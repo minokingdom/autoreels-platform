@@ -431,7 +431,7 @@
                   <span class="text-[10px] text-white/70 shrink-0">크기</span>
                   <input id="igSelectedScaleSlider" type="range" min="0.45" max="2.5" step="0.05" value="1" oninput="setSelectedOverlayScale(this.value)" class="flex-1 min-w-0 accent-white h-1 cursor-pointer" />
                   <button type="button" id="igSelectedAlphaBtn" onclick="cycleSelectedOverlayAlpha()" class="px-1.5 h-5 rounded-full bg-white/10 hover:bg-white/20 text-[10px] cursor-pointer shrink-0" title="투명도">100%</button>
-                  <button type="button" id="igSelectedAnimBtn" onclick="cycleSelectedOverlayAnim()" class="px-1.5 h-5 rounded-full bg-[#38bdf8]/20 hover:bg-[#38bdf8]/35 text-[#38bdf8] text-[10px] font-semibold cursor-pointer shrink-0" title="등장 모션">고정</button>
+                  <button type="button" id="igSelectedAnimBtn" onclick="openSelectedOverlayBottomSheet()" class="px-2 h-5 rounded-full bg-[#38bdf8]/20 hover:bg-[#38bdf8]/35 text-[#38bdf8] text-[10px] font-semibold cursor-pointer shrink-0" title="바텀시트에서 애니메이션·스타일 편집">고정 ▾</button>
                 </div>
                 <div class="flex items-center justify-between gap-1 text-[10px]">
                   <div class="flex items-center gap-1">

@@ -2339,18 +2339,29 @@
       const list = getCutOverlayList(cutIdx);
       const selIdx = window.__arSelectedOverlayIdx;
       const selItem = selIdx >= 0 ? list[selIdx] : null;
-      if (selBar) selBar.classList.toggle('hidden', !selItem);
+      const sheetOpen = !!(window.__arInlineEditActive || window.__arCutEditorOpen);
+      if (selBar) selBar.classList.toggle('hidden', !selItem || sheetOpen);
       if (selItem) {
         if (slider) slider.value = Number(selItem.scale) || 1;
         if (alphaBtn) alphaBtn.textContent = `${Math.round((typeof selItem.alpha === 'number' ? selItem.alpha : 1) * 100)}%`;
         if (animBtn) {
           const aObj = CUT_OVERLAY_ANIMS.find((a) => a.id === (selItem.anim || 'static')) || CUT_OVERLAY_ANIMS[0];
-          animBtn.textContent = aObj.label;
+          animBtn.textContent = `${aObj.label} ▾`;
         }
         const canEdit = selItem.type === 'text' || selItem.style === 'photo' || (selItem.type === 'sticker' && selItem.variant === 'widget' && ['loc', 'poll', 'tag', 'dm'].includes(selItem.key));
         if (editBtn) editBtn.classList.toggle('hidden', !canEdit);
       }
     }
+
+    function openSelectedOverlayBottomSheet() {
+      const cutIdx = window.__arPinnedCut;
+      const selIdx = window.__arSelectedOverlayIdx;
+      if (typeof cutIdx !== 'number' || cutIdx < 0 || selIdx < 0) return;
+      if (typeof openInlineQuickEdit === 'function') {
+        openInlineQuickEdit(cutIdx, `overlay:${selIdx}`);
+      }
+    }
+    window.openSelectedOverlayBottomSheet = openSelectedOverlayBottomSheet;
 
     function renderIgStickerSheetBody() {
       const body = document.getElementById('igSheetContent');
@@ -3423,19 +3434,47 @@
         if (it) {
           const isText = it.type === 'text';
           const isWidget = it.type === 'sticker' && it.variant === 'widget';
-          const curTxt = isText ? (it.text || '') : (it.customText || it.text || '');
+          const isPhotoSticker = it.type === 'sticker' && it.style === 'photo';
+          const curAlpha = typeof it.alpha === 'number' ? it.alpha : 1;
+          const nextAlpha = curAlpha > 0.85 ? 0.75 : curAlpha > 0.6 ? 0.5 : 1;
+          const shapeLabels = [
+            { id: 'round', label: '둥근' },
+            { id: 'circle', label: '원형' },
+            { id: 'polaroid', label: '폴라로이드' },
+            { id: 'rect', label: '사각' }
+          ];
           bodyHtml = `
             <div class="ar-el-row">
               ${(isText || isWidget) ? `
                 <button type="button" onclick="openCanvasDirectTextEdit(${cutIdx}, 'overlay:${ii}')"
                         class="ar-el-badge blue" style="padding:5px 10px;font-weight:800;white-space:nowrap;">✏️ 문구 수정</button>
-              ` : `<span class="text-[12px] text-white/80 flex-1">${it.style === 'photo' ? '📷 사진 스티커' : escapeCutHtml(it.text || it.key || '스티커')}</span>`}
+              ` : `<span class="text-[11.5px] font-bold text-white/85 shrink-0">${isPhotoSticker ? '📷 사진 스티커' : escapeCutHtml(it.text || it.key || '스티커')}</span>`}
               <span class="ar-el-label ml-1">크기</span>
-              <input type="range" min="0.45" max="2.4" step="0.05" value="${Number(it.scale) || 1}"
+              <input type="range" min="0.45" max="2.5" step="0.05" value="${Number(it.scale) || 1}"
                      oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'scale', this.value, false)"
                      class="flex-1 min-w-0" />
-              <button type="button" onclick="removeSelectedOverlay()" class="ar-el-badge" style="color:#f87171;">🗑</button>
+              <button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'alpha', ${nextAlpha}, true)"
+                      class="ar-el-badge muted" title="투명도 전환">${Math.round(curAlpha * 100)}%</button>
+              <button type="button" onclick="removeSelectedOverlay()" class="ar-el-badge" style="color:#f87171;" title="삭제">🗑</button>
             </div>
+            <div class="ar-el-row">
+              <span class="ar-el-label">회전·정렬</span>
+              <div class="flex items-center gap-1 flex-1 overflow-x-auto no-scrollbar">
+                <button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'rot', ${Math.max(-45, (Number(it.rot) || 0) - 10)}, true)" class="ar-el-badge muted">↺ -10°</button>
+                <button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'rot', ${Math.min(45, (Number(it.rot) || 0) + 10)}, true)" class="ar-el-badge muted">↻ +10°</button>
+                <button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'rot', 0, true)" class="ar-el-badge muted">${Math.round(Number(it.rot) || 0)}°</button>
+                <button type="button" onclick="duplicateSelectedOverlay()" class="ar-el-badge muted ml-auto">복제</button>
+                <button type="button" onclick="copySelectedOverlayToAllCuts()" class="ar-el-badge muted">전체컷</button>
+              </div>
+            </div>
+            ${isPhotoSticker ? `
+              <div class="ar-inline-scroll-row ar-inline-style-bar">
+                ${shapeLabels.map((sh) => `
+                  <button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'photoShape', '${sh.id}', true)"
+                          class="ar-inline-style-chip ${(it.photoShape || 'round') === sh.id ? 'active' : ''}">${sh.label}</button>
+                `).join('')}
+              </div>
+            ` : ''}
             ${isText ? `
               <div class="ar-inline-scroll-row ar-inline-font-bar">
                 ${CUT_TEXT_FONTS.map((f) => `
@@ -3452,9 +3491,9 @@
               </div>
             ` : ''}
             <div class="ar-inline-scroll-row ar-inline-anim-bar">
-              ${AR_ELEMENT_ANIMS.filter((a) => a.id !== 'default').map((an) => {
+              ${CUT_OVERLAY_ANIMS.map((an) => {
                 const curA = it.anim || 'static';
-                const on = (an.id === 'none' && (curA === 'static' || curA === 'none')) || curA === an.id;
+                const on = (an.id === 'static' && (curA === 'static' || curA === 'none')) || curA === an.id;
                 return `<button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'anim', '${an.id}', true);previewCutElementAnimation(${cutIdx})"
                                 class="ar-inline-anim-chip ${on ? 'active' : ''}">${an.label}</button>`;
               }).join('')}
