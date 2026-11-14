@@ -2239,8 +2239,12 @@
       }
       drawCutElementOverridesOverlay(c, W, H, cutIdx, localT, design, V);
       const overlays = (campaign.cutOverlays && campaign.cutOverlays[cutIdx]) || [];
+      const animPreview = window.__arAnimPreviewTarget && window.__arAnimPreviewTarget.cutIdx === cutIdx ? window.__arAnimPreviewTarget : null;
       if (Array.isArray(overlays) && overlays.length) {
-        overlays.forEach((item) => drawSingleCutOverlayItem(c, W, H, item, localT));
+        overlays.forEach((item, ii) => {
+          const itemT = (animPreview && animPreview.key === `overlay:${ii}`) ? animPreview.elapsed : localT;
+          drawSingleCutOverlayItem(c, W, H, item, itemT);
+        });
       }
       if (typeof drawCutStrokesOverlay === 'function') drawCutStrokesOverlay(c, W, H, cutIdx);
       drawCutElementSelectionBox(c, W, H, cutIdx);
@@ -2847,8 +2851,8 @@
         const leftPct = ((typeof it.x === 'number' ? it.x : 0.5) * 100).toFixed(2);
         const topPct = ((typeof it.y === 'number' ? it.y : 0.5) * 100).toFixed(2);
         const sc = Number(it.scale) || 1;
-        const boxW = Math.round((it.type === 'sticker' && it.variant !== 'badge' ? 62 : 130) * Math.min(1.8, Math.max(0.7, sc)));
-        const boxH = Math.round((it.type === 'sticker' && it.variant !== 'badge' ? 62 : 44) * Math.min(1.8, Math.max(0.7, sc)));
+        const boxW = Math.round((it.type === 'sticker' && it.variant !== 'badge' && it.variant !== 'widget' ? 62 : 144) * Math.min(1.8, Math.max(0.7, sc)));
+        const boxH = Math.round((it.type === 'sticker' && it.variant !== 'badge' && it.variant !== 'widget' ? 62 : 44) * Math.min(1.8, Math.max(0.7, sc)));
         return `
           <div data-ov-idx="${ii}"
                ondblclick="event.stopPropagation();if(${it.type === 'text' ? 'true' : 'false'})openCanvasDirectTextEdit(${cutIdx}, 'overlay:${ii}')"
@@ -3140,7 +3144,7 @@
     // ============================================================================
     // ★ 애니메이션 & 컷 전환 라이브 미리보기 및 전환 설정
     // ============================================================================
-    function previewCutElementAnimation(cutIdx) {
+    function previewCutElementAnimation(cutIdx, targetKey) {
       if (typeof cutIdx !== 'number' || cutIdx < 0) return;
       if (window.__arAnimPreviewTimer) {
         cancelAnimationFrame(window.__arAnimPreviewTimer);
@@ -3150,8 +3154,33 @@
       const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
       const cutDur = mainDur / n;
       const startT = cutIdx * cutDur;
-      const dur = Math.min(0.78, cutDur * 0.65);
+      const dur = Math.min(0.85, cutDur * 0.72);
       const t0 = performance.now();
+
+      // 특정 요소(스티커 등) 애니메이션 미리보기일 때는 배경/다른 요소를 고정하고 해당 요소의 localT만 0→dur로 재생
+      if (targetKey && String(targetKey).startsWith('overlay:')) {
+        const curT = (window.__timelines && window.__timelines.main) ? window.__timelines.main.currentTime : (startT + Math.min(0.65, cutDur * 0.45));
+        const stayT = (curT >= startT + 0.35 && curT < startT + cutDur) ? curT : (startT + Math.min(0.65, cutDur * 0.45));
+        const step = (now) => {
+          const elapsed = (now - t0) / 1000;
+          const lt = Math.min(dur, elapsed);
+          window.__arAnimPreviewTarget = { cutIdx, key: targetKey, elapsed: lt };
+          if (window.__timelines && window.__timelines.main) {
+            window.__timelines.main.seek(stayT);
+          }
+          if (elapsed < dur) {
+            window.__arAnimPreviewTimer = requestAnimationFrame(step);
+          } else {
+            window.__arAnimPreviewTarget = null;
+            window.__arAnimPreviewTimer = null;
+            if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(stayT);
+          }
+        };
+        window.__arAnimPreviewTimer = requestAnimationFrame(step);
+        return;
+      }
+
+      window.__arAnimPreviewTarget = null;
       const step = (now) => {
         const elapsed = (now - t0) / 1000;
         const lt = Math.min(dur, elapsed);
@@ -3494,7 +3523,7 @@
               ${CUT_OVERLAY_ANIMS.map((an) => {
                 const curA = it.anim || 'static';
                 const on = (an.id === 'static' && (curA === 'static' || curA === 'none')) || curA === an.id;
-                return `<button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'anim', '${an.id}', true);previewCutElementAnimation(${cutIdx})"
+                return `<button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'anim', '${an.id}', true);previewCutElementAnimation(${cutIdx}, 'overlay:${ii}')"
                                 class="ar-inline-anim-chip ${on ? 'active' : ''}">${an.label}</button>`;
               }).join('')}
             </div>
@@ -4364,7 +4393,7 @@
                 ${AR_ELEMENT_ANIMS.filter((a) => a.id !== 'default').map((an) => {
                   const curA = it.anim || 'static';
                   const on = (an.id === 'none' && (curA === 'static' || curA === 'none')) || curA === an.id;
-                  return `<button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'anim', '${an.id}', true);previewCutElementAnimation(${cutIdx})"
+                  return `<button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'anim', '${an.id}', true);previewCutElementAnimation(${cutIdx}, 'overlay:${ii}')"
                                   class="ar-el-chip ${on ? 'active' : ''}">${an.label}</button>`;
                 }).join('')}
               </div>
