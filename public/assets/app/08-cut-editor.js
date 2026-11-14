@@ -2975,19 +2975,21 @@
 
     function ensureInlineQuickEditBarDOM() {
       let bar = document.getElementById('arInlineEditBar');
-      if (bar) return bar;
       const vp = document.getElementById('previewViewport');
-      const monitorFrame = vp ? (vp.closest('.monitor-frame') || vp.parentElement) : document.getElementById('mainMonitorColumn');
-      if (!monitorFrame) return null;
+      if (bar) {
+        if (vp && bar.parentElement !== vp) {
+          vp.appendChild(bar);
+        }
+        return bar;
+      }
+      if (!vp) return null;
       bar = document.createElement('section');
       bar.id = 'arInlineEditBar';
-      bar.className = 'ar-inline-edit-bar hidden';
-      bar.setAttribute('aria-label', '프리뷰 인라인 빠른 편집 바');
-      if (vp && vp.nextSibling) {
-        vp.parentElement.insertBefore(bar, vp.nextSibling);
-      } else {
-        monitorFrame.appendChild(bar);
-      }
+      bar.className = 'ar-inline-edit-bar ar-preview-floating-sheet hidden';
+      bar.setAttribute('aria-label', '프리뷰 인라인 빠른 편집 바텀시트');
+      bar.addEventListener('mousedown', (ev) => ev.stopPropagation());
+      bar.addEventListener('touchstart', (ev) => ev.stopPropagation(), { passive: true });
+      vp.appendChild(bar);
       return bar;
     }
 
@@ -3246,13 +3248,14 @@
       }
 
       bar.innerHTML = `
+        <div class="ar-sheet-grabber"></div>
         <div class="ar-inline-head">
           <div class="ar-inline-title">
             <span>⚡ ${cutIdx + 1}컷 빠른 편집</span>
           </div>
           <div class="flex items-center gap-1">
-            <button type="button" onclick="openCutEditor(${cutIdx}, '${activeKey}')" class="ar-el-badge muted">🎛️ 상세 모달</button>
-            <button type="button" onclick="closeInlineQuickEdit()" class="ar-el-badge blue">편집 완료 ✓</button>
+            <button type="button" onclick="openCutEditor(${cutIdx}, '${activeKey}')" class="ar-el-badge muted">🎛️ 상세 시트</button>
+            <button type="button" onclick="closeInlineQuickEdit()" class="ar-el-badge blue">완료 ✓</button>
           </div>
         </div>
         <div class="ar-inline-scroll-row">
@@ -3288,7 +3291,7 @@
         const vp = document.getElementById('previewViewport');
         if (!vp || !vp.contains(ev.target)) return;
         // HUD 버튼, 인풋, 드로잉 캔버스 위는 제외
-        if (ev.target.closest('button, input, textarea, select, #igEditorHud, #igSheetBackdrop, #igTextComposeOverlay, #igDrawOverlay, #presetHandle')) {
+        if (ev.target.closest('button, input, textarea, select, #igEditorHud, #igSheetBackdrop, #igTextComposeOverlay, #igDrawOverlay, #presetHandle, #arInlineEditBar, #cutEditorPanel, #cutPhotoReplaceModal')) {
           return;
         }
         const pt = ev.touches ? ev.touches[0] : ev;
@@ -3347,29 +3350,33 @@
     })();
 
     // ============================================================================
-    // ★ 컷 편집 — 요소별 편집 모달 (Element Inspector Modal & Direct Canvas Mode)
+    // ★ 컷 편집 — 미리보기 창 위/밑에서 올라오는 바텀시트 모달 (#cutEditorPanel & #cutPhotoReplaceModal)
     // ============================================================================
     function ensureCutEditorPanelDOM() {
       let panel = document.getElementById('cutEditorPanel');
+      const vp = document.getElementById('previewViewport');
+      const container = vp || document.body;
       if (panel) {
-        if (panel.parentElement !== document.body) {
-          document.body.appendChild(panel);
+        if (panel.parentElement !== container) {
+          container.appendChild(panel);
         }
         panel.className = panel.classList.contains('hidden')
-          ? 'hidden fixed inset-0 z-50 flex ar-modal'
-          : 'fixed inset-0 z-50 flex ar-modal';
+          ? 'hidden ar-preview-sheet-backdrop'
+          : 'ar-preview-sheet-backdrop';
         return panel;
       }
       panel = document.createElement('div');
       panel.id = 'cutEditorPanel';
-      panel.className = 'hidden fixed inset-0 z-50 flex ar-modal';
+      panel.className = 'hidden ar-preview-sheet-backdrop';
       panel.setAttribute('role', 'dialog');
       panel.setAttribute('aria-modal', 'true');
-      panel.setAttribute('aria-label', '컷 요소별 편집 모달');
+      panel.setAttribute('aria-label', '컷 요소별 편집 시트');
       panel.addEventListener('click', (ev) => {
         if (ev.target === panel) closeCutEditor();
       });
-      document.body.appendChild(panel);
+      panel.addEventListener('mousedown', (ev) => ev.stopPropagation());
+      panel.addEventListener('touchstart', (ev) => ev.stopPropagation(), { passive: true });
+      container.appendChild(panel);
       return panel;
     }
 
@@ -3581,17 +3588,24 @@
 
     function openCutPhotoReplaceModal(cutIdx) {
       const targetIdx = typeof cutIdx === 'number' && cutIdx >= 0 ? cutIdx : (window.__arPinnedCut >= 0 ? window.__arPinnedCut : 0);
+      const vp = document.getElementById('previewViewport');
+      const container = vp || document.body;
       let modal = document.getElementById('cutPhotoReplaceModal');
       if (!modal) {
         modal = document.createElement('div');
         modal.id = 'cutPhotoReplaceModal';
-        modal.className = 'hidden fixed inset-0 z-[60] flex ar-modal';
+        modal.className = 'hidden ar-preview-sheet-backdrop';
+        modal.style.zIndex = '36';
         modal.setAttribute('role', 'dialog');
         modal.setAttribute('aria-modal', 'true');
         modal.addEventListener('click', (ev) => {
           if (ev.target === modal) closeCutPhotoReplaceModal();
         });
-        document.body.appendChild(modal);
+        modal.addEventListener('mousedown', (ev) => ev.stopPropagation());
+        modal.addEventListener('touchstart', (ev) => ev.stopPropagation(), { passive: true });
+        container.appendChild(modal);
+      } else if (modal.parentElement !== container) {
+        container.appendChild(modal);
       }
       const scenes = typeof getIndScenes === 'function' ? getIndScenes() : [];
       const curSceneIdx = (campaign && Array.isArray(campaign.cutSceneIndices) && typeof campaign.cutSceneIndices[targetIdx] === 'number')
@@ -3600,47 +3614,47 @@
       const hasCustomMedia = !!(campaign && ((campaign.uploadedPhotos && campaign.uploadedPhotos[targetIdx]) || (campaign.cutVideoUrls && campaign.cutVideoUrls[targetIdx])));
 
       modal.innerHTML = `
-        <div class="studio-card w-full space-y-4 ar-modal-card" style="--mw:440px" onclick="event.stopPropagation()">
-          <div class="ar-modal-head">
-            <h3 class="text-[15px] font-semibold text-[#ededed]">📷 ${targetIdx + 1}컷 사진·영상 교체</h3>
-            <button type="button" onclick="closeCutPhotoReplaceModal()" class="ar-modal-x" aria-label="닫기">×</button>
+        <div class="ar-preview-bottom-sheet" onclick="event.stopPropagation()">
+          <div class="ar-sheet-grabber"></div>
+          <div class="flex items-center justify-between text-[12px]">
+            <span class="text-white font-semibold">📷 ${targetIdx + 1}컷 사진·영상 교체</span>
+            <button type="button" onclick="closeCutPhotoReplaceModal()" class="px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-[11px] text-white cursor-pointer">닫기 ✕</button>
           </div>
-          <p class="text-[12px] text-[#a1a1a6] -mt-2">카메라로 바로 촬영하거나 갤러리(파일) 또는 기본 제공 장면에서 선택하세요.</p>
-          <div class="grid grid-cols-2 gap-2.5">
-            <label class="flex flex-col items-center justify-center gap-1.5 p-4 rounded-[12px] border border-[#0070f3]/50 bg-[#0070f3]/12 hover:bg-[#0070f3]/20 text-white cursor-pointer transition text-center">
-              <span class="text-[24px]">📷</span>
-              <span class="text-[13px] font-semibold">카메라 촬영</span>
-              <span class="text-[11px] text-white/65">직접 사진 찍기</span>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex flex-col items-center justify-center gap-1 p-3 rounded-[12px] border border-[#38bdf8]/50 bg-[#0070f3]/18 hover:bg-[#0070f3]/28 text-white cursor-pointer transition text-center">
+              <span class="text-[20px]">📷</span>
+              <span class="text-[12px] font-semibold">카메라 촬영</span>
+              <span class="text-[10px] text-white/65">직접 사진 찍기</span>
               <input type="file" accept="image/*" capture="environment" class="hidden"
                      onchange="replaceCutMedia(${targetIdx}, event);closeCutPhotoReplaceModal();renderCutEditorPanel();if(typeof renderInlineQuickEditBar==='function')renderInlineQuickEditBar();" />
             </label>
-            <label class="flex flex-col items-center justify-center gap-1.5 p-4 rounded-[12px] border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] text-white cursor-pointer transition text-center">
-              <span class="text-[24px]">🖼️</span>
-              <span class="text-[13px] font-semibold">갤러리 · 파일</span>
-              <span class="text-[11px] text-white/65">사진첩·폴더에서 선택</span>
+            <label class="flex flex-col items-center justify-center gap-1 p-3 rounded-[12px] border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] text-white cursor-pointer transition text-center">
+              <span class="text-[20px]">🖼️</span>
+              <span class="text-[12px] font-semibold">갤러리 · 파일</span>
+              <span class="text-[10px] text-white/65">사진첩·폴더 선택</span>
               <input type="file" accept="image/*,video/*" class="hidden"
                      onchange="replaceCutMedia(${targetIdx}, event);closeCutPhotoReplaceModal();renderCutEditorPanel();if(typeof renderInlineQuickEditBar==='function')renderInlineQuickEditBar();" />
             </label>
           </div>
           ${hasCustomMedia ? `
             <button type="button" onclick="clearCutUploadedPhoto(${targetIdx})"
-                    class="w-full py-2 px-3 rounded-[10px] border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] text-[12px] text-[#f87171] font-medium transition">
+                    class="w-full py-1.5 px-2.5 rounded-[10px] border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] text-[11px] text-[#f87171] font-medium transition">
               ↺ 업로드한 사진 제거하고 기본 장면으로 복원
             </button>
           ` : ''}
           ${scenes.length ? `
-            <div class="space-y-2 pt-2 border-t border-white/10">
-              <div class="text-[12px] font-medium text-[#a1a1a6]">🎬 업종 기본 제공 장면에서 선택</div>
-              <div class="grid grid-cols-3 gap-2 max-h-[190px] overflow-y-auto pr-1">
+            <div class="space-y-1.5 pt-1.5 border-t border-white/10">
+              <div class="text-[11px] font-medium text-[#a1a1a6]">🎬 업종 기본 제공 장면에서 선택</div>
+              <div class="grid grid-cols-3 gap-1.5 max-h-[155px] overflow-y-auto pr-0.5">
                 ${scenes.slice(0, 9).map((sc, si) => {
                   const active = !hasCustomMedia && curSceneIdx === si;
                   const thumb = sc.img || sc.url || '';
                   const title = sc.label || sc.title || `장면 ${si + 1}`;
                   return `
                     <button type="button" onclick="applyCutScenePresetFromModal(${targetIdx}, ${si})"
-                            class="group relative rounded-[10px] overflow-hidden border ${active ? 'border-[#4cc38a] ring-1 ring-[#4cc38a]' : 'border-white/15 hover:border-white/40'} bg-black/40 aspect-[16/11] text-left">
+                            class="group relative rounded-[9px] overflow-hidden border ${active ? 'border-[#4cc38a] ring-1 ring-[#4cc38a]' : 'border-white/15 hover:border-white/40'} bg-black/40 aspect-[16/11] text-left">
                       ${thumb ? `<img src="${escapeCutHtml(thumb)}" alt="" class="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition" />` : ''}
-                      <span class="absolute inset-x-0 bottom-0 px-1.5 py-1 bg-black/70 text-[10px] text-white truncate">${escapeCutHtml(title)}</span>
+                      <span class="absolute inset-x-0 bottom-0 px-1 py-0.5 bg-black/75 text-[9.5px] text-white truncate">${escapeCutHtml(title)}</span>
                     </button>
                   `;
                 }).join('')}
@@ -4119,40 +4133,37 @@
       }
 
       panel.innerHTML = `
-        <div class="studio-card w-full space-y-3.5 ar-modal-card" style="--mw:560px" onclick="event.stopPropagation()">
-          <div class="ar-modal-head">
-            <div class="flex items-center gap-2 min-w-0">
-              <h3 class="text-[15px] font-semibold text-[#ededed]">🎬 ${cutIdx + 1}컷 요소 선택·상세 편집</h3>
+        <div class="ar-preview-bottom-sheet" onclick="event.stopPropagation()">
+          <div class="ar-sheet-grabber"></div>
+          <div class="flex items-center justify-between gap-1.5 text-[12px]">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="text-white font-semibold truncate">🎛️ ${cutIdx + 1}컷 요소 편집</span>
               <button type="button" onclick="toggleDirectCanvasSelectMode()"
                       class="ar-el-badge ${window.__arDirectCanvasMode ? 'blue' : 'muted'}"
                       title="프리뷰 캔버스에서 직접 요소를 클릭·드래그해 위치를 조절합니다">
-                🎯 캔버스 직접 선택 ${window.__arDirectCanvasMode ? 'ON' : 'OFF'}
+                🎯 직접선택 ${window.__arDirectCanvasMode ? 'ON' : 'OFF'}
               </button>
             </div>
-            <div class="flex items-center gap-1.5 shrink-0">
+            <div class="flex items-center gap-1 shrink-0">
               <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'all')"
-                      class="ar-el-badge muted" title="${cutIdx + 1}컷의 모든 요소 편집 초기화">이 컷 초기화</button>
-              <button type="button" onclick="closeCutEditor()" class="ar-modal-x" aria-label="닫기">×</button>
+                      class="ar-el-badge muted" title="${cutIdx + 1}컷의 모든 요소 편집 초기화">초기화</button>
+              <button type="button" onclick="closeCutEditor()" class="px-2.5 py-0.5 rounded-full bg-white text-[#09090b] font-bold text-[11px] cursor-pointer">완료 ✓</button>
             </div>
           </div>
-          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-            <span class="text-[11px] font-medium text-[#8a8f98] shrink-0 mr-1">컷 이동</span>
+          <div class="flex items-center gap-1 overflow-x-auto no-scrollbar pb-0.5">
+            <span class="text-[10px] font-medium text-[#8a8f98] shrink-0 mr-1">컷</span>
             ${cutSwitchHtml}
           </div>
-          <div class="ar-el-chip-list" role="tablist" aria-label="편집할 컷 요소 선택">
+          <div class="ar-inline-scroll-row" role="tablist" aria-label="편집할 컷 요소 선택">
             ${chipsHtml}
           </div>
           <div class="ar-el-inspector">
             ${inspectorHtml}
           </div>
-          <div class="flex items-center justify-between gap-2 pt-2 border-t border-white/10">
+          <div class="flex items-center justify-between gap-2 pt-1.5 border-t border-white/10">
             <button type="button" onclick="window.__arDirectCanvasMode=true;closeCutEditor();openInlineQuickEdit(${cutIdx}, '${activeKey}');"
-                    class="px-3 py-2 rounded-[8px] text-[12px] font-medium border border-white/15 bg-white/[0.04] text-[#ededed] hover:bg-white/[0.08] transition">
-              🎯 모달 닫고 화면에서 직접 드래그·빠른 편집
-            </button>
-            <button type="button" onclick="closeCutEditor()"
-                    class="px-4 py-2 rounded-[8px] text-[12px] font-semibold bg-[#0070f3] text-white hover:bg-[#0060df] transition">
-              편집 완료 ✓
+                    class="px-2.5 py-1.5 rounded-[8px] text-[11px] font-medium border border-white/15 bg-white/[0.06] text-[#ededed] hover:bg-white/[0.12] transition flex-1">
+              🎯 시트 내리고 화면에서 직접 드래그·빠른 편집
             </button>
           </div>
         </div>
