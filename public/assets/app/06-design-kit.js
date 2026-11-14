@@ -813,18 +813,19 @@
       }
       c.save();
       c.globalAlpha = gEase(e / 0.4);
-      c.textAlign = zone.center ? 'center' : 'left';
-      const x = zone.center ? W / 2 : zone.x;
+      const isCenterPrice = zone.center || !['lower3', 'vertical', 'bubble', 'typer', 'checkl'].includes(spec.cap);
+      c.textAlign = isCenterPrice ? 'center' : 'left';
+      const x = isCenterPrice ? W / 2 : zone.x;
       if (['glass', 'typer', 'ticket', 'lower3', 'headline'].includes(spec.cap)) {
         c.font = kFont(spec.font, 34);
         const w = c.measureText(txt).width + 30;
-        const bx = zone.center ? W / 2 - w / 2 : zone.x;
+        const bx = isCenterPrice ? W / 2 - w / 2 : zone.x;
         gRoundRect(c, bx, zone.y, w, 52, spec.cap === 'glass' ? 26 : 4);
         c.fillStyle = K.bgAccent ? K.hl : V.accent;
         c.fill();
         c.fillStyle = kTextOn(K.bgAccent ? K.hl : V.accent);
         c.textBaseline = 'middle';
-        c.fillText(txt, zone.center ? W / 2 : bx + 15, zone.y + 28);
+        c.fillText(txt, isCenterPrice ? W / 2 : bx + 15, zone.y + 28);
         c.textBaseline = 'alphabetic';
       } else {
         c.fillStyle = K.bgAccent ? K.hl : V.accent;
@@ -862,7 +863,7 @@
           c.font = kFont(fk, r.size / (KIT_FONTS[fk] || KIT_FONTS.sans).k);
           const w = c.measureText(ln).width + 40;
           const bh = r.lh + 14;
-          const x = zone.x - (1 - ei) * (w + 80);
+          const x = W / 2 - w / 2 - (1 - ei) * (w + 80);
           const y = top + i * (bh + 8);
           c.save();
           c.translate(x, y);
@@ -871,8 +872,9 @@
           c.fillRect(0, 0, w, bh);
           c.restore();
           c.fillStyle = hlText;
+          c.textAlign = 'center';
           c.textBaseline = 'middle';
-          c.fillText(ln, x + 14, y + bh / 2 + 2);
+          c.fillText(ln, x + w / 2, y + bh / 2 + 2);
           c.textBaseline = 'alphabetic';
         });
       } else if (cap === 'glass') {
@@ -933,28 +935,28 @@
         }
       } else if (cap === 'outline') {
         const r = kWrap(c, text, W - 60, 2, 74, 40, fk);
-        c.textAlign = 'left';
+        c.textAlign = 'center';
         r.lines.forEach((ln, i) => {
           const y = top + r.lh * (i + 0.85);
-          kLongShadow(c, ln, zone.x, y, ink, K.light ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.58)', 13, 0.85, 1);
+          kLongShadow(c, ln, W / 2, y, ink, K.light ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.58)', 13, 0.85, 1);
           const p = gEase((e - i * 0.18) / 0.6);
           c.save();
           c.beginPath();
-          c.rect(zone.x - 10, y - r.size * 1.1, (zone.w + 20) * p, r.size * 1.4);
+          c.rect(W / 2 - zone.w / 2 - 10, y - r.size * 1.1, (zone.w + 20) * p, r.size * 1.4);
           c.clip();
           c.fillStyle = hl;
-          c.fillText(ln, zone.x, y);
+          c.fillText(ln, W / 2, y);
           c.restore();
         });
       } else if (cap === 'marker') {
         const r = kWrap(c, text, W - 100, 3, 42, 24, fk);
-        c.textAlign = 'left';
+        c.textAlign = 'center';
         r.lines.forEach((ln, i) => {
           const ei = gEase((e - i * 0.2) / 0.5);
           const y = top + r.lh * (i + 0.9) + i * 6;
           const w = c.measureText(ln).width;
           c.save();
-          c.translate(zone.x, y);
+          c.translate(W / 2 - w / 2, y);
           c.rotate(-0.012);
           c.fillStyle = hl;
           c.globalAlpha = 0.95;
@@ -962,7 +964,7 @@
           c.restore();
           c.globalAlpha = Math.min(1, ei * 2);
           c.fillStyle = hlText;
-          c.fillText(ln, zone.x, y);
+          c.fillText(ln, W / 2, y);
           c.globalAlpha = 1;
         });
       } else if (cap === 'bubble') {
@@ -1165,7 +1167,7 @@
           const y = top + i * (bh + 10);
           const fill = i % 2 ? (K.light && !zone.onPhoto ? '#111111' : '#ffffff') : hl;
           c.save();
-          c.translate(zone.x + w / 2, y + bh / 2);
+          c.translate(W / 2, y + bh / 2);
           c.scale(ei, ei);
           gRoundRect(c, -w / 2, -bh / 2, w, bh, bh / 2);
           c.fillStyle = fill;
@@ -1213,7 +1215,7 @@
         r.lines.forEach((ln, i) => {
           const y = top + r.lh * (i + 0.9) + i * 4;
           const w = c.measureText(ln).width;
-          const x = cap === 'write' ? zone.x : W / 2 - w / 2;
+          const x = W / 2 - w / 2;
           boxes.push({ x, y, w });
           const lp = Math.min(1, Math.max(0, prog - i));
           if (lp <= 0) return;

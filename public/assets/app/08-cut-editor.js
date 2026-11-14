@@ -4834,7 +4834,7 @@
                   const bw = mw + 44;
                   const lineH = r.lh + 18;
                   const bh = r.lines.length * lineH + Math.max(0, r.lines.length - 1) * 10;
-                  defCx = zone.x + bw / 2;
+                  defCx = W / 2;
                   defCy = topY + bh / 2;
                   defW = bw;
                   defH = bh;
