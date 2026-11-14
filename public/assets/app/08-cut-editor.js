@@ -416,7 +416,8 @@
         obj.bgColor ||
         obj.font ||
         (obj.boxStyle && obj.boxStyle !== 'default') ||
-        (obj.anim && obj.anim !== 'default')
+        (obj.anim && obj.anim !== 'default') ||
+        !!obj.align
       );
     }
 
@@ -3840,6 +3841,34 @@
       if (rerenderPanel) renderPreviewCutPinBar();
     }
 
+    function alignCutElement(cutIdx, elKey, alignVal) {
+      if (typeof cutIdx !== 'number' || cutIdx < 0) return;
+      const ov = getCutElementOverride(cutIdx);
+      const target = ov[elKey];
+      if (!target) return;
+      const cv = document.getElementById('pv') || document.querySelector('canvas');
+      const W = (cv && cv.width) || 540;
+      const H = (cv && cv.height) || 960;
+      const curBox = window.__arLastRenderedBoxes && window.__arLastRenderedBoxes[cutIdx] && window.__arLastRenderedBoxes[cutIdx][elKey];
+      // Preserve current vertical position when first enabling customPos so alignment never jumps vertically
+      if (!target.customPos && curBox && typeof curBox.cy === 'number') {
+        target.y = Math.max(0.06, Math.min(0.94, curBox.cy / H));
+      }
+      const boxW = curBox && curBox.w ? curBox.w : W * 0.6;
+      const halfNorm = Math.min(0.42, (boxW / 2) / W);
+      const padNorm = 24 / W;
+      let nextX = 0.5;
+      if (alignVal === 'left') nextX = Math.max(0.08, Math.min(0.46, halfNorm + padNorm));
+      else if (alignVal === 'right') nextX = Math.min(0.92, Math.max(0.54, 1 - halfNorm - padNorm));
+      target.align = alignVal;
+      target.x = nextX;
+      target.customPos = true;
+      syncCutInspectorLiveValues(cutIdx, elKey);
+      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+      renderCutOverlayEditorLayer();
+      renderPreviewCutPinBar();
+    }
+
     function resetCutElementOverride(cutIdx, elKey) {
       if (typeof cutIdx !== 'number' || cutIdx < 0) return;
       const def = createDefaultCutElementOverride();
@@ -4108,11 +4137,11 @@
         <div class="ar-el-row">
           <span class="ar-el-label">정렬</span>
           <div class="flex items-center gap-1.5 flex-1 py-0.5">
-            <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'align', 'left', true);updateCutElementOverride(${cutIdx}, '${elKey}', 'x', 0.28, true)"
+            <button type="button" onclick="alignCutElement(${cutIdx}, '${elKey}', 'left')"
                     class="ar-el-chip ${obj.align === 'left' ? 'active' : ''}">◀ 좌정렬</button>
-            <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'align', 'center', true);updateCutElementOverride(${cutIdx}, '${elKey}', 'x', 0.5, true)"
+            <button type="button" onclick="alignCutElement(${cutIdx}, '${elKey}', 'center')"
                     class="ar-el-chip ${!obj.align || obj.align === 'center' ? 'active' : ''}">◆ 중앙</button>
-            <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'align', 'right', true);updateCutElementOverride(${cutIdx}, '${elKey}', 'x', 0.72, true)"
+            <button type="button" onclick="alignCutElement(${cutIdx}, '${elKey}', 'right')"
                     class="ar-el-chip ${obj.align === 'right' ? 'active' : ''}">▶ 우정렬</button>
           </div>
         </div>
@@ -4766,6 +4795,17 @@
                   defCy = topY + bh / 2;
                   defW = bw;
                   defH = bh;
+                } else if (capType === 'pill') {
+                  const r = kWrap(c, text, W - 130, 3, 36, 22, fk);
+                  let mw = 0;
+                  r.lines.forEach((ln) => (mw = Math.max(mw, c.measureText(ln).width)));
+                  const bw = mw + 44;
+                  const lineH = r.lh + 18;
+                  const bh = r.lines.length * lineH + Math.max(0, r.lines.length - 1) * 10;
+                  defCx = zone.x + bw / 2;
+                  defCy = topY + bh / 2;
+                  defW = bw;
+                  defH = bh;
                 } else if (capType === 'vsub') {
                   const r = kWrap(c, text, W - 120, 2, 32, 22, fk);
                   const bh = r.lines.length * (r.lh + 12);
@@ -4954,7 +4994,8 @@
                 c.scale(sc * ast.scaleX, sc * ast.scaleY);
                 c.translate(-defCx, -defCy);
                 window.__arLastRenderedBoxes[rIdx].caption = { cx: tx + ast.dx, cy: ty + ast.dy, w: defW * sc, h: defH * sc };
-                const res = origMCaption(c, text, x, y, maxW, maxH, size, nextFont, nextCol, e, align, box);
+                const nextAlign = capOv.align || align;
+                const res = origMCaption(c, text, x, y, maxW, maxH, size, nextFont, nextCol, e, nextAlign, box);
                 c.restore();
                 return res;
               }
