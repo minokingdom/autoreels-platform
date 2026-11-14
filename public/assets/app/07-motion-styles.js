@@ -81,11 +81,11 @@
       ['ba_collage', '나란히 비교', 'ba_collage', 'pretM', '#0f172a', '#1e293b', '#34d399', '#ffffff', false],
       ['ba_flash', '비포→애프터 전환', 'ba_flash', 'dohyeon', '#111111', '#1c1917', '#fb923c', '#ffffff', false],
       ['ba_polaroid', '스냅 비교 카드', 'ba_polaroid', 'maru', '#f4efe8', '#ebe3d7', '#c2603f', '#2b2622', true],
-      // script-to-motion 스타일 4종 (시네마틱 룩 · 키네틱 타이포 · 소나 핑 · 글로우 스파크)
-      ['stm_kinetic', '✦ 시네마 키네틱', 'stm_kinetic', 'impact', '#08090d', '#141824', '#fbbf24', '#38bdf8', false],
-      ['stm_cinema', '🎬 시네마틱 룩', 'stm_cinema', 'maru', '#09090b', '#181412', '#e8d5bc', '#fb923c', false],
-      ['stm_sonar', '◎ 소나 핑 모션', 'stm_sonar', 'pretM', '#040b12', '#0b1929', '#59f3e0', '#ffffff', false],
-      ['stm_glint', '✨ 글로우 스파크', 'stm_glint', 'dohyeon', '#0b0a12', '#171326', '#fde047', '#f472b6', false]
+      // script-to-motion 스타일 4종 (감성 시네마틱 룩 · 절제된 키네틱 타이포)
+      ['stm_kinetic', '✦ 시네마 키네틱', 'stm_kinetic', 'maru', '#0c0b0a', '#171411', '#e8d5bc', '#ffffff', false],
+      ['stm_cinema', '🎬 시네마틱 룩', 'stm_cinema', 'gowun', '#09090b', '#141210', '#e6ccb2', '#ffffff', false],
+      ['stm_sonar', '◎ 소나 핑 모션', 'stm_sonar', 'pretL', '#090d12', '#111822', '#cbd5e1', '#ffffff', false],
+      ['stm_glint', '✨ 글로우 스파크', 'stm_glint', 'maruL', '#0d0b0a', '#1a1613', '#f3e5ab', '#ffffff', false]
     ];
     // 모션 디자인도 별도 분류를 만들지 않고 기존 분류에 넣음
     const MOTION_CAT = {
@@ -2137,150 +2137,132 @@
         });
         c.restore();
       } else if (M === 'stm_kinetic') {
-        // script-to-motion: Key Light + Depth Vignette + Damped Spring Kinetic Type + Glint Sweep
-        mPhoto(c, S, 0, 0, 0, W, H, 1.04 + lp * 0.06);
-        const kl = c.createRadialGradient(W * 0.85, H * 0.14, 10, W * 0.85, H * 0.14, W * 1.1);
-        kl.addColorStop(0, 'rgba(255, 232, 185, 0.28)');
-        kl.addColorStop(0.42, 'rgba(251, 191, 36, 0.08)');
-        kl.addColorStop(1, 'rgba(6, 8, 14, 0.72)');
+        // script-to-motion: 은은한 웜 키라이트 + 부드러운 expo.out 시차 타이포 (25px 명조, 여백과 감성)
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.02 + lp * 0.035, 1);
+        const kl = c.createRadialGradient(W * 0.84, H * 0.14, 8, W * 0.84, H * 0.14, W * 1.05);
+        kl.addColorStop(0, 'rgba(255, 236, 205, 0.20)');
+        kl.addColorStop(0.45, 'rgba(232, 213, 188, 0.05)');
+        kl.addColorStop(1, 'rgba(8, 7, 6, 0.56)');
         c.fillStyle = kl; c.fillRect(0, 0, W, H);
-        const botG = c.createLinearGradient(0, H * 0.48, 0, H);
+        const botG = c.createLinearGradient(0, H * 0.55, 0, H);
         botG.addColorStop(0, 'rgba(0,0,0,0)');
-        botG.addColorStop(1, 'rgba(6,8,14,0.88)');
-        c.fillStyle = botG; c.fillRect(0, H * 0.48, W, H * 0.52);
-        // deterministic dust/sparks
+        botG.addColorStop(1, 'rgba(10,9,8,0.78)');
+        c.fillStyle = botG; c.fillRect(0, H * 0.55, W, H * 0.45);
+        // 아주 잔잔하게 떠다니는 미세 먼지 빛
         c.save();
         c.globalCompositeOperation = 'screen';
-        for (let i = 0; i < 14; i++) {
-          const sx = (((Math.sin(i * 19.3 + 0.5) * 43758.5) % 1 + 1) % 1) * W + Math.sin(t * 0.9 + i) * 18;
-          const sy = (((Math.cos(i * 27.1 + 1.2) * 23421.6) % 1 + 1) % 1) * H - ((t * 28 + i * 17) % 120);
-          const sr = 2 + (i % 4) * 1.4;
-          c.fillStyle = i % 2 === 0 ? 'rgba(251,191,36,0.45)' : 'rgba(56,189,248,0.42)';
-          c.beginPath(); c.arc(sx, (sy + H) % H, sr, 0, Math.PI * 2); c.fill();
+        for (let i = 0; i < 10; i++) {
+          const sx = (((Math.sin(i * 19.3 + 0.5) * 43758.5) % 1 + 1) % 1) * W + Math.sin(t * 0.45 + i) * 12;
+          const sy = (((Math.cos(i * 27.1 + 1.2) * 23421.6) % 1 + 1) % 1) * H - ((t * 14 + i * 17) % 90);
+          c.fillStyle = 'rgba(245, 230, 205, 0.24)';
+          c.beginPath(); c.arc(sx, (sy + H) % H, 1.4 + (i % 3) * 0.7, 0, Math.PI * 2); c.fill();
         }
         c.restore();
-        inLabel(c, `CHAPTER 0${cutIdx + 1} · KINETIC`, 32, 46, sp.accent);
-        const wr = kWrap(c, caption, W - 64, 2, 50, 28, 'impact');
-        const F = KIT_FONTS.impact;
+        inLabel(c, `0${cutIdx + 1} · ${inDateLabel()}`, 34, 46, 'rgba(232,213,188,0.82)');
+        const wr = kWrap(c, caption, W - 88, 2, 25, 19, 'maru');
+        const F = KIT_FONTS.maru || KIT_FONTS.sans;
         c.save();
         c.font = gFont(F.w, wr.size, F.f);
-        c.textAlign = 'left';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.shadowColor = 'rgba(0,0,0,0.65)';
+        c.shadowBlur = 14;
+        c.shadowOffsetY = 2;
         wr.lines.forEach((ln, i) => {
-          const lt = Math.max(0, local - i * 0.1);
-          const p = Math.min(1, lt / 0.65);
-          const spring = 1 - Math.exp(-6.2 * p) * Math.cos(p * Math.PI * 3.0);
-          const scY = 0.78 + 0.22 * spring;
-          const dy = (1 - spring) * 34;
-          c.save();
-          c.globalAlpha = Math.min(1, p * 4);
-          c.translate(32, H - 235 + i * wr.lh + dy);
-          c.scale(1, scY);
-          kLongShadow(c, ln, 0, 0, i === 0 ? '#ffffff' : sp.accent, 'rgba(0,0,0,0.68)', 10, 0.85, 1);
-          c.restore();
+          const lt = Math.max(0, local - i * 0.14);
+          const p = 1 - Math.pow(1 - Math.min(1, lt / 0.75), 4);
+          c.globalAlpha = p;
+          c.fillStyle = i === 0 ? '#ffffff' : 'rgba(255,255,255,0.88)';
+          c.fillText(ln, W / 2, H - 195 + i * wr.lh + (1 - p) * 18);
         });
         c.restore();
-        if (isPrice) mPrice(c, W, H - 300, sp, e);
-        inSign(c, d, W - 32, H - 46, 'rgba(255,255,255,0.85)');
+        if (isPrice) mPrice(c, W, H - 265, sp, e);
+        inSign(c, d, W - 34, H - 46, 'rgba(232,213,188,0.78)');
       } else if (M === 'stm_cinema') {
-        // script-to-motion: 2.35:1 Cinemascope Letterbox + Film Light Leak + Editorial Type
-        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.03 + lp * 0.04, 1);
+        // script-to-motion: 얇은 시네마스코프 레터박스 + 따뜻한 필름 리크 + 23px 영화 자막
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.02 + lp * 0.03, 1);
         c.save();
         c.globalCompositeOperation = 'screen';
-        const lkX = W * (0.2 + 0.6 * (0.5 + 0.5 * Math.sin(t * 0.8)));
-        const lk = c.createRadialGradient(lkX, H * 0.22, 10, lkX, H * 0.22, W * 0.85);
-        lk.addColorStop(0, 'rgba(255, 145, 77, 0.28)');
-        lk.addColorStop(0.5, 'rgba(255, 90, 110, 0.10)');
+        const lkX = W * (0.25 + 0.5 * (0.5 + 0.5 * Math.sin(t * 0.45)));
+        const lk = c.createRadialGradient(lkX, H * 0.2, 8, lkX, H * 0.2, W * 0.8);
+        lk.addColorStop(0, 'rgba(255, 178, 120, 0.16)');
+        lk.addColorStop(0.5, 'rgba(255, 130, 120, 0.05)');
         lk.addColorStop(1, 'rgba(0,0,0,0)');
         c.fillStyle = lk; c.fillRect(0, 0, W, H);
         c.restore();
-        const botG = c.createLinearGradient(0, H * 0.56, 0, H);
+        const botG = c.createLinearGradient(0, H * 0.6, 0, H);
         botG.addColorStop(0, 'rgba(0,0,0,0)');
-        botG.addColorStop(1, 'rgba(0,0,0,0.86)');
-        c.fillStyle = botG; c.fillRect(0, H * 0.56, W, H * 0.44);
-        // Letterbox bars
-        c.fillStyle = '#000000';
-        c.fillRect(0, 0, W, 88);
-        c.fillRect(0, H - 88, W, 88);
-        c.strokeStyle = 'rgba(232,213,188,0.22)';
+        botG.addColorStop(1, 'rgba(0,0,0,0.78)');
+        c.fillStyle = botG; c.fillRect(0, H * 0.6, W, H * 0.4);
+        c.fillStyle = '#080809';
+        c.fillRect(0, 0, W, 68);
+        c.fillRect(0, H - 68, W, 68);
+        c.strokeStyle = 'rgba(230,204,178,0.16)';
         c.lineWidth = 1;
-        c.beginPath(); c.moveTo(0, 88.5); c.lineTo(W, 88.5); c.moveTo(0, H - 88.5); c.lineTo(W, H - 88.5); c.stroke();
-        inLabel(c, `SCENE 0${cutIdx + 1} · 24FPS`, 30, 52, '#e8d5bc');
-        if (isPrice) mPrice(c, W, H - 280, sp, e);
-        mCaption(c, caption, 36, H - 225, W - 72, 125, 34, 'maru', '#ffffff', e, 'center');
-        inSign(c, d, W - 30, H - 44, '#e8d5bc');
-        inGrain(c, W, H, t, 0.05);
+        c.beginPath(); c.moveTo(0, 68.5); c.lineTo(W, 68.5); c.moveTo(0, H - 68.5); c.lineTo(W, H - 68.5); c.stroke();
+        inLabel(c, `SCENE 0${cutIdx + 1}`, 32, 38, 'rgba(230,204,178,0.78)');
+        if (isPrice) mPrice(c, W, H - 245, sp, e);
+        mCaption(c, caption, 44, H - 190, W - 88, 100, 23, 'gowun', 'rgba(255,255,255,0.95)', mClamp(local / 0.7), 'center');
+        inSign(c, d, W - 32, H - 36, 'rgba(230,204,178,0.75)');
+        inGrain(c, W, H, t, 0.04);
       } else if (M === 'stm_sonar') {
-        // script-to-motion: FXKit.pingWipe expanding sonar reveal + cyan rim + glass card
-        const pWipe = mEase(local / 0.65);
-        c.fillStyle = '#040b12';
-        c.fillRect(0, 0, W, H);
-        c.save();
-        if (pWipe < 0.995) {
-          c.beginPath();
-          c.arc(W / 2, H * 0.42, Math.max(8, Math.hypot(W, H) * 0.62 * pWipe), 0, Math.PI * 2);
-          c.clip();
-        }
-        mPhoto(c, S, 0, 0, 0, W, H, 1.05 + lp * 0.05);
-        c.restore();
-        if (pWipe < 0.98) {
-          const r = Math.hypot(W, H) * 0.62 * pWipe;
+        // script-to-motion: 부드러운 포커스 인 + 은은한 파동 링 1개 + 깔끔한 미니 글래스 자막(24px)
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.03 + lp * 0.035, 1);
+        const pRing = 1 - Math.pow(1 - Math.min(1, local / 1.05), 3);
+        if (pRing < 0.99) {
           c.save();
-          c.strokeStyle = `rgba(89, 243, 224, ${(1 - pWipe) * 0.95})`;
-          c.lineWidth = 4;
-          c.beginPath(); c.arc(W / 2, H * 0.42, r, 0, Math.PI * 2); c.stroke();
-          for (let si = 0; si < 16; si++) {
-            const ang = (si / 16) * Math.PI * 2 + pWipe * 0.5;
-            c.fillStyle = `rgba(180, 255, 245, ${(1 - pWipe) * 0.9})`;
-            c.beginPath(); c.arc(W / 2 + Math.cos(ang) * r, H * 0.42 + Math.sin(ang) * r, 3, 0, Math.PI * 2); c.fill();
-          }
+          c.strokeStyle = `rgba(255, 255, 255, ${(1 - pRing) * 0.28})`;
+          c.lineWidth = 1.5;
+          c.beginPath();
+          c.arc(W / 2, H * 0.44, 24 + pRing * 280, 0, Math.PI * 2);
+          c.stroke();
           c.restore();
         }
-        const botG = c.createLinearGradient(0, H * 0.55, 0, H);
-        botG.addColorStop(0, 'rgba(4,11,18,0)');
-        botG.addColorStop(1, 'rgba(4,11,18,0.88)');
-        c.fillStyle = botG; c.fillRect(0, H * 0.55, W, H * 0.45);
-        inLabel(c, `SIGNAL 0${cutIdx + 1}`, 32, 46, '#59f3e0');
-        if (isPrice) mPrice(c, W, H - 290, sp, e);
-        mCaption(c, caption, 36, H - 230, W - 72, 130, 34, 'pretM', '#ffffff', e, 'center', { bg: 'rgba(6, 18, 30, 0.78)', border: '#59f3e0', r: 18 });
-        inSign(c, d, W - 32, H - 46, '#59f3e0');
+        const botG = c.createLinearGradient(0, H * 0.58, 0, H);
+        botG.addColorStop(0, 'rgba(9,13,18,0)');
+        botG.addColorStop(1, 'rgba(9,13,18,0.78)');
+        c.fillStyle = botG; c.fillRect(0, H * 0.58, W, H * 0.42);
+        inLabel(c, `0${cutIdx + 1} · ${sp.label || 'STORY'}`, 34, 46, 'rgba(226,232,240,0.85)');
+        if (isPrice) mPrice(c, W, H - 255, sp, e);
+        mCaption(c, caption, 44, H - 198, W - 88, 105, 24, 'pretL', '#ffffff', mClamp(local / 0.65), 'center', { bg: 'rgba(15, 20, 28, 0.52)', border: 'rgba(255,255,255,0.22)', r: 22 });
+        inSign(c, d, W - 34, H - 46, 'rgba(226,232,240,0.78)');
       } else if (M === 'stm_glint') {
-        // script-to-motion: Out-of-focus Bokeh + Film Plaque + Specular Glint Sweep
-        mPhoto(c, S, 0, 0, 0, W, H, 1.04 + lp * 0.05);
+        // script-to-motion: 샴페인 웜 보케 + 24px 얇은 명조 자막 + 은은한 실버 글린트
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.02 + lp * 0.035, 1);
         c.save();
         c.globalCompositeOperation = 'screen';
-        for (let i = 0; i < 14; i++) {
-          const bx = (((Math.sin(i * 15.7 + 0.3) * 43758.5) % 1 + 1) % 1) * W + Math.sin(t * 0.7 + i) * 20;
-          const by = (((Math.cos(i * 23.9 + 0.9) * 23421.6) % 1 + 1) % 1) * H + Math.cos(t * 0.6 + i) * 16;
-          const br = 20 + (i % 4) * 14;
+        for (let i = 0; i < 11; i++) {
+          const bx = (((Math.sin(i * 15.7 + 0.3) * 43758.5) % 1 + 1) % 1) * W + Math.sin(t * 0.45 + i) * 14;
+          const by = (((Math.cos(i * 23.9 + 0.9) * 23421.6) % 1 + 1) % 1) * H + Math.cos(t * 0.4 + i) * 12;
+          const br = 18 + (i % 4) * 12;
           const g = c.createRadialGradient(bx, by, 2, bx, by, br);
-          const col = i % 2 === 0 ? '253,224,71' : '244,114,182';
-          g.addColorStop(0, `rgba(${col},0.22)`);
+          const col = i % 2 === 0 ? '255,236,195' : '255,255,255';
+          g.addColorStop(0, `rgba(${col},0.14)`);
           g.addColorStop(1, `rgba(${col},0)`);
           c.fillStyle = g; c.beginPath(); c.arc(bx, by, br, 0, Math.PI * 2); c.fill();
         }
         c.restore();
-        const botG = c.createLinearGradient(0, H * 0.54, 0, H);
+        const botG = c.createLinearGradient(0, H * 0.56, 0, H);
         botG.addColorStop(0, 'rgba(0,0,0,0)');
-        botG.addColorStop(1, 'rgba(10,8,16,0.86)');
-        c.fillStyle = botG; c.fillRect(0, H * 0.54, W, H * 0.46);
-        inLabel(c, sp.label || 'HIGHLIGHT', 32, 46, '#fde047');
-        if (isPrice) mPrice(c, W, H - 295, sp, e);
-        mCaption(c, caption, 36, H - 230, W - 72, 130, 36, 'dohyeon', '#ffffff', e, 'center', { bg: 'rgba(12,13,18,0.86)', border: '#fde047', r: 14 });
-        // Glint sweep over bottom caption area
-        if (local >= 0.35 && local <= 1.25) {
-          const gp = (local - 0.35) / 0.9;
-          const gx = W * (-0.2 + 1.4 * gp);
+        botG.addColorStop(1, 'rgba(12,10,9,0.78)');
+        c.fillStyle = botG; c.fillRect(0, H * 0.56, W, H * 0.44);
+        inLabel(c, sp.label || 'MOMENT', 34, 46, 'rgba(243,229,171,0.85)');
+        if (isPrice) mPrice(c, W, H - 260, sp, e);
+        mCaption(c, caption, 44, H - 196, W - 88, 105, 25, 'maruL', '#ffffff', mClamp(local / 0.7), 'center');
+        if (local >= 0.4 && local <= 1.35) {
+          const gp = (local - 0.4) / 0.95;
+          const gx = W * (-0.1 + 1.2 * gp);
           c.save();
           c.globalCompositeOperation = 'screen';
-          const gl = c.createLinearGradient(gx - 45, H - 250, gx + 45, H - 90);
+          const gl = c.createLinearGradient(gx - 36, H - 220, gx + 36, H - 110);
           gl.addColorStop(0, 'rgba(255,255,255,0)');
-          gl.addColorStop(0.5, 'rgba(255,255,255,0.34)');
+          gl.addColorStop(0.5, 'rgba(255,255,255,0.22)');
           gl.addColorStop(1, 'rgba(255,255,255,0)');
           c.fillStyle = gl;
-          c.fillRect(24, H - 245, W - 48, 150);
+          c.fillRect(40, H - 210, W - 80, 110);
           c.restore();
         }
-        inSign(c, d, W - 32, H - 46, '#fde047');
+        inSign(c, d, W - 34, H - 46, 'rgba(243,229,171,0.78)');
       } else if (M.startsWith('ba_')) {
         // 비포·애프터 비교 5종 공통 배지 헬퍼
         const baBadge = (bx, by, txt, bgCol, fgCol, align = 'left') => {
