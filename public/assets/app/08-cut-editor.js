@@ -2608,22 +2608,32 @@
         const topPct = (b.y * 100).toFixed(2);
         const wPct = Math.max(12, Math.min(96, b.wPct)).toFixed(2);
         const hPct = Math.max(4, Math.min(40, b.hPct)).toFixed(2);
+        const labelShort = b.key === 'caption' ? '컷 자막' : b.key === 'badge' ? '상단 라벨' : b.key === 'price' ? '혜택 배지' : '프로필';
         return `
           <div data-el-key="${b.key}"
                title="${b.title}"
-               ondblclick="openCutEditor(${cutIdx}, '${b.key}')"
+               ondblclick="event.stopPropagation();openCanvasDirectTextEdit(${cutIdx}, '${b.key}')"
                style="left:${leftPct}%;top:${topPct}%;width:${wPct}%;height:${hPct}%;transform:translate(-50%,-50%);touch-action:none;"
-               class="absolute cursor-move rounded-[10px] ${isSel ? 'active' : 'hover:bg-white/5'}">
+               class="absolute cursor-move rounded-[10px] ${isSel ? 'active' : ''}">
+            ${isSel ? `
+              <button type="button"
+                      onpointerdown="event.stopPropagation()"
+                      onclick="event.stopPropagation();openCanvasDirectTextEdit(${cutIdx}, '${b.key}')"
+                      style="position:absolute;left:50%;top:-26px;transform:translateX(-50%);white-space:nowrap;z-index:20;"
+                      class="px-2.5 py-0.5 rounded-full bg-[#10b981] text-[#052e16] text-[11px] font-extrabold shadow-md cursor-pointer hover:bg-[#34d399]">
+                ✏️ ${labelShort} · 탭해서 직접 수정
+              </button>
+            ` : ''}
           </div>
         `;
       }).join('');
 
       const inlineBadgeHtml = window.__arInlineEditActive
-        ? `<div class="ar-inline-edit-badge pointer-events-none">⚡ ${cutIdx + 1}컷 인라인 빠른 편집 · 드래그하여 이동</div>`
+        ? `<div class="ar-inline-edit-badge pointer-events-none">⚡ ${cutIdx + 1}컷 빠른 편집 · 빈 곳 탭하면 닫힘</div>`
         : '';
 
       const hintHtml = (!window.__arInlineEditActive && directMode)
-        ? `<div class="ar-el-canvas-hint pointer-events-none">${activeKey === 'photo' ? '드래그하여 사진 구도 이동' : '요소를 클릭·드래그해 이동 (더블클릭·길게 눌러 상세 편집)'}</div>`
+        ? `<div class="ar-el-canvas-hint pointer-events-none">${activeKey === 'photo' ? '드래그하여 사진 구도 이동' : '자막 탭하면 직접 수정 · 드래그로 이동'}</div>`
         : '';
 
       layer.innerHTML = `
@@ -2641,7 +2651,7 @@
         const boxH = Math.round((it.type === 'sticker' && it.variant !== 'badge' ? 62 : 44) * Math.min(1.8, Math.max(0.7, sc)));
         return `
           <div data-ov-idx="${ii}"
-               ondblclick="if(${it.type === 'text' ? 'true' : 'false'})openIgTextCompose(${ii})"
+               ondblclick="event.stopPropagation();if(${it.type === 'text' ? 'true' : 'false'})openCanvasDirectTextEdit(${cutIdx}, 'overlay:${ii}')"
                style="left:${leftPct}%;top:${topPct}%;width:${boxW}px;height:${boxH}px;transform:translate(-50%,-50%) rotate(${it.rot || 0}deg);touch-action:none;"
                class="absolute cursor-move rounded-[10px] ${sel ? 'active ring-1 ring-white/85 bg-white/5' : ''}">
           </div>
@@ -2651,7 +2661,9 @@
       if (!layer._boundDrag) {
         layer._boundDrag = true;
         let dragIdx = -1, dragElKey = '', startX = 0, startY = 0, origX = 0.5, origY = 0.5, moved = false, overTrash = false;
+        let wasAlreadySelected = false, tappedEmptyBg = false;
         const onStart = (ev) => {
+          if (typeof closeCanvasDirectTextEdit === 'function') closeCanvasDirectTextEdit(true);
           const card = ev.target.closest('[data-ov-idx]');
           const elCard = ev.target.closest('[data-el-key]');
           const pt = ev.touches ? ev.touches[0] : ev;
@@ -2659,11 +2671,14 @@
           startY = pt.clientY;
           moved = false;
           overTrash = false;
+          wasAlreadySelected = false;
+          tappedEmptyBg = false;
 
           if (card) {
             ev.preventDefault();
             dragIdx = Number(card.getAttribute('data-ov-idx'));
             dragElKey = '';
+            wasAlreadySelected = (window.__arSelectedOverlayIdx === dragIdx);
             window.__arSelectedOverlayIdx = dragIdx;
             window.__arActiveCutElKey = `overlay:${dragIdx}`;
             const it = getCutOverlayList(window.__arPinnedCut)[dragIdx];
@@ -2680,7 +2695,9 @@
           if (elCard && (window.__arDirectCanvasMode || window.__arCutEditorOpen || window.__arInlineEditActive)) {
             ev.preventDefault();
             dragIdx = -1;
-            dragElKey = elCard.getAttribute('data-el-key') || 'caption';
+            const hitKey = elCard.getAttribute('data-el-key') || 'caption';
+            wasAlreadySelected = (window.__arSelectedOverlayIdx < 0 && window.__arActiveCutElKey === hitKey);
+            dragElKey = hitKey;
             window.__arSelectedOverlayIdx = -1;
             window.__arActiveCutElKey = dragElKey;
             const curOv = getCutElementOverride(window.__arPinnedCut);
@@ -2696,9 +2713,10 @@
             return;
           }
 
-          // 배경 사진 구도 모드이거나 빈 캔버스 영역을 드래그할 때
+          // 빈 캔버스 영역을 탭하거나 드래그할 때
           if (window.__arPinnedCut >= 0 && (window.__arDirectCanvasMode || window.__arCutEditorOpen || window.__arInlineEditActive)) {
             ev.preventDefault();
+            tappedEmptyBg = true;
             dragIdx = -1;
             window.__arSelectedOverlayIdx = -1;
             const curKey = window.__arActiveCutElKey || '';
@@ -2812,13 +2830,29 @@
 
         const onEnd = () => {
           if (rCanvas) rCanvas.classList.remove('ar-el-canvas-dragging');
+          const wasMoved = moved;
+          const wasAlready = wasAlreadySelected;
+          const wasEmptyTap = tappedEmptyBg;
+          wasAlreadySelected = false;
+          tappedEmptyBg = false;
+
           if (dragElKey) {
+            const finishedKey = dragElKey;
             dragElKey = '';
             const snapV = document.getElementById('cutSnapV');
             const snapH = document.getElementById('cutSnapH');
             if (snapV) snapV.classList.add('hidden');
             if (snapH) snapH.classList.add('hidden');
             renderPreviewCutPinBar();
+
+            if (!wasMoved && wasEmptyTap) {
+              if (window.__arInlineEditActive) closeInlineQuickEdit();
+              if (window.__arCutEditorOpen) closeCutEditor();
+              return;
+            }
+            if (!wasMoved && wasAlready && finishedKey !== 'photo' && typeof openCanvasDirectTextEdit === 'function') {
+              openCanvasDirectTextEdit(window.__arPinnedCut, finishedKey);
+            }
             return;
           }
           if (dragIdx >= 0) {
@@ -2840,6 +2874,14 @@
               window.__arSelectedOverlayIdx = -1;
               window.__arActiveCutElKey = 'caption';
               if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+            } else if (!wasMoved && wasAlready && typeof openCanvasDirectTextEdit === 'function') {
+              const it = getCutOverlayList(window.__arPinnedCut)[finishedIdx];
+              if (it && it.type === 'text') {
+                saveCutOverlays();
+                renderPreviewCutPinBar();
+                openCanvasDirectTextEdit(window.__arPinnedCut, `overlay:${finishedIdx}`);
+                return;
+              }
             }
             saveCutOverlays();
             renderPreviewCutPinBar();
@@ -2996,6 +3038,29 @@
       bar.setAttribute('aria-label', '프리뷰 인라인 빠른 편집 바텀시트');
       bar.addEventListener('mousedown', (ev) => ev.stopPropagation());
       bar.addEventListener('touchstart', (ev) => ev.stopPropagation(), { passive: true });
+      // 상단 손잡이/헤더를 아래로 스와이프하면 시트 닫기
+      let dragStartY = null;
+      bar.addEventListener('pointerdown', (ev) => {
+        if (ev.target.closest('.ar-sheet-grabber, .ar-inline-head')) {
+          dragStartY = ev.clientY;
+        } else {
+          dragStartY = null;
+        }
+      });
+      bar.addEventListener('pointerup', (ev) => {
+        if (dragStartY !== null && ev.clientY - dragStartY > 36) {
+          closeInlineQuickEdit();
+        }
+        dragStartY = null;
+      });
+      if (!window.__arOutsideCloseInlineBound) {
+        window.__arOutsideCloseInlineBound = true;
+        document.addEventListener('pointerdown', (ev) => {
+          if (!window.__arInlineEditActive) return;
+          if (ev.target.closest('#arInlineEditBar, #cutEditorPanel, #cutPhotoReplaceModal, #arCanvasInlineInputWrap, #previewViewport')) return;
+          closeInlineQuickEdit();
+        });
+      }
       vp.appendChild(bar);
       return bar;
     }
@@ -3038,8 +3103,6 @@
         window.__timelines.main.seek(curT);
       }
       renderPreviewCutPinBar();
-      const inp = document.getElementById('arInlineQuickTextInput');
-      if (inp) setTimeout(() => inp.focus(), 20);
     }
 
     function closeInlineQuickEdit() {
@@ -3123,13 +3186,12 @@
 
         bodyHtml = `
           <div class="ar-el-row">
-            <input id="arInlineQuickTextInput" type="text" value="${escapeCutHtml(curText)}" placeholder="${escapeCutHtml(placeholderTxt)}"
-                   oninput="${textHandler}"
-                   class="flex-1 min-w-0 h-8 px-2.5 rounded-[8px] bg-black/45 border border-white/15 text-[12px] text-white focus:outline-none focus:border-[#4cc38a]" />
+            <button type="button" onclick="openCanvasDirectTextEdit(${cutIdx}, '${activeKey}')"
+                    class="ar-el-badge blue" style="padding:5px 10px;font-weight:800;white-space:nowrap;">✏️ 문구 수정</button>
             <span class="ar-el-label ml-1">크기</span>
             <input type="range" min="0.6" max="1.9" step="0.05" value="${Number(tObj.scale) || 1}"
                    oninput="updateCutElementOverride(${cutIdx}, '${activeKey}', 'scale', this.value, false)"
-                   class="w-20" />
+                   class="flex-1 min-w-0" />
             <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${activeKey}', 'hidden', ${!tObj.hidden}, true)"
                     class="ar-el-badge ${tObj.hidden ? 'muted' : ''}">${tObj.hidden ? '🙈 숨김' : '👁 표시'}</button>
             <button type="button" onclick="resetCutElementOverride(${cutIdx}, '${activeKey}')" class="ar-el-badge muted">↺</button>
@@ -3175,14 +3237,13 @@
           bodyHtml = `
             <div class="ar-el-row">
               ${(isText || isWidget) ? `
-                <input id="arInlineQuickTextInput" type="text" value="${escapeCutHtml(curTxt)}" placeholder="오버레이 문구"
-                       oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'text', this.value, false)"
-                       class="flex-1 min-w-0 h-8 px-2.5 rounded-[8px] bg-black/45 border border-white/15 text-[12px] text-white focus:outline-none focus:border-[#4cc38a]" />
+                <button type="button" onclick="openCanvasDirectTextEdit(${cutIdx}, 'overlay:${ii}')"
+                        class="ar-el-badge blue" style="padding:5px 10px;font-weight:800;white-space:nowrap;">✏️ 문구 수정</button>
               ` : `<span class="text-[12px] text-white/80 flex-1">${it.style === 'photo' ? '📷 사진 스티커' : escapeCutHtml(it.text || it.key || '스티커')}</span>`}
               <span class="ar-el-label ml-1">크기</span>
               <input type="range" min="0.45" max="2.4" step="0.05" value="${Number(it.scale) || 1}"
                      oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'scale', this.value, false)"
-                     class="w-20" />
+                     class="flex-1 min-w-0" />
               <button type="button" onclick="removeSelectedOverlay()" class="ar-el-badge" style="color:#f87171;">🗑</button>
             </div>
             ${isText ? `
@@ -3787,9 +3848,8 @@
       return `
         <div class="ar-el-row">
           <span class="ar-el-label">${labelTitle}</span>
-          <input type="text" value="${escapeCutHtml(curTextVal)}" placeholder="${escapeCutHtml(placeholderTxt)}"
-                 oninput="${textInputHandler}"
-                 class="flex-1 min-w-0 h-9 px-3 rounded-[8px] bg-black/45 border border-white/15 text-[13px] text-white focus:outline-none focus:border-[#4cc38a]" />
+          <button type="button" onclick="openCanvasDirectTextEdit(${cutIdx}, '${elKey}')"
+                  class="ar-el-badge blue flex-1 min-w-0 justify-center" style="padding:6px 10px;font-weight:800;">✏️ 화면 위에서 문구 직접 수정</button>
           <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'hidden', ${!obj.hidden}, true)"
                   class="ar-el-badge ${obj.hidden ? 'muted' : ''}">${obj.hidden ? '🙈 숨김중' : '👁 표시중'}</button>
           <button type="button" onclick="resetCutElementOverride(${cutIdx}, '${elKey}')" class="ar-el-badge muted" title="위치·크기·디자인 초기화">↺ 초기화</button>
@@ -5198,118 +5258,74 @@
         window.renderMotionFrame = wrappedMotion;
       }
 
-      // 3) Clean Canvas Selection Overlay: ONLY draw the currently selected element (zero ghost boxes for unselected elements)
-      drawCanvasSelectionOverlay = function (c, W, H, cutIdx) {
-        if (window.__arExporting || pinnedPreviewCut < 0) return;
-        if (!canvasDirectEditEnabled) return;
-        const sel = getSelectedCanvasTarget(cutIdx);
-        if (!sel || sel === 'none' || sel === 'photo') return;
-
-        const boxes = getCanvasElementHitboxes(cutIdx);
-        const hb = boxes.find(b => b.key === sel);
-        if (!hb) return;
-
-        c.save();
-        const x = hb.cx - hb.w / 2;
-        const y = hb.cy - hb.h / 2;
-        const w = hb.w;
-        const h = hb.h;
-        const r = 14;
-
-        c.strokeStyle = '#34d399';
-        c.lineWidth = 2.5;
-        c.setLineDash([7, 5]);
-        if (typeof roundRect === 'function') {
-          roundRect(c, x, y, w, h, r);
-          c.stroke();
-        } else {
-          c.strokeRect(x, y, w, h);
-        }
-        c.setLineDash([]);
-
-        // Corner handles
-        const hs = 9;
-        const corners = [
-          [x, y],
-          [x + w, y],
-          [x, y + h],
-          [x + w, y + h]
-        ];
-        c.fillStyle = '#ffffff';
-        c.strokeStyle = '#10b981';
-        c.lineWidth = 2.5;
-        corners.forEach(([ hx, hy ]) => {
-          c.fillRect(hx - hs / 2, hy - hs / 2, hs, hs);
-          c.strokeRect(hx - hs / 2, hy - hs / 2, hs, hs);
-        });
-
-        // Top pill badge with hint for direct text editing
-        const isEditableText = (hb.key === 'caption' || hb.key === 'badge' || hb.key === 'price' || hb.key === 'chip' || String(hb.key).startsWith('ov:'));
-        const pillText = isEditableText ? `${hb.label} · 탭하여 직접 수정` : hb.label;
-        c.font = '800 12px "Pretendard Variable", Pretendard, sans-serif';
-        const tw = c.measureText(pillText).width + 20;
-        const ph = 24;
-        const px = Math.max(10, Math.min(W - tw - 10, hb.cx - tw / 2));
-        const py = y > 38 ? (y - ph - 8) : (y + h + 8);
-        c.fillStyle = 'rgba(16, 185, 129, 0.95)';
-        if (typeof roundRect === 'function') {
-          roundRect(c, px, py, tw, ph, 12);
-          c.fill();
-        } else {
-          c.fillRect(px, py, tw, ph);
-        }
-        c.fillStyle = '#052e16';
-        c.textAlign = 'center';
-        c.textBaseline = 'middle';
-        c.fillText(pillText, px + tw / 2, py + ph / 2 + 0.5);
-        c.restore();
-      };
-      window.drawCanvasSelectionOverlay = drawCanvasSelectionOverlay;
-
-      // 4) Direct On-Canvas Floating Text Editor (#arCanvasInlineInputWrap)
+      // 3) Direct On-Canvas Floating Text Editor (#arCanvasInlineInputWrap)
       function isTextElementKey(key) {
-        if (!key || key === 'none' || key === 'photo') return false;
+        if (!key || key === 'none' || key === 'photo' || key === 'transition' || key === 'deco') return false;
         if (key === 'caption' || key === 'badge' || key === 'price' || key === 'chip') return true;
-        if (String(key).startsWith('ov:')) {
-          const id = String(key).slice(3);
-          const item = (typeof findOverlayById === 'function') ? findOverlayById(id) : null;
-          return !!(item && item.type !== 'emoji' && item.type !== 'frame');
+        if (String(key).startsWith('overlay:')) {
+          const idx = Number(String(key).split(':')[1]);
+          const list = typeof getCutOverlayList === 'function' ? getCutOverlayList(window.__arPinnedCut) : [];
+          const it = list[idx];
+          return !!(it && (it.type === 'text' || (it.type === 'sticker' && it.variant === 'widget')));
         }
         return false;
       }
 
+      function getCanvasElementLabel(key) {
+        if (key === 'caption') return '컷 자막';
+        if (key === 'badge') return '상단 라벨';
+        if (key === 'price') return '혜택 배지';
+        if (key === 'chip') return '프로필·상호';
+        if (String(key).startsWith('overlay:')) return '오버레이 문구';
+        return '문구';
+      }
+
       function getCanvasElementCurrentText(cutIdx, key) {
-        if (String(key).startsWith('ov:')) {
-          const id = String(key).slice(3);
-          const item = (typeof findOverlayById === 'function') ? findOverlayById(id) : null;
-          return item ? String(item.text || '') : '';
+        if (String(key).startsWith('overlay:')) {
+          const idx = Number(String(key).split(':')[1]);
+          const list = typeof getCutOverlayList === 'function' ? getCutOverlayList(cutIdx) : [];
+          const it = list[idx];
+          if (!it) return '';
+          return it.type === 'text' ? String(it.text || '') : String(it.customText || it.text || '');
         }
-        const ov = (typeof getCutElementOverride === 'function') ? getCutElementOverride(cutIdx, key) : null;
-        if (ov && ov.text) return String(ov.text);
         if (key === 'caption') {
-          return (typeof getDefaultCutCaptionText === 'function') ? String(getDefaultCutCaptionText(cutIdx) || '') : '';
+          if (campaign && Array.isArray(campaign.cutCaptions) && campaign.cutCaptions[cutIdx]) {
+            return String(campaign.cutCaptions[cutIdx]);
+          }
+          return (campaign && campaign.hook) ? String(campaign.hook) : '';
         }
-        return (typeof getCutElementPlaceholder === 'function') ? String(getCutElementPlaceholder(cutIdx, key) || '') : '';
+        const ov = (typeof getCutElementOverride === 'function') ? getCutElementOverride(cutIdx) : null;
+        if (ov && ov[key] && ov[key].text) return String(ov[key].text);
+        if (key === 'badge') {
+          const design = typeof getActiveDesign === 'function' ? getActiveDesign() : {};
+          return (window.__arLastDetectedBadgeText && window.__arLastDetectedBadgeText[cutIdx]) || (design && design.label) || '';
+        }
+        if (key === 'price') {
+          return (typeof arPriceTag === 'function' ? arPriceTag() : '') || (campaign && campaign.discount) || '';
+        }
+        if (key === 'chip') {
+          const dObj = typeof getActiveDealer === 'function' ? getActiveDealer() : {};
+          return `${dObj.name || ''} ${dObj.title || dObj.branch || ''}`.trim();
+        }
+        return '';
       }
 
       function applyCanvasElementLiveText(cutIdx, key, val) {
-        if (String(key).startsWith('ov:')) {
-          const id = String(key).slice(3);
-          selectedOverlayId = id;
+        if (String(key).startsWith('overlay:')) {
+          const idx = Number(String(key).split(':')[1]);
           if (typeof updateSelectedOverlayProp === 'function') {
-            updateSelectedOverlayProp('text', val);
+            updateSelectedOverlayProp(cutIdx, idx, 'text', val, false);
           }
           return;
         }
         if (key === 'caption' && typeof updateCutCaptionDirect === 'function') {
           updateCutCaptionDirect(cutIdx, val);
-          const elOv = (typeof getCutElementOverride === 'function') ? getCutElementOverride(cutIdx, 'caption') : null;
-          if (elOv && elOv.text) {
-            elOv.text = val;
-            if (typeof saveCutOverlaysToStorage === 'function') saveCutOverlaysToStorage();
+          const ov = (typeof getCutElementOverride === 'function') ? getCutElementOverride(cutIdx) : null;
+          if (ov && ov.caption && ov.caption.text) {
+            ov.caption.text = val;
           }
         } else if (typeof updateCutElementOverride === 'function') {
-          updateCutElementOverride(cutIdx, key, 'text', val);
+          updateCutElementOverride(cutIdx, key, 'text', val, false);
         }
       }
 
@@ -5337,13 +5353,19 @@
           const cancelBtn = wrap.querySelector('#arCanvasInlineCancelBtn');
 
           ta.addEventListener('pointerdown', (e) => e.stopPropagation());
+          ta.addEventListener('mousedown', (e) => e.stopPropagation());
+          ta.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
           wrap.addEventListener('pointerdown', (e) => e.stopPropagation());
+          wrap.addEventListener('mousedown', (e) => e.stopPropagation());
+          wrap.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
 
           ta.addEventListener('input', () => {
             if (!wrap.__editCtx) return;
             const { cutIdx, key } = wrap.__editCtx;
             applyCanvasElementLiveText(cutIdx, key, ta.value);
-            if (typeof seekPreviewToCut === 'function') seekPreviewToCut(cutIdx);
+            if (window.__timelines && window.__timelines.main) {
+              window.__timelines.main.seek(window.__timelines.main.currentTime);
+            }
           });
 
           ta.addEventListener('keydown', (e) => {
@@ -5372,16 +5394,35 @@
       }
 
       function openCanvasDirectTextEdit(cutIdx, elKey) {
-        const targetCut = (typeof cutIdx === 'number' && cutIdx >= 0) ? cutIdx : getActiveEditCutIndex();
-        const key = elKey || getSelectedCanvasTarget(targetCut);
+        const targetCut = (typeof cutIdx === 'number' && cutIdx >= 0) ? cutIdx : window.__arPinnedCut;
+        if (typeof targetCut !== 'number' || targetCut < 0) return;
+        const key = elKey || window.__arActiveCutElKey || 'caption';
         if (!isTextElementKey(key)) return;
+
+        // 하단 바텀시트가 자막 입력창을 가리지 않도록 잠시 닫고 직접 편집창 표시
+        if (window.__arInlineEditActive && typeof closeInlineQuickEdit === 'function') {
+          closeInlineQuickEdit();
+        }
+        if (window.__arCutEditorOpen && typeof closeCutEditor === 'function') {
+          closeCutEditor();
+        }
 
         const wrap = ensureCanvasDirectTextEditorDom();
         const vp = document.getElementById('previewViewport');
         if (!wrap || !vp) return;
 
-        const boxes = getCanvasElementHitboxes(targetCut);
-        const hb = boxes.find(b => b.key === key) || { cx: 270, cy: 680, w: 440, h: 110, label: '텍스트' };
+        let hb = null;
+        if (String(key).startsWith('overlay:')) {
+          const idx = Number(String(key).split(':')[1]);
+          const it = (typeof getCutOverlayList === 'function') ? getCutOverlayList(targetCut)[idx] : null;
+          if (it) {
+            hb = { cx: (typeof it.x === 'number' ? it.x : 0.5) * 540, cy: (typeof it.y === 'number' ? it.y : 0.5) * 960, w: 360, h: 90 };
+          }
+        } else if (typeof getCutElementHitBox === 'function') {
+          hb = getCutElementHitBox(targetCut, key, 540, 960);
+        }
+        if (!hb) hb = { cx: 270, cy: 640, w: 440, h: 110 };
+
         const initialText = getCanvasElementCurrentText(targetCut, key);
 
         wrap.__editCtx = {
@@ -5390,10 +5431,9 @@
           initialText
         };
 
-        // Position over the selected element box in percentage of 540x960 canvas
-        const wPct = Math.max(58, Math.min(92, (hb.w / 540) * 100 + 6));
-        const leftPct = Math.max(4, Math.min(96 - wPct, ((hb.cx - hb.w / 2) / 540) * 100 - 3));
-        const topPct = Math.max(8, Math.min(72, ((hb.cy - hb.h / 2) / 960) * 100));
+        const wPct = Math.max(66, Math.min(92, (hb.w / 540) * 100 + 8));
+        const leftPct = Math.max(4, Math.min(96 - wPct, ((hb.cx - hb.w / 2) / 540) * 100 - 4));
+        const topPct = Math.max(10, Math.min(72, ((hb.cy - hb.h / 2) / 960) * 100));
 
         wrap.style.width = `${wPct.toFixed(1)}%`;
         wrap.style.left = `${leftPct.toFixed(1)}%`;
@@ -5402,7 +5442,7 @@
 
         const hintEl = wrap.querySelector('#arCanvasInlineHint');
         if (hintEl) {
-          hintEl.textContent = `${hb.label || '문구'} 직접 수정 · Enter 완료`;
+          hintEl.textContent = `${getCanvasElementLabel(key)} 직접 수정 · Enter 완료`;
         }
 
         const ta = wrap.querySelector('#arCanvasInlineInput');
@@ -5411,7 +5451,7 @@
           setTimeout(() => {
             ta.focus();
             ta.select();
-          }, 15);
+          }, 20);
         }
       }
 
@@ -5421,14 +5461,13 @@
         const ctx = wrap.__editCtx;
         const ta = wrap.querySelector('#arCanvasInlineInput');
         if (ctx && ta) {
-          if (commit) {
-            applyCanvasElementLiveText(ctx.cutIdx, ctx.key, ta.value);
-          } else {
-            applyCanvasElementLiveText(ctx.cutIdx, ctx.key, ctx.initialText);
+          applyCanvasElementLiveText(ctx.cutIdx, ctx.key, commit ? ta.value : ctx.initialText);
+          if (window.__timelines && window.__timelines.main) {
+            window.__timelines.main.seek(window.__timelines.main.currentTime);
           }
-          if (typeof seekPreviewToCut === 'function') seekPreviewToCut(ctx.cutIdx);
-          if (typeof renderCutEditorPanel === 'function' && cutEditorOpen) renderCutEditorPanel();
-          if (typeof renderInlineQuickEditBar === 'function') renderInlineQuickEditBar();
+          if (typeof renderCutOverlayEditorLayer === 'function') renderCutOverlayEditorLayer();
+          if (typeof renderCutEditorPanel === 'function' && window.__arCutEditorOpen) renderCutEditorPanel();
+          if (typeof renderInlineQuickEditBar === 'function' && window.__arInlineEditActive) renderInlineQuickEditBar();
         }
         wrap.classList.remove('is-open');
         wrap.__editCtx = null;
@@ -5436,107 +5475,6 @@
 
       window.openCanvasDirectTextEdit = openCanvasDirectTextEdit;
       window.closeCanvasDirectTextEdit = closeCanvasDirectTextEdit;
-
-      // 5) Hook canvas tap/double-tap on already-selected text element to open direct text editor on screen
-      function bindDirectCanvasTapToEdit() {
-        const cv = document.getElementById('reelCanvas');
-        if (!cv || cv.__arDirectTextTapBound) return;
-        cv.__arDirectTextTapBound = true;
-
-        let downSelBefore = null;
-        let downPos = null;
-        let downTime = 0;
-
-        cv.addEventListener('pointerdown', (e) => {
-          closeCanvasDirectTextEdit(true);
-          if (pinnedPreviewCut < 0 || !canvasDirectEditEnabled) {
-            downSelBefore = null;
-            return;
-          }
-          const cutIdx = getActiveEditCutIndex();
-          downSelBefore = getSelectedCanvasTarget(cutIdx);
-          downPos = { x: e.clientX, y: e.clientY };
-          downTime = Date.now();
-        }, true); // capture before initCanvasDirectManip changes selection
-
-        cv.addEventListener('pointerup', (e) => {
-          if (pinnedPreviewCut < 0 || !canvasDirectEditEnabled || !downPos) return;
-          const dist = Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y);
-          const dt = Date.now() - downTime;
-          const cutIdx = getActiveEditCutIndex();
-          const currentSel = getSelectedCanvasTarget(cutIdx);
-          downPos = null;
-
-          // If user tapped (without dragging) on an element that was ALREADY selected, open direct on-canvas text editor!
-          if (dist < 6 && dt < 450 && downSelBefore && downSelBefore === currentSel && isTextElementKey(currentSel)) {
-            const rect = cv.getBoundingClientRect();
-            if (rect.width > 0 && rect.height > 0) {
-              const cx = (e.clientX - rect.left) * (540 / rect.width);
-              const cy = (e.clientY - rect.top) * (960 / rect.height);
-              const hit = hitTestCanvasElement(cutIdx, cx, cy);
-              if (hit && hit.key === currentSel) {
-                openCanvasDirectTextEdit(cutIdx, currentSel);
-              }
-            }
-          }
-        });
-
-        cv.addEventListener('dblclick', (e) => {
-          if (pinnedPreviewCut < 0 || !canvasDirectEditEnabled) return;
-          const cutIdx = getActiveEditCutIndex();
-          const rect = cv.getBoundingClientRect();
-          if (!rect.width || !rect.height) return;
-          const cx = (e.clientX - rect.left) * (540 / rect.width);
-          const cy = (e.clientY - rect.top) * (960 / rect.height);
-          const hit = hitTestCanvasElement(cutIdx, cx, cy);
-          if (hit && isTextElementKey(hit.key)) {
-            e.preventDefault();
-            selectCanvasElement(cutIdx, hit.key);
-            openCanvasDirectTextEdit(cutIdx, hit.key);
-          }
-        });
-      }
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bindDirectCanvasTapToEdit);
-      } else {
-        setTimeout(bindDirectCanvasTapToEdit, 0);
-      }
-
-      // 6) Update bottom sheet & inspector so text is edited directly on canvas instead of a cramped input next to the slider
-      const origBuildInspector = buildStandardElementInspectorHtml;
-      buildStandardElementInspectorHtml = function (cutIdx, elKey, titleLabel, textVal, placeholder, isCaption) {
-        const html = origBuildInspector.apply(this, arguments);
-        // Replace the cramped narrow input inside the inspector row with a clean button that opens the direct on-canvas editor
-        return html.replace(
-          /<input type="text"[^>]*oninput="[^"]*"[^>]*>/i,
-          `<button type="button" class="cut-el-vis-btn on" style="flex:1;min-width:0;justify-content:center;padding:6px 10px;font-weight:800;font-size:12px;" onclick="openCanvasDirectTextEdit(${cutIdx}, '${elKey}')">✏️ 화면 위에서 문구 직접 수정</button>`
-        );
-      };
-
-      const origRenderInlineQuickEditBar = renderInlineQuickEditBar;
-      renderInlineQuickEditBar = function () {
-        origRenderInlineQuickEditBar.apply(this, arguments);
-        const bar = document.getElementById('arInlineEditBar');
-        if (!bar || !bar.classList.contains('is-open')) return;
-        const textInput = bar.querySelector('#arInlineQuickTextInput');
-        if (textInput) {
-          const cutIdx = getActiveEditCutIndex();
-          const sel = getSelectedCanvasTarget(cutIdx);
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'ar-inline-action-btn primary';
-          btn.style.cssText = 'flex:0 0 auto;padding:5px 11px;font-size:11.5px;font-weight:800;white-space:nowrap;';
-          btn.innerHTML = '✏️ 문구 수정';
-          btn.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            openCanvasDirectTextEdit(cutIdx, sel);
-          };
-          textInput.replaceWith(btn);
-        }
-      };
-      window.renderInlineQuickEditBar = renderInlineQuickEditBar;
     })();
 
     loadDesignPrefs();
