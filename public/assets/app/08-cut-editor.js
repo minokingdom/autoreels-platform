@@ -2820,13 +2820,21 @@
                style="left:${leftPct}%;top:${topPct}%;width:${wPct}%;height:${hPct}%;transform:translate(-50%,-50%);touch-action:none;"
                class="absolute cursor-move rounded-[10px] ${isSel ? 'active' : ''}">
             ${isSel ? `
-              <button type="button"
-                      onpointerdown="event.stopPropagation()"
-                      onclick="event.stopPropagation();openCanvasDirectTextEdit(${cutIdx}, '${b.key}')"
-                      style="position:absolute;left:50%;top:-26px;transform:translateX(-50%);white-space:nowrap;z-index:20;"
-                      class="px-2.5 py-0.5 rounded-full bg-[#10b981] text-[#052e16] text-[11px] font-extrabold shadow-md cursor-pointer hover:bg-[#34d399]">
-                ✏️ ${labelShort} · 탭해서 직접 수정
-              </button>
+              <div style="position:absolute;left:50%;top:-28px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:4px;white-space:nowrap;z-index:20;">
+                <button type="button"
+                        onpointerdown="event.stopPropagation()"
+                        onclick="event.stopPropagation();openCanvasDirectTextEdit(${cutIdx}, '${b.key}')"
+                        class="px-2 py-0.5 rounded-full bg-[#10b981] text-[#052e16] text-[10.5px] font-extrabold shadow-md cursor-pointer hover:bg-[#34d399]">
+                  ✏️ ${labelShort} 수정
+                </button>
+                <button type="button"
+                        onpointerdown="event.stopPropagation()"
+                        onclick="event.stopPropagation();updateCutElementOverride(${cutIdx}, '${b.key}', 'hidden', true, true)"
+                        title="이 요소 삭제(숨김)"
+                        class="px-1.5 py-0.5 rounded-full bg-[#ef4444] text-white text-[10.5px] font-extrabold shadow-md cursor-pointer hover:bg-[#f87171]">
+                  🗑️
+                </button>
+              </div>
             ` : ''}
           </div>
         `;
@@ -2977,8 +2985,20 @@
             } else if (curOv[dragElKey]) {
               let nx = Math.max(0.06, Math.min(0.94, origX + dx));
               let ny = Math.max(0.05, Math.min(0.94, origY + dy));
-              const nearV = Math.abs(nx - 0.5) < 0.025;
-              const nearH = Math.abs(ny - 0.5) < 0.025;
+              const trash = document.getElementById('igTrashZone');
+              const topBar = document.getElementById('igTopBar');
+              if (moved) {
+                if (topBar) topBar.classList.add('opacity-0');
+                if (trash) trash.classList.remove('hidden');
+              }
+              overTrash = moved && ny > 0.83 && Math.abs(nx - 0.5) < 0.16;
+              if (trash) {
+                trash.style.transform = overTrash ? 'translateX(-50%) scale(1.22)' : 'translateX(-50%) scale(1)';
+                trash.style.backgroundColor = overTrash ? 'rgba(229,72,77,0.9)' : 'rgba(0,0,0,0.65)';
+                trash.style.borderColor = overTrash ? '#ffffff' : 'rgba(255,255,255,0.3)';
+              }
+              const nearV = !overTrash && Math.abs(nx - 0.5) < 0.025;
+              const nearH = !overTrash && Math.abs(ny - 0.5) < 0.025;
               if (nearV) nx = 0.5;
               if (nearH) ny = 0.5;
               if (snapV) snapV.classList.toggle('hidden', !nearV);
@@ -3042,11 +3062,21 @@
 
           if (dragElKey) {
             const finishedKey = dragElKey;
+            const wasTrash = overTrash;
             dragElKey = '';
+            overTrash = false;
             const snapV = document.getElementById('cutSnapV');
             const snapH = document.getElementById('cutSnapH');
+            const trash = document.getElementById('igTrashZone');
+            const topBar = document.getElementById('igTopBar');
             if (snapV) snapV.classList.add('hidden');
             if (snapH) snapH.classList.add('hidden');
+            if (trash) trash.classList.add('hidden');
+            if (topBar) topBar.classList.remove('opacity-0');
+            if (wasTrash && finishedKey !== 'photo') {
+              updateCutElementOverride(window.__arPinnedCut, finishedKey, 'hidden', true, true);
+              return;
+            }
             renderPreviewCutPinBar();
 
             if (!wasMoved && wasEmptyTap) {
