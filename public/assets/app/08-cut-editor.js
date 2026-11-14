@@ -3453,11 +3453,12 @@
                     class="ar-el-badge blue" style="padding:5px 10px;font-weight:800;white-space:nowrap;">✏️ 문구 수정</button>
             <span class="ar-el-label ml-1">크기</span>
             <input type="range" min="0.6" max="1.9" step="0.05" value="${Number(tObj.scale) || 1}"
-                   oninput="updateCutElementOverride(${cutIdx}, '${activeKey}', 'scale', this.value, false)"
+                   oninput="if(this.nextElementSibling)this.nextElementSibling.textContent=Math.round(this.value*100)+'%';updateCutElementOverride(${cutIdx}, '${activeKey}', 'scale', this.value, false)"
                    class="flex-1 min-w-0" />
+            <span class="ar-el-val">${Math.round((Number(tObj.scale) || 1) * 100)}%</span>
             <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${activeKey}', 'hidden', ${!tObj.hidden}, true)"
                     class="ar-el-badge ${tObj.hidden ? 'muted' : ''}">${tObj.hidden ? '🙈 숨김' : '👁 표시'}</button>
-            <button type="button" onclick="resetCutElementOverride(${cutIdx}, '${activeKey}')" class="ar-el-badge muted">↺</button>
+            <button type="button" onclick="resetCutElementOverride(${cutIdx}, '${activeKey}')" class="ar-el-badge muted">초기화</button>
           </div>
           <div class="ar-inline-scroll-row ar-inline-font-bar">
             <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${activeKey}', 'font', '', true)"
@@ -3519,8 +3520,9 @@
               ` : `<span class="text-[11.5px] font-bold text-white/85 shrink-0">${isPhotoSticker ? '📷 사진 스티커' : escapeCutHtml(it.text || it.key || '스티커')}</span>`}
               <span class="ar-el-label ml-1">크기</span>
               <input type="range" min="0.45" max="2.5" step="0.05" value="${Number(it.scale) || 1}"
-                     oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'scale', this.value, false)"
+                     oninput="if(this.nextElementSibling)this.nextElementSibling.textContent=Math.round(this.value*100)+'%';updateSelectedOverlayProp(${cutIdx}, ${ii}, 'scale', this.value, false)"
                      class="flex-1 min-w-0" />
+              <span class="ar-el-val">${Math.round((Number(it.scale) || 1) * 100)}%</span>
               <button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'alpha', ${nextAlpha}, true)"
                       class="ar-el-badge muted" title="투명도 전환">${Math.round(curAlpha * 100)}%</button>
               <button type="button" onclick="removeSelectedOverlay()" class="ar-el-badge" style="color:#f87171;" title="삭제">🗑</button>
