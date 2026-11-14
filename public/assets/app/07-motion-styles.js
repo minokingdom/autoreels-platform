@@ -1798,12 +1798,15 @@
         c.textAlign = 'center'; c.textBaseline = 'middle';
         Array.from('일상의결').forEach((ch, i) => c.fillText(ch, W * 0.13, H * 0.15 + i * W * 0.055));
         const nx = W * 0.06, ny = H * 0.45 + (1 - ent) * H * 0.008;
-        c.fillStyle = '#f5efdf';
-        c.fillRect(nx, ny, W * 0.58, H * 0.265);
-        c.fillStyle = '#e8decb';
-        c.fillRect(nx + W * 0.025, ny, W * 0.007, H * 0.265);
-        inLabel(c, '간직하고 싶은 순간', nx + W * 0.06, ny + H * 0.032, '#88725b', 'left', W * 0.023);
-        mCaption(c, caption, nx + W * 0.06, ny + H * 0.055, W * 0.46, H * 0.185, W * 0.05, 'gowun', '#3b342b', e, 'left');
+        if (typeof arBeginMotionCaptionCard !== 'function' || arBeginMotionCaptionCard(c, W, H, cutIdx, local, nx + W * 0.29, ny + H * 0.132, W * 0.58, H * 0.265)) {
+          c.fillStyle = '#f5efdf';
+          c.fillRect(nx, ny, W * 0.58, H * 0.265);
+          c.fillStyle = '#e8decb';
+          c.fillRect(nx + W * 0.025, ny, W * 0.007, H * 0.265);
+          inLabel(c, '간직하고 싶은 순간', nx + W * 0.06, ny + H * 0.032, '#88725b', 'left', W * 0.023);
+          mCaption(c, caption, nx + W * 0.06, ny + H * 0.055, W * 0.46, H * 0.185, W * 0.05, 'gowun', '#3b342b', e, 'left');
+          if (typeof arEndMotionCaptionCard === 'function') arEndMotionCaptionCard(c);
+        }
         inLabel(c, inDateLabel().split(' ')[0], W * 0.91, H * 0.85, '#88725b', 'right', W * 0.023);
         inGrain(c, W, H, t, 0.055);
       } else if (M === 'in_x_cover') {
@@ -1842,14 +1845,17 @@
           inLabel(c, label, tx + W * 0.035, ty + H * 0.0225, '#574b3e', 'left', W * 0.025);
         });
         const nx = W * 0.07 + (1 - ent) * W * 0.025, ny = H * 0.57;
-        c.fillStyle = '#f6edda';
-        gRoundRect(c, nx, ny, W * 0.81, H * 0.255, W * 0.008); c.fill();
-        c.fillStyle = '#c7c7aa'; c.fillRect(nx, ny, W * 0.025, H * 0.255);
-        c.fillStyle = '#e3d6bd';
-        c.beginPath(); c.moveTo(nx + W * 0.81, ny + H * 0.22);
-        c.lineTo(nx + W * 0.75, ny + H * 0.255); c.lineTo(nx + W * 0.81, ny + H * 0.255); c.closePath(); c.fill();
-        inLabel(c, '여기에 남겨둘 말', nx + W * 0.065, ny + H * 0.035, '#8a775d', 'left', W * 0.024);
-        mCaption(c, caption, nx + W * 0.065, ny + H * 0.06, W * 0.67, H * 0.17, W * 0.058, 'pen', '#46392d', e, 'left');
+        if (typeof arBeginMotionCaptionCard !== 'function' || arBeginMotionCaptionCard(c, W, H, cutIdx, local, nx + W * 0.405, ny + H * 0.127, W * 0.81, H * 0.255)) {
+          c.fillStyle = '#f6edda';
+          gRoundRect(c, nx, ny, W * 0.81, H * 0.255, W * 0.008); c.fill();
+          c.fillStyle = '#c7c7aa'; c.fillRect(nx, ny, W * 0.025, H * 0.255);
+          c.fillStyle = '#e3d6bd';
+          c.beginPath(); c.moveTo(nx + W * 0.81, ny + H * 0.22);
+          c.lineTo(nx + W * 0.75, ny + H * 0.255); c.lineTo(nx + W * 0.81, ny + H * 0.255); c.closePath(); c.fill();
+          inLabel(c, '여기에 남겨둘 말', nx + W * 0.065, ny + H * 0.035, '#8a775d', 'left', W * 0.024);
+          mCaption(c, caption, nx + W * 0.065, ny + H * 0.06, W * 0.67, H * 0.17, W * 0.058, 'pen', '#46392d', e, 'left');
+          if (typeof arEndMotionCaptionCard === 'function') arEndMotionCaptionCard(c);
+        }
         inGrain(c, W, H, t, 0.05);
       } else if (M === 'in_x_walk') {
         // 산책 기록: 사진 위 점선 동선과 방문 순서 핀, 현재 지점 옆에 나타나는 담백한 자막
@@ -1926,13 +1932,16 @@
         c.restore();
         const reply = mEase((local - 0.22) / 0.65), rx = W * 0.18;
         const ry = H * 0.59 + (1 - reply) * H * 0.014, rw = W * 0.74, rh = H * 0.245;
-        c.save(); c.globalAlpha = reply; c.fillStyle = '#e6dcc0';
-        gRoundRect(c, rx, ry, rw, rh, W * 0.035); c.fill();
-        c.beginPath(); c.moveTo(rx + rw - W * 0.03, ry + rh * 0.7);
-        c.lineTo(rx + rw + W * 0.018, ry + rh * 0.86); c.lineTo(rx + rw - W * 0.04, ry + rh * 0.86); c.fill();
-        c.restore();
-        mCaption(c, caption, rx + W * 0.045, ry + H * 0.02, rw - W * 0.09, rh - H * 0.04,
-          Math.round(W * 0.06), 'pretM', '#3d3529', mClamp((local - 0.32) / 1.1), 'left');
+        if (typeof arBeginMotionCaptionCard !== 'function' || arBeginMotionCaptionCard(c, W, H, cutIdx, local, rx + rw / 2, ry + rh / 2, rw, rh)) {
+          c.save(); c.globalAlpha = reply; c.fillStyle = '#e6dcc0';
+          gRoundRect(c, rx, ry, rw, rh, W * 0.035); c.fill();
+          c.beginPath(); c.moveTo(rx + rw - W * 0.03, ry + rh * 0.7);
+          c.lineTo(rx + rw + W * 0.018, ry + rh * 0.86); c.lineTo(rx + rw - W * 0.04, ry + rh * 0.86); c.fill();
+          c.restore();
+          mCaption(c, caption, rx + W * 0.045, ry + H * 0.02, rw - W * 0.09, rh - H * 0.04,
+            Math.round(W * 0.06), 'pretM', '#3d3529', mClamp((local - 0.32) / 1.1), 'left');
+          if (typeof arEndMotionCaptionCard === 'function') arEndMotionCaptionCard(c);
+        }
         inGrain(c, W, H, t, 0.045);
       } else if (M === 'in_y_torn') {
         // 찢은 인화: 불규칙한 종이 가장자리 안에 큰 사진, 종이 전체가 살짝 떠오름
@@ -2014,23 +2023,31 @@
         const pw = Math.min(W - 56, maxW + 64);
         const ph = wr.lines.length * wr.lh + 34;
         const px = (W - pw) / 2, py = H - 230 + (1 - ent) * 28;
-        c.save();
-        c.globalAlpha = ent;
-        gRoundRect(c, px, py, pw, ph, ph / 2);
-        c.fillStyle = 'rgba(14,18,28,0.58)';
-        c.fill();
-        c.strokeStyle = 'rgba(255,255,255,0.28)';
-        c.lineWidth = 1.2;
-        c.stroke();
-        c.fillStyle = sp.accent;
-        c.beginPath(); c.arc(px + 26, py + ph / 2, 5, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#ffffff';
-        c.textAlign = 'left';
-        c.textBaseline = 'middle';
-        wr.lines.forEach((ln, i) => {
-          c.fillText(ln, px + 44, py + 17 + wr.lh * (i + 0.5));
-        });
-        c.restore();
+        if (typeof arBeginMotionCaptionCard !== 'function' || arBeginMotionCaptionCard(c, W, H, cutIdx, local, px + pw / 2, py + ph / 2, pw, ph)) {
+          c.save();
+          c.globalAlpha = ent;
+          gRoundRect(c, px, py, pw, ph, ph / 2);
+          c.fillStyle = 'rgba(14,18,28,0.58)';
+          c.fill();
+          c.strokeStyle = 'rgba(255,255,255,0.28)';
+          c.lineWidth = 1.2;
+          c.stroke();
+          c.fillStyle = sp.accent;
+          c.beginPath(); c.arc(px + 26, py + ph / 2, 5, 0, Math.PI * 2); c.fill();
+          const capOv = (typeof cutElementOverrides !== 'undefined' && cutElementOverrides && cutElementOverrides[cutIdx] && cutElementOverrides[cutIdx].caption) || null;
+          c.fillStyle = (capOv && capOv.color) || '#ffffff';
+          if (capOv && capOv.font && CUT_TEXT_FONTS) {
+            const fo = CUT_TEXT_FONTS.find((f) => f.id === capOv.font);
+            if (fo) c.font = `${fo.weight} ${wr.size}px ${fo.css}`;
+          }
+          c.textAlign = 'left';
+          c.textBaseline = 'middle';
+          wr.lines.forEach((ln, i) => {
+            c.fillText(ln, px + 44, py + 17 + wr.lh * (i + 0.5));
+          });
+          c.restore();
+          if (typeof arEndMotionCaptionCard === 'function') arEndMotionCaptionCard(c);
+        }
       } else if (M === 'ed_kinetic') {
         // 키네틱 포스터: 풀블리드 + 사선 빛 스윕 + 굵은 긴그림자(Long Shadow) 타이포
         mPhoto(c, S, 0, 0, 0, W, H, 1.06 + lp * 0.05);

@@ -283,15 +283,33 @@
     ];
 
     const AR_ELEMENT_BOX_STYLES = [
-      { id: 'default',    label: '스타일 기본' },
-      { id: 'darkGlass',  label: '다크 글래스' },
-      { id: 'solidBadge', label: '컬러 배지' },
-      { id: 'outlineBox', label: '테두리 박스' },
-      { id: 'softBox',    label: '반투명 박스' },
-      { id: 'neonGlow',   label: '네온 글로우' },
-      { id: 'plain',      label: '배경 없음' }
+      { id: 'default',      label: '스타일 기본' },
+      { id: 'darkGlass',    label: '다크 글래스' },
+      { id: 'whiteCard',    label: '화이트 카드' },
+      { id: 'stickyNote',   label: '포스트잇 메모' },
+      { id: 'speechBubble', label: '말풍선 카드' },
+      { id: 'couponTicket', label: '쿠폰 티켓' },
+      { id: 'solidBadge',   label: '컬러 배지' },
+      { id: 'outlineBox',   label: '테두리 박스' },
+      { id: 'softBox',      label: '반투명 박스' },
+      { id: 'stampFrame',   label: '도장 프레임' },
+      { id: 'neonGlow',     label: '네온 글로우' },
+      { id: 'plain',        label: '배경 없음' }
     ];
     window.AR_ELEMENT_BOX_STYLES = AR_ELEMENT_BOX_STYLES;
+
+    const AR_CUT_LAYOUT_OPTIONS = [
+      { id: '',         label: '스타일 기본' },
+      { id: 'full',     label: '풀화면' },
+      { id: 'polaroid', label: '폴라로이드' },
+      { id: 'arch',     label: '아치 윈도우' },
+      { id: 'circle',   label: '스포트라이트' },
+      { id: 'mat',      label: '갤러리 액자' },
+      { id: 'split',    label: '상하 분할' },
+      { id: 'duo',      label: '비교 분할' },
+      { id: 'film',     label: '필름 스트립' }
+    ];
+    window.AR_CUT_LAYOUT_OPTIONS = AR_CUT_LAYOUT_OPTIONS;
 
     const AR_CUT_TRANSITIONS = [
       { id: 'default',       label: '스타일 기본' },
@@ -339,6 +357,7 @@
         caption: { x: 0.5, y: 0.72, scale: 1, color: '', bgColor: '', font: '', boxStyle: 'default', anim: 'default', hidden: false, customPos: false },
         badge:   { text: '', x: 0.5, y: 0.08, scale: 1, color: '', bgColor: '', font: '', boxStyle: 'default', anim: 'default', hidden: false, customPos: false },
         price:   { text: '', x: 0.5, y: 0.56, scale: 1, color: '', bgColor: '', font: '', boxStyle: 'default', anim: 'default', hidden: false, customPos: false },
+        chip:    { text: '', x: 0.36, y: 0.92, scale: 1, color: '', bgColor: '', font: '', boxStyle: 'default', anim: 'default', hidden: false, customPos: false },
         photo:   { scale: 1, panX: 0, panY: 0 }
       };
     }
@@ -358,6 +377,8 @@
         else cutElementOverrides[cutIdx].badge = Object.assign({}, def.badge, cutElementOverrides[cutIdx].badge);
         if (!cutElementOverrides[cutIdx].price) cutElementOverrides[cutIdx].price = def.price;
         else cutElementOverrides[cutIdx].price = Object.assign({}, def.price, cutElementOverrides[cutIdx].price);
+        if (!cutElementOverrides[cutIdx].chip) cutElementOverrides[cutIdx].chip = def.chip;
+        else cutElementOverrides[cutIdx].chip = Object.assign({}, def.chip, cutElementOverrides[cutIdx].chip);
         if (!cutElementOverrides[cutIdx].photo) cutElementOverrides[cutIdx].photo = def.photo;
         else cutElementOverrides[cutIdx].photo = Object.assign({}, def.photo, cutElementOverrides[cutIdx].photo);
       }
@@ -408,10 +429,15 @@
         const p = ov.price || {};
         return !!(p.text || isCutElementPropCustomized(p));
       }
+      if (elKey === 'chip') {
+        const ch = ov.chip || {};
+        return !!(ch.text || isCutElementPropCustomized(ch));
+      }
       if (elKey === 'photo') {
         const ph = ov.photo || {};
         const flt = (campaign.cutFilters && campaign.cutFilters[cutIdx]) || 'none';
-        return !!((ph.scale && Math.abs(ph.scale - 1) > 0.01) || (ph.panX && Math.abs(ph.panX) > 0.005) || (ph.panY && Math.abs(ph.panY) > 0.005) || (flt && flt !== 'none'));
+        const cPlan = (campaign.scenePlan && campaign.scenePlan[cutIdx]) || {};
+        return !!((ph.scale && Math.abs(ph.scale - 1) > 0.01) || (ph.panX && Math.abs(ph.panX) > 0.005) || (ph.panY && Math.abs(ph.panY) > 0.005) || (flt && flt !== 'none') || cPlan.customLayout);
       }
       if (elKey === 'deco') {
         const d = (campaign.cutDecos && campaign.cutDecos[cutIdx]) || 'none';
@@ -425,6 +451,7 @@
       return isCutElementModified(cutIdx, 'caption') ||
              isCutElementModified(cutIdx, 'badge') ||
              isCutElementModified(cutIdx, 'price') ||
+             isCutElementModified(cutIdx, 'chip') ||
              isCutElementModified(cutIdx, 'photo') ||
              isCutElementModified(cutIdx, 'transition');
     }
@@ -1567,6 +1594,74 @@
         c.fill();
         c.restore();
         fg = bgColor ? mainCol : (isLightFill ? '#09090b' : '#ffffff');
+      } else if (st === 'whiteCard') {
+        c.shadowColor = 'rgba(0,0,0,0.32)';
+        c.shadowBlur = 18;
+        c.shadowOffsetY = 6;
+        gRoundRect(c, -bw / 2, -bh / 2, bw, bh, rad);
+        c.fillStyle = bgColor || 'rgba(255, 255, 255, 0.95)';
+        c.fill();
+        c.strokeStyle = 'rgba(0,0,0,0.08)';
+        c.lineWidth = 1.2;
+        c.stroke();
+        c.shadowBlur = 0;
+        c.shadowOffsetY = 0;
+        fg = textColor && textColor !== '#ffffff' ? textColor : '#111827';
+      } else if (st === 'stickyNote') {
+        c.save();
+        c.rotate(-0.025);
+        c.shadowColor = 'rgba(0,0,0,0.32)';
+        c.shadowBlur = 18;
+        c.shadowOffsetY = 6;
+        c.fillStyle = bgColor || '#fef08a';
+        c.fillRect(-bw / 2, -bh / 2, bw, bh);
+        c.shadowBlur = 0;
+        c.shadowOffsetY = 0;
+        c.fillStyle = 'rgba(255,255,255,0.65)';
+        c.fillRect(-38 * sc, -bh / 2 - 9 * sc, 76 * sc, 18 * sc);
+        c.restore();
+        fg = textColor && textColor !== '#ffffff' ? textColor : '#1f2937';
+      } else if (st === 'speechBubble') {
+        c.shadowColor = 'rgba(0,0,0,0.35)';
+        c.shadowBlur = 16;
+        c.shadowOffsetY = 5;
+        gRoundRect(c, -bw / 2, -bh / 2, bw, bh, Math.round(22 * sc));
+        c.fillStyle = bgColor || '#ffffff';
+        c.fill();
+        c.beginPath();
+        c.moveTo(-bw * 0.18, bh / 2 - 2);
+        c.lineTo(-bw * 0.24, bh / 2 + 16 * sc);
+        c.lineTo(-bw * 0.06, bh / 2 - 2);
+        c.closePath();
+        c.fill();
+        c.shadowBlur = 0;
+        c.shadowOffsetY = 0;
+        fg = textColor && textColor !== '#ffffff' ? textColor : '#111827';
+      } else if (st === 'couponTicket') {
+        c.shadowColor = 'rgba(0,0,0,0.35)';
+        c.shadowBlur = 16;
+        c.shadowOffsetY = 5;
+        gRoundRect(c, -bw / 2, -bh / 2, bw, bh, Math.round(10 * sc));
+        c.fillStyle = bgColor || '#fffdf7';
+        c.fill();
+        c.shadowBlur = 0;
+        c.shadowOffsetY = 0;
+        c.strokeStyle = mainCol === '#ffffff' ? '#f97316' : mainCol;
+        c.lineWidth = 2;
+        c.setLineDash([6, 4]);
+        c.strokeRect(-bw / 2 + 7, -bh / 2 + 7, bw - 14, bh - 14);
+        c.setLineDash([]);
+        fg = textColor && textColor !== '#ffffff' ? textColor : '#111827';
+      } else if (st === 'stampFrame') {
+        const stCol = mainCol === '#ffffff' ? '#ef4444' : mainCol;
+        c.fillStyle = bgColor || 'rgba(255,255,255,0.92)';
+        c.fillRect(-bw / 2, -bh / 2, bw, bh);
+        c.strokeStyle = stCol;
+        c.lineWidth = 4.5;
+        c.strokeRect(-bw / 2 + 5, -bh / 2 + 5, bw - 10, bh - 10);
+        c.lineWidth = 1.5;
+        c.strokeRect(-bw / 2 + 11, -bh / 2 + 11, bw - 22, bh - 22);
+        fg = stCol;
       } else if (st === 'neonGlow') {
         c.shadowColor = bgColor || mainCol;
         c.shadowBlur = 24 + ast.glowBoost * 20;
@@ -1608,6 +1703,9 @@
         if (ds && ds.genre === 'sale' && !ds.high) return { x: 0.5, y: 0.79, w: 340, h: 68 };
         return { x: 0.5, y: 0.56, w: 340, h: 64 };
       }
+      if (elKey === 'chip') {
+        return { x: 0.36, y: 0.92, w: 300, h: 54 };
+      }
       if (elKey === 'caption') {
         if (ds && ds.engine === 'motion') return { x: 0.5, y: 0.74, w: 492, h: 112 };
         if (ds && ds.genre === 'sale') return { x: 0.5, y: ds.high ? 0.312 : 0.583, w: 492, h: 108 };
@@ -1618,22 +1716,25 @@
 
     function drawCutElementOverridesOverlay(c, W, H, cutIdx, localT, design, V) {
       if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
-      window.__arLastRenderedBoxes[cutIdx] = {};
+      if (!window.__arLastRenderedBoxes[cutIdx]) window.__arLastRenderedBoxes[cutIdx] = {};
+      const handled = (window.__arNativeElementHandled && window.__arNativeElementHandled[cutIdx]) || {};
       const ov = cutElementOverrides && cutElementOverrides[cutIdx];
       if (!ov) return;
       const accent = (V && V.accent) || '#facc15';
 
-      // 1) 상단 라벨/배지 커스텀 렌더
+      // 1) 상단 라벨/배지 커스텀 렌더 (네이티브 훅이 직접 처리하지 않은 경우 또는 커스텀 박스 디자인 선택 시)
       const b = ov.badge;
-      if (b && !b.hidden) {
-        const hasCustomBadgeStyle = isCutElementPropCustomized(b) || (!!b.text && design && design.head === 'none');
+      if (b && !b.hidden && !handled.badge) {
+        const hasCustomBadgeStyle = isCutElementPropCustomized(b) || !!b.text;
         if (hasCustomBadgeStyle) {
-          const bText = String(b.text || (design && design.label) || (V && V.label) || `${cutIdx + 1} CUT`).trim();
+          const detectedLbl = window.__arLastDetectedBadgeText && window.__arLastDetectedBadgeText[cutIdx];
+          const bText = String(b.text || detectedLbl || (design && design.label) || (V && V.label) || `${cutIdx + 1} CUT`).trim();
           if (bText) {
             const sc = Math.max(0.5, Math.min(2.2, Number(b.scale) || 1));
+            const prevBox = window.__arLastRenderedBoxes[cutIdx].badge;
             const defB = getDefaultCutElPos('badge');
-            const bx = (b.customPos && typeof b.x === 'number' ? b.x : defB.x) * W;
-            const by = (b.customPos && typeof b.y === 'number' ? b.y : defB.y) * H;
+            const bx = b.customPos && typeof b.x === 'number' ? b.x * W : (prevBox ? prevBox.cx : defB.x * W);
+            const by = b.customPos && typeof b.y === 'number' ? b.y * H : (prevBox ? prevBox.cy : defB.y * H);
             const fontSpec = resolveArFontSpec(b.font, 800, 18, sc);
             const ast = computeArElementAnimState(b.anim || 'default', localT);
             const rBox = drawStyledArBoxAndText(c, W, H, {
@@ -1659,15 +1760,16 @@
 
       // 2) 혜택/서브 문구 커스텀 렌더
       const p = ov.price;
-      if (p && !p.hidden) {
+      if (p && !p.hidden && !handled.price) {
         const hasCustomPrice = isCutElementPropCustomized(p) || !!p.text;
         if (hasCustomPrice) {
           const pText = String(p.text || (typeof arPriceTag === 'function' ? arPriceTag() : '') || (campaign && campaign.discount) || '').trim();
           if (pText) {
             const sc = Math.max(0.5, Math.min(2.2, Number(p.scale) || 1));
+            const prevBox = window.__arLastRenderedBoxes[cutIdx].price;
             const defP = getDefaultCutElPos('price');
-            const px = (p.customPos && typeof p.x === 'number' ? p.x : defP.x) * W;
-            const py = (p.customPos && typeof p.y === 'number' ? p.y : defP.y) * H;
+            const px = p.customPos && typeof p.x === 'number' ? p.x * W : (prevBox ? prevBox.cx : defP.x * W);
+            const py = p.customPos && typeof p.y === 'number' ? p.y * H : (prevBox ? prevBox.cy : defP.y * H);
             const fontSpec = resolveArFontSpec(p.font, 900, 26, sc);
             const ast = computeArElementAnimState(p.anim || 'default', localT);
             const rBox = drawStyledArBoxAndText(c, W, H, {
@@ -1691,18 +1793,56 @@
         }
       }
 
-      // 3) 메인 컷 자막 커스텀 렌더
+      // 3) 하단 프로필·상호 칩 커스텀 렌더
+      const ch = ov.chip;
+      if (ch && !ch.hidden && !handled.chip) {
+        const hasCustomChip = isCutElementPropCustomized(ch) || !!ch.text;
+        if (hasCustomChip) {
+          const dObj = typeof getActiveDealer === 'function' ? getActiveDealer() : {};
+          const defChipTxt = `${dObj.name || ''} ${dObj.title || dObj.branch || ''}`.trim() || '매장 안내';
+          const cText = String(ch.text || defChipTxt).trim();
+          if (cText) {
+            const sc = Math.max(0.5, Math.min(2.2, Number(ch.scale) || 1));
+            const prevBox = window.__arLastRenderedBoxes[cutIdx].chip;
+            const defCh = getDefaultCutElPos('chip');
+            const chx = ch.customPos && typeof ch.x === 'number' ? ch.x * W : (prevBox ? prevBox.cx : defCh.x * W);
+            const chy = ch.customPos && typeof ch.y === 'number' ? ch.y * H : (prevBox ? prevBox.cy : defCh.y * H);
+            const fontSpec = resolveArFontSpec(ch.font, 800, 17, sc);
+            const ast = computeArElementAnimState(ch.anim || 'default', localT);
+            const rBox = drawStyledArBoxAndText(c, W, H, {
+              lines: [cText],
+              rawText: cText,
+              cx: chx,
+              cy: chy,
+              sc,
+              fontSpec,
+              boxStyle: ch.boxStyle || 'default',
+              textColor: ch.color || '#ffffff',
+              bgColor: ch.bgColor || '',
+              defaultBoxStyle: 'darkGlass',
+              pillRadius: true,
+              padXBase: 36,
+              padYBase: 16,
+              ast
+            });
+            if (rBox) window.__arLastRenderedBoxes[cutIdx].chip = rBox;
+          }
+        }
+      }
+
+      // 4) 메인 컷 자막 커스텀 렌더 (네이티브 훅이 직접 처리하지 않은 경우 또는 커스텀 박스 디자인 선택 시)
       const cap = ov.caption;
-      if (cap && !cap.hidden) {
+      if (cap && !cap.hidden && !handled.caption) {
         const hasCustomCap = isCutElementPropCustomized(cap);
         if (hasCustomCap) {
           const raw = (campaign && campaign.cutCaptions && campaign.cutCaptions[cutIdx]) || (campaign && campaign.hook) || '';
           const clean = typeof gCleanCaption === 'function' ? gCleanCaption(raw) : String(raw || '').trim();
           if (clean) {
             const sc = Math.max(0.5, Math.min(2.2, Number(cap.scale) || 1));
+            const prevBox = window.__arLastRenderedBoxes[cutIdx].caption;
             const defC = getDefaultCutElPos('caption');
-            const cx = (cap.customPos && typeof cap.x === 'number' ? cap.x : defC.x) * W;
-            const cy = (cap.customPos && typeof cap.y === 'number' ? cap.y : defC.y) * H;
+            const cx = cap.customPos && typeof cap.x === 'number' ? cap.x * W : (prevBox ? prevBox.cx : defC.x * W);
+            const cy = cap.customPos && typeof cap.y === 'number' ? cap.y * H : (prevBox ? prevBox.cy : defC.y * H);
             const fontSpec = resolveArFontSpec(cap.font, 800, 34, sc);
             const ast = computeArElementAnimState(cap.anim || 'default', localT);
             c.save();
@@ -1766,15 +1906,16 @@
           color: '#60a5fa'
         };
       }
-      if (elKey === 'caption' || elKey === 'badge' || elKey === 'price') {
+      if (elKey === 'caption' || elKey === 'badge' || elKey === 'price' || elKey === 'chip') {
         const elObj = ov[elKey] || {};
         const sc = Math.max(0.6, Math.min(2.0, Number(elObj.scale) || 1));
         const rendered = window.__arLastRenderedBoxes && window.__arLastRenderedBoxes[cutIdx] && window.__arLastRenderedBoxes[cutIdx][elKey];
         const def = getDefaultCutElPos(elKey);
         const labelMap = {
-          caption: elObj.hidden ? '컷 자막 (숨김)' : '💬 컷 자막',
-          badge: elObj.hidden ? '상단 배지 (숨김)' : '🏷️ 상단 라벨/배지',
-          price: elObj.hidden ? '혜택 문구 (숨김)' : '💰 혜택/서브 문구'
+          caption: elObj.hidden ? '컷 자막 (숨김)' : '💬 컷 자막·카드',
+          badge: elObj.hidden ? '상단 배지 (숨김)' : '🏷️ 상단 라벨·배지',
+          price: elObj.hidden ? '혜택 배지 (숨김)' : '💰 혜택·강조 배지',
+          chip: elObj.hidden ? '하단 프로필 (숨김)' : '🪪 하단 프로필·상호'
         };
         const cx = rendered ? rendered.cx : ((elObj.customPos && typeof elObj.x === 'number' ? elObj.x : def.x) * W);
         const cy = rendered ? rendered.cy : ((elObj.customPos && typeof elObj.y === 'number' ? elObj.y : def.y) * H);
@@ -2441,13 +2582,14 @@
       layer.classList.remove('hidden', 'pointer-events-none');
       layer.classList.add('pointer-events-auto');
 
-      // 기본 컷 요소(자막·배지·혜택문구) 직접 선택·드래그 히트박스 (캔버스 실제 좌표와 % 단위로 정확히 일치)
-      const baseBoxes = directMode ? ['badge', 'price', 'caption'].map((key) => {
+      // 기본 컷 요소(자막·배지·혜택문구·하단프로필) 직접 선택·드래그 히트박스 (캔버스 실제 좌표와 % 단위로 정확히 일치)
+      const baseBoxes = directMode ? ['badge', 'price', 'chip', 'caption'].map((key) => {
         const hb = getCutElementHitBox(cutIdx, key, 540, 960);
         const titleMap = {
-          badge: '상단 라벨/배지 (드래그하여 이동)',
-          price: '혜택/서브 문구 (드래그하여 이동)',
-          caption: '컷 자막 (드래그하여 이동)'
+          badge: '🏷️ 상단 라벨/배지 (드래그하여 이동 · 더블클릭하여 편집)',
+          price: '💰 혜택/강조 배지 (드래그하여 이동 · 더블클릭하여 편집)',
+          chip: '🪪 하단 프로필·상호 (드래그하여 이동 · 더블클릭하여 편집)',
+          caption: '💬 컷 자막·카드 (드래그하여 이동 · 더블클릭하여 편집)'
         };
         return {
           key,
@@ -2468,6 +2610,7 @@
         return `
           <div data-el-key="${b.key}"
                title="${b.title}"
+               ondblclick="openCutEditor(${cutIdx}, '${b.key}')"
                style="left:${leftPct}%;top:${topPct}%;width:${wPct}%;height:${hPct}%;transform:translate(-50%,-50%);touch-action:none;"
                class="absolute cursor-move rounded-[10px] ${isSel ? 'active' : 'hover:bg-white/5'}">
           </div>
@@ -2812,20 +2955,19 @@
           return `overlay:${i}`;
         }
       }
-      const ov = getCutElementOverride(cutIdx);
-      const bx = typeof ov.badge.x === 'number' ? ov.badge.x : 0.5;
-      const by = typeof ov.badge.y === 'number' ? ov.badge.y : 0.08;
-      if (Math.abs(nx - bx) <= 0.32 && Math.abs(ny - by) <= 0.08) return 'badge';
-
-      const px = typeof ov.price.x === 'number' ? ov.price.x : 0.5;
-      const py = typeof ov.price.y === 'number' ? ov.price.y : 0.56;
-      if (Math.abs(nx - px) <= 0.36 && Math.abs(ny - py) <= 0.07) return 'price';
-
-      const cx = typeof ov.caption.x === 'number' ? ov.caption.x : 0.5;
-      const cy = typeof ov.caption.y === 'number' ? ov.caption.y : 0.72;
-      if (Math.abs(nx - cx) <= 0.44 && Math.abs(ny - cy) <= 0.14) return 'caption';
+      for (const elKey of ['badge', 'price', 'chip', 'caption']) {
+        const hb = getCutElementHitBox(cutIdx, elKey, 540, 960);
+        if (hb) {
+          const hx = hb.cx / 540;
+          const hy = hb.cy / 960;
+          const hw = Math.max(0.14, (hb.w / 540) * 0.55);
+          const hh = Math.max(0.05, (hb.h / 960) * 0.6);
+          if (Math.abs(nx - hx) <= hw && Math.abs(ny - hy) <= hh) return elKey;
+        }
+      }
 
       if (ny < 0.16) return 'badge';
+      if (ny > 0.87) return 'chip';
       if (ny > 0.62) return 'caption';
       if (ny >= 0.48 && ny <= 0.62) return 'price';
       return 'caption';
@@ -2931,10 +3073,11 @@
       }
 
       const pills = [
-        { key: 'caption',    label: '💬 자막' },
-        { key: 'badge',      label: '🏷️ 상단배지' },
-        { key: 'price',      label: '💰 혜택문구' },
-        { key: 'photo',      label: '🖼️ 배경구도' },
+        { key: 'caption',    label: '💬 자막·카드' },
+        { key: 'badge',      label: '🏷️ 상단라벨' },
+        { key: 'price',      label: '💰 혜택배지' },
+        { key: 'chip',       label: '🪪 하단프로필' },
+        { key: 'photo',      label: '🖼️ 배경·구도' },
         { key: 'transition', label: '🎞 컷 전환' }
       ];
       overlays.forEach((it, ii) => {
@@ -2950,16 +3093,21 @@
       }).join('');
 
       let bodyHtml = '';
-      if (activeKey === 'caption' || activeKey === 'badge' || activeKey === 'price') {
+      if (activeKey === 'caption' || activeKey === 'badge' || activeKey === 'price' || activeKey === 'chip') {
         const tObj = ov[activeKey] || {};
+        const detectedBadge = (window.__arLastDetectedBadgeText && window.__arLastDetectedBadgeText[cutIdx]) || (design && design.label) || '상단 배지';
+        const dObj = typeof getActiveDealer === 'function' ? getActiveDealer() : {};
+        const defChip = `${dObj.name || ''} ${dObj.title || dObj.branch || ''}`.trim() || '매장 안내';
         const curText = activeKey === 'caption'
           ? ((campaign.cutCaptions && campaign.cutCaptions[cutIdx]) || '')
           : (tObj.text || '');
         const placeholderTxt = activeKey === 'caption'
           ? `${cutIdx + 1}컷 자막 입력`
           : activeKey === 'badge'
-            ? `기본: ${(design && design.label) || '상단 배지'}`
-            : `기본: ${(typeof arPriceTag === 'function' ? arPriceTag() : '') || (campaign && campaign.discount) || '혜택 문구'}`;
+            ? `기본: ${detectedBadge}`
+            : activeKey === 'chip'
+              ? `기본: ${defChip}`
+              : `기본: ${(typeof arPriceTag === 'function' ? arPriceTag() : '') || (campaign && campaign.discount) || '혜택 문구'}`;
         const textHandler = activeKey === 'caption'
           ? `updateCutCaptionDirect(${cutIdx}, this.value)`
           : `updateCutElementOverride(${cutIdx}, '${activeKey}', 'text', this.value, false)`;
@@ -3085,7 +3233,7 @@
             <span class="ar-el-label">확대</span>
             <input type="range" min="0.8" max="2.4" step="0.05" value="${Number(ph.scale) || 1}"
                    oninput="updateCutElementOverride(${cutIdx}, 'photo', 'scale', this.value, false)" class="flex-1" />
-            <button type="button" onclick="triggerCutPhotoReplace(${cutIdx})" class="ar-el-badge blue">📷 사진 교체</button>
+            <button type="button" onclick="openCutPhotoReplaceModal(${cutIdx})" class="ar-el-badge blue">📷 이 컷 사진 교체</button>
             <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'photo')" class="ar-el-badge muted">↺</button>
           </div>
           <div class="ar-inline-scroll-row ar-inline-style-bar">
@@ -3103,7 +3251,7 @@
             <span>⚡ ${cutIdx + 1}컷 빠른 편집</span>
           </div>
           <div class="flex items-center gap-1">
-            <button type="button" onclick="openCutEditor(${cutIdx}, '${activeKey}')" class="ar-el-badge muted">상세 패널</button>
+            <button type="button" onclick="openCutEditor(${cutIdx}, '${activeKey}')" class="ar-el-badge muted">🎛️ 상세 모달</button>
             <button type="button" onclick="closeInlineQuickEdit()" class="ar-el-badge blue">편집 완료 ✓</button>
           </div>
         </div>
@@ -3199,24 +3347,29 @@
     })();
 
     // ============================================================================
-    // ★ 컷 편집 — 요소별 편집 모드 (Element Inspector & Direct Canvas Mode)
+    // ★ 컷 편집 — 요소별 편집 모달 (Element Inspector Modal & Direct Canvas Mode)
     // ============================================================================
     function ensureCutEditorPanelDOM() {
       let panel = document.getElementById('cutEditorPanel');
-      if (panel) return panel;
-      const pinBar = document.getElementById('previewCutPinBar');
-      const monitorFrame = pinBar ? (pinBar.closest('.monitor-frame') || pinBar.parentElement.parentElement) : document.getElementById('mainMonitorColumn');
-      if (!monitorFrame) return null;
-      panel = document.createElement('section');
-      panel.id = 'cutEditorPanel';
-      panel.className = 'hidden mt-2 w-full';
-      panel.setAttribute('aria-label', '컷 요소별 편집 모드');
-      const pinRow = pinBar ? pinBar.parentElement : null;
-      if (pinRow && pinRow.nextSibling) {
-        monitorFrame.insertBefore(panel, pinRow.nextSibling);
-      } else {
-        monitorFrame.appendChild(panel);
+      if (panel) {
+        if (panel.parentElement !== document.body) {
+          document.body.appendChild(panel);
+        }
+        panel.className = panel.classList.contains('hidden')
+          ? 'hidden fixed inset-0 z-50 flex ar-modal'
+          : 'fixed inset-0 z-50 flex ar-modal';
+        return panel;
       }
+      panel = document.createElement('div');
+      panel.id = 'cutEditorPanel';
+      panel.className = 'hidden fixed inset-0 z-50 flex ar-modal';
+      panel.setAttribute('role', 'dialog');
+      panel.setAttribute('aria-modal', 'true');
+      panel.setAttribute('aria-label', '컷 요소별 편집 모달');
+      panel.addEventListener('click', (ev) => {
+        if (ev.target === panel) closeCutEditor();
+      });
+      document.body.appendChild(panel);
       return panel;
     }
 
@@ -3252,14 +3405,9 @@
 
     function closeCutEditor() {
       window.__arCutEditorOpen = false;
-      window.__arInlineEditActive = false;
       const panel = document.getElementById('cutEditorPanel');
       if (panel) panel.classList.add('hidden');
-      const bar = document.getElementById('arInlineEditBar');
-      if (bar) bar.classList.add('hidden');
-      if (window.__arPinnedCut >= 0) {
-        togglePinPreviewCut(-1);
-      }
+      renderCutOverlayEditorLayer();
     }
 
     function selectCutEditorElement(elKey) {
@@ -3330,13 +3478,33 @@
         if (Array.isArray(campaign.cutDecos)) campaign.cutDecos[cutIdx] = 'none';
         if (Array.isArray(campaign.cutFrames)) campaign.cutFrames[cutIdx] = '';
         if (Array.isArray(campaign.cutTransitions)) campaign.cutTransitions[cutIdx] = 'default';
+        if (Array.isArray(campaign.scenePlan) && campaign.scenePlan[cutIdx]) {
+          delete campaign.scenePlan[cutIdx].customLayout;
+          delete campaign.scenePlan[cutIdx].customCap;
+        }
       } else if (elKey === 'transition') {
         if (Array.isArray(campaign.cutTransitions)) campaign.cutTransitions[cutIdx] = 'default';
       } else if (def[elKey]) {
         ov[elKey] = def[elKey];
-        if (elKey === 'photo' && Array.isArray(campaign.cutFilters)) {
-          campaign.cutFilters[cutIdx] = 'none';
+        if (elKey === 'photo') {
+          if (Array.isArray(campaign.cutFilters)) campaign.cutFilters[cutIdx] = 'none';
+          if (Array.isArray(campaign.scenePlan) && campaign.scenePlan[cutIdx]) {
+            delete campaign.scenePlan[cutIdx].customLayout;
+          }
         }
+      }
+      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+      renderPreviewCutPinBar();
+    }
+
+    function setCutCustomLayout(cutIdx, layoutId) {
+      if (typeof cutIdx !== 'number' || cutIdx < 0) return;
+      if (!Array.isArray(campaign.scenePlan)) campaign.scenePlan = [];
+      if (!campaign.scenePlan[cutIdx]) campaign.scenePlan[cutIdx] = {};
+      if (!layoutId) {
+        delete campaign.scenePlan[cutIdx].customLayout;
+      } else {
+        campaign.scenePlan[cutIdx].customLayout = layoutId;
       }
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
       renderPreviewCutPinBar();
@@ -3379,7 +3547,7 @@
         const el = document.getElementById(id);
         if (el && document.activeElement !== el) el.value = val;
       };
-      if (elKey === 'caption' || elKey === 'badge' || elKey === 'price') {
+      if (elKey === 'caption' || elKey === 'badge' || elKey === 'price' || elKey === 'chip') {
         const t = ov[elKey] || {};
         setVal('arElValX', `${Math.round((typeof t.x === 'number' ? t.x : 0.5) * 100)}%`);
         setVal('arElValY', `${Math.round((typeof t.y === 'number' ? t.y : 0.5) * 100)}%`);
@@ -3411,39 +3579,136 @@
       }
     }
 
-    function triggerCutPhotoReplace(cutIdx) {
-      if (typeof replaceCutMedia === 'function') {
-        replaceCutMedia(cutIdx);
+    function openCutPhotoReplaceModal(cutIdx) {
+      const targetIdx = typeof cutIdx === 'number' && cutIdx >= 0 ? cutIdx : (window.__arPinnedCut >= 0 ? window.__arPinnedCut : 0);
+      let modal = document.getElementById('cutPhotoReplaceModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'cutPhotoReplaceModal';
+        modal.className = 'hidden fixed inset-0 z-[60] flex ar-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.addEventListener('click', (ev) => {
+          if (ev.target === modal) closeCutPhotoReplaceModal();
+        });
+        document.body.appendChild(modal);
+      }
+      const scenes = typeof getIndScenes === 'function' ? getIndScenes() : [];
+      const curSceneIdx = (campaign && Array.isArray(campaign.cutSceneIndices) && typeof campaign.cutSceneIndices[targetIdx] === 'number')
+        ? campaign.cutSceneIndices[targetIdx]
+        : (targetIdx % Math.max(1, scenes.length));
+      const hasCustomMedia = !!(campaign && ((campaign.uploadedPhotos && campaign.uploadedPhotos[targetIdx]) || (campaign.cutVideoUrls && campaign.cutVideoUrls[targetIdx])));
+
+      modal.innerHTML = `
+        <div class="studio-card w-full space-y-4 ar-modal-card" style="--mw:440px" onclick="event.stopPropagation()">
+          <div class="ar-modal-head">
+            <h3 class="text-[15px] font-semibold text-[#ededed]">📷 ${targetIdx + 1}컷 사진·영상 교체</h3>
+            <button type="button" onclick="closeCutPhotoReplaceModal()" class="ar-modal-x" aria-label="닫기">×</button>
+          </div>
+          <p class="text-[12px] text-[#a1a1a6] -mt-2">카메라로 바로 촬영하거나 갤러리(파일) 또는 기본 제공 장면에서 선택하세요.</p>
+          <div class="grid grid-cols-2 gap-2.5">
+            <label class="flex flex-col items-center justify-center gap-1.5 p-4 rounded-[12px] border border-[#0070f3]/50 bg-[#0070f3]/12 hover:bg-[#0070f3]/20 text-white cursor-pointer transition text-center">
+              <span class="text-[24px]">📷</span>
+              <span class="text-[13px] font-semibold">카메라 촬영</span>
+              <span class="text-[11px] text-white/65">직접 사진 찍기</span>
+              <input type="file" accept="image/*" capture="environment" class="hidden"
+                     onchange="replaceCutMedia(${targetIdx}, event);closeCutPhotoReplaceModal();renderCutEditorPanel();if(typeof renderInlineQuickEditBar==='function')renderInlineQuickEditBar();" />
+            </label>
+            <label class="flex flex-col items-center justify-center gap-1.5 p-4 rounded-[12px] border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] text-white cursor-pointer transition text-center">
+              <span class="text-[24px]">🖼️</span>
+              <span class="text-[13px] font-semibold">갤러리 · 파일</span>
+              <span class="text-[11px] text-white/65">사진첩·폴더에서 선택</span>
+              <input type="file" accept="image/*,video/*" class="hidden"
+                     onchange="replaceCutMedia(${targetIdx}, event);closeCutPhotoReplaceModal();renderCutEditorPanel();if(typeof renderInlineQuickEditBar==='function')renderInlineQuickEditBar();" />
+            </label>
+          </div>
+          ${hasCustomMedia ? `
+            <button type="button" onclick="clearCutUploadedPhoto(${targetIdx})"
+                    class="w-full py-2 px-3 rounded-[10px] border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] text-[12px] text-[#f87171] font-medium transition">
+              ↺ 업로드한 사진 제거하고 기본 장면으로 복원
+            </button>
+          ` : ''}
+          ${scenes.length ? `
+            <div class="space-y-2 pt-2 border-t border-white/10">
+              <div class="text-[12px] font-medium text-[#a1a1a6]">🎬 업종 기본 제공 장면에서 선택</div>
+              <div class="grid grid-cols-3 gap-2 max-h-[190px] overflow-y-auto pr-1">
+                ${scenes.slice(0, 9).map((sc, si) => {
+                  const active = !hasCustomMedia && curSceneIdx === si;
+                  const thumb = sc.img || sc.url || '';
+                  const title = sc.label || sc.title || `장면 ${si + 1}`;
+                  return `
+                    <button type="button" onclick="applyCutScenePresetFromModal(${targetIdx}, ${si})"
+                            class="group relative rounded-[10px] overflow-hidden border ${active ? 'border-[#4cc38a] ring-1 ring-[#4cc38a]' : 'border-white/15 hover:border-white/40'} bg-black/40 aspect-[16/11] text-left">
+                      ${thumb ? `<img src="${escapeCutHtml(thumb)}" alt="" class="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition" />` : ''}
+                      <span class="absolute inset-x-0 bottom-0 px-1.5 py-1 bg-black/70 text-[10px] text-white truncate">${escapeCutHtml(title)}</span>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      modal.classList.remove('hidden');
+    }
+
+    function closeCutPhotoReplaceModal() {
+      const modal = document.getElementById('cutPhotoReplaceModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function clearCutUploadedPhoto(cutIdx) {
+      if (campaign && Array.isArray(campaign.uploadedPhotos)) campaign.uploadedPhotos[cutIdx] = null;
+      if (campaign && Array.isArray(campaign.cutVideoUrls)) campaign.cutVideoUrls[cutIdx] = null;
+      if (campaign && Array.isArray(campaign.cutVideos)) campaign.cutVideos[cutIdx] = null;
+      closeCutPhotoReplaceModal();
+      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+      if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+      renderPreviewCutPinBar();
+    }
+
+    function applyCutScenePresetFromModal(cutIdx, sceneIdx) {
+      if (typeof selectCutDefaultScene === 'function') {
+        selectCutDefaultScene(cutIdx, sceneIdx);
+      } else {
+        if (!Array.isArray(campaign.cutSceneIndices)) campaign.cutSceneIndices = [];
+        campaign.cutSceneIndices[cutIdx] = sceneIdx;
+        if (Array.isArray(campaign.uploadedPhotos)) campaign.uploadedPhotos[cutIdx] = null;
+      }
+      closeCutPhotoReplaceModal();
+      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+      renderPreviewCutPinBar();
+    }
+
+    function triggerCutPhotoReplace(cutIdx, mode) {
+      if (mode === undefined || mode === null) {
+        openCutPhotoReplaceModal(cutIdx);
         return;
       }
-      let inp = document.getElementById('arCutPhotoReplaceInput');
+      const useCamera = mode === true || mode === 'camera';
+      const id = useCamera ? 'arCutPhotoCameraInput' : 'arCutPhotoReplaceInput';
+      let inp = document.getElementById(id);
       if (!inp) {
         inp = document.createElement('input');
         inp.type = 'file';
-        inp.id = 'arCutPhotoReplaceInput';
-        inp.accept = 'image/*,video/*';
+        inp.id = id;
+        inp.accept = useCamera ? 'image/*' : 'image/*,video/*';
+        if (useCamera) inp.setAttribute('capture', 'environment');
         inp.className = 'hidden';
         document.body.appendChild(inp);
       }
       inp.onchange = (ev) => {
         const f = ev.target && ev.target.files && ev.target.files[0];
-        inp.value = '';
         if (!f) return;
-        if (typeof handleCutCardFileSelect === 'function') {
+        if (typeof replaceCutMedia === 'function') {
+          replaceCutMedia(cutIdx, { target: { files: [f] } });
+        } else if (typeof handleCutCardFileSelect === 'function') {
           handleCutCardFileSelect(cutIdx, f);
-        } else {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const img = new Image();
-            img.onload = () => {
-              if (!Array.isArray(campaign.uploadedPhotos)) campaign.uploadedPhotos = [];
-              campaign.uploadedPhotos[cutIdx] = img;
-              if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
-            };
-            img.src = reader.result;
-          };
-          reader.readAsDataURL(f);
         }
+        inp.value = '';
+        closeCutPhotoReplaceModal();
+        renderCutEditorPanel();
+        if (typeof renderInlineQuickEditBar === 'function') renderInlineQuickEditBar();
       };
       inp.click();
     }
@@ -3462,7 +3727,7 @@
       const curAnim = obj.anim || 'default';
       return `
         <div class="ar-el-row">
-          <span class="ar-el-label">폰트·박스</span>
+          <span class="ar-el-label">폰트 스타일</span>
           <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 min-w-0 py-0.5">
             <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'font', '', true)"
                     class="ar-el-chip ${!curFont ? 'active' : ''}">기본 폰트</button>
@@ -3474,7 +3739,7 @@
           </div>
         </div>
         <div class="ar-el-row">
-          <span class="ar-el-label">박스 디자인</span>
+          <span class="ar-el-label">카드·박스</span>
           <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 min-w-0 py-0.5">
             ${AR_ELEMENT_BOX_STYLES.map((bs) => `
               <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'boxStyle', '${bs.id}', true)"
@@ -3494,24 +3759,75 @@
       `;
     }
 
+    function buildStandardElementInspectorHtml(cutIdx, elKey, obj, labelTitle, curTextVal, placeholderTxt, textInputHandler, defaultY) {
+      const defPos = getDefaultCutElPos(elKey);
+      const curX = obj.customPos && typeof obj.x === 'number' ? obj.x : defPos.x;
+      const curY = obj.customPos && typeof obj.y === 'number' ? obj.y : (defaultY ?? defPos.y);
+      return `
+        <div class="ar-el-row">
+          <span class="ar-el-label">${labelTitle}</span>
+          <input type="text" value="${escapeCutHtml(curTextVal)}" placeholder="${escapeCutHtml(placeholderTxt)}"
+                 oninput="${textInputHandler}"
+                 class="flex-1 min-w-0 h-9 px-3 rounded-[8px] bg-black/45 border border-white/15 text-[13px] text-white focus:outline-none focus:border-[#4cc38a]" />
+          <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'hidden', ${!obj.hidden}, true)"
+                  class="ar-el-badge ${obj.hidden ? 'muted' : ''}">${obj.hidden ? '🙈 숨김중' : '👁 표시중'}</button>
+          <button type="button" onclick="resetCutElementOverride(${cutIdx}, '${elKey}')" class="ar-el-badge muted" title="위치·크기·디자인 초기화">↺ 초기화</button>
+        </div>
+        <div class="ar-el-row grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="ar-el-label">가로 위치 X</span>
+            <input id="arElRangeX" type="range" min="0.06" max="0.94" step="0.01" value="${curX}"
+                   oninput="updateCutElementOverride(${cutIdx}, '${elKey}', 'x', this.value, false)" class="flex-1" />
+            <span id="arElValX" class="ar-el-val">${Math.round(curX * 100)}%</span>
+          </div>
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="ar-el-label">세로 위치 Y</span>
+            <input id="arElRangeY" type="range" min="0.05" max="0.95" step="0.01" value="${curY}"
+                   oninput="updateCutElementOverride(${cutIdx}, '${elKey}', 'y', this.value, false)" class="flex-1" />
+            <span id="arElValY" class="ar-el-val">${Math.round(curY * 100)}%</span>
+          </div>
+        </div>
+        <div class="ar-el-row">
+          <span class="ar-el-label">요소 크기</span>
+          <input id="arElRangeScale" type="range" min="0.55" max="1.9" step="0.05" value="${Number(obj.scale) || 1}"
+                 oninput="updateCutElementOverride(${cutIdx}, '${elKey}', 'scale', this.value, false)" class="flex-1" />
+          <span id="arElValScale" class="ar-el-val">${Math.round((Number(obj.scale) || 1) * 100)}%</span>
+        </div>
+        <div class="ar-el-row">
+          <span class="ar-el-label">색상 선택</span>
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
+            <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'color', '', true)"
+                    class="px-2.5 py-1 rounded-full text-[11px] font-semibold border shrink-0 ${!obj.color ? 'border-white bg-white/15 text-white' : 'border-white/15 text-white/60'}">기본색</button>
+            ${CUT_TEXT_COLORS.map((col) => `
+              <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'color', '${col}', true)"
+                      class="ar-el-color-swatch ${obj.color === col ? 'active' : ''}"
+                      style="background:${col}" aria-label="색상 ${col}"></button>
+            `).join('')}
+          </div>
+        </div>
+        ${buildElementStyleAndAnimRowsHtml(cutIdx, elKey, obj)}
+      `;
+    }
+
     function renderCutEditorPanel() {
       const panel = ensureCutEditorPanelDOM();
       if (!panel) return;
       const cutIdx = window.__arPinnedCut;
-      if (typeof cutIdx !== 'number' || cutIdx < 0) {
+      if (!window.__arCutEditorOpen || typeof cutIdx !== 'number' || cutIdx < 0) {
         panel.classList.add('hidden');
         panel.innerHTML = '';
         return;
       }
-      window.__arCutEditorOpen = true;
       panel.classList.remove('hidden');
 
+      const totalCuts = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
       const ov = getCutElementOverride(cutIdx);
       const overlays = getCutOverlayList(cutIdx);
       const curDeco = (campaign.cutDecos && campaign.cutDecos[cutIdx]) || 'none';
       const curFilter = (campaign.cutFilters && campaign.cutFilters[cutIdx]) || 'none';
       const curFrame = (campaign.cutFrames && campaign.cutFrames[cutIdx]) || '';
       const curTrans = (campaign.cutTransitions && campaign.cutTransitions[cutIdx]) || 'default';
+      const curLayout = (campaign.scenePlan && campaign.scenePlan[cutIdx] && campaign.scenePlan[cutIdx].customLayout) || '';
       const design = typeof getActiveDesign === 'function' ? getActiveDesign() : {};
 
       let activeKey = window.__arActiveCutElKey || 'caption';
@@ -3526,11 +3842,19 @@
         }
       }
 
+      const cutSwitchHtml = Array.from({ length: totalCuts }, (_, i) => {
+        const on = i === cutIdx;
+        const mod = hasAnyCutElementOverride(i);
+        return `<button type="button" onclick="openCutEditor(${i}, '${activeKey}')"
+                        class="px-2.5 py-1 rounded-[8px] text-[11px] font-semibold border transition shrink-0 ${on ? 'bg-white text-[#09090b] border-white' : mod ? 'bg-[#facc15]/15 border-[#facc15]/50 text-[#fde047]' : 'bg-white/5 border-white/10 text-[#a1a1a6] hover:text-white'}">${i + 1}컷${mod ? '✦' : ''}</button>`;
+      }).join('');
+
       const baseChips = [
-        { key: 'caption',    label: '💬 컷 자막',         hidden: !!ov.caption.hidden, mod: isCutElementModified(cutIdx, 'caption') },
-        { key: 'badge',      label: '🏷️ 상단 라벨/배지',   hidden: !!ov.badge.hidden,   mod: isCutElementModified(cutIdx, 'badge') },
-        { key: 'price',      label: '💰 혜택/서브 문구',   hidden: !!ov.price.hidden,   mod: isCutElementModified(cutIdx, 'price') },
-        { key: 'photo',      label: '🖼️ 배경 사진 구도',   hidden: false,               mod: isCutElementModified(cutIdx, 'photo') },
+        { key: 'caption',    label: '💬 컷 자막·카드',     hidden: !!ov.caption.hidden, mod: isCutElementModified(cutIdx, 'caption') },
+        { key: 'badge',      label: '🏷️ 상단 라벨·배지',   hidden: !!ov.badge.hidden,   mod: isCutElementModified(cutIdx, 'badge') },
+        { key: 'price',      label: '💰 혜택·강조 배지',   hidden: !!ov.price.hidden,   mod: isCutElementModified(cutIdx, 'price') },
+        { key: 'chip',       label: '🪪 하단 프로필·상호', hidden: !!ov.chip.hidden,    mod: isCutElementModified(cutIdx, 'chip') },
+        { key: 'photo',      label: '🖼️ 배경 사진·구도',   hidden: false,               mod: isCutElementModified(cutIdx, 'photo') },
         { key: 'transition', label: '🎞 컷 전환 효과',     hidden: false,               mod: isCutElementModified(cutIdx, 'transition') },
         { key: 'deco',       label: '✨ 꾸밈·오버레이',    hidden: false,               mod: isCutElementModified(cutIdx, 'deco') }
       ];
@@ -3559,150 +3883,104 @@
 
       let inspectorHtml = '';
       if (activeKey === 'caption') {
-        const c = ov.caption;
         const curCap = (campaign.cutCaptions && campaign.cutCaptions[cutIdx]) || '';
-        inspectorHtml = `
-          <div class="ar-el-row">
-            <span class="ar-el-label">컷 자막</span>
-            <input type="text" value="${escapeCutHtml(curCap)}" placeholder="${cutIdx + 1}컷 자막을 입력하세요"
-                   oninput="updateCutCaptionDirect(${cutIdx}, this.value)"
-                   class="flex-1 min-w-0 h-8 px-2.5 rounded-[8px] bg-black/40 border border-white/15 text-[12px] text-white focus:outline-none focus:border-[#4cc38a]" />
-            <button type="button" onclick="updateCutElementOverride(${cutIdx}, 'caption', 'hidden', ${!c.hidden}, true)"
-                    class="ar-el-badge ${c.hidden ? 'muted' : ''}">${c.hidden ? '🙈 숨김중' : '👁 표시중'}</button>
-            <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'caption')" class="ar-el-badge muted" title="자막 위치·크기·색상 초기화">↺ 초기화</button>
-          </div>
-          <div class="ar-el-row">
-            <span class="ar-el-label">가로 X</span>
-            <input id="arElRangeX" type="range" min="0.08" max="0.92" step="0.01" value="${typeof c.x === 'number' ? c.x : 0.5}"
-                   oninput="updateCutElementOverride(${cutIdx}, 'caption', 'x', this.value, false)" />
-            <span id="arElValX" class="ar-el-val">${Math.round((typeof c.x === 'number' ? c.x : 0.5) * 100)}%</span>
-            <span class="ar-el-label ml-1">세로 Y</span>
-            <input id="arElRangeY" type="range" min="0.08" max="0.92" step="0.01" value="${typeof c.y === 'number' ? c.y : 0.72}"
-                   oninput="updateCutElementOverride(${cutIdx}, 'caption', 'y', this.value, false)" />
-            <span id="arElValY" class="ar-el-val">${Math.round((typeof c.y === 'number' ? c.y : 0.72) * 100)}%</span>
-          </div>
-          <div class="ar-el-row">
-            <span class="ar-el-label">크기</span>
-            <input id="arElRangeScale" type="range" min="0.6" max="1.8" step="0.05" value="${Number(c.scale) || 1}"
-                   oninput="updateCutElementOverride(${cutIdx}, 'caption', 'scale', this.value, false)" />
-            <span id="arElValScale" class="ar-el-val">${Math.round((Number(c.scale) || 1) * 100)}%</span>
-            <div class="flex items-center gap-1 ml-1 overflow-x-auto no-scrollbar">
-              <button type="button" onclick="updateCutElementOverride(${cutIdx}, 'caption', 'color', '', true)"
-                      class="px-1.5 py-0.5 rounded text-[10px] border ${!c.color ? 'border-white bg-white/15 text-white' : 'border-white/15 text-white/60'}">기본</button>
-              ${CUT_TEXT_COLORS.slice(0, 7).map((col) => `
-                <button type="button" onclick="updateCutElementOverride(${cutIdx}, 'caption', 'color', '${col}', true)"
-                        class="w-4 h-4 rounded-full shrink-0 border ${c.color === col ? 'scale-125 border-white ring-1 ring-white' : 'border-white/30'}"
-                        style="background:${col}"></button>
-              `).join('')}
-            </div>
-          </div>
-          ${buildElementStyleAndAnimRowsHtml(cutIdx, 'caption', c)}
-        `;
+        inspectorHtml = buildStandardElementInspectorHtml(
+          cutIdx,
+          'caption',
+          ov.caption,
+          '컷 자막',
+          curCap,
+          `${cutIdx + 1}컷 자막을 입력하세요`,
+          `updateCutCaptionDirect(${cutIdx}, this.value)`,
+          0.72
+        );
       } else if (activeKey === 'badge') {
-        const b = ov.badge;
-        const defLabel = (design && design.label) || '상단 라벨';
-        inspectorHtml = `
-          <div class="ar-el-row">
-            <span class="ar-el-label">배지 문구</span>
-            <input type="text" value="${escapeCutHtml(b.text || '')}" placeholder="기본: ${escapeCutHtml(defLabel)}"
-                   oninput="updateCutElementOverride(${cutIdx}, 'badge', 'text', this.value, false)"
-                   class="flex-1 min-w-0 h-8 px-2.5 rounded-[8px] bg-black/40 border border-white/15 text-[12px] text-white focus:outline-none focus:border-[#4cc38a]" />
-            <button type="button" onclick="updateCutElementOverride(${cutIdx}, 'badge', 'hidden', ${!b.hidden}, true)"
-                    class="ar-el-badge ${b.hidden ? 'muted' : ''}">${b.hidden ? '🙈 숨김중' : '👁 표시중'}</button>
-            <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'badge')" class="ar-el-badge muted">↺ 초기화</button>
-          </div>
-          <div class="ar-el-row">
-            <span class="ar-el-label">가로 X</span>
-            <input id="arElRangeX" type="range" min="0.08" max="0.92" step="0.01" value="${typeof b.x === 'number' ? b.x : 0.5}"
-                   oninput="updateCutElementOverride(${cutIdx}, 'badge', 'x', this.value, false)" />
-            <span id="arElValX" class="ar-el-val">${Math.round((typeof b.x === 'number' ? b.x : 0.5) * 100)}%</span>
-            <span class="ar-el-label ml-1">세로 Y</span>
-            <input id="arElRangeY" type="range" min="0.04" max="0.90" step="0.01" value="${typeof b.y === 'number' ? b.y : 0.08}"
-                   oninput="updateCutElementOverride(${cutIdx}, 'badge', 'y', this.value, false)" />
-            <span id="arElValY" class="ar-el-val">${Math.round((typeof b.y === 'number' ? b.y : 0.08) * 100)}%</span>
-          </div>
-          <div class="ar-el-row">
-            <span class="ar-el-label">크기</span>
-            <input id="arElRangeScale" type="range" min="0.6" max="1.8" step="0.05" value="${Number(b.scale) || 1}"
-                   oninput="updateCutElementOverride(${cutIdx}, 'badge', 'scale', this.value, false)" />
-            <span id="arElValScale" class="ar-el-val">${Math.round((Number(b.scale) || 1) * 100)}%</span>
-            <div class="flex items-center gap-1 ml-1 overflow-x-auto no-scrollbar">
-              <button type="button" onclick="updateCutElementOverride(${cutIdx}, 'badge', 'color', '', true)"
-                      class="px-1.5 py-0.5 rounded text-[10px] border ${!b.color ? 'border-white bg-white/15 text-white' : 'border-white/15 text-white/60'}">기본</button>
-              ${CUT_TEXT_COLORS.slice(0, 7).map((col) => `
-                <button type="button" onclick="updateCutElementOverride(${cutIdx}, 'badge', 'color', '${col}', true)"
-                        class="w-4 h-4 rounded-full shrink-0 border ${b.color === col ? 'scale-125 border-white ring-1 ring-white' : 'border-white/30'}"
-                        style="background:${col}"></button>
-              `).join('')}
-            </div>
-          </div>
-          ${buildElementStyleAndAnimRowsHtml(cutIdx, 'badge', b)}
-        `;
+        const detectedLabel = (window.__arLastDetectedBadgeText && window.__arLastDetectedBadgeText[cutIdx]) || (design && design.label) || '상단 라벨';
+        inspectorHtml = buildStandardElementInspectorHtml(
+          cutIdx,
+          'badge',
+          ov.badge,
+          '상단 라벨',
+          ov.badge.text || '',
+          `기본: ${detectedLabel}`,
+          `updateCutElementOverride(${cutIdx}, 'badge', 'text', this.value, false)`,
+          0.08
+        );
       } else if (activeKey === 'price') {
-        const p = ov.price;
         const defPrice = (typeof arPriceTag === 'function' ? arPriceTag() : '') || (campaign && campaign.discount) || '혜택 강조 문구';
-        inspectorHtml = `
-          <div class="ar-el-row">
-            <span class="ar-el-label">혜택 문구</span>
-            <input type="text" value="${escapeCutHtml(p.text || '')}" placeholder="기본: ${escapeCutHtml(defPrice)}"
-                   oninput="updateCutElementOverride(${cutIdx}, 'price', 'text', this.value, false)"
-                   class="flex-1 min-w-0 h-8 px-2.5 rounded-[8px] bg-black/40 border border-white/15 text-[12px] text-white focus:outline-none focus:border-[#4cc38a]" />
-            <button type="button" onclick="updateCutElementOverride(${cutIdx}, 'price', 'hidden', ${!p.hidden}, true)"
-                    class="ar-el-badge ${p.hidden ? 'muted' : ''}">${p.hidden ? '🙈 숨김중' : '👁 표시중'}</button>
-            <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'price')" class="ar-el-badge muted">↺ 초기화</button>
-          </div>
-          <div class="ar-el-row">
-            <span class="ar-el-label">가로 X</span>
-            <input id="arElRangeX" type="range" min="0.08" max="0.92" step="0.01" value="${typeof p.x === 'number' ? p.x : 0.5}"
-                   oninput="updateCutElementOverride(${cutIdx}, 'price', 'x', this.value, false)" />
-            <span id="arElValX" class="ar-el-val">${Math.round((typeof p.x === 'number' ? p.x : 0.5) * 100)}%</span>
-            <span class="ar-el-label ml-1">세로 Y</span>
-            <input id="arElRangeY" type="range" min="0.08" max="0.92" step="0.01" value="${typeof p.y === 'number' ? p.y : 0.56}"
-                   oninput="updateCutElementOverride(${cutIdx}, 'price', 'y', this.value, false)" />
-            <span id="arElValY" class="ar-el-val">${Math.round((typeof p.y === 'number' ? p.y : 0.56) * 100)}%</span>
-          </div>
-          <div class="ar-el-row">
-            <span class="ar-el-label">크기</span>
-            <input id="arElRangeScale" type="range" min="0.6" max="1.8" step="0.05" value="${Number(p.scale) || 1}"
-                   oninput="updateCutElementOverride(${cutIdx}, 'price', 'scale', this.value, false)" />
-            <span id="arElValScale" class="ar-el-val">${Math.round((Number(p.scale) || 1) * 100)}%</span>
-            <div class="flex items-center gap-1 ml-1 overflow-x-auto no-scrollbar">
-              <button type="button" onclick="updateCutElementOverride(${cutIdx}, 'price', 'color', '', true)"
-                      class="px-1.5 py-0.5 rounded text-[10px] border ${!p.color ? 'border-white bg-white/15 text-white' : 'border-white/15 text-white/60'}">기본</button>
-              ${CUT_TEXT_COLORS.slice(0, 7).map((col) => `
-                <button type="button" onclick="updateCutElementOverride(${cutIdx}, 'price', 'color', '${col}', true)"
-                        class="w-4 h-4 rounded-full shrink-0 border ${p.color === col ? 'scale-125 border-white ring-1 ring-white' : 'border-white/30'}"
-                        style="background:${col}"></button>
-              `).join('')}
-            </div>
-          </div>
-          ${buildElementStyleAndAnimRowsHtml(cutIdx, 'price', p)}
-        `;
+        inspectorHtml = buildStandardElementInspectorHtml(
+          cutIdx,
+          'price',
+          ov.price,
+          '혜택 문구',
+          ov.price.text || '',
+          `기본: ${defPrice}`,
+          `updateCutElementOverride(${cutIdx}, 'price', 'text', this.value, false)`,
+          0.56
+        );
+      } else if (activeKey === 'chip') {
+        const dObj = typeof getActiveDealer === 'function' ? getActiveDealer() : {};
+        const defChip = `${dObj.name || ''} ${dObj.title || dObj.branch || ''}`.trim() || '매장·프로필 바';
+        inspectorHtml = buildStandardElementInspectorHtml(
+          cutIdx,
+          'chip',
+          ov.chip,
+          '프로필·상호',
+          ov.chip.text || '',
+          `기본: ${defChip}`,
+          `updateCutElementOverride(${cutIdx}, 'chip', 'text', this.value, false)`,
+          0.92
+        );
       } else if (activeKey === 'photo') {
         const ph = ov.photo;
         inspectorHtml = `
+          <div class="ar-el-row flex-wrap">
+            <span class="ar-el-label">사진 교체</span>
+            <button type="button" onclick="openCutPhotoReplaceModal(${cutIdx})" class="ar-el-badge blue">📷 이 컷 사진·영상 교체 (카메라 / 갤러리)</button>
+            <label class="ar-el-badge cursor-pointer">
+              📷 카메라 바로 촬영
+              <input type="file" accept="image/*" capture="environment" class="hidden" onchange="replaceCutMedia(${cutIdx}, event);renderCutEditorPanel();if(typeof renderInlineQuickEditBar==='function')renderInlineQuickEditBar();" />
+            </label>
+            <label class="ar-el-badge cursor-pointer">
+              🖼️ 갤러리 바로 선택
+              <input type="file" accept="image/*,video/*" class="hidden" onchange="replaceCutMedia(${cutIdx}, event);renderCutEditorPanel();if(typeof renderInlineQuickEditBar==='function')renderInlineQuickEditBar();" />
+            </label>
+            <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'photo')" class="ar-el-badge muted ml-auto">↺ 초기화</button>
+          </div>
           <div class="ar-el-row">
             <span class="ar-el-label">확대(Zoom)</span>
             <input id="arElRangePhotoScale" type="range" min="0.8" max="2.4" step="0.05" value="${Number(ph.scale) || 1}"
-                   oninput="updateCutElementOverride(${cutIdx}, 'photo', 'scale', this.value, false)" />
+                   oninput="updateCutElementOverride(${cutIdx}, 'photo', 'scale', this.value, false)" class="flex-1" />
             <span id="arElValPhotoScale" class="ar-el-val">${Math.round((Number(ph.scale) || 1) * 100)}%</span>
-            <button type="button" onclick="triggerCutPhotoReplace(${cutIdx})" class="ar-el-badge blue">📷 이 컷 사진 교체</button>
-            <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'photo')" class="ar-el-badge muted">↺ 구도 초기화</button>
+          </div>
+          <div class="ar-el-row grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="ar-el-label">좌우 이동</span>
+              <input id="arElRangePanX" type="range" min="-0.5" max="0.5" step="0.02" value="${Number(ph.panX) || 0}"
+                     oninput="updateCutElementOverride(${cutIdx}, 'photo', 'panX', this.value, false)" class="flex-1" />
+              <span id="arElValPanX" class="ar-el-val">${Math.round((Number(ph.panX) || 0) * 100)}%</span>
+            </div>
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="ar-el-label">상하 이동</span>
+              <input id="arElRangePanY" type="range" min="-0.5" max="0.5" step="0.02" value="${Number(ph.panY) || 0}"
+                     oninput="updateCutElementOverride(${cutIdx}, 'photo', 'panY', this.value, false)" class="flex-1" />
+              <span id="arElValPanY" class="ar-el-val">${Math.round((Number(ph.panY) || 0) * 100)}%</span>
+            </div>
           </div>
           <div class="ar-el-row">
-            <span class="ar-el-label">좌우 이동</span>
-            <input id="arElRangePanX" type="range" min="-0.5" max="0.5" step="0.02" value="${Number(ph.panX) || 0}"
-                   oninput="updateCutElementOverride(${cutIdx}, 'photo', 'panX', this.value, false)" />
-            <span id="arElValPanX" class="ar-el-val">${Math.round((Number(ph.panX) || 0) * 100)}%</span>
-            <span class="ar-el-label ml-1">상하 이동</span>
-            <input id="arElRangePanY" type="range" min="-0.5" max="0.5" step="0.02" value="${Number(ph.panY) || 0}"
-                   oninput="updateCutElementOverride(${cutIdx}, 'photo', 'panY', this.value, false)" />
-            <span id="arElValPanY" class="ar-el-val">${Math.round((Number(ph.panY) || 0) * 100)}%</span>
+            <span class="ar-el-label">사진 배치</span>
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
+              ${AR_CUT_LAYOUT_OPTIONS.map((lo) => {
+                const on = curLayout === lo.id;
+                return `<button type="button" onclick="setCutCustomLayout(${cutIdx}, '${lo.id}')"
+                                class="ar-el-chip ${on ? 'active' : ''}">${lo.label}</button>`;
+              }).join('')}
+            </div>
           </div>
           <div class="ar-el-row">
             <span class="ar-el-label">색감 필터</span>
-            <div class="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1 py-0.5">
-              ${CUT_FILTER_OPTIONS.slice(0, 8).map((f) => {
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
+              ${CUT_FILTER_OPTIONS.map((f) => {
                 const on = curFilter === f.id;
                 return `<button type="button" onclick="setCutFilter(${cutIdx}, '${f.id}')"
                                 class="ar-el-chip ${on ? 'active' : ''}">${f.label}</button>`;
@@ -3714,7 +3992,7 @@
         inspectorHtml = `
           <div class="ar-el-row">
             <span class="ar-el-label">컷 전환(16종)</span>
-            <div class="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1 py-0.5">
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
               ${AR_CUT_TRANSITIONS.map((tr) => {
                 const on = curTrans === tr.id;
                 return `<button type="button" onclick="setCutTransition(${cutIdx}, '${tr.id}')"
@@ -3742,25 +4020,28 @@
               ${(isText || isWidget) ? `
                 <input type="text" value="${escapeCutHtml(curTxt)}" placeholder="문구 입력"
                        oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'text', this.value, false)"
-                       class="flex-1 min-w-0 h-8 px-2.5 rounded-[8px] bg-black/40 border border-white/15 text-[12px] text-white focus:outline-none focus:border-[#4cc38a]" />
+                       class="flex-1 min-w-0 h-9 px-3 rounded-[8px] bg-black/45 border border-white/15 text-[13px] text-white focus:outline-none focus:border-[#4cc38a]" />
               ` : `<span class="text-[12px] text-white/80 flex-1">${it.style === 'photo' ? '📷 사진 스티커' : escapeCutHtml(it.text || it.key || '스티커')}</span>`}
               <button type="button" onclick="duplicateSelectedOverlay()" class="ar-el-badge muted">복제</button>
               <button type="button" onclick="removeSelectedOverlay()" class="ar-el-badge" style="color:#f87171;border-color:rgba(248,113,113,0.4);">🗑 삭제</button>
             </div>
             ${isText ? `
               <div class="ar-el-row">
-                <span class="ar-el-label">폰트·배경</span>
-                <div class="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1">
+                <span class="ar-el-label">폰트 스타일</span>
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
                   ${CUT_TEXT_FONTS.map((f) => {
                     const on = (it.font || 'dohyeon') === f.id;
                     return `<button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'font', '${f.id}', true)"
                                     class="ar-el-chip ${on ? 'active' : ''}">${f.label}</button>`;
                   }).join('')}
                 </div>
-                <div class="flex items-center gap-1">
-                  ${CUT_TEXT_COLORS.slice(0, 6).map((col) => `
+              </div>
+              <div class="ar-el-row">
+                <span class="ar-el-label">색상 선택</span>
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
+                  ${CUT_TEXT_COLORS.map((col) => `
                     <button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'color', '${col}', true)"
-                            class="w-4 h-4 rounded-full shrink-0 border ${(it.color || '#ffffff') === col ? 'scale-125 border-white ring-1 ring-white' : 'border-white/30'}"
+                            class="ar-el-color-swatch ${(it.color || '#ffffff') === col ? 'active' : ''}"
                             style="background:${col}"></button>
                   `).join('')}
                 </div>
@@ -3768,7 +4049,7 @@
             ` : ''}
             <div class="ar-el-row">
               <span class="ar-el-label">애니메이션</span>
-              <div class="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1 py-0.5">
+              <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
                 ${AR_ELEMENT_ANIMS.filter((a) => a.id !== 'default').map((an) => {
                   const curA = it.anim || 'static';
                   const on = (an.id === 'none' && (curA === 'static' || curA === 'none')) || curA === an.id;
@@ -3777,25 +4058,33 @@
                 }).join('')}
               </div>
             </div>
-            <div class="ar-el-row">
-              <span class="ar-el-label">가로 X</span>
-              <input id="arElRangeOvX" type="range" min="0.06" max="0.94" step="0.01" value="${typeof it.x === 'number' ? it.x : 0.5}"
-                     oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'x', this.value, false)" />
-              <span id="arElValOvX" class="ar-el-val">${Math.round((typeof it.x === 'number' ? it.x : 0.5) * 100)}%</span>
-              <span class="ar-el-label ml-1">세로 Y</span>
-              <input id="arElRangeOvY" type="range" min="0.06" max="0.94" step="0.01" value="${typeof it.y === 'number' ? it.y : 0.5}"
-                     oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'y', this.value, false)" />
-              <span id="arElValOvY" class="ar-el-val">${Math.round((typeof it.y === 'number' ? it.y : 0.5) * 100)}%</span>
+            <div class="ar-el-row grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="ar-el-label">가로 X</span>
+                <input id="arElRangeOvX" type="range" min="0.06" max="0.94" step="0.01" value="${typeof it.x === 'number' ? it.x : 0.5}"
+                       oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'x', this.value, false)" class="flex-1" />
+                <span id="arElValOvX" class="ar-el-val">${Math.round((typeof it.x === 'number' ? it.x : 0.5) * 100)}%</span>
+              </div>
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="ar-el-label">세로 Y</span>
+                <input id="arElRangeOvY" type="range" min="0.06" max="0.94" step="0.01" value="${typeof it.y === 'number' ? it.y : 0.5}"
+                       oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'y', this.value, false)" class="flex-1" />
+                <span id="arElValOvY" class="ar-el-val">${Math.round((typeof it.y === 'number' ? it.y : 0.5) * 100)}%</span>
+              </div>
             </div>
-            <div class="ar-el-row">
-              <span class="ar-el-label">크기</span>
-              <input id="arElRangeOvScale" type="range" min="0.45" max="2.5" step="0.05" value="${Number(it.scale) || 1}"
-                     oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'scale', this.value, false)" />
-              <span id="arElValOvScale" class="ar-el-val">${Math.round((Number(it.scale) || 1) * 100)}%</span>
-              <span class="ar-el-label ml-1">회전</span>
-              <input id="arElRangeOvRot" type="range" min="-45" max="45" step="1" value="${Number(it.rot) || 0}"
-                     oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'rot', this.value, false)" />
-              <span id="arElValOvRot" class="ar-el-val">${Math.round(Number(it.rot) || 0)}°</span>
+            <div class="ar-el-row grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="ar-el-label">크기</span>
+                <input id="arElRangeOvScale" type="range" min="0.45" max="2.5" step="0.05" value="${Number(it.scale) || 1}"
+                       oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'scale', this.value, false)" class="flex-1" />
+                <span id="arElValOvScale" class="ar-el-val">${Math.round((Number(it.scale) || 1) * 100)}%</span>
+              </div>
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="ar-el-label">회전</span>
+                <input id="arElRangeOvRot" type="range" min="-45" max="45" step="1" value="${Number(it.rot) || 0}"
+                       oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'rot', this.value, false)" class="flex-1" />
+                <span id="arElValOvRot" class="ar-el-val">${Math.round(Number(it.rot) || 0)}°</span>
+              </div>
             </div>
           `;
         }
@@ -3804,14 +4093,14 @@
         inspectorHtml = `
           <div class="ar-el-row">
             <span class="ar-el-label">요소 추가</span>
-            <button type="button" onclick="openIgTextCompose(-1)" class="ar-el-chip active">＋ 🔤 텍스트 추가</button>
-            <button type="button" onclick="openIgSheet('sticker')" class="ar-el-chip">＋ ⭐ 스티커·위젯</button>
-            <button type="button" onclick="openIgDrawMode()" class="ar-el-chip">＋ ✏️ 그리기</button>
+            <button type="button" onclick="closeCutEditor();openIgTextCompose(-1)" class="ar-el-chip active">＋ 🔤 텍스트 추가</button>
+            <button type="button" onclick="closeCutEditor();openIgSheet('sticker')" class="ar-el-chip">＋ ⭐ 스티커·위젯</button>
+            <button type="button" onclick="closeCutEditor();openIgDrawMode()" class="ar-el-chip">＋ ✏️ 그리기</button>
           </div>
           <div class="ar-el-row">
             <span class="ar-el-label">꾸밈 효과</span>
-            <div class="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1 py-0.5">
-              ${CUT_DECO_OPTIONS.slice(0, 8).map((o) => {
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
+              ${CUT_DECO_OPTIONS.map((o) => {
                 const on = curDeco === o.id;
                 return `<button type="button" onclick="setCutDeco(${cutIdx}, '${o.id}')" class="ar-el-chip ${on ? 'active' : ''}">${o.label}</button>`;
               }).join('')}
@@ -3819,7 +4108,7 @@
           </div>
           <div class="ar-el-row">
             <span class="ar-el-label">프레임</span>
-            <div class="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1 py-0.5">
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
               ${CUT_STICKER_FRAMES.map((fr) => {
                 const on = (curFrame || 'noneFrame') === fr.key;
                 return `<button type="button" onclick="setCutFrame(${cutIdx}, '${fr.key}')" class="ar-el-chip ${on ? 'active' : ''}">${fr.label}</button>`;
@@ -3830,27 +4119,42 @@
       }
 
       panel.innerHTML = `
-        <div class="ar-el-mode-bar">
-          <div class="flex items-center gap-1.5 min-w-0">
-            <span class="ar-el-badge">${cutIdx + 1}컷 요소 선택·편집</span>
-            <button type="button" onclick="toggleDirectCanvasSelectMode()"
-                    class="ar-el-badge ${window.__arDirectCanvasMode ? 'blue' : 'muted'}"
-                    title="프리뷰 캔버스에서 직접 요소를 클릭·드래그해 위치를 조절합니다">
-              🎯 캔버스 직접 선택 ${window.__arDirectCanvasMode ? 'ON' : 'OFF'}
+        <div class="studio-card w-full space-y-3.5 ar-modal-card" style="--mw:560px" onclick="event.stopPropagation()">
+          <div class="ar-modal-head">
+            <div class="flex items-center gap-2 min-w-0">
+              <h3 class="text-[15px] font-semibold text-[#ededed]">🎬 ${cutIdx + 1}컷 요소 선택·상세 편집</h3>
+              <button type="button" onclick="toggleDirectCanvasSelectMode()"
+                      class="ar-el-badge ${window.__arDirectCanvasMode ? 'blue' : 'muted'}"
+                      title="프리뷰 캔버스에서 직접 요소를 클릭·드래그해 위치를 조절합니다">
+                🎯 캔버스 직접 선택 ${window.__arDirectCanvasMode ? 'ON' : 'OFF'}
+              </button>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'all')"
+                      class="ar-el-badge muted" title="${cutIdx + 1}컷의 모든 요소 편집 초기화">이 컷 초기화</button>
+              <button type="button" onclick="closeCutEditor()" class="ar-modal-x" aria-label="닫기">×</button>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+            <span class="text-[11px] font-medium text-[#8a8f98] shrink-0 mr-1">컷 이동</span>
+            ${cutSwitchHtml}
+          </div>
+          <div class="ar-el-chip-list" role="tablist" aria-label="편집할 컷 요소 선택">
+            ${chipsHtml}
+          </div>
+          <div class="ar-el-inspector">
+            ${inspectorHtml}
+          </div>
+          <div class="flex items-center justify-between gap-2 pt-2 border-t border-white/10">
+            <button type="button" onclick="window.__arDirectCanvasMode=true;closeCutEditor();openInlineQuickEdit(${cutIdx}, '${activeKey}');"
+                    class="px-3 py-2 rounded-[8px] text-[12px] font-medium border border-white/15 bg-white/[0.04] text-[#ededed] hover:bg-white/[0.08] transition">
+              🎯 모달 닫고 화면에서 직접 드래그·빠른 편집
+            </button>
+            <button type="button" onclick="closeCutEditor()"
+                    class="px-4 py-2 rounded-[8px] text-[12px] font-semibold bg-[#0070f3] text-white hover:bg-[#0060df] transition">
+              편집 완료 ✓
             </button>
           </div>
-          <div class="flex items-center gap-1 shrink-0">
-            <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'all')"
-                    class="ar-el-badge muted" title="${cutIdx + 1}컷의 모든 요소 편집 초기화">이 컷 초기화</button>
-            <button type="button" onclick="closeCutEditor()"
-                    class="ar-el-badge muted" title="요소 편집 닫기">닫기 ✕</button>
-          </div>
-        </div>
-        <div class="ar-el-chip-list" role="tablist" aria-label="편집할 컷 요소 선택">
-          ${chipsHtml}
-        </div>
-        <div class="ar-el-inspector">
-          ${inspectorHtml}
         </div>
       `;
     }
@@ -3880,7 +4184,48 @@
       renderPreviewCutPinBar();
     }
 
-    // 배경 사진 구도(Zoom / Pan X / Pan Y) 및 가격·혜택 오버라이드를 모든 엔진(kit / motion / genre)에 일관 적용하기 위한 래퍼
+    // 모션 스타일의 노트·말풍선·글래스필 카드 전체를 자막 요소와 함께 이동/확대/애니메이션/숨김 처리하는 헬퍼
+    function arBeginMotionCaptionCard(c, W, H, cutIdx, localSec, cardCx, cardCy, cardW, cardH) {
+      if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
+      if (!window.__arLastRenderedBoxes[cutIdx]) window.__arLastRenderedBoxes[cutIdx] = {};
+      window.__arLastRenderedBoxes[cutIdx].caption = { cx: cardCx, cy: cardCy, w: cardW, h: cardH };
+      const capOv = cutElementOverrides && cutElementOverrides[cutIdx] && cutElementOverrides[cutIdx].caption;
+      if (capOv && (capOv.hidden || (capOv.boxStyle && capOv.boxStyle !== 'default'))) {
+        return false;
+      }
+      if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+      if (!window.__arNativeElementHandled[cutIdx]) window.__arNativeElementHandled[cutIdx] = {};
+      window.__arNativeElementHandled[cutIdx].caption = true;
+      c.save();
+      window.__arInsideMotionCaptionCard = true;
+      if (capOv && isCutElementPropCustomized(capOv)) {
+        const sc = Math.max(0.5, Math.min(2.2, Number(capOv.scale) || 1));
+        const tx = capOv.customPos && typeof capOv.x === 'number' ? capOv.x * W : cardCx;
+        const ty = capOv.customPos && typeof capOv.y === 'number' ? capOv.y * H : cardCy;
+        const ast = computeArElementAnimState(capOv.anim || 'default', localSec || 0);
+        c.globalAlpha *= Math.max(0, Math.min(1, ast.alpha));
+        c.translate(tx + ast.dx, ty + ast.dy);
+        if (ast.rot) c.rotate(ast.rot);
+        c.scale(sc * ast.scaleX, sc * ast.scaleY);
+        c.translate(-cardCx, -cardCy);
+        window.__arLastRenderedBoxes[cutIdx].caption = {
+          cx: tx + ast.dx,
+          cy: ty + ast.dy,
+          w: cardW * sc,
+          h: cardH * sc
+        };
+      }
+      return true;
+    }
+
+    function arEndMotionCaptionCard(c) {
+      window.__arInsideMotionCaptionCard = false;
+      c.restore();
+    }
+    window.arBeginMotionCaptionCard = arBeginMotionCaptionCard;
+    window.arEndMotionCaptionCard = arEndMotionCaptionCard;
+
+    // 배경 사진 구도(Zoom / Pan X / Pan Y) 및 모든 템플릿 디자인 요소(자막카드·상단배지·하단프로필·혜택배지)를 모든 엔진(kit / motion / genre)에 일관 적용하기 위한 래퍼
     (function bindCutElementEngineHooks() {
       if (window.__arCutElementHooksBound) return;
       window.__arCutElementHooksBound = true;
@@ -3923,13 +4268,450 @@
           const rIdx = window.__arActiveRenderCutIdx;
           if (typeof rIdx === 'number' && rIdx >= 0 && cutElementOverrides && cutElementOverrides[rIdx] && cutElementOverrides[rIdx].price) {
             const p = cutElementOverrides[rIdx].price;
-            if (isCutElementPropCustomized(p) || p.text) {
-              return false;
-            }
+            if (p.hidden) return false;
+            if (p.boxStyle && p.boxStyle !== 'default') return false;
           }
           return origGIsPriceCut(raw);
         };
         gIsPriceCut._arWrapped = true;
+      }
+
+      // 1) Kit 엔진 메인 자막 카드 (glass, sticky, ticket, bubble, band, pill 등) 직접 제어
+      if (typeof kitCaption === 'function' && !kitCaption._arWrapped) {
+        const origKitCaption = kitCaption;
+        kitCaption = function (c, W, H, t, zone, text, spec, V, K, e, cutIdx, S, fr) {
+          const rIdx = typeof cutIdx === 'number' ? cutIdx : window.__arActiveRenderCutIdx;
+          if (typeof rIdx === 'number' && rIdx >= 0) {
+            if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
+            if (!window.__arLastRenderedBoxes[rIdx]) window.__arLastRenderedBoxes[rIdx] = {};
+            if (!window.__arLastDetectedBadgeText) window.__arLastDetectedBadgeText = {};
+            if (K && K.label && !window.__arLastDetectedBadgeText[rIdx]) {
+              window.__arLastDetectedBadgeText[rIdx] = K.label;
+            }
+            const defCx = zone.x + zone.w / 2;
+            const defCy = zone.center ? zone.y + zone.h / 2 : zone.y + Math.min(115, zone.h * 0.45);
+            const defW = Math.min(W - 36, Math.max(260, zone.w));
+            const defH = Math.min(200, Math.max(96, zone.h * 0.65));
+            window.__arLastRenderedBoxes[rIdx].caption = { cx: defCx, cy: defCy, w: defW, h: defH };
+
+            const ov = cutElementOverrides && cutElementOverrides[rIdx];
+            const capOv = ov && ov.caption;
+            const bOv = ov && ov.badge;
+            let nextK = K;
+            let nextSpec = spec;
+            if (bOv) {
+              if (bOv.hidden || (bOv.boxStyle && bOv.boxStyle !== 'default') || bOv.customPos) {
+                nextK = Object.assign({}, nextK, { label: '' });
+              } else if (bOv.text) {
+                nextK = Object.assign({}, nextK, { label: bOv.text });
+              }
+            }
+            if (capOv) {
+              if (capOv.hidden || (capOv.boxStyle && capOv.boxStyle !== 'default')) {
+                return;
+              }
+              if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+              if (!window.__arNativeElementHandled[rIdx]) window.__arNativeElementHandled[rIdx] = {};
+              window.__arNativeElementHandled[rIdx].caption = true;
+              if (isCutElementPropCustomized(capOv)) {
+                const sc = Math.max(0.5, Math.min(2.2, Number(capOv.scale) || 1));
+                const tx = capOv.customPos && typeof capOv.x === 'number' ? capOv.x * W : defCx;
+                const ty = capOv.customPos && typeof capOv.y === 'number' ? capOv.y * H : defCy;
+                const localSec = window.__arActiveRenderLocalSec || 0;
+                const ast = computeArElementAnimState(capOv.anim || 'default', localSec);
+                if (capOv.font) nextSpec = Object.assign({}, nextSpec, { font: capOv.font });
+                if (capOv.color) nextK = Object.assign({}, nextK, { hl: capOv.color, ink: capOv.color });
+                c.save();
+                c.globalAlpha *= Math.max(0, Math.min(1, ast.alpha));
+                c.translate(tx + ast.dx, ty + ast.dy);
+                if (ast.rot) c.rotate(ast.rot);
+                c.scale(sc * ast.scaleX, sc * ast.scaleY);
+                c.translate(-defCx, -defCy);
+                window.__arLastRenderedBoxes[rIdx].caption = {
+                  cx: tx + ast.dx,
+                  cy: ty + ast.dy,
+                  w: defW * sc,
+                  h: defH * sc
+                };
+                const res = origKitCaption(c, W, H, t, zone, text, nextSpec, V, nextK, e, cutIdx, S, fr);
+                c.restore();
+                return res;
+              }
+            } else {
+              if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+              if (!window.__arNativeElementHandled[rIdx]) window.__arNativeElementHandled[rIdx] = {};
+              window.__arNativeElementHandled[rIdx].caption = true;
+            }
+            return origKitCaption(c, W, H, t, zone, text, nextSpec, V, nextK, e, cutIdx, S, fr);
+          }
+          return origKitCaption(c, W, H, t, zone, text, spec, V, K, e, cutIdx, S, fr);
+        };
+        kitCaption._arWrapped = true;
+      }
+
+      // 2) Kit 엔진 상단 헤더·배지 (pill, kicker, box, profile, counter) 직접 제어
+      if (typeof kitHead === 'function' && !kitHead._arWrapped) {
+        const origKitHead = kitHead;
+        kitHead = function (c, W, t, spec, V, K, S, cutIdx, totalCuts, cutDur) {
+          const rIdx = typeof cutIdx === 'number' ? cutIdx : window.__arActiveRenderCutIdx;
+          if (typeof rIdx === 'number' && rIdx >= 0) {
+            if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
+            if (!window.__arLastRenderedBoxes[rIdx]) window.__arLastRenderedBoxes[rIdx] = {};
+            if (!window.__arLastDetectedBadgeText) window.__arLastDetectedBadgeText = {};
+            if (K && K.label) window.__arLastDetectedBadgeText[rIdx] = K.label;
+            const hd = spec.deco === 'vhs' ? 'none' : spec.head;
+            const defCx = (hd === 'pill' || hd === 'profile' || hd === 'counter') ? 130 : hd === 'box' ? W - 95 : W / 2;
+            const defCy = (spec.deco === 'bars' ? 88 : 32) + 18;
+            window.__arLastRenderedBoxes[rIdx].badge = { cx: defCx, cy: defCy, w: 230, h: 48 };
+
+            const bOv = cutElementOverrides && cutElementOverrides[rIdx] && cutElementOverrides[rIdx].badge;
+            if (bOv) {
+              if (bOv.hidden || (bOv.boxStyle && bOv.boxStyle !== 'default') || (hd === 'none' && (isCutElementPropCustomized(bOv) || bOv.text))) {
+                return;
+              }
+              if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+              if (!window.__arNativeElementHandled[rIdx]) window.__arNativeElementHandled[rIdx] = {};
+              window.__arNativeElementHandled[rIdx].badge = true;
+              if (isCutElementPropCustomized(bOv) || bOv.text) {
+                const sc = Math.max(0.5, Math.min(2.2, Number(bOv.scale) || 1));
+                const tx = bOv.customPos && typeof bOv.x === 'number' ? bOv.x * W : defCx;
+                const ty = bOv.customPos && typeof bOv.y === 'number' ? bOv.y * 960 : defCy;
+                const localSec = window.__arActiveRenderLocalSec || 0;
+                const ast = computeArElementAnimState(bOv.anim || 'default', localSec);
+                const nextK = Object.assign({}, K, {
+                  label: bOv.text || K.label,
+                  hl: bOv.color || K.hl
+                });
+                const nextV = bOv.color ? Object.assign({}, V, { accent: bOv.color }) : V;
+                const nextSpec = bOv.font ? Object.assign({}, spec, { font: bOv.font }) : spec;
+                c.save();
+                c.globalAlpha *= Math.max(0, Math.min(1, ast.alpha));
+                c.translate(tx + ast.dx, ty + ast.dy);
+                if (ast.rot) c.rotate(ast.rot);
+                c.scale(sc * ast.scaleX, sc * ast.scaleY);
+                c.translate(-defCx, -defCy);
+                window.__arLastRenderedBoxes[rIdx].badge = { cx: tx + ast.dx, cy: ty + ast.dy, w: 230 * sc, h: 48 * sc };
+                const res = origKitHead(c, W, t, nextSpec, nextV, nextK, S, cutIdx, totalCuts, cutDur);
+                c.restore();
+                return res;
+              }
+            } else if (hd !== 'none') {
+              if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+              if (!window.__arNativeElementHandled[rIdx]) window.__arNativeElementHandled[rIdx] = {};
+              window.__arNativeElementHandled[rIdx].badge = true;
+            }
+          }
+          return origKitHead(c, W, t, spec, V, K, S, cutIdx, totalCuts, cutDur);
+        };
+        kitHead._arWrapped = true;
+      }
+
+      // 3) Motion 엔진 자막 (mCaption) 직접 제어
+      if (typeof mCaption === 'function' && !mCaption._arWrapped) {
+        const origMCaption = mCaption;
+        mCaption = function (c, text, x, y, maxW, maxH, size, fontKey, color, e, align, box) {
+          const rIdx = window.__arActiveRenderCutIdx;
+          if (typeof rIdx === 'number' && rIdx >= 0) {
+            const capOv = cutElementOverrides && cutElementOverrides[rIdx] && cutElementOverrides[rIdx].caption;
+            if (capOv && (capOv.hidden || (capOv.boxStyle && capOv.boxStyle !== 'default'))) {
+              return { top: y, h: 0 };
+            }
+            if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+            if (!window.__arNativeElementHandled[rIdx]) window.__arNativeElementHandled[rIdx] = {};
+            window.__arNativeElementHandled[rIdx].caption = true;
+            const nextFont = (capOv && capOv.font) || fontKey;
+            const nextCol = (capOv && capOv.color) || color;
+            if (!window.__arInsideMotionCaptionCard) {
+              const W = (c && c.canvas && c.canvas.width) || 540;
+              const H = (c && c.canvas && c.canvas.height) || 960;
+              const defCx = align === 'left' ? x + maxW * 0.45 : align === 'right' ? x - maxW * 0.45 : x;
+              const defCy = y + Math.min(72, maxH * 0.45);
+              const defW = Math.min(W - 40, Math.max(240, maxW));
+              const defH = Math.min(150, Math.max(84, maxH));
+              if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
+              if (!window.__arLastRenderedBoxes[rIdx]) window.__arLastRenderedBoxes[rIdx] = {};
+              window.__arLastRenderedBoxes[rIdx].caption = { cx: defCx, cy: defCy, w: defW, h: defH };
+              if (capOv && isCutElementPropCustomized(capOv)) {
+                const sc = Math.max(0.5, Math.min(2.2, Number(capOv.scale) || 1));
+                const tx = capOv.customPos && typeof capOv.x === 'number' ? capOv.x * W : defCx;
+                const ty = capOv.customPos && typeof capOv.y === 'number' ? capOv.y * H : defCy;
+                const localSec = window.__arActiveRenderLocalSec || 0;
+                const ast = computeArElementAnimState(capOv.anim || 'default', localSec);
+                c.save();
+                c.globalAlpha *= Math.max(0, Math.min(1, ast.alpha));
+                c.translate(tx + ast.dx, ty + ast.dy);
+                if (ast.rot) c.rotate(ast.rot);
+                c.scale(sc * ast.scaleX, sc * ast.scaleY);
+                c.translate(-defCx, -defCy);
+                window.__arLastRenderedBoxes[rIdx].caption = { cx: tx + ast.dx, cy: ty + ast.dy, w: defW * sc, h: defH * sc };
+                const res = origMCaption(c, text, x, y, maxW, maxH, size, nextFont, nextCol, e, align, box);
+                c.restore();
+                return res;
+              }
+            }
+            return origMCaption(c, text, x, y, maxW, maxH, size, nextFont, nextCol, e, align, box);
+          }
+          return origMCaption(c, text, x, y, maxW, maxH, size, fontKey, color, e, align, box);
+        };
+        mCaption._arWrapped = true;
+      }
+
+      // 4) Motion 엔진 상단/서브 라벨 (inLabel — '여기에 남겨둘 말', '오늘은 어떤 장면이야?' 등) 직접 제어
+      if (typeof inLabel === 'function' && !inLabel._arWrapped) {
+        const origInLabel = inLabel;
+        inLabel = function (c, text, x, y, color, align = 'left', size = 13) {
+          const rIdx = window.__arActiveRenderCutIdx;
+          if (typeof rIdx === 'number' && rIdx >= 0) {
+            const isShortTab = text === '눈길' || text === '머문 곳' || text === '기억';
+            if (!isShortTab) {
+              if (!window.__arLastDetectedBadgeText) window.__arLastDetectedBadgeText = {};
+              if (window.__arInsideMotionCaptionCard || !window.__arLastDetectedBadgeText[rIdx]) {
+                window.__arLastDetectedBadgeText[rIdx] = text;
+              }
+              const W = (c && c.canvas && c.canvas.width) || 540;
+              const H = (c && c.canvas && c.canvas.height) || 960;
+              const defCx = align === 'left' ? x + 85 : align === 'right' ? x - 85 : x;
+              const defCy = y;
+              if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
+              if (!window.__arLastRenderedBoxes[rIdx]) window.__arLastRenderedBoxes[rIdx] = {};
+              if (window.__arInsideMotionCaptionCard || !window.__arLastRenderedBoxes[rIdx].badge) {
+                window.__arLastRenderedBoxes[rIdx].badge = { cx: defCx, cy: defCy, w: 210, h: 42 };
+              }
+              const bOv = cutElementOverrides && cutElementOverrides[rIdx] && cutElementOverrides[rIdx].badge;
+              if (bOv) {
+                if (bOv.hidden || (bOv.boxStyle && bOv.boxStyle !== 'default')) {
+                  return;
+                }
+                if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+                if (!window.__arNativeElementHandled[rIdx]) window.__arNativeElementHandled[rIdx] = {};
+                window.__arNativeElementHandled[rIdx].badge = true;
+                const nextTxt = bOv.text || text;
+                const nextCol = bOv.color || color;
+                const sc = Math.max(0.5, Math.min(2.2, Number(bOv.scale) || 1));
+                const nextSize = Math.round(size * sc);
+                if (bOv.customPos || (bOv.anim && bOv.anim !== 'default')) {
+                  const tx = bOv.customPos && typeof bOv.x === 'number' ? bOv.x * W : defCx;
+                  const ty = bOv.customPos && typeof bOv.y === 'number' ? bOv.y * H : defCy;
+                  const localSec = window.__arActiveRenderLocalSec || 0;
+                  const ast = computeArElementAnimState(bOv.anim || 'default', localSec);
+                  c.save();
+                  c.globalAlpha *= Math.max(0, Math.min(1, ast.alpha));
+                  c.translate(tx + ast.dx, ty + ast.dy);
+                  if (ast.rot) c.rotate(ast.rot);
+                  c.scale(ast.scaleX, ast.scaleY);
+                  c.translate(-defCx, -defCy);
+                  window.__arLastRenderedBoxes[rIdx].badge = { cx: tx + ast.dx, cy: ty + ast.dy, w: 210 * sc, h: 42 * sc };
+                  origInLabel(c, nextTxt, x, y, nextCol, align, nextSize);
+                  c.restore();
+                  return;
+                }
+                return origInLabel(c, nextTxt, x, y, nextCol, align, nextSize);
+              } else {
+                if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+                if (!window.__arNativeElementHandled[rIdx]) window.__arNativeElementHandled[rIdx] = {};
+                window.__arNativeElementHandled[rIdx].badge = true;
+              }
+            }
+          }
+          return origInLabel(c, text, x, y, color, align, size);
+        };
+        inLabel._arWrapped = true;
+      }
+
+      // 5) 하단 프로필·상호 바 (kitChip, mChip, inSign, drawDealerChip) 직접 제어
+      const wrapChipFn = (origFn, defaultCxRatio, defaultCyRatio) => {
+        return function (c, d, W, H, ...rest) {
+          const rIdx = window.__arActiveRenderCutIdx;
+          const cw = typeof W === 'number' && W > 100 ? W : ((c && c.canvas && c.canvas.width) || 540);
+          const ch = typeof H === 'number' && H > 100 ? H : ((c && c.canvas && c.canvas.height) || 960);
+          if (typeof rIdx === 'number' && rIdx >= 0) {
+            const defCx = cw * defaultCxRatio;
+            const defCy = ch * defaultCyRatio;
+            if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
+            if (!window.__arLastRenderedBoxes[rIdx]) window.__arLastRenderedBoxes[rIdx] = {};
+            window.__arLastRenderedBoxes[rIdx].chip = { cx: defCx, cy: defCy, w: 300, h: 54 };
+            const cOv = cutElementOverrides && cutElementOverrides[rIdx] && cutElementOverrides[rIdx].chip;
+            if (cOv) {
+              if (cOv.hidden || (cOv.boxStyle && cOv.boxStyle !== 'default')) {
+                return;
+              }
+              if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+              if (!window.__arNativeElementHandled[rIdx]) window.__arNativeElementHandled[rIdx] = {};
+              window.__arNativeElementHandled[rIdx].chip = true;
+              const nextD = cOv.text ? Object.assign({}, d, { name: cOv.text, title: '', branch: '' }) : d;
+              if (isCutElementPropCustomized(cOv) || cOv.text) {
+                const sc = Math.max(0.5, Math.min(2.2, Number(cOv.scale) || 1));
+                const tx = cOv.customPos && typeof cOv.x === 'number' ? cOv.x * cw : defCx;
+                const ty = cOv.customPos && typeof cOv.y === 'number' ? cOv.y * ch : defCy;
+                const localSec = window.__arActiveRenderLocalSec || 0;
+                const ast = computeArElementAnimState(cOv.anim || 'default', localSec);
+                c.save();
+                c.globalAlpha *= Math.max(0, Math.min(1, ast.alpha));
+                c.translate(tx + ast.dx, ty + ast.dy);
+                if (ast.rot) c.rotate(ast.rot);
+                c.scale(sc * ast.scaleX, sc * ast.scaleY);
+                c.translate(-defCx, -defCy);
+                window.__arLastRenderedBoxes[rIdx].chip = { cx: tx + ast.dx, cy: ty + ast.dy, w: 300 * sc, h: 54 * sc };
+                const res = origFn(c, nextD, W, H, ...rest);
+                c.restore();
+                return res;
+              }
+            } else {
+              if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+              if (!window.__arNativeElementHandled[rIdx]) window.__arNativeElementHandled[rIdx] = {};
+              window.__arNativeElementHandled[rIdx].chip = true;
+            }
+          }
+          return origFn(c, d, W, H, ...rest);
+        };
+      };
+
+      if (typeof kitChip === 'function' && !kitChip._arWrapped) {
+        kitChip = wrapChipFn(kitChip, 0.36, 0.91);
+        kitChip._arWrapped = true;
+      }
+      if (typeof mChip === 'function' && !mChip._arWrapped) {
+        mChip = wrapChipFn(mChip, 0.35, 0.94);
+        mChip._arWrapped = true;
+      }
+      if (typeof drawDealerChip === 'function' && !drawDealerChip._arWrapped) {
+        drawDealerChip = wrapChipFn(drawDealerChip, 0.36, 0.92);
+        drawDealerChip._arWrapped = true;
+      }
+      if (typeof inSign === 'function' && !inSign._arWrapped) {
+        const origInSign = inSign;
+        inSign = function (c, d, x, y, color, align = 'right', size = 18) {
+          const rIdx = window.__arActiveRenderCutIdx;
+          if (typeof rIdx === 'number' && rIdx >= 0) {
+            const W = (c && c.canvas && c.canvas.width) || 540;
+            const H = (c && c.canvas && c.canvas.height) || 960;
+            const defCx = align === 'right' ? x - 80 : align === 'left' ? x + 80 : x;
+            const defCy = y;
+            if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
+            if (!window.__arLastRenderedBoxes[rIdx]) window.__arLastRenderedBoxes[rIdx] = {};
+            window.__arLastRenderedBoxes[rIdx].chip = { cx: defCx, cy: defCy, w: 200, h: 42 };
+            const cOv = cutElementOverrides && cutElementOverrides[rIdx] && cutElementOverrides[rIdx].chip;
+            if (cOv) {
+              if (cOv.hidden || (cOv.boxStyle && cOv.boxStyle !== 'default')) return;
+              if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+              if (!window.__arNativeElementHandled[rIdx]) window.__arNativeElementHandled[rIdx] = {};
+              window.__arNativeElementHandled[rIdx].chip = true;
+              const nextD = cOv.text ? Object.assign({}, d, { name: cOv.text }) : d;
+              const nextCol = cOv.color || color;
+              const sc = Math.max(0.5, Math.min(2.2, Number(cOv.scale) || 1));
+              if (cOv.customPos || (cOv.anim && cOv.anim !== 'default') || Math.abs(sc - 1) > 0.01) {
+                const tx = cOv.customPos && typeof cOv.x === 'number' ? cOv.x * W : defCx;
+                const ty = cOv.customPos && typeof cOv.y === 'number' ? cOv.y * H : defCy;
+                const localSec = window.__arActiveRenderLocalSec || 0;
+                const ast = computeArElementAnimState(cOv.anim || 'default', localSec);
+                c.save();
+                c.globalAlpha *= Math.max(0, Math.min(1, ast.alpha));
+                c.translate(tx + ast.dx, ty + ast.dy);
+                if (ast.rot) c.rotate(ast.rot);
+                c.scale(sc * ast.scaleX, sc * ast.scaleY);
+                c.translate(-defCx, -defCy);
+                window.__arLastRenderedBoxes[rIdx].chip = { cx: tx + ast.dx, cy: ty + ast.dy, w: 200 * sc, h: 42 * sc };
+                origInSign(c, nextD, x, y, nextCol, align, size);
+                c.restore();
+                return;
+              }
+              return origInSign(c, nextD, x, y, nextCol, align, size);
+            } else {
+              if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+              if (!window.__arNativeElementHandled[rIdx]) window.__arNativeElementHandled[rIdx] = {};
+              window.__arNativeElementHandled[rIdx].chip = true;
+            }
+          }
+          return origInSign(c, d, x, y, color, align, size);
+        };
+        inSign._arWrapped = true;
+      }
+
+      // 6) 혜택·가격 배지 (kitPrice, mPrice) 직접 제어
+      if (typeof kitPrice === 'function' && !kitPrice._arWrapped) {
+        const origKitPrice = kitPrice;
+        kitPrice = function (c, W, zone, spec, V, K, e) {
+          const rIdx = window.__arActiveRenderCutIdx;
+          if (typeof rIdx === 'number' && rIdx >= 0) {
+            const pOv = cutElementOverrides && cutElementOverrides[rIdx] && cutElementOverrides[rIdx].price;
+            if (pOv && (pOv.hidden || (pOv.boxStyle && pOv.boxStyle !== 'default'))) return 0;
+            const isStar = (typeof KIT_STAR_CAPS !== 'undefined' && KIT_STAR_CAPS.includes(spec.cap)) || zone.h < 250;
+            const defCx = isStar ? (spec.cap === 'vertical' ? 98 : W - 98) : (zone.center ? W / 2 : zone.x + 120);
+            const defCy = isStar ? Math.max(110, zone.y - 92) : zone.y + 28;
+            if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
+            if (!window.__arLastRenderedBoxes[rIdx]) window.__arLastRenderedBoxes[rIdx] = {};
+            window.__arLastRenderedBoxes[rIdx].price = { cx: defCx, cy: defCy, w: isStar ? 160 : 260, h: isStar ? 140 : 60 };
+            if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+            if (!window.__arNativeElementHandled[rIdx]) window.__arNativeElementHandled[rIdx] = {};
+            window.__arNativeElementHandled[rIdx].price = true;
+            if (pOv && (isCutElementPropCustomized(pOv) || pOv.text)) {
+              const sc = Math.max(0.5, Math.min(2.2, Number(pOv.scale) || 1));
+              const tx = pOv.customPos && typeof pOv.x === 'number' ? pOv.x * W : defCx;
+              const ty = pOv.customPos && typeof pOv.y === 'number' ? pOv.y * 960 : defCy;
+              const localSec = window.__arActiveRenderLocalSec || 0;
+              const ast = computeArElementAnimState(pOv.anim || 'default', localSec);
+              const nextV = pOv.color ? Object.assign({}, V, { accent: pOv.color }) : V;
+              const nextK = pOv.color ? Object.assign({}, K, { hl: pOv.color }) : K;
+              const savedDiscount = campaign ? campaign.discount : undefined;
+              if (pOv.text && campaign) campaign.discount = pOv.text;
+              c.save();
+              c.globalAlpha *= Math.max(0, Math.min(1, ast.alpha));
+              c.translate(tx + ast.dx, ty + ast.dy);
+              if (ast.rot) c.rotate(ast.rot);
+              c.scale(sc * ast.scaleX, sc * ast.scaleY);
+              c.translate(-defCx, -defCy);
+              window.__arLastRenderedBoxes[rIdx].price = { cx: tx + ast.dx, cy: ty + ast.dy, w: (isStar ? 160 : 260) * sc, h: (isStar ? 140 : 60) * sc };
+              const res = origKitPrice(c, W, zone, spec, nextV, nextK, e);
+              c.restore();
+              if (pOv.text && campaign) campaign.discount = savedDiscount;
+              return res;
+            }
+          }
+          return origKitPrice(c, W, zone, spec, V, K, e);
+        };
+        kitPrice._arWrapped = true;
+      }
+
+      if (typeof mPrice === 'function' && !mPrice._arWrapped) {
+        const origMPrice = mPrice;
+        mPrice = function (c, W, y, spec, e) {
+          const rIdx = window.__arActiveRenderCutIdx;
+          if (typeof rIdx === 'number' && rIdx >= 0) {
+            const pOv = cutElementOverrides && cutElementOverrides[rIdx] && cutElementOverrides[rIdx].price;
+            if (pOv && (pOv.hidden || (pOv.boxStyle && pOv.boxStyle !== 'default'))) return;
+            const defCx = W / 2;
+            const defCy = y;
+            if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
+            if (!window.__arLastRenderedBoxes[rIdx]) window.__arLastRenderedBoxes[rIdx] = {};
+            window.__arLastRenderedBoxes[rIdx].price = { cx: defCx, cy: defCy, w: 280, h: 64 };
+            if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+            if (!window.__arNativeElementHandled[rIdx]) window.__arNativeElementHandled[rIdx] = {};
+            window.__arNativeElementHandled[rIdx].price = true;
+            if (pOv && (isCutElementPropCustomized(pOv) || pOv.text)) {
+              const sc = Math.max(0.5, Math.min(2.2, Number(pOv.scale) || 1));
+              const tx = pOv.customPos && typeof pOv.x === 'number' ? pOv.x * W : defCx;
+              const ty = pOv.customPos && typeof pOv.y === 'number' ? pOv.y * 960 : defCy;
+              const localSec = window.__arActiveRenderLocalSec || 0;
+              const ast = computeArElementAnimState(pOv.anim || 'default', localSec);
+              const nextSpec = pOv.color ? Object.assign({}, spec, { accent: pOv.color }) : spec;
+              const savedDiscount = campaign ? campaign.discount : undefined;
+              if (pOv.text && campaign) campaign.discount = pOv.text;
+              c.save();
+              c.globalAlpha *= Math.max(0, Math.min(1, ast.alpha));
+              c.translate(tx + ast.dx, ty + ast.dy);
+              if (ast.rot) c.rotate(ast.rot);
+              c.scale(sc * ast.scaleX, sc * ast.scaleY);
+              c.translate(-defCx, -defCy);
+              window.__arLastRenderedBoxes[rIdx].price = { cx: tx + ast.dx, cy: ty + ast.dy, w: 280 * sc, h: 64 * sc };
+              origMPrice(c, W, y, nextSpec, e);
+              c.restore();
+              if (pOv.text && campaign) campaign.discount = savedDiscount;
+              return;
+            }
+          }
+          return origMPrice(c, W, y, spec, e);
+        };
+        mPrice._arWrapped = true;
       }
     })();
 
@@ -4039,10 +4821,19 @@
       const localSec = activeCutIdx >= 0 ? (t - activeCutIdx * cutDur) : 0;
       const transId = (activeCutIdx >= 0 && campaign.cutTransitions && campaign.cutTransitions[activeCutIdx]) || 'default';
       window.__arActiveRenderCutIdx = activeCutIdx;
+      window.__arActiveRenderLocalSec = localSec;
+      window.__arInsideMotionCaptionCard = false;
+      if (activeCutIdx >= 0) {
+        if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
+        window.__arLastRenderedBoxes[activeCutIdx] = {};
+        if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+        window.__arNativeElementHandled[activeCutIdx] = {};
+      }
 
-      // 컷별 요소 오버라이드(자막 숨김/커스텀 위치, 상단 배지 숨김/문구 변경)를 기본 렌더에 반영
+      // 컷별 요소 오버라이드: kit / motion 엔진은 각 네이티브 훅(kitCaption, kitHead, mCaption, inLabel 등)에서 템플릿 원본 디자인을 유지한 채 이동·크기·색상·폰트·애니메이션을 직접 적용하며, genre 엔진이거나 박스 디자인을 새로 고른 경우에만 오버레이 렌더러가 대체함
       const ov = activeCutIdx >= 0 && cutElementOverrides ? cutElementOverrides[activeCutIdx] : null;
-      const hasCustomBadge = !!(ov && ov.badge && isCutElementPropCustomized(ov.badge));
+      const isNativeHookEngine = baseDesign && (baseDesign.engine === 'kit' || baseDesign.engine === 'motion');
+      const hasCustomBadge = !!(ov && ov.badge && (isNativeHookEngine ? (ov.badge.hidden || (ov.badge.boxStyle && ov.badge.boxStyle !== 'default')) : isCutElementPropCustomized(ov.badge)));
       const design = ov && ov.badge && (hasCustomBadge || ov.badge.text)
         ? Object.assign({}, baseDesign, {
             head: hasCustomBadge ? 'none' : baseDesign.head,
@@ -4058,7 +4849,7 @@
         }
       }
 
-      const suppressBaseCaption = !!(ov && ov.caption && isCutElementPropCustomized(ov.caption));
+      const suppressBaseCaption = !!(ov && ov.caption && !isNativeHookEngine && isCutElementPropCustomized(ov.caption));
       const savedCutCap = suppressBaseCaption && campaign.cutCaptions ? campaign.cutCaptions[activeCutIdx] : undefined;
       const savedHook = suppressBaseCaption ? campaign.hook : undefined;
       if (suppressBaseCaption) {
@@ -4076,11 +4867,11 @@
         if (t < mainDuration) {
           hadTransPre = applyCutTransitionPre(c, W, H, transId, localSec);
         }
-        // 사진 탭에서 이 컷의 화면 구도를 [변경]했으면, 모션·장르 디자인이어도 그 컷은 고른 구도(레이아웃·자막 모양)로 그림
+        // 사진 탭 또는 요소 편집 모달에서 이 컷의 화면 배치(customLayout)를 변경했으면, 모션·장르 디자인이어도 그 컷은 고른 배치로 그림
         if (t < mainDuration && design.engine !== 'kit') {
           const cIdx = activeCutIdx;
           const cPlan = (campaign.scenePlan && campaign.scenePlan[cIdx]) || {};
-          if (cPlan._customWidget && cPlan.widget && cPlan.customLayout) {
+          if (cPlan.customLayout) {
             const kd = arCutKitDesign(design);
             if (kd) {
               const KV = buildDesignVariant(kd, getActivePalette());
@@ -4090,7 +4881,9 @@
                 campaign.hook = savedHook;
               }
               const frac = Math.min(1, Math.max(0, (t - cIdx * cutDur) / cutDur));
-              drawCustomCutWidget(c, W, H, t, cIdx, frac, cPlan.widget, d, KV);
+              if (cPlan._customWidget && cPlan.widget) {
+                drawCustomCutWidget(c, W, H, t, cIdx, frac, cPlan.widget, d, KV);
+              }
               drawCustomCutDecoOverlay(c, W, H, t, mainDuration, totalCuts, cutDur, kd, KV);
               applyCutTransitionPost(c, W, H, transId, localSec, hadTransPre);
               hadTransPre = false;
