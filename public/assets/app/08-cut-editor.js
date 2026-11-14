@@ -1953,10 +1953,11 @@
       if (window.__arPinnedCut !== cutIdx) return;
       if (!window.__arCutEditorOpen && !window.__arInlineEditActive && !window.__arDirectCanvasMode && window.__arSelectedOverlayIdx < 0) return;
 
-      let activeKey = window.__arActiveCutElKey || 'caption';
+      let activeKey = window.__arActiveCutElKey || '';
       if (window.__arSelectedOverlayIdx >= 0) {
         activeKey = `overlay:${window.__arSelectedOverlayIdx}`;
       }
+      if (!activeKey) return;
       const box = getCutElementHitBox(cutIdx, activeKey, W, H);
       if (!box) return;
 
@@ -2572,7 +2573,7 @@
       const ov = getCutElementOverride(cutIdx);
       const activeKey = window.__arSelectedOverlayIdx >= 0
         ? `overlay:${window.__arSelectedOverlayIdx}`
-        : (window.__arActiveCutElKey || 'caption');
+        : (window.__arActiveCutElKey || '');
 
       if (!list.length && !directMode) {
         layer.classList.add('hidden');
@@ -2586,10 +2587,10 @@
       const baseBoxes = directMode ? ['badge', 'price', 'chip', 'caption'].map((key) => {
         const hb = getCutElementHitBox(cutIdx, key, 540, 960);
         const titleMap = {
-          badge: '🏷️ 상단 라벨/배지 (드래그하여 이동 · 더블클릭하여 편집)',
-          price: '💰 혜택/강조 배지 (드래그하여 이동 · 더블클릭하여 편집)',
-          chip: '🪪 하단 프로필·상호 (드래그하여 이동 · 더블클릭하여 편집)',
-          caption: '💬 컷 자막·카드 (드래그하여 이동 · 더블클릭하여 편집)'
+          badge: '🏷️ 상단 라벨/배지 (클릭하여 선택 · 드래그하여 이동 · 더블클릭 편집)',
+          price: '💰 혜택/강조 배지 (클릭하여 선택 · 드래그하여 이동 · 더블클릭 편집)',
+          chip: '🪪 하단 프로필·상호 (클릭하여 선택 · 드래그하여 이동 · 더블클릭 편집)',
+          caption: '💬 컷 자막·카드 (클릭하여 선택 · 드래그하여 이동 · 더블클릭 편집)'
         };
         return {
           key,
@@ -2622,7 +2623,7 @@
         : '';
 
       const hintHtml = (!window.__arInlineEditActive && directMode)
-        ? `<div class="ar-el-canvas-hint pointer-events-none">${activeKey === 'photo' ? '드래그하여 사진 구도 이동' : '요소를 클릭·드래그해 위치 조절 (길게 눌러 빠른 편집)'}</div>`
+        ? `<div class="ar-el-canvas-hint pointer-events-none">${activeKey === 'photo' ? '드래그하여 사진 구도 이동' : '요소를 클릭·드래그해 이동 (더블클릭·길게 눌러 상세 편집)'}</div>`
         : '';
 
       layer.innerHTML = `
@@ -2700,12 +2701,16 @@
             ev.preventDefault();
             dragIdx = -1;
             window.__arSelectedOverlayIdx = -1;
-            const curKey = window.__arActiveCutElKey || 'caption';
-            if (curKey === 'photo' || (!curKey.startsWith('overlay:') && curKey !== 'transition')) {
-              dragElKey = curKey === 'deco' ? 'photo' : curKey;
+            const curKey = window.__arActiveCutElKey || '';
+            if (curKey && curKey !== 'photo' && !curKey.startsWith('overlay:') && curKey !== 'transition' && curKey !== 'deco') {
+              dragElKey = curKey;
             } else {
               dragElKey = 'photo';
-              window.__arActiveCutElKey = 'photo';
+              if (window.__arCutEditorOpen || window.__arInlineEditActive) {
+                window.__arActiveCutElKey = 'photo';
+              } else {
+                window.__arActiveCutElKey = '';
+              }
             }
             const curOv = getCutElementOverride(window.__arPinnedCut);
             if (dragElKey === 'photo') {
@@ -2853,6 +2858,7 @@
       if (typeof idx !== 'number' || idx < 0) {
         window.__arPinnedCut = -1;
         window.__arSelectedOverlayIdx = -1;
+        window.__arActiveCutElKey = '';
         window.__arCutEditorOpen = false;
         window.__arInlineEditActive = false;
         renderPreviewCutPinBar();
@@ -2862,6 +2868,7 @@
       if (window.__arPinnedCut === idx) {
         window.__arPinnedCut = -1;
         window.__arSelectedOverlayIdx = -1;
+        window.__arActiveCutElKey = '';
         window.__arCutEditorOpen = false;
         window.__arInlineEditActive = false;
         isPlaying = true;
@@ -2871,10 +2878,10 @@
       } else {
         window.__arPinnedCut = idx;
         window.__arSelectedOverlayIdx = -1;
-        window.__arCutEditorOpen = true;
-        if (!window.__arActiveCutElKey || window.__arActiveCutElKey.startsWith('overlay:')) {
-          window.__arActiveCutElKey = 'caption';
-        }
+        window.__arActiveCutElKey = '';
+        window.__arCutEditorOpen = false;
+        window.__arInlineEditActive = false;
+        window.__arDirectCanvasMode = true;
         isPlaying = false;
         const ppBtn = document.getElementById('playPauseBtn');
         if (ppBtn) ppBtn.textContent = '▶️ 재생';
