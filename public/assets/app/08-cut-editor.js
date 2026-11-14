@@ -3387,6 +3387,7 @@
         bar.classList.add('hidden');
         bar.innerHTML = '';
         if (vp) vp.classList.remove('ar-inline-edit-active');
+        syncPreviewViewportFocusShift();
         return;
       }
       bar.classList.remove('hidden');
@@ -3406,6 +3407,7 @@
           window.__arActiveCutElKey = 'caption';
         }
       }
+      syncPreviewViewportFocusShift();
 
       const pills = [
         { key: 'caption',    label: '💬 자막·카드' },
@@ -3778,10 +3780,43 @@
       renderPreviewCutPinBar();
     }
 
+    function syncPreviewViewportFocusShift() {
+      const canvas = document.getElementById('reelCanvas');
+      const overlayLayer = document.getElementById('cutOverlayEditorLayer');
+      if (!canvas) return;
+      const panel = document.getElementById('cutEditorPanel');
+      const inlineBar = document.getElementById('arInlineEditBar');
+      const cutSheetOpen = !!(window.__arCutEditorOpen && panel && !panel.classList.contains('hidden'));
+      const inlineOpen = !!(window.__arInlineEditActive && inlineBar && !inlineBar.classList.contains('hidden'));
+      let shiftPct = 0;
+      if (cutSheetOpen || inlineOpen) {
+        const cutIdx = window.__arPinnedCut;
+        const elKey = window.__arSelectedOverlayIdx >= 0
+          ? `overlay:${window.__arSelectedOverlayIdx}`
+          : (window.__arActiveCutElKey || 'caption');
+        if (typeof cutIdx === 'number' && cutIdx >= 0 && elKey !== 'photo' && elKey !== 'deco' && elKey !== 'transition') {
+          const box = getCutElementHitBox(cutIdx, elKey, 540, 960);
+          const cyNorm = box && typeof box.cy === 'number' ? (box.cy / 960) : 0.5;
+          if (cyNorm > 0.44) {
+            shiftPct = Math.min(40, Math.max(0, (cyNorm - 0.42) * 100));
+          }
+        }
+      }
+      const tf = shiftPct > 0.5 ? `translateY(-${shiftPct.toFixed(1)}%)` : '';
+      const tr = 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1)';
+      canvas.style.transition = tr;
+      canvas.style.transform = tf;
+      if (overlayLayer) {
+        overlayLayer.style.transition = tr;
+        overlayLayer.style.transform = tf;
+      }
+    }
+
     function closeCutEditor() {
       window.__arCutEditorOpen = false;
       const panel = document.getElementById('cutEditorPanel');
       if (panel) panel.classList.add('hidden');
+      syncPreviewViewportFocusShift();
       renderCutOverlayEditorLayer();
     }
 
@@ -3840,6 +3875,7 @@
       syncCutInspectorLiveValues(cutIdx, elKey);
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
       renderCutOverlayEditorLayer();
+      syncPreviewViewportFocusShift();
       if (rerenderPanel) renderPreviewCutPinBar();
     }
 
@@ -4234,6 +4270,7 @@
       if (!window.__arCutEditorOpen || typeof cutIdx !== 'number' || cutIdx < 0) {
         panel.classList.add('hidden');
         panel.innerHTML = '';
+        syncPreviewViewportFocusShift();
         return;
       }
       panel.classList.remove('hidden');
@@ -4259,6 +4296,7 @@
           window.__arActiveCutElKey = 'caption';
         }
       }
+      syncPreviewViewportFocusShift();
 
       const cutSwitchHtml = Array.from({ length: totalCuts }, (_, i) => {
         const on = i === cutIdx;
