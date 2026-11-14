@@ -90,6 +90,10 @@
     // 컷별 꾸밈효과 + 인스타 스타일 글씨/스티커 오버레이 + 미리보기 컷 번호 고정
     const CUT_DECO_OPTIONS = [
       { id: 'none', label: '없음' },
+      { id: 'cineKeyLight', label: '🎬 키라이트' },
+      { id: 'cineBokeh', label: '✨ 시네마 보케' },
+      { id: 'cineLeak', label: '🌅 필름 리크' },
+      { id: 'cineLetterbox', label: '🎞️ 시네마스코프' },
       { id: 'sparkle', label: '✨ 반짝이' },
       { id: 'confetti', label: '🎉 콘페티' },
       { id: 'leak', label: '☀️ 빛 번짐' },
@@ -237,32 +241,44 @@
       { id: 'mood', label: '무드다크', swatch: '#09090b', tint: 'rgba(9,9,11,0.34)', mode: 'multiply' }
     ];
     const AR_ELEMENT_ANIMS = [
-      { id: 'default',    label: '스타일 기본',     group: 'base' },
-      { id: 'none',       label: '없음(고정)',      group: 'base' },
-      { id: 'fadeIn',     label: '페이드인',        group: 'in' },
-      { id: 'slideUp',    label: '위로 슬라이드',   group: 'in' },
-      { id: 'slideDown',  label: '아래로 슬라이드', group: 'in' },
-      { id: 'slideLeft',  label: '왼쪽 슬라이드',   group: 'in' },
-      { id: 'slideRight', label: '오른쪽 슬라이드', group: 'in' },
-      { id: 'pop',        label: '팝(탄성)',        group: 'in' },
-      { id: 'bounce',     label: '바운스',          group: 'in' },
-      { id: 'zoomIn',     label: '줌인',            group: 'in' },
-      { id: 'zoomOut',    label: '줌아웃',          group: 'in' },
-      { id: 'blurIn',     label: '블러 인',         group: 'in' },
-      { id: 'wipe',       label: '가로 와이프',     group: 'in' },
-      { id: 'typewriter', label: '타자기',          group: 'in' },
-      { id: 'flip',       label: '플립 회전',       group: 'in' },
-      { id: 'drop',       label: '드롭 낙하',       group: 'in' },
-      { id: 'float',      label: '둥실둥실',        group: 'loop' },
-      { id: 'pulse',      label: '두근두근',        group: 'loop' },
-      { id: 'wiggle',     label: '흔들흔들',        group: 'loop' },
-      { id: 'glow',       label: '글로우',          group: 'loop' }
+      { id: 'default',     label: '스타일 기본',     group: 'base' },
+      { id: 'none',        label: '없음(고정)',      group: 'base' },
+      { id: 'txSpring',    label: '✦ 스프링 팝',     group: 'in' },
+      { id: 'txGlint',     label: '✦ 라이트 글린트', group: 'in' },
+      { id: 'txShatter',   label: '✦ 글리치 분리',   group: 'in' },
+      { id: 'txBlurReveal',label: '✦ 포커스 풀',     group: 'in' },
+      { id: 'txWave',      label: '✦ 시네마 웨이브', group: 'loop' },
+      { id: 'txNeonPulse', label: '✦ 네온 펄스',     group: 'loop' },
+      { id: 'fadeIn',      label: '페이드인',        group: 'in' },
+      { id: 'slideUp',     label: '위로 슬라이드',   group: 'in' },
+      { id: 'slideDown',   label: '아래로 슬라이드', group: 'in' },
+      { id: 'slideLeft',   label: '왼쪽 슬라이드',   group: 'in' },
+      { id: 'slideRight',  label: '오른쪽 슬라이드', group: 'in' },
+      { id: 'pop',         label: '팝(탄성)',        group: 'in' },
+      { id: 'bounce',      label: '바운스',          group: 'in' },
+      { id: 'zoomIn',      label: '줌인',            group: 'in' },
+      { id: 'zoomOut',     label: '줌아웃',          group: 'in' },
+      { id: 'blurIn',      label: '블러 인',         group: 'in' },
+      { id: 'wipe',        label: '가로 와이프',     group: 'in' },
+      { id: 'typewriter',  label: '타자기',          group: 'in' },
+      { id: 'flip',        label: '플립 회전',       group: 'in' },
+      { id: 'drop',        label: '드롭 낙하',       group: 'in' },
+      { id: 'float',       label: '둥실둥실',        group: 'loop' },
+      { id: 'pulse',       label: '두근두근',        group: 'loop' },
+      { id: 'wiggle',      label: '흔들흔들',        group: 'loop' },
+      { id: 'glow',        label: '글로우',          group: 'loop' }
     ];
     window.AR_ELEMENT_ANIMS = AR_ELEMENT_ANIMS;
 
     const CUT_OVERLAY_ANIMS = [
-      { id: 'static',     label: '고정' },
-      { id: 'pop',        label: '팝(탄성)' },
+      { id: 'static',      label: '고정' },
+      { id: 'txSpring',    label: '✦ 스프링 팝' },
+      { id: 'txGlint',     label: '✦ 라이트 글린트' },
+      { id: 'txShatter',   label: '✦ 글리치 분리' },
+      { id: 'txBlurReveal',label: '✦ 포커스 풀' },
+      { id: 'txWave',      label: '✦ 시네마 웨이브' },
+      { id: 'txNeonPulse', label: '✦ 네온 펄스' },
+      { id: 'pop',         label: '팝(탄성)' },
       { id: 'bounce',     label: '바운스' },
       { id: 'slideUp',    label: '위로 슬라이드' },
       { id: 'slideDown',  label: '아래로 슬라이드' },
@@ -283,8 +299,11 @@
     ];
 
     const AR_ELEMENT_BOX_STYLES = [
-      { id: 'default',      label: '스타일 기본' },
-      { id: 'darkGlass',    label: '다크 글래스' },
+      { id: 'default',        label: '스타일 기본' },
+      { id: 'cinematicGlass', label: '🎬 시네마틱 글래스' },
+      { id: 'editorialSerif', label: '✦ 에디토리얼' },
+      { id: 'filmPlaque',     label: '🎞️ 필름 플라크' },
+      { id: 'darkGlass',      label: '다크 글래스' },
       { id: 'whiteCard',    label: '화이트 카드' },
       { id: 'stickyNote',   label: '포스트잇 메모' },
       { id: 'speechBubble', label: '말풍선 카드' },
@@ -312,9 +331,11 @@
     window.AR_CUT_LAYOUT_OPTIONS = AR_CUT_LAYOUT_OPTIONS;
 
     const AR_CUT_TRANSITIONS = [
-      { id: 'default',       label: '스타일 기본' },
-      { id: 'none',          label: '없음(컷)' },
-      { id: 'crossfade',     label: '크로스페이드' },
+      { id: 'default',        label: '스타일 기본' },
+      { id: 'none',           label: '없음(컷)' },
+      { id: 'pingWipe',       label: '◎ 소나 핑 와이프' },
+      { id: 'cineLightSweep', label: '✨ 시네마 빛 전환' },
+      { id: 'crossfade',      label: '크로스페이드' },
       { id: 'pushLeft',      label: '왼쪽 밀기' },
       { id: 'pushRight',     label: '오른쪽 밀기' },
       { id: 'pushUp',        label: '위로 밀기' },
@@ -1166,6 +1187,55 @@
         st.rot = Math.sin(lt * 9.5) * 0.065;
       } else if (a === 'glow') {
         st.glowBoost = 0.5 + 0.5 * Math.sin(lt * 5.6);
+      } else if (a === 'txSpring') {
+        // script-to-motion TypeFX.m.spring: closed-form damped harmonic spring
+        const dur = 0.72;
+        if (lt < dur) {
+          const p = Math.max(0, lt / dur);
+          const k = 1 - Math.exp(-6.5 * p) * Math.cos(p * Math.PI * 3.2);
+          st.scaleX = 0.72 + 0.28 * k;
+          st.scaleY = 0.72 + 0.28 * k;
+          st.dy = (1 - k) * 34;
+          st.alpha = Math.min(1, p * 4.5);
+        }
+      } else if (a === 'txGlint') {
+        // script-to-motion FXKit.glintOver: settle + diagonal specular light sweep
+        const p = Math.min(1, lt / 0.42);
+        const ease = 1 - Math.pow(1 - p, 3);
+        st.alpha = ease;
+        st.dy = (1 - ease) * 18;
+        if (lt >= 0.25 && lt <= 1.25) {
+          st.glintPhase = (lt - 0.25) / 1.0;
+        }
+      } else if (a === 'txShatter') {
+        // script-to-motion TypeFX shatter/glitch assemble
+        const dur = 0.48;
+        if (lt < dur) {
+          const rem = 1 - lt / dur;
+          const jitter = Math.sin(lt * 72) * rem * rem;
+          st.dx = jitter * 22;
+          st.dy = Math.cos(lt * 54) * rem * rem * 8;
+          st.rot = jitter * 0.035;
+          st.alpha = Math.min(1, lt * 5);
+        }
+      } else if (a === 'txBlurReveal') {
+        // script-to-motion cinematic focus pull
+        const p = Math.min(1, lt / 0.55);
+        const ease = p * p * (3 - 2 * p);
+        st.alpha = ease;
+        st.blur = (1 - ease) * 14;
+        const s = 1.14 - 0.14 * ease;
+        st.scaleX = s;
+        st.scaleY = s;
+      } else if (a === 'txWave') {
+        // script-to-motion continuous wave breath
+        st.dy = Math.sin(lt * 3.4) * 6;
+        st.rot = Math.sin(lt * 2.1) * 0.018;
+        const s = 1 + Math.sin(lt * 3.4 + 1.2) * 0.025;
+        st.scaleX = s;
+        st.scaleY = s;
+      } else if (a === 'txNeonPulse') {
+        st.glowBoost = 0.65 + 0.45 * Math.sin(lt * 4.8);
       }
       return st;
     }
@@ -1409,6 +1479,59 @@
         c.globalCompositeOperation = 'screen';
         c.fillStyle = grd;
         c.fillRect(0, 0, W, H);
+      } else if (decoKey === 'cineKeyLight') {
+        // script-to-motion cinematic-look: motivated upper-right key light + depth vignette
+        const lx = W * 0.82 + Math.sin(t * 0.55) * 28;
+        const ly = H * 0.12 + Math.cos(t * 0.45) * 18;
+        const keyGrad = c.createRadialGradient(lx, ly, 16, lx, ly, W * 1.15);
+        keyGrad.addColorStop(0, 'rgba(255, 240, 210, 0.28)');
+        keyGrad.addColorStop(0.38, 'rgba(255, 215, 165, 0.11)');
+        keyGrad.addColorStop(1, 'rgba(8, 10, 16, 0.46)');
+        c.fillStyle = keyGrad;
+        c.fillRect(0, 0, W, H);
+        const vig = c.createRadialGradient(W * 0.5, H * 0.48, W * 0.34, W * 0.5, H * 0.5, H * 0.74);
+        vig.addColorStop(0, 'rgba(0,0,0,0)');
+        vig.addColorStop(1, 'rgba(0,0,0,0.42)');
+        c.fillStyle = vig;
+        c.fillRect(0, 0, W, H);
+      } else if (decoKey === 'cineBokeh') {
+        // script-to-motion FXKit deterministic out-of-focus bokeh orbs
+        c.globalCompositeOperation = 'screen';
+        for (let i = 0; i < 16; i++) {
+          const seed = i * 2.17 + 0.31;
+          const bx = (((Math.sin(seed * 19.31) * 43758.54) % 1 + 1) % 1) * W + Math.sin(t * 0.7 + i) * 22;
+          const by = (((Math.cos(seed * 31.17) * 23421.63) % 1 + 1) % 1) * H + Math.cos(t * 0.55 + i * 1.3) * 18;
+          const br = 18 + (i % 5) * 14;
+          const g = c.createRadialGradient(bx, by, br * 0.1, bx, by, br);
+          const col = i % 3 === 0 ? '255,214,140' : i % 3 === 1 ? '140,220,255' : '255,255,255';
+          g.addColorStop(0, `rgba(${col},0.22)`);
+          g.addColorStop(0.65, `rgba(${col},0.08)`);
+          g.addColorStop(1, `rgba(${col},0)`);
+          c.fillStyle = g;
+          c.beginPath(); c.arc(bx, by, br, 0, Math.PI * 2); c.fill();
+        }
+      } else if (decoKey === 'cineLeak') {
+        // script-to-motion FXKit warm film light leak sweep
+        c.globalCompositeOperation = 'screen';
+        const sx = W * (0.25 + 0.5 * (0.5 + 0.5 * Math.sin(t * 0.9)));
+        const sy = H * 0.18;
+        const lk = c.createRadialGradient(sx, sy, 10, sx, sy, W * 0.9);
+        lk.addColorStop(0, 'rgba(255, 136, 68, 0.34)');
+        lk.addColorStop(0.45, 'rgba(255, 86, 110, 0.14)');
+        lk.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        c.fillStyle = lk;
+        c.fillRect(0, 0, W, H);
+      } else if (decoKey === 'cineLetterbox') {
+        // script-to-motion 2.35:1 cinemascope bars + subtle film grade
+        c.fillStyle = 'rgba(0, 0, 0, 0.94)';
+        c.fillRect(0, 0, W, 86);
+        c.fillRect(0, H - 86, W, 86);
+        c.strokeStyle = 'rgba(255,255,255,0.14)';
+        c.lineWidth = 1;
+        c.beginPath();
+        c.moveTo(0, 86.5); c.lineTo(W, 86.5);
+        c.moveTo(0, H - 86.5); c.lineTo(W, H - 86.5);
+        c.stroke();
       }
       c.restore();
     }
@@ -1667,6 +1790,59 @@
         c.shadowBlur = 24 + ast.glowBoost * 20;
         c.shadowOffsetY = 0;
         fg = '#ffffff';
+      } else if (st === 'cinematicGlass') {
+        // script-to-motion cinematic-look: directional key-light rim + deep translucent glass
+        c.shadowColor = 'rgba(0,0,0,0.62)';
+        c.shadowBlur = 24 + ast.glowBoost * 16;
+        c.shadowOffsetY = 8;
+        gRoundRect(c, -bw / 2, -bh / 2, bw, bh, rad);
+        const cg = c.createLinearGradient(-bw / 2, -bh / 2, bw / 2, bh / 2);
+        cg.addColorStop(0, 'rgba(28, 32, 42, 0.86)');
+        cg.addColorStop(1, 'rgba(10, 12, 18, 0.90)');
+        c.fillStyle = bgColor || cg;
+        c.fill();
+        const rim = c.createLinearGradient(-bw / 2, -bh / 2, bw / 2, bh / 2);
+        rim.addColorStop(0, 'rgba(255,255,255,0.68)');
+        rim.addColorStop(0.45, 'rgba(255,255,255,0.16)');
+        rim.addColorStop(1, 'rgba(255,255,255,0.06)');
+        c.strokeStyle = rim;
+        c.lineWidth = 1.8;
+        c.stroke();
+        c.shadowBlur = 0;
+        c.shadowOffsetY = 0;
+        fg = mainCol;
+      } else if (st === 'editorialSerif') {
+        // script-to-motion editorial kinetic type: no heavy card, crisp left accent bar + deep contrast shadow
+        c.fillStyle = mainCol === '#ffffff' ? '#facc15' : mainCol;
+        gRoundRect(c, -bw / 2, -bh / 2 + 6, 5 * sc, bh - 12, 3);
+        c.fill();
+        c.shadowColor = 'rgba(0,0,0,0.88)';
+        c.shadowBlur = 18;
+        c.shadowOffsetY = 4;
+        fg = mainCol;
+      } else if (st === 'filmPlaque') {
+        // script-to-motion world-material plaque: double hairline bezel + corner ticks
+        c.shadowColor = 'rgba(0,0,0,0.65)';
+        c.shadowBlur = 20;
+        c.shadowOffsetY = 6;
+        c.fillStyle = bgColor || 'rgba(12, 13, 18, 0.88)';
+        c.fillRect(-bw / 2, -bh / 2, bw, bh);
+        c.shadowBlur = 0;
+        c.shadowOffsetY = 0;
+        c.strokeStyle = 'rgba(255,255,255,0.34)';
+        c.lineWidth = 1.2;
+        c.strokeRect(-bw / 2 + 4, -bh / 2 + 4, bw - 8, bh - 8);
+        c.strokeStyle = mainCol === '#ffffff' ? '#fbbf24' : mainCol;
+        c.lineWidth = 2.2;
+        const tLen = 11 * sc;
+        [[-bw / 2, -bh / 2, 1, 1], [bw / 2, -bh / 2, -1, 1], [-bw / 2, bh / 2, 1, -1], [bw / 2, bh / 2, -1, -1]].forEach(([x0, y0, dx0, dy0]) => {
+          c.beginPath();
+          c.moveTo(x0 + dx0 * tLen, y0);
+          c.lineTo(x0, y0);
+          c.lineTo(x0, y0 + dy0 * tLen);
+          c.stroke();
+        });
+        fg = mainCol;
       } else {
         // 'plain' (배경 없음)
         c.shadowColor = 'rgba(0,0,0,0.85)';
@@ -1688,6 +1864,19 @@
         const ly = (li - (lines.length - 1) / 2) * lh;
         c.fillText(drawLn, 0, ly + 1, bw - 20);
       });
+      if (typeof ast.glintPhase === 'number' && ast.glintPhase >= 0 && ast.glintPhase <= 1) {
+        c.save();
+        gRoundRect(c, -bw / 2, -bh / 2, bw, bh, rad);
+        c.clip();
+        const gx = -bw * 0.75 + bw * 1.5 * ast.glintPhase;
+        const gl = c.createLinearGradient(gx - 38, -bh / 2, gx + 38, bh / 2);
+        gl.addColorStop(0, 'rgba(255,255,255,0)');
+        gl.addColorStop(0.5, 'rgba(255,255,255,0.42)');
+        gl.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = gl;
+        c.fillRect(-bw / 2, -bh / 2, bw, bh);
+        c.restore();
+      }
       c.restore();
       return { cx: cx + ast.dx, cy: cy + ast.dy, w: bw, h: bh };
     }
@@ -2036,7 +2225,7 @@
       if (frameKey) drawCutFrameOverlay(c, W, H, frameKey, t);
       const decoKey = (campaign.cutDecos && campaign.cutDecos[cutIdx]) || '';
       if (decoKey && decoKey !== 'none') {
-        const extraKeys = ['snow', 'petals', 'bubbles', 'bokeh', 'hearts', 'sparks', 'scanline', 'prism'];
+        const extraKeys = ['cineKeyLight', 'cineBokeh', 'cineLeak', 'cineLetterbox', 'snow', 'petals', 'bubbles', 'bokeh', 'hearts', 'sparks', 'scanline', 'prism'];
         if (extraKeys.includes(decoKey)) {
           drawExtraCutDeco(c, W, H, t, decoKey);
         } else if (typeof kitDeco === 'function') {
@@ -4948,7 +5137,7 @@
         c.translate(W / 2, H / 2);
         c.scale(z, z);
         c.translate(-W / 2, -H / 2);
-      } else if (transId === 'circleWipe') {
+      } else if (transId === 'circleWipe' || transId === 'pingWipe') {
         const maxR = Math.hypot(W, H) * 0.58;
         c.beginPath();
         c.arc(W / 2, H / 2, Math.max(4, maxR * ep), 0, Math.PI * 2);
@@ -5009,6 +5198,43 @@
         c.fillRect(0, (H * 0.28) | 0, W, 18);
         c.fillStyle = `rgba(244,63,94,${a.toFixed(3)})`;
         c.fillRect(0, (H * 0.64) | 0, W, 14);
+      } else if (transId === 'pingWipe') {
+        // script-to-motion FXKit.pingWipe: expanding sonar ring + deterministic spark ring
+        const maxR = Math.hypot(W, H) * 0.58;
+        const r = Math.max(4, maxR * ep);
+        c.strokeStyle = `rgba(89, 243, 224, ${(1 - ep) * 0.9})`;
+        c.lineWidth = 4 * (1 - ep * 0.5);
+        c.beginPath();
+        c.arc(W / 2, H / 2, r, 0, Math.PI * 2);
+        c.stroke();
+        if (ep > 0.08) {
+          c.strokeStyle = `rgba(255, 255, 255, ${(1 - ep) * 0.45})`;
+          c.lineWidth = 2;
+          c.beginPath();
+          c.arc(W / 2, H / 2, r * 0.86, 0, Math.PI * 2);
+          c.stroke();
+        }
+        for (let si = 0; si < 18; si++) {
+          const ang = (si / 18) * Math.PI * 2 + ep * 0.5;
+          const sx = W / 2 + Math.cos(ang) * r;
+          const sy = H / 2 + Math.sin(ang) * r;
+          c.fillStyle = `rgba(180, 255, 245, ${(1 - ep) * 0.85})`;
+          c.beginPath();
+          c.arc(sx, sy, 2.5 * (1 - ep * 0.4), 0, Math.PI * 2);
+          c.fill();
+        }
+      } else if (transId === 'cineLightSweep') {
+        // script-to-motion FXKit.leak + subtle warm flash
+        c.globalCompositeOperation = 'screen';
+        const sx = W * (-0.2 + 1.4 * ep);
+        const sy = H * 0.45;
+        const lk = c.createRadialGradient(sx, sy, 12, sx, sy, W * 0.72);
+        const peak = Math.sin(ep * Math.PI);
+        lk.addColorStop(0, `rgba(255, 224, 178, ${(peak * 0.65).toFixed(3)})`);
+        lk.addColorStop(0.5, `rgba(255, 138, 80, ${(peak * 0.28).toFixed(3)})`);
+        lk.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        c.fillStyle = lk;
+        c.fillRect(0, 0, W, H);
       }
       c.restore();
     }
@@ -5399,14 +5625,6 @@
         const key = elKey || window.__arActiveCutElKey || 'caption';
         if (!isTextElementKey(key)) return;
 
-        // 하단 바텀시트가 자막 입력창을 가리지 않도록 잠시 닫고 직접 편집창 표시
-        if (window.__arInlineEditActive && typeof closeInlineQuickEdit === 'function') {
-          closeInlineQuickEdit();
-        }
-        if (window.__arCutEditorOpen && typeof closeCutEditor === 'function') {
-          closeCutEditor();
-        }
-
         const wrap = ensureCanvasDirectTextEditorDom();
         const vp = document.getElementById('previewViewport');
         if (!wrap || !vp) return;
@@ -5431,9 +5649,16 @@
           initialText
         };
 
-        const wPct = Math.max(66, Math.min(92, (hb.w / 540) * 100 + 8));
-        const leftPct = Math.max(4, Math.min(96 - wPct, ((hb.cx - hb.w / 2) / 540) * 100 - 4));
-        const topPct = Math.max(10, Math.min(72, ((hb.cy - hb.h / 2) / 960) * 100));
+        // transform: translate(-50%, -50%) 기준이므로 leftPct는 요소 중심좌표(%)로 두고 양끝이 잘리지 않게 클램프
+        const wPct = Math.max(72, Math.min(90, (hb.w / 540) * 100 + 6));
+        const halfW = wPct / 2;
+        const cxPct = (hb.cx / 540) * 100;
+        const leftPct = Math.max(halfW + 4, Math.min(96 - halfW, cxPct));
+        const sheetOpen = !!(window.__arInlineEditActive || window.__arCutEditorOpen);
+        const cyPct = (hb.cy / 960) * 100;
+        const topPct = sheetOpen
+          ? Math.max(14, Math.min(44, cyPct))
+          : Math.max(14, Math.min(82, cyPct));
 
         wrap.style.width = `${wPct.toFixed(1)}%`;
         wrap.style.left = `${leftPct.toFixed(1)}%`;
