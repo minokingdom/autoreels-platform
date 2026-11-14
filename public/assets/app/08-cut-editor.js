@@ -4189,21 +4189,19 @@
                   class="ar-el-badge blue flex-1 min-w-0 justify-center overflow-hidden text-ellipsis whitespace-nowrap" style="padding:6px 10px;font-weight:800;">✏️ 문구 수정</button>
           <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'hidden', ${!obj.hidden}, true)"
                   class="ar-el-badge ${obj.hidden ? 'muted' : ''}">${obj.hidden ? '🙈 숨김' : '👁 표시'}</button>
-          <button type="button" onclick="resetCutElementOverride(${cutIdx}, '${elKey}')" class="ar-el-badge muted" title="위치·크기·디자인 초기화">↺</button>
+          <button type="button" onclick="resetCutElementOverride(${cutIdx}, '${elKey}')" class="ar-el-badge muted" title="위치·크기·디자인 초기화">초기화</button>
         </div>
-        <div class="ar-el-row grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="ar-el-label">가로 위치 X</span>
-            <input id="arElRangeX" type="range" min="0.06" max="0.94" step="0.01" value="${curX}"
-                   oninput="updateCutElementOverride(${cutIdx}, '${elKey}', 'x', this.value, false)" class="flex-1" />
-            <span id="arElValX" class="ar-el-val">${Math.round(curX * 100)}%</span>
-          </div>
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="ar-el-label">세로 위치 Y</span>
-            <input id="arElRangeY" type="range" min="0.05" max="0.95" step="0.01" value="${curY}"
-                   oninput="updateCutElementOverride(${cutIdx}, '${elKey}', 'y', this.value, false)" class="flex-1" />
-            <span id="arElValY" class="ar-el-val">${Math.round(curY * 100)}%</span>
-          </div>
+        <div class="ar-el-row">
+          <span class="ar-el-label">가로 위치 X</span>
+          <input id="arElRangeX" type="range" min="0.06" max="0.94" step="0.01" value="${curX}"
+                 oninput="updateCutElementOverride(${cutIdx}, '${elKey}', 'x', this.value, false)" class="flex-1" />
+          <span id="arElValX" class="ar-el-val">${Math.round(curX * 100)}%</span>
+        </div>
+        <div class="ar-el-row">
+          <span class="ar-el-label">세로 위치 Y</span>
+          <input id="arElRangeY" type="range" min="0.05" max="0.95" step="0.01" value="${curY}"
+                 oninput="updateCutElementOverride(${cutIdx}, '${elKey}', 'y', this.value, false)" class="flex-1" />
+          <span id="arElValY" class="ar-el-val">${Math.round(curY * 100)}%</span>
         </div>
         <div class="ar-el-row">
           <span class="ar-el-label">요소 크기</span>
@@ -4371,19 +4369,17 @@
                    oninput="updateCutElementOverride(${cutIdx}, 'photo', 'scale', this.value, false)" class="flex-1" />
             <span id="arElValPhotoScale" class="ar-el-val">${Math.round((Number(ph.scale) || 1) * 100)}%</span>
           </div>
-          <div class="ar-el-row grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="ar-el-label">좌우 이동</span>
-              <input id="arElRangePanX" type="range" min="-0.5" max="0.5" step="0.02" value="${Number(ph.panX) || 0}"
-                     oninput="updateCutElementOverride(${cutIdx}, 'photo', 'panX', this.value, false)" class="flex-1" />
-              <span id="arElValPanX" class="ar-el-val">${Math.round((Number(ph.panX) || 0) * 100)}%</span>
-            </div>
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="ar-el-label">상하 이동</span>
-              <input id="arElRangePanY" type="range" min="-0.5" max="0.5" step="0.02" value="${Number(ph.panY) || 0}"
-                     oninput="updateCutElementOverride(${cutIdx}, 'photo', 'panY', this.value, false)" class="flex-1" />
-              <span id="arElValPanY" class="ar-el-val">${Math.round((Number(ph.panY) || 0) * 100)}%</span>
-            </div>
+          <div class="ar-el-row">
+            <span class="ar-el-label">좌우 이동</span>
+            <input id="arElRangePanX" type="range" min="-0.5" max="0.5" step="0.02" value="${Number(ph.panX) || 0}"
+                   oninput="updateCutElementOverride(${cutIdx}, 'photo', 'panX', this.value, false)" class="flex-1" />
+            <span id="arElValPanX" class="ar-el-val">${Math.round((Number(ph.panX) || 0) * 100)}%</span>
+          </div>
+          <div class="ar-el-row">
+            <span class="ar-el-label">상하 이동</span>
+            <input id="arElRangePanY" type="range" min="-0.5" max="0.5" step="0.02" value="${Number(ph.panY) || 0}"
+                   oninput="updateCutElementOverride(${cutIdx}, 'photo', 'panY', this.value, false)" class="flex-1" />
+            <span id="arElValPanY" class="ar-el-val">${Math.round((Number(ph.panY) || 0) * 100)}%</span>
           </div>
           <div class="ar-el-row">
             <span class="ar-el-label">사진 배치</span>
@@ -4476,33 +4472,29 @@
                 }).join('')}
               </div>
             </div>
-            <div class="ar-el-row grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div class="flex items-center gap-2 min-w-0">
-                <span class="ar-el-label">가로 X</span>
-                <input id="arElRangeOvX" type="range" min="0.06" max="0.94" step="0.01" value="${typeof it.x === 'number' ? it.x : 0.5}"
-                       oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'x', this.value, false)" class="flex-1" />
-                <span id="arElValOvX" class="ar-el-val">${Math.round((typeof it.x === 'number' ? it.x : 0.5) * 100)}%</span>
-              </div>
-              <div class="flex items-center gap-2 min-w-0">
-                <span class="ar-el-label">세로 Y</span>
-                <input id="arElRangeOvY" type="range" min="0.06" max="0.94" step="0.01" value="${typeof it.y === 'number' ? it.y : 0.5}"
-                       oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'y', this.value, false)" class="flex-1" />
-                <span id="arElValOvY" class="ar-el-val">${Math.round((typeof it.y === 'number' ? it.y : 0.5) * 100)}%</span>
-              </div>
+            <div class="ar-el-row">
+              <span class="ar-el-label">가로 X</span>
+              <input id="arElRangeOvX" type="range" min="0.06" max="0.94" step="0.01" value="${typeof it.x === 'number' ? it.x : 0.5}"
+                     oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'x', this.value, false)" class="flex-1" />
+              <span id="arElValOvX" class="ar-el-val">${Math.round((typeof it.x === 'number' ? it.x : 0.5) * 100)}%</span>
             </div>
-            <div class="ar-el-row grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div class="flex items-center gap-2 min-w-0">
-                <span class="ar-el-label">크기</span>
-                <input id="arElRangeOvScale" type="range" min="0.45" max="2.5" step="0.05" value="${Number(it.scale) || 1}"
-                       oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'scale', this.value, false)" class="flex-1" />
-                <span id="arElValOvScale" class="ar-el-val">${Math.round((Number(it.scale) || 1) * 100)}%</span>
-              </div>
-              <div class="flex items-center gap-2 min-w-0">
-                <span class="ar-el-label">회전</span>
-                <input id="arElRangeOvRot" type="range" min="-45" max="45" step="1" value="${Number(it.rot) || 0}"
-                       oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'rot', this.value, false)" class="flex-1" />
-                <span id="arElValOvRot" class="ar-el-val">${Math.round(Number(it.rot) || 0)}°</span>
-              </div>
+            <div class="ar-el-row">
+              <span class="ar-el-label">세로 Y</span>
+              <input id="arElRangeOvY" type="range" min="0.06" max="0.94" step="0.01" value="${typeof it.y === 'number' ? it.y : 0.5}"
+                     oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'y', this.value, false)" class="flex-1" />
+              <span id="arElValOvY" class="ar-el-val">${Math.round((typeof it.y === 'number' ? it.y : 0.5) * 100)}%</span>
+            </div>
+            <div class="ar-el-row">
+              <span class="ar-el-label">크기</span>
+              <input id="arElRangeOvScale" type="range" min="0.45" max="2.5" step="0.05" value="${Number(it.scale) || 1}"
+                     oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'scale', this.value, false)" class="flex-1" />
+              <span id="arElValOvScale" class="ar-el-val">${Math.round((Number(it.scale) || 1) * 100)}%</span>
+            </div>
+            <div class="ar-el-row">
+              <span class="ar-el-label">회전</span>
+              <input id="arElRangeOvRot" type="range" min="-45" max="45" step="1" value="${Number(it.rot) || 0}"
+                     oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'rot', this.value, false)" class="flex-1" />
+              <span id="arElValOvRot" class="ar-el-val">${Math.round(Number(it.rot) || 0)}°</span>
             </div>
           `;
         }
