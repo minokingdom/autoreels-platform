@@ -4306,10 +4306,116 @@
             if (K && K.label && !window.__arLastDetectedBadgeText[rIdx]) {
               window.__arLastDetectedBadgeText[rIdx] = K.label;
             }
-            const defCx = zone.x + zone.w / 2;
-            const defCy = zone.center ? zone.y + zone.h / 2 : zone.y + Math.min(115, zone.h * 0.45);
-            const defW = Math.min(W - 36, Math.max(260, zone.w));
-            const defH = Math.min(200, Math.max(96, zone.h * 0.65));
+            const fk = (spec && spec.font) || 'sans';
+            const capType = (spec && spec.cap) || 'glass';
+            const topY = zone.center ? zone.y + zone.h / 2 - 60 : zone.y;
+            let defCx = zone.x + zone.w / 2;
+            let defCy = topY + 62;
+            let defW = zone.w;
+            let defH = 124;
+            try {
+              if (typeof kWrap === 'function') {
+                if (capType === 'glass') {
+                  const r = kWrap(c, text, W - 130, 3, 36, 22, fk);
+                  const bh = 66 + r.lines.length * r.lh;
+                  const y0 = topY + (1 - gEase(e / 0.55)) * 36;
+                  defCx = zone.x + zone.w / 2;
+                  defCy = y0 + bh / 2;
+                  defW = zone.w;
+                  defH = bh;
+                } else if (capType === 'sticky') {
+                  const r = kWrap(c, text, 330, 3, 40, 26, fk);
+                  const nh = r.lines.length * r.lh + 70;
+                  const drop = (1 - gBack(e / 0.5)) * -220;
+                  defCx = W / 2;
+                  defCy = topY + nh / 2 + drop;
+                  defW = 390;
+                  defH = nh;
+                } else if (capType === 'ticket') {
+                  const r = kWrap(c, text, W - 140, 3, 32, 20, fk);
+                  const bh = 76 + r.lines.length * r.lh;
+                  const y0 = topY + (1 - gEase(e / 0.5)) * 90;
+                  defCx = zone.x + zone.w / 2;
+                  defCy = y0 + bh / 2;
+                  defW = zone.w - 20;
+                  defH = bh + 8;
+                } else if (capType === 'bubble') {
+                  const r = kWrap(c, text, W - 150, 3, 36, 22, fk);
+                  let mw = 0;
+                  r.lines.forEach((ln) => (mw = Math.max(mw, c.measureText(ln).width)));
+                  const bw = mw + 56;
+                  const bh = r.lines.length * r.lh + 40;
+                  defCx = zone.x + bw / 2;
+                  defCy = topY + bh / 2;
+                  defW = bw;
+                  defH = bh + 18;
+                } else if (capType === 'notecard') {
+                  const r = kWrap(c, text, zone.w - 70, 3, 30, 20, fk);
+                  const bh = 92 + r.lines.length * r.lh + 56;
+                  const y0 = topY + (1 - gEase(e / 0.5)) * 40;
+                  defCx = zone.x + zone.w / 2;
+                  defCy = y0 + bh / 2;
+                  defW = zone.w;
+                  defH = bh;
+                } else if (capType === 'checkl') {
+                  const itemsCount = Math.min(3, rIdx + 1);
+                  const bh = 58 + itemsCount * 56;
+                  defCx = zone.x + zone.w / 2;
+                  defCy = topY + bh / 2;
+                  defW = zone.w;
+                  defH = bh;
+                } else if (capType === 'typer') {
+                  const r = kWrap(c, text, W - 130, 3, 32, 20, fk);
+                  const bh = 60 + r.lines.length * r.lh;
+                  defCx = zone.x + zone.w / 2;
+                  defCy = topY + bh / 2;
+                  defW = zone.w;
+                  defH = bh;
+                } else if (capType === 'stamp') {
+                  const r = kWrap(c, text, W - 190, 2, 40, 24, fk);
+                  let mw = 0;
+                  r.lines.forEach((ln) => (mw = Math.max(mw, c.measureText(ln).width)));
+                  const bw = Math.max(240, mw + 70);
+                  const bh = r.lines.length * r.lh + 64;
+                  defCx = W / 2;
+                  defCy = topY + bh / 2 + 6;
+                  defW = bw;
+                  defH = bh;
+                } else if (capType === 'headline') {
+                  const r = kWrap(c, text, W - 70, 2, 44, 26, fk);
+                  const bh = 70 + r.lines.length * r.lh;
+                  defCx = W / 2;
+                  defCy = topY - 6 + bh / 2;
+                  defW = W - 24;
+                  defH = bh;
+                } else if (capType === 'lower3') {
+                  const r = kWrap(c, text, W - 110, 2, 32, 20, fk);
+                  let mw = 0;
+                  r.lines.forEach((ln) => (mw = Math.max(mw, c.measureText(ln).width)));
+                  const bw = Math.max(220, mw + 44);
+                  const bh = 34 + r.lines.length * r.lh + 22;
+                  defCx = zone.x + bw / 2;
+                  defCy = topY + bh / 2;
+                  defW = bw;
+                  defH = bh;
+                } else if (capType === 'vsub') {
+                  const r = kWrap(c, text, W - 120, 2, 32, 22, fk);
+                  const bh = r.lines.length * (r.lh + 12);
+                  const blockTop = zone.center ? topY : zone.y + zone.h - bh - 6;
+                  defCx = W / 2;
+                  defCy = blockTop + bh / 2;
+                  defW = Math.min(W - 60, zone.w);
+                  defH = Math.max(54, bh);
+                } else {
+                  const r = kWrap(c, text, Math.max(220, zone.w - 40), 3, 42, 24, fk);
+                  const bh = Math.max(68, r.lines.length * r.lh + 28);
+                  defCx = zone.x + zone.w / 2;
+                  defCy = topY + bh / 2;
+                  defW = Math.min(W - 36, Math.max(240, zone.w));
+                  defH = bh;
+                }
+              }
+            } catch (_e) {}
             window.__arLastRenderedBoxes[rIdx].caption = { cx: defCx, cy: defCy, w: defW, h: defH };
 
             const ov = cutElementOverrides && cutElementOverrides[rIdx];
@@ -4442,10 +4548,28 @@
             if (!window.__arInsideMotionCaptionCard) {
               const W = (c && c.canvas && c.canvas.width) || 540;
               const H = (c && c.canvas && c.canvas.height) || 960;
-              const defCx = align === 'left' ? x + maxW * 0.45 : align === 'right' ? x - maxW * 0.45 : x;
-              const defCy = y + Math.min(72, maxH * 0.45);
-              const defW = Math.min(W - 40, Math.max(240, maxW));
-              const defH = Math.min(150, Math.max(84, maxH));
+              let defCx = align === 'left' ? x + maxW * 0.45 : align === 'right' ? x - maxW * 0.45 : x;
+              let defCy = y + maxH / 2;
+              let defW = Math.min(W - 40, Math.max(220, maxW));
+              let defH = Math.min(140, Math.max(68, maxH));
+              try {
+                if (typeof mFit === 'function' && typeof KIT_FONTS !== 'undefined') {
+                  const F = KIT_FONTS[nextFont] || KIT_FONTS.sans;
+                  const maxLines = Math.max(1, Math.min(3, Math.floor(maxH / (size * F.k * 1.28))));
+                  const r = mFit(c, text, maxW, maxLines, size, Math.round(size * 0.55), nextFont);
+                  const totalH = r.lines.length * r.lh;
+                  const topPos = y + Math.max(0, (maxH - totalH) / 2);
+                  let mw = 0;
+                  c.save();
+                  c.font = gFont(F.w, r.size, F.f);
+                  r.lines.forEach((ln) => (mw = Math.max(mw, c.measureText(ln).width)));
+                  c.restore();
+                  defW = Math.min(W - 36, Math.max(180, mw + 44));
+                  defH = Math.max(54, totalH + 24);
+                  defCx = align === 'left' ? x + defW / 2 - 14 : align === 'right' ? x - defW / 2 + 14 : x;
+                  defCy = topPos + totalH / 2;
+                }
+              } catch (_e) {}
               if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
               if (!window.__arLastRenderedBoxes[rIdx]) window.__arLastRenderedBoxes[rIdx] = {};
               window.__arLastRenderedBoxes[rIdx].caption = { cx: defCx, cy: defCy, w: defW, h: defH };
@@ -5002,6 +5126,418 @@
         c.restore();
       }
     }
+
+    // ─── Exact Bounding Box Hooks for Genre & Motion Card Styles + Clean Selection Overlay + Direct On-Canvas Text Editing ───
+    (function enhanceCanvasSelectionAndDirectEdit() {
+      function recordCutElementBox(cutIdx, key, defCx, defCy, defW, defH) {
+        if (cutIdx < 0 || cutIdx > 3) return;
+        const ov = (typeof getCutElementOverride === 'function') ? getCutElementOverride(cutIdx, key) : null;
+        const dx = ov ? ((Number(ov.x) || 50) - 50) * 5.4 : 0;
+        const dy = ov ? ((Number(ov.y) || 50) - 50) * 9.6 : 0;
+        const sc = ov ? (Number(ov.scale) || 100) / 100 : 1;
+        window.__arLastRenderedBoxes = window.__arLastRenderedBoxes || {};
+        window.__arLastRenderedBoxes[cutIdx] = window.__arLastRenderedBoxes[cutIdx] || {};
+        window.__arLastRenderedBoxes[cutIdx][key] = {
+          cx: Math.max(40, Math.min(500, defCx + dx)),
+          cy: Math.max(40, Math.min(920, defCy + dy)),
+          w: Math.max(80, Math.min(520, defW * sc)),
+          h: Math.max(44, Math.min(340, defH * sc)),
+          key
+        };
+      }
+
+      // 1) Genre Engine exact card boxes
+      const genreCaptionCardDefs = {
+        drawSaleMain:    { cx: 270, cy: 761, w: 484, h: 178 },
+        drawLuxuryMain:  { cx: 270, cy: 765, w: 460, h: 170 },
+        drawEvMain:      { cx: 270, cy: 761, w: 484, h: 178 },
+        drawSportsMain:  { cx: 270, cy: 761, w: 484, h: 178 },
+        drawFinanceMain: { cx: 270, cy: 750, w: 484, h: 180 },
+        drawTrustMain:   { cx: 270, cy: 756, w: 476, h: 184 }
+      };
+      Object.keys(genreCaptionCardDefs).forEach((fnName) => {
+        const orig = window[fnName];
+        if (typeof orig === 'function' && !orig.__arBoxWrapped) {
+          const box = genreCaptionCardDefs[fnName];
+          const wrapped = function (c, W, H, s, t, p, text) {
+            const cutIdx = (typeof window.__arActiveRenderCutIdx === 'number') ? window.__arActiveRenderCutIdx : -1;
+            const res = orig.call(this, c, W, H, s, t, p, text);
+            if (cutIdx >= 0 && cutIdx < 4) {
+              recordCutElementBox(cutIdx, 'caption', box.cx, box.cy, box.w, box.h);
+            }
+            return res;
+          };
+          wrapped.__arBoxWrapped = true;
+          window[fnName] = wrapped;
+        }
+      });
+
+      // 2) Motion Engine custom card styles (in_music, in_lock, in_cal, in_h_plaque, in_g_bookmark, poll)
+      if (typeof window.renderMotionFrame === 'function' && !window.renderMotionFrame.__arCardBoxWrapped) {
+        const origMotion = window.renderMotionFrame;
+        const motionCardMap = {
+          in_music:      { caption: { cx: 270, cy: 720, w: 468, h: 196 }, badge: { cx: 270, cy: 92,  w: 260, h: 48 }, price: { cx: 180, cy: 696, w: 260, h: 44 } },
+          in_lock:       { caption: { cx: 270, cy: 695, w: 476, h: 170 }, badge: { cx: 270, cy: 196, w: 320, h: 120 }, price: { cx: 220, cy: 650, w: 260, h: 44 } },
+          in_cal:        { caption: { cx: 270, cy: 694, w: 468, h: 228 }, badge: { cx: 270, cy: 615, w: 468, h: 70 }, price: { cx: 270, cy: 768, w: 420, h: 52 } },
+          in_h_plaque:   { caption: { cx: 270, cy: 720, w: 468, h: 200 }, badge: { cx: 270, cy: 655, w: 280, h: 44 }, price: { cx: 270, cy: 782, w: 320, h: 44 } },
+          in_g_bookmark: { caption: { cx: 270, cy: 692, w: 452, h: 236 }, badge: { cx: 270, cy: 604, w: 300, h: 44 }, price: { cx: 270, cy: 774, w: 300, h: 44 } },
+          poll:          { caption: { cx: 270, cy: 676, w: 468, h: 232 }, badge: { cx: 270, cy: 590, w: 240, h: 44 }, price: { cx: 270, cy: 735, w: 428, h: 108 } }
+        };
+        const wrappedMotion = function (c, W, H, s, t, m) {
+          const res = origMotion.apply(this, arguments);
+          const cutIdx = (typeof window.__arActiveRenderCutIdx === 'number') ? window.__arActiveRenderCutIdx : -1;
+          if (cutIdx >= 0 && cutIdx < 4 && m && motionCardMap[m.id]) {
+            const defs = motionCardMap[m.id];
+            if (defs.caption) recordCutElementBox(cutIdx, 'caption', defs.caption.cx, defs.caption.cy, defs.caption.w, defs.caption.h);
+            if (defs.badge)   recordCutElementBox(cutIdx, 'badge',   defs.badge.cx,   defs.badge.cy,   defs.badge.w,   defs.badge.h);
+            if (defs.price)   recordCutElementBox(cutIdx, 'price',   defs.price.cx,   defs.price.cy,   defs.price.w,   defs.price.h);
+          }
+          return res;
+        };
+        wrappedMotion.__arCardBoxWrapped = true;
+        window.renderMotionFrame = wrappedMotion;
+      }
+
+      // 3) Clean Canvas Selection Overlay: ONLY draw the currently selected element (zero ghost boxes for unselected elements)
+      drawCanvasSelectionOverlay = function (c, W, H, cutIdx) {
+        if (window.__arExporting || pinnedPreviewCut < 0) return;
+        if (!canvasDirectEditEnabled) return;
+        const sel = getSelectedCanvasTarget(cutIdx);
+        if (!sel || sel === 'none' || sel === 'photo') return;
+
+        const boxes = getCanvasElementHitboxes(cutIdx);
+        const hb = boxes.find(b => b.key === sel);
+        if (!hb) return;
+
+        c.save();
+        const x = hb.cx - hb.w / 2;
+        const y = hb.cy - hb.h / 2;
+        const w = hb.w;
+        const h = hb.h;
+        const r = 14;
+
+        c.strokeStyle = '#34d399';
+        c.lineWidth = 2.5;
+        c.setLineDash([7, 5]);
+        if (typeof roundRect === 'function') {
+          roundRect(c, x, y, w, h, r);
+          c.stroke();
+        } else {
+          c.strokeRect(x, y, w, h);
+        }
+        c.setLineDash([]);
+
+        // Corner handles
+        const hs = 9;
+        const corners = [
+          [x, y],
+          [x + w, y],
+          [x, y + h],
+          [x + w, y + h]
+        ];
+        c.fillStyle = '#ffffff';
+        c.strokeStyle = '#10b981';
+        c.lineWidth = 2.5;
+        corners.forEach(([ hx, hy ]) => {
+          c.fillRect(hx - hs / 2, hy - hs / 2, hs, hs);
+          c.strokeRect(hx - hs / 2, hy - hs / 2, hs, hs);
+        });
+
+        // Top pill badge with hint for direct text editing
+        const isEditableText = (hb.key === 'caption' || hb.key === 'badge' || hb.key === 'price' || hb.key === 'chip' || String(hb.key).startsWith('ov:'));
+        const pillText = isEditableText ? `${hb.label} · 탭하여 직접 수정` : hb.label;
+        c.font = '800 12px "Pretendard Variable", Pretendard, sans-serif';
+        const tw = c.measureText(pillText).width + 20;
+        const ph = 24;
+        const px = Math.max(10, Math.min(W - tw - 10, hb.cx - tw / 2));
+        const py = y > 38 ? (y - ph - 8) : (y + h + 8);
+        c.fillStyle = 'rgba(16, 185, 129, 0.95)';
+        if (typeof roundRect === 'function') {
+          roundRect(c, px, py, tw, ph, 12);
+          c.fill();
+        } else {
+          c.fillRect(px, py, tw, ph);
+        }
+        c.fillStyle = '#052e16';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillText(pillText, px + tw / 2, py + ph / 2 + 0.5);
+        c.restore();
+      };
+      window.drawCanvasSelectionOverlay = drawCanvasSelectionOverlay;
+
+      // 4) Direct On-Canvas Floating Text Editor (#arCanvasInlineInputWrap)
+      function isTextElementKey(key) {
+        if (!key || key === 'none' || key === 'photo') return false;
+        if (key === 'caption' || key === 'badge' || key === 'price' || key === 'chip') return true;
+        if (String(key).startsWith('ov:')) {
+          const id = String(key).slice(3);
+          const item = (typeof findOverlayById === 'function') ? findOverlayById(id) : null;
+          return !!(item && item.type !== 'emoji' && item.type !== 'frame');
+        }
+        return false;
+      }
+
+      function getCanvasElementCurrentText(cutIdx, key) {
+        if (String(key).startsWith('ov:')) {
+          const id = String(key).slice(3);
+          const item = (typeof findOverlayById === 'function') ? findOverlayById(id) : null;
+          return item ? String(item.text || '') : '';
+        }
+        const ov = (typeof getCutElementOverride === 'function') ? getCutElementOverride(cutIdx, key) : null;
+        if (ov && ov.text) return String(ov.text);
+        if (key === 'caption') {
+          return (typeof getDefaultCutCaptionText === 'function') ? String(getDefaultCutCaptionText(cutIdx) || '') : '';
+        }
+        return (typeof getCutElementPlaceholder === 'function') ? String(getCutElementPlaceholder(cutIdx, key) || '') : '';
+      }
+
+      function applyCanvasElementLiveText(cutIdx, key, val) {
+        if (String(key).startsWith('ov:')) {
+          const id = String(key).slice(3);
+          selectedOverlayId = id;
+          if (typeof updateSelectedOverlayProp === 'function') {
+            updateSelectedOverlayProp('text', val);
+          }
+          return;
+        }
+        if (key === 'caption' && typeof updateCutCaptionDirect === 'function') {
+          updateCutCaptionDirect(cutIdx, val);
+          const elOv = (typeof getCutElementOverride === 'function') ? getCutElementOverride(cutIdx, 'caption') : null;
+          if (elOv && elOv.text) {
+            elOv.text = val;
+            if (typeof saveCutOverlaysToStorage === 'function') saveCutOverlaysToStorage();
+          }
+        } else if (typeof updateCutElementOverride === 'function') {
+          updateCutElementOverride(cutIdx, key, 'text', val);
+        }
+      }
+
+      function ensureCanvasDirectTextEditorDom() {
+        const vp = document.getElementById('previewViewport');
+        if (!vp) return null;
+        let wrap = document.getElementById('arCanvasInlineInputWrap');
+        if (!wrap) {
+          wrap = document.createElement('div');
+          wrap.id = 'arCanvasInlineInputWrap';
+          wrap.innerHTML = `
+            <textarea id="arCanvasInlineInput" rows="2" placeholder="문구를 직접 입력하세요"></textarea>
+            <div class="ar-canvas-inline-toolbar">
+              <span class="ar-hint" id="arCanvasInlineHint">Enter 완료 · Shift+Enter 줄바꿈</span>
+              <div style="display:flex;gap:5px;align-items:center;">
+                <button type="button" class="ar-cancel-btn" id="arCanvasInlineCancelBtn">취소</button>
+                <button type="button" id="arCanvasInlineDoneBtn">완료</button>
+              </div>
+            </div>
+          `;
+          vp.appendChild(wrap);
+
+          const ta = wrap.querySelector('#arCanvasInlineInput');
+          const doneBtn = wrap.querySelector('#arCanvasInlineDoneBtn');
+          const cancelBtn = wrap.querySelector('#arCanvasInlineCancelBtn');
+
+          ta.addEventListener('pointerdown', (e) => e.stopPropagation());
+          wrap.addEventListener('pointerdown', (e) => e.stopPropagation());
+
+          ta.addEventListener('input', () => {
+            if (!wrap.__editCtx) return;
+            const { cutIdx, key } = wrap.__editCtx;
+            applyCanvasElementLiveText(cutIdx, key, ta.value);
+            if (typeof seekPreviewToCut === 'function') seekPreviewToCut(cutIdx);
+          });
+
+          ta.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              closeCanvasDirectTextEdit(true);
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              closeCanvasDirectTextEdit(false);
+            }
+          });
+
+          doneBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeCanvasDirectTextEdit(true);
+          });
+
+          cancelBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeCanvasDirectTextEdit(false);
+          });
+        }
+        return wrap;
+      }
+
+      function openCanvasDirectTextEdit(cutIdx, elKey) {
+        const targetCut = (typeof cutIdx === 'number' && cutIdx >= 0) ? cutIdx : getActiveEditCutIndex();
+        const key = elKey || getSelectedCanvasTarget(targetCut);
+        if (!isTextElementKey(key)) return;
+
+        const wrap = ensureCanvasDirectTextEditorDom();
+        const vp = document.getElementById('previewViewport');
+        if (!wrap || !vp) return;
+
+        const boxes = getCanvasElementHitboxes(targetCut);
+        const hb = boxes.find(b => b.key === key) || { cx: 270, cy: 680, w: 440, h: 110, label: '텍스트' };
+        const initialText = getCanvasElementCurrentText(targetCut, key);
+
+        wrap.__editCtx = {
+          cutIdx: targetCut,
+          key,
+          initialText
+        };
+
+        // Position over the selected element box in percentage of 540x960 canvas
+        const wPct = Math.max(58, Math.min(92, (hb.w / 540) * 100 + 6));
+        const leftPct = Math.max(4, Math.min(96 - wPct, ((hb.cx - hb.w / 2) / 540) * 100 - 3));
+        const topPct = Math.max(8, Math.min(72, ((hb.cy - hb.h / 2) / 960) * 100));
+
+        wrap.style.width = `${wPct.toFixed(1)}%`;
+        wrap.style.left = `${leftPct.toFixed(1)}%`;
+        wrap.style.top = `${topPct.toFixed(1)}%`;
+        wrap.classList.add('is-open');
+
+        const hintEl = wrap.querySelector('#arCanvasInlineHint');
+        if (hintEl) {
+          hintEl.textContent = `${hb.label || '문구'} 직접 수정 · Enter 완료`;
+        }
+
+        const ta = wrap.querySelector('#arCanvasInlineInput');
+        if (ta) {
+          ta.value = initialText;
+          setTimeout(() => {
+            ta.focus();
+            ta.select();
+          }, 15);
+        }
+      }
+
+      function closeCanvasDirectTextEdit(commit = true) {
+        const wrap = document.getElementById('arCanvasInlineInputWrap');
+        if (!wrap || !wrap.classList.contains('is-open')) return;
+        const ctx = wrap.__editCtx;
+        const ta = wrap.querySelector('#arCanvasInlineInput');
+        if (ctx && ta) {
+          if (commit) {
+            applyCanvasElementLiveText(ctx.cutIdx, ctx.key, ta.value);
+          } else {
+            applyCanvasElementLiveText(ctx.cutIdx, ctx.key, ctx.initialText);
+          }
+          if (typeof seekPreviewToCut === 'function') seekPreviewToCut(ctx.cutIdx);
+          if (typeof renderCutEditorPanel === 'function' && cutEditorOpen) renderCutEditorPanel();
+          if (typeof renderInlineQuickEditBar === 'function') renderInlineQuickEditBar();
+        }
+        wrap.classList.remove('is-open');
+        wrap.__editCtx = null;
+      }
+
+      window.openCanvasDirectTextEdit = openCanvasDirectTextEdit;
+      window.closeCanvasDirectTextEdit = closeCanvasDirectTextEdit;
+
+      // 5) Hook canvas tap/double-tap on already-selected text element to open direct text editor on screen
+      function bindDirectCanvasTapToEdit() {
+        const cv = document.getElementById('reelCanvas');
+        if (!cv || cv.__arDirectTextTapBound) return;
+        cv.__arDirectTextTapBound = true;
+
+        let downSelBefore = null;
+        let downPos = null;
+        let downTime = 0;
+
+        cv.addEventListener('pointerdown', (e) => {
+          closeCanvasDirectTextEdit(true);
+          if (pinnedPreviewCut < 0 || !canvasDirectEditEnabled) {
+            downSelBefore = null;
+            return;
+          }
+          const cutIdx = getActiveEditCutIndex();
+          downSelBefore = getSelectedCanvasTarget(cutIdx);
+          downPos = { x: e.clientX, y: e.clientY };
+          downTime = Date.now();
+        }, true); // capture before initCanvasDirectManip changes selection
+
+        cv.addEventListener('pointerup', (e) => {
+          if (pinnedPreviewCut < 0 || !canvasDirectEditEnabled || !downPos) return;
+          const dist = Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y);
+          const dt = Date.now() - downTime;
+          const cutIdx = getActiveEditCutIndex();
+          const currentSel = getSelectedCanvasTarget(cutIdx);
+          downPos = null;
+
+          // If user tapped (without dragging) on an element that was ALREADY selected, open direct on-canvas text editor!
+          if (dist < 6 && dt < 450 && downSelBefore && downSelBefore === currentSel && isTextElementKey(currentSel)) {
+            const rect = cv.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+              const cx = (e.clientX - rect.left) * (540 / rect.width);
+              const cy = (e.clientY - rect.top) * (960 / rect.height);
+              const hit = hitTestCanvasElement(cutIdx, cx, cy);
+              if (hit && hit.key === currentSel) {
+                openCanvasDirectTextEdit(cutIdx, currentSel);
+              }
+            }
+          }
+        });
+
+        cv.addEventListener('dblclick', (e) => {
+          if (pinnedPreviewCut < 0 || !canvasDirectEditEnabled) return;
+          const cutIdx = getActiveEditCutIndex();
+          const rect = cv.getBoundingClientRect();
+          if (!rect.width || !rect.height) return;
+          const cx = (e.clientX - rect.left) * (540 / rect.width);
+          const cy = (e.clientY - rect.top) * (960 / rect.height);
+          const hit = hitTestCanvasElement(cutIdx, cx, cy);
+          if (hit && isTextElementKey(hit.key)) {
+            e.preventDefault();
+            selectCanvasElement(cutIdx, hit.key);
+            openCanvasDirectTextEdit(cutIdx, hit.key);
+          }
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindDirectCanvasTapToEdit);
+      } else {
+        setTimeout(bindDirectCanvasTapToEdit, 0);
+      }
+
+      // 6) Update bottom sheet & inspector so text is edited directly on canvas instead of a cramped input next to the slider
+      const origBuildInspector = buildStandardElementInspectorHtml;
+      buildStandardElementInspectorHtml = function (cutIdx, elKey, titleLabel, textVal, placeholder, isCaption) {
+        const html = origBuildInspector.apply(this, arguments);
+        // Replace the cramped narrow input inside the inspector row with a clean button that opens the direct on-canvas editor
+        return html.replace(
+          /<input type="text"[^>]*oninput="[^"]*"[^>]*>/i,
+          `<button type="button" class="cut-el-vis-btn on" style="flex:1;min-width:0;justify-content:center;padding:6px 10px;font-weight:800;font-size:12px;" onclick="openCanvasDirectTextEdit(${cutIdx}, '${elKey}')">✏️ 화면 위에서 문구 직접 수정</button>`
+        );
+      };
+
+      const origRenderInlineQuickEditBar = renderInlineQuickEditBar;
+      renderInlineQuickEditBar = function () {
+        origRenderInlineQuickEditBar.apply(this, arguments);
+        const bar = document.getElementById('arInlineEditBar');
+        if (!bar || !bar.classList.contains('is-open')) return;
+        const textInput = bar.querySelector('#arInlineQuickTextInput');
+        if (textInput) {
+          const cutIdx = getActiveEditCutIndex();
+          const sel = getSelectedCanvasTarget(cutIdx);
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'ar-inline-action-btn primary';
+          btn.style.cssText = 'flex:0 0 auto;padding:5px 11px;font-size:11.5px;font-weight:800;white-space:nowrap;';
+          btn.innerHTML = '✏️ 문구 수정';
+          btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openCanvasDirectTextEdit(cutIdx, sel);
+          };
+          textInput.replaceWith(btn);
+        }
+      };
+      window.renderInlineQuickEditBar = renderInlineQuickEditBar;
+    })();
 
     loadDesignPrefs();
     (function () {
