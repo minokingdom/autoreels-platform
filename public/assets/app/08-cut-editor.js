@@ -2932,16 +2932,8 @@
             dragIdx = -1;
             window.__arSelectedOverlayIdx = -1;
             const curKey = window.__arActiveCutElKey || '';
-            if (curKey && curKey !== 'photo' && !curKey.startsWith('overlay:') && curKey !== 'transition' && curKey !== 'deco') {
-              dragElKey = curKey;
-            } else {
-              dragElKey = 'photo';
-              if (window.__arCutEditorOpen || window.__arInlineEditActive) {
-                window.__arActiveCutElKey = 'photo';
-              } else {
-                window.__arActiveCutElKey = '';
-              }
-            }
+            dragElKey = 'photo';
+            window.__arActiveCutElKey = 'photo';
             const curOv = getCutElementOverride(window.__arPinnedCut);
             if (dragElKey === 'photo') {
               origX = Number(curOv.photo.panX) || 0;
