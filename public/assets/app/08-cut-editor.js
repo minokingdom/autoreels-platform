@@ -3255,6 +3255,7 @@
     }
 
     function openInlineQuickEdit(cutIdx, elKey) {
+      if (typeof closePresetDrawer === 'function') closePresetDrawer();
       const n = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
       let targetIdx = typeof cutIdx === 'number' && cutIdx >= 0 ? Math.min(n - 1, cutIdx) : window.__arPinnedCut;
       if (typeof targetIdx !== 'number' || targetIdx < 0) {
@@ -3638,6 +3639,7 @@
     }
 
     function openCutEditor(cutIdx, elKey) {
+      if (typeof closePresetDrawer === 'function') closePresetDrawer();
       const n = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
       const targetIdx = typeof cutIdx === 'number' && cutIdx >= 0 ? Math.min(n - 1, cutIdx) : (window.__arPinnedCut >= 0 ? window.__arPinnedCut : 0);
       window.__arCutEditorOpen = true;
@@ -5624,6 +5626,7 @@
         if (typeof targetCut !== 'number' || targetCut < 0) return;
         const key = elKey || window.__arActiveCutElKey || 'caption';
         if (!isTextElementKey(key)) return;
+        if (typeof closePresetDrawer === 'function') closePresetDrawer();
 
         const wrap = ensureCanvasDirectTextEditorDom();
         const vp = document.getElementById('previewViewport');

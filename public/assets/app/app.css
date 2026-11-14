@@ -647,7 +647,11 @@
       align-items: center;
       gap: 5px;
       pointer-events: auto;
-      animation: arInlineBarIn 130ms var(--ease-out);
+      animation: arCanvasInlineFade 130ms var(--ease-out);
+    }
+    @keyframes arCanvasInlineFade {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
     #arCanvasInlineInputWrap.is-open {
       display: flex;

@@ -228,6 +228,9 @@
     function openPresetDrawer(side) {
       const dr = document.getElementById('presetDrawer');
       if (!dr) return;
+      if (typeof closeCanvasDirectTextEdit === 'function') closeCanvasDirectTextEdit(true);
+      if (typeof closeInlineQuickEdit === 'function') closeInlineQuickEdit();
+      if (typeof closeCutEditor === 'function') closeCutEditor();
       renderPresetDrawer();
       dr.classList.toggle('from-left', side === 'left');
       // 방향을 바꾼 직후에도 미끄러져 들어오도록 한 프레임 쉬었다가 열기
