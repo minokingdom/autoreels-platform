@@ -2340,14 +2340,21 @@
       const cutIdx = window.__arPinnedCut;
       const active = typeof cutIdx === 'number' && cutIdx >= 0;
       hud.classList.toggle('hidden', !active);
+      document.body.classList.toggle('ar-cut-editing', active);
       if (presetHandle) presetHandle.classList.toggle('hidden', active);
       if (!active) {
         closeIgSheet();
         closeIgTextCompose(false);
+        closeIgDrawMode(true);
         return;
       }
       if (badge) badge.textContent = `${cutIdx + 1}컷 편집`;
-      if (undoBtn) undoBtn.classList.toggle('hidden', !window.__arOverlayUndo || window.__arOverlayUndo.length === 0);
+      if (undoBtn) undoBtn.disabled = !window.__arOverlayUndo || window.__arOverlayUndo.length === 0;
+      const toolRow = document.getElementById('igToolRow');
+      if (toolRow) {
+        arInitSwipeRow(toolRow);
+        arUpdateSwipeFade(toolRow);
+      }
       const list = getCutOverlayList(cutIdx);
       const selIdx = window.__arSelectedOverlayIdx;
       const selItem = selIdx >= 0 ? list[selIdx] : null;

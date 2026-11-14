@@ -277,6 +277,54 @@
     .flex > *, .grid > * { min-width: 0; }
     .flex > .rounded-full, .flex > svg, .flex > img, .flex > input[type="checkbox"], .flex > input[type="radio"] { flex-shrink: 0; }
 
+    /* 컷 편집: 완료 위치는 유지하고 도구만 가로로 스크롤 */
+    #igTopBar { display: grid; gap: 6px; color: #ededed; }
+    #igTopBar .ig-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      border-radius: 10px;
+      background: #19191b;
+      pointer-events: auto;
+    }
+    #igTopBar .ig-header-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    #igToolRow {
+      display: flex;
+      gap: 4px;
+      min-width: 0;
+      overflow-x: auto;
+      border-radius: 10px;
+      background: #19191b;
+    }
+    #igTopBar button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      min-width: 40px;
+      min-height: 40px;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border: 0;
+      border-radius: 8px;
+      background: #232325;
+      color: #ededed;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    #igTopBar button:hover:not(:disabled) { background: #19191b; }
+    #igTopBar button:focus-visible { outline: 2px solid #ededed; outline-offset: -3px; }
+    #igTopBar button:disabled { opacity: .35; cursor: default; }
+    #igTopBar #igDoneBtn { min-width: 44px; width: 44px; background: #ededed; color: #19191b; font-size: 12px; font-weight: 700; }
+    /* 투명한 그리기 화면 뒤에 일반 도구·선택 바가 비치지 않게 */
+    #igEditorHud:has(#igDrawOverlay:not(.hidden)) #igTopBar,
+    #igEditorHud:has(#igDrawOverlay:not(.hidden)) #igSelectedBar { display: none; }
+    @media (max-width: 1023px) {
+      body.ar-cut-editing #mobileLiveDock { display: none; }
+    }
+
     /* 모바일 실시간 라이브 스튜디오 도크 */
     #mobileLiveDock {
       position: -webkit-sticky;
