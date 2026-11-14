@@ -1852,8 +1852,11 @@
       }
 
       c.fillStyle = fg;
-      c.textAlign = 'center';
+      const textAlign = opts.align === 'left' || opts.align === 'right' ? opts.align : 'center';
+      c.textAlign = textAlign;
       c.textBaseline = 'middle';
+      const padInner = Math.round((padXBase || 36) * sc * 0.45);
+      const drawX = textAlign === 'left' ? (-bw / 2 + padInner) : textAlign === 'right' ? (bw / 2 - padInner) : 0;
 
       let totalChars = rawText ? rawText.length : lines.join(' ').length;
       let budget = ast.charRatio < 0.999 ? Math.max(1, Math.ceil(totalChars * ast.charRatio)) : 99999;
@@ -1862,7 +1865,7 @@
         const drawLn = budget >= ln.length ? ln : ln.slice(0, budget);
         budget -= ln.length + 1;
         const ly = (li - (lines.length - 1) / 2) * lh;
-        c.fillText(drawLn, 0, ly + 1, bw - 20);
+        c.fillText(drawLn, drawX, ly + 1, bw - 20);
       });
       if (typeof ast.glintPhase === 'number' && ast.glintPhase >= 0 && ast.glintPhase <= 1) {
         c.save();
@@ -1936,6 +1939,7 @@
               boxStyle: b.boxStyle || 'default',
               textColor: b.color || accent,
               bgColor: b.bgColor || '',
+              align: b.align || 'center',
               defaultBoxStyle: 'solidBadge',
               pillRadius: true,
               padXBase: 32,
@@ -1971,6 +1975,7 @@
               boxStyle: p.boxStyle || 'default',
               textColor: p.color || accent,
               bgColor: p.bgColor || '',
+              align: p.align || 'center',
               defaultBoxStyle: 'outlineBox',
               pillRadius: false,
               padXBase: 40,
@@ -2008,6 +2013,7 @@
               boxStyle: ch.boxStyle || 'default',
               textColor: ch.color || '#ffffff',
               bgColor: ch.bgColor || '',
+              align: ch.align || 'center',
               defaultBoxStyle: 'darkGlass',
               pillRadius: true,
               padXBase: 36,
@@ -2062,6 +2068,7 @@
               boxStyle: cap.boxStyle || 'default',
               textColor: cap.color || '#ffffff',
               bgColor: cap.bgColor || '',
+              align: cap.align || 'center',
               defaultBoxStyle: 'darkGlass',
               pillRadius: false,
               padXBase: 44,
@@ -2820,21 +2827,13 @@
                style="left:${leftPct}%;top:${topPct}%;width:${wPct}%;height:${hPct}%;transform:translate(-50%,-50%);touch-action:none;"
                class="absolute cursor-move rounded-[10px] ${isSel ? 'active' : ''}">
             ${isSel ? `
-              <div style="position:absolute;left:50%;top:-28px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:4px;white-space:nowrap;z-index:20;">
-                <button type="button"
-                        onpointerdown="event.stopPropagation()"
-                        onclick="event.stopPropagation();openCanvasDirectTextEdit(${cutIdx}, '${b.key}')"
-                        class="px-2 py-0.5 rounded-full bg-[#10b981] text-[#052e16] text-[10.5px] font-extrabold shadow-md cursor-pointer hover:bg-[#34d399]">
-                  ✏️ ${labelShort} 수정
-                </button>
-                <button type="button"
-                        onpointerdown="event.stopPropagation()"
-                        onclick="event.stopPropagation();updateCutElementOverride(${cutIdx}, '${b.key}', 'hidden', true, true)"
-                        title="이 요소 삭제(숨김)"
-                        class="px-1.5 py-0.5 rounded-full bg-[#ef4444] text-white text-[10.5px] font-extrabold shadow-md cursor-pointer hover:bg-[#f87171]">
-                  🗑️
-                </button>
-              </div>
+              <button type="button"
+                      onpointerdown="event.stopPropagation()"
+                      onclick="event.stopPropagation();openCanvasDirectTextEdit(${cutIdx}, '${b.key}')"
+                      style="position:absolute;left:50%;top:-26px;transform:translateX(-50%);white-space:nowrap;z-index:20;"
+                      class="px-2.5 py-0.5 rounded-full bg-[#10b981] text-[#052e16] text-[10.5px] font-extrabold shadow-md cursor-pointer hover:bg-[#34d399]">
+                ✏️ ${labelShort} 수정
+              </button>
             ` : ''}
           </div>
         `;
@@ -3127,6 +3126,9 @@
         layer.addEventListener('touchstart', onStart, { passive: false });
         window.addEventListener('touchmove', onMove, { passive: false });
         window.addEventListener('touchend', onEnd);
+        window.addEventListener('touchcancel', onEnd);
+        window.addEventListener('pointercancel', onEnd);
+        window.addEventListener('blur', onEnd);
       }
     }
 
@@ -3478,6 +3480,12 @@
             `).join('')}
           </div>
           <div class="ar-inline-scroll-row ar-inline-color-bar">
+            <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${activeKey}', 'align', 'left', true);updateCutElementOverride(${cutIdx}, '${activeKey}', 'x', 0.28, true)"
+                    class="ar-inline-style-chip ${tObj.align === 'left' ? 'active' : ''}">◀ 좌정렬</button>
+            <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${activeKey}', 'align', 'center', true);updateCutElementOverride(${cutIdx}, '${activeKey}', 'x', 0.5, true)"
+                    class="ar-inline-style-chip ${!tObj.align || tObj.align === 'center' ? 'active' : ''}">◆ 중앙</button>
+            <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${activeKey}', 'align', 'right', true);updateCutElementOverride(${cutIdx}, '${activeKey}', 'x', 0.72, true)"
+                    class="ar-inline-style-chip ${tObj.align === 'right' ? 'active' : ''}">▶ 우정렬</button>
             <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${activeKey}', 'color', '', true)"
                     class="ar-inline-style-chip ${!tObj.color ? 'active' : ''}">기본색</button>
             ${CUT_TEXT_COLORS.map((col) => `
@@ -4097,6 +4105,17 @@
       const curBox = obj.boxStyle || 'default';
       const curAnim = obj.anim || 'default';
       return `
+        <div class="ar-el-row">
+          <span class="ar-el-label">정렬</span>
+          <div class="flex items-center gap-1.5 flex-1 py-0.5">
+            <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'align', 'left', true);updateCutElementOverride(${cutIdx}, '${elKey}', 'x', 0.28, true)"
+                    class="ar-el-chip ${obj.align === 'left' ? 'active' : ''}">◀ 좌정렬</button>
+            <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'align', 'center', true);updateCutElementOverride(${cutIdx}, '${elKey}', 'x', 0.5, true)"
+                    class="ar-el-chip ${!obj.align || obj.align === 'center' ? 'active' : ''}">◆ 중앙</button>
+            <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'align', 'right', true);updateCutElementOverride(${cutIdx}, '${elKey}', 'x', 0.72, true)"
+                    class="ar-el-chip ${obj.align === 'right' ? 'active' : ''}">▶ 우정렬</button>
+          </div>
+        </div>
         <div class="ar-el-row">
           <span class="ar-el-label">폰트 스타일</span>
           <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 min-w-0 py-0.5">
