@@ -4079,10 +4079,10 @@
         <div class="ar-el-row">
           <span class="ar-el-label">${labelTitle}</span>
           <button type="button" onclick="openCanvasDirectTextEdit(${cutIdx}, '${elKey}')"
-                  class="ar-el-badge blue flex-1 min-w-0 justify-center" style="padding:6px 10px;font-weight:800;">✏️ 화면 위에서 문구 직접 수정</button>
+                  class="ar-el-badge blue flex-1 min-w-0 justify-center overflow-hidden text-ellipsis whitespace-nowrap" style="padding:6px 10px;font-weight:800;">✏️ 문구 수정</button>
           <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'hidden', ${!obj.hidden}, true)"
-                  class="ar-el-badge ${obj.hidden ? 'muted' : ''}">${obj.hidden ? '🙈 숨김중' : '👁 표시중'}</button>
-          <button type="button" onclick="resetCutElementOverride(${cutIdx}, '${elKey}')" class="ar-el-badge muted" title="위치·크기·디자인 초기화">↺ 초기화</button>
+                  class="ar-el-badge ${obj.hidden ? 'muted' : ''}">${obj.hidden ? '🙈 숨김' : '👁 표시'}</button>
+          <button type="button" onclick="resetCutElementOverride(${cutIdx}, '${elKey}')" class="ar-el-badge muted" title="위치·크기·디자인 초기화">↺</button>
         </div>
         <div class="ar-el-row grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div class="flex items-center gap-2 min-w-0">
