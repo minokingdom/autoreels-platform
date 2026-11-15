@@ -85,7 +85,8 @@
       ['stm_kinetic', '✦ 시네마 키네틱', 'stm_kinetic', 'maru', '#0c0b0a', '#171411', '#e8d5bc', '#ffffff', false],
       ['stm_cinema', '🎬 시네마틱 룩', 'stm_cinema', 'gowun', '#09090b', '#141210', '#e6ccb2', '#ffffff', false],
       ['stm_sonar', '◎ 소나 핑 모션', 'stm_sonar', 'pretL', '#090d12', '#111822', '#cbd5e1', '#ffffff', false],
-      ['stm_glint', '✨ 글로우 스파크', 'stm_glint', 'maruL', '#0d0b0a', '#1a1613', '#f3e5ab', '#ffffff', false]
+      ['stm_glint', '✨ 글로우 스파크', 'stm_glint', 'maruL', '#0d0b0a', '#1a1613', '#f3e5ab', '#ffffff', false],
+      ['in_card_news', '한 장씩, 카드뉴스', 'in_card_news', 'sans', '#f6f1e7', '#efe7da', '#655644', '#29241e', true]
     ];
     // 모션 디자인도 별도 분류를 만들지 않고 기존 분류에 넣음
     const MOTION_CAT = {
@@ -98,7 +99,7 @@
       in_g_sub: '브이로그', in_g_arch: '감성', in_g_strip: '브이로그', in_g_postcard: '감성', in_g_cam: '브이로그', in_g_bookmark: '감성',
       in_h_plaque: '감성', in_h_panes: '감성', in_h_double: '감성', in_h_vinyl: '감성',
       in_music: '감성', in_memo: '브이로그', in_lock: '감성', in_dump: '브이로그', in_cal: '감성',
-      in_x_contact: '브이로그', in_x_linen: '감성', in_x_cover: '감성',
+      in_x_contact: '브이로그', in_x_linen: '감성', in_x_cover: '감성', in_card_news: '상담·정보',
       in_x_tabs: '브이로그', in_x_walk: '브이로그', in_x_window: '감성',
       in_y_chat: '브이로그', 
       in_y_torn: '감성', in_y_mosaic: '브이로그',
@@ -1816,28 +1817,108 @@
         inLabel(c, inDateLabel().split(' ')[0], W * 0.91, H * 0.85, '#88725b', 'right', W * 0.023);
         inGrain(c, W, H, t, 0.055);
       } else if (M === 'in_x_cover') {
-        // 작은 잡지: 사진 전체를 표지로, 큰 한글 제호와 오른쪽 정렬 기사 제목
-        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.025 + lp * 0.025, 0.85);
-        const shade = c.createLinearGradient(0, 0, 0, H);
-        shade.addColorStop(0, 'rgba(28,22,16,0.66)');
-        shade.addColorStop(0.35, 'rgba(28,22,16,0.06)');
-        shade.addColorStop(0.55, 'rgba(28,22,16,0.12)');
-        shade.addColorStop(1, 'rgba(28,22,16,0.75)');
-        c.fillStyle = shade; c.fillRect(0, 0, W, H);
-        inLabel(c, '일상을 담은 작은 잡지', W * 0.08, H * 0.055, '#e7dac4', 'left', W * 0.023);
-        c.save();
-        c.globalAlpha = mEase(local / 0.85);
-        c.fillStyle = '#fff7e9';
-        c.font = gFont(600, W * 0.135, KIT_FONTS.maru.f);
-        c.textAlign = 'center'; c.textBaseline = 'middle';
-        c.fillText('우리의 하루', W / 2, H * 0.125 + (1 - ent) * H * 0.006);
-        c.fillStyle = 'rgba(255,247,233,0.6)';
-        c.fillRect(W * 0.08, H * 0.182, W * 0.84, H * 0.001);
+        // 한 잡지 안의 여섯 역할. 컷 순서로 결정하므로 다시 탐색해도 구도가 같음.
+        const role = cutIdx % 6, paper = '#f6f1e7', ink = '#392e25', muted = '#756452';
+        const beat = Math.min(1, cutDur / 2), titleE = mClamp((local / beat - 0.22) / 0.8);
+        const infoE = mEase((local / beat - 0.72) / 0.35), photoE = mEase(local / (0.3 * beat));
+        const safeDealer = arDealerForCopy(d);
+        const full = role === 0 || role === 3 || role === 5;
+        c.fillStyle = paper; c.fillRect(0, 0, W, H);
+        const print = (k, x, y, w, h, angle = 0, zoom = 1.03) => {
+          c.save(); c.globalAlpha = photoE;
+          c.translate(W * (x + w / 2), H * (y + h / 2) + (1 - photoE) * H * 0.015);
+          c.rotate(angle * photoE);
+          const px = -W * w / 2, py = -H * h / 2, edge = W * 0.018;
+          c.fillStyle = '#fffcf6'; c.fillRect(px - edge, py - edge, W * w + edge * 2, H * h + edge * 2);
+          mPhoto(c, S, k, px, py, W * w, H * h, zoom + lp * 0.015);
+          inWarm(c, px, py, W * w, H * h, 0.65); c.restore();
+        };
+        const title = (x, y, w, h, color = ink, align = 'left', size = 0.062) => {
+          mCaption(c, caption, W * x, H * y, W * w, H * h, W * size, 'maru', color, titleE, align);
+        };
+        if (full) {
+          inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, (role === 3 ? 1.48 : 1.025) + lp * 0.025, 0.75);
+          const shade = c.createLinearGradient(0, 0, W * 0.8, H);
+          shade.addColorStop(0, 'rgba(36,30,25,0.67)');
+          shade.addColorStop(0.6, 'rgba(36,30,25,0.12)');
+          shade.addColorStop(1, 'rgba(36,30,25,0.45)');
+          c.fillStyle = shade; c.fillRect(0, 0, W, H);
+        }
+        if (role === 0) {
+          // 도입: 표지 사진과 질문, 제호는 보조 정보로 나중에 등장.
+          title(0.09, 0.19, 0.76, 0.25, paper, 'left', 0.085);
+        } else if (role === 1) {
+          // 공개: 종이 위 오른쪽 인화지와 왼쪽 기사 제목.
+          print(0, 0.43, 0.22, 0.48, 0.56, 0.035);
+          title(0.08, 0.31, 0.30, 0.37);
+          c.fillStyle = '#cabbab'; c.fillRect(W * 0.08, H * 0.25, W * 0.20 * photoE, H * 0.001);
+        } else if (role === 2) {
+          // 상황: 넓은 맥락 사진 위에 작은 메모를 겹침.
+          print(0, 0.075, 0.16, 0.85, 0.64, -0.012, 1);
+          c.fillStyle = paper; c.fillRect(W * 0.11, H * 0.19, W * 0.65, H * 0.23);
+          title(0.16, 0.205, 0.55, 0.20);
+        } else if (role === 3) {
+          // 근거: 디테일 확대와 주석. 수치·효능은 만들어 넣지 않음.
+          c.save(); c.globalAlpha = infoE; c.strokeStyle = paper; c.lineWidth = W * 0.0015;
+          c.beginPath(); c.arc(W * 0.65, H * 0.36, W * 0.06, 0, Math.PI * 2); c.stroke();
+          c.beginPath(); c.moveTo(W * 0.61, H * 0.39); c.lineTo(W * 0.44, H * 0.58); c.stroke(); c.restore();
+          c.fillStyle = paper; c.fillRect(W * 0.09, H * 0.58, W * 0.72, H * 0.25);
+          title(0.15, 0.61, 0.60, 0.19);
+        } else if (role === 4) {
+          // 선택: 실제로 다른 사진이 있을 때만 두 장을 비교.
+          const current = kitImg(S, 0);
+          const other = S.photos.findIndex((p) => p !== current && (!p.src || p.src !== current?.src));
+          title(0.09, 0.12, 0.80, 0.16);
+          if (other >= 0) {
+            print(0, 0.08, 0.34, 0.39, 0.38, -0.045);
+            print(other - S.idx, 0.54, 0.43, 0.38, 0.38, 0.04);
+          } else {
+            print(0, 0.15, 0.36, 0.70, 0.43, -0.025, 1);
+          }
+        } else {
+          // 마무리: 실제 입력한 매장·혜택만 사용. 비어 있으면 본문 기록만 남김.
+          c.fillStyle = paper; c.fillRect(W * 0.13, H * 0.28, W * 0.74, H * 0.48);
+          title(0.20, 0.37, 0.60, 0.24);
+          c.save(); c.globalAlpha = infoE;
+          c.fillStyle = '#cabbab'; c.fillRect(W * 0.20, H * 0.65, W * 0.60, H * 0.001);
+          mCaption(c, safeDealer.promoTag || safeDealer.name, W * 0.20, H * 0.67, W * 0.60, H * 0.06, W * 0.03, 'maru', muted, infoE, 'left');
+          c.restore();
+        }
+        c.save(); c.globalAlpha = infoE;
+        inLabel(c, '우리의 작은 잡지', W * 0.08, H * 0.065, full ? paper : muted, 'left', W * 0.026);
+        inLabel(c, `${String(cutIdx + 1).padStart(2, '0')} / ${String(totalCuts).padStart(2, '0')}`, W * 0.92, H * 0.065, full ? paper : muted, 'right', W * 0.026);
+        inLabel(c, ['첫 장면', '오늘의 발견', '머무는 순간', '자세히 보기', '다른 시선', safeDealer.name ? '다시 만날 곳' : '남겨둘 장면'][role], W * 0.08, H * 0.87, full ? paper : muted, 'left', W * 0.026);
         c.restore();
-        inLabel(c, `${String(cutIdx + 1).padStart(2, '0')}호`, W * 0.92, H * 0.21, '#e7dac4', 'right', W * 0.027);
-        inLabel(c, '이번 장면', W * 0.9, H * 0.645, '#e7dac4', 'right', W * 0.024);
-        mCaption(c, caption, W * 0.9, H * 0.675, W * 0.74, H * 0.19, W * 0.064, 'maru', '#fff7e9', e, 'right');
-        inGrain(c, W, H, t, 0.065);
+        inGrain(c, W, H, t, 0.045);
+      } else if (M === 'in_card_news') {
+        // 사진을 가득 담은 카드 위에 불투명 글 상자. 앞 페이지도 함께 밀어 빈 프레임을 막음.
+        const turnDur = Math.min(0.48, cutDur * 0.18), turn = cutIdx ? mEase(local / turnDur) : 1;
+        const drawPage = (pageIdx, offset, settled) => {
+          const pageTime = pageIdx === cutIdx ? t : (pageIdx + 1) * cutDur - 0.001;
+          const pageScene = Object.assign({}, S, { idx: S.n ? Math.min(S.n - 1, Math.floor(pageTime / (mainDuration / S.n))) : 0 });
+          const pageRaw = String((campaign.cutCaptions && campaign.cutCaptions[pageIdx]) || campaign.hook || '');
+          // 줄바꿈이나 문장 경계로 제목/본문을 나누되 원문에 없는 내용은 더하지 않음.
+          const parts = pageRaw.split(/\n+|(?<=[.!?。])\s+/).map(gCleanCaption).filter(Boolean);
+          const headline = parts.shift() || '', body = parts.join(' ');
+          const pace = Math.min(1, cutDur / 2), pe = settled ? 1 : mClamp((local / pace - 0.18) / 0.8);
+          const be = settled ? 1 : mClamp((local / pace - 0.52) / 0.7);
+          const boxY = pageIdx % 2 ? 0.44 : 0.18;
+          c.save(); c.translate(offset, 0);
+          gRoundRect(c, W * 0.04, H * 0.035, W * 0.92, H * 0.85, W * 0.035); c.clip();
+          mPhoto(c, pageScene, 0, W * 0.04, H * 0.035, W * 0.92, H * 0.85, 1.025);
+          inWarm(c, W * 0.04, H * 0.035, W * 0.92, H * 0.85, 0.45);
+          c.fillStyle = '#f6f1e7';
+          gRoundRect(c, W * 0.09, H * boxY, W * 0.82, H * 0.35, W * 0.018); c.fill();
+          inLabel(c, `${pageIdx + 1} / ${totalCuts}`, W * 0.15, H * (boxY + 0.038), '#655644', 'left', W * 0.03);
+          mCaption(c, headline, W * 0.15, H * (boxY + 0.065), W * 0.70, H * 0.15, W * 0.08, 'sans', '#29241e', pe, 'left');
+          c.fillStyle = '#cabbab'; c.fillRect(W * 0.15, H * (boxY + 0.235), W * 0.12, H * 0.0015);
+          mCaption(c, body, W * 0.15, H * (boxY + 0.252), W * 0.70, H * 0.075, W * 0.043, 'pretL', '#655644', be, 'left');
+          c.restore();
+        };
+        c.save(); c.beginPath(); c.rect(0, 0, W, H * 0.91); c.clip();
+        if (cutIdx > 0 && turn < 1) drawPage(cutIdx - 1, -W * turn, true);
+        drawPage(cutIdx, W * (1 - turn), false);
+        c.restore();
       } else if (M === 'in_x_tabs') {
         // 붙여둔 한마디: 꽉 찬 사진 가장자리의 색인과 가로로 살짝 들어오는 손글씨 종이 탭
         inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.04 + lp * 0.02, 0.9);
