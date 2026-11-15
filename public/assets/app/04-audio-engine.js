@@ -1513,6 +1513,7 @@
       } catch (e) {}
 
       const voiceChanged = (AudioEngine.ttsVoice !== prevVoice) || (AudioEngine.ttsSpeed !== prevSpeed);
+      if (typeof renderBgmRecommendations === 'function') renderBgmRecommendations();
       if (String(pickedBgm).startsWith('lyria_')) {
         arSelectLyriaBgm(pickedBgm);
         if (voiceChanged && AudioEngine.enabled) arResetAndRebuildNarration();
@@ -1547,4 +1548,128 @@
       } else if (AudioEngine.enabled && !AudioEngine.scriptPending) {
         AudioEngine.prefetchTtsBuffers();
       }
+    }
+
+    // 인스타 릴스처럼 현재 대본·주제·업종·디자인 분위기에 맞는 BGM Top 3 추천
+    function getRecommendedBgms() {
+      const text = [
+        typeof campaign !== 'undefined' ? (campaign.topic || '') : '',
+        typeof campaign !== 'undefined' ? (campaign.carTitle || '') : '',
+        typeof campaign !== 'undefined' && Array.isArray(campaign.cutCaptions) ? campaign.cutCaptions.join(' ') : '',
+        typeof campaign !== 'undefined' && Array.isArray(campaign.cutScripts) ? campaign.cutScripts.join(' ') : '',
+        (document.getElementById('topicInput') && document.getElementById('topicInput').value) || ''
+      ].join(' ');
+      const ind = typeof getIndustryId === 'function' ? getIndustryId() : 'car';
+      const ds = typeof getActiveDesign === 'function' ? getActiveDesign() : null;
+      const cat = ds ? (ds.cat || '') : '';
+
+      const scores = new Map();
+      const bump = (id, pts, reason) => {
+        const cur = scores.get(id) || { id, pts: 0, reason };
+        cur.pts += pts;
+        if (reason && cur.pts === pts) cur.reason = reason;
+        scores.set(id, cur);
+      };
+
+      // 1) 내용·분위기 키워드 매칭
+      if (/특가|할인|마감|긴급|최저가|선착순|파격|단\s?\d+일|이벤트|폭탄/.test(text)) {
+        bump('news', 8, '긴급·특가'); bump('urban', 7, '강렬한 비트'); bump('edm', 6, '텐션 업');
+      }
+      if (/비|감성|힐링|브이로그|일상|따뜻|소소|산책|주말|오후|여유/.test(text)) {
+        bump('lofi', 9, '감성 무드'); bump('vlog', 8, '일상 브이로그'); bump('ballad', 6, '잔잔한 피아노');
+      }
+      if (/프리미엄|럭셔리|고급|하이엔드|신축|수입|VIP|호텔|라운지/.test(text)) {
+        bump('luxury', 9, '고급 라운지'); bump('jazz', 7, '세련된 재즈'); bump('lyria_realestate', 6, '프리미엄');
+      }
+      if (/카페|커피|디저트|베이커리|브런치|케이크|라떼/.test(text)) {
+        bump('lyria_cafe', 10, '카페 맞춤'); bump('lofi', 7, '감성'); bump('jazz', 6, '재즈');
+      }
+      if (/맛집|고기|식당|파스타|초밥|배달|안주|술집/.test(text)) {
+        bump('lyria_restaurant', 10, '맛집 맞춤'); bump('funk', 7, '경쾌한 그루브'); bump('vlog', 6, '브이로그');
+      }
+      if (/뷰티|헤어|네일|피부|메이크업|에스테틱|염색|펌/.test(text)) {
+        bump('lyria_beauty', 10, '뷰티 맞춤'); bump('bright', 8, '트렌디 시티팝'); bump('luxury', 5, '세련됨');
+      }
+      if (/헬스|PT|다이어트|운동|필라테스|근력|체지방|챌린지/.test(text)) {
+        bump('lyria_fitness', 10, '운동 에너지'); bump('edm', 8, '업템포'); bump('urban', 7, '파워 비트');
+      }
+      if (/학원|수업|공부|합격|성적|수능|영어|코딩|강의/.test(text)) {
+        bump('lyria_academy', 10, '집중·신뢰'); bump('lofi', 7, '로파이'); bump('ballad', 5, '차분함');
+      }
+      if (/병원|클리닉|치과|시술|진료|교정|임플란트|피부과/.test(text)) {
+        bump('lyria_clinic', 10, '신뢰감'); bump('luxury', 6, '차분한 라운지'); bump('lofi', 5, '편안함');
+      }
+      if (/인테리어|시공|리모델링|가구|공간|아파트|분양|매물/.test(text)) {
+        bump('lyria_interior', 9, '공간 감성'); bump('lyria_realestate', 8, '하우스 라운지'); bump('cinema', 6, '웅장함');
+      }
+      if (/신차|출고|중고차|리스|렌트|드라이브|시승|엔진/.test(text)) {
+        bump('lyria_showroom', 10, '쇼룸 맞춤'); bump('showroom', 8, '칠 하우스'); bump('drive', 7, '드라이브');
+      }
+      if (/신상|코디|쇼핑|패션|룩북|세일|오픈/.test(text)) {
+        bump('lyria_shop', 10, '쇼핑몰 맞춤'); bump('bright', 8, '시티팝'); bump('funk', 6, '그루브');
+      }
+
+      // 2) 업종 기본 매칭
+      const indDefault = {
+        car: ['lyria_showroom', 'showroom', 'drive'],
+        cafe: ['lyria_cafe', 'lofi', 'jazz'],
+        restaurant: ['lyria_restaurant', 'funk', 'vlog'],
+        beauty: ['lyria_beauty', 'bright', 'luxury'],
+        fitness: ['lyria_fitness', 'edm', 'urban'],
+        realestate: ['lyria_realestate', 'luxury', 'cinema'],
+        academy: ['lyria_academy', 'lofi', 'ballad'],
+        clinic: ['lyria_clinic', 'luxury', 'lofi'],
+        shop: ['lyria_shop', 'bright', 'funk'],
+        interior: ['lyria_interior', 'luxury', 'lofi']
+      }[ind] || ['showroom', 'bright', 'lofi'];
+      indDefault.forEach((id, i) => bump(id, 5 - i, '업종 추천'));
+
+      // 3) 디자인 카테고리 매칭
+      if (['브이로그', '감성', '손글씨'].includes(cat)) bump('lofi', 4, '디자인 어울림');
+      if (['타이포', '특가', '스포츠'].includes(cat)) bump('urban', 4, '디자인 어울림');
+      if (['고급', '매거진'].includes(cat)) bump('luxury', 4, '디자인 어울림');
+
+      const LABELS = {
+        showroom: 'Chill House 쇼룸', urban: 'Phonk / Trap', bright: 'Upbeat City Pop',
+        luxury: 'Luxury Lounge', lofi: 'Lo-fi 감성', vlog: 'Acoustic Pop 브이로그',
+        cinema: 'Cinematic 트레일러', drive: 'Synthwave 드라이브', edm: 'EDM 페스티벌',
+        funk: 'Funk 그루브', ballad: 'Piano 발라드', news: 'Breaking News', jazz: 'Jazz 라운지',
+        lyria_showroom: 'AI 쇼룸 하우스', lyria_cafe: 'AI 카페 보사노바', lyria_restaurant: 'AI 맛집 그루브',
+        lyria_beauty: 'AI 뷰티 R&B', lyria_fitness: 'AI 피트니스 트랩', lyria_realestate: 'AI 하우스 라운지',
+        lyria_academy: 'AI 학원 로파이', lyria_clinic: 'AI 클리닉 앰비언트', lyria_shop: 'AI 쇼핑몰 시티팝',
+        lyria_interior: 'AI 인테리어 미니멀'
+      };
+      return Array.from(scores.values())
+        .sort((a, b) => b.pts - a.pts)
+        .slice(0, 3)
+        .map((x) => ({ ...x, label: LABELS[x.id] || x.id }));
+    }
+
+    function applyRecommendedBgm(id) {
+      const sel = document.getElementById('bgmStyleSelect');
+      if (sel) sel.value = id;
+      onAudioConfigChange();
+      renderBgmRecommendations();
+    }
+
+    function renderBgmRecommendations() {
+      const row = document.getElementById('bgmRecommendRow');
+      if (!row) return;
+      const sel = document.getElementById('bgmStyleSelect');
+      const cur = sel ? sel.value : AudioEngine.bgmStyle;
+      const recs = getRecommendedBgms();
+      row.innerHTML = `<span class="text-[11px] text-[#85858b] mr-0.5">추천:</span>` + recs.map((r) => {
+        const active = cur === r.id;
+        return `<button type="button" onclick="applyRecommendedBgm('${r.id}')" class="px-2 py-0.5 rounded-full text-[11px] border transition-colors cursor-pointer ${active ? 'bg-[#2563eb]/20 border-[#3b82f6] text-[#93c5fd]' : 'bg-[#1a1a20] border-[var(--border)] text-[#d4d4d8] hover:border-[#3b82f6]'}" title="${r.reason}">✨ ${r.label}</button>`;
+      }).join('');
+    }
+
+    if (typeof window !== 'undefined') {
+      window.renderBgmRecommendations = renderBgmRecommendations;
+      window.applyRecommendedBgm = applyRecommendedBgm;
+      window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(renderBgmRecommendations, 400);
+        const ti = document.getElementById('topicInput');
+        if (ti) ti.addEventListener('input', () => { clearTimeout(window.__bgmRecT); window.__bgmRecT = setTimeout(renderBgmRecommendations, 300); });
+      });
     }
