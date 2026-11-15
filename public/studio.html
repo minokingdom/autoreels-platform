@@ -253,7 +253,8 @@
     </div>
   </section>
 
-  <div id="arStudioShell" class="max-w-[1440px] mx-auto space-y-6">
+  <div id="arStudioShell" class="max-w-[1440px] mx-auto space-y-6" style="opacity:0;transition:opacity 0.12s ease">
+    <script>setTimeout(function(){var s=document.getElementById('arStudioShell');if(s)s.style.opacity='1';},700);</script>
 
     <!-- 본사 관리자 모드 활성화 시 최상단 고정 알림 배너 -->
     <div id="adminTopBanner" class="hidden rounded-[10px] bg-gradient-to-r from-[#d97706]/20 via-[#b45309]/15 to-transparent border border-[#d97706]/40 px-4 py-2.5 flex items-center justify-between gap-3 text-xs flex-wrap">

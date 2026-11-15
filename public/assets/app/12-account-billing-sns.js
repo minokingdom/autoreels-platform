@@ -1051,6 +1051,10 @@
     }
     // 저장된 업종 반영 (자동차가 아니면 그 업종의 첫 프리셋·템플릿으로 시작)
     setIndustry(IND.key, { silent: true, force: IND.key !== 'auto' });
+    (function revealStudioAfterIndustry(){
+      const s = document.getElementById('arStudioShell');
+      if (s) s.style.opacity = '1';
+    })();
     if (typeof loadCutDecos === 'function') loadCutDecos();
     if (typeof restoreAiScriptPrefs === 'function') restoreAiScriptPrefs();
     syncPreviewPanel();
