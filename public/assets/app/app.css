@@ -1173,3 +1173,26 @@ body:has(#cutEditorPanel:not(.hidden)) #previewCutPinBar { display: none !import
   #arCanvasInlineInputWrap.is-open { position: fixed !important; left: 12px !important; right: 12px !important; top: auto !important; bottom: 12px !important; width: auto !important; transform: none !important; z-index: 120; }
   #arCanvasInlineInputWrap textarea { font-size: 16px !important; min-height: 64px; }
 }
+
+/* 내 스타일 만들기: 미리볼 컷 고르기 */
+.ar-custom-cutnav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ar-custom-cutnav > span { font-size: 12px; color: #85858b; }
+#arCustomCutTabs { display: flex; gap: 4px; flex-wrap: wrap; }
+#arCustomCutTabs button { min-width: 30px; height: 28px; padding: 0 8px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: transparent; color: #a1a1a6; font-size: 12px; cursor: pointer; }
+#arCustomCutTabs button.on { background: #fff; color: #09090b; border-color: #fff; }
+.ar-custom-preview .ar-custom-cutnav { grid-column: 1 / -1; margin-bottom: 12px; }
+.ar-custom-cutnav #arCustomCutTabs { flex-wrap: nowrap; }
+.ar-custom-cutnav #arCustomCutTabs button { padding: 0 6px; min-width: 28px; height: 26px; }
+/* 모바일: 미리보기를 위에 고정해 두고, 아래 설정을 올려 가며 바꾸면 바로 보이게 */
+@media (max-width: 650px) {
+  .ar-custom-preview { position: sticky; top: -18px; z-index: 5; box-shadow: 0 12px 24px rgba(0,0,0,.55); }
+  .ar-custom-preview > div:not(.ar-custom-cutnav) p { display: none; }
+  .ar-custom-preview .ar-custom-saved { display: none; }
+}
+/* 로고 불러오기: 기본 파일 선택 버튼 대신 우리 버튼 모양 */
+.ar-custom-upload input[type=file] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.ar-custom-upload > label { display: inline-flex; align-items: center; height: 40px; padding: 0 16px; border-radius: 10px; background: #232325; border: 1px solid #303033; color: #ededed; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+/* 디자인 목록: 세부 편집이 다 되는 디자인 표시 */
+.pd-card { position: relative; }
+.fine-edit-badge { position: absolute; top: 8px; left: 8px; z-index: 2; padding: 2px 7px; border-radius: 999px; background: rgba(12,12,14,.72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.18); color: #fff; font-size: 10px; font-weight: 600; line-height: 1.5; pointer-events: none; }

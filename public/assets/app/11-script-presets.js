@@ -302,6 +302,7 @@
           <span class="pd-dice">🎲</span>
           <div>랜덤 테마</div>
         </button>` + items.map((d) => `<button type="button" class="pd-card ${d.id === active ? 'on' : ''}" onclick="choosePresetFromDrawer('${d.id}')" title="${d.desc}">
+          ${typeof arDesignFineEdit === 'function' && arDesignFineEdit(d) ? AR_FINE_BADGE : ''}
           <img id="pdthumb_${d.id}" src="${urls[d.id] || blank}" alt="" loading="lazy" />
           <div>${d.name}</div>
         </button>`).join('');

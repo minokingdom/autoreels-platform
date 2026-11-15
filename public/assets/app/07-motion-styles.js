@@ -147,6 +147,25 @@
       c.restore();
       return { top, h: total };
     }
+    // ★ 화면 속 자막(메모 앱·알림·포스터처럼 디자인에 박힌 글자)도 컷 편집에서 고를 수 있게:
+    //   자막 위치를 알려 주고, 컷 편집에서 바꾼 글꼴·색·크기·위치·숨김을 따름
+    function mCapOv(cutIdx) {
+      try {
+        const o = typeof cutElementOverrides !== 'undefined' && cutElementOverrides && cutElementOverrides[cutIdx] && cutElementOverrides[cutIdx].caption;
+        return o || {};
+      } catch (e) { return {}; }
+    }
+    function mCapFont(cutIdx, def) { const f = mCapOv(cutIdx).font; return f && KIT_FONTS[f] ? f : def; }
+    function mCapColor(cutIdx, def) { return mCapOv(cutIdx).color || def; }
+    function mCapBegin(c, W, H, cutIdx, local, lines, x, y0, lh, align) {
+      if (typeof arBeginMotionCaptionCard !== 'function') return true;
+      let mw = 0;
+      lines.forEach((l) => { mw = Math.max(mw, c.measureText(l).width); });
+      const n = Math.max(1, lines.length);
+      const cx = align === 'left' ? x + mw / 2 : align === 'right' ? x - mw / 2 : x;
+      return arBeginMotionCaptionCard(c, W, H, cutIdx, local, cx, y0 + ((n - 1) * lh) / 2, mw + 28, n * lh + 18);
+    }
+    function mCapEnd(c) { if (typeof arEndMotionCaptionCard === 'function') arEndMotionCaptionCard(c); }
     function mPhoto(c, S, k, x, y, w, h, scale = 1.06, px = 0, py = 0) {
       const img = kitImg(S, k);
       if (!img) {
@@ -789,14 +808,16 @@
         mPhoto(c, S, 0, 32, 38, pw - 16, ph - 16, 1.05 + lp * 0.05);
         c.restore();
         if (isPrice) mPrice(c, W, capY, Object.assign({}, sp, { accent: sp.accent2 }), e);
-        const F = KIT_FONTS[sp.font] || KIT_FONTS.sans;
-        const r = mFit(c, caption, W - 70, 3, 44, 24, sp.font);
+        const capFk = mCapFont(cutIdx, sp.font);
+        const F = KIT_FONTS[capFk] || KIT_FONTS.sans;
+        const r = mFit(c, caption, W - 70, 3, 44, 24, capFk);
         c.font = gFont(F.w, r.size, F.f);
         c.textBaseline = 'middle';
         c.textAlign = 'left';
         const y0 = capY + (isPrice ? 44 : 8) + Math.max(0, (capH - (isPrice ? 44 : 8) - r.lines.length * r.lh) / 2);
         let wi = 0;
-        r.lines.forEach((ln, li) => {
+        const bounceCapOn = mCapBegin(c, W, H, cutIdx, local, r.lines, W / 2, y0 + r.lh / 2, r.lh, 'center');
+        if (bounceCapOn) r.lines.forEach((ln, li) => {
           const words = ln.split(' ');
           const lw = c.measureText(ln).width;
           let x = (W - lw) / 2;
@@ -808,7 +829,7 @@
               c.save();
               c.translate(x + ww / 2, y0 + li * r.lh + r.lh / 2);
               c.scale(sc, sc);
-              c.fillStyle = wi % 3 === 1 ? sp.accent : wi % 3 === 2 ? sp.accent2 : '#0f172a';
+              c.fillStyle = mCapColor(cutIdx, wi % 3 === 1 ? sp.accent : wi % 3 === 2 ? sp.accent2 : '#0f172a');
               c.fillText(wd, -ww / 2, 0);
               c.restore();
             }
@@ -816,6 +837,7 @@
             wi++;
           });
         });
+        if (bounceCapOn) mCapEnd(c);
       } else if (M === 'story') {
         // 인스타 스토리: 위 진행 막대 + 프로필 + 줄마다 색 배경 자막 + 스티커
         mPhoto(c, S, 0, 0, 0, W, H, 1.06 + lp * 0.05);
@@ -841,12 +863,14 @@
         c.fillText(((d && (d.name || d.branch)) || '').slice(0, 18), 60, 44);
         c.fillStyle = 'rgba(255,255,255,0.7)'; c.font = gFont(500, 12, GENRE_FONTS.sans); c.fillText('방금 전', 60, 61);
         // 스토리 텍스트: 줄마다 둥근 배경
-        const F = KIT_FONTS[sp.font] || KIT_FONTS.sans;
-        const r = mFit(c, caption, W - 110, 3, 36, 22, sp.font);
+        const capFk = mCapFont(cutIdx, sp.font);
+        const F = KIT_FONTS[capFk] || KIT_FONTS.sans;
+        const r = mFit(c, caption, W - 110, 3, 36, 22, capFk);
         c.font = gFont(F.w, r.size, F.f);
         c.textAlign = 'center';
         const cy0 = H * 0.5 - (r.lines.length * (r.lh + 6)) / 2;
-        r.lines.forEach((ln, i) => {
+        const storyCapOn = mCapBegin(c, W, H, cutIdx, local, r.lines, W / 2, cy0 + r.lh / 2, r.lh + 6, 'center');
+        if (storyCapOn) r.lines.forEach((ln, i) => {
           const p = gBack(mClamp((local - 0.1 - i * 0.08) / 0.35));
           if (p <= 0) return;
           const w = c.measureText(ln).width + 28;
@@ -857,10 +881,11 @@
           gRoundRect(c, -w / 2, -r.lh / 2 - 2, w, r.lh + 4, 10);
           c.fillStyle = i % 2 ? '#ffffff' : sp.accent;
           c.fill();
-          c.fillStyle = i % 2 ? '#111111' : '#ffffff';
+          c.fillStyle = mCapColor(cutIdx, i % 2 ? '#111111' : '#ffffff');
           c.fillText(ln, 0, 2);
           c.restore();
         });
+        if (storyCapOn) mCapEnd(c);
         // 스티커 (가격 컷은 가격 스티커, 아니면 이모지 스티커)
         const sp2 = gBack(mClamp((local - 0.5) / 0.4));
         if (sp2 > 0) {
@@ -924,11 +949,16 @@
         c.beginPath(); c.moveTo(px + 96, iy - 12); c.lineTo(px + 120, iy - 2); c.lineTo(px + 96, iy + 8); c.closePath(); c.stroke();
         if (isPrice) { c.fillStyle = sp.accent; c.font = gFont(900, 22, GENRE_FONTS.impact); c.textAlign = 'right'; c.fillText(arPriceTag(), px + pw - 8, iy); }
         c.textAlign = 'left';
-        const F = KIT_FONTS[sp.font] || KIT_FONTS.sans;
-        const r = mFit(c, caption, pw - 24, 2, 24, 16, sp.font);
+        const capFk = mCapFont(cutIdx, sp.font);
+        const F = KIT_FONTS[capFk] || KIT_FONTS.sans;
+        const r = mFit(c, caption, pw - 24, 2, 24, 16, capFk);
         c.globalAlpha = mEase(e / 0.4);
-        c.fillStyle = '#111'; c.font = gFont(800, r.size, F.f);
-        r.lines.forEach((ln, i) => c.fillText(ln, px + 10, iy + 40 + i * r.lh));
+        c.font = gFont(800, r.size, F.f);
+        if (mCapBegin(c, W, H, cutIdx, local, r.lines, px + 10, iy + 34, r.lh, 'left')) {
+          c.fillStyle = mCapColor(cutIdx, '#111');
+          r.lines.forEach((ln, i) => c.fillText(ln, px + 10, iy + 40 + i * r.lh));
+          mCapEnd(c);
+        }
         c.globalAlpha = 1;
         c.fillStyle = sp.light ? '#8e8e8e' : '#ddd'; c.font = gFont(500, 13, GENRE_FONTS.sans);
         c.fillText(`#${(IND.hashtags && IND.hashtags[0]) || '오늘의추천'} #${(IND.hashtags && IND.hashtags[1]) || '릴스'}`, px + 10, iy + 44 + r.lines.length * r.lh);
@@ -1601,9 +1631,14 @@
         c.textAlign = 'left';
         c.textBaseline = 'middle';
         c.fillStyle = '#fffaf2';
-        const r = mFit(c, caption, cw - art - 64, 2, 22, 15, 'maru');
-        c.font = gFont(KIT_FONTS.maru.w, r.size, KIT_FONTS.maru.f);
-        r.lines.forEach((ln, i) => c.fillText(ln, cx + art + 40, cy + 44 + i * r.lh));
+        const capF = mCapFont(cutIdx, 'maru');
+        const r = mFit(c, caption, cw - art - 64, 2, 22, 15, capF);
+        c.font = gFont(KIT_FONTS[capF].w, r.size, KIT_FONTS[capF].f);
+        if (mCapBegin(c, W, H, cutIdx, local, r.lines, cx + art + 40, cy + 44, r.lh, 'left')) {
+          c.fillStyle = mCapColor(cutIdx, '#fffaf2');
+          r.lines.forEach((ln, i) => c.fillText(ln, cx + art + 40, cy + 44 + i * r.lh));
+          mCapEnd(c);
+        }
         c.fillStyle = '#eee7db';
         gDrawLine(c, String((d && d.name) || (typeof IND !== 'undefined' && IND.place) || ''), cx + art + 40, cy + 44 + r.lines.length * r.lh + 4, cw - art - 64, 15, 11, KIT_FONTS.pretL.f, 500);
         const by = cy + 150, bw = cw - 44;
@@ -1642,10 +1677,14 @@
         c.fillText(`${n0.getFullYear()}년 ${n0.getMonth() + 1}월 ${n0.getDate()}일 ${n0.getHours() < 12 ? '오전' : '오후'} ${((n0.getHours() + 11) % 12) + 1}:${String(n0.getMinutes()).padStart(2, '0')}`, W / 2, 84);
         const shown = caption.slice(0, Math.max(1, Math.ceil(caption.length * mClamp(local / 1.2))));
         c.textAlign = 'left';
-        c.fillStyle = '#1c1c1e';
-        const r = mFit(c, shown, W - 56, 3, 30, 20, 'pretM');
-        c.font = gFont(700, r.size, KIT_FONTS.pretM.f);
-        r.lines.forEach((ln, i) => c.fillText(ln, 28, 130 + i * r.lh));
+        const capF = mCapFont(cutIdx, 'pretM');
+        const r = mFit(c, shown, W - 56, 3, 30, 20, capF);
+        c.font = gFont(capF === 'pretM' ? 700 : KIT_FONTS[capF].w, r.size, KIT_FONTS[capF].f);
+        if (mCapBegin(c, W, H, cutIdx, local, r.lines, 28, 130, r.lh, 'left')) {
+          c.fillStyle = mCapColor(cutIdx, '#1c1c1e');
+          r.lines.forEach((ln, i) => c.fillText(ln, 28, 130 + i * r.lh));
+          mCapEnd(c);
+        }
         if (local < 1.3 && Math.floor(t * 2.5) % 2 === 0) {
           const last = r.lines[r.lines.length - 1] || '';
           c.fillStyle = '#e0a400';
@@ -1692,10 +1731,14 @@
         c.font = gFont(500, 13, GENRE_FONTS.sans);
         c.fillText('지금', nx + nw - 16, ny + 30);
         c.textAlign = 'left';
-        c.fillStyle = '#fffaf2';
-        const r = mFit(c, caption, nw - 90, 2, 17, 13, 'pretL');
-        c.font = gFont(500, r.size, KIT_FONTS.pretL.f);
-        r.lines.forEach((ln, i) => c.fillText(ln, nx + 68, ny + 58 + i * r.lh));
+        const capF = mCapFont(cutIdx, 'pretL');
+        const r = mFit(c, caption, nw - 90, 2, 17, 13, capF);
+        c.font = gFont(capF === 'pretL' ? 500 : KIT_FONTS[capF].w, r.size, KIT_FONTS[capF].f);
+        if (mCapBegin(c, W, H, cutIdx, local, r.lines, nx + 68, ny + 58, r.lh, 'left')) {
+          c.fillStyle = mCapColor(cutIdx, '#fffaf2');
+          r.lines.forEach((ln, i) => c.fillText(ln, nx + 68, ny + 58 + i * r.lh));
+          mCapEnd(c);
+        }
         c.restore();
         c.fillStyle = 'rgba(255,255,255,0.85)';
         gRoundRect(c, W / 2 - 66, H - 22, 132, 5, 3); c.fill();
@@ -2145,18 +2188,22 @@
           c.fillRect(0, 0, 140, H);
           c.restore();
         }
-        const wr = kWrap(c, caption, W - 64, 2, 54, 30, 'impact');
-        const F = KIT_FONTS.impact;
+        const capFk = mCapFont(cutIdx, 'impact');
+        const wr = kWrap(c, caption, W - 64, 2, 54, 30, capFk);
+        const F = KIT_FONTS[capFk];
         c.save();
         c.font = gFont(F.w, wr.size, F.f);
         c.textAlign = 'left';
-        wr.lines.forEach((ln, i) => {
-          const p = mEase((e - i * 0.12) / 0.42);
-          const x = 32 + (1 - p) * -48;
-          const y = H - 220 + i * wr.lh;
-          c.globalAlpha = p;
-          kLongShadow(c, ln, x, y, i === 0 ? '#ffffff' : sp.accent, 'rgba(0,0,0,0.62)', 12, 0.85, 1);
-        });
+        if (mCapBegin(c, W, H, cutIdx, local, wr.lines, 32, H - 232, wr.lh, 'left')) {
+          wr.lines.forEach((ln, i) => {
+            const p = mEase((e - i * 0.12) / 0.42);
+            const x = 32 + (1 - p) * -48;
+            const y = H - 220 + i * wr.lh;
+            c.globalAlpha = p;
+            kLongShadow(c, ln, x, y, mCapColor(cutIdx, i === 0 ? '#ffffff' : sp.accent), 'rgba(0,0,0,0.62)', 12, 0.85, 1);
+          });
+          mCapEnd(c);
+        }
         c.restore();
       } else if (M === 'ed_arch') {
         // 아치 갤러리: 따뜻한 스톤 배경 위 아치형 창 + 얇은 골드 라인 + 명조 서명
@@ -2201,16 +2248,20 @@
         [[28, 36], [W - 28, 36], [28, H - 90], [W - 28, H - 90]].forEach(([mx, my]) => {
           c.beginPath(); c.moveTo(mx - 8, my); c.lineTo(mx + 8, my); c.moveTo(mx, my - 8); c.lineTo(mx, my + 8); c.stroke();
         });
-        const wr = kWrap(c, caption, W - 72, 2, 46, 26, 'dohyeon');
-        const F = KIT_FONTS.dohyeon;
+        const capFk = mCapFont(cutIdx, 'dohyeon');
+        const wr = kWrap(c, caption, W - 72, 2, 46, 26, capFk);
+        const F = KIT_FONTS[capFk];
         c.save();
         c.font = gFont(F.w, wr.size, F.f);
         c.textAlign = 'left';
-        wr.lines.forEach((ln, i) => {
-          const p = mEase((e - i * 0.1) / 0.4);
-          c.globalAlpha = p;
-          kLongShadow(c, ln, 32, H - 220 + i * wr.lh + (1 - p) * 20, i === 0 ? '#ffffff' : sp.accent2, 'rgba(0,0,0,0.58)', 10, 0.85, 1);
-        });
+        if (mCapBegin(c, W, H, cutIdx, local, wr.lines, 32, H - 232, wr.lh, 'left')) {
+          wr.lines.forEach((ln, i) => {
+            const p = mEase((e - i * 0.1) / 0.4);
+            c.globalAlpha = p;
+            kLongShadow(c, ln, 32, H - 220 + i * wr.lh + (1 - p) * 20, mCapColor(cutIdx, i === 0 ? '#ffffff' : sp.accent2), 'rgba(0,0,0,0.58)', 10, 0.85, 1);
+          });
+          mCapEnd(c);
+        }
         c.restore();
       } else if (M === 'stm_kinetic') {
         // script-to-motion: 은은한 웜 키라이트 + 부드러운 expo.out 시차 타이포 (25px 명조, 여백과 감성)
@@ -2235,8 +2286,9 @@
         }
         c.restore();
         inLabel(c, `0${cutIdx + 1} · ${inDateLabel()}`, 34, 46, 'rgba(232,213,188,0.82)');
-        const wr = kWrap(c, caption, W - 88, 2, 25, 19, 'maru');
-        const F = KIT_FONTS.maru || KIT_FONTS.sans;
+        const capFk = mCapFont(cutIdx, 'maru');
+        const wr = kWrap(c, caption, W - 88, 2, 25, 19, capFk);
+        const F = KIT_FONTS[capFk] || KIT_FONTS.sans;
         c.save();
         c.font = gFont(F.w, wr.size, F.f);
         c.textAlign = 'center';
@@ -2244,13 +2296,16 @@
         c.shadowColor = 'rgba(0,0,0,0.65)';
         c.shadowBlur = 14;
         c.shadowOffsetY = 2;
-        wr.lines.forEach((ln, i) => {
-          const lt = Math.max(0, local - i * 0.14);
-          const p = 1 - Math.pow(1 - Math.min(1, lt / 0.75), 4);
-          c.globalAlpha = p;
-          c.fillStyle = i === 0 ? '#ffffff' : 'rgba(255,255,255,0.88)';
-          c.fillText(ln, W / 2, H - 195 + i * wr.lh + (1 - p) * 18);
-        });
+        if (mCapBegin(c, W, H, cutIdx, local, wr.lines, W / 2, H - 195, wr.lh, 'center')) {
+          wr.lines.forEach((ln, i) => {
+            const lt = Math.max(0, local - i * 0.14);
+            const p = 1 - Math.pow(1 - Math.min(1, lt / 0.75), 4);
+            c.globalAlpha = p;
+            c.fillStyle = mCapColor(cutIdx, i === 0 ? '#ffffff' : 'rgba(255,255,255,0.88)');
+            c.fillText(ln, W / 2, H - 195 + i * wr.lh + (1 - p) * 18);
+          });
+          mCapEnd(c);
+        }
         c.restore();
         if (isPrice) mPrice(c, W, H - 265, sp, e);
         inSign(c, d, W - 34, H - 46, 'rgba(232,213,188,0.78)');

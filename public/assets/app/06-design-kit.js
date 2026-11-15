@@ -3864,6 +3864,11 @@
       if (key !== 'auto') return ds.engine === 'motion';
       return true;
     }
+    // ★ 세부 편집이 다 되는 디자인 (자막·위 라벨·아래 이름을 컷 편집에서 모두 골라 바꿀 수 있음)
+    //   kit 디자인은 전부, motion 디자인은 아래 목록 (2026-11-16 전 디자인을 그려 확인)
+    const AR_FINE_EDIT_MOTION = new Set(['in_film', 'in_mood', 'in_letter', 'in_vlog', 'in_collage', 'in_h_plaque', 'in_h_panes', 'in_h_double', 'in_h_vinyl', 'in_g_sub', 'in_g_arch', 'in_g_strip', 'in_g_postcard', 'in_g_cam', 'in_g_bookmark', 'ed_vogue', 'ed_arch', 'stm_kinetic', 'stm_cinema', 'stm_sonar', 'stm_glint']);
+    function arDesignFineEdit(d) { return !!d && (d.engine === 'kit' || AR_FINE_EDIT_MOTION.has(d.id)); }
+    const AR_FINE_BADGE = '<span class="fine-edit-badge" title="자막·위 라벨·아래 이름을 컷마다 세세하게 바꿀 수 있어요">세부 편집</span>';
     function arVisibleDesigns() {
       const list = DESIGN_STYLES.filter(arDesignVisible);
       return list.filter((d) => d.industry).concat(list.filter((d) => !d.industry));
@@ -4008,7 +4013,16 @@
         // 편집 패널의 미리보기는 컷 편집 선택/좌표 기록을 변경하지 않는다.
         window.__arActiveRenderCutIdx = -1;
         c.clearRect(0, 0, cv.width, cv.height);
-        renderMotionFrame(c, cv.width, cv.height, 1.6, 18, 6, arDealerForCopy(getSelectedDealer()), arMakeCustomDesign(style), {});
+        // 컷 번호를 눌러 다른 컷도 미리보기 (마지막은 엔딩)
+        const n = Math.max(1, getTargetCutCount());
+        const mainDur = n * 3;
+        const k = Math.max(0, Math.min(n, Number(window.__arCustomPreviewCut) || 0));
+        const t = k >= n ? mainDur + 1.6 : k * 3 + 1.6;
+        renderMotionFrame(c, cv.width, cv.height, t, mainDur, n, arDealerForCopy(getSelectedDealer()), arMakeCustomDesign(style), {});
+        const tabs = document.getElementById('arCustomCutTabs');
+        if (tabs) {
+          tabs.innerHTML = Array.from({ length: n + 1 }, (_, i) => `<button type="button" role="tab" aria-selected="${i === k}" class="${i === k ? 'on' : ''}" onclick="window.__arCustomPreviewCut=${i};arUpdateCustomPreview()">${i >= n ? '엔딩' : i + 1}</button>`).join('');
+        }
       } finally { window.__arActiveRenderCutIdx = previousCut; }
     }
     function arWriteCustomStyles(next) {
@@ -4243,7 +4257,8 @@
         const src = urls[ds.id] || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
         return `
           <button type="button" onclick="selectDesignStyle('${ds.id}')" title="${ds.desc}"
-            class="text-left p-1.5 rounded-[9px] border transition-colors cursor-pointer ${on ? 'border-[#ededed] bg-[#232325]' : 'border-[var(--border)] bg-[#141415] hover:border-[rgba(237,237,237,0.3)]'}">
+            class="relative text-left p-1.5 rounded-[9px] border transition-colors cursor-pointer ${on ? 'border-[#ededed] bg-[#232325]' : 'border-[var(--border)] bg-[#141415] hover:border-[rgba(237,237,237,0.3)]'}">
+            ${arDesignFineEdit(ds) ? AR_FINE_BADGE : ''}
             <img id="dthumb_${ds.id}" src="${src}" alt="" class="w-full aspect-[9/16] object-cover rounded-[6px] bg-[#0f0f10]" />
             <div class="mt-1.5 px-0.5 text-[12px] font-medium ${on ? 'text-white' : 'text-[#d4d4d8]'} truncate">${ds.name}</div>
           </button>`;
