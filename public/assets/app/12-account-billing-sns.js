@@ -209,7 +209,7 @@
       d.licensedPhone = acc.phone;
       if (acc.promoTag) d.promoTag = acc.promoTag;
       d.licenseKey = acc.licenseKey || 'AR-000000 (미결제 체험판)';
-      d.expiryYmd = acc.expiryYmd || 20261231;
+      d.expiryYmd = acc.expiryYmd == null ? 20261231 : acc.expiryYmd;
       try { localStorage.setItem('autoreels_logged_phone', acc.phone); } catch (e) {}
       selectDealer(d.id, true);
       // 가입할 때 고른 업종으로 고정 (예전 계정은 자동차)
@@ -486,21 +486,22 @@
       AR_SERVER.me = me;
       const u = me.user;
       const pro = Boolean(me.entitlement && me.entitlement.pro);
-      const until = pro ? arYmd(me.entitlement.until) : 20000101;
+      const comp = pro && me.subscription && me.subscription.comp === true;
+      const until = comp ? 0 : (pro ? arYmd(me.entitlement.until) : 20000101);
       applyLoggedInDealer({
         phone: u.phone,
         name: u.name,
         title: u.title,
         branch: u.branch,
         promoTag: u.promo,
-        licenseKey: pro ? formatWasmLicenseKey(u.phone, until) : 'AR-000000 (무료 회원)',
+        licenseKey: comp ? '무상 PRO (서버 인증)' : (pro ? formatWasmLicenseKey(u.phone, until) : 'AR-000000 (무료 회원)'),
         expiryYmd: until
       });
       if (typeof arLockIndustry === 'function') arLockIndustry(u.industry || 'auto');
       if (typeof arSnsRefresh === 'function') arSnsRefresh();
       const btn = document.getElementById('headerAuthBtn');
       if (btn) {
-        btn.textContent = '내 계정 · 로그아웃';
+        btn.textContent = comp ? '무상 PRO · 내 계정' : '내 계정 · 로그아웃';
         btn.setAttribute('onclick', 'arOpenAccount()');
       }
       syncDrmAndSnsUI();
@@ -592,10 +593,11 @@
       const sub = AR_SERVER.me && AR_SERVER.me.subscription;
       const activeNow = AR_SERVER.me && AR_SERVER.me.entitlement && AR_SERVER.me.entitlement.pro;
       if (!AR_SERVER.me) btn.textContent = '로그인하고 결제하기';
+      else if (sub && sub.comp) btn.textContent = '무상 PRO 이용 중';
       else if (!AR_SERVER.cfg.billingReady) btn.textContent = '결제 오픈 준비 중입니다';
       else if (activeNow && sub) btn.textContent = sub.plan === (AR_PLAN_MAP[selectedPlanKey] || '') ? '카드 바꾸기' : '카드 등록하고 다음 결제일부터 요금제 바꾸기';
       else btn.textContent = `카드 등록하고 ${plan.amount.toLocaleString()}원 결제하기`;
-      btn.disabled = Boolean(AR_SERVER.me) && !AR_SERVER.cfg.billingReady;
+      btn.disabled = Boolean(AR_SERVER.me) && (Boolean(sub && sub.comp) || !AR_SERVER.cfg.billingReady);
       btn.style.opacity = btn.disabled ? '0.55' : '';
     }
 
@@ -631,7 +633,7 @@
               <div class="text-[13px] text-[#ededed]">${s ? `${s.planName} · ${arStatusLabel(s.status)}${s.cancelAtPeriodEnd ? ' (해지 예약)' : ''}` : '무료 회원'}</div>
               ${s && s.currentPeriodEnd ? `<div class="text-[11px] text-[#85858b]">${s.cancelAtPeriodEnd ? '이용 종료일' : '다음 결제일'} ${fmt(s.currentPeriodEnd)}${s.cardLast4 ? ` · 카드 끝자리 ${s.cardLast4}` : ''}</div>` : ''}
             </div>
-            ${s && ['active', 'past_due'].includes(s.status)
+            ${s && !s.comp && ['active', 'past_due'].includes(s.status)
               ? (s.cancelAtPeriodEnd
                   ? '<button type="button" onclick="arSetCancel(false)" class="btn-secondary h-7 px-2.5 text-[11px]">해지 취소</button>'
                   : '<button type="button" onclick="arSetCancel(true)" class="btn-secondary h-7 px-2.5 text-[11px]">해지 예약</button>')

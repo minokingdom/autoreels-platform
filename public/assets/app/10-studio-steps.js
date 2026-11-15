@@ -428,6 +428,14 @@
 
     function evaluateDealerDrmStatus(d) {
       if (!d) return 0;
+      // 서버 모드에서는 만료일 없는 무상 PRO도 서버 응답의 이용 권한으로 판정합니다.
+      if (window.AR_SERVER && AR_SERVER.mode) {
+        const me = AR_SERVER.me;
+        if (!me || !me.user || !me.entitlement || !me.entitlement.pro) return 0;
+        if (String(d.phone || '').replace(/\D/g, '') !== String(me.user.phone || '').replace(/\D/g, '')) return 3;
+        const comp = me.subscription && me.subscription.comp === true;
+        return comp || new Date(me.entitlement.until).getTime() > Date.now() ? 1 : 0;
+      }
       const curP8 = extractPhoneLast8(d.phone);
       const regP8 = extractPhoneLast8(d.licensedPhone || d.phone);
       const sig = parseProvidedLicenseSig(d.licenseKey);
@@ -452,11 +460,13 @@
       const boundTextEl = document.getElementById('drmBoundPhoneText');
       if (boundTextEl) boundTextEl.textContent = d.licensedPhone || d.phone;
       const expEl = document.getElementById('dlrExpiryView');
+      const comp = Boolean(window.AR_SERVER && AR_SERVER.mode && AR_SERVER.me && AR_SERVER.me.subscription && AR_SERVER.me.subscription.comp);
       if (expEl) {
         const ymdStr = String(d.expiryYmd || 20261231);
         expEl.value = ymdStr.length === 8
           ? `PRO 무제한 (${ymdStr.slice(0, 4)}-${ymdStr.slice(4, 6)}-${ymdStr.slice(6, 8)})`
           : 'PRO 무제한 구독';
+        if (comp) expEl.value = '무상 PRO · 만료 없음';
       }
 
       const hdrNameEl = document.getElementById('headerDealerNameText');
@@ -470,7 +480,7 @@
       if (badgeEl) {
         if (drmCode === 1) {
           badgeEl.className = 'tag-chip px-2.5 py-1 text-[12px] font-medium text-[#4cc38a]';
-          badgeEl.textContent = '정품 구독 인증됨 (워터마크 제거)';
+          badgeEl.textContent = comp ? '무상 PRO (워터마크 제거)' : '정품 구독 인증됨 (워터마크 제거)';
           if (hdrDotEl) hdrDotEl.style.background = '#4cc38a';
         } else if (drmCode === 3) {
           badgeEl.className = 'tag-chip px-2.5 py-1 text-[12px] font-medium text-[#e5484d]';

@@ -7,7 +7,7 @@ const { readiness } = require('../lib/server/config');
 const { setSession, clearSession, readSession, hashPassword, checkPassword, sameOrigin } = require('../lib/server/session');
 const billing = require('../lib/server/billing');
 const { publicPlans } = require('../lib/server/plans');
-const { usageFor, isActive } = require('../lib/server/usage');
+const { usageFor, isActive, consume } = require('../lib/server/usage');
 
 const INDUSTRY_KEYS = ['auto', 'restaurant', 'cafe', 'beauty', 'realestate', 'academy', 'clinic', 'fitness', 'shop', 'interior'];
 
@@ -193,7 +193,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'consume-export' && req.method === 'POST') {
-      const q = await usage.consume(req, 'export', 1);
+      const q = await consume(req, 'export', 1);
       if (!q.ok) return send(res, q.status, q.body);
       return send(res, 200, { ok: true, used: q.used, cap: q.cap });
     }
