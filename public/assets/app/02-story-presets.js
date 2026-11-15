@@ -4228,7 +4228,7 @@ function renderStoryArchetypesUI() {
       const cutBadge = document.getElementById('mobileDockCutBadge');
       if (cutBadge) {
         if (t >= mainDur) {
-          cutBadge.textContent = IND.key === 'auto' ? '엔딩 · 카마스터 명함' : '엔딩 · 명함';
+          cutBadge.textContent = IND.key === 'auto' ? '엔딩 · 카마스터 정보' : '엔딩';
         } else {
           const capTxt = String((campaign.cutCaptions && campaign.cutCaptions[cutIdx]) || '').replace(/\s+/g, ' ').trim();
           cutBadge.textContent = `${cutIdx + 1}컷 · ${capTxt || wLabel}`;

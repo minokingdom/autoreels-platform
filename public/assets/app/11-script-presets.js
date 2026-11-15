@@ -539,14 +539,14 @@
     async function exportSynthesizedVideo() {
       // 성우가 들어간 완성본은 명함까지 마친 뒤 발행 단계에서 만들 수 있음
       if (!arFinalAudioUnlocked) {
-        if (typeof arToast === 'function') arToast('명함까지 순서대로 마치면 발행 단계에서 음악·성우가 들어간 완성본을 만들 수 있어요.');
+        if (typeof arToast === 'function') arToast('엔딩까지 순서대로 마치면 발행 단계에서 음악·성우가 들어간 완성본을 만들 수 있어요.');
         switchStudioTab(arFirstMissingStep() || 'publish');
         return;
       }
       const d = getSelectedDealer();
       const drmCode = evaluateDealerDrmStatus(d);
       if (drmCode === 3) {
-        alert(`[정품 보안 차단]\n현재 명함 전화번호(${d.phone})가 구독에 등록된 번호(${d.licensedPhone})와 다릅니다.\n계정 공유가 감지되어 영상 추출이 차단되었습니다.`);
+        alert(`[정품 보안 차단]\n현재 엔딩 연락처(${d.phone})가 구독에 등록된 번호(${d.licensedPhone})와 다릅니다.\n계정 공유가 감지되어 영상 추출이 차단되었습니다.`);
         return;
       }
       if (drmCode !== 1) {

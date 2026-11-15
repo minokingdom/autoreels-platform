@@ -333,7 +333,7 @@
         <div id="dealerQuickSelector" class="flex items-center gap-1.5 flex-wrap"></div>
       </div>
       <div class="flex items-center gap-3">
-        <span id="mobileSavedBadge" class="text-[12px] text-[#85858b]">명함 정보는 현재 기기에 자동 저장됩니다</span>
+        <span id="mobileSavedBadge" class="text-[12px] text-[#85858b]">엔딩 정보는 현재 기기에 자동 저장됩니다</span>
         <button onclick="openNewDealerModal()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">
           수동 카마스터 추가
         </button>
@@ -616,7 +616,7 @@
               본편
             </button>
             <button id="jumpBtn2" onclick="seekToTime(getMainDuration() + 0.5)" class="h-7 px-2 rounded-[6px] text-[12px] bg-[#232325] text-[#ededed] transition-colors cursor-pointer">
-              명함
+              엔딩
             </button>
           </div>
 
@@ -680,7 +680,7 @@
               <span class="font-mono text-[11px] text-[#85858b]">4</span> 사운드
             </button>
             <button type="button" role="tab" id="studioTabBtn_card" aria-controls="studioPanel_card" aria-selected="false" onclick="switchStudioTab('card')" class="studio-tab text-[#85858b] hover:text-[#ededed] font-normal">
-              <span class="font-mono text-[11px] text-[#85858b]">5</span> 명함
+              <span class="font-mono text-[11px] text-[#85858b]">5</span> 엔딩
             </button>
             <button type="button" role="tab" id="studioTabBtn_publish" aria-controls="studioPanel_publish" aria-selected="false" onclick="switchStudioTab('publish')" class="studio-tab text-[#85858b] hover:text-[#ededed] font-normal">
               <span class="font-mono text-[11px] text-[#85858b]">6</span> 발행
@@ -1135,20 +1135,20 @@
               </div>
             </div>
             <p id="customBgmStatusText" class="hidden text-[11px] font-mono text-[#4cc38a]"></p>
-            <p class="text-[11px] text-[#85858b]">지금은 배경음악만 들려요. 성우 목소리는 명함까지 마치면 발행 단계에서 음악과 섞인 완성본으로 들려드려요.</p>
+            <p class="text-[11px] text-[#85858b]">지금은 배경음악만 들려요. 성우 목소리는 엔딩까지 마치면 발행 단계에서 음악과 섞인 완성본으로 들려드려요.</p>
           </div>
 
           <div class="flex items-center justify-between gap-2 pt-1">
             <button type="button" onclick="switchStudioTab('photo')" class="btn-secondary h-9 px-3 text-[12px] cursor-pointer">← 사진</button>
-            <button type="button" onclick="switchStudioTab('card')" class="btn-primary h-9 px-4 text-[12px] cursor-pointer">다음: 명함 →</button>
+            <button type="button" onclick="switchStudioTab('card')" class="btn-primary h-9 px-4 text-[12px] cursor-pointer">다음: 엔딩 →</button>
           </div>
         </div>
 
         <div id="studioPanel_card" role="tabpanel" aria-labelledby="studioTabBtn_card" class="studio-panel hidden p-5 sm:p-6 space-y-5">
           <div class="studio-sub p-4 space-y-3">
             <div>
-              <div class="text-[14px] font-semibold text-[#ededed]">영상 끝 명함</div>
-              <p id="cardTabSummaryText" class="text-[12px] text-[#85858b] mt-0.5">영상 마지막에 나오는 명함이에요. 넣고 싶은 항목만 켜 두세요. 모두 비우면 명함 없이 끝나요.</p>
+              <div class="text-[14px] font-semibold text-[#ededed]">영상 엔딩</div>
+              <p id="cardTabSummaryText" class="text-[12px] text-[#85858b] mt-0.5">영상 마지막에 나오는 가게 정보예요. 넣고 싶은 항목만 켜 두세요. 모두 비우면 엔딩 없이 끝나요.</p>
             </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1191,7 +1191,7 @@
               </label>
             </div>
             <div class="pt-3 border-t border-[var(--border)]">
-              <div class="text-[12px] text-[#a1a1a6] mb-2">명함에 보일 항목</div>
+              <div class="text-[12px] text-[#a1a1a6] mb-2">엔딩에 보일 항목</div>
               <div id="cardShowToggles" class="card-show-grid"></div>
             </div>
           </div>
@@ -1343,7 +1343,7 @@
             <div id="publishLogLines" class="space-y-1 font-mono text-[12px] text-[#85858b]"></div>
           </div>
           <div class="flex items-center justify-between gap-2 pt-1">
-            <button type="button" onclick="switchStudioTab('card')" class="btn-secondary h-9 px-3 text-[12px] cursor-pointer">← 명함</button>
+            <button type="button" onclick="switchStudioTab('card')" class="btn-secondary h-9 px-3 text-[12px] cursor-pointer">← 엔딩</button>
             <span></span>
           </div>
         </div>
@@ -1969,10 +1969,10 @@
       <div id="settingsCardSection" class="studio-sub p-4 space-y-3">
         <div class="flex items-center justify-between gap-3">
           <div>
-            <div class="text-[13px] font-medium text-[#ededed]">내 명함 · 매장 정보</div>
-            <p class="text-[12px] text-[#85858b] mt-0.5">명함 내용·로고·보일 항목은 제작 화면의 [명함] 단계에서 고쳐요.</p>
+            <div class="text-[13px] font-medium text-[#ededed]">엔딩 · 매장 정보</div>
+            <p class="text-[12px] text-[#85858b] mt-0.5">가게 정보·로고·보일 항목은 제작 화면의 [엔딩] 단계에서 고쳐요.</p>
           </div>
-          <button type="button" onclick="closeStudioSettingsModal(); switchStudioTab('card')" class="btn-secondary h-9 px-3 text-[13px] cursor-pointer shrink-0">명함 단계로</button>
+          <button type="button" onclick="closeStudioSettingsModal(); switchStudioTab('card')" class="btn-secondary h-9 px-3 text-[13px] cursor-pointer shrink-0">엔딩 단계로</button>
         </div>
 
         <details data-advanced class="studio-sub fold">

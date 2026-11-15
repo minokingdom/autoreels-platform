@@ -271,8 +271,8 @@
       if (key === 'publish' && !arFinalAudioUnlocked) {
         const missing = arFirstMissingStep();
         if (missing) {
-          const names = { topic: '주제', script: '대본', photo: '사진', sound: '사운드', card: '명함' };
-          if (typeof arToast === 'function') arToast(`${names[missing]} 단계부터 순서대로 마쳐 주세요. 명함까지 끝내면 완성본을 들려드려요.`);
+          const names = { topic: '주제', script: '대본', photo: '사진', sound: '사운드', card: '엔딩' };
+          if (typeof arToast === 'function') arToast(`${names[missing]} 단계부터 순서대로 마쳐 주세요. 엔딩까지 끝내면 완성본을 들려드려요.`);
           key = missing;
         }
       }
@@ -319,7 +319,7 @@
     // ==========================================================================
     // ★ 모바일 아래 고정 단계 바: 긴 화면 맨 끝까지 내려가지 않아도 [이전]·[다음]으로 이동
     // ==========================================================================
-    const AR_STEP_NAMES = { topic: '주제', script: '대본', photo: '사진', sound: '사운드', card: '명함', publish: '발행' };
+    const AR_STEP_NAMES = { topic: '주제', script: '대본', photo: '사진', sound: '사운드', card: '엔딩', publish: '발행' };
     function arEnsureMobileStepBar() {
       let bar = document.getElementById('mobileStepBar');
       if (bar) return bar;
@@ -386,8 +386,8 @@
         topic: ['오늘의 주제', '오늘 올릴 주제를 골라 주세요. 고르면 그 주제로 AI가 대본 3안을 바로 만들어 드려요.'],
         script: ['대본 고르기', '상품 이름과 혜택을 확인하고 [AI로 만들기]를 누르세요. 대본 3안 중 마음에 드는 것을 고르면 됩니다.'],
         photo: ['사진 넣기', '내 사진이나 영상을 올리세요. 올리지 않으면 기본 사진으로 만들어집니다.'],
-        sound: ['소리 고르기', '배경음악과 성우 목소리를 고르세요. 성우 목소리는 명함까지 마치면 발행 단계에서 음악과 함께 완성본으로 들려드려요.'],
-        card: ['마지막 화면 확인', '영상 마지막에 나올 이름·소속·연락처·혜택이 맞는지 확인하세요.'],
+        sound: ['소리 고르기', '배경음악과 성우 목소리를 고르세요. 성우 목소리는 엔딩까지 마치면 발행 단계에서 음악과 함께 완성본으로 들려드려요.'],
+        card: ['엔딩 꾸미기', '영상 마지막에 나올 가게 정보와 로고를 넣고, 보일 항목만 켜 두세요.'],
         publish: ['완성본 확인 · SNS에 올리기', '배경음악과 성우가 들어간 완성본을 확인하고, 올릴 SNS를 고른 뒤 [선택한 SNS에 발행]을 누르세요.']
       };
       const idx = STUDIO_TABS.indexOf(key);
@@ -872,7 +872,7 @@
         );
         const badge = document.getElementById('mobileSavedBadge');
         if (badge) {
-          badge.textContent = `[${d.name} ${d.title}] 명함 정보가 로컬에 자동 저장됨`;
+          badge.textContent = `[${d.name} ${d.title}] 엔딩 정보가 이 기기에 자동 저장됨`;
         }
       } catch (e) {}
     }

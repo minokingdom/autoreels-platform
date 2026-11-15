@@ -803,7 +803,7 @@
         jb1.onclick = () => seekToTime(mainDur * 0.45);
       }
       if (jb2) {
-        jb2.textContent = '명함';
+        jb2.textContent = '엔딩';
         jb2.onclick = () => seekToTime(mainDur + 0.3);
       }
 

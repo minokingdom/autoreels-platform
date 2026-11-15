@@ -49,7 +49,7 @@
         } else {
           badge.textContent = (typeof IND !== 'undefined' && IND.outroMode === 'store')
             ? `엔딩 ${IND.place || '매장'} 안내 (${mainDuration.toFixed(0)}~${TOTAL_DURATION.toFixed(0)}초)`
-            : `엔딩 카마스터 명함 (${mainDuration.toFixed(0)}~${TOTAL_DURATION.toFixed(0)}초)`;
+            : `엔딩 (${mainDuration.toFixed(0)}~${TOTAL_DURATION.toFixed(0)}초)`;
         }
       }
     }
