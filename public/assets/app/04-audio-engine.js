@@ -743,7 +743,20 @@
         if (this.ttsPrefetchTimer) clearTimeout(this.ttsPrefetchTimer);
         this.ttsPrefetchTimer = setTimeout(() => {
           this.ttsPrefetchTimer = null;
-          if (this.enabled) this.prefetchTtsBuffers();
+          if (!this.enabled) return;
+          const job = this.prefetchTtsBuffers();
+          if (this._restartOnReady) {
+            Promise.resolve(job).then(() => {
+              if (!this._restartOnReady || !this.enabled) return;
+              this._restartOnReady = false;
+              isPlaying = true;
+              const ppBtn = document.getElementById('playPauseBtn');
+              if (ppBtn) ppBtn.textContent = '⏸ 일시정지';
+              if (window.__timelines && window.__timelines['main']) window.__timelines['main'].seek(0);
+              if (this.masterBuffer) this.playMasterAt(0);
+              else this.syncWithTimeline(0);
+            });
+          }
         }, delayMs);
       },
 
@@ -1179,15 +1192,42 @@
       testCutTts(slot);
     }
 
+    function arResetAndRebuildNarration() {
+      if (typeof AudioEngine === 'undefined') return;
+      AudioEngine.stopTts();
+      AudioEngine.masterBuffer = null;
+      AudioEngine.masterDuration = 0;
+      AudioEngine.lastSpokenCut = -1;
+      AudioEngine._restartOnReady = true;
+      if (AudioEngine.enabled) {
+        AudioEngine.schedulePrefetch(900);
+      }
+    }
+
+    // 브라우저 자동재생 정책 때문에 첫 화면 클릭/키 입력 시 사운드·나레이션을 자동으로 켬
+    (function setupAutoUnlockNarration() {
+      const unlock = (ev) => {
+        if (window.__arUserMuted || AudioEngine.enabled) return;
+        const t = ev && ev.target;
+        if (t && typeof t.closest === 'function' && t.closest('#soundToggleBtn, #mobileDockSoundBtn')) return;
+        toggleAudioMaster(true);
+      };
+      window.addEventListener('pointerdown', unlock, { once: true, passive: true });
+      window.addEventListener('keydown', unlock, { once: true, passive: true });
+    })();
+
     function toggleAudioMaster(forceState) {
       AudioEngine.enabled = typeof forceState === 'boolean' ? forceState : !AudioEngine.enabled;
+      if (AudioEngine.enabled) window.__arUserMuted = false;
+      else if (typeof forceState !== 'boolean' || forceState === false) window.__arUserMuted = true;
       const btn = document.getElementById('soundToggleBtn');
       const dot = document.getElementById('soundDot');
       const lbl = document.getElementById('soundToggleLabel');
       const engineBadge = document.getElementById('audioEngineBadge');
 
       if (AudioEngine.enabled) {
-        AudioEngine.ensureContext();
+        const ctx = AudioEngine.ensureContext();
+        if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
         AudioEngine.lastSpokenCut = -1;
         AudioEngine.startBgmLoop();
         AudioEngine.loadVoiceList();

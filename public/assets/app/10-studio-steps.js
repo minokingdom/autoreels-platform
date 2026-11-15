@@ -179,7 +179,7 @@
     //   그 전에는 성우 녹음을 받지도 틀지도 않음 (배경음악 미리 듣기는 가능)
     //   발행 단계에 들어오면 고른 배경음악 + 성우 목소리를 섞은 완성본을 처음부터 재생
     const arStepsVisited = new Set(['topic']);
-    let arFinalAudioUnlocked = false;
+    let arFinalAudioUnlocked = true;
     function arVoiceAllowed() { return arFinalAudioUnlocked; }
     function arFirstMissingStep() {
       return ['topic', 'script', 'photo', 'sound', 'card'].find((k) => !arStepsVisited.has(k)) || null;
@@ -646,7 +646,9 @@
         d._cardEmptyLast = cardEmptyNow;
         applyVideoDurations();
       }
-      if (typeof AudioEngine !== 'undefined' && AudioEngine.enabled && arVoiceAllowed()) {
+      if (typeof arResetAndRebuildNarration === 'function') {
+        arResetAndRebuildNarration();
+      } else if (typeof AudioEngine !== 'undefined' && AudioEngine.enabled && arVoiceAllowed()) {
         AudioEngine.masterBuffer = null;
         AudioEngine.masterDuration = 0;
         AudioEngine.schedulePrefetch();
@@ -751,11 +753,15 @@
         const ttsEl = document.getElementById(`cutTts${i}`);
         if (ttsEl) campaign.ttsLines[i] = ttsEl.value;
       }
-      AudioEngine.masterBuffer = null;
-      AudioEngine.masterDuration = 0;
-      if (AudioEngine.enabled) AudioEngine.schedulePrefetch();
+      if (typeof arResetAndRebuildNarration === 'function') {
+        arResetAndRebuildNarration();
+      } else {
+        AudioEngine.masterBuffer = null;
+        AudioEngine.masterDuration = 0;
+        if (AudioEngine.enabled) AudioEngine.schedulePrefetch();
+      }
       if (typeof renderVisualStoryboardTrack === 'function') renderVisualStoryboardTrack();
-      window.__timelines['main'].seek(window.__timelines['main'].currentTime);
+      window.__timelines['main'].seek(0);
     }
 
     function saveAdminAiKeys() {

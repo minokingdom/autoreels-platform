@@ -432,7 +432,8 @@
       }
       syncPreviewPanel();
       syncTechPanel();
-      window.__timelines['main'].seek(window.__timelines['main'].currentTime);
+      if (typeof arResetAndRebuildNarration === 'function') arResetAndRebuildNarration();
+      window.__timelines['main'].seek(0);
     }
 
     function batchGenerateToStaging() {

@@ -4195,17 +4195,18 @@ function renderStoryArchetypesUI() {
       }
     }
 
-    // 모바일 스크롤 시 라이브 도크 완벽 상단 락 (스크롤 다운 시 fixed 모드 전환)
-    window.addEventListener('scroll', () => {
+    // 모바일 스크롤 시 메인 미리보기(9:16)가 화면 위로 지나가면 미니 도크를 상단에 고정
+    function syncMobileDockVisibility() {
       const dock = document.getElementById('mobileLiveDock');
       if (!dock || window.innerWidth >= 1024) {
         if (dock) dock.classList.remove('dock-fixed-mode');
         return;
       }
-      const scrollY = window.scrollY || window.pageYOffset;
-      if (scrollY > 120) {
-        dock.classList.add('dock-fixed-mode');
-      } else {
-        dock.classList.remove('dock-fixed-mode');
-      }
-    }, { passive: true });
+      const mon = document.getElementById('mainMonitorColumn');
+      const shouldShow = mon
+        ? mon.getBoundingClientRect().bottom < 72
+        : (window.scrollY || window.pageYOffset) > 420;
+      dock.classList.toggle('dock-fixed-mode', shouldShow);
+    }
+    window.addEventListener('scroll', syncMobileDockVisibility, { passive: true });
+    window.addEventListener('resize', syncMobileDockVisibility, { passive: true });

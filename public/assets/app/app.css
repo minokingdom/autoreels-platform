@@ -325,25 +325,26 @@
       body.ar-cut-editing #mobileLiveDock { display: none; }
     }
 
-    /* 모바일 실시간 라이브 스튜디오 도크 */
+    /* 모바일 실시간 라이브 스튜디오 도크 (메인 9:16 미리보기가 화면에서 사라질 때만 상단에 나타남) */
     #mobileLiveDock {
-      position: -webkit-sticky;
-      position: sticky;
-      top: 8px;
-      z-index: 45;
+      display: none;
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
     }
-    #mobileLiveDock.dock-fixed-mode {
-      position: fixed;
-      top: 8px;
-      left: 12px;
-      right: 12px;
-      width: calc(100% - 24px);
-      margin-left: auto;
-      margin-right: auto;
-      z-index: 50;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.85);
+    @media (max-width: 1023px) {
+      #mobileLiveDock.dock-fixed-mode {
+        display: block;
+        position: fixed;
+        top: 8px;
+        left: 12px;
+        right: 12px;
+        width: calc(100% - 24px);
+        margin-left: auto;
+        margin-right: auto;
+        z-index: 50;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.85);
+      }
+      body.ar-cut-editing #mobileLiveDock.dock-fixed-mode { display: none; }
     }
     .theme-swatch-chip {
       transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
