@@ -4,9 +4,9 @@ name: smoke
 on:
   push:
     branches: [main]
-    paths: ['public/**', 'tests/**', 'scripts/build-app.mjs', '.github/workflows/smoke.yml']
+    paths: ['public/**', 'tests/**', 'scripts/build-app.mjs', 'api/**', 'lib/**', '.github/workflows/smoke.yml']
   pull_request:
-    paths: ['public/**', 'tests/**', 'scripts/build-app.mjs', '.github/workflows/smoke.yml']
+    paths: ['public/**', 'tests/**', 'scripts/build-app.mjs', 'api/**', 'lib/**', '.github/workflows/smoke.yml']
   workflow_dispatch:
 
 jobs:
@@ -23,6 +23,11 @@ jobs:
           node scripts/build-app.mjs
           for f in public/assets/app/*.js; do node --check "$f" || exit 1; done
           echo "syntax ok"
+      - name: Load every API module (catches missing files / require errors)
+        run: |
+          npm ci --omit=dev --no-audit --no-fund || npm install --omit=dev --no-audit --no-fund
+          for f in api/*.js; do node -e "require('./$f')" || { echo "FAILED: $f"; exit 1; }; done
+          echo "api modules ok"
       - name: Install Playwright
         run: |
           npm i --no-save playwright@1.48.2
