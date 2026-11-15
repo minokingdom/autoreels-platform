@@ -4195,17 +4195,18 @@ function renderStoryArchetypesUI() {
       }
     }
 
-    // 모바일 스크롤 시 메인 미리보기(9:16)가 화면 위로 지나가면 미니 도크를 상단에 고정
+    // 모바일 스크롤 시: 맨 위에서는 숨기고, 메인 9:16 미리보기가 화면에 보일 때도 숨겨 전체를 가리지 않게 함
     function syncMobileDockVisibility() {
       const dock = document.getElementById('mobileLiveDock');
       if (!dock || window.innerWidth >= 1024) {
         if (dock) dock.classList.remove('dock-fixed-mode');
         return;
       }
+      const scrollY = window.scrollY || window.pageYOffset;
       const mon = document.getElementById('mainMonitorColumn');
-      const shouldShow = mon
-        ? mon.getBoundingClientRect().bottom < 72
-        : (window.scrollY || window.pageYOffset) > 420;
+      const rect = mon ? mon.getBoundingClientRect() : null;
+      const monVisible = rect ? (rect.top < window.innerHeight - 60 && rect.bottom > 72) : false;
+      const shouldShow = scrollY > 120 && !monVisible;
       dock.classList.toggle('dock-fixed-mode', shouldShow);
     }
     window.addEventListener('scroll', syncMobileDockVisibility, { passive: true });
