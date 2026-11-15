@@ -465,7 +465,7 @@
         const wKey = plan.widget || WIDGET_POOL[i % WIDGET_POOL.length];
         const rawWLabel = (typeof WIDGET_LABELS !== 'undefined' && WIDGET_LABELS[wKey]) || wKey;
         const wLabel = typeof indWord === 'function' ? indWord(rawWLabel) : rawWLabel;
-        const subVal = (campaign.cutCaptions[i] || '').replace(/"/g, '&quot;');
+        const subVal = (campaign.cutCaptions[i] || '').replace(/\n+/g, ' / ').replace(/"/g, '&quot;');
         const ttsVal = ((campaign.ttsLines && campaign.ttsLines[i]) || campaign.cutCaptions[i] || '').replace(/"/g, '&quot;');
 
         const activePhotoIdx = (plan.photoIdx !== undefined && photos[plan.photoIdx])
@@ -493,7 +493,7 @@
         html += `
           <div class="p-3 rounded-[8px] bg-[#141415] border border-[var(--border)] space-y-1.5">
             <button type="button" onclick="seekToTime(${seekSec})" id="cutTimeLabel${i}" class="font-mono text-[12px] text-[#ededed] font-medium hover:text-[#38bdf8] cursor-pointer" title="이 장면(${s}초)으로 미리보기 이동">CUT ${i + 1} (${s}~${e}초)</button>
-            <span class="block text-[11px] text-[#85858b]">화면 자막</span>
+            <span class="block text-[11px] text-[#85858b]">화면 자막 <span class="text-[#6e6e73]">· 띄어쓰기 / 띄어쓰기로 줄 나누기 (안 넣으면 자동)</span></span>
             <input id="cutSub${i}" type="text" value="${subVal}" oninput="updateCustomCutCaptions()" placeholder="${i + 1}컷 화면 헤드라인" class="studio-input w-full h-8 px-2.5 text-[12px]" />
             <span class="block text-[11px] text-[#85858b]">성우 대사</span>
             <input id="cutTts${i}" type="text" value="${ttsVal}" oninput="updateCustomCutCaptions()" placeholder="${i + 1}컷 성우 대사 (짧을수록 영상이 짧아집니다)" title="숫자가 다르게 읽히면 한글로 적어 주세요. 예: 네 대" class="studio-input w-full h-7 px-2.5 text-[11px] text-[#a1a1a6]" />

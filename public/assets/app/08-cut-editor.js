@@ -5821,7 +5821,7 @@
           wrap.innerHTML = `
             <textarea id="arCanvasInlineInput" rows="2" placeholder="문구를 직접 입력하세요"></textarea>
             <div class="ar-canvas-inline-toolbar">
-              <span class="ar-hint" id="arCanvasInlineHint">Enter 완료 · Shift+Enter 줄바꿈</span>
+              <span class="ar-hint" id="arCanvasInlineHint">줄바꿈 키 = 여기서 줄 나누기</span>
               <div style="display:flex;gap:5px;align-items:center;">
                 <button type="button" class="ar-cancel-btn" id="arCanvasInlineCancelBtn">취소</button>
                 <button type="button" id="arCanvasInlineDoneBtn">완료</button>
@@ -5851,7 +5851,9 @@
           });
 
           ta.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            // 휴대폰은 줄바꿈 키가 곧 Enter라서, 터치 화면에서는 Enter = 줄 나누기, 완료는 버튼으로
+            const touch = (() => { try { return window.matchMedia('(pointer: coarse)').matches; } catch (er) { return false; } })();
+            if (e.key === 'Enter' && !e.shiftKey && !touch) {
               e.preventDefault();
               closeCanvasDirectTextEdit(true);
             } else if (e.key === 'Escape') {
@@ -5924,7 +5926,11 @@
 
         const hintEl = wrap.querySelector('#arCanvasInlineHint');
         if (hintEl) {
-          hintEl.textContent = `${getCanvasElementLabel(key)} 직접 수정 · Enter 완료`;
+          const touch = (() => { try { return window.matchMedia('(pointer: coarse)').matches; } catch (er) { return false; } })();
+          // 줄을 직접 안 나누면 디자인이 알아서 나눈다는 것을 분명히 알려 줌 (화면의 줄바꿈이 자동인지 헷갈리지 않게)
+          hintEl.textContent = touch
+            ? '줄바꿈 키로 원하는 곳에서 줄을 나눠요 · 안 나누면 디자인이 알아서 나눠요'
+            : 'Shift+Enter로 줄 나누기 · 안 나누면 디자인이 알아서 나눠요 · Enter 완료';
         }
 
         const ta = wrap.querySelector('#arCanvasInlineInput');

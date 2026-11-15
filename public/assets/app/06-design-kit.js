@@ -1440,8 +1440,8 @@
           c.restore();
         }
       } else if (cap === 'stack') {
-        // 단어마다 한 줄씩, 줄 너비를 꽉 채우는 거대한 글씨
-        let words = text.split(' ').filter(Boolean);
+        // 단어마다 한 줄씩, 줄 너비를 꽉 채우는 거대한 글씨 (직접 넣은 줄바꿈이 있으면 그 줄 그대로)
+        let words = /\n/.test(text) ? text.split(/\n+/).map((t) => t.trim()).filter(Boolean) : text.split(/\s+/).filter(Boolean);
         while (words.length > 5) {
           let best = 0;
           for (let i = 1; i < words.length - 1; i++) if (words[i].length + words[i + 1].length < words[best].length + words[best + 1].length) best = i;

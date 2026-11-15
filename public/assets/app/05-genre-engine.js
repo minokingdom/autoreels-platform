@@ -291,7 +291,8 @@
       return String(s || '')
         .replace(/^[\s -⯿\u{1F000}-\u{1FFFF}️‍✔✓★☆•·\-\[\]【】]+/u, '')
         .replace(/[\u{1F000}-\u{1FFFF}️‍]/gu, '')
-        .replace(/\s+/g, ' ')
+        .replace(/[^\S\n]+/g, ' ') // 직접 넣은 줄바꿈은 남기고 나머지 공백만 하나로
+        .replace(/ *\n+ */g, '\n')
         .trim();
     }
     // 한 줄 맞춤: 넘치면 글자를 줄이고, 그래도 넘치면 말줄임
@@ -316,6 +317,18 @@
     }
     // 어절·구절을 지킨 뒤, 같은 줄 수 안에서 전체 줄 너비의 편차를 최소화한다.
     function gWrap(c, text, maxW, maxLines, size, minSize, family, weight) {
+      // 사장님이 직접 넣은 줄바꿈(Enter)은 그 자리에서 꼭 나누고, 나머지는 자동으로 균형 있게 나눔
+      const segs = String(text || '').split(/\n+/).map((t) => t.trim()).filter(Boolean);
+      if (segs.length > 1) {
+        const lim = Math.max(segs.length, Math.floor(maxLines));
+        const low = Math.min(size, minSize);
+        for (let s = size; ; s = Math.max(low, s - 1)) {
+          const parts = segs.map((seg) => gWrap(c, seg, maxW, Math.max(1, lim - segs.length + 1), s, s, family, weight));
+          const lines = [].concat(...parts.map((p) => p.lines));
+          const ok = lines.length <= lim && !lines.some((l) => /…$/.test(l));
+          if (ok || s === low) { c.font = gFont(weight, s, family); return { lines: lines.slice(0, lim), size: s }; }
+        }
+      }
       const words = String(text || '').trim().split(/\s+/).filter(Boolean);
       const limit = Math.max(1, Math.floor(maxLines)), smallest = Math.min(size, minSize);
       const bare = (w) => w.replace(/[.,!?。…·:;"'“”‘’()[\]]/g, '');

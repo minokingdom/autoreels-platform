@@ -1167,3 +1167,9 @@ body:has(#cutEditorPanel:not(.hidden)) #previewCutPinBar { display: none !import
 #cutEditorPanel .ar-el-inspector { border: 0 !important; padding: 0 !important; background: transparent !important; }
 .ig-len { width: 100%; margin-left: 0; padding: 0 6px 0 14px; }
 .ig-len em { flex: 1; font-style: normal; font-size: 13px; color: #a1a1a6; }
+
+/* 터치 화면: 문구 고치는 칸을 화면 아래(키보드 위)에 띄워서, 영상 속 글자가 어떻게 나뉘는지 그대로 보이게 */
+@media (pointer: coarse) {
+  #arCanvasInlineInputWrap.is-open { position: fixed !important; left: 12px !important; right: 12px !important; top: auto !important; bottom: 12px !important; width: auto !important; transform: none !important; z-index: 120; }
+  #arCanvasInlineInputWrap textarea { font-size: 16px !important; min-height: 64px; }
+}

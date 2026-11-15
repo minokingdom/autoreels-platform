@@ -1094,7 +1094,8 @@
       if (!Array.isArray(campaign.ttsLines)) campaign.ttsLines = [];
       for (let i = 0; i < totalCuts; i++) {
         const el = document.getElementById(`cutSub${i}`);
-        if (el) campaign.cutCaptions[i] = el.value;
+        // 대본 칸에서는 ' / ' 를 줄 나누기로 씀 (화면에서 직접 넣은 줄바꿈과 같은 뜻)
+        if (el) campaign.cutCaptions[i] = el.value.replace(/\s+\/\s+/g, '\n').replace(/\n{2,}/g, '\n').trim();
         const ttsEl = document.getElementById(`cutTts${i}`);
         if (ttsEl) campaign.ttsLines[i] = ttsEl.value;
       }
