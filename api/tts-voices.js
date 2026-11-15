@@ -48,21 +48,25 @@ async function listCachedBgmUrls() {
 }
 
 function extractAudioFromInteraction(data) {
-  const outputs = (data && Array.isArray(data.outputs) ? data.outputs : [])
-    .concat(data && data.response && Array.isArray(data.response.outputs) ? data.response.outputs : []);
-  for (const out of outputs) {
+  const candidates = [];
+  const pushList = (arr) => {
+    if (!Array.isArray(arr)) return;
+    for (const item of arr) {
+      if (!item) continue;
+      candidates.push(item);
+      if (Array.isArray(item.parts)) candidates.push(...item.parts);
+      if (Array.isArray(item.content)) candidates.push(...item.content);
+    }
+  };
+  pushList(data && data.outputs);
+  pushList(data && data.response && data.response.outputs);
+  pushList(data && data.steps);
+  for (const out of candidates) {
     if (!out) continue;
     const mime = out.mime_type || out.mimeType || (out.inlineData && out.inlineData.mimeType) || '';
     const b64 = out.data || (out.inlineData && out.inlineData.data) || '';
     if (b64 && String(mime).startsWith('audio/')) {
       return { mimeType: mime, base64: b64 };
-    }
-    if (Array.isArray(out.parts)) {
-      for (const p of out.parts) {
-        const pm = (p && (p.mime_type || p.mimeType || (p.inlineData && p.inlineData.mimeType))) || '';
-        const pb = (p && (p.data || (p.inlineData && p.inlineData.data))) || '';
-        if (pb && String(pm).startsWith('audio/')) return { mimeType: pm, base64: pb };
-      }
     }
   }
   return null;
