@@ -1081,9 +1081,26 @@
                   <option value="ballad">내장 비트 · Piano 발라드</option>
                   <option value="news">내장 비트 · Breaking News</option>
                   <option value="jazz">내장 비트 · Jazz 라운지</option>
+                  <optgroup label="✨ 구글 Lyria AI 고음질 BGM">
+                    <option value="lyria_showroom">✨ Lyria AI · 쇼룸 일렉트로닉 하우스</option>
+                    <option value="lyria_cafe">✨ Lyria AI · 감성 카페 보사노바·재즈</option>
+                    <option value="lyria_restaurant">✨ Lyria AI · 맛집 어쿠스틱 그루브</option>
+                    <option value="lyria_beauty">✨ Lyria AI · 뷰티·헤어 트렌디 R&B</option>
+                    <option value="lyria_fitness">✨ Lyria AI · 피트니스 파워 트랩</option>
+                    <option value="lyria_realestate">✨ Lyria AI · 프리미엄 하우스 라운지</option>
+                    <option value="lyria_academy">✨ Lyria AI · 학원·교육 로파이 비트</option>
+                    <option value="lyria_clinic">✨ Lyria AI · 클리닉 신뢰감 앰비언트</option>
+                    <option value="lyria_shop">✨ Lyria AI · 패션·쇼핑몰 시티팝</option>
+                    <option value="lyria_interior">✨ Lyria AI · 인테리어 북유럽 미니멀</option>
+                  </optgroup>
                   <option value="custom_mp3" id="customBgmOption" class="hidden">내가 불러온 릴스·숏츠 음원 파일</option>
                   <option value="off">BGM 끄기</option>
                 </select>
+                <div class="flex items-center gap-1.5 mt-1.5">
+                  <input id="lyriaCustomPromptInput" type="text" placeholder="예: 비 오는 날 카페 재즈, 경쾌한 매장 홍보" class="studio-input flex-1 min-w-0 h-8 px-2.5 text-[11px]" />
+                  <button type="button" id="lyriaCustomGenBtn" onclick="generateCustomLyriaBgm()" class="btn-secondary h-8 px-2.5 text-[11px] shrink-0 cursor-pointer whitespace-nowrap" title="구글 Lyria AI로 30초 맞춤 배경음악 생성">✨ AI BGM 만들기</button>
+                </div>
+                <p id="lyriaBgmStatusText" class="hidden text-[11px] text-[#4cc38a] mt-1"></p>
               </div>
 
               <div data-advanced>

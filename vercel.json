@@ -7,6 +7,9 @@
     "api/tts-script.js": {
       "maxDuration": 60
     },
+    "api/tts-voices.js": {
+      "maxDuration": 60
+    },
     "api/account.js": {
       "maxDuration": 60
     },

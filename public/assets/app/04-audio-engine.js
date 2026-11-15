@@ -104,6 +104,40 @@
         }
       },
 
+      // 구글 Lyria AI BGM 등 외부/Blob 음원 URL 로드
+      loadRemoteBgmUrl(url, label) {
+        const ctx = this.ensureContext();
+        if (this.customBgmUrl) {
+          URL.revokeObjectURL(this.customBgmUrl);
+          this.customBgmUrl = null;
+        }
+        if (!this.customBgmAudioEl) {
+          this.customBgmAudioEl = new Audio();
+          this.customBgmAudioEl.loop = true;
+          this.customBgmAudioEl.crossOrigin = 'anonymous';
+          if (ctx) {
+            try {
+              this.customBgmSourceNode = ctx.createMediaElementSource(this.customBgmAudioEl);
+              this.customBgmSourceNode.connect(this.bgmGain);
+            } catch (e) {}
+          }
+        }
+        this.customBgmAudioEl.src = url;
+        this.customBgmAudioEl.volume = 0.65;
+        this.bgmStyle = 'custom_mp3';
+
+        const statusText = document.getElementById('lyriaBgmStatusText');
+        if (statusText) {
+          statusText.classList.remove('hidden');
+          statusText.textContent = `✨ ${label || 'Lyria AI BGM'} 적용됨 (영상 추출 시 그대로 합성됩니다)`;
+        }
+        if (!this.enabled) {
+          toggleAudioMaster(true);
+        } else {
+          this.startBgmLoop();
+        }
+      },
+
       // ★ 내장 릴스·숏츠 스타일 BGM 엔진 (코드 패드 + 베이스라인 + 아르페지오 리프 + 킥/클랩/하이햇)
       //   - AudioContext 시간 기준 룩어헤드 스케줄링으로 끊김 없이 재생
       BGM_STYLES: {
@@ -1261,12 +1295,82 @@
       }
     }
 
+    async function arSelectLyriaBgm(presetId) {
+      const st = document.getElementById('lyriaBgmStatusText');
+      if (st) {
+        st.classList.remove('hidden');
+        st.textContent = '✨ 구글 Lyria AI 배경음악 준비 중... (최초 1회 약 10~15초)';
+      }
+      try {
+        if (!window.__arLyriaMap) {
+          const lr = await fetch('/api/tts-voices?action=bgm-list').then((r) => r.json()).catch(() => null);
+          window.__arLyriaMap = {};
+          if (lr && Array.isArray(lr.tracks)) lr.tracks.forEach((t) => { window.__arLyriaMap[t.id] = t; });
+        }
+        const cached = window.__arLyriaMap[presetId];
+        if (cached && cached.url) {
+          AudioEngine.loadRemoteBgmUrl(cached.url, cached.label);
+          return;
+        }
+        const res = await fetch('/api/tts-voices?action=generate-bgm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ presetId })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok || !data.url) throw new Error(data.message || 'Lyria 생성 실패');
+        window.__arLyriaMap[presetId] = { id: presetId, label: data.label, url: data.url };
+        AudioEngine.loadRemoteBgmUrl(data.url, data.label);
+      } catch (err) {
+        if (st) {
+          st.classList.remove('hidden');
+          st.textContent = `⚠️ ${err && err.message ? err.message : 'Lyria 생성 실패 — 내장 비트로 재생합니다.'}`;
+        }
+        AudioEngine.bgmStyle = 'showroom';
+        const sel = document.getElementById('bgmStyleSelect');
+        if (sel) sel.value = 'showroom';
+        if (AudioEngine.enabled) AudioEngine.startBgmLoop();
+      }
+    }
+
+    async function generateCustomLyriaBgm() {
+      const inp = document.getElementById('lyriaCustomPromptInput');
+      const btn = document.getElementById('lyriaCustomGenBtn');
+      const st = document.getElementById('lyriaBgmStatusText');
+      const prompt = (inp && inp.value || '').trim();
+      if (!prompt) {
+        if (typeof arToast === 'function') arToast('만들고 싶은 음악 분위기를 입력해 주세요. (예: 따뜻한 카페 재즈)');
+        if (inp) inp.focus();
+        return;
+      }
+      if (btn) { btn.disabled = true; btn.textContent = '✨ 생성 중...'; }
+      if (st) { st.classList.remove('hidden'); st.textContent = '✨ 구글 Lyria AI가 30초 맞춤 음악을 작곡하고 있습니다...'; }
+      try {
+        const res = await fetch('/api/tts-voices?action=generate-bgm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok || !data.url) throw new Error(data.message || 'Lyria 생성 실패');
+        const opt = document.getElementById('customBgmOption');
+        const sel = document.getElementById('bgmStyleSelect');
+        if (opt) { opt.classList.remove('hidden'); opt.textContent = data.label; }
+        if (sel) sel.value = 'custom_mp3';
+        AudioEngine.loadRemoteBgmUrl(data.url, data.label);
+      } catch (err) {
+        if (st) { st.classList.remove('hidden'); st.textContent = `⚠️ ${err && err.message || 'Lyria 생성 실패'}`; }
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '✨ AI BGM 만들기'; }
+      }
+    }
+
     function onAudioConfigChange() {
       const prevVoice = AudioEngine.ttsVoice;
       const prevSpeed = AudioEngine.ttsSpeed;
       const bgmEl = document.getElementById('bgmStyleSelect');
       const ttsEl = document.getElementById('ttsVoiceSelect');
-      if (bgmEl) AudioEngine.bgmStyle = bgmEl.value;
+      const pickedBgm = bgmEl ? bgmEl.value : AudioEngine.bgmStyle;
       if (ttsEl) AudioEngine.ttsVoice = ttsEl.value;
       const speedEl = document.getElementById('ttsSpeedSelect');
       if (speedEl) AudioEngine.ttsSpeed = Number(speedEl.value) || 1.1;
@@ -1275,6 +1379,12 @@
       } catch (e) {}
 
       const voiceChanged = (AudioEngine.ttsVoice !== prevVoice) || (AudioEngine.ttsSpeed !== prevSpeed);
+      if (String(pickedBgm).startsWith('lyria_')) {
+        arSelectLyriaBgm(pickedBgm);
+        if (voiceChanged && AudioEngine.enabled) arResetAndRebuildNarration();
+        return;
+      }
+      AudioEngine.bgmStyle = pickedBgm;
       if (!AudioEngine.enabled) {
         if (voiceChanged) {
           AudioEngine.masterBuffer = null;
