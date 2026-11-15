@@ -526,7 +526,21 @@
       //   문장마다 따로 녹음하면 톤·속도·크기가 서로 달라 이어 붙인 티가 나므로,
       //   한 호흡으로 녹음한 하나의 음성에서 컷별 구간만 잘라 씁니다.
       scriptCache: new Map(),
+      scriptMasters: new Map(),
+      masterKey: '',
+      masterWantKey: '',
       scriptPending: null,
+      scriptKeyFor(lines) { return `${this.ttsVoice}@${this.ttsSpeed}|${lines.join('\n')}`; },
+      useScriptMaster(key) {
+        const m = this.scriptMasters.get(key);
+        if (!m) return false;
+        this.masterBuffer = m.full;
+        this.masterPeak = m.peak;
+        this.masterDuration = m.full.duration;
+        this.masterCutBounds = m.bounds;
+        this.masterKey = key;
+        return true;
+      },
       fetchScriptNarration(lines) {
         const voice = this.ttsVoice;
         const speed = this.ttsSpeed;
@@ -569,11 +583,6 @@
             if (v > peak) peak = v;
           }
 
-          // ★ 원테이크 마스터 오디오 버퍼 보관: 컷마다 끊어 치지 않고 한 호흡으로 자연스럽게 연속 재생
-          this.masterBuffer = full;
-          this.masterPeak = peak;
-          this.masterDuration = full.duration;
-          this.masterCutBounds = null;
 
           // 문장 경계: 글자 위치로 추정한 경계 근처(±0.4초)에서 실제로 가장 조용한 지점을 찾아 자름
           //   (추정 경계가 말끝·말머리에 걸리면 문장 끝 발음이 잘리거나 다음 문장 첫 소리가 섞임)
@@ -609,7 +618,11 @@
           }
           // 마지막 문장은 녹음 끝까지 (말끝 여운이 잘리지 않게)
           bounds.push(full.duration);
-          this.masterCutBounds = bounds;
+          // ★ 원테이크 마스터 오디오: 대본별로 보관하고, 지금 대본의 녹음일 때만 재생용으로 씀
+          //   (예전에는 나중에 끝난 녹음이 무조건 재생용이 되어, 업종이 정해지기 전 자동차 대본 녹음이
+          //    늦게 도착하면 미용실 영상 첫머리에 "쏘렌토…"가 나왔음)
+          this.scriptMasters.set(scriptKey, { full, peak, bounds });
+          if (this.masterWantKey === scriptKey) this.useScriptMaster(scriptKey);
 
           lines.forEach((line, i) => {
             const from = Math.max(0, Math.floor(bounds[i] * sr));
@@ -753,6 +766,16 @@
           if (text) lines.push(text);
         }
         if (lines.length === 0) return Promise.resolve([]);
+        // 지금 대본과 다른 녹음은 바로 내려놓음 (이전 대본 목소리가 새 영상에 섞이지 않게)
+        const wantKey = this.scriptKeyFor(lines);
+        this.masterWantKey = wantKey;
+        if ((this.masterKey !== wantKey || !this.masterBuffer) && !this.useScriptMaster(wantKey)) {
+          if (this.masterBuffer) this.stopTts && this.stopTts();
+          this.masterBuffer = null;
+          this.masterCutBounds = null;
+          this.masterDuration = 0;
+          this.masterKey = '';
+        }
         // 예약된 (타이핑 후) 녹음이 있으면 지금 바로 받으므로 취소
         if (this.ttsPrefetchTimer) { clearTimeout(this.ttsPrefetchTimer); this.ttsPrefetchTimer = null; }
 
