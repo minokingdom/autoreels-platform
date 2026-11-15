@@ -314,60 +314,73 @@
       c.fillText(f.text, x, y);
       return f.size;
     }
-    // 여러 줄 줄바꿈: 단어 단위, 긴 단어는 글자 단위. 최대 줄 수를 넘으면 글자 크기를 줄임
+    // 어절·구절을 지킨 뒤, 같은 줄 수 안에서 전체 줄 너비의 편차를 최소화한다.
     function gWrap(c, text, maxW, maxLines, size, minSize, family, weight) {
-      const words = String(text || '').split(' ');
-      for (let s = size; s >= minSize; s -= 1) {
-        c.font = gFont(weight, s, family);
-        const lines = [];
-        let cur = '';
-        let overflow = false;
-        for (const w of words) {
-          const trial = cur ? cur + ' ' + w : w;
-          if (c.measureText(trial).width <= maxW) {
-            cur = trial;
-            continue;
-          }
-          if (cur) lines.push(cur);
-          if (c.measureText(w).width <= maxW) {
-            cur = w;
-          } else {
-            let piece = '';
-            for (const ch of w) {
-              if (c.measureText(piece + ch).width > maxW) {
-                lines.push(piece);
-                piece = ch;
-              } else piece += ch;
+      const words = String(text || '').trim().split(/\s+/).filter(Boolean);
+      const limit = Math.max(1, Math.floor(maxLines)), smallest = Math.min(size, minSize);
+      const bare = (w) => w.replace(/[.,!?。…·:;"'“”‘’()[\]]/g, '');
+      const short = (w) => Array.from(bare(w)).length;
+      // 관형어·수량 표현 뒤는 다음 어절과 붙인다. 조사가 붙은 일반 명사는 묶지 않는다.
+      const tight = (w) => /^(?:이|그|저|한|두|세|네|몇|새|첫|온|각|여러|모든|어떤|무슨|다른|같은)$/.test(bare(w))
+        || /^\d[\d,.]*(?:%|대|잔|개|명|번|원|만|천|억|분|시간|년|월|일)?$/.test(bare(w))
+        || (short(w) <= 4 && /(?:은|운|한|런|던|로운)$/.test(bare(w)));
+      const breaks = words.map((w) => short(w) === 1 || tight(w) ? 1 : 0);
+      const better = (a, b) => !b || a.bad < b.bad || (a.bad === b.bad && a.cost < b.cost);
+      if (!words.length) { c.font = gFont(weight, size, family); return { lines: [], size }; }
+      // 줄 수를 고정한 동적 계획법으로 뒤쪽 줄까지 함께 비교한다.
+      const arrange = (tokens) => {
+        const n = tokens.length, widths = Array.from({ length: n }, () => []);
+        const width = (i, j) => widths[i][j] ?? (widths[i][j] = c.measureText(tokens.slice(i, j).join(' ')).width);
+        let best = null;
+        for (let count = 1; count <= Math.min(limit, n); count++) {
+          const target = width(0, n) / count;
+          const dp = Array.from({ length: count + 1 }, () => Array(n + 1).fill(null));
+          dp[0][0] = { bad: 0, cost: 0, lines: [] };
+          for (let row = 1; row <= count; row++) {
+            for (let end = row; end <= n - (count - row); end++) {
+              for (let start = row - 1; start < end; start++) {
+                const prev = dp[row - 1][start];
+                if (!prev) continue;
+                const w = width(start, end);
+                if (w > maxW) continue;
+                const orphan = count > 1 && end === n && end - start === 1 && short(tokens[start]) <= 3;
+                const candidate = {
+                  bad: prev.bad + (end < n ? breaks[end - 1] : 0) + (orphan ? 1 : 0),
+                  cost: prev.cost + Math.pow((w - target) / Math.max(1, maxW), 2),
+                  lines: prev.lines.concat(tokens.slice(start, end).join(' '))
+                };
+                if (better(candidate, dp[row][end])) dp[row][end] = candidate;
+              }
             }
-            cur = piece;
           }
-          if (lines.length > maxLines) {
-            overflow = true;
-            break;
-          }
+          const found = dp[count][n];
+          if (found && !found.bad) return found;
+          if (found && better(found, best)) best = found;
         }
-        if (cur) lines.push(cur);
-        if (!overflow && lines.length <= maxLines) return { lines, size: s };
+        return best;
+      };
+      let fallback = null;
+      for (let s = size; ; s = Math.max(smallest, s - 1)) {
+        c.font = gFont(weight, s, family);
+        const found = arrange(words);
+        if (found && !found.bad) return { lines: found.lines, size: s };
+        // 최소 크기까지 줄여도 구절을 지킬 수 없을 때만 불가피한 경계를 허용한다.
+        if (found && (!fallback || found.bad < fallback.bad)) fallback = { ...found, size: s };
+        if (s === smallest) break;
       }
-      // 가장 작은 글자로도 넘치면: 최대 줄 수까지만 쓰고 마지막 줄 끝에 말줄임표
-      c.font = gFont(weight, minSize, family);
-      const lines = [];
-      let cur = '';
-      for (const ch of String(text || '')) {
-        if (c.measureText(cur + ch).width > maxW) {
-          lines.push(cur);
-          cur = ch.trim() ? ch : '';
-          if (lines.length === maxLines) break;
-        } else cur += ch;
+      if (fallback) {
+        c.font = gFont(weight, fallback.size, family);
+        return { lines: fallback.lines, size: fallback.size };
       }
-      if (lines.length < maxLines && cur) lines.push(cur);
-      const last = lines.length - 1;
-      if (last >= 0) {
-        let tail = lines[last];
-        while (tail.length > 1 && c.measureText(tail + '…').width > maxW) tail = tail.slice(0, -1);
-        lines[last] = tail + '…';
+      // 최소 크기에도 넘치면 낱말을 자르지 않고 뒤 어절부터 생략한다.
+      c.font = gFont(weight, smallest, family);
+      for (let end = words.length - 1; end > 0; end--) {
+        const tokens = words.slice(0, end);
+        tokens[tokens.length - 1] += '…';
+        const found = arrange(tokens);
+        if (found && !found.bad) return { lines: found.lines, size: smallest };
       }
-      return { lines, size: minSize };
+      return { lines: c.measureText('…').width <= maxW ? ['…'] : [], size: smallest };
     }
     function gDrawCover(c, img, W, H, scale, panX, panY, alpha) {
       if (!img) return;

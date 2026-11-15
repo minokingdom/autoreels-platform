@@ -164,6 +164,14 @@
       kitCover(c, img, x, y, w, h, scale, px, py);
       c.restore();
     }
+    // 필요한 정보 패널만 반투명 유리로 구분한다. 사진은 그대로 비쳐 보인다.
+    function inGlass(c, x, y, w, h, radius) {
+      c.save(); c.shadowColor = 'transparent';
+      gRoundRect(c, x, y, w, h, radius);
+      c.fillStyle = 'rgba(15,15,18,0.42)'; c.fill();
+      c.strokeStyle = 'rgba(255,255,255,0.18)'; c.lineWidth = 1; c.stroke();
+      c.restore();
+    }
     // ---------- 인스타 감성 도우미 ----------
     let arGrainTile = null;
     function inGrain(c, W, H, t, alpha) {
@@ -1183,13 +1191,9 @@
         inLabel(c, `${String(n0.getMonth() + 1).padStart(2, '0')} · ${String(n0.getDate()).padStart(2, '0')}`, W / 2, 46, '#8c735b', 'center', Math.round(W * 0.026));
         c.save();
         c.globalAlpha = ent;
-        gRoundRect(c, W / 2 - 150, ay + ah - 26, 300, 44, 22);
-        c.fillStyle = '#f9f5ef';
-        c.shadowColor = 'rgba(60,40,20,0.12)';
-        c.shadowBlur = 10;
-        c.fill();
+        inGlass(c, W / 2 - 150, ay + ah - 26, 300, 44, 22);
         c.restore();
-        inSign(c, d, W / 2, ay + ah - 4, '#5e4d3e', 'center', Math.round(W * 0.03));
+        inSign(c, d, W / 2, ay + ah - 4, '#fffaf2', 'center', Math.round(W * 0.03));
         mCaption(c, caption, W / 2, ay + ah + 38, W - 88, 288, Math.round(W * 0.0620), 'maru', '#2b2520', e);
         inGrain(c, W, H, t, 0.07);
       } else if (M === 'in_g_strip') {
@@ -1314,33 +1318,18 @@
         inSign(c, d, W / 2, H - 64, 'rgba(255,250,244,0.82)', 'center', Math.round(W * 0.03));
         inGrain(c, W, H, t, 0.06);
       } else if (M === 'in_g_bookmark') {
-        // 책갈피 노트: 깊이감 있는 배경 사진 위에 반투명 트레싱지 책갈피 태그와 세로 감성 문구
+        // 책갈피 노트: 깊이감 있는 배경 사진 위에 부드러운 명암과 세로 감성 문구
         inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.05 + lp * 0.04, 1.1);
         c.fillStyle = 'rgba(24,18,14,0.28)';
         c.fillRect(0, 0, W, H);
-        const bw = W - 136, bh = Math.round(H * 0.44), bx = 68, by = Math.round(H * 0.42) + (1 - ent) * 22;
+        const bw = W - 136, bh = Math.round(H * 0.44), by = Math.round(H * 0.42) + (1 - ent) * 22;
         c.save();
         c.globalAlpha = 0.92 * ent;
-        c.shadowColor = 'rgba(20,12,6,0.22)';
-        c.shadowBlur = 18;
-        c.shadowOffsetY = 6;
-        c.fillStyle = 'rgba(250,246,239,0.92)';
-        gRoundRect(c, bx, by, bw, bh, 6);
-        c.fill();
-        c.shadowColor = 'transparent';
-        c.strokeStyle = 'rgba(150,128,106,0.35)';
-        c.lineWidth = 1;
-        gRoundRect(c, bx + 10, by + 10, bw - 20, bh - 20, 4);
-        c.stroke();
-        c.fillStyle = 'rgba(120,98,78,0.45)';
-        c.beginPath(); c.arc(W / 2, by + 28, 5, 0, Math.PI * 2); c.fill();
-        c.strokeStyle = 'rgba(180,155,130,0.75)';
-        c.lineWidth = 2;
-        c.beginPath(); c.moveTo(W / 2, by - 46); c.lineTo(W / 2, by + 24); c.stroke();
+        inCaptionScrim(c, 0, 0, W, H, (by + bh / 2) / H);
         const n0 = new Date();
-        inLabel(c, `${String(n0.getMonth() + 1).padStart(2, '0')}.${String(n0.getDate()).padStart(2, '0')}`, W / 2, by + 58, '#8c7662', 'center', Math.round(W * 0.026));
-        mCaption(c, caption, W / 2, by + 84, bw - 56, (bh - 150) * 1.6, Math.round(W * 0.0577), 'maruL', '#2b2520', e);
-        inSign(c, d, W / 2, by + bh - 36, '#6e5c4e', 'center', Math.round(W * 0.03));
+        inLabel(c, `${String(n0.getMonth() + 1).padStart(2, '0')}.${String(n0.getDate()).padStart(2, '0')}`, W / 2, by + 58, '#fffaf2', 'center', Math.round(W * 0.026));
+        mCaption(c, caption, W / 2, by + 84, bw - 56, (bh - 150) * 1.6, Math.round(W * 0.0577), 'maruL', '#fffaf2', e);
+        inSign(c, d, W / 2, by + bh - 36, '#fffaf2', 'center', Math.round(W * 0.03));
         c.restore();
         inGrain(c, W, H, t, 0.08);
       } else if (M === 'in_h_plaque') {
@@ -1355,25 +1344,16 @@
         c.strokeStyle = 'rgba(255,248,238,0.38)';
         c.lineWidth = Math.max(1, Math.round(W * 0.0018));
         c.strokeRect(W * 0.045, H * 0.035, W * 0.91, H * 0.93);
-        // 저장한 내 스타일은 사진 위에 직접 쓰고, 기본 전시 명패는 유지한다.
+        // 기본 전시 기록과 저장한 내 스타일 모두 사진 위에 직접 쓴다.
         const slide = (1 - ent) * H * 0.018;
         const cx = W * 0.08, cy = H * (custom ? { top: 0.17, middle: 0.37, bottom: 0.59 }[custom.caption.position] : 0.64) + slide, cw = W * 0.78, ch = H * 0.245;
-        if (custom) inCaptionScrim(c, 0, 0, W, H, cy / H + 0.12);
-        else {
-          c.save();
-          c.shadowColor = 'rgba(20,14,10,0.22)';
-          c.shadowBlur = 10;
-          c.fillStyle = 'rgba(248,243,234,0.94)';
-          gRoundRect(c, cx, cy, cw, ch, Math.round(W * 0.008));
-          c.fill();
-          c.restore();
-        }
+        inCaptionScrim(c, 0, 0, W, H, cy / H + 0.12);
         // 명패 내부 디테일
-        c.fillStyle = custom ? custom.colors.accent : '#8c7a6b';
+        c.fillStyle = custom ? custom.colors.accent : '#cabbab';
         c.fillRect(cx + cw * 0.07, cy + ch * 0.23, cw * 0.12, Math.max(1, Math.round(W * 0.002)));
-        inLabel(c, `전시 기록 · 제 ${String(cutIdx + 1).padStart(2, '0')}장`, cx + cw * 0.07, cy + ch * 0.14, custom ? '#fffaf2' : '#7a6a5c', 'left', Math.round(W * 0.025));
-        mCaption(c, caption, cx + cw * 0.07, cy + ch * 0.30, cw * 0.86, ch * 0.48, W * (custom ? custom.caption.sizeRatio : 0.056), custom ? custom.fontKey : 'maru', custom ? '#fffaf2' : '#2b241f', e, 'left');
-        inSign(c, d, cx + cw * 0.93, cy + ch * 0.86, custom ? '#fffaf2' : '#6e5f52', 'right', Math.round(W * 0.029));
+        inLabel(c, `전시 기록 · 제 ${String(cutIdx + 1).padStart(2, '0')}장`, cx + cw * 0.07, cy + ch * 0.14, '#fffaf2', 'left', Math.round(W * 0.025));
+        mCaption(c, caption, cx + cw * 0.07, cy + ch * 0.30, cw * 0.86, ch * 0.48, W * (custom ? custom.caption.sizeRatio : 0.056), custom ? custom.fontKey : 'maru', '#fffaf2', e, 'left');
+        inSign(c, d, cx + cw * 0.93, cy + ch * 0.86, '#fffaf2', 'right', Math.round(W * 0.029));
         inGrain(c, W, H, t, 0.065);
       } else if (M === 'in_h_panes') {
         // 세 갈래 시선: 같은 사진을 세 개의 세로 창으로 나누어 미묘한 시차로 흐르게 연출
@@ -1611,9 +1591,7 @@
         const cw = W - 80, ch = 250, cx = 40, cy = H - ch - 120 + (1 - ent) * 30;
         c.save();
         c.globalAlpha = 0.25 + 0.75 * ent;
-        gRoundRect(c, cx, cy, cw, ch, 28);
-        c.fillStyle = 'rgba(250,246,240,0.82)';
-        c.fill();
+        inGlass(c, cx, cy, cw, ch, 28);
         const art = 84;
         c.save();
         gRoundRect(c, cx + 22, cy + 22, art, art, 12);
@@ -1622,18 +1600,18 @@
         c.restore();
         c.textAlign = 'left';
         c.textBaseline = 'middle';
-        c.fillStyle = '#1c1714';
+        c.fillStyle = '#fffaf2';
         const r = mFit(c, caption, cw - art - 64, 2, 22, 15, 'maru');
         c.font = gFont(KIT_FONTS.maru.w, r.size, KIT_FONTS.maru.f);
         r.lines.forEach((ln, i) => c.fillText(ln, cx + art + 40, cy + 44 + i * r.lh));
-        c.fillStyle = '#7d7066';
+        c.fillStyle = '#eee7db';
         gDrawLine(c, String((d && d.name) || (typeof IND !== 'undefined' && IND.place) || ''), cx + art + 40, cy + 44 + r.lines.length * r.lh + 4, cw - art - 64, 15, 11, KIT_FONTS.pretL.f, 500);
         const by = cy + 150, bw = cw - 44;
-        c.fillStyle = 'rgba(60,50,40,0.18)';
+        c.fillStyle = 'rgba(255,255,255,0.18)';
         gRoundRect(c, cx + 22, by, bw, 5, 3); c.fill();
-        c.fillStyle = '#2b2622';
+        c.fillStyle = '#fffaf2';
         gRoundRect(c, cx + 22, by, Math.max(6, bw * ((cutIdx + lp) / totalCuts)), 5, 3); c.fill();
-        c.fillStyle = '#7d7066';
+        c.fillStyle = '#eee7db';
         c.font = gFont(500, 12, GENRE_FONTS.sans);
         const el = Math.floor(t);
         c.fillText(`0:${String(el).padStart(2, '0')}`, cx + 22, by + 22);
@@ -1641,7 +1619,7 @@
         c.fillText(`-0:${String(Math.max(0, Math.round(mainDuration - t))).padStart(2, '0')}`, cx + 22 + bw, by + 22);
         // 재생 버튼: ◀◀  ❚❚  ▶▶
         const my = cy + 212, mx = cx + cw / 2;
-        c.fillStyle = '#1c1714';
+        c.fillStyle = '#fffaf2';
         const tri = (x, dir) => { c.beginPath(); c.moveTo(x, my - 9); c.lineTo(x + 13 * dir, my); c.lineTo(x, my + 9); c.closePath(); c.fill(); };
         tri(mx - 74, -1); tri(mx - 62, -1);
         c.fillRect(mx - 9, my - 11, 6, 22); c.fillRect(mx + 3, my - 11, 6, 22);
@@ -1698,9 +1676,7 @@
         const ny = H - 230 + (1 - ent) * 40, nw = W - 40, nx = 20;
         c.save();
         c.globalAlpha = ent;
-        gRoundRect(c, nx, ny, nw, 104, 22);
-        c.fillStyle = 'rgba(245,242,238,0.78)';
-        c.fill();
+        inGlass(c, nx, ny, nw, 104, 22);
         gRoundRect(c, nx + 16, ny + 18, 38, 38, 9);
         c.fillStyle = sp.accent2 === '#ffffff' ? '#2b2622' : sp.accent2;
         c.fill();
@@ -1709,14 +1685,14 @@
         c.font = gFont(700, 18, GENRE_FONTS.sans);
         c.fillText(String((d && d.name) || (typeof IND !== 'undefined' && IND.place) || '·').slice(0, 1), nx + 35, ny + 38);
         c.textAlign = 'left';
-        c.fillStyle = '#1c1c1e';
+        c.fillStyle = '#fffaf2';
         gDrawLine(c, String((d && d.name) || (typeof IND !== 'undefined' && IND.place) || ''), nx + 68, ny + 30, nw - 140, 16, 12, GENRE_FONTS.sans, 700);
-        c.fillStyle = '#8e8e93';
+        c.fillStyle = '#eee7db';
         c.textAlign = 'right';
         c.font = gFont(500, 13, GENRE_FONTS.sans);
         c.fillText('지금', nx + nw - 16, ny + 30);
         c.textAlign = 'left';
-        c.fillStyle = '#2c2c2e';
+        c.fillStyle = '#fffaf2';
         const r = mFit(c, caption, nw - 90, 2, 17, 13, 'pretL');
         c.font = gFont(500, r.size, KIT_FONTS.pretL.f);
         r.lines.forEach((ln, i) => c.fillText(ln, nx + 68, ny + 58 + i * r.lh));
@@ -1760,31 +1736,26 @@
         inSign(c, d, W - 30, H - 44, '#7a6658');
         inGrain(c, W, H, t, 0.05);
       } else if (M === 'in_cal') {
-        // 캘린더 카드: 위쪽 사진, 그 위로 겹친 흰 카드에 영어 요일·날짜, 아래 명조 자막
-        inPhotoFade(c, S, cutIdx, local, 0, 0, W, Math.round(H * 0.6), 1.05 + lp * 0.04, 1);
+        // 캘린더 카드: 전체 사진, 그 위로 겹친 반투명 일정 카드에 영어 요일·날짜, 아래 명조 자막
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.05 + lp * 0.04, 1);
         const n2 = new Date();
         const cy2 = Math.round(H * 0.5) + (1 - ent) * 24;
-        c.save();
-        c.shadowColor = 'rgba(60,40,20,0.18)'; c.shadowBlur = 18; c.shadowOffsetY = 6;
-        gRoundRect(c, 34, cy2, W - 68, H - cy2 - 70, 18);
-        c.fillStyle = '#fffdf9';
-        c.fill();
-        c.restore();
-        c.fillStyle = '#c2603f';
+        inGlass(c, 34, cy2, W - 68, H - cy2 - 70, W * 0.035);
+        c.fillStyle = '#f0d7bb';
         gRoundRect(c, 34, cy2, W - 68, 10, 5); c.fill();
         c.textAlign = 'left';
         c.textBaseline = 'middle';
-        c.fillStyle = '#2b2622';
+        c.fillStyle = '#fffaf2';
         c.font = gFont(600, 40, KIT_FONTS.maru.f);
         c.fillText(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][n2.getDay()], 58, cy2 + 56);
-        c.fillStyle = '#c2603f';
+        c.fillStyle = '#f0d7bb';
         c.textAlign = 'right';
         c.font = gFont(500, 18, GENRE_FONTS.sans);
         c.fillText(`${String(n2.getMonth() + 1).padStart(2, '0')}.${String(n2.getDate()).padStart(2, '0')}`, W - 58, cy2 + 58);
         c.fillStyle = '#e6ddd0';
         c.fillRect(58, cy2 + 92, W - 116, 1);
-        mCaption(c, caption, 58, cy2 + 108, W - 116, H - cy2 - 230, 28, 'maru', '#2b2622', e, 'left');
-        inSign(c, d, W - 58, H - 108, '#7a6d61');
+        mCaption(c, caption, 58, cy2 + 108, W - 116, H - cy2 - 230, 28, 'maru', '#fffaf2', e, 'left');
+        inSign(c, d, W - 58, H - 108, '#eee7db');
         inGrain(c, W, H, t, 0.06);
       } else if (M === 'in_x_contact') {
         // 밀착인화: 질감 있는 인화지 위 정돈된 여섯 장, 선택 컷의 작은 황토색 표식
@@ -1817,7 +1788,7 @@
         }
         inGrain(c, W, H, t, 0.065);
       } else if (M === 'in_x_linen') {
-        // 리넨: 성긴 직물 바탕의 세로 인화물과 옆에서 겹친 접지, 천천히 떠오르는 사진
+        // 리넨: 성긴 직물 바탕의 세로 인화물과 사진 위에 겹친 메모, 천천히 떠오르는 사진
         c.fillStyle = 'rgba(112,91,65,0.07)';
         for (let x = 0; x < W; x += W / 55) c.fillRect(x, 0, W * 0.0015, H);
         c.fillStyle = 'rgba(255,251,239,0.25)';
@@ -1833,12 +1804,9 @@
         Array.from('일상의결').forEach((ch, i) => c.fillText(ch, W * 0.13, H * 0.15 + i * W * 0.055));
         const nx = W * 0.06, ny = H * 0.45 + (1 - ent) * H * 0.008;
         if (typeof arBeginMotionCaptionCard !== 'function' || arBeginMotionCaptionCard(c, W, H, cutIdx, local, nx + W * 0.29, ny + H * 0.132, W * 0.58, H * 0.265)) {
-          c.fillStyle = '#f5efdf';
-          c.fillRect(nx, ny, W * 0.58, H * 0.265);
-          c.fillStyle = '#e8decb';
-          c.fillRect(nx + W * 0.025, ny, W * 0.007, H * 0.265);
-          inLabel(c, '간직하고 싶은 순간', nx + W * 0.06, ny + H * 0.032, '#88725b', 'left', W * 0.023);
-          mCaption(c, caption, nx + W * 0.06, ny + H * 0.055, W * 0.46, H * 0.185, W * 0.05, 'gowun', '#3b342b', e, 'left');
+          inCaptionScrim(c, 0, 0, W, H, (ny + H * 0.132) / H);
+          inLabel(c, '간직하고 싶은 순간', nx + W * 0.06, ny + H * 0.032, '#fffaf2', 'left', W * 0.023);
+          mCaption(c, caption, nx + W * 0.06, ny + H * 0.055, W * 0.46, H * 0.185, W * 0.05, 'gowun', '#fffaf2', e, 'left');
           if (typeof arEndMotionCaptionCard === 'function') arEndMotionCaptionCard(c);
         }
         inLabel(c, inDateLabel().split(' ')[0], W * 0.91, H * 0.85, '#88725b', 'right', W * 0.023);
@@ -1958,27 +1926,21 @@
         drawPage(cutIdx, W * (1 - turn), false);
         c.restore();
       } else if (M === 'in_x_tabs') {
-        // 붙여둔 한마디: 꽉 찬 사진 가장자리의 색인과 가로로 살짝 들어오는 손글씨 종이 탭
+        // 붙여둔 한마디: 꽉 찬 사진 가장자리의 색인과 가로로 살짝 들어오는 사진 위 손글씨
         inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.04 + lp * 0.02, 0.9);
         c.fillStyle = 'rgba(37,30,21,0.12)'; c.fillRect(0, 0, W, H);
-        const labels = ['눈길', '머문 곳', '기억'], colors = ['#d9d4b9', '#e8cfb9', '#eee5ce'];
+        const labels = ['눈길', '머문 곳', '기억'];
         labels.forEach((label, i) => {
           const selected = i === cutIdx % 3, tw = W * (selected ? 0.27 : 0.22);
           const tx = W - tw, ty = H * (0.13 + i * 0.058);
-          c.fillStyle = colors[i];
-          gRoundRect(c, tx, ty, tw + W * 0.02, H * 0.045, W * 0.008); c.fill();
-          inLabel(c, label, tx + W * 0.035, ty + H * 0.0225, '#574b3e', 'left', W * 0.025);
+          inGlass(c, tx, ty, tw + W * 0.02, H * 0.045, W * 0.025);
+          inLabel(c, label, tx + W * 0.035, ty + H * 0.0225, '#fffaf2', 'left', W * 0.025);
         });
         const nx = W * 0.07 + (1 - ent) * W * 0.025, ny = H * 0.57;
         if (typeof arBeginMotionCaptionCard !== 'function' || arBeginMotionCaptionCard(c, W, H, cutIdx, local, nx + W * 0.405, ny + H * 0.127, W * 0.81, H * 0.255)) {
-          c.fillStyle = '#f6edda';
-          gRoundRect(c, nx, ny, W * 0.81, H * 0.255, W * 0.008); c.fill();
-          c.fillStyle = '#c7c7aa'; c.fillRect(nx, ny, W * 0.025, H * 0.255);
-          c.fillStyle = '#e3d6bd';
-          c.beginPath(); c.moveTo(nx + W * 0.81, ny + H * 0.22);
-          c.lineTo(nx + W * 0.75, ny + H * 0.255); c.lineTo(nx + W * 0.81, ny + H * 0.255); c.closePath(); c.fill();
-          inLabel(c, '여기에 남겨둘 말', nx + W * 0.065, ny + H * 0.035, '#8a775d', 'left', W * 0.024);
-          mCaption(c, caption, nx + W * 0.065, ny + H * 0.06, W * 0.67, H * 0.17, W * 0.058, 'pen', '#46392d', e, 'left');
+          inCaptionScrim(c, 0, 0, W, H, (ny + H * 0.127) / H);
+          inLabel(c, '여기에 남겨둘 말', nx + W * 0.065, ny + H * 0.035, '#fffaf2', 'left', W * 0.024);
+          mCaption(c, caption, nx + W * 0.065, ny + H * 0.06, W * 0.67, H * 0.17, W * 0.058, 'pen', '#fffaf2', e, 'left');
           if (typeof arEndMotionCaptionCard === 'function') arEndMotionCaptionCard(c);
         }
         inGrain(c, W, H, t, 0.05);
@@ -2049,22 +2011,17 @@
         c.fillStyle = 'rgba(32,25,18,0.18)'; c.fillRect(0, 0, W, H);
         const bx = W * 0.07, by = H * 0.49, bw = W * 0.5, bh = H * 0.065;
         c.save(); c.globalAlpha = mEase(local / 0.65);
-        c.fillStyle = '#fcf5e8';
-        gRoundRect(c, bx, by, bw, bh, W * 0.035); c.fill();
-        c.beginPath(); c.moveTo(bx + W * 0.025, by + bh * 0.55);
-        c.lineTo(bx - W * 0.018, by + bh * 0.8); c.lineTo(bx + W * 0.04, by + bh * 0.87); c.fill();
-        inLabel(c, '오늘은 어떤 장면이야?', bx + W * 0.04, by + bh / 2, '#76634f', 'left', Math.round(W * 0.026));
+        inGlass(c, bx, by, bw, bh, W * 0.035);
+        inLabel(c, '오늘은 어떤 장면이야?', bx + W * 0.04, by + bh / 2, '#fffaf2', 'left', Math.round(W * 0.026));
         c.restore();
         const reply = mEase((local - 0.22) / 0.65), rx = W * 0.18;
         const ry = H * 0.59 + (1 - reply) * H * 0.014, rw = W * 0.74, rh = H * 0.245;
         if (typeof arBeginMotionCaptionCard !== 'function' || arBeginMotionCaptionCard(c, W, H, cutIdx, local, rx + rw / 2, ry + rh / 2, rw, rh)) {
-          c.save(); c.globalAlpha = reply; c.fillStyle = '#e6dcc0';
-          gRoundRect(c, rx, ry, rw, rh, W * 0.035); c.fill();
-          c.beginPath(); c.moveTo(rx + rw - W * 0.03, ry + rh * 0.7);
-          c.lineTo(rx + rw + W * 0.018, ry + rh * 0.86); c.lineTo(rx + rw - W * 0.04, ry + rh * 0.86); c.fill();
+          c.save(); c.globalAlpha = reply;
+          inGlass(c, rx, ry, rw, rh, W * 0.035);
           c.restore();
           mCaption(c, caption, rx + W * 0.045, ry + H * 0.02, rw - W * 0.09, rh - H * 0.04,
-            Math.round(W * 0.06), 'pretM', '#3d3529', mClamp((local - 0.32) / 1.1), 'left');
+            Math.round(W * 0.06), 'pretM', '#fffaf2', mClamp((local - 0.32) / 1.1), 'left');
           if (typeof arEndMotionCaptionCard === 'function') arEndMotionCaptionCard(c);
         }
         inGrain(c, W, H, t, 0.045);
