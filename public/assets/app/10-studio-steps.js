@@ -69,19 +69,39 @@
       return out.slice(0, 6);
     }
     let arTopicsLoading = 0;
-    function arRenderTopics(topics, statusText) {
+    // 주제는 한 화면에 5개씩만 (나머지는 다음 페이지)
+    const AR_TOPICS_PER_PAGE = 5;
+    let arTopicPage = 0;
+    function arTopicGoPage(n) {
+      const topics = window.__arTopics || [];
+      const pages = Math.max(1, Math.ceil(topics.length / AR_TOPICS_PER_PAGE));
+      arTopicPage = Math.max(0, Math.min(pages - 1, n));
+      arRenderTopics(topics, null, true);
+      const box = document.getElementById('topicCards');
+      if (box && box.getBoundingClientRect().top < 120) window.scrollTo({ top: Math.max(0, box.getBoundingClientRect().top + window.scrollY - 170), behavior: 'smooth' });
+    }
+    function arRenderTopics(topics, statusText, keepPage) {
       const box = document.getElementById('topicCards');
       if (!box) return;
+      if (!keepPage) arTopicPage = 0;
       window.__arTopics = topics;
       const esc = (v) => String(v || '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
-      box.innerHTML = topics.map((t, i) => `
+      const pages = Math.max(1, Math.ceil(topics.length / AR_TOPICS_PER_PAGE));
+      const from = arTopicPage * AR_TOPICS_PER_PAGE;
+      const pager = pages > 1 ? `
+        <div class="topic-pager">
+          <button type="button" onclick="arTopicGoPage(${arTopicPage - 1})" ${arTopicPage === 0 ? 'disabled' : ''}>← 이전</button>
+          <span>${arTopicPage + 1} / ${pages}</span>
+          <button type="button" onclick="arTopicGoPage(${arTopicPage + 1})" ${arTopicPage >= pages - 1 ? 'disabled' : ''}>다음 주제 →</button>
+        </div>` : '';
+      box.innerHTML = topics.slice(from, from + AR_TOPICS_PER_PAGE).map((t, k) => ({ t, i: from + k })).map(({ t, i }) => `
         <button type="button" data-topic-idx="${i}" class="text-left p-3.5 rounded-[10px] bg-[#141415] hover:bg-[#1c1c20] border border-[var(--border)] hover:border-[#4cc38a] cursor-pointer transition">
           <div class="text-[14px] font-semibold text-[#ededed]">${esc(t.title)}</div>
           <div class="text-[12px] text-[#4cc38a] mt-0.5">${esc(t.why)}</div>
           <div class="text-[11px] text-[#85858b] mt-1">${esc(t.prompt)}</div>
-        </button>`).join('');
+        </button>`).join('') + pager;
       const st = document.getElementById('topicStatus');
-      if (st) st.textContent = statusText || '';
+      if (st && statusText !== null) st.textContent = statusText || '';
     }
     async function arLoadTopics(force) {
       const dc = arDateContext();
