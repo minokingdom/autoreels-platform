@@ -211,7 +211,7 @@
     //   그 전에는 성우 녹음을 받지도 틀지도 않음 (배경음악 미리 듣기는 가능)
     //   발행 단계에 들어오면 고른 배경음악 + 성우 목소리를 섞은 완성본을 처음부터 재생
     const arStepsVisited = new Set(['topic']);
-    let arFinalAudioUnlocked = true;
+    let arFinalAudioUnlocked = false; // AGENTS.md: 성우 녹음은 발행 단계에서 처음 (그 전엔 받지도 틀지도 않음 — 크레딧 절약, 이전 대본 목소리 섞임 방지)
     function arVoiceAllowed() { return arFinalAudioUnlocked; }
     function arFirstMissingStep() {
       return ['topic', 'script', 'photo', 'sound', 'card'].find((k) => !arStepsVisited.has(k)) || null;
