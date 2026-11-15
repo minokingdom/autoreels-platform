@@ -1196,3 +1196,17 @@ body:has(#cutEditorPanel:not(.hidden)) #previewCutPinBar { display: none !import
 /* 디자인 목록: 세부 편집이 다 되는 디자인 표시 */
 .pd-card { position: relative; }
 .fine-edit-badge { position: absolute; top: 8px; left: 8px; z-index: 2; padding: 2px 7px; border-radius: 999px; background: rgba(12,12,14,.72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.18); color: #fff; font-size: 10px; font-weight: 600; line-height: 1.5; pointer-events: none; }
+
+/* 디자인 서랍: 분위기 추천 (인스타 템플릿 추천처럼) */
+.pd-reco { padding: 10px 10px 6px; border-bottom: 1px solid var(--border); }
+.pd-reco-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.pd-reco-head strong { font-size: 13px; color: #ededed; }
+.pd-reco-head button { width: 28px; height: 28px; border-radius: 50%; border: 0; background: #232327; color: #ededed; cursor: pointer; }
+.pd-reco-row { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; }
+.pd-reco-card { position: relative; flex: 0 0 104px; scroll-snap-align: start; padding: 0; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.pd-reco-card img { width: 104px; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 12px; background: #0f0f10; display: block; }
+.pd-reco-card em { position: absolute; left: 6px; right: 6px; bottom: 26px; padding: 3px 7px; border-radius: 999px; background: rgba(12,12,14,.72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: #fff; font-size: 10px; font-style: normal; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pd-reco-card span { display: block; margin-top: 4px; font-size: 11px; color: #d4d4d8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pd-mood-row { display: flex; gap: 6px; overflow-x: auto; padding: 8px 0 4px; }
+.pd-mood { flex: 0 0 auto; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: transparent; color: #d4d4d8; font-size: 12px; cursor: pointer; }
+.pd-mood.on { background: #fff; color: #09090b; border-color: #fff; }

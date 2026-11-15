@@ -195,6 +195,54 @@
       { t: /인기|요즘|유행|트렌드|핫한|잘 나가|화제|난리/, d: /인기|🔥|트렌드|브이로그|vlog|handheld|POV|재미|ig_/i },
       { t: /빠른|바쁜|퇴근|점심|출근|짬|시간 없/, d: /브이로그|handheld|timestamp|vsub|타이포|zoom|주방|새벽/i }
     ];
+    // ★ 분위기·컨셉 추천 (인스타 템플릿 추천처럼): 지금 주제·대본 문구를 읽어 어울리는 스타일을 이유와 함께 고름
+    const AR_TOPIC_MOOD_LABELS = ['특가 강조', '변신 전후', '계절 감성', '알려 주는 정보', '요즘 유행', '바쁜 일상'];
+    const AR_DESIGN_MOODS = [
+      { id: 'soft', label: '감성', re: /감성|film|필름|sepia|손글씨|pen|gowun|maru|in_|polaroid|엽서|편지|일기|다이어리/i },
+      { id: 'clean', label: '깔끔', re: /미니멀|minimal|깔끔|레터|letter|카드|glass|유리|화이트|white|plaque|전시/i },
+      { id: 'trendy', label: '트렌디', re: /브이로그|vlog|ig_|스토리|키네틱|kinetic|pov|handheld|타임스탬프|timestamp|덤프|dump/i },
+      { id: 'luxe', label: '고급', re: /고급|에디토리얼|vogue|cinema|시네마|serif|명조|luxury|gold|금|매거진|magazine/i },
+      { id: 'warm', label: '따뜻', re: /warm|따뜻|크림|cream|오후|아치|arch|리넨|linen|햇살/i },
+      { id: 'pop', label: '발랄', re: /바운스|bounce|pop|팝|bubble|말풍선|재미|jua|bagel|스티커|sticker|투표|poll/i }
+    ];
+    function arDesignHay(d) { return [d.id, d.name, d.label, d.cat, d.desc, d.outro, d.cap, d.layout, d.grade, d.font].filter(Boolean).join(' '); }
+    function arDesignsForMood(moodId) {
+      const m = AR_DESIGN_MOODS.find((x) => x.id === moodId);
+      if (!m || typeof arVisibleDesigns !== 'function') return [];
+      return arVisibleDesigns().filter((d) => m.re.test(arDesignHay(d)));
+    }
+    function arRecommendDesigns(limit = 6) {
+      if (typeof arVisibleDesigns !== 'function') return [];
+      const tp = window.arTodayTopic;
+      // 고른 주제를 먼저(가중치 크게), 그다음 대본 문구
+      const topicText = [tp && tp.title, tp && tp.why, tp && tp.prompt].filter(Boolean).join(' ');
+      const capText = [campaign.hook, ...(campaign.cutCaptions || [])].filter(Boolean).join(' ');
+      const all = AR_TOPIC_MOODS.map((m, i) => ({ m, label: AR_TOPIC_MOOD_LABELS[i] }));
+      const moods = all.filter((x) => topicText && x.m.t.test(topicText)).map((x) => ({ ...x, w: 4 }))
+        .concat(all.filter((x) => !(topicText && x.m.t.test(topicText)) && x.m.t.test(capText)).map((x) => ({ ...x, w: 2 })));
+      const season = (typeof arDateContext === 'function' && arDateContext().season) || '';
+      const cur = typeof getActiveDesign === 'function' ? getActiveDesign() : null;
+      const scored = arVisibleDesigns().filter((d) => !cur || d.id !== cur.id).map((d) => {
+        const hay = arDesignHay(d);
+        let sc = 0, why = '';
+        moods.forEach((x) => { if (x.m.d.test(hay)) { sc += x.w; if (!why) why = x.label === '계절 감성' && season ? `${season} 감성` : x.label; } });
+        if (!why && /감성|warm|sepia|film/i.test(hay) && /가을|겨울/.test(season)) { sc += 1.2; why = `${season} 분위기`; }
+        if (d.industry) { sc += 0.8; if (!why) why = '이 업종 전용'; }
+        if (d.isTrend) { sc += 0.6; if (!why) why = '요즘 인기'; }
+        // 매번 같은 줄이 되지 않게 살짝 섞음 (같은 점수 안에서 순서만 바뀜)
+        return { d, sc: sc + Math.random() * 0.4, why: why || '새로운 느낌' };
+      }).sort((a, b) => b.sc - a.sc);
+      // 같은 묶음(분류)만 몰리지 않게 분류당 2개까지
+      const perCat = {}, out = [];
+      for (const r of scored) {
+        const k = r.d.industry ? 'ind' : r.d.cat;
+        if ((perCat[k] || 0) >= 2) continue;
+        perCat[k] = (perCat[k] || 0) + 1;
+        out.push(r);
+        if (out.length >= limit) break;
+      }
+      return out;
+    }
     function arDesignForTopic(topic) {
       if (!topic || typeof arVisibleDesigns !== 'function') return null;
       const text = [topic.title, topic.why, topic.prompt].filter(Boolean).join(' ');

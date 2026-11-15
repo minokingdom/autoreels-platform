@@ -283,6 +283,33 @@
       pdCat = cat;
       renderPresetDrawer();
     }
+    let pdMood = '';
+    function selectPdMood(id) {
+      pdMood = pdMood === id ? '' : id;
+      renderPresetDrawer();
+      const list = document.getElementById('presetDrawerList');
+      if (list && pdMood) list.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
+    // 위쪽 추천 줄: "지금 대본에 어울려요" + 분위기 칩 (인스타 템플릿 추천처럼)
+    function renderPresetRecommend(urls, blank) {
+      const box = document.getElementById('pdRecommend');
+      if (!box || typeof arRecommendDesigns !== 'function') return;
+      const recos = arRecommendDesigns(6);
+      const fine = (d) => (typeof arDesignFineEdit === 'function' && arDesignFineEdit(d) ? AR_FINE_BADGE : '');
+      box.innerHTML = `
+        <div class="pd-reco-head"><strong>지금 대본에 어울려요</strong><button type="button" onclick="renderPresetDrawer()" aria-label="다른 추천">↻</button></div>
+        <div class="pd-reco-row no-scrollbar">
+          ${recos.map(({ d, why }) => `<button type="button" class="pd-reco-card" onclick="choosePresetFromDrawer('${d.id}')" title="${d.desc}">
+              ${fine(d)}
+              <img id="pdreco_${d.id}" src="${urls[d.id] || blank}" alt="" loading="lazy" />
+              <em>${why}</em>
+              <span>${d.name}</span>
+            </button>`).join('')}
+        </div>
+        <div class="pd-mood-row no-scrollbar">
+          ${AR_DESIGN_MOODS.map((m) => `<button type="button" class="pd-mood ${pdMood === m.id ? 'on' : ''}" onclick="selectPdMood('${m.id}')">#${m.label}</button>`).join('')}
+        </div>`;
+    }
     function renderPresetDrawer() {
       const list = document.getElementById('presetDrawerList');
       if (!list || typeof DESIGN_STYLES === 'undefined') return;
@@ -296,7 +323,8 @@
       const urls = (typeof designThumbCache !== 'undefined' && designThumbCache.urls) || {};
       const blank = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
       if (!arDesignCats().includes(pdCat)) pdCat = '전체';
-      const vis = arVisibleDesigns();
+      renderPresetRecommend(urls, blank);
+      const vis = pdMood && typeof arDesignsForMood === 'function' ? arDesignsForMood(pdMood) : arVisibleDesigns();
       const items = pdCat === '전체' ? vis : vis.filter((d) => d.cat === pdCat);
       list.innerHTML = (pdCat === '전체' ? arCustomPickerCards('pdthumb_') : '') + `<button type="button" class="pd-card pd-random" onclick="pickRandomTheme(true)" title="디자인과 색을 무작위로 바꿔 봅니다">
           <span class="pd-dice">🎲</span>

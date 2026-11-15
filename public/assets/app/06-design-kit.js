@@ -4172,6 +4172,8 @@
           if (el) el.src = url;
           const el2 = document.getElementById('pdthumb_' + ds.id);
           if (el2) el2.src = url;
+          const el3 = document.getElementById('pdreco_' + ds.id);
+          if (el3) el3.src = url;
         });
       } catch (e) {}
       campaign.designStyle = saved;
