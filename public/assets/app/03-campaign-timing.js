@@ -226,6 +226,8 @@
 
     // 영상 길이에 따른 본편 컷(사진·장면) 수 계산: 8~12초=4컷, 15초=6컷, 20초=8컷, 30초+=10컷
     function getTargetCutCount() {
+      // 컷 편집에서 컷을 복사·삭제하면 그 수를 그대로 씀 (영상 길이 버튼을 다시 누르면 풀림)
+      if (typeof campaign !== 'undefined' && campaign && campaign.cutCountOverride >= 2) return Math.min(10, campaign.cutCountOverride);
       // 컷(자막·성우 대사) 수는 고른 영상 길이로 정함: 길이를 늘리면 컷과 대사가 늘어남.
       // 사진·영상은 따로 "장면"으로 나뉘어 깔리며, 같은 사진을 반복해 채우지 않음
       if (BASE_DURATION >= 26) return 10;
@@ -703,6 +705,16 @@
         }
         mainDur = targetMain;
       }
+      // 컷 편집에서 고른 컷 길이(배율) 반영. 성우 문장에 맞춰 고정된 경우에는 늘리기만 (줄이면 말이 잘림)
+      const lenScale = (typeof campaign !== 'undefined' && Array.isArray(campaign.cutLenScale)) ? campaign.cutLenScale : null;
+      if (lenScale && lenScale.some((v) => v && Math.abs(v - 1) > 0.01)) {
+        if (!lengths.length) lengths = new Array(cuts).fill(mainDur / cuts);
+        lengths = lengths.map((x, i) => {
+          const k = Number(lenScale[i]) || 1;
+          return Math.max(0.8, x * (exactMasterLocked ? Math.max(1, k) : k));
+        });
+        mainDur = lengths.reduce((p, q) => p + q, 0);
+      }
       const total = exactMasterLocked ? Math.round((mainDur + outro) * 100) / 100 : Math.round((mainDur + outro) * 10) / 10;
       const outroRounded = exactMasterLocked ? Math.round((total - mainDur) * 100) / 100 : Math.round(outro * 10) / 10;
       // 반올림한 전체 길이에 컷 길이 합이 정확히 맞도록 보정 (원테이크 싱크 고정 시에는 컷 경계를 흔들지 않음)
@@ -731,6 +743,7 @@
 
     function setVideoTotalDuration(sec) {
       BASE_DURATION = Math.max(6, Math.min(60, Number(sec) || 12));
+      if (typeof campaign !== 'undefined') { delete campaign.cutCountOverride; campaign.cutLenScale = []; }
       applyVideoDurations();
       // 컷 수가 바뀌면 새 컷의 성우 음성을 받아 길이를 다시 맞춤
       if (audioEngineReady() && AudioEngine.enabled) AudioEngine.prefetchTtsBuffers();

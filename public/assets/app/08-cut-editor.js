@@ -3705,11 +3705,11 @@
     function ensureCutEditorPanelDOM() {
       let panel = document.getElementById('cutEditorPanel');
       const vp = document.getElementById('previewViewport');
-      const container = vp || document.body;
+      // 편집창은 영상을 덮지 않도록 영상 틀 바로 아래에 둠 (인스타 편집처럼 화면은 깨끗하게)
+      const container = vp ? vp.parentElement : document.body;
+      const place = (el) => { if (vp) vp.insertAdjacentElement('afterend', el); else document.body.appendChild(el); };
       if (panel) {
-        if (panel.parentElement !== container) {
-          container.appendChild(panel);
-        }
+        if (panel.previousElementSibling !== vp) place(panel);
         panel.className = panel.classList.contains('hidden')
           ? 'hidden ar-preview-sheet-backdrop'
           : 'ar-preview-sheet-backdrop';
@@ -3726,7 +3726,7 @@
       });
       panel.addEventListener('mousedown', (ev) => ev.stopPropagation());
       panel.addEventListener('touchstart', (ev) => ev.stopPropagation(), { passive: true });
-      container.appendChild(panel);
+      place(panel);
       return panel;
     }
 
@@ -3770,7 +3770,7 @@
       const cutSheetOpen = !!(window.__arCutEditorOpen && panel && !panel.classList.contains('hidden'));
       const inlineOpen = !!(window.__arInlineEditActive && inlineBar && !inlineBar.classList.contains('hidden'));
       let shiftPct = 0;
-      if (cutSheetOpen || inlineOpen) {
+      if (inlineOpen) { // 컷 편집창은 영상 아래에 있으므로 영상을 밀어 올리지 않음
         const cutIdx = window.__arPinnedCut;
         const elKey = window.__arSelectedOverlayIdx >= 0
           ? `overlay:${window.__arSelectedOverlayIdx}`
@@ -4198,50 +4198,137 @@
     }
 
     function buildStandardElementInspectorHtml(cutIdx, elKey, obj, labelTitle, curTextVal, placeholderTxt, textInputHandler, defaultY) {
+      // 인스타 스토리 글자 편집처럼: 문구 → 글꼴 → 색 → 크기 순서. 위치는 화면에서 끌어 옮기고, 숫자 조절은 접어 둠
       const defPos = getDefaultCutElPos(elKey);
       const curX = obj.customPos && typeof obj.x === 'number' ? obj.x : defPos.x;
       const curY = obj.customPos && typeof obj.y === 'number' ? obj.y : (defaultY ?? defPos.y);
+      const curFont = obj.font || '';
+      const curBox = obj.boxStyle || 'default';
+      const curAnim = obj.anim || 'default';
+      const sc = Number(obj.scale) || 1;
       return `
-        <div class="ar-el-row">
-          <span class="ar-el-label">${labelTitle}</span>
-          <button type="button" onclick="openCanvasDirectTextEdit(${cutIdx}, '${elKey}')"
-                  class="ar-el-badge blue flex-1 min-w-0 justify-center overflow-hidden text-ellipsis whitespace-nowrap" style="padding:6px 10px;font-weight:800;">✏️ 문구 수정</button>
-          <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'hidden', ${!obj.hidden}, true)"
-                  class="ar-el-badge ${obj.hidden ? 'muted' : ''}">${obj.hidden ? '🙈 숨김' : '👁 표시'}</button>
-          <button type="button" onclick="resetCutElementOverride(${cutIdx}, '${elKey}')" class="ar-el-badge muted" title="위치·크기·디자인 초기화">초기화</button>
+        <div class="ig-ins-top">
+          <button type="button" onclick="openCanvasDirectTextEdit(${cutIdx}, '${elKey}')" class="ig-pill ig-pill-main">Aa 문구 고치기</button>
+          <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'hidden', ${!obj.hidden}, true)" class="ig-pill ${obj.hidden ? 'off' : ''}">${obj.hidden ? '숨김' : '보임'}</button>
+          <button type="button" onclick="arApplyElementStyleToAllCuts(${cutIdx}, '${elKey}')" class="ig-pill" title="이 모양·위치를 모든 컷에 똑같이">모든 컷에 똑같이</button>
         </div>
-        <div class="ar-el-row">
-          <span class="ar-el-label">가로 위치 X</span>
-          <input id="arElRangeX" type="range" min="0.06" max="0.94" step="0.01" value="${curX}"
-                 oninput="updateCutElementOverride(${cutIdx}, '${elKey}', 'x', this.value, false)" class="flex-1" />
-          <span id="arElValX" class="ar-el-val">${Math.round(curX * 100)}%</span>
+        <div class="ig-ins-fonts no-scrollbar">
+          <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'font', '', true)" class="ig-font ${!curFont ? 'on' : ''}">기본</button>
+          ${CUT_TEXT_FONTS.map((f) => `<button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'font', '${f.id}', true)" style="font-family:${f.css};font-weight:${f.weight};" class="ig-font ${curFont === f.id ? 'on' : ''}">${f.label}</button>`).join('')}
         </div>
-        <div class="ar-el-row">
-          <span class="ar-el-label">세로 위치 Y</span>
-          <input id="arElRangeY" type="range" min="0.05" max="0.95" step="0.01" value="${curY}"
-                 oninput="updateCutElementOverride(${cutIdx}, '${elKey}', 'y', this.value, false)" class="flex-1" />
-          <span id="arElValY" class="ar-el-val">${Math.round(curY * 100)}%</span>
+        <div class="ig-ins-colors no-scrollbar">
+          <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'color', '', true)" class="ig-dot ig-dot-auto ${!obj.color ? 'on' : ''}" aria-label="디자인 기본색"></button>
+          ${CUT_TEXT_COLORS.map((col) => `<button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'color', '${col}', true)" class="ig-dot ${obj.color === col ? 'on' : ''}" style="background:${col}" aria-label="색상 ${col}"></button>`).join('')}
         </div>
-        <div class="ar-el-row">
-          <span class="ar-el-label">요소 크기</span>
-          <input id="arElRangeScale" type="range" min="0.55" max="1.9" step="0.05" value="${Number(obj.scale) || 1}"
-                 oninput="updateCutElementOverride(${cutIdx}, '${elKey}', 'scale', this.value, false)" class="flex-1" />
-          <span id="arElValScale" class="ar-el-val">${Math.round((Number(obj.scale) || 1) * 100)}%</span>
+        <div class="ig-ins-size">
+          <span>가</span>
+          <input id="arElRangeScale" type="range" min="0.55" max="1.9" step="0.05" value="${sc}" oninput="updateCutElementOverride(${cutIdx}, '${elKey}', 'scale', this.value, false)" />
+          <span class="big">가</span>
+          <span id="arElValScale" class="ar-el-val">${Math.round(sc * 100)}%</span>
         </div>
-        <div class="ar-el-row">
-          <span class="ar-el-label">색상 선택</span>
-          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
-            <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'color', '', true)"
-                    class="px-2.5 py-1 rounded-full text-[11px] font-semibold border shrink-0 ${!obj.color ? 'border-white bg-white/15 text-white' : 'border-white/15 text-white/60'}">기본색</button>
-            ${CUT_TEXT_COLORS.map((col) => `
-              <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'color', '${col}', true)"
-                      class="ar-el-color-swatch ${obj.color === col ? 'active' : ''}"
-                      style="background:${col}" aria-label="색상 ${col}"></button>
-            `).join('')}
+        <div class="ig-ins-row no-scrollbar">
+          <button type="button" onclick="alignCutElement(${cutIdx}, '${elKey}', 'left')" class="ig-chip ${obj.align === 'left' ? 'on' : ''}" aria-label="왼쪽 정렬">⇤</button>
+          <button type="button" onclick="alignCutElement(${cutIdx}, '${elKey}', 'center')" class="ig-chip ${!obj.align || obj.align === 'center' ? 'on' : ''}" aria-label="가운데 정렬">↔</button>
+          <button type="button" onclick="alignCutElement(${cutIdx}, '${elKey}', 'right')" class="ig-chip ${obj.align === 'right' ? 'on' : ''}" aria-label="오른쪽 정렬">⇥</button>
+          <span class="ig-sep"></span>
+          ${AR_ELEMENT_BOX_STYLES.map((bs) => `<button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'boxStyle', '${bs.id}', true)" class="ig-chip ${curBox === bs.id ? 'on' : ''}">${bs.label}</button>`).join('')}
+        </div>
+        <div class="ig-ins-row no-scrollbar">
+          <span class="ig-row-label">움직임</span>
+          ${AR_ELEMENT_ANIMS.map((an) => `<button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'anim', '${an.id}', true);previewCutElementAnimation(${cutIdx})" class="ig-chip ${curAnim === an.id ? 'on' : ''}">${an.label}</button>`).join('')}
+        </div>
+        <details class="ig-ins-more">
+          <summary>위치 숫자로 맞추기 · 초기화</summary>
+          <div class="ar-el-row">
+            <span class="ar-el-label">가로</span>
+            <input id="arElRangeX" type="range" min="0.06" max="0.94" step="0.01" value="${curX}" oninput="updateCutElementOverride(${cutIdx}, '${elKey}', 'x', this.value, false)" class="flex-1" />
+            <span id="arElValX" class="ar-el-val">${Math.round(curX * 100)}%</span>
           </div>
-        </div>
-        ${buildElementStyleAndAnimRowsHtml(cutIdx, elKey, obj)}
+          <div class="ar-el-row">
+            <span class="ar-el-label">세로</span>
+            <input id="arElRangeY" type="range" min="0.05" max="0.95" step="0.01" value="${curY}" oninput="updateCutElementOverride(${cutIdx}, '${elKey}', 'y', this.value, false)" class="flex-1" />
+            <span id="arElValY" class="ar-el-val">${Math.round(curY * 100)}%</span>
+          </div>
+          <button type="button" onclick="resetCutElementOverride(${cutIdx}, '${elKey}')" class="ig-pill">이 요소 처음대로</button>
+        </details>
       `;
+    }
+
+    // ★ 지금 컷에서 바꾼 요소 모양·위치를 모든 컷에 똑같이 (문구는 컷마다 그대로)
+    function arApplyElementStyleToAllCuts(cutIdx, elKey) {
+      const src = getCutElementOverride(cutIdx)[elKey];
+      if (!src) return;
+      const keys = ['x', 'y', 'scale', 'color', 'bgColor', 'font', 'boxStyle', 'anim', 'hidden', 'customPos', 'align'];
+      const n = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
+      for (let i = 0; i < n; i++) {
+        if (i === cutIdx) continue;
+        const dst = getCutElementOverride(i)[elKey];
+        keys.forEach((k) => { if (k in src) dst[k] = src[k]; else delete dst[k]; });
+      }
+      if (typeof arToast === 'function') arToast(`${n}개 컷에 같은 모양을 적용했어요.`);
+      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+      renderCutEditorPanel();
+    }
+
+    // ★ 컷 순서 바꾸기 · 복사 · 빼기 · 길이
+    const AR_PER_CUT_KEYS = ['cutCaptions', 'ttsLines', 'scenePlan', 'cutDecos', 'cutFilters', 'cutFrames', 'cutOverlays', 'cutStrokes', 'cutTransitions', 'cutVideoUrls', 'cutVideos', 'cutSceneIndices', 'cutLenScale'];
+    function arPerCutArrays() {
+      const n = getTargetCutCount();
+      if (!Array.isArray(cutElementOverrides)) cutElementOverrides = [];
+      const list = AR_PER_CUT_KEYS.map((k) => {
+        if (!Array.isArray(campaign[k])) campaign[k] = [];
+        return campaign[k];
+      });
+      list.push(cutElementOverrides);
+      list.forEach((arr) => { if (arr.length < n) arr.length = n; });
+      return list;
+    }
+    function arAfterCutStructureChange(focusIdx) {
+      window.cutElementOverrides = cutElementOverrides;
+      campaign.cutElementOverrides = cutElementOverrides;
+      if (typeof applyVideoDurations === 'function') applyVideoDurations();
+      if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+      if (typeof arResetAndRebuildNarration === 'function') arResetAndRebuildNarration();
+      if (typeof saveAiScriptPrefs === 'function') saveAiScriptPrefs();
+      window.__arPinnedCut = focusIdx;
+      if (typeof renderPreviewCutPinBar === 'function') renderPreviewCutPinBar();
+      if (typeof seekToTime === 'function' && typeof getCutStart === 'function') seekToTime(getCutStart(focusIdx) + 0.1);
+      openCutEditor(focusIdx, window.__arActiveCutElKey || 'caption');
+    }
+    function arMoveCut(i, dir) {
+      const n = getTargetCutCount();
+      const j = i + dir;
+      if (j < 0 || j >= n) return;
+      arPerCutArrays().forEach((arr) => { const t = arr[i]; arr[i] = arr[j]; arr[j] = t; });
+      arAfterCutStructureChange(j);
+    }
+    function arDuplicateCut(i) {
+      const n = getTargetCutCount();
+      if (n >= 10) { if (typeof arToast === 'function') arToast('컷은 10개까지 만들 수 있어요.'); return; }
+      arPerCutArrays().forEach((arr) => {
+        const v = arr[i];
+        arr.splice(i + 1, 0, v && typeof v === 'object' ? JSON.parse(JSON.stringify(v)) : v);
+      });
+      campaign.cutCountOverride = n + 1;
+      arAfterCutStructureChange(i + 1);
+    }
+    function arDeleteCut(i) {
+      const n = getTargetCutCount();
+      if (n <= 2) { if (typeof arToast === 'function') arToast('컷은 2개 이상 있어야 해요.'); return; }
+      arPerCutArrays().forEach((arr) => { arr.splice(i, 1); });
+      campaign.cutCountOverride = n - 1;
+      arAfterCutStructureChange(Math.min(i, n - 2));
+    }
+    function arNudgeCutLength(i, delta) {
+      const lens = getCutLengths();
+      if (!Array.isArray(campaign.cutLenScale)) campaign.cutLenScale = [];
+      const curK = Number(campaign.cutLenScale[i]) || 1;
+      const base = (lens[i] || 3) / curK;
+      const want = Math.max(1, Math.min(8, (lens[i] || 3) + delta));
+      campaign.cutLenScale[i] = Math.max(0.3, Math.min(4, want / base));
+      if (typeof applyVideoDurations === 'function') applyVideoDurations();
+      if (typeof seekToTime === 'function') seekToTime(getCutStart(i) + 0.1);
+      renderCutEditorPanel();
     }
 
     function renderCutEditorPanel() {
@@ -4287,13 +4374,13 @@
       }).join('');
 
       const baseChips = [
-        { key: 'caption',    label: '💬 컷 자막·카드',     hidden: !!ov.caption.hidden, mod: isCutElementModified(cutIdx, 'caption') },
-        { key: 'badge',      label: '🏷️ 상단 라벨·배지',   hidden: !!ov.badge.hidden,   mod: isCutElementModified(cutIdx, 'badge') },
-        { key: 'price',      label: '💰 혜택·강조 배지',   hidden: !!ov.price.hidden,   mod: isCutElementModified(cutIdx, 'price') },
-        { key: 'chip',       label: '🪪 하단 프로필·상호', hidden: !!ov.chip.hidden,    mod: isCutElementModified(cutIdx, 'chip') },
-        { key: 'photo',      label: '🖼️ 배경 사진·구도',   hidden: false,               mod: isCutElementModified(cutIdx, 'photo') },
-        { key: 'transition', label: '🎞 컷 전환 효과',     hidden: false,               mod: isCutElementModified(cutIdx, 'transition') },
-        { key: 'deco',       label: '✨ 꾸밈·오버레이',    hidden: false,               mod: isCutElementModified(cutIdx, 'deco') }
+        { key: 'caption',    label: '자막',     hidden: !!ov.caption.hidden, mod: isCutElementModified(cutIdx, 'caption') },
+        { key: 'badge',      label: '위 라벨',  hidden: !!ov.badge.hidden,   mod: isCutElementModified(cutIdx, 'badge') },
+        { key: 'price',      label: '혜택',     hidden: !!ov.price.hidden,   mod: isCutElementModified(cutIdx, 'price') },
+        { key: 'chip',       label: '아래 이름', hidden: !!ov.chip.hidden,    mod: isCutElementModified(cutIdx, 'chip') },
+        { key: 'photo',      label: '사진',     hidden: false,               mod: isCutElementModified(cutIdx, 'photo') },
+        { key: 'transition', label: '전환',     hidden: false,               mod: isCutElementModified(cutIdx, 'transition') },
+        { key: 'deco',       label: '꾸밈',     hidden: false,               mod: isCutElementModified(cutIdx, 'deco') }
       ];
 
       const overlayChipsHtml = overlays.map((it, ii) => {
@@ -4549,39 +4636,35 @@
         `;
       }
 
+      window.__arDirectCanvasMode = true; // 화면에서 바로 끌어 옮기기는 늘 켜 둠
+      const curLen = (getCutLengths()[cutIdx] || 0).toFixed(1);
       panel.innerHTML = `
-        <div class="ar-preview-bottom-sheet" onclick="event.stopPropagation()">
-          <div class="ar-sheet-grabber"></div>
-          <div class="flex items-center justify-between gap-1.5 text-[12px]">
-            <div class="flex items-center gap-1.5 min-w-0">
-              <span class="text-white font-semibold truncate">🎛️ ${cutIdx + 1}컷 요소 편집</span>
-              <button type="button" onclick="toggleDirectCanvasSelectMode()"
-                      class="ar-el-badge ${window.__arDirectCanvasMode ? 'blue' : 'muted'}"
-                      title="프리뷰 캔버스에서 직접 요소를 클릭·드래그해 위치를 조절합니다">
-                🎯 직접선택 ${window.__arDirectCanvasMode ? 'ON' : 'OFF'}
-              </button>
-            </div>
-            <div class="flex items-center gap-1 shrink-0">
-              <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'all')"
-                      class="ar-el-badge muted" title="${cutIdx + 1}컷의 모든 요소 편집 초기화">초기화</button>
-              <button type="button" onclick="closeCutEditor()" class="px-2.5 py-0.5 rounded-full bg-white text-[#09090b] font-bold text-[11px] cursor-pointer">완료 ✓</button>
+        <div class="ar-preview-bottom-sheet ig-sheet" onclick="event.stopPropagation()">
+          <div class="ig-sheet-head">
+            <button type="button" class="ig-nav" onclick="openCutEditor(${Math.max(0, cutIdx - 1)}, '${activeKey}')" ${cutIdx === 0 ? 'disabled' : ''} aria-label="이전 컷">‹</button>
+            <strong>${cutIdx + 1} <small>/ ${totalCuts}컷</small></strong>
+            <button type="button" class="ig-nav" onclick="openCutEditor(${Math.min(totalCuts - 1, cutIdx + 1)}, '${activeKey}')" ${cutIdx >= totalCuts - 1 ? 'disabled' : ''} aria-label="다음 컷">›</button>
+            <span class="ig-flex"></span>
+            <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'all')" class="ig-text-btn">처음대로</button>
+            <button type="button" onclick="closeCutEditor()" class="ig-text-btn" aria-label="편집창 접기">접기 ⌄</button>
+          </div>
+          <div class="ig-cut-actions no-scrollbar">
+            <button type="button" onclick="arMoveCut(${cutIdx}, -1)" ${cutIdx === 0 ? 'disabled' : ''} class="ig-act"><span>◀</span>앞으로</button>
+            <button type="button" onclick="arMoveCut(${cutIdx}, 1)" ${cutIdx >= totalCuts - 1 ? 'disabled' : ''} class="ig-act"><span>▶</span>뒤로</button>
+            <button type="button" onclick="arDuplicateCut(${cutIdx})" ${totalCuts >= 10 ? 'disabled' : ''} class="ig-act"><span>⧉</span>복사</button>
+            <button type="button" onclick="arDeleteCut(${cutIdx})" ${totalCuts <= 2 ? 'disabled' : ''} class="ig-act"><span>🗑</span>빼기</button>
+            <div class="ig-len">
+              <em>이 컷 길이</em>
+              <button type="button" onclick="arNudgeCutLength(${cutIdx}, -0.5)" aria-label="짧게">−</button>
+              <span>${curLen}초</span>
+              <button type="button" onclick="arNudgeCutLength(${cutIdx}, 0.5)" aria-label="길게">＋</button>
             </div>
           </div>
-          <div class="flex items-center gap-1 overflow-x-auto no-scrollbar pb-0.5">
-            <span class="text-[10px] font-medium text-[#8a8f98] shrink-0 mr-1">컷</span>
-            ${cutSwitchHtml}
-          </div>
-          <div class="ar-inline-scroll-row" role="tablist" aria-label="편집할 컷 요소 선택">
+          <div class="ar-inline-scroll-row ig-el-tabs" role="tablist" aria-label="편집할 요소 선택">
             ${chipsHtml}
           </div>
           <div class="ar-el-inspector">
             ${inspectorHtml}
-          </div>
-          <div class="flex items-center justify-between gap-2 pt-1.5 border-t border-white/10">
-            <button type="button" onclick="window.__arDirectCanvasMode=true;closeCutEditor();openInlineQuickEdit(${cutIdx}, '${activeKey}');"
-                    class="px-2.5 py-1.5 rounded-[8px] text-[11px] font-medium border border-white/15 bg-white/[0.06] text-[#ededed] hover:bg-white/[0.12] transition flex-1">
-              🎯 시트 내리고 화면에서 직접 드래그·빠른 편집
-            </button>
           </div>
         </div>
       `;
