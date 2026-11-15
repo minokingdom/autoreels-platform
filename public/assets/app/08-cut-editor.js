@@ -4033,22 +4033,12 @@
             <span class="text-white font-semibold">📷 ${targetIdx + 1}컷 사진·영상 교체</span>
             <button type="button" onclick="closeCutPhotoReplaceModal()" class="px-2 py-0.5 rounded-full bg-white/10 hover:bg-white/20 text-[11px] text-white cursor-pointer">닫기 ✕</button>
           </div>
-          <div class="grid grid-cols-2 gap-2">
-            <label class="flex flex-col items-center justify-center gap-1 p-3 rounded-[12px] border border-[#38bdf8]/50 bg-[#0070f3]/18 hover:bg-[#0070f3]/28 text-white cursor-pointer transition text-center">
-              <span class="text-[20px]">📷</span>
-              <span class="text-[12px] font-semibold">카메라 촬영</span>
-              <span class="text-[10px] text-white/65">직접 사진 찍기</span>
-              <input type="file" accept="image/*" capture="environment" class="hidden"
-                     onchange="replaceCutMedia(${targetIdx}, event);closeCutPhotoReplaceModal();renderCutEditorPanel();if(typeof renderInlineQuickEditBar==='function')renderInlineQuickEditBar();" />
-            </label>
-            <label class="flex flex-col items-center justify-center gap-1 p-3 rounded-[12px] border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] text-white cursor-pointer transition text-center">
-              <span class="text-[20px]">🖼️</span>
-              <span class="text-[12px] font-semibold">갤러리 · 파일</span>
-              <span class="text-[10px] text-white/65">사진첩·폴더 선택</span>
-              <input type="file" accept="image/*,video/*" class="hidden"
-                     onchange="replaceCutMedia(${targetIdx}, event);closeCutPhotoReplaceModal();renderCutEditorPanel();if(typeof renderInlineQuickEditBar==='function')renderInlineQuickEditBar();" />
-            </label>
-          </div>
+          <!-- 버튼 하나: 누르면 휴대폰이 카메라로 찍을지 사진첩에서 고를지 물어봄 -->
+          <label class="flex items-center justify-center gap-2 h-12 rounded-[12px] bg-white text-[#09090b] text-[14px] font-semibold cursor-pointer transition">
+            📷 사진·영상 고르기 (카메라 · 사진첩)
+            <input type="file" accept="image/*,video/*" class="hidden"
+                   onchange="replaceCutMedia(${targetIdx}, event);closeCutPhotoReplaceModal();renderCutEditorPanel();if(typeof renderInlineQuickEditBar==='function')renderInlineQuickEditBar();" />
+          </label>
           ${hasCustomMedia ? `
             <button type="button" onclick="clearCutUploadedPhoto(${targetIdx})"
                     class="w-full py-1.5 px-2.5 rounded-[10px] border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] text-[11px] text-[#f87171] font-medium transition">
@@ -4459,20 +4449,15 @@
         const ph = ov.photo;
         inspectorHtml = `
           <div class="ar-el-row flex-wrap">
-            <span class="ar-el-label">사진 교체</span>
-            <button type="button" onclick="openCutPhotoReplaceModal(${cutIdx})" class="ar-el-badge blue">📷 이 컷 사진·영상 교체 (카메라 / 갤러리)</button>
-            <label class="ar-el-badge cursor-pointer">
-              📷 카메라 바로 촬영
-              <input type="file" accept="image/*" capture="environment" class="hidden" onchange="replaceCutMedia(${cutIdx}, event);renderCutEditorPanel();if(typeof renderInlineQuickEditBar==='function')renderInlineQuickEditBar();" />
-            </label>
-            <label class="ar-el-badge cursor-pointer">
-              🖼️ 갤러리 바로 선택
+            <!-- 버튼 하나: 누르면 휴대폰이 카메라 / 갤러리 중 고르게 해 줌 -->
+            <label class="ig-pill ig-pill-main cursor-pointer" style="display:inline-flex;align-items:center;">
+              📷 사진·영상 바꾸기
               <input type="file" accept="image/*,video/*" class="hidden" onchange="replaceCutMedia(${cutIdx}, event);renderCutEditorPanel();if(typeof renderInlineQuickEditBar==='function')renderInlineQuickEditBar();" />
             </label>
             <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'photo')" class="ar-el-badge muted ml-auto">↺ 초기화</button>
           </div>
           <div class="ar-el-row">
-            <span class="ar-el-label">확대(Zoom)</span>
+            <span class="ar-el-label">확대</span>
             <input id="arElRangePhotoScale" type="range" min="0.8" max="2.4" step="0.05" value="${Number(ph.scale) || 1}"
                    oninput="updateCutElementOverride(${cutIdx}, 'photo', 'scale', this.value, false)" class="flex-1" />
             <span id="arElValPhotoScale" class="ar-el-val">${Math.round((Number(ph.scale) || 1) * 100)}%</span>
