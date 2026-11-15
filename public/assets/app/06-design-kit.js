@@ -3977,21 +3977,17 @@
     }
     async function arUploadCustomLogo(file) {
       if (!file || !arCustomDraft) return;
-      if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) { arCustomStatus('5MB 이하의 PNG·JPG·WebP 이미지를 골라 주세요.'); return; }
       const token = ++arCustomUploadToken, button = document.querySelector('#arCustomStyleForm [type="submit"]');
       button.disabled = true; arCustomStatus('로고를 작게 변환하고 있어요.');
-      const url = URL.createObjectURL(file);
       try {
-        const img = new Image(); img.src = url; await img.decode();
-        const cv = document.createElement('canvas'), scale = Math.min(1, 256 / Math.max(img.naturalWidth, img.naturalHeight));
-        cv.width = Math.max(1, Math.round(img.naturalWidth * scale)); cv.height = Math.max(1, Math.round(img.naturalHeight * scale));
-        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
-        const dataUrl = cv.toDataURL('image/png');
+        let img = await arImportPhoto(file, { maxEdge: 256, transparent: true, dataUrl: true });
+        if (img.src.length > 180000) img = await arImportPhoto(file, { maxEdge: 160, transparent: true, dataUrl: true });
+        const dataUrl = img.src;
         if (dataUrl.length > 180000) throw new Error('용량');
         if (token !== arCustomUploadToken) return;
         arCustomDraft.logo.dataUrl = dataUrl; arCustomStatus('로고를 불러왔어요. 저장하면 적용돼요.'); await arUpdateCustomPreview();
-      } catch (e) { if (token === arCustomUploadToken) arCustomStatus('이미지를 읽지 못했거나 로고 용량이 커요. 더 단순한 이미지로 다시 골라 주세요.'); }
-      finally { URL.revokeObjectURL(url); if (token === arCustomUploadToken) button.disabled = false; }
+      } catch (e) { if (token === arCustomUploadToken) arCustomStatus(e.message === '용량' ? '로고 용량이 커요. 더 단순한 이미지로 다시 골라 주세요.' : e.message); }
+      finally { if (token === arCustomUploadToken) { button.disabled = false; document.getElementById('arCustomLogoFile').value = ''; } }
     }
     document.addEventListener('click', event => {
       const button = event.target.closest('[data-custom-action]');

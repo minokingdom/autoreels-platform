@@ -551,32 +551,17 @@
       return -1;
     }
 
-    function handleIgPhotoStickerUpload(event) {
+    async function handleIgPhotoStickerUpload(event) {
       const file = event && event.target && event.target.files && event.target.files[0];
       if (event && event.target) event.target.value = '';
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const rawUrl = reader.result;
-        const img = new Image();
-        img.onload = () => {
-          const maxDim = 480;
-          let w = img.naturalWidth || 400;
-          let h = img.naturalHeight || 400;
-          if (w > maxDim || h > maxDim) {
-            const r = Math.min(maxDim / w, maxDim / h);
-            w = Math.round(w * r);
-            h = Math.round(h * r);
-          }
-          const c = document.createElement('canvas');
-          c.width = w;
-          c.height = h;
-          const cx = c.getContext('2d');
-          cx.drawImage(img, 0, 0, w, h);
-          const dataUrl = c.toDataURL('image/webp', 0.88);
-          getPhotoStickerImg(dataUrl);
-          const cutIdx = ensureActivePinCut();
-          if (cutIdx < 0) return;
+      const cutIdx = ensureActivePinCut();
+      if (cutIdx < 0) return;
+      await arWithPhotoImport(event.target, async () => {
+          const img = await arImportPhoto(file, { maxEdge: 480, transparent: true });
+          const dataUrl = img.src;
+          // 되돌리기 기록에서도 쓰므로 스티커 URL은 편집 중 유지한다.
+          window.__arPhotoStickerCache[dataUrl] = img;
           pushCutOverlayUndo();
           if (!Array.isArray(campaign.cutOverlays)) campaign.cutOverlays = [];
           if (!Array.isArray(campaign.cutOverlays[cutIdx])) campaign.cutOverlays[cutIdx] = [];
@@ -587,7 +572,7 @@
             style: 'photo',
             photoSrc: dataUrl,
             photoShape: 'round',
-            aspect: w / Math.max(1, h),
+            aspect: img.naturalWidth / img.naturalHeight,
             x: 0.5,
             y: 0.5,
             scale: 1,
@@ -599,10 +584,7 @@
           renderPreviewCutPinBar();
           renderCutOverlayEditorLayer();
           renderIgEditorHud();
-        };
-        img.src = rawUrl;
-      };
-      reader.readAsDataURL(file);
+      });
     }
 
     const IG_DRAW_BRUSHES = [
@@ -4146,7 +4128,7 @@
         const f = ev.target && ev.target.files && ev.target.files[0];
         if (!f) return;
         if (typeof replaceCutMedia === 'function') {
-          replaceCutMedia(cutIdx, { target: { files: [f] } });
+          replaceCutMedia(cutIdx, ev);
         } else if (typeof handleCutCardFileSelect === 'function') {
           handleCutCardFileSelect(cutIdx, f);
         }

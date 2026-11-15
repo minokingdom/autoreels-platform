@@ -3567,19 +3567,85 @@
       });
     }
 
-    // 사진 파일 하나를 불러옴 (실패하면 null)
-    function loadCutPhoto(file, order) {
-      return new Promise((resolve) => {
-        const url = URL.createObjectURL(file);
-        const img = new Image();
-        img.onload = () => {
-          img._dataUrl = url;
-          img._label = `${order}. 내 사진`;
-          resolve(img);
-        };
-        img.onerror = () => resolve(null);
-        img.src = url;
-      });
+    // 카메라 원본은 화면·HTML에 넣기 전에 축소한다. 여러 장도 한 장씩 디코딩한다.
+    function arImportPhoto(file, options = {}) {
+      const run = async () => {
+        const maxEdge = options.maxEdge || 1600;
+        let source, inputUrl, outputUrl, canvas;
+        try {
+          if (typeof createImageBitmap === 'function') {
+            try { source = await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) {}
+          }
+          if (!source) {
+            // HTMLImageElement도 EXIF 방향을 적용하며, 원본 base64 복사를 만들지 않는다.
+            inputUrl = URL.createObjectURL(file);
+            source = new Image(); source.src = inputUrl;
+            await source.decode();
+          }
+          const width = source.naturalWidth || source.width, height = source.naturalHeight || source.height;
+          if (!width || !height) throw new Error('이미지 크기');
+          const scale = Math.min(1, maxEdge / Math.max(width, height));
+          canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(width * scale));
+          canvas.height = Math.max(1, Math.round(height * scale));
+          const ctx = canvas.getContext('2d');
+          if (!options.transparent) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+          ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+          const blob = await new Promise((resolve, reject) => canvas.toBlob(
+            value => value ? resolve(value) : reject(new Error('이미지 변환')),
+            options.transparent ? 'image/png' : 'image/jpeg', 0.85
+          ));
+          let src;
+          if (options.dataUrl) {
+            // 저장이 필요한 작은 로고만 data URL로 만든다.
+            src = await new Promise((resolve, reject) => {
+              const reader = new FileReader(); reader.onload = () => resolve(reader.result);
+              reader.onerror = () => reject(reader.error); reader.readAsDataURL(blob);
+            });
+          } else { outputUrl = URL.createObjectURL(blob); src = outputUrl; }
+          const img = new Image(); img.src = src; await img.decode();
+          img._dataUrl = src; img._arObjectUrl = outputUrl; img._blobBytes = blob.size;
+          outputUrl = null;
+          return img;
+        } catch (e) {
+          const heic = /hei[cf]/i.test(file.type || '') || /\.hei[cf]$/i.test(file.name || '');
+          throw new Error(heic ? '이 브라우저에서 HEIC 사진을 열 수 없어요. JPG나 PNG로 바꿔 다시 골라 주세요.' : '사진을 읽지 못했어요. JPG나 PNG 사진을 다시 골라 주세요.');
+        } finally {
+          if (source && typeof source.close === 'function') source.close();
+          if (source instanceof HTMLImageElement) source.removeAttribute('src');
+          if (inputUrl) URL.revokeObjectURL(inputUrl);
+          if (outputUrl) URL.revokeObjectURL(outputUrl);
+          if (canvas) { canvas.width = 1; canvas.height = 1; }
+        }
+      };
+      const job = (arImportPhoto.pending || Promise.resolve()).then(run);
+      arImportPhoto.pending = job.catch(() => {});
+      return job;
+    }
+
+    function arReleasePhoto(img) {
+      if (img && img._arObjectUrl) { URL.revokeObjectURL(img._arObjectUrl); img._arObjectUrl = null; }
+    }
+
+    async function arWithPhotoImport(input, action) {
+      const disabled = input && input.disabled;
+      if (input) { input.disabled = true; input.setAttribute?.('aria-busy', 'true'); }
+      arToast('사진을 불러오는 중…', true);
+      try {
+        // 로딩 안내가 먼저 그려진 뒤 디코딩을 시작한다.
+        await new Promise(resolve => setTimeout(resolve, 20));
+        await action();
+        arToast('사진을 불러왔어요.', true);
+      } catch (e) { arToast(e.message || '사진을 불러오지 못했어요. 다시 시도해 주세요.'); }
+      finally {
+        if (input) { input.value = ''; input.disabled = disabled; input.removeAttribute?.('aria-busy'); }
+      }
+    }
+
+    async function loadCutPhoto(file, order) {
+      const img = await arImportPhoto(file);
+      img._label = `${order}. 내 사진`;
+      return img;
     }
 
     // 영상 파일 하나를 불러오고 썸네일용 첫 장면을 뽑음 (실패하면 null)
@@ -3621,25 +3687,32 @@
 
     // 사진·영상 여러 개 올리기: 올린 순서대로 한 컷씩 배치 (최대 10개)
     async function handleMultiPhotoUpload(event) {
-      const picked = Array.from(event.target.files || []).filter((f) => /^(image|video)\//.test(f.type));
+      const picked = Array.from(event.target.files || []).filter((f) => /^(image|video)\//.test(f.type) || /\.(jpe?g|png|webp|hei[cf])$/i.test(f.name));
       if (picked.length === 0) return;
       const files = picked.slice(0, 10);
       const statusEl = document.getElementById('photoUploadStatus');
       if (statusEl) statusEl.textContent = `${files.length}개 불러오는 중…`;
 
-      const loaded = await Promise.all(
-        files.map((file, idx) => (file.type.startsWith('video/') ? loadCutVideo(file, idx + 1) : loadCutPhoto(file, idx + 1)))
-      );
+      let photoError = '';
+      const loaded = [];
+      await arWithPhotoImport(event.target, async () => {
+        for (const [idx, file] of files.entries()) {
+          try { loaded.push(await (file.type.startsWith('video/') ? loadCutVideo(file, idx + 1) : loadCutPhoto(file, idx + 1))); }
+          catch (e) { photoError = e.message; loaded.push(null); }
+        }
+        if (!loaded.some(Boolean)) throw new Error(photoError || '불러올 수 있는 사진·영상이 없습니다.');
+      });
       const items = loaded.filter(Boolean);
       event.target.value = ''; // 같은 파일을 다시 골라도 반응하도록
       if (items.length === 0) {
-        if (statusEl) statusEl.textContent = '불러올 수 있는 사진·영상이 없습니다. 다른 파일로 다시 시도해 주세요.';
+        if (statusEl) statusEl.textContent = photoError || '불러올 수 있는 사진·영상이 없습니다. 다른 파일로 다시 시도해 주세요.';
         return;
       }
 
       pauseAllCutVideos();
       campaign.isUserCustomPhotos = true;
       campaign.hasCustomVideo = false;
+      campaign.uploadedPhotos.forEach(arReleasePhoto);
       campaign.uploadedPhotos = items;
 
       applyVideoDurations(); // 장면이 바뀌었으므로 길이·썸네일을 다시 계산
@@ -3652,22 +3725,22 @@
         const skipped = picked.length - files.length;
         statusEl.textContent =
           `${items.length}개를 올렸습니다. 영상 길이에 맞춰 순서대로 나뉘어 들어갑니다.` +
-          (failed > 0 ? ` ${failed}개는 열 수 없어 제외했습니다.` : '') +
+          (failed > 0 ? ` ${failed}개는 열 수 없어 제외했습니다. ${photoError}` : '') +
           (skipped > 0 ? ` 10개까지만 쓸 수 있어 ${skipped}개는 제외했습니다.` : '');
       }
     }
 
     // 카마스터 프로필 사진 업로드 핸들러
-    function handleDealerAvatarUpload(event) {
+    async function handleDealerAvatarUpload(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
       const d = getSelectedDealer();
-      const img = new Image();
-      img.onload = () => {
+      await arWithPhotoImport(event.target, async () => {
+        const img = await arImportPhoto(file, { maxEdge: 800 });
+        arReleasePhoto(d.avatarImg);
         d.avatarImg = img;
         window.__timelines['main'].seek(8.5);
-      };
-      img.src = URL.createObjectURL(file);
+      });
     }
 
     function handleCustomVideoUpload(event) {
@@ -3677,6 +3750,7 @@
       vid.src = URL.createObjectURL(file);
       vid.play();
       campaign.hasCustomVideo = true;
+      campaign.uploadedPhotos.forEach(arReleasePhoto);
       campaign.uploadedPhotos = [];
     }
 

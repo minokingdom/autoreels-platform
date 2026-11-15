@@ -1113,9 +1113,11 @@ POST https://graph.facebook.com/v19.0/${d.igUsername.replace('@', '')}/media
       if (typeof arToast === 'function') arToast(`CUT ${cutIdx + 1} 디자인 → ${wLbl}`, true);
     }
 
-    function replaceCutMedia(cutIdx, event) {
+    async function replaceCutMedia(cutIdx, event) {
       const file = event?.target?.files && event.target.files[0];
       if (!file) return;
+      const jobs = replaceCutMedia.jobs || (replaceCutMedia.jobs = {});
+      const job = jobs[cutIdx] = (jobs[cutIdx] || 0) + 1;
       if (!Array.isArray(campaign.uploadedPhotos)) campaign.uploadedPhotos = [];
       while (campaign.uploadedPhotos.length <= cutIdx) {
         const fallback = campaign.uploadedPhotos[0];
@@ -1123,13 +1125,17 @@ POST https://graph.facebook.com/v19.0/${d.igUsername.replace('@', '')}/media
         campaign.uploadedPhotos.push(fallback);
       }
       const applyObj = (mediaObj) => {
+        const previous = campaign.uploadedPhotos[cutIdx];
         campaign.uploadedPhotos[cutIdx] = mediaObj;
+        if (!campaign.uploadedPhotos.includes(previous)) arReleasePhoto(previous);
         campaign.isUserCustomPhotos = true;
         if (!Array.isArray(campaign.scenePlan)) campaign.scenePlan = [];
         if (!campaign.scenePlan[cutIdx]) campaign.scenePlan[cutIdx] = {};
         campaign.scenePlan[cutIdx].photoIdx = cutIdx;
         renderPhotoThumbnailsGrid();
         if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+        if (typeof renderCutEditorPanel === 'function') renderCutEditorPanel();
+        if (typeof renderInlineQuickEditBar === 'function') renderInlineQuickEditBar();
         if (typeof seekToTime === 'function' && typeof getCutStart === 'function') {
           seekToTime(getCutStart(cutIdx) + 0.1);
         } else if (window.__timelines?.main) {
@@ -1153,26 +1159,21 @@ POST https://graph.facebook.com/v19.0/${d.igUsername.replace('@', '')}/media
         }, { once: true });
         campaign.hasCustomVideo = true;
         applyObj(vid);
+        event.target.value = '';
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const img = new Image();
-        img._dataUrl = ev.target.result;
+      // 같은 컷을 연속 교체하면 마지막 선택만 적용한다.
+      await arWithPhotoImport(event.target, async () => {
+        const img = await arImportPhoto(file);
+        if (jobs[cutIdx] !== job) { arReleasePhoto(img); return; }
         img._label = `${cutIdx + 1}. ${cutIdx + 1}컷 내 사진`;
-        img.onload = () => {
-          if (typeof seekToTime === 'function' && typeof getCutStart === 'function') {
-            seekToTime(getCutStart(cutIdx) + 0.1);
-          }
-        };
-        img.src = ev.target.result;
         applyObj(img);
-      };
-      reader.readAsDataURL(file);
+      });
     }
 
     function resetToAiPhotos() {
+      campaign.uploadedPhotos.forEach(arReleasePhoto);
       if (IND.key !== 'auto') { pauseAllCutVideos(); campaign.isUserCustomPhotos = false; campaign.hasCustomVideo = false; return arApplyIndustryPhotos(); }
       pauseAllCutVideos();
       campaign.uploadedPhotos = [];
