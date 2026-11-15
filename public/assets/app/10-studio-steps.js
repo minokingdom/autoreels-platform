@@ -427,15 +427,15 @@
     }
 
     function evaluateDealerDrmStatus(d) {
-      if (!d) return 0;
-      // 서버 모드에서는 만료일 없는 무상 PRO도 서버 응답의 이용 권한으로 판정합니다.
+      // 서버 모드에서는 로그인 세션과 서버 구독/무상 PRO 권한으로만 판정합니다.
+      // (명함·매장 연락처 칸을 가게 전화번호로 바꾸거나 비워도 워터마크가 뜨지 않도록 함)
       if (window.AR_SERVER && AR_SERVER.mode) {
         const me = AR_SERVER.me;
         if (!me || !me.user || !me.entitlement || !me.entitlement.pro) return 0;
-        if (String(d.phone || '').replace(/\D/g, '') !== String(me.user.phone || '').replace(/\D/g, '')) return 3;
         const comp = me.subscription && me.subscription.comp === true;
-        return comp || new Date(me.entitlement.until).getTime() > Date.now() ? 1 : 0;
+        return comp || (me.entitlement.until && new Date(me.entitlement.until).getTime() > Date.now()) ? 1 : 0;
       }
+      if (!d) return 0;
       const curP8 = extractPhoneLast8(d.phone);
       const regP8 = extractPhoneLast8(d.licensedPhone || d.phone);
       const sig = parseProvidedLicenseSig(d.licenseKey);
