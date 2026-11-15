@@ -1652,21 +1652,37 @@
       renderBgmRecommendations();
     }
 
+    function generateKeywordLyriaBgm(kw) {
+      const inp = document.getElementById('lyriaCustomPromptInput');
+      if (inp) inp.value = kw;
+      if (typeof generateCustomLyriaBgm === 'function') generateCustomLyriaBgm();
+    }
+
     function renderBgmRecommendations() {
       const row = document.getElementById('bgmRecommendRow');
       if (!row) return;
       const sel = document.getElementById('bgmStyleSelect');
       const cur = sel ? sel.value : AudioEngine.bgmStyle;
       const recs = getRecommendedBgms();
+      const rawTopic = String(
+        (document.getElementById('topicInput') && document.getElementById('topicInput').value) ||
+        (typeof campaign !== 'undefined' && (campaign.topic || campaign.carTitle)) || ''
+      ).replace(/\s+/g, ' ').trim();
+      const shortKw = rawTopic.length > 14 ? rawTopic.slice(0, 14) + '…' : rawTopic;
+      const safeAttr = rawTopic.replace(/['"\\<>]/g, '');
+      const kwBtn = rawTopic
+        ? `<button type="button" onclick="generateKeywordLyriaBgm('${safeAttr}')" class="px-2 py-0.5 rounded-full text-[11px] border border-[#10b981]/50 bg-[#10b981]/15 text-[#6ee7b7] hover:bg-[#10b981]/25 transition-colors cursor-pointer" title="입력한 키워드 내용에 맞춰 새 AI 배경음악을 즉시 생성·저장합니다">✨ '${shortKw}' 새 BGM 생성</button>`
+        : '';
       row.innerHTML = `<span class="text-[11px] text-[#85858b] mr-0.5">추천:</span>` + recs.map((r) => {
         const active = cur === r.id;
         return `<button type="button" onclick="applyRecommendedBgm('${r.id}')" class="px-2 py-0.5 rounded-full text-[11px] border transition-colors cursor-pointer ${active ? 'bg-[#2563eb]/20 border-[#3b82f6] text-[#93c5fd]' : 'bg-[#1a1a20] border-[var(--border)] text-[#d4d4d8] hover:border-[#3b82f6]'}" title="${r.reason}">✨ ${r.label}</button>`;
-      }).join('');
+      }).join('') + kwBtn;
     }
 
     if (typeof window !== 'undefined') {
       window.renderBgmRecommendations = renderBgmRecommendations;
       window.applyRecommendedBgm = applyRecommendedBgm;
+      window.generateKeywordLyriaBgm = generateKeywordLyriaBgm;
       window.addEventListener('DOMContentLoaded', () => {
         setTimeout(renderBgmRecommendations, 400);
         const ti = document.getElementById('topicInput');

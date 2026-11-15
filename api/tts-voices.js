@@ -128,11 +128,21 @@ module.exports = async function handler(req, res) {
     const presetId = String(body.presetId || '').trim();
     const preset = LYRIA_BGM_PACK.find((t) => t.id === presetId);
     const customPrompt = String(body.prompt || '').trim();
+    const kwHash = (!preset && customPrompt)
+      ? 'kw_' + require('crypto').createHash('sha1').update(customPrompt.toLowerCase().replace(/\s+/g, ' ')).digest('hex').slice(0, 12)
+      : '';
 
-    if (preset) {
+    const cacheId = preset ? preset.id : kwHash;
+    if (cacheId) {
       const cachedMap = await listCachedBgmUrls();
-      if (cachedMap[preset.id]) {
-        return res.status(200).json({ ok: true, id: preset.id, label: preset.label, url: cachedMap[preset.id], cached: true });
+      if (cachedMap[cacheId]) {
+        return res.status(200).json({
+          ok: true,
+          id: cacheId,
+          label: preset ? preset.label : `✨ AI · ${customPrompt.slice(0, 20)}`,
+          url: cachedMap[cacheId],
+          cached: true
+        });
       }
     }
 
@@ -156,7 +166,7 @@ module.exports = async function handler(req, res) {
       const blob = getBlobHelpers();
       let url = '';
       if (blob) {
-        const key = preset ? preset.id : `custom_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        const key = preset ? preset.id : (kwHash || `custom_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`);
         const putRes = await blob.put(`bgm-pack/${key}.${ext}`, buf, {
           access: 'public',
           contentType: audio.mimeType,
