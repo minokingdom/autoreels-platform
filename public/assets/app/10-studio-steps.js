@@ -399,6 +399,93 @@
       set('easyStepText', step[1]);
     }
 
+    // ★ 휴대폰의 기본 선택창(회색 안드로이드 목록) 대신 우리 디자인의 아래 시트로 고르기
+    //   터치 화면에서만. 사진 고르기는 사진 미리보기 그리드로 보여 줌.
+    function arIsTouchUi() {
+      try { return window.matchMedia('(pointer: coarse)').matches; } catch (e) { return false; }
+    }
+    function arSelectLabel(sel) {
+      const box = sel.closest('.cut-ctl');
+      const span = box && box.querySelector('span');
+      if (span) return span.textContent.trim();
+      if (sel.id) {
+        const lb = document.querySelector(`label[for="${sel.id}"]`);
+        if (lb) return lb.textContent.trim();
+      }
+      const prev = sel.previousElementSibling;
+      if (prev && prev.tagName === 'LABEL') return prev.textContent.trim();
+      return sel.getAttribute('title') || '선택';
+    }
+    function arCloseOptionSheet() {
+      const el = document.getElementById('arOptionSheet');
+      if (el) { el.classList.add('hidden'); el.style.display = 'none'; el.innerHTML = ''; }
+    }
+    function arOpenOptionSheet(sel) {
+      let el = document.getElementById('arOptionSheet');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'arOptionSheet';
+        el.className = 'ar-modal hidden fixed inset-0 z-[95]';
+        el.addEventListener('click', (e) => { if (e.target === el) arCloseOptionSheet(); });
+        document.body.appendChild(el);
+      }
+      const esc = (v) => String(v || '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+      const isPhoto = sel.getAttribute('data-sheet-kind') === 'photo';
+      const photos = (typeof campaign !== 'undefined' && campaign.uploadedPhotos) || [];
+      const opts = [...sel.options].filter((o) => !o.disabled && !o.hidden && !o.classList.contains('hidden'));
+      const items = opts.map((o) => {
+        const on = o.value === sel.value;
+        const label = esc(o.textContent.trim().replace(/^\d+\.\s*/, isPhoto ? '' : '$&'));
+        if (isPhoto) {
+          const ph = photos[Number(o.value)];
+          const src = ph ? (ph._dataUrl || ph.src || '') : '';
+          return `<button type="button" class="aos-photo${on ? ' on' : ''}" data-v="${esc(o.value)}">${src ? `<img src="${esc(src)}" alt="" />` : '<span></span>'}<em>${label}</em></button>`;
+        }
+        return `<button type="button" class="aos-item${on ? ' on' : ''}" data-v="${esc(o.value)}"><span>${label}</span>${on ? '<b>✓</b>' : ''}</button>`;
+      }).join('');
+      el.innerHTML = `<div class="aos-card">
+          <div class="aos-head"><strong>${esc(arSelectLabel(sel))}</strong><button type="button" class="ar-modal-x" aria-label="닫기">✕</button></div>
+          <div class="${isPhoto ? 'aos-grid' : 'aos-list'}">${items}</div>
+        </div>`;
+      el.querySelector('.ar-modal-x').onclick = arCloseOptionSheet;
+      el.querySelectorAll('[data-v]').forEach((b) => {
+        b.onclick = () => {
+          sel.value = b.getAttribute('data-v');
+          arCloseOptionSheet();
+          sel.dispatchEvent(new Event('input', { bubbles: true }));
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+        };
+      });
+      el.classList.remove('hidden');
+      el.style.display = 'flex';
+      const cur = el.querySelector('.on');
+      if (cur) cur.scrollIntoView({ block: 'center' });
+    }
+    let arSelTouch = null; // 화면을 밀다가 선택칸 위에서 손을 떼도 열리지 않게, 손가락 이동 거리 확인
+    document.addEventListener('touchstart', (e) => {
+      const t = e.touches && e.touches[0];
+      arSelTouch = t ? { x: t.clientX, y: t.clientY } : null;
+    }, { capture: true, passive: true });
+    ['mousedown', 'touchend'].forEach((type) => {
+      document.addEventListener(type, (e) => {
+        const sel = e.target && e.target.closest && e.target.closest('select');
+        if (!sel || sel.disabled || sel.multiple || sel.hasAttribute('data-native') || !arIsTouchUi()) return;
+        e.preventDefault();
+        sel.blur();
+        if (type === 'touchend') {
+          const t = e.changedTouches && e.changedTouches[0];
+          if (arSelTouch && t && Math.hypot(t.clientX - arSelTouch.x, t.clientY - arSelTouch.y) > 10) return;
+          arOpenOptionSheet(sel);
+        } else if (e.button === 0) arOpenOptionSheet(sel);
+      }, { capture: true, passive: false });
+    });
+    // 키보드·접근성으로 열려고 할 때 대비: 포커스되면 기본 목록 대신 시트
+    document.addEventListener('focusin', (e) => {
+      const sel = e.target;
+      if (!sel || sel.tagName !== 'SELECT' || sel.hasAttribute('data-native') || !arIsTouchUi()) return;
+      sel.blur();
+    });
+
     function arSetUiMode(mode, remember) {
       const easy = mode !== 'full';
       document.body.classList.toggle('ar-easy', easy);

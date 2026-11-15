@@ -1086,3 +1086,23 @@ body.ar-cut-editing #presetDrawer:not(.open) { visibility: hidden; }
 .color-swatch { width: 34px; height: 34px; border-radius: 8px; flex: 0 0 auto; border: 2px solid transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); cursor: pointer; transition: transform .12s ease; }
 .color-swatch:hover { transform: scale(1.06); }
 .color-swatch.on { border-color: #ededed; box-shadow: 0 0 0 2px #0d0d10 inset; }
+
+/* 휴대폰 기본 선택창 대신 쓰는 아래 시트 */
+#arOptionSheet { align-items: flex-end; padding: 0; }
+#arOptionSheet .aos-card { width: 100%; max-width: 520px; margin: 0 auto; max-height: 78vh; display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border-strong); border-bottom: 0; border-radius: 18px 18px 0 0; padding: 14px 14px calc(14px + env(safe-area-inset-bottom)); animation: aosUp 200ms var(--ease-out); }
+@keyframes aosUp { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+#arOptionSheet .aos-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 10px; }
+#arOptionSheet .aos-head strong { font-size: 15px; color: #ededed; }
+#arOptionSheet .aos-list { overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+#arOptionSheet .aos-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; padding: 0 14px; border-radius: 12px; background: #18181b; border: 1px solid transparent; color: #d4d4d8; font-size: 14px; text-align: left; cursor: pointer; }
+#arOptionSheet .aos-item.on { background: #12201a; border-color: #4cc38a66; color: #fff; }
+#arOptionSheet .aos-item b { color: #4cc38a; }
+#arOptionSheet .aos-grid { overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+#arOptionSheet .aos-photo { position: relative; aspect-ratio: 9 / 13; border-radius: 12px; overflow: hidden; border: 2px solid transparent; background: #000; padding: 0; cursor: pointer; }
+#arOptionSheet .aos-photo img { width: 100%; height: 100%; object-fit: cover; }
+#arOptionSheet .aos-photo em { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 6px 6px; font-style: normal; font-size: 11px; line-height: 1.25; color: #fff; text-align: left; background: linear-gradient(transparent, rgba(0,0,0,.75)); }
+#arOptionSheet .aos-photo.on { border-color: #4cc38a; }
+#arOptionSheet .aos-grid { flex: 1 1 auto; min-height: 0; align-content: start; grid-auto-rows: calc((min(100vw, 520px) - 44px) / 3 * 13 / 9); }
+#arOptionSheet .aos-photo { aspect-ratio: auto; height: 100%; }
+#arOptionSheet .aos-photo img { position: absolute; inset: 0; }
+#arOptionSheet .aos-photo em { z-index: 1; }

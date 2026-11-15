@@ -523,7 +523,7 @@
             </div>
             <div class="cut-ctl-grid pt-2.5 border-t border-[#222225]">
               <label class="cut-ctl"><span>사진</span>
-                <select onchange="pickCutDefaultPhoto(${i}, this.value)" title="이 컷의 기본 이미지 선택" class="studio-input">
+                <select onchange="pickCutDefaultPhoto(${i}, this.value)" title="이 컷의 기본 이미지 선택" data-sheet-kind="photo" class="studio-input">
                   ${photoOpts || '<option value="0">기본 장면</option>'}
                 </select>
               </label>
