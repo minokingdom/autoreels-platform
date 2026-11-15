@@ -539,6 +539,7 @@
           this.masterBuffer = full;
           this.masterPeak = peak;
           this.masterDuration = full.duration;
+          this.masterCutBounds = null;
 
           // 문장 경계: 글자 위치로 추정한 경계 근처(±0.4초)에서 실제로 가장 조용한 지점을 찾아 자름
           //   (추정 경계가 말끝·말머리에 걸리면 문장 끝 발음이 잘리거나 다음 문장 첫 소리가 섞임)
@@ -574,6 +575,7 @@
           }
           // 마지막 문장은 녹음 끝까지 (말끝 여운이 잘리지 않게)
           bounds.push(full.duration);
+          this.masterCutBounds = bounds;
 
           lines.forEach((line, i) => {
             const from = Math.max(0, Math.floor(bounds[i] * sr));
@@ -727,7 +729,7 @@
             if (this.scriptPending === job) this.scriptPending = null;
             refitDurationToNarration();
             // 재생 중에 마스터 음성이 도착하면 즉시 타임라인 현재 시간에 맞춰 재생
-            if (isPlaying && this.enabled && this.masterBuffer) {
+            if (isPlaying && this.enabled && this.masterBuffer && !this._restartOnReady) {
               const curT = (window.__timelines && window.__timelines['main']) ? (window.__timelines['main'].currentTime || 0) : 0;
               this.playMasterAt(curT);
             }
@@ -1196,6 +1198,7 @@
       if (typeof AudioEngine === 'undefined') return;
       AudioEngine.stopTts();
       AudioEngine.masterBuffer = null;
+      AudioEngine.masterCutBounds = null;
       AudioEngine.masterDuration = 0;
       AudioEngine.lastSpokenCut = -1;
       AudioEngine._restartOnReady = true;

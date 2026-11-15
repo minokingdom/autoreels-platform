@@ -594,12 +594,26 @@
       let mainDur = Math.max(4.0, BASE_DURATION - baseOutro);
       let outro = baseOutro;
       let lengths = [];
+      let exactMasterLocked = false;
       if (audioEngineReady() && AudioEngine.enabled && AudioEngine.ttsVoice !== 'off') {
         const secs = AudioEngine.getNarrationSeconds();
         const cutSecs = secs.slice(0, cuts);
         const outroSec = secs[cuts] || 0;
+        const bounds = AudioEngine.masterBuffer && Array.isArray(AudioEngine.masterCutBounds) && AudioEngine.masterCutBounds.length >= cuts + 1
+          ? AudioEngine.masterCutBounds
+          : null;
 
-        if (cutSecs.length === cuts && cutSecs.every((x) => x > 0)) {
+        if (bounds) {
+          // 원테이크 마스터 음성의 실제 문장 경계(bounds)에 컷 전환 시점을 1:1로 고정
+          exactMasterLocked = true;
+          lengths = [];
+          for (let i = 0; i < cuts; i++) {
+            const start = i === 0 ? 0 : bounds[i];
+            const end = bounds[i + 1];
+            lengths.push(Math.max(0.5, end - start));
+          }
+          mainDur = lengths.reduce((p, q) => p + q, 0);
+        } else if (cutSecs.length === cuts && cutSecs.every((x) => x > 0)) {
           lengths = cutSecs.map((x) => Math.max(1.5, x + 0.25));
           const need = lengths.reduce((p, q) => p + q, 0);
           if (need < mainDur) {
@@ -612,33 +626,39 @@
           if (longestCut > 0) mainDur = Math.max(mainDur, cuts * (longestCut + 0.3));
         }
 
-        // 마지막 엔딩 명함 멘트 길이 확보 (음성이 완전히 끝나고도 2.2초 이상 유지 -> 절대 잘리지 않음!)
+        // 마지막 엔딩 명함 멘트 길이 확보 (음성이 완전히 끝나고도 충분히 유지)
         if (outroSec > 0) {
-          outro = Math.max(outro, outroSec + 2.2);
+          outro = Math.max(outro, outroSec + 2.0);
         } else {
-          outro = Math.max(outro, 4.2); // 멘트 길이를 아직 모를 때도 4.2초 이상 확보
+          outro = Math.max(outro, 4.2);
         }
 
-        // 원테이크 마스터 음성이 있을 때:
+        // 원테이크 마스터 음성이 있을 때: 남는 시간은 엔딩 명함 구간으로 흡수하여 본편 컷 싱크를 유지
         if (AudioEngine.masterBuffer && AudioEngine.masterDuration > 0) {
           const masterDur = AudioEngine.masterDuration;
-          const targetTotal = Math.max(BASE_DURATION, masterDur + 2.4);
+          const targetTotal = Math.max(BASE_DURATION, masterDur + 2.2);
           if (mainDur + outro < targetTotal) {
             outro = Math.max(outro, targetTotal - mainDur);
           }
         }
       }
-      // 명함이 비었으면 명함 화면 없이: 고른 길이는 본편으로 채우고, 한 호흡 음성이 끝까지 들어가게 확보
+      // 명함이 비었으면 명함 화면 없이: 한 호흡 음성이 끝까지 들어가게 확보 (마지막 컷만 연장)
       if (arCardEmpty()) {
         outro = 0;
-        mainDur = Math.max(mainDur, BASE_DURATION);
-        const masterDur = audioEngineReady() && AudioEngine.enabled && AudioEngine.masterBuffer ? AudioEngine.masterDuration : 0;
-        if (masterDur > 0) mainDur = Math.max(mainDur, masterDur + 0.6);
+        const targetMain = Math.max(
+          mainDur,
+          BASE_DURATION,
+          audioEngineReady() && AudioEngine.enabled && AudioEngine.masterBuffer ? AudioEngine.masterDuration + 0.6 : 0
+        );
+        if (exactMasterLocked && lengths.length > 0 && targetMain > mainDur) {
+          lengths[lengths.length - 1] += targetMain - mainDur;
+        }
+        mainDur = targetMain;
       }
-      const total = Math.round((mainDur + outro) * 10) / 10;
-      const outroRounded = Math.round(outro * 10) / 10;
-      // 반올림한 전체 길이에 컷 길이 합이 정확히 맞도록 보정
-      if (lengths.length > 0) {
+      const total = exactMasterLocked ? Math.round((mainDur + outro) * 100) / 100 : Math.round((mainDur + outro) * 10) / 10;
+      const outroRounded = exactMasterLocked ? Math.round((total - mainDur) * 100) / 100 : Math.round(outro * 10) / 10;
+      // 반올림한 전체 길이에 컷 길이 합이 정확히 맞도록 보정 (원테이크 싱크 고정 시에는 컷 경계를 흔들지 않음)
+      if (!exactMasterLocked && lengths.length > 0) {
         const main = Math.max(4.0, total - outroRounded);
         const sum = lengths.reduce((p, q) => p + q, 0);
         lengths = lengths.map((x) => (x * main) / sum);
