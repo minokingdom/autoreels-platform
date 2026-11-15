@@ -154,12 +154,44 @@
       if (promptEl) promptEl.value = topic.prompt;
       const badge = document.getElementById('todayTopicBadge');
       if (badge) { badge.textContent = `오늘 주제: ${topic.title} — 이 주제로 대본을 만들고 있어요`; badge.classList.remove('hidden'); }
+      // 주제(키워드)와 같은 분위기의 디자인으로 맞춤 — 대본·디자인이 한 흐름이 되게
+      const ds = arDesignForTopic(topic);
+      if (ds && typeof selectDesignStyle === 'function') selectDesignStyle(ds.id);
+      const tail = ds ? ` · 디자인: ${ds.name}` : '';
+      if (badge) badge.textContent = `오늘 주제: ${topic.title} — 이 주제로 대본을 만들고 있어요${tail}`;
       switchStudioTab('script');
       if (typeof generateStoryboardFromPrompt === 'function') {
         Promise.resolve(generateStoryboardFromPrompt()).finally(() => {
-          if (badge) badge.textContent = `오늘 주제: ${topic.title}`;
+          if (badge) badge.textContent = `오늘 주제: ${topic.title}${tail}`;
         });
       }
+    }
+    // 주제 문구의 분위기(특가·변신·계절 감성·정보·유행·바쁜 일상)를 읽어 맞는 디자인을 고름
+    const AR_TOPIC_MOODS = [
+      { t: /블프|블랙\s*프라이|세일|할인|특가|혜택|이벤트|쿠폰|오픈|1\+1|%|가격|무료/, d: /특가|세일|할인|혜택|이벤트|가격|SALE|ticket|band|impact|vivid|mo_number/i },
+      { t: /수능|변신|비포|애프터|전후|before|after|달라|바뀐|새로워/i, d: /비포|애프터|변신|전후|before|after|split|wipe/i },
+      { t: /가을|겨울|봄|여름|날씨|비 오는|눈 오는|크리스마스|연말|새해|감성|따뜻|추위|쌀쌀|건조|선선/, d: /감성|warm|sepia|film|polaroid|write|pen|손글씨|노트|편지|일기|필름|in_film|in_mood|in_letter|in_diary/i },
+      { t: /비법|방법|팁|관리|주의|체크|정리|가이드|이유|고르는|차이|알아/, d: /상담|정보|news|kicker|headline|카드뉴스|체크|신문|chalk|메뉴판|card_news/i },
+      { t: /인기|요즘|유행|트렌드|핫한|잘 나가|화제|난리/, d: /인기|🔥|트렌드|브이로그|vlog|handheld|POV|재미|ig_/i },
+      { t: /빠른|바쁜|퇴근|점심|출근|짬|시간 없/, d: /브이로그|handheld|timestamp|vsub|타이포|zoom|주방|새벽/i }
+    ];
+    function arDesignForTopic(topic) {
+      if (!topic || typeof arVisibleDesigns !== 'function') return null;
+      const text = [topic.title, topic.why, topic.prompt].filter(Boolean).join(' ');
+      const moods = AR_TOPIC_MOODS.filter((m) => m.t.test(text));
+      if (!moods.length) return null;
+      const cur = typeof getActiveDesign === 'function' ? getActiveDesign() : null;
+      let best = 0, pool = [];
+      arVisibleDesigns().forEach((d) => {
+        const hay = [d.id, d.name, d.label, d.cat, d.outro, d.cap, d.layout, d.grade].filter(Boolean).join(' ');
+        // 앞쪽(주제를 가장 잘 나타내는) 분위기일수록 가중치를 크게, 업종 전용 테마는 조금 더
+        let sc = moods.reduce((a, m, i) => a + (m.d.test(hay) ? 3 - Math.min(i, 2) * 0.5 : 0), 0);
+        if (!sc) return;
+        if (d.industry) sc += 0.5;
+        if (sc > best) { best = sc; pool = [d]; } else if (sc === best) pool.push(d);
+      });
+      if (pool.length > 1 && cur) pool = pool.filter((d) => d.id !== cur.id);
+      return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
     }
     function arPickCustomTopic() {
       const el = document.getElementById('topicCustomInput');
@@ -307,7 +339,17 @@
       pb.onclick = prev ? go(prev) : null;
       nb.style.visibility = next ? 'visible' : 'hidden';
       nb.textContent = next ? `다음: ${AR_STEP_NAMES[next]} →` : '';
-      nb.onclick = next ? go(next) : null;
+      // 주제 단계에서 주제를 고르지 않고 [다음]을 누르면 맨 위 추천 주제로 대본·디자인을 만듦
+      nb.onclick = !next ? null : () => {
+        if (key === 'topic' && !window.arTodayTopic && (window.__arTopics || []).length) {
+          arPickTopic(window.__arTopics[0]);
+          const panel = document.getElementById('studioPanel_script');
+          const top = panel ? panel.getBoundingClientRect().top + window.scrollY - 150 : 0;
+          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+          return;
+        }
+        go(next)();
+      };
       bar.querySelector('#mobileStepCount').textContent = `${idx + 1} / ${STUDIO_TABS.length}`;
       bar.querySelector('#mobileStepName').textContent = AR_STEP_NAMES[key] || '';
     }
