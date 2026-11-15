@@ -240,6 +240,19 @@
             : 'studio-tab text-[#85858b] hover:text-[#ededed] font-normal';
         }
       });
+      // 주제·대본 단계에서는 미리보기를 숨겨 넓게 쓰고, 사진 탭부터 미리보기 표시
+      const showPreview = !['topic', 'script'].includes(key);
+      const monCol = document.getElementById('mainMonitorColumn');
+      const wfCol = document.getElementById('studioWorkflowColumn');
+      if (monCol) monCol.classList.toggle('hidden', !showPreview);
+      if (wfCol) {
+        wfCol.className = showPreview ? 'lg:col-span-7 order-1 lg:order-2' : 'lg:col-span-12 order-1 lg:order-2';
+      }
+      if (typeof syncMobileDockVisibility === 'function') syncMobileDockVisibility();
+      if (showPreview && window.__timelines && window.__timelines['main']) {
+        window.__timelines['main'].seek(window.__timelines['main'].currentTime);
+      }
+
       // 탭을 바꾸면 패널 맨 위가 보이도록 (긴 화면에서 아래쪽에 머무는 것 방지)
       const bar = document.querySelector('.studio-tablist');
       if (bar && bar.getBoundingClientRect().top < 0) {

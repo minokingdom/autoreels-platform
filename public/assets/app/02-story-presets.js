@@ -4198,14 +4198,14 @@ function renderStoryArchetypesUI() {
     // 모바일 스크롤 시: 맨 위에서는 숨기고, 메인 9:16 미리보기가 화면에 보일 때도 숨겨 전체를 가리지 않게 함
     function syncMobileDockVisibility() {
       const dock = document.getElementById('mobileLiveDock');
-      if (!dock || window.innerWidth >= 1024) {
+      const mon = document.getElementById('mainMonitorColumn');
+      if (!dock || window.innerWidth >= 1024 || !mon || mon.classList.contains('hidden')) {
         if (dock) dock.classList.remove('dock-fixed-mode');
         return;
       }
       const scrollY = window.scrollY || window.pageYOffset;
-      const mon = document.getElementById('mainMonitorColumn');
-      const rect = mon ? mon.getBoundingClientRect() : null;
-      const monVisible = rect ? (rect.top < window.innerHeight - 60 && rect.bottom > 72) : false;
+      const rect = mon.getBoundingClientRect();
+      const monVisible = rect.top < window.innerHeight - 60 && rect.bottom > 72;
       const shouldShow = scrollY > 120 && !monVisible;
       dock.classList.toggle('dock-fixed-mode', shouldShow);
     }
