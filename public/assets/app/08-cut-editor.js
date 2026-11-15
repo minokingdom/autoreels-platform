@@ -4384,7 +4384,14 @@
         return `<button type="button" onclick="selectCutEditorElement('${key}')" aria-selected="${on ? 'true' : 'false'}" class="ar-el-chip modified ${on ? 'active' : ''}">${shortTxt}</button>`;
       }).join('');
 
-      const chipsHtml = baseChips.map((ch) => {
+      // 지금 디자인에 실제로 그려지는 요소만 보여 줌 (없는 요소를 골라도 아무 변화가 없어 헷갈렸음)
+      const drawn = (window.__arLastRenderedBoxes && window.__arLastRenderedBoxes[cutIdx]) || null;
+      const presentChips = baseChips.filter((ch) => {
+        if (!['caption', 'badge', 'price', 'chip'].includes(ch.key)) return true;
+        if (ch.key === activeKey || ch.mod) return true;
+        return !drawn || !!drawn[ch.key];
+      });
+      const chipsHtml = presentChips.map((ch) => {
         const on = activeKey === ch.key;
         const cls = [
           'ar-el-chip',
