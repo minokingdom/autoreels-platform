@@ -5,18 +5,18 @@
     //   대본 템플릿(STORY_ARCHETYPES)은 문구만 바꾸고 디자인은 바꾸지 않습니다.
     // ==========================================================================
     const DESIGN_STYLES = [
-      { id: 'sale_coupon', name: '특가 프로모션', desc: '다크 글래스 자막 · 할인 숫자 카운트업 · 프리미엄 딜러 명함', genre: 'sale', label: '특가 진행중', sig: 'countdown', high: false, alt: false, cover: false, accent: '#e11d48', accent2: '#fde68a' },
-      { id: 'sale_news', name: '뉴스 속보', desc: '상단 속보 띠와 흐르는 자막 · 검은 띠 자막 · 표지형 명함', genre: 'sale', label: 'LIVE 특가속보', sig: 'ticker', high: true, alt: true, cover: true, accent: '#dc2626', accent2: '#fde047' },
-      { id: 'lux_editorial', name: '에디토리얼', desc: '흑백 화보 · 명조체 가운데 자막 · 금테 액자 명함', genre: 'luxury', label: 'THE EDITORIAL', sig: 'masthead', grade: 'mono', high: false, alt: false, cover: false, accent: '#e7d8b5', accent2: '#ffffff' },
-      { id: 'lux_cinema', name: '시네마', desc: '영화 비율 검은 띠 · 필름 질감 · 왼쪽 정렬 자막 · 표지형 명함', genre: 'luxury', label: 'CINÉMA', sig: 'film', grade: 'film', high: true, alt: true, cover: true, accent: '#f2c46d', accent2: '#ffffff' },
-      { id: 'ev_hud', name: '글래스 HUD', desc: '모서리 표시 · 스캔선 · 유리 패널 자막 · ID 카드 명함', genre: 'ev', label: 'EV SYSTEM', sig: 'grid', high: false, alt: false, cover: false, accent: '#22d3ee', accent2: '#a5f3fc' },
-      { id: 'ev_terminal', name: '터미널', desc: '레이더 원 · 글자가 타이핑되는 자막 · 표지형 명함', genre: 'ev', label: 'AUTOPILOT', sig: 'radar', high: true, alt: true, cover: true, accent: '#38bdf8', accent2: '#e0f2fe' },
+      { id: 'sale_coupon', name: '특가 프로모션', desc: '다크 글래스 자막 · 할인 숫자 카운트업 · 프리미엄 딜러 엔딩', genre: 'sale', label: '특가 진행중', sig: 'countdown', high: false, alt: false, cover: false, accent: '#e11d48', accent2: '#fde68a' },
+      { id: 'sale_news', name: '뉴스 속보', desc: '상단 속보 띠와 흐르는 자막 · 검은 띠 자막 · 표지형 엔딩', genre: 'sale', label: 'LIVE 특가속보', sig: 'ticker', high: true, alt: true, cover: true, accent: '#dc2626', accent2: '#fde047' },
+      { id: 'lux_editorial', name: '에디토리얼', desc: '흑백 화보 · 명조체 가운데 자막 · 금테 액자 엔딩', genre: 'luxury', label: 'THE EDITORIAL', sig: 'masthead', grade: 'mono', high: false, alt: false, cover: false, accent: '#e7d8b5', accent2: '#ffffff' },
+      { id: 'lux_cinema', name: '시네마', desc: '영화 비율 검은 띠 · 필름 질감 · 왼쪽 정렬 자막 · 표지형 엔딩', genre: 'luxury', label: 'CINÉMA', sig: 'film', grade: 'film', high: true, alt: true, cover: true, accent: '#f2c46d', accent2: '#ffffff' },
+      { id: 'ev_hud', name: '글래스 HUD', desc: '모서리 표시 · 스캔선 · 유리 패널 자막 · ID 카드 엔딩', genre: 'ev', label: 'EV SYSTEM', sig: 'grid', high: false, alt: false, cover: false, accent: '#22d3ee', accent2: '#a5f3fc' },
+      { id: 'ev_terminal', name: '터미널', desc: '레이더 원 · 글자가 타이핑되는 자막 · 표지형 엔딩', genre: 'ev', label: 'AUTOPILOT', sig: 'radar', high: true, alt: true, cover: true, accent: '#38bdf8', accent2: '#e0f2fe' },
       { id: 'sport_race', name: '레이스', desc: '연석 무늬 · 속도선 · 비스듬한 색 블록 자막 · 레이서 카드', genre: 'sports', label: 'RACE MODE', sig: 'checker', high: false, alt: false, cover: false, accent: '#ef4444', accent2: '#ffffff' },
-      { id: 'sport_outline', name: '퍼포먼스', desc: '0→100 타이머 · 거대한 외곽선 글씨 · 표지형 명함', genre: 'sports', label: 'LAUNCH', sig: 'timer', high: true, alt: true, cover: true, accent: '#facc15', accent2: '#ffffff' },
-      { id: 'fin_chat', name: '채팅 상담', desc: '위 사진 · 아래 메신저 말풍선 · 견적서 카드 · DM 명함', genre: 'finance', label: '1:1 견적상담', sig: 'split', high: false, alt: false, cover: false, accent: '#6366f1', accent2: '#e0e7ff' },
-      { id: 'fin_notice', name: '알림 카드', desc: '사진 전체 화면 · 푸시 알림 자막 · 표지형 명함', genre: 'finance', label: '견적 알림', sig: 'receipt', high: false, alt: true, cover: true, accent: '#0ea5e9', accent2: '#e0f2fe' },
-      { id: 'trust_card', name: '화이트 카드', desc: '밝은 톤 · 아래 흰 카드 자막 · 인증서 명함', genre: 'trust', label: '인증 카마스터', sig: 'seal', high: false, alt: false, cover: false, accent: '#1d4ed8', accent2: '#dbeafe' },
-      { id: 'trust_check', name: '체크리스트', desc: '검수 진행 표시 · 위쪽 체크 카드 자막 · 표지형 명함', genre: 'trust', label: '정밀 검수 완료', sig: 'checklist', high: true, alt: true, cover: true, accent: '#0284c7', accent2: '#e0f2fe' }
+      { id: 'sport_outline', name: '퍼포먼스', desc: '0→100 타이머 · 거대한 외곽선 글씨 · 표지형 엔딩', genre: 'sports', label: 'LAUNCH', sig: 'timer', high: true, alt: true, cover: true, accent: '#facc15', accent2: '#ffffff' },
+      { id: 'fin_chat', name: '채팅 상담', desc: '위 사진 · 아래 메신저 말풍선 · 견적서 카드 · DM 엔딩', genre: 'finance', label: '1:1 견적상담', sig: 'split', high: false, alt: false, cover: false, accent: '#6366f1', accent2: '#e0e7ff' },
+      { id: 'fin_notice', name: '알림 카드', desc: '사진 전체 화면 · 푸시 알림 자막 · 표지형 엔딩', genre: 'finance', label: '견적 알림', sig: 'receipt', high: false, alt: true, cover: true, accent: '#0ea5e9', accent2: '#e0f2fe' },
+      { id: 'trust_card', name: '화이트 카드', desc: '밝은 톤 · 아래 흰 카드 자막 · 인증서 엔딩', genre: 'trust', label: '인증 카마스터', sig: 'seal', high: false, alt: false, cover: false, accent: '#1d4ed8', accent2: '#dbeafe' },
+      { id: 'trust_check', name: '체크리스트', desc: '검수 진행 표시 · 위쪽 체크 카드 자막 · 표지형 엔딩', genre: 'trust', label: '정밀 검수 완료', sig: 'checklist', high: true, alt: true, cover: true, accent: '#0284c7', accent2: '#e0f2fe' }
     ];
 
     // 색상 — 어떤 디자인에도 적용되는 포인트 색 (디자인 수에 세지 않음)
@@ -3264,7 +3264,7 @@
     const KIT_PART_NAMES = {
       layout: { full: '전체 화면', split: '라운딩 카드', polaroid: '겹친 폴라로이드', film: '흐르는 필름', circle: '원형 렌즈', mat: '액자', diag: '사선 분할', cards: '겹친 카드', grid: '4분할 그리드', arch: '아치 창', blinds: '블라인드 전환', duo: '레이어드 콜라주', notebook: '공책', chalkboard: '칠판', dim: '어두운 사진 위 큰 글씨', poster: '타이포 포스터', handheld: '손에 든 카메라' },
       cap: { band: '기울어진 띠', glass: '유리 카드', typer: '타자기', outline: '외곽선 글씨', marker: '형광펜', bubble: '말풍선', sticky: '포스트잇', cinema: '영화 자막', neon: '네온사인', stamp: '도장', words: '단어 팝', vertical: '세로쓰기', ticket: '영수증 쪽지', pill: '알약 칩', headline: '신문 헤드라인', lower3: '방송 하단 자막', write: '써지는 손글씨', letter: '편지지 손글씨', chalk: '분필 글씨', scribble: '동그라미 손글씨', brush: '붓글씨', doodle: '낙서 손글씨', stack: '꽉 찬 단어 쌓기', scroll: '흐르는 타이포', slam: '한 단어씩 쾅', knockout: '글자 속 사진', marquee: '무한 띠 타이포', longshadow: '입체 글씨', vsub: '브이로그 자막', chapter: '챕터 카드', loctag: '위치 태그', checkl: '출고 체크리스트', timestamp: '날짜·시각 기록', scriptkick: '필기체 포인트', signline: '서명 밑줄', quotecard: '서명 인용', notecard: '고급 카드지' },
-      outro: { bigname: '큰 이름', card: '흰 명함 카드', ticket: '탑승권', badge: '사원증', receipt: '견적 영수증', chat: '메신저 대화', split: '컬러 블록', ring: '회전 글씨 원', polaroid: '폴라로이드', news: '신문 1면', neon: '네온 간판', minimal: '미니멀', vlogend: '유튜브 끝 화면', signature: '서명 명함' }
+      outro: { bigname: '큰 이름', card: '흰 카드', ticket: '탑승권', badge: '사원증', receipt: '견적 영수증', chat: '메신저 대화', split: '컬러 블록', ring: '회전 글씨 원', polaroid: '폴라로이드', news: '신문 1면', neon: '네온 간판', minimal: '미니멀', vlogend: '유튜브 끝 화면', signature: '서명 명함' }
     };
     const KIT_DESIGNS = KIT_ROWS.map((r, i) => ({
       id: r[0],
@@ -3287,7 +3287,7 @@
       sfont: r[16] || '',
       seed: i,
       genre: 'kit',
-      desc: `${KIT_PART_NAMES.layout[r[3]]} · ${KIT_PART_NAMES.cap[r[4]]} 자막 · ${KIT_PART_NAMES.outro[r[8]]} 명함`
+      desc: `${KIT_PART_NAMES.layout[r[3]]} · ${KIT_PART_NAMES.cap[r[4]]} 자막 · ${KIT_PART_NAMES.outro[r[8]]} 엔딩`
     }));
     const CLASSIC_CATS = { sale: '특가', luxury: '고급', ev: '테크', sports: '스포츠', finance: '상담·정보', trust: '신뢰' };
     DESIGN_STYLES.forEach((ds) => {
@@ -3398,7 +3398,7 @@
           id: `ind_${ind}_${r[0]}`, name: r[1], cat: '내 업종', industry: ind, engine: 'kit',
           layout: r[2], cap: r[3], font: r[4], deco: r[5], trans: r[6], outro: r[7], grade: r[8], head: r[9], bg: r[10],
           label: r[11], accent: r[12], accent2: r[13], script: r[14] || '', sfont: r[15] || '', seed: 500 + i, genre: 'kit',
-          desc: `${KIT_PART_NAMES.layout[r[2]]} · ${KIT_PART_NAMES.cap[r[3]]} 자막 · ${KIT_PART_NAMES.outro[r[7]]} 명함`
+          desc: `${KIT_PART_NAMES.layout[r[2]]} · ${KIT_PART_NAMES.cap[r[3]]} 자막 · ${KIT_PART_NAMES.outro[r[7]]} 엔딩`
         });
       });
     });

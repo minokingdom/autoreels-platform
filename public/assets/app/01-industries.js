@@ -592,7 +592,7 @@
                 <span class="text-[18px]">${x.icon}</span><span>${x.name}</span>${x.key === IND.key ? '<span class="ml-auto text-[10px] text-[#85858b]">지금</span>' : ''}
               </button>`).join('')}
           </div>
-          <p class="text-[11px] text-[#85858b]">고르신 업종에 맞는 전용 디자인·사진·대본·명함이 바로 적용됩니다.</p>
+          <p class="text-[11px] text-[#85858b]">고르신 업종에 맞는 전용 디자인·사진·대본·엔딩이 바로 적용됩니다.</p>
           <div class="ar-modal-foot">
             <button type="button" onclick="document.getElementById('industryPickerModal').remove()" class="btn-secondary h-9 px-4 text-[12px] cursor-pointer">취소</button>
             <button type="button" id="industryPickerSave" onclick="arChangeAccountIndustry(arPickerChoice)" class="btn-primary h-9 px-5 text-[12px] cursor-pointer" disabled style="opacity:.45">저장</button>
