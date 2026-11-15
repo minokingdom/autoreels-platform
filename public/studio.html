@@ -1146,14 +1146,53 @@
 
         <div id="studioPanel_card" role="tabpanel" aria-labelledby="studioTabBtn_card" class="studio-panel hidden p-5 sm:p-6 space-y-5">
           <div class="studio-sub p-4 space-y-3">
-            <div class="flex items-center justify-between gap-2 flex-wrap">
-              <div>
-                <div class="text-[14px] font-medium text-[#ededed]">엔딩 명함 · 매장 정보</div>
-                <p id="cardTabSummaryText" class="text-[12px] text-[#a1a1a6] mt-1">구독 상태 · 업종 · 명함 정보는 상단 설정창에서 관리합니다.</p>
+            <div>
+              <div class="text-[14px] font-semibold text-[#ededed]">영상 끝 명함</div>
+              <p id="cardTabSummaryText" class="text-[12px] text-[#85858b] mt-0.5">영상 마지막에 나오는 명함이에요. 넣고 싶은 항목만 켜 두세요. 모두 비우면 명함 없이 끝나요.</p>
+            </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label id="dlrNameTitleLabel" data-noind class="block text-[12px] text-[#a1a1a6] mb-1.5">이름 및 직함</label>
+            <div class="flex gap-2">
+              <input id="dlrInputName" type="text" placeholder="홍길동" oninput="updateCurrentDealerFromPreview()" class="studio-input w-1/2 h-9 px-3 text-[13px]" />
+              <input id="dlrInputTitle" type="text" placeholder="수석 카마스터" oninput="updateCurrentDealerFromPreview()" class="studio-input w-1/2 h-9 px-3 text-[13px]" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-[12px] text-[#a1a1a6] mb-1.5">상담 연락처 · 로그인 번호</label>
+            <input id="dlrInputPhone" type="tel" placeholder="010-0000-0000" oninput="updateCurrentDealerFromPreview()" class="studio-input w-full h-9 px-3 text-[13px] font-mono" />
+          </div>
+          <div>
+            <label class="block text-[12px] text-[#a1a1a6] mb-1.5">소속 전시장 · 매장명</label>
+            <input id="dlrInputBranch" type="text" placeholder="OO자동차 전시장" oninput="updateCurrentDealerFromPreview()" class="studio-input w-full h-9 px-3 text-[13px]" />
+          </div>
+          <div>
+            <label class="block text-[12px] text-[#a1a1a6] mb-1.5">프로필 사진</label>
+            <label for="dealerFaceQuickInput" class="btn-secondary h-9 px-3 text-[13px] flex items-center justify-center cursor-pointer">
+              프로필 사진 바꾸기
+              <input type="file" id="dealerFaceQuickInput" accept="image/*" onchange="handleDealerAvatarUpload(event)" class="hidden" />
+            </label>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-[12px] text-[#a1a1a6] mb-1.5">혜택 · 인사말 문구</label>
+            <input id="dlrInputPromo" type="text" oninput="updateCurrentDealerFromPreview()" class="studio-input w-full h-9 px-3 text-[13px]" />
+          </div>
+        </div>
+            <div class="pt-3 border-t border-[var(--border)]">
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-[12px] text-[#a1a1a6]">로고</span>
+                <button type="button" id="dealerLogoClearBtn" onclick="clearDealerLogo()" class="hidden text-[12px] text-[#85858b] hover:text-[#ededed] cursor-pointer">로고 빼기</button>
               </div>
-              <button type="button" onclick="openStudioSettingsModal('card')" class="btn-secondary h-9 px-3.5 text-[12px] cursor-pointer shrink-0">
-                ⚙️ 설정에서 명함 수정하기
-              </button>
+              <label for="dealerLogoInput" class="cut-upload" id="dealerLogoLabel">
+                <img id="dealerLogoPreview" alt="" class="hidden h-7 max-w-[120px] object-contain mr-2" />
+                <span id="dealerLogoLabelText">🏷️ 가게·회사 로고 올리기 (배경 없는 PNG가 좋아요)</span>
+                <input type="file" id="dealerLogoInput" accept="image/*" onchange="handleDealerLogoUpload(event)" class="hidden" />
+              </label>
+            </div>
+            <div class="pt-3 border-t border-[var(--border)]">
+              <div class="text-[12px] text-[#a1a1a6] mb-2">명함에 보일 항목</div>
+              <div id="cardShowToggles" class="card-show-grid"></div>
             </div>
           </div>
 
@@ -1928,34 +1967,12 @@
 
       <!-- 3. 내 명함 / 매장 정보 -->
       <div id="settingsCardSection" class="studio-sub p-4 space-y-3">
-        <div class="text-[13px] font-medium text-[#ededed]">내 명함 · 매장 정보</div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="flex items-center justify-between gap-3">
           <div>
-            <label id="dlrNameTitleLabel" data-noind class="block text-[12px] text-[#a1a1a6] mb-1.5">이름 및 직함</label>
-            <div class="flex gap-2">
-              <input id="dlrInputName" type="text" placeholder="홍길동" oninput="updateCurrentDealerFromPreview()" class="studio-input w-1/2 h-9 px-3 text-[13px]" />
-              <input id="dlrInputTitle" type="text" placeholder="수석 카마스터" oninput="updateCurrentDealerFromPreview()" class="studio-input w-1/2 h-9 px-3 text-[13px]" />
-            </div>
+            <div class="text-[13px] font-medium text-[#ededed]">내 명함 · 매장 정보</div>
+            <p class="text-[12px] text-[#85858b] mt-0.5">명함 내용·로고·보일 항목은 제작 화면의 [명함] 단계에서 고쳐요.</p>
           </div>
-          <div>
-            <label class="block text-[12px] text-[#a1a1a6] mb-1.5">상담 연락처 · 로그인 번호</label>
-            <input id="dlrInputPhone" type="tel" placeholder="010-0000-0000" oninput="updateCurrentDealerFromPreview()" class="studio-input w-full h-9 px-3 text-[13px] font-mono" />
-          </div>
-          <div>
-            <label class="block text-[12px] text-[#a1a1a6] mb-1.5">소속 전시장 · 매장명</label>
-            <input id="dlrInputBranch" type="text" placeholder="OO자동차 전시장" oninput="updateCurrentDealerFromPreview()" class="studio-input w-full h-9 px-3 text-[13px]" />
-          </div>
-          <div>
-            <label class="block text-[12px] text-[#a1a1a6] mb-1.5">프로필 사진</label>
-            <label for="dealerFaceQuickInput" class="btn-secondary h-9 px-3 text-[13px] flex items-center justify-center cursor-pointer">
-              프로필 사진 바꾸기
-              <input type="file" id="dealerFaceQuickInput" accept="image/*" onchange="handleDealerAvatarUpload(event)" class="hidden" />
-            </label>
-          </div>
-          <div class="md:col-span-2">
-            <label class="block text-[12px] text-[#a1a1a6] mb-1.5">혜택 · 인사말 문구</label>
-            <input id="dlrInputPromo" type="text" oninput="updateCurrentDealerFromPreview()" class="studio-input w-full h-9 px-3 text-[13px]" />
-          </div>
+          <button type="button" onclick="closeStudioSettingsModal(); switchStudioTab('card')" class="btn-secondary h-9 px-3 text-[13px] cursor-pointer shrink-0">명함 단계로</button>
         </div>
 
         <details data-advanced class="studio-sub fold">

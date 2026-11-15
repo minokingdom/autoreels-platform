@@ -635,7 +635,11 @@
           Object.assign(d, d._autoOrig);
           return;
         }
-        if (IND.outroMode === 'store') {
+        // 사장님이 올린 프로필 사진이 있으면 그것을, 없으면 업종 매장 사진을 씀
+        // (예전에는 인물형 업종(미용실 등)에 자동차 견본 딜러 사진이 그대로 나왔음)
+        if (d._customAvatar) {
+          d.avatarImg = d._customAvatar;
+        } else {
           // 대체 그림에도 예시 매장명은 넣지 않음
           const storeName = IND.place || IND.name || '';
           if (!d._storeAvatarCache) d._storeAvatarCache = {};
@@ -657,8 +661,6 @@
             d._storeAvatarCache[IND.key] = storeImg;
           }
           d.avatarImg = d._storeAvatarCache[IND.key] || d._autoOrig.avatarImg;
-        } else {
-          d.avatarImg = d._autoOrig.avatarImg;
         }
         // 명함(4단계)은 비워 둠: 예시 매장명·주소·혜택은 입력칸 안내 문구(placeholder)로만 보여 줌
         // 사장님이 직접 입력한 값은 그대로 두고, 견본(자동차 견본·업종 예시) 값만 지움

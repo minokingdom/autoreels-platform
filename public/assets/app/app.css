@@ -1066,3 +1066,23 @@
 .topic-pager button { height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); background: #18181b; color: #ededed; font-size: 13px; font-weight: 600; cursor: pointer; }
 .topic-pager button:disabled { opacity: .35; cursor: default; }
 .topic-pager span { font-size: 12px; color: #85858b; font-family: ui-monospace, monospace; }
+
+/* 컷 편집: 도구 줄을 영상 위에 겹치지 않고 영상 바깥(위)으로, 선택 조절바는 영상 아래로 빼서 자막·사진이 가려지지 않게 */
+body.ar-cut-editing #previewViewport { overflow: visible; margin-top: 100px; }
+body.ar-cut-editing #previewViewport:has(#igSelectedBar:not(.hidden)) { margin-bottom: 96px; }
+body.ar-cut-editing #reelCanvas { border-radius: 12px; }
+body.ar-cut-editing #igTopBar { top: auto !important; bottom: calc(100% + 8px); left: 0 !important; right: 0 !important; }
+body.ar-cut-editing #igSelectedBar { bottom: auto !important; top: calc(100% + 8px); left: 0 !important; right: 0 !important; }
+/* 영상 틀 밖으로 넘치게 바꿨으니, 닫혀 있는 디자인 서랍이 옆에 비치지 않게 */
+body.ar-cut-editing #presetDrawer:not(.open) { visibility: hidden; }
+
+/* 명함 단계: 보일 항목 고르기 */
+.card-show-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.card-show-chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: #18181b; font-size: 13px; color: #a1a1a6; cursor: pointer; user-select: none; }
+.card-show-chip input { width: 16px; height: 16px; accent-color: #4cc38a; }
+.card-show-chip:has(input:checked) { border-color: #4cc38a66; background: #12201a; color: #ededed; }
+
+/* 색상 고르기: 네모 견본만 */
+.color-swatch { width: 34px; height: 34px; border-radius: 8px; flex: 0 0 auto; border: 2px solid transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); cursor: pointer; transition: transform .12s ease; }
+.color-swatch:hover { transform: scale(1.06); }
+.color-swatch.on { border-color: #ededed; box-shadow: 0 0 0 2px #0d0d10 inset; }

@@ -4266,13 +4266,14 @@
 
     function renderColorPalettePicker() {
       const design = getActiveDesign();
+      // 이름 없이 네모 색 견본만 (이름은 길게 누르거나 마우스를 올리면 보임)
       const html = COLOR_PALETTES.map((p) => {
         const on = p.id === campaign.colorKey;
         const sw = p.accent || design.accent;
-        const dot = p.id === 'default'
-          ? `<span class="w-3 h-3 rounded-full shrink-0" style="background: conic-gradient(${design.accent} 0 50%, ${design.accent2} 50% 100%)"></span>`
-          : `<span class="w-3 h-3 rounded-full shrink-0" style="background:${sw}"></span>`;
-        return `<button type="button" onclick="selectColorPalette('${p.id}')" class="theme-swatch-chip shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-[6px] text-[11px] font-medium border cursor-pointer ${on ? 'border-[#ededed] bg-[#232325] text-white' : 'border-[var(--border)] text-[#a1a1a6] hover:text-[#ededed]'}">${dot}<span class="truncate">${p.name}</span></button>`;
+        const bg = p.id === 'default'
+          ? `linear-gradient(135deg, ${design.accent} 0 50%, ${design.accent2} 50% 100%)`
+          : sw;
+        return `<button type="button" onclick="selectColorPalette('${p.id}')" title="${p.name}" aria-label="${p.name}" aria-pressed="${on}" class="color-swatch${on ? ' on' : ''}" style="background:${bg}"></button>`;
       }).join('');
       ['desktopThemeSwatches', 'mobileThemeSwatches', 'designColorSwatches'].forEach((id) => {
         const el = document.getElementById(id);

@@ -1344,7 +1344,9 @@ POST https://graph.facebook.com/v19.0/${d.igUsername.replace('@', '')}/media
         if (!b64Url) return;
         const img = new Image();
         img.onload = () => {
-          d.avatarImg = img;
+          // 견본 딜러 사진은 자동차 업종에서만 (늦게 불러와져 미용실 명함에 자동차 딜러 얼굴이 덮어써지던 문제)
+          if (d._autoOrig) d._autoOrig.avatarImg = img;
+          if ((typeof IND === 'undefined' || IND.key === 'auto') && !d._customAvatar) d.avatarImg = img;
           window.__timelines['main'].seek(window.__timelines['main'].currentTime);
         };
         img.src = b64Url;

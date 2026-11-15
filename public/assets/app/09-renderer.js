@@ -3431,7 +3431,24 @@
       // ========================================================================
       // 🦀 Rust WebAssembly (Wasm) DRM & 전화번호 도용(계정 돌려쓰기) 방지 캔버스 워터마크
       // ========================================================================
-      const drmCode = evaluateDealerDrmStatus(d);
+      // 명함 화면(엔딩)에 로고: 위쪽 가운데에 살짝 떠오르듯 (모든 디자인 공통)
+      if (t >= mainDuration && d && d.logoImg && d.logoImg.complete && d.logoImg.naturalWidth && !arCardEmpty()) {
+        const lg = d.logoImg;
+        const maxW = W * 0.24, maxH = W * 0.11;
+        const k = Math.min(maxW / lg.naturalWidth, maxH / lg.naturalHeight);
+        const lw = lg.naturalWidth * k, lh = lg.naturalHeight * k;
+        const a = Math.min(1, Math.max(0, (t - mainDuration) / 0.5));
+        ctx.save();
+        ctx.globalAlpha = a;
+        ctx.shadowColor = 'rgba(0,0,0,0.22)';
+        ctx.shadowBlur = 8;
+        // 오른쪽 위 모서리 (가운데 사진·제목과 겹치지 않게)
+        ctx.drawImage(lg, W - lw - W * 0.05, H * 0.035 + (1 - a) * 8, lw, lh);
+        ctx.restore();
+      }
+
+      // 정품 확인은 화면용 명함(항목을 끈 것)이 아니라 실제 계정 정보로
+      const drmCode = evaluateDealerDrmStatus(getSelectedDealer());
       if (drmCode !== 1) {
         ctx.save();
         ctx.fillStyle = 'rgba(2, 6, 23, 0.52)';
@@ -3743,8 +3760,10 @@
       const d = getSelectedDealer();
       await arWithPhotoImport(event.target, async () => {
         const img = await arImportPhoto(file, { maxEdge: 800 });
-        arReleasePhoto(d.avatarImg);
+        if (d.avatarImg && d.avatarImg === d._customAvatar) arReleasePhoto(d.avatarImg);
         d.avatarImg = img;
+        d._customAvatar = img;
+        if (d.cardHide) delete d.cardHide.avatar;
         window.__timelines['main'].seek(8.5);
       });
     }

@@ -278,6 +278,7 @@
       }
       arStepsVisited.add(key);
       if (key === 'sound') AudioEngine.loadVoiceList();
+      if (key === 'card' && typeof arRenderCardShowToggles === 'function') arRenderCardShowToggles();
       // 사진 탭의 컷 카드에 대본 탭에서 고친 문구를 반영
       if (key === 'photo' && typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
       STUDIO_TABS.forEach((k) => {
@@ -574,10 +575,7 @@
       if (indEl && typeof IND !== 'undefined') {
         indEl.textContent = `${IND.icon} ${IND.name}`;
       }
-      if (cardSumEl && d) {
-        const parts = [d.name, d.title, d.branch, d.phone].filter((v) => String(v || '').trim());
-        cardSumEl.textContent = parts.length ? parts.join(' · ') : '명함이 비어 있습니다. 설정에서 입력해 보세요.';
-      }
+      if (typeof arRenderCardShowToggles === 'function') arRenderCardShowToggles();
     }
 
     function openStudioSettingsModal(focusSection) {
@@ -778,7 +776,8 @@
             phone: d.phone,
             branch: d.branch,
             promoTag: d.promoTag,
-            snsAccounts: d.snsAccounts
+            snsAccounts: d.snsAccounts,
+            cardHide: d.cardHide || {}
           })
         );
         const badge = document.getElementById('mobileSavedBadge');
@@ -789,6 +788,7 @@
     }
 
     function loadSavedDealerProfiles() {
+      arLoadDealerLogos();
       try {
         dealers.forEach((d) => {
           const raw = localStorage.getItem('autoreels_my_dealer_profile_' + d.id);
@@ -800,6 +800,7 @@
             if (parsed.branch) d.branch = parsed.branch;
             if (parsed.promoTag) d.promoTag = parsed.promoTag;
             if (parsed.snsAccounts) d.snsAccounts = parsed.snsAccounts;
+            if (parsed.cardHide && typeof parsed.cardHide === 'object') d.cardHide = parsed.cardHide;
           }
         });
       } catch (e) {}
@@ -833,6 +834,88 @@
       renderDealerVariationSummary();
       syncTechPanel();
       window.__timelines['main'].seek(window.__timelines['main'].currentTime);
+    }
+
+    // ★ 명함 단계: 보일 항목 고르기 + 로고
+    //   (설정창이 아니라 명함 단계에서 바로. 항목을 끄면 영상 끝 명함에서만 빠지고 적어 둔 내용은 그대로 남음)
+    const AR_CARD_FIELDS = [
+      ['name', '이름'], ['title', '직함'], ['phone', '연락처'], ['branch', '매장명'],
+      ['promoTag', '혜택 문구'], ['avatar', '프로필 사진'], ['logo', '로고']
+    ];
+    function arCardFieldShown(d, k) { return !(d && d.cardHide && d.cardHide[k]); }
+    function arRenderCardShowToggles() {
+      const box = document.getElementById('cardShowToggles');
+      const d = typeof getSelectedDealer === 'function' ? getSelectedDealer() : null;
+      if (!box || !d) return;
+      const isAuto = typeof IND !== 'undefined' && IND.key === 'auto';
+      box.innerHTML = AR_CARD_FIELDS
+        .filter(([k]) => !(isAuto && k === 'phone')) // 자동차 판매는 영상에 전화번호를 넣지 않음
+        .map(([k, label]) => `<label class="card-show-chip"><input type="checkbox" ${arCardFieldShown(d, k) ? 'checked' : ''} onchange="arToggleCardField('${k}', this.checked)" /><span>${label}</span></label>`).join('');
+      const has = !!d.logoImg;
+      const pv = document.getElementById('dealerLogoPreview');
+      const tx = document.getElementById('dealerLogoLabelText');
+      const clr = document.getElementById('dealerLogoClearBtn');
+      if (pv) { pv.classList.toggle('hidden', !has); if (has) pv.src = d.logoImg.src; }
+      if (tx) tx.textContent = has ? '다른 로고로 바꾸기' : '🏷️ 가게·회사 로고 올리기 (배경 없는 PNG가 좋아요)';
+      if (clr) clr.classList.toggle('hidden', !has);
+    }
+    function arToggleCardField(k, on) {
+      const d = getSelectedDealer();
+      d.cardHide = Object.assign({}, d.cardHide || {});
+      if (on) delete d.cardHide[k]; else d.cardHide[k] = true;
+      updateCurrentDealerFromPreview();
+      if (typeof seekToTime === 'function') seekToTime(Math.max(0, TOTAL_DURATION - 1.2)); // 명함 화면으로 이동해 바로 확인
+    }
+    function arSaveDealerLogo(d) {
+      try {
+        if (d.logoImg && d.logoImg.src && d.logoImg.src.startsWith('data:')) localStorage.setItem('autoreels_dealer_logo_' + d.id, d.logoImg.src);
+        else localStorage.removeItem('autoreels_dealer_logo_' + d.id);
+      } catch (e) {}
+    }
+    function arLoadDealerLogos() {
+      try {
+        dealers.forEach((d) => {
+          const src = localStorage.getItem('autoreels_dealer_logo_' + d.id);
+          if (src && !d.logoImg) { const img = new Image(); img.src = src; d.logoImg = img; }
+        });
+      } catch (e) {}
+    }
+    function handleDealerLogoUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const d = getSelectedDealer();
+      const reader = new FileReader();
+      reader.onload = () => {
+        const raw = new Image();
+        raw.onload = () => {
+          // 저장 공간을 아끼려고 긴 변 400px로 줄임 (투명 배경 유지 위해 PNG)
+          const k = Math.min(1, 400 / Math.max(raw.width, raw.height));
+          const cv = document.createElement('canvas');
+          cv.width = Math.max(1, Math.round(raw.width * k));
+          cv.height = Math.max(1, Math.round(raw.height * k));
+          cv.getContext('2d').drawImage(raw, 0, 0, cv.width, cv.height);
+          const img = new Image();
+          img.onload = () => {
+            d.logoImg = img;
+            if (d.cardHide) delete d.cardHide.logo;
+            arSaveDealerLogo(d);
+            updateCurrentDealerFromPreview();
+            arRenderCardShowToggles();
+            if (typeof seekToTime === 'function') seekToTime(Math.max(0, TOTAL_DURATION - 1.2));
+          };
+          img.src = cv.toDataURL('image/png');
+        };
+        raw.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+      event.target.value = '';
+    }
+    function clearDealerLogo() {
+      const d = getSelectedDealer();
+      d.logoImg = null;
+      arSaveDealerLogo(d);
+      updateCurrentDealerFromPreview();
+      arRenderCardShowToggles();
     }
 
     function copyDealerCaption() {

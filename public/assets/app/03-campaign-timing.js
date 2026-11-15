@@ -273,9 +273,16 @@
     function arIsDemoPromo(v) { return AR_DEMO_PROMO_TAGS.includes(String(v || '').trim()); }
     // 영상 화면에 그릴 명함: 혜택이 견본 그대로면 비워서 🎁 혜택 장식이 나오지 않게 함 (원본 명함은 그대로 둠)
     function arDisplayDealer(d) {
-      if (!d || !arIsDemoPromo(d.promoTag)) return d;
+      if (!d) return d;
+      const hide = d.cardHide || {};
+      const demo = arIsDemoPromo(d.promoTag);
+      if (!demo && !Object.keys(hide).length) return d;
       const view = Object.create(d);
-      view.promoTag = '';
+      if (demo) view.promoTag = '';
+      // 명함 단계에서 끈 항목은 영상 끝 명함에서 뺌 (적어 둔 내용은 그대로)
+      ['name', 'title', 'phone', 'branch', 'promoTag'].forEach((k) => { if (hide[k]) view[k] = ''; });
+      if (hide.avatar) view.avatarImg = null;
+      if (hide.logo) view.logoImg = null;
       return view;
     }
     function arDealerForCopy(d) {
@@ -295,7 +302,10 @@
     function arCardEmpty() {
       try {
         const d = getSelectedDealer();
-        return !d || !['name', 'title', 'branch', 'phone', 'promoTag'].some((k) => String(d[k] || '').trim());
+        if (!d) return true;
+        const v = arDisplayDealer(d);
+        // 보이도록 켜 둔 항목이 하나도 없고 로고도 없으면 명함 화면 없이 끝냄
+        return !['name', 'title', 'branch', 'phone', 'promoTag'].some((k) => String(v[k] || '').trim()) && !v.logoImg;
       } catch (e) { return false; }
     }
 
