@@ -91,6 +91,7 @@
           opt.textContent = `🎵 내 음원: ${file.name.slice(0, 22)}`;
         }
         if (sel) sel.value = 'custom_mp3';
+        if (typeof renderBgmRecommendations === 'function') setTimeout(renderBgmRecommendations, 0);
 
         const statusText = document.getElementById('customBgmStatusText');
         if (statusText) {
@@ -1463,6 +1464,7 @@
         AudioEngine.bgmStyle = 'showroom';
         const sel = document.getElementById('bgmStyleSelect');
         if (sel) sel.value = 'showroom';
+        if (typeof renderBgmRecommendations === 'function') renderBgmRecommendations();
         if (AudioEngine.enabled) AudioEngine.startBgmLoop();
       }
     }
@@ -1492,6 +1494,7 @@
         if (opt) { opt.classList.remove('hidden'); opt.textContent = data.label; }
         if (sel) sel.value = 'custom_mp3';
         AudioEngine.loadRemoteBgmUrl(data.url, data.label);
+        if (typeof renderBgmRecommendations === 'function') renderBgmRecommendations();
       } catch (err) {
         if (st) { st.classList.remove('hidden'); st.textContent = arFriendlyBgmError(err, false); }
       } finally {
@@ -1558,15 +1561,18 @@
     }
 
     // 인스타 릴스처럼 현재 대본·주제·업종·디자인 분위기에 맞는 BGM Top 3 추천
-    function getRecommendedBgms() {
+    function getRecommendedBgms(limit = 3) {
+      const tp = typeof window !== 'undefined' ? window.arTodayTopic : null;
       const text = [
+        tp ? [tp.title, tp.why, tp.prompt].filter(Boolean).join(' ') : '',
         typeof campaign !== 'undefined' ? (campaign.topic || '') : '',
         typeof campaign !== 'undefined' ? (campaign.carTitle || '') : '',
         typeof campaign !== 'undefined' && Array.isArray(campaign.cutCaptions) ? campaign.cutCaptions.join(' ') : '',
         typeof campaign !== 'undefined' && Array.isArray(campaign.cutScripts) ? campaign.cutScripts.join(' ') : '',
         (document.getElementById('topicInput') && document.getElementById('topicInput').value) || ''
       ].join(' ');
-      const ind = typeof getIndustryId === 'function' ? getIndustryId() : 'car';
+      const ind = typeof getIndustryId === 'function' ? getIndustryId()
+        : (typeof IND !== 'undefined' && IND.key ? (IND.key === 'auto' ? 'car' : IND.key) : 'car');
       const ds = typeof getActiveDesign === 'function' ? getActiveDesign() : null;
       const cat = ds ? (ds.cat || '') : '';
 
@@ -1652,7 +1658,7 @@
       };
       return Array.from(scores.values())
         .sort((a, b) => b.pts - a.pts)
-        .slice(0, 3)
+        .slice(0, limit)
         .map((x) => ({ ...x, label: LABELS[x.id] || x.id }));
     }
 
@@ -1669,25 +1675,137 @@
       if (typeof generateCustomLyriaBgm === 'function') generateCustomLyriaBgm();
     }
 
-    function renderBgmRecommendations() {
-      const row = document.getElementById('bgmRecommendRow');
-      if (!row) return;
+    // ★ 인스타 음악 고르기처럼: 지금 음악 한 줄 → 누르면 음악 목록(추천이 목록 맨 위에 '추천' 표시와 함께)
+    const AR_BGM_META = {
+      showroom: ['잔잔', '칠 하우스', '#0ea5e9', '#1e3a8a'], urban: ['신나는', '폰크 · 트랩', '#ef4444', '#111827'],
+      bright: ['신나는', '시티팝', '#f59e0b', '#ec4899'], luxury: ['고급', '라운지', '#a16207', '#1c1917'],
+      lofi: ['감성', '로파이', '#a78bfa', '#312e81'], vlog: ['감성', '어쿠스틱 팝', '#84cc16', '#14532d'],
+      cinema: ['고급', '시네마틱', '#64748b', '#0f172a'], drive: ['신나는', '신스웨이브', '#d946ef', '#1e1b4b'],
+      edm: ['신나는', 'EDM', '#22d3ee', '#7c3aed'], funk: ['신나는', '펑크 그루브', '#fb923c', '#7c2d12'],
+      ballad: ['감성', '피아노', '#f9a8d4', '#831843'], news: ['잔잔', '뉴스', '#94a3b8', '#1e293b'],
+      jazz: ['고급', '재즈', '#d97706', '#422006'],
+      lyria_showroom: ['AI 맞춤', '쇼룸 하우스', '#38bdf8', '#0f172a'], lyria_cafe: ['AI 맞춤', '카페 보사노바', '#d6a77a', '#3f2a1d'],
+      lyria_restaurant: ['AI 맞춤', '맛집 그루브', '#f97316', '#451a03'], lyria_beauty: ['AI 맞춤', '뷰티 R&B', '#f472b6', '#4a044e'],
+      lyria_fitness: ['AI 맞춤', '파워 트랩', '#ef4444', '#0c0a09'], lyria_realestate: ['AI 맞춤', '하우스 라운지', '#cbd5e1', '#1e293b'],
+      lyria_academy: ['AI 맞춤', '공부 로파이', '#60a5fa', '#1e1b4b'], lyria_clinic: ['AI 맞춤', '앰비언트', '#5eead4', '#134e4a'],
+      lyria_shop: ['AI 맞춤', '쇼핑 시티팝', '#fb7185', '#4c0519'], lyria_interior: ['AI 맞춤', '북유럽 미니멀', '#e7e5e4', '#44403c'],
+      ace_showroom: ['신나는', '일렉트로닉 하우스', '#0284c7', '#020617'], ace_cafe: ['감성', '보사노바 · 재즈', '#b45309', '#1c1917'],
+      ace_restaurant: ['신나는', '어쿠스틱 그루브', '#ea580c', '#1c0a00'], ace_beauty: ['감성', '트렌디 R&B', '#db2777', '#2e1065'],
+      ace_fitness: ['신나는', '파워 트랩', '#dc2626', '#09090b'], ace_realestate: ['고급', '하우스 라운지', '#94a3b8', '#0f172a'],
+      ace_academy: ['잔잔', '로파이 비트', '#3b82f6', '#172554'], ace_clinic: ['잔잔', '앰비언트', '#14b8a6', '#042f2e'],
+      ace_shop: ['신나는', '시티팝', '#e11d48', '#3f0013'], ace_interior: ['잔잔', '북유럽 미니멀', '#d6d3d1', '#292524'],
+      custom_mp3: ['내 음원', '불러온 파일', '#4cc38a', '#064e3b'], off: ['', '음악 없이', '#3f3f46', '#18181b']
+    };
+    const AR_BGM_MOODS = ['추천', '전체', '신나는', '잔잔', '감성', '고급', 'AI 맞춤'];
+    let arBgmMood = '추천';
+    function arBgmOptions() {
       const sel = document.getElementById('bgmStyleSelect');
-      const cur = sel ? sel.value : AudioEngine.bgmStyle;
-      const recs = getRecommendedBgms();
-      const rawTopic = String(
-        (document.getElementById('topicInput') && document.getElementById('topicInput').value) ||
-        (typeof campaign !== 'undefined' && (campaign.topic || campaign.carTitle)) || ''
-      ).replace(/\s+/g, ' ').trim();
-      const shortKw = rawTopic.length > 14 ? rawTopic.slice(0, 14) + '…' : rawTopic;
-      const safeAttr = rawTopic.replace(/['"\\<>]/g, '');
-      const kwBtn = rawTopic
-        ? `<button type="button" onclick="generateKeywordLyriaBgm('${safeAttr}')" class="px-2 py-0.5 rounded-full text-[11px] border border-[#10b981]/50 bg-[#10b981]/15 text-[#6ee7b7] hover:bg-[#10b981]/25 transition-colors cursor-pointer" title="입력한 키워드 내용에 맞춰 새 AI 배경음악을 즉시 생성·저장합니다">✨ '${shortKw}' 새 BGM 생성</button>`
-        : '';
-      row.innerHTML = `<span class="text-[11px] text-[#85858b] mr-0.5">추천:</span>` + recs.map((r) => {
-        const active = cur === r.id;
-        return `<button type="button" onclick="applyRecommendedBgm('${r.id}')" class="px-2 py-0.5 rounded-full text-[11px] border transition-colors cursor-pointer ${active ? 'bg-[#2563eb]/20 border-[#3b82f6] text-[#93c5fd]' : 'bg-[#1a1a20] border-[var(--border)] text-[#d4d4d8] hover:border-[#3b82f6]'}" title="${r.reason}">✨ ${r.label}</button>`;
-      }).join('') + kwBtn;
+      if (!sel) return [];
+      return [...sel.options].filter((o) => !o.classList.contains('hidden')).map((o) => ({ id: o.value, name: o.textContent.trim() }));
+    }
+    function arBgmCover(id, size) {
+      const m = AR_BGM_META[id] || ['', '', '#3f3f46', '#18181b'];
+      return `<span class="bgm-cover" style="width:${size}px;height:${size}px;background:linear-gradient(135deg, ${m[2]}, ${m[3]})">${id === 'off' ? '✕' : '♪'}</span>`;
+    }
+    function renderBgmRecommendations() {
+      // 예전 '추천:' 칩 줄은 쓰지 않음 → 지금 음악 한 줄만
+      const row = document.getElementById('bgmRecommendRow');
+      const sel = document.getElementById('bgmStyleSelect');
+      if (!row || !sel) return;
+      sel.classList.add('hidden');
+      const cur = sel.value;
+      const opt = arBgmOptions().find((o) => o.id === cur) || { id: cur, name: cur };
+      const m = AR_BGM_META[cur] || [];
+      const reco = getRecommendedBgms(3).find((r) => r.id === cur);
+      row.className = 'mb-1.5';
+      row.innerHTML = `<button type="button" class="bgm-now" onclick="arOpenBgmSheet()">
+          ${arBgmCover(cur, 44)}
+          <span class="bgm-now-txt"><strong>${opt.name}</strong><small>${reco ? '추천 · ' + reco.reason : (m[1] || '배경음악')}</small></span>
+          <span class="bgm-now-go">바꾸기 ›</span>
+        </button>`;
+      const sheet = document.getElementById('arBgmSheet');
+      if (sheet && sheet.style.display === 'flex') arRenderBgmSheet();
+    }
+    function arOpenBgmSheet() {
+      let el = document.getElementById('arBgmSheet');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'arBgmSheet';
+        el.className = 'ar-modal hidden fixed inset-0 z-[95]';
+        el.addEventListener('click', (e) => { if (e.target === el) arCloseBgmSheet(); });
+        document.body.appendChild(el);
+      }
+      arBgmMood = '추천';
+      arRenderBgmSheet();
+      el.classList.remove('hidden');
+      el.style.display = 'flex';
+    }
+    function arCloseBgmSheet() {
+      const el = document.getElementById('arBgmSheet');
+      if (el) { el.classList.add('hidden'); el.style.display = 'none'; }
+    }
+    function arRenderBgmSheet() {
+      const el = document.getElementById('arBgmSheet');
+      if (!el) return;
+      const sel = document.getElementById('bgmStyleSelect');
+      const cur = sel ? sel.value : '';
+      const q = (el.querySelector('#arBgmSearch') || {}).value || '';
+      const recos = getRecommendedBgms(6);
+      const recoMap = new Map(recos.map((r) => [r.id, r.reason]));
+      let list = arBgmOptions();
+      if (q.trim()) {
+        const k = q.trim().toLowerCase();
+        list = list.filter((o) => (o.name + ' ' + ((AR_BGM_META[o.id] || [])[1] || '') + ' ' + ((AR_BGM_META[o.id] || [])[0] || '')).toLowerCase().includes(k));
+      } else if (arBgmMood === '추천') {
+        // 추천은 목록 맨 위에, 나머지는 그 아래 그대로 이어서
+        const ids = recos.map((r) => r.id);
+        list = ids.map((id) => list.find((o) => o.id === id)).filter(Boolean).concat(list.filter((o) => !recoMap.has(o.id)));
+      } else if (arBgmMood !== '전체') {
+        list = list.filter((o) => (AR_BGM_META[o.id] || [])[0] === arBgmMood);
+      }
+      const esc = (v) => String(v || '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+      const tp = window.arTodayTopic;
+      const kw = String((tp && tp.title) || '').trim();
+      const rows = list.map((o) => {
+        const m = AR_BGM_META[o.id] || [];
+        const why = recoMap.get(o.id);
+        // 같은 말이 두 번 나오지 않게 (예: '재즈 · 재즈')
+        const parts = [];
+        [why, m[1], m[0] && m[0] !== 'AI 맞춤' ? m[0] : ''].forEach((v) => { if (v && !parts.includes(v)) parts.push(v); });
+        const sub = parts.map((v, i) => (i === 0 && why ? `<b>추천</b> ${esc(v)}` : esc(v))).join(' · ');
+        const on = o.id === cur;
+        return `<button type="button" class="bgm-row ${on ? 'on' : ''}" onclick="arPickBgm('${o.id}')">
+            ${arBgmCover(o.id, 48)}
+            <span class="bgm-row-txt"><strong>${esc(o.name)}</strong><small>${sub}</small></span>
+            <span class="bgm-row-state">${on ? (typeof isPlaying !== 'undefined' && isPlaying ? '<i class="bgm-eq"><i></i><i></i><i></i></i>' : '✓') : '▶'}</span>
+          </button>`;
+      }).join('');
+      const hadFocus = document.activeElement && document.activeElement.id === 'arBgmSearch';
+      el.innerHTML = `<div class="bgm-sheet">
+          <div class="bgm-head"><strong>음악</strong><button type="button" class="bgm-done" onclick="arCloseBgmSheet()">완료</button></div>
+          <input id="arBgmSearch" class="bgm-search" type="search" placeholder="음악 검색 (예: 재즈, 신나는, 카페)" value="${esc(q)}" oninput="arRenderBgmSheet()" />
+          <div class="bgm-moods no-scrollbar">${AR_BGM_MOODS.map((md) => `<button type="button" class="${md === arBgmMood && !q ? 'on' : ''}" onclick="arBgmMood='${md}';const s=document.getElementById('arBgmSearch');if(s)s.value='';arRenderBgmSheet()">${md}</button>`).join('')}</div>
+          <div class="bgm-list">
+            ${kw ? `<button type="button" class="bgm-row bgm-make" onclick="arCloseBgmSheet();generateKeywordLyriaBgm('${esc(kw).replace(/'/g, '')}')"><span class="bgm-cover bgm-cover-make">✨</span><span class="bgm-row-txt"><strong>'${esc(kw.length > 16 ? kw.slice(0, 16) + '…' : kw)}' 맞춤 음악 만들기</strong><small>오늘 주제에 맞춰 AI가 새로 작곡해요 (10~15초)</small></span><span class="bgm-row-state">＋</span></button>` : ''}
+            ${rows || '<p class="bgm-empty">맞는 음악이 없어요</p>'}
+            <label for="customBgmFileInput" class="bgm-row bgm-make"><span class="bgm-cover bgm-cover-make">⤒</span><span class="bgm-row-txt"><strong>내 음원 불러오기</strong><small>휴대폰에 있는 음악·영상 소리를 써요</small></span><span class="bgm-row-state">＋</span></label>
+          </div>
+        </div>`;
+      if (hadFocus) { const s2 = el.querySelector('#arBgmSearch'); if (s2) { s2.focus(); s2.setSelectionRange(s2.value.length, s2.value.length); } }
+    }
+    // 목록에서 누르면 바로 그 음악으로 바꾸고 처음부터 들려줌 (인스타처럼 눌러서 들어 보기)
+    function arPickBgm(id) {
+      const sel = document.getElementById('bgmStyleSelect');
+      if (!sel) return;
+      const same = sel.value === id;
+      sel.value = id;
+      if (!same) onAudioConfigChange();
+      if (id !== 'off' && typeof seekToTime === 'function') {
+        seekToTime(0);
+        if (typeof isPlaying !== 'undefined' && !isPlaying && typeof togglePlayPause === 'function') togglePlayPause();
+      }
+      renderBgmRecommendations();
+      arRenderBgmSheet();
     }
 
     if (typeof window !== 'undefined') {

@@ -1210,3 +1210,36 @@ body:has(#cutEditorPanel:not(.hidden)) #previewCutPinBar { display: none !import
 .pd-mood-row { display: flex; gap: 6px; overflow-x: auto; padding: 8px 0 4px; }
 .pd-mood { flex: 0 0 auto; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: transparent; color: #d4d4d8; font-size: 12px; cursor: pointer; }
 .pd-mood.on { background: #fff; color: #09090b; border-color: #fff; }
+
+/* ===== 배경음악: 인스타 음악 고르기처럼 ===== */
+.bgm-now { width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px 10px 8px 8px; border-radius: 14px; border: 1px solid var(--border); background: #141416; text-align: left; cursor: pointer; }
+.bgm-now:hover { border-color: rgba(255,255,255,.2); }
+.bgm-cover { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; color: rgba(255,255,255,.9); font-size: 18px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+.bgm-now-txt, .bgm-row-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.bgm-now-txt strong, .bgm-row-txt strong { font-size: 14px; color: #ededed; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bgm-now-txt small, .bgm-row-txt small { font-size: 12px; color: #85858b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bgm-row-txt small b { color: #4cc38a; font-weight: 600; }
+.bgm-now-go { flex: 0 0 auto; font-size: 13px; color: #a1a1a6; }
+#arBgmSheet { align-items: flex-end; padding: 0; }
+.bgm-sheet { width: 100%; max-width: 520px; margin: 0 auto; height: 82vh; display: flex; flex-direction: column; background: #121214; border: 1px solid var(--border-strong); border-bottom: 0; border-radius: 18px 18px 0 0; padding: 12px 14px 0; animation: aosUp 200ms var(--ease-out); }
+.bgm-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 2px 10px; }
+.bgm-head strong { font-size: 17px; color: #fff; }
+.bgm-done { height: 32px; padding: 0 14px; border-radius: 999px; border: 0; background: #fff; color: #09090b; font-size: 13px; font-weight: 700; cursor: pointer; }
+.bgm-search { width: 100%; height: 40px; padding: 0 14px; border-radius: 12px; border: 0; background: #232327; color: #fff; font-size: 14px; outline: none; }
+.bgm-search::placeholder { color: #85858b; }
+.bgm-moods { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 8px; }
+.bgm-moods button { flex: 0 0 auto; height: 32px; padding: 0 14px; border-radius: 999px; border: 0; background: #232327; color: #d4d4d8; font-size: 13px; font-weight: 600; cursor: pointer; }
+.bgm-moods button.on { background: #fff; color: #09090b; }
+.bgm-list { flex: 1; overflow-y: auto; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+.bgm-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px 2px; border: 0; background: transparent; text-align: left; cursor: pointer; border-radius: 10px; }
+.bgm-row:hover { background: rgba(255,255,255,.03); }
+.bgm-row-state { flex: 0 0 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #d4d4d8; font-size: 13px; }
+.bgm-row.on .bgm-row-state { color: #4cc38a; font-size: 16px; }
+.bgm-row.on strong { color: #4cc38a; }
+.bgm-cover-make { width: 48px; height: 48px; background: #232327 !important; font-size: 20px; }
+.bgm-make strong { color: #ededed; }
+.bgm-empty { padding: 24px 0; text-align: center; color: #85858b; font-size: 13px; }
+.bgm-eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; }
+.bgm-eq i { width: 3px; background: #4cc38a; border-radius: 1px; animation: bgmEq .9s ease-in-out infinite; }
+.bgm-eq i:nth-child(2) { animation-delay: .2s; } .bgm-eq i:nth-child(3) { animation-delay: .4s; }
+@keyframes bgmEq { 0%,100% { height: 4px; } 50% { height: 14px; } }

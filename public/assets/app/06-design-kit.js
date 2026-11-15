@@ -4231,6 +4231,7 @@
       AudioEngine.bgmStyle = key;
       const sel = document.getElementById('bgmStyleSelect');
       if (sel) sel.value = key;
+      if (typeof renderBgmRecommendations === 'function') renderBgmRecommendations(); // 지금 음악 줄도 같이 바꿈
       if (changed && restart && AudioEngine.enabled) AudioEngine.startBgmLoop();
     }
 

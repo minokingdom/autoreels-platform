@@ -327,6 +327,7 @@
       arStepsVisited.add(key);
       if (key === 'sound') AudioEngine.loadVoiceList();
       if (key === 'card' && typeof arRenderCardShowToggles === 'function') arRenderCardShowToggles();
+      if (key === 'sound' && typeof renderBgmRecommendations === 'function') renderBgmRecommendations();
       // 사진 탭의 컷 카드에 대본 탭에서 고친 문구를 반영
       if (key === 'photo' && typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
       STUDIO_TABS.forEach((k) => {
