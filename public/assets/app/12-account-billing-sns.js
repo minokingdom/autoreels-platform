@@ -141,6 +141,8 @@
     let authModalTab = 'login';
 
     function openDealerAuthModal() {
+      arRenderIndustryChip();
+      arFillSignupFieldsForIndustry();
       const m = document.getElementById('dealerAuthModal');
       const notice = document.getElementById('authModalNotice');
       if (notice) notice.classList.add('hidden');
@@ -153,6 +155,7 @@
 
     function switchAuthModalTab(tab) {
       authModalTab = tab;
+      arFillSignupFieldsForIndustry(document.getElementById('authIndustryInput').value || IND.key);
       const on = 'h-8 rounded-[6px] text-[12px] font-medium bg-[#232325] text-[#ededed] cursor-pointer';
       const off = 'h-8 rounded-[6px] text-[12px] font-normal text-[#85858b] hover:text-[#ededed] cursor-pointer';
       document.getElementById('authTabLogin').className = tab === 'login' ? on : off;
@@ -246,9 +249,9 @@
       } else {
         acc = {
           phone, pw,
-          name: document.getElementById('authNameInput').value.trim() || '신규 카마스터',
-          title: document.getElementById('authTitleInput').value.trim() || '카마스터',
-          branch: document.getElementById('authBranchInput').value.trim() || '공식 전시장',
+          name: document.getElementById('authNameInput').value.trim(),
+          title: document.getElementById('authTitleInput').value.trim(),
+          branch: document.getElementById('authBranchInput').value.trim(),
           promoTag: document.getElementById('authPromoInput').value.trim(),
           industry: (document.getElementById('authIndustryInput') || {}).value || 'auto',
           licenseKey: 'AR-000000 (미결제 체험판)',

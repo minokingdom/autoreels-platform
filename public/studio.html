@@ -1131,7 +1131,7 @@
         <div id="studioPanel_card" role="tabpanel" aria-labelledby="studioTabBtn_card" class="studio-panel hidden p-5 sm:p-6 space-y-5">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label class="block text-[12px] text-[#a1a1a6] mb-1.5">이름 및 직함</label>
+              <label id="dlrNameTitleLabel" data-noind class="block text-[12px] text-[#a1a1a6] mb-1.5">이름 및 직함</label>
               <div class="flex gap-2">
                 <input id="dlrInputName" type="text" placeholder="홍길동" oninput="updateCurrentDealerFromPreview()" class="studio-input w-1/2 h-9 px-3 text-[13px]" />
                 <input id="dlrInputTitle" type="text" placeholder="수석 카마스터" oninput="updateCurrentDealerFromPreview()" class="studio-input w-1/2 h-9 px-3 text-[13px]" />
@@ -1478,12 +1478,12 @@
           </div>
           <div>
             <label class="block text-[12px] text-[#a1a1a6] mb-1">직함</label>
-            <input id="modalTitle" type="text" value="수석 카마스터" class="studio-input w-full h-9 px-3 text-[13px]" />
+            <input id="modalTitle" type="text" class="studio-input w-full h-9 px-3 text-[13px]" />
           </div>
         </div>
         <div>
           <label class="block text-[12px] text-[#a1a1a6] mb-1">소속 전시장 · 대리점</label>
-          <input id="modalBranch" type="text" placeholder="기아자동차 테헤란로지점" class="studio-input w-full h-9 px-3 text-[13px]" />
+          <input id="modalBranch" type="text" placeholder="예: OO자동차 공식전시장" class="studio-input w-full h-9 px-3 text-[13px]" />
         </div>
         <div>
           <label class="block text-[12px] text-[#a1a1a6] mb-1">상담 연락처 (Rust Wasm DRM 바인딩 번호)</label>
@@ -1492,7 +1492,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-[12px] text-[#a1a1a6] mb-1">인스타그램 계정</label>
-            <input id="modalIgId" type="text" placeholder="@kia_junhyuk" class="studio-input w-full h-9 px-3 text-[13px] font-mono" />
+            <input id="modalIgId" type="text" placeholder="예: @my_store" class="studio-input w-full h-9 px-3 text-[13px] font-mono" />
           </div>
           <div>
             <label class="block text-[12px] text-[#a1a1a6] mb-1">연동 메모</label>
@@ -1501,7 +1501,7 @@
         </div>
         <div>
           <label class="block text-[12px] text-[#a1a1a6] mb-1">출고 서비스 문구</label>
-          <input id="modalPromo" type="text" value="계약 고객 전원 프리미엄 신차패키지 7종 무상 시공" class="studio-input w-full h-9 px-3 text-[13px]" />
+          <input id="modalPromo" type="text" class="studio-input w-full h-9 px-3 text-[13px]" />
         </div>
       </div>
       <div class="flex justify-end gap-2 pt-2">
@@ -1636,32 +1636,32 @@
       <div class="space-y-3 text-[13px]">
         <div>
           <label class="block text-[12px] text-[#a1a1a6] mb-1">본인 휴대폰 번호 (아이디 겸 정품 바인딩 번호)</label>
-          <input id="authPhoneInput" type="tel" value="010-5582-3391" placeholder="010-0000-0000" class="studio-input w-full h-9 px-3 text-[13px] font-mono" />
+          <input id="authPhoneInput" type="tel" placeholder="010-0000-0000" class="studio-input w-full h-9 px-3 text-[13px] font-mono" />
         </div>
         <div>
           <label id="authPwLabel" class="block text-[12px] text-[#a1a1a6] mb-1">비밀번호 (4자리 이상)</label>
-          <input id="authPasswordInput" type="password" value="1234" placeholder="••••" class="studio-input w-full h-9 px-3 text-[13px]" />
+          <input id="authPasswordInput" type="password" placeholder="••••" class="studio-input w-full h-9 px-3 text-[13px]" />
         </div>
 
         <!-- 신규 가입 시 추가 입력 필드 -->
         <div id="authSignupFields" class="hidden space-y-3 pt-2 border-t border-[var(--border)]">
           <div>
             <label class="block text-[12px] text-[#a1a1a6] mb-1">업종 <span class="text-[#6e6e73]">(가입 후에는 이 업종으로 고정됩니다)</span></label>
-            <select id="authIndustryInput" class="studio-input w-full h-10 px-2 text-[14px]"></select>
+            <select id="authIndustryInput" onchange="arSignupIndustryChanged(this.value)" class="studio-input w-full h-10 px-2 text-[14px]"></select>
           </div>
           <div class="grid grid-cols-2 gap-2.5">
             <div>
               <label class="block text-[12px] text-[#a1a1a6] mb-1">카마스터 성함</label>
-              <input id="authNameInput" type="text" value="정우성" placeholder="홍길동" class="studio-input w-full h-9 px-3 text-[13px]" />
+              <input id="authNameInput" type="text" placeholder="홍길동" class="studio-input w-full h-9 px-3 text-[13px]" />
             </div>
             <div>
               <label class="block text-[12px] text-[#a1a1a6] mb-1">직함</label>
-              <input id="authTitleInput" type="text" value="수석 카마스터" placeholder="수석 카마스터" class="studio-input w-full h-9 px-3 text-[13px]" />
+              <input id="authTitleInput" type="text" placeholder="수석 카마스터" class="studio-input w-full h-9 px-3 text-[13px]" />
             </div>
           </div>
           <div>
             <label class="block text-[12px] text-[#a1a1a6] mb-1">소속 전시장 · 대리점명</label>
-            <input id="authBranchInput" type="text" value="현대자동차 도산대로점" placeholder="현대·기아 공식전시장" class="studio-input w-full h-9 px-3 text-[13px]" />
+            <input id="authBranchInput" type="text" placeholder="예: OO자동차 공식전시장" class="studio-input w-full h-9 px-3 text-[13px]" />
           </div>
           <div>
             <label class="block text-[12px] text-[#a1a1a6] mb-1">이메일 <span class="text-[#6e6e73]">(영수증용·선택)</span></label>
@@ -1669,7 +1669,7 @@
           </div>
           <div>
             <label class="block text-[12px] text-[#a1a1a6] mb-1">출고 고객 전담 서비스 문구</label>
-            <input id="authPromoInput" type="text" value="출고 고객 전원 프리미엄 썬팅 + 블랙박스 무상 지원" class="studio-input w-full h-9 px-3 text-[13px]" />
+            <input id="authPromoInput" type="text" class="studio-input w-full h-9 px-3 text-[13px]" />
           </div>
         </div>
       </div>

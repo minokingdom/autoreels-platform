@@ -502,19 +502,34 @@
     }
     // 가입 창에서 업종을 바꾸면 미리보기와 입력칸 안내도 그 업종으로
     function arSignupIndustryChanged(key) {
-      if (arIndustryLocked) return;
-      setIndustry(key);
-      arFillSignupFieldsForIndustry();
+      if (!AR_INDUSTRIES[key]) return;
+      if (!arIndustryLocked) setIndustry(key);
+      arFillSignupFieldsForIndustry(key);
     }
-    function arFillSignupFieldsForIndustry() {
-      const set = (id, v, ph) => { const el = document.getElementById(id); if (el) { el.value = v; if (ph != null) el.placeholder = ph; } };
-      const lab = (id, text) => { const el = document.getElementById(id); const l = el && el.closest('div') && el.closest('div').querySelector('label'); if (l) l.textContent = text; };
-      set('authTitleInput', IND.title, IND.title);
-      set('authBranchInput', '', IND.branchPlaceholder);
-      set('authPromoInput', '', IND.promoPlaceholder);
-      lab('authNameInput', `${IND.role === '대표' ? '대표' : IND.role.replace(/님$/, '')} 성함`);
-      lab('authBranchInput', IND.branchLabel);
-      lab('authPromoInput', IND.promoLabel);
+    // 직접 입력한 값은 보존하고, 예시는 안내 문구로만 표시합니다.
+    function arIndustryFieldHint(id, label, example) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.setAttribute('data-noind', '');
+      el.placeholder = example ? `예: ${example}` : '';
+      const lab = el.closest('div').querySelector('label');
+      if (lab && label) {
+        lab.setAttribute('data-noind', '');
+        lab.textContent = label;
+      }
+    }
+    function arFillSignupFieldsForIndustry(key = IND.key) {
+      const ind = AR_INDUSTRIES[key] || IND;
+      arIndustryFieldHint('authNameInput', `${ind.role.replace(/님$/, '')} 성함`, '홍길동');
+      arIndustryFieldHint('authTitleInput', '직함 · 소개', ind.title || ind.role);
+      arIndustryFieldHint('authBranchInput', ind.branchLabel, ind.branchPlaceholder);
+      arIndustryFieldHint('authPromoInput', ind.promoLabel, ind.promoPlaceholder);
+    }
+    function arFillNewDealerFieldsForIndustry() {
+      arIndustryFieldHint('modalName', `${IND.role.replace(/님$/, '')} 성함`, '홍길동');
+      arIndustryFieldHint('modalTitle', '직함 · 소개', IND.title || IND.role);
+      arIndustryFieldHint('modalBranch', IND.branchLabel, IND.branchPlaceholder);
+      arIndustryFieldHint('modalPromo', IND.promoLabel, IND.promoPlaceholder);
     }
     // 로그인한 회원이 업종 바꾸기: 화면을 바꾸고 계정에도 저장
     async function arChangeAccountIndustry(key) {
@@ -649,14 +664,12 @@
           if (arIsSampleDealerValue(d, k)) d[k] = '';
         });
       });
-      const nameIn = document.getElementById('dlrInputName');
-      const titleIn = document.getElementById('dlrInputTitle');
-      const branchIn = document.getElementById('dlrInputBranch');
-      const promoIn = document.getElementById('dlrInputPromo');
-      if (nameIn) nameIn.placeholder = IND.key === 'auto' ? '김민준' : `예: ${(IND.storeNames && IND.storeNames[0]) || '매장명'}`;
-      if (titleIn) titleIn.placeholder = IND.outroMode === 'store' ? (IND.storeSubtitle || '매장 공식 안내') : (IND.title || '대표');
-      if (branchIn) branchIn.placeholder = IND.outroMode === 'store' ? (IND.storeLocation || IND.branchPlaceholder) : (IND.branchPlaceholder || '소속 지점');
-      if (promoIn) promoIn.placeholder = IND.promoPlaceholder || '';
+      const nameLabel = document.getElementById('dlrNameTitleLabel');
+      if (nameLabel) nameLabel.textContent = IND.outroMode === 'store' ? `${IND.place} 이름 및 소개` : '이름 및 직함';
+      arIndustryFieldHint('dlrInputName', '', IND.outroMode === 'store' ? (IND.storeNames?.[0] || '매장명') : '홍길동');
+      arIndustryFieldHint('dlrInputTitle', '', IND.title || IND.role);
+      arIndustryFieldHint('dlrInputBranch', IND.branchLabel, IND.branchPlaceholder);
+      arIndustryFieldHint('dlrInputPromo', IND.promoLabel, IND.promoPlaceholder);
       const phoneIn = document.getElementById('dlrInputPhone');
       if (phoneIn) phoneIn.placeholder = IND.key === 'auto' ? '010-0000-0000' : '예: 02-123-4567';      if (typeof syncPreviewPanel === 'function') { try { syncPreviewPanel(); } catch (e) {} }
     }

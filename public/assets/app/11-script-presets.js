@@ -947,15 +947,16 @@ POST https://graph.facebook.com/v19.0/${d.igUsername.replace('@', '')}/media
     }
 
     function openNewDealerModal() {
+      arFillNewDealerFieldsForIndustry();
       document.getElementById('newDealerModal').classList.remove('hidden');
     }
     function closeNewDealerModal() {
       document.getElementById('newDealerModal').classList.add('hidden');
     }
     function submitNewDealer() {
-      const name = document.getElementById('modalName').value.trim() || '신규카마스터';
-      const title = document.getElementById('modalTitle').value.trim() || '카마스터';
-      const branch = document.getElementById('modalBranch').value.trim() || '공식인증 전시장';
+      const name = document.getElementById('modalName').value.trim();
+      const title = document.getElementById('modalTitle').value.trim();
+      const branch = document.getElementById('modalBranch').value.trim();
       const phone = document.getElementById('modalPhone').value.trim() || '010-0000-0000';
       const igUsername = document.getElementById('modalIgId').value.trim() || '@dealer_official';
       const promoTag = document.getElementById('modalPromo').value.trim();
