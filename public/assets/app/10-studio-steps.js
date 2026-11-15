@@ -492,6 +492,9 @@
       document.querySelectorAll('[data-ui-mode]').forEach((b) => {
         b.setAttribute('aria-pressed', String((b.getAttribute('data-ui-mode') === 'easy') === easy));
       });
+      const sw = document.getElementById('editModeSwitch');
+      if (sw) sw.setAttribute('aria-checked', String(!easy));
+      if (remember && typeof arToast === 'function') arToast(easy ? '편집 모드를 껐어요. 기본 단계만 보여요.' : '편집 모드: 문구·효과음·속도 같은 세부 설정이 보여요.');
       if (remember) {
         try { localStorage.setItem('ar_ui_mode', easy ? 'easy' : 'full'); } catch (e) {}
       }
@@ -637,7 +640,7 @@
       } else if (d.status === 'REVISION') {
         statusContainer.innerHTML = `<span class="tag-chip px-2.5 py-1 text-[12px] text-[#d97706]">수정 요청됨</span>`;
       } else {
-        statusContainer.innerHTML = `<span class="tag-chip px-2.5 py-1 text-[12px] text-[#a1a1a6]">편집 중</span>`;
+        statusContainer.innerHTML = ''; // '편집 중' 표시는 편집 모드 스위치와 헷갈려서 뺌
       }
     }
 

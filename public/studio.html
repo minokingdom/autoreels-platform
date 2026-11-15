@@ -655,11 +655,11 @@
               <span class="hidden text-xs text-[#85858b]"><code id="stagingUrlText">https://staging.autoreels.kr/v/tok_minjun</code></span>
             </div>
             <div class="flex items-center gap-2">
-              <!-- 쉬운 모드 / 전체 기능 전환 (선택은 이 브라우저에 기억) -->
-              <div id="uiModeToggle" role="group" aria-label="화면 모드" class="flex items-center gap-1 p-1 rounded-[8px] bg-[#141415] border border-[var(--border)]">
-                <button type="button" data-ui-mode="easy" aria-pressed="false" class="ui-mode-btn h-8 px-3 rounded-[6px] text-[12px] cursor-pointer">쉬운 모드</button>
-                <button type="button" data-ui-mode="full" aria-pressed="false" class="ui-mode-btn h-8 px-3 rounded-[6px] text-[12px] cursor-pointer">전체 기능</button>
-              </div>
+              <!-- 편집 모드: 끄면 기본 흐름만, 켜면 문구·효과음·속도 같은 세부 설정까지 보임 (선택은 이 브라우저에 기억) -->
+              <button type="button" id="editModeSwitch" role="switch" aria-checked="false" onclick="arSetUiMode(document.body.classList.contains('ar-easy') ? 'full' : 'easy', true)" class="edit-mode-switch">
+                <span class="ems-track"><span class="ems-knob"></span></span>
+                <span class="ems-label">편집 모드</span>
+              </button>
               <div id="previewStatusBadge"></div>
             </div>
           </div>
