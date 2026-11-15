@@ -271,7 +271,7 @@
 
     <!-- 상단 헤더 (카마스터 로그인 상태 · 정기구독 결제 · 카마스터/관리자 모드 스위치 탑재) -->
     <header class="studio-card px-5 py-3.5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-      <div class="flex items-center justify-between gap-3 flex-wrap">
+      <div class="flex items-center justify-between gap-3 w-full xl:w-auto">
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-[8px] bg-[#232325] border border-[var(--border-strong)] flex items-center justify-center font-mono text-xs font-medium text-[#ededed] shrink-0">
             AR
@@ -280,26 +280,26 @@
             <h1 class="text-[16px] font-medium text-[#ededed] leading-none">
               AutoReels
             </h1>
-            <span id="roleModeBadge" class="tag-chip px-2 py-0.5 text-[11px] font-mono text-[#4cc38a]">
-              카마스터 전용 스튜디오
-            </span>
             <button type="button" onclick="openLandingView()" class="text-[11px] text-[#85858b] hover:text-[#ededed] underline underline-offset-2 cursor-pointer">소개</button>
           </div>
         </div>
 
-        <!-- 카마스터용: 현재 로그인된 내 계정 표시 + 로그인/결제 버튼 -->
-        <div class="flex items-center gap-2 flex-wrap">
-          <div id="headerLoggedDealerChip" class="h-8 px-3 rounded-[8px] bg-[#141415] border border-[var(--border)] flex items-center gap-2 text-[12px]">
-            <span id="headerDrmDot" class="w-2 h-2 rounded-full bg-[#4cc38a]"></span>
-            <span id="headerDealerNameText" class="text-[#ededed] font-medium">홍길동 수석 카마스터</span>
-            <span id="headerDealerPhoneText" class="text-[#85858b] font-mono">010-0000-0000</span>
+        <!-- 상단 통합 설정 버튼 (구독상태 · 업종 · 명함은 설정창에서 한 번에 관리) -->
+        <div class="flex items-center gap-2">
+          <button type="button" id="headerSettingsBtn" onclick="openStudioSettingsModal()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer flex items-center gap-2" title="구독 상태 · 업종 · 명함 설정">
+            <span id="headerDrmDot" class="w-2 h-2 rounded-full bg-[#4cc38a] shrink-0"></span>
+            <span>⚙️ 설정</span>
+          </button>
+        </div>
+
+        <!-- 기존 JS 호환용 숨김 요소 (내용은 설정창과 동기화됨) -->
+        <div class="hidden" aria-hidden="true">
+          <span id="roleModeBadge">카마스터 전용 스튜디오</span>
+          <div id="headerLoggedDealerChip">
+            <span id="headerDealerNameText">홍길동 수석 카마스터</span>
+            <span id="headerDealerPhoneText">010-0000-0000</span>
           </div>
-          <button type="button" id="headerAuthBtn" onclick="openDealerAuthModal()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">
-            카마스터 로그인 · 가입
-          </button>
-          <button type="button" onclick="openBillingCheckoutModal()" class="h-8 px-3.5 rounded-[8px] text-[12px] font-medium bg-[#2563eb] hover:bg-[#1d4ed8] text-white transition-colors cursor-pointer">
-            PRO 구독 결제
-          </button>
+          <button type="button" id="headerAuthBtn" onclick="openDealerAuthModal()">카마스터 로그인 · 가입</button>
         </div>
       </div>
 
@@ -1129,92 +1129,21 @@
         </div>
 
         <div id="studioPanel_card" role="tabpanel" aria-labelledby="studioTabBtn_card" class="studio-panel hidden p-5 sm:p-6 space-y-5">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label id="dlrNameTitleLabel" data-noind class="block text-[12px] text-[#a1a1a6] mb-1.5">이름 및 직함</label>
-              <div class="flex gap-2">
-                <input id="dlrInputName" type="text" placeholder="홍길동" oninput="updateCurrentDealerFromPreview()" class="studio-input w-1/2 h-9 px-3 text-[13px]" />
-                <input id="dlrInputTitle" type="text" placeholder="수석 카마스터" oninput="updateCurrentDealerFromPreview()" class="studio-input w-1/2 h-9 px-3 text-[13px]" />
+          <div class="studio-sub p-4 space-y-3">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div>
+                <div class="text-[14px] font-medium text-[#ededed]">엔딩 명함 · 매장 정보</div>
+                <p id="cardTabSummaryText" class="text-[12px] text-[#a1a1a6] mt-1">구독 상태 · 업종 · 명함 정보는 상단 설정창에서 관리합니다.</p>
               </div>
-            </div>
-            <div>
-              <label class="block text-[12px] text-[#a1a1a6] mb-1.5">상담 연락처 · 로그인 번호 (영상에는 표시되지 않음)</label>
-              <input id="dlrInputPhone" type="tel" placeholder="010-0000-0000" oninput="updateCurrentDealerFromPreview()" class="studio-input w-full h-9 px-3 text-[13px] font-mono" />
-            </div>
-            <div>
-              <label class="block text-[12px] text-[#a1a1a6] mb-1.5">소속 전시장 · 대리점명</label>
-              <input id="dlrInputBranch" type="text" placeholder="OO자동차 전시장" oninput="updateCurrentDealerFromPreview()" class="studio-input w-full h-9 px-3 text-[13px]" />
-            </div>
-            <div>
-              <label class="block text-[12px] text-[#a1a1a6] mb-1.5">프로필 사진</label>
-              <label for="dealerFaceQuickInput" class="btn-secondary h-9 px-3 text-[13px] flex items-center justify-center cursor-pointer">
-                프로필 사진 바꾸기
-                <input type="file" id="dealerFaceQuickInput" accept="image/*" onchange="handleDealerAvatarUpload(event)" class="hidden" />
-              </label>
-            </div>
-            <div class="md:col-span-2">
-              <label class="block text-[12px] text-[#a1a1a6] mb-1.5">출고 고객 전담 혜택 문구</label>
-              <input id="dlrInputPromo" type="text" oninput="updateCurrentDealerFromPreview()" class="studio-input w-full h-9 px-3 text-[13px]" />
+              <button type="button" onclick="openStudioSettingsModal('card')" class="btn-secondary h-9 px-3.5 text-[12px] cursor-pointer shrink-0">
+                ⚙️ 설정에서 명함 수정하기
+              </button>
             </div>
           </div>
-
-          <!-- Rust Wasm 정품 구독 라이선스 & 전화번호 바인딩 보호 카드 -->
-          <details data-advanced class="studio-sub fold">
-            <summary class="p-4 flex flex-wrap items-center justify-between gap-2">
-              <span class="text-[13px] font-medium text-[#ededed]">구독 라이선스 · 번호 인증 세부내역</span>
-              <span id="drmStatusBadge" class="tag-chip px-2.5 py-1 text-[12px] font-medium text-[#4cc38a]">
-                정품 구독 인증됨
-              </span>
-            </summary>
-            <div class="px-4 pb-4 space-y-3">
-
-            <p class="text-[13px] text-[#a1a1a6] leading-relaxed">
-              구독권 1개로 지점 동료 카마스터들이 연락처만 바꿔 돌려쓰는 행위를 차단하기 위해, Rust WebAssembly 보안 코어가 등록 연락처(<code id="drmBoundPhoneText" class="font-mono text-[#ededed]">010-0000-0000</code>)와 정품 키를 대조합니다. 미구독 또는 번호 변경 시 영상 중앙에 워터마크가 합성되며 추출이 잠깁니다.
-            </p>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-              <div>
-                <label class="block text-[12px] text-[#85858b] mb-1">카마스터 정품 라이선스 키</label>
-                <input id="dlrLicenseKeyInput" type="text" oninput="onDealerLicenseInput()" placeholder="AR-XXXXXX" class="studio-input w-full h-9 px-3 text-[12px] font-mono" />
-              </div>
-              <div>
-                <label class="block text-[12px] text-[#85858b] mb-1">바인딩된 정품 연락처</label>
-                <input id="dlrLicensedPhoneView" type="text" readonly class="studio-input w-full h-9 px-3 text-[12px] font-mono opacity-75" />
-              </div>
-              <div>
-                <label class="block text-[12px] text-[#85858b] mb-1">구독 만료일</label>
-                <input id="dlrExpiryView" type="text" readonly value="2026-12-31" class="studio-input w-full h-9 px-3 text-[12px] font-mono opacity-75" />
-              </div>
-            </div>
-
-            <!-- 카마스터용: 구독 결제 · 정품 라이선스 즉시 개통 바 -->
-            <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[var(--border)]">
-              <span id="dealerBillingNoticeText" class="text-[12px] text-[#a1a1a6]">
-                결제하면 내 번호 전용 라이선스가 바로 발급되고 워터마크가 사라집니다. 로그인과 결제는 화면 맨 위 버튼에서 합니다.
-              </span>
-            </div>
-
-            <!-- [관리자 전용] 대표님 테스트용 구독 상태 전환 (카마스터 모드에서는 숨김) -->
-            <div id="adminDrmSimRow" class="hidden flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-[var(--border)]">
-              <span class="text-[12px] font-mono text-[#d97706]">[관리자 전용] 구독 차단 시뮬레이션</span>
-              <div class="flex flex-wrap gap-1.5">
-                <button type="button" onclick="simulateDrmMode('PRO')" class="btn-secondary h-7 px-2.5 text-[12px] cursor-pointer">
-                  정품 구독 정상
-                </button>
-                <button type="button" onclick="simulateDrmMode('TRIAL')" class="btn-secondary h-7 px-2.5 text-[12px] cursor-pointer">
-                  미결제 · 만료 상태 테스트
-                </button>
-                <button type="button" onclick="simulateDrmMode('TAMPER')" class="btn-secondary h-7 px-2.5 text-[12px] cursor-pointer">
-                  타 카마스터 번호 도용 테스트
-                </button>
-              </div>
-            </div>
-          </div>
-          </details>
 
           <div class="flex items-center justify-between gap-2 pt-1">
             <button type="button" onclick="switchStudioTab('sound')" class="btn-secondary h-9 px-3 text-[12px] cursor-pointer">← 사운드</button>
-            <button type="button" onclick="switchStudioTab('publish')" class="btn-primary h-9 px-4 text-[12px] cursor-pointer">다음: 발행 →</button>
+            <button type="button" onclick="switchStudioTab('publish')" class="btn-primary h-9 px-4 text-[13px] cursor-pointer">다음: 발행 →</button>
           </div>
         </div>
 
@@ -1944,6 +1873,113 @@
       </div>
     </div>
   </footer>
+  <div id="studioSettingsModal" class="hidden fixed inset-0 z-50 flex ar-modal" onclick="if(event.target===this)closeStudioSettingsModal()">
+    <div class="studio-card w-full space-y-4 ar-modal-card max-h-[88vh] overflow-y-auto" style="--mw:560px">
+      <div class="ar-modal-head">
+        <h3 class="text-[16px] font-semibold text-[#ededed]">⚙️ 스튜디오 설정</h3>
+        <button type="button" onclick="closeStudioSettingsModal()" class="ar-modal-x" aria-label="닫기">×</button>
+      </div>
+
+      <!-- 1. 계정 및 구독 상태 -->
+      <div class="studio-sub p-4 space-y-3">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div>
+            <div class="text-[12px] text-[#85858b]">계정 · 구독 상태</div>
+            <div id="settingsAccountSummary" class="text-[14px] font-medium text-[#ededed] mt-0.5">로그인하지 않음 (체험판)</div>
+          </div>
+          <span id="drmStatusBadge" class="tag-chip px-2.5 py-1 text-[12px] font-medium text-[#4cc38a]">
+            정품 구독 인증됨
+          </span>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" id="settingsAuthActionBtn" onclick="closeStudioSettingsModal(); (window.AR_SERVER && AR_SERVER.mode && AR_SERVER.me ? arOpenAccount() : openDealerAuthModal());" class="btn-secondary h-9 px-3.5 text-[12px] cursor-pointer">
+            로그인 · 회원가입
+          </button>
+          <button type="button" onclick="closeStudioSettingsModal(); openBillingCheckoutModal();" class="h-9 px-3.5 rounded-[8px] text-[12px] font-medium bg-[#2563eb] hover:bg-[#1d4ed8] text-white transition-colors cursor-pointer">
+            PRO 구독 · 요금제 관리
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. 업종 선택 -->
+      <div class="studio-sub p-4 flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <div class="text-[12px] text-[#85858b]">현재 업종</div>
+          <div id="settingsIndustrySummary" class="text-[14px] font-medium text-[#ededed] mt-0.5">🚘 자동차 영업</div>
+        </div>
+        <button type="button" onclick="closeStudioSettingsModal(); openIndustryPicker();" class="btn-secondary h-9 px-3.5 text-[12px] cursor-pointer">
+          업종 바꾸기
+        </button>
+      </div>
+
+      <!-- 3. 내 명함 / 매장 정보 -->
+      <div id="settingsCardSection" class="studio-sub p-4 space-y-3">
+        <div class="text-[13px] font-medium text-[#ededed]">내 명함 · 매장 정보</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label id="dlrNameTitleLabel" data-noind class="block text-[12px] text-[#a1a1a6] mb-1.5">이름 및 직함</label>
+            <div class="flex gap-2">
+              <input id="dlrInputName" type="text" placeholder="홍길동" oninput="updateCurrentDealerFromPreview()" class="studio-input w-1/2 h-9 px-3 text-[13px]" />
+              <input id="dlrInputTitle" type="text" placeholder="수석 카마스터" oninput="updateCurrentDealerFromPreview()" class="studio-input w-1/2 h-9 px-3 text-[13px]" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-[12px] text-[#a1a1a6] mb-1.5">상담 연락처 · 로그인 번호</label>
+            <input id="dlrInputPhone" type="tel" placeholder="010-0000-0000" oninput="updateCurrentDealerFromPreview()" class="studio-input w-full h-9 px-3 text-[13px] font-mono" />
+          </div>
+          <div>
+            <label class="block text-[12px] text-[#a1a1a6] mb-1.5">소속 전시장 · 매장명</label>
+            <input id="dlrInputBranch" type="text" placeholder="OO자동차 전시장" oninput="updateCurrentDealerFromPreview()" class="studio-input w-full h-9 px-3 text-[13px]" />
+          </div>
+          <div>
+            <label class="block text-[12px] text-[#a1a1a6] mb-1.5">프로필 사진</label>
+            <label for="dealerFaceQuickInput" class="btn-secondary h-9 px-3 text-[13px] flex items-center justify-center cursor-pointer">
+              프로필 사진 바꾸기
+              <input type="file" id="dealerFaceQuickInput" accept="image/*" onchange="handleDealerAvatarUpload(event)" class="hidden" />
+            </label>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-[12px] text-[#a1a1a6] mb-1.5">혜택 · 인사말 문구</label>
+            <input id="dlrInputPromo" type="text" oninput="updateCurrentDealerFromPreview()" class="studio-input w-full h-9 px-3 text-[13px]" />
+          </div>
+        </div>
+
+        <details data-advanced class="studio-sub fold">
+          <summary class="p-3 flex flex-wrap items-center justify-between gap-2 text-[12px] text-[#a1a1a6] cursor-pointer">
+            <span>구독 라이선스 · 번호 인증 세부내역</span>
+            <code id="drmBoundPhoneText" class="font-mono text-[#ededed]">010-0000-0000</code>
+          </summary>
+          <div class="px-3 pb-3 space-y-2.5">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+              <div>
+                <label class="block text-[11px] text-[#85858b] mb-1">정품 라이선스 키</label>
+                <input id="dlrLicenseKeyInput" type="text" oninput="onDealerLicenseInput()" placeholder="AR-XXXXXX" class="studio-input w-full h-8 px-2.5 text-[12px] font-mono" />
+              </div>
+              <div>
+                <label class="block text-[11px] text-[#85858b] mb-1">바인딩된 연락처</label>
+                <input id="dlrLicensedPhoneView" type="text" readonly class="studio-input w-full h-8 px-2.5 text-[12px] font-mono opacity-75" />
+              </div>
+              <div>
+                <label class="block text-[11px] text-[#85858b] mb-1">구독 만료일</label>
+                <input id="dlrExpiryView" type="text" readonly value="2026-12-31" class="studio-input w-full h-8 px-2.5 text-[12px] font-mono opacity-75" />
+              </div>
+            </div>
+            <span id="dealerBillingNoticeText" class="block text-[11px] text-[#85858b]">
+              결제하면 내 번호 전용 라이선스가 바로 발급되고 워터마크가 사라집니다.
+            </span>
+            <div id="adminDrmSimRow" class="hidden flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[var(--border)]">
+              <span class="text-[11px] font-mono text-[#d97706]">[관리자 전용] 구독 차단 시뮬레이션</span>
+              <div class="flex flex-wrap gap-1.5">
+                <button type="button" onclick="simulateDrmMode('PRO')" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer">정품 구독 정상</button>
+                <button type="button" onclick="simulateDrmMode('TRIAL')" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer">미결제 · 만료</button>
+                <button type="button" onclick="simulateDrmMode('TAMPER')" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer">번호 도용</button>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
   <div id="arLegalModal" class="hidden fixed inset-0 z-50 flex ar-modal" onclick="if(event.target===this)closeArLegalModal()">
     <div class="studio-card w-full space-y-3 ar-modal-card" style="--mw:540px">
       <div class="ar-modal-head">

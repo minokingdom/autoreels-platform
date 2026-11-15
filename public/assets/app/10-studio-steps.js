@@ -426,6 +426,49 @@
       }
     }
 
+    function syncStudioSettingsModal() {
+      const d = typeof getSelectedDealer === 'function' ? getSelectedDealer() : null;
+      const accEl = document.getElementById('settingsAccountSummary');
+      const authBtn = document.getElementById('settingsAuthActionBtn');
+      const indEl = document.getElementById('settingsIndustrySummary');
+      const cardSumEl = document.getElementById('cardTabSummaryText');
+      const serverMe = window.AR_SERVER && AR_SERVER.mode ? AR_SERVER.me : null;
+      if (accEl) {
+        if (serverMe && serverMe.user) {
+          const comp = serverMe.subscription && serverMe.subscription.comp === true;
+          accEl.textContent = `${serverMe.user.name || ''} (${serverMe.user.phone || ''})${comp ? ' · 무상 PRO' : ''}`;
+        } else if (d) {
+          accEl.textContent = `${d.name || '게스트'} · ${d.phone || '미로그인'}`;
+        }
+      }
+      if (authBtn) {
+        authBtn.textContent = serverMe && serverMe.user ? '계정 · 로그아웃' : '로그인 · 회원가입';
+      }
+      if (indEl && typeof IND !== 'undefined') {
+        indEl.textContent = `${IND.icon} ${IND.name}`;
+      }
+      if (cardSumEl && d) {
+        const parts = [d.name, d.title, d.branch, d.phone].filter((v) => String(v || '').trim());
+        cardSumEl.textContent = parts.length ? parts.join(' · ') : '명함이 비어 있습니다. 설정에서 입력해 보세요.';
+      }
+    }
+
+    function openStudioSettingsModal(focusSection) {
+      syncStudioSettingsModal();
+      const modal = document.getElementById('studioSettingsModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      if (focusSection === 'card') {
+        const sec = document.getElementById('settingsCardSection');
+        if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function closeStudioSettingsModal() {
+      const modal = document.getElementById('studioSettingsModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
     function evaluateDealerDrmStatus(d) {
       // 서버 모드에서는 로그인 세션과 서버 구독/무상 PRO 권한으로만 판정합니다.
       // (명함·매장 연락처 칸을 가게 전화번호로 바꾸거나 비워도 워터마크가 뜨지 않도록 함)
@@ -473,6 +516,7 @@
       if (hdrNameEl) hdrNameEl.textContent = `${d.name} ${d.title}`;
       const hdrPhoneEl = document.getElementById('headerDealerPhoneText');
       if (hdrPhoneEl) hdrPhoneEl.textContent = d.phone || '';
+      syncStudioSettingsModal();
 
       const drmCode = evaluateDealerDrmStatus(d);
       const badgeEl = document.getElementById('drmStatusBadge');
@@ -492,6 +536,7 @@
           if (hdrDotEl) hdrDotEl.style.background = '#d97706';
         }
       }
+      syncStudioSettingsModal();
 
       // 4대 SNS 연결 상태 UI 업데이트
       const sns = d.snsAccounts || { ig: d.igUsername, yt: '', tt: '', fb: '' };

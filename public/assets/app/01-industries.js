@@ -486,6 +486,8 @@
         btn.textContent = arIndustryLocked ? `${IND.icon} ${IND.name} ▾` : `${IND.icon} ${IND.name} · 업종 선택`;
         btn.title = arIndustryLocked ? '내 계정 업종 — 눌러서 바꿀 수 있습니다' : '회원가입할 때 업종을 고르면 내 계정 업종으로 저장됩니다';
       }
+      const setInd = document.getElementById('settingsIndustrySummary');
+      if (setInd) setInd.textContent = `${IND.icon} ${IND.name}`;
       const auth = document.getElementById('authIndustryInput');
       if (auth) {
         if (!auth.options.length) {
