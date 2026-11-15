@@ -8,16 +8,16 @@ const { listCuratedVoices } = require('../lib/fish-voices');
 const { isSameSiteRequest, consume, refundUsage } = require('../lib/server/usage');
 
 const LYRIA_BGM_PACK = [
-  { id: 'lyria_showroom', label: '✨ Lyria AI · 쇼룸 일렉트로닉 하우스', prompt: 'Instrumental only, no vocals. Sleek modern luxury car showroom chill house beat, 118 BPM, warm analog bass, crisp hi-hats, clean commercial background music.' },
-  { id: 'lyria_cafe', label: '✨ Lyria AI · 감성 카페 보사노바·재즈', prompt: 'Instrumental only, no vocals. Cozy Korean aesthetic cafe acoustic jazz and light bossa nova, warm Rhodes electric piano, soft brushed drums, 102 BPM.' },
-  { id: 'lyria_restaurant', label: '✨ Lyria AI · 맛집 활기찬 어쿠스틱 그루브', prompt: 'Instrumental only, no vocals. Upbeat appetizing food vlog indie pop groove, acoustic guitar, claps, bright marimba, 114 BPM, friendly commercial feel.' },
-  { id: 'lyria_beauty', label: '✨ Lyria AI · 뷰티·헤어 트렌디 알앤비', prompt: 'Instrumental only, no vocals. Stylish modern beauty salon R&B chill groove, glassy synth pads, smooth sub bass, snappy rimshot, 105 BPM.' },
-  { id: 'lyria_fitness', label: '✨ Lyria AI · 피트니스 파워 힙합·트랩', prompt: 'Instrumental only, no vocals. High energy workout fitness reels phonk trap beat, punchy 808 bass, crisp snare, motivational synth lead, 134 BPM.' },
-  { id: 'lyria_realestate', label: '✨ Lyria AI · 프리미엄 하우스 투어 라운지', prompt: 'Instrumental only, no vocals. Luxury real estate home tour ambient lounge, clean piano chords, subtle deep house pulse, airy pads, 110 BPM.' },
-  { id: 'lyria_academy', label: '✨ Lyria AI · 학원·교육 집중 로파이 비트', prompt: 'Instrumental only, no vocals. Clean inspiring study lo-fi hip hop beat, soft piano melody, warm vinyl texture, crisp boom-bap drums, 92 BPM.' },
-  { id: 'lyria_clinic', label: '✨ Lyria AI · 병원·클리닉 신뢰감 앰비언트', prompt: 'Instrumental only, no vocals. Trustworthy clean medical clinic background music, gentle marimba, warm strings, minimal soft percussion, 100 BPM.' },
-  { id: 'lyria_shop', label: '✨ Lyria AI · 패션·쇼핑몰 시티팝', prompt: 'Instrumental only, no vocals. Trendy Seoul fashion lookbook city pop synth funk, funky slap bass, retro brass synth, bright 120 BPM groove.' },
-  { id: 'lyria_interior', label: '✨ Lyria AI · 인테리어 북유럽 미니멀', prompt: 'Instrumental only, no vocals. Minimalist Scandinavian interior design vlog music, plucked acoustic guitar, warm cello pad, gentle shaker, 104 BPM.' }
+  { id: 'lyria_showroom', label: 'AI 쇼룸 일렉트로닉 하우스', prompt: 'Instrumental only, no vocals. Sleek modern luxury car showroom chill house beat, 118 BPM, warm analog bass, crisp hi-hats, clean commercial background music.' },
+  { id: 'lyria_cafe', label: 'AI 감성 카페 보사노바·재즈', prompt: 'Instrumental only, no vocals. Cozy Korean aesthetic cafe acoustic jazz and light bossa nova, warm Rhodes electric piano, soft brushed drums, 102 BPM.' },
+  { id: 'lyria_restaurant', label: 'AI 맛집 어쿠스틱 그루브', prompt: 'Instrumental only, no vocals. Upbeat appetizing food vlog indie pop groove, acoustic guitar, claps, bright marimba, 114 BPM, friendly commercial feel.' },
+  { id: 'lyria_beauty', label: 'AI 뷰티·헤어 트렌디 R&B', prompt: 'Instrumental only, no vocals. Stylish modern beauty salon R&B chill groove, glassy synth pads, smooth sub bass, snappy rimshot, 105 BPM.' },
+  { id: 'lyria_fitness', label: 'AI 피트니스 파워 트랩', prompt: 'Instrumental only, no vocals. High energy workout fitness reels phonk trap beat, punchy 808 bass, crisp snare, motivational synth lead, 134 BPM.' },
+  { id: 'lyria_realestate', label: 'AI 프리미엄 하우스 라운지', prompt: 'Instrumental only, no vocals. Luxury real estate home tour ambient lounge, clean piano chords, subtle deep house pulse, airy pads, 110 BPM.' },
+  { id: 'lyria_academy', label: 'AI 학원·교육 로파이 비트', prompt: 'Instrumental only, no vocals. Clean inspiring study lo-fi hip hop beat, soft piano melody, warm vinyl texture, crisp boom-bap drums, 92 BPM.' },
+  { id: 'lyria_clinic', label: 'AI 클리닉 신뢰감 앰비언트', prompt: 'Instrumental only, no vocals. Trustworthy clean medical clinic background music, gentle marimba, warm strings, minimal soft percussion, 100 BPM.' },
+  { id: 'lyria_shop', label: 'AI 패션·쇼핑몰 시티팝', prompt: 'Instrumental only, no vocals. Trendy Seoul fashion lookbook city pop synth funk, funky slap bass, retro brass synth, bright 120 BPM groove.' },
+  { id: 'lyria_interior', label: 'AI 인테리어 북유럽 미니멀', prompt: 'Instrumental only, no vocals. Minimalist Scandinavian interior design vlog music, plucked acoustic guitar, warm cello pad, gentle shaker, 104 BPM.' }
 ];
 
 function getBlobHelpers() {
