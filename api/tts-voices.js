@@ -78,6 +78,9 @@ async function callGeminiLyria(prompt, apiKey) {
   const data = await r.json().catch(() => ({}));
   if (!r.ok) {
     const msg = (data && data.error && data.error.message) || `lyria_http_${r.status}`;
+    if (r.status === 429 || /free tier|rate limit/i.test(msg)) {
+      throw new Error('구글 AI Studio 무료 등급에서는 Lyria 음악 생성이 제한(한도 0)되어 있습니다. AI Studio에서 유료 결제(Pay-as-you-go)를 연결하면 바로 생성됩니다.');
+    }
     throw new Error(msg);
   }
   let audio = extractAudioFromInteraction(data);
