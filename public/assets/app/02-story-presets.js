@@ -55,35 +55,36 @@
       'CONTRACT_STAMP_SIGN'
     ];
 
+    // 손님 화면에 보이는 꾸밈 이름: 쉬운 말로 (예전 '방송국 와이드 하단바', '댓글 자동 DM 콜아웃' 같은 개발용 이름은 손님이 이해 못 함)
     const WIDGET_LABELS_RAW = {
-      BREAKING_NEWS: '긴급 속보 티커',
-      MAGAZINE_COVER: '매거진 커버 프레임',
-      GIANT_DISCOUNT_STAMP: '슬롯머신 특가 스탬프',
-      SPEC_FLOATING_TAGS: '3단 플로팅 스펙태그',
-      KAKAO_CHAT_PAIR: '실제 카톡 대화창',
-      RECEIPT_QUOTE: '영수증 견적 명세표',
-      VS_FINANCE_BATTLE: '할부·렌트·리스 비교',
-      CHECKLIST_GLASS: '글래스 체크리스트',
-      STOCK_COUNTDOWN: '선점재고 잔여 게이지',
-      SMARTKEY_DELIVERY: '스마트키 출고 배너',
-      MONTHLY_PAYMENT_HERO: '월 납입금 히어로 보드',
-      COMMENT_DM_MAGNET: '댓글 자동 DM 콜아웃',
-      RACING_RIBBON: '사선 레이싱 리본',
-      TECH_HUD: '3D 미래형 HUD 타겟',
-      LOWER_THIRD: '방송국 와이드 하단바',
-      NEON_TITLE: '초대형 사이버 네온타이틀',
-      DYNAMIC_ISLAND: '다이내믹 아일랜드 팝업',
-      SPEEDOMETER_RPM_DIAL: 'RPM 속도계 다이얼',
-      VIP_BLACK_CARD: 'VIP 블랙 메탈카드',
-      SCRATCH_COUPON: '스크래치 특가 쿠폰',
-      SMARTPHONE_NOTIF_STACK: '스마트폰 3단 알림스택',
-      CONTRACT_STAMP_SIGN: '공식출고 서명 인감도장'
+      BREAKING_NEWS: '속보 띠',
+      MAGAZINE_COVER: '잡지 표지',
+      GIANT_DISCOUNT_STAMP: '특가 도장',
+      SPEC_FLOATING_TAGS: '특징 태그',
+      KAKAO_CHAT_PAIR: '카톡 대화',
+      RECEIPT_QUOTE: '견적서',
+      VS_FINANCE_BATTLE: '할부·리스 비교',
+      CHECKLIST_GLASS: '체크리스트',
+      STOCK_COUNTDOWN: '남은 재고',
+      SMARTKEY_DELIVERY: '출고 축하',
+      MONTHLY_PAYMENT_HERO: '월 납입금 강조',
+      COMMENT_DM_MAGNET: '댓글 유도',
+      RACING_RIBBON: '사선 띠',
+      TECH_HUD: '초점 표시',
+      LOWER_THIRD: '아래 자막 띠',
+      NEON_TITLE: '큰 제목',
+      DYNAMIC_ISLAND: '알림 팝업',
+      SPEEDOMETER_RPM_DIAL: '속도계',
+      VIP_BLACK_CARD: 'VIP 카드',
+      SCRATCH_COUPON: '긁는 쿠폰',
+      SMARTPHONE_NOTIF_STACK: '알림 3개',
+      CONTRACT_STAMP_SIGN: '계약 도장'
     };
     // 업종이 자동차가 아니면 위젯 이름도 업종 말로 (음식점에 '견적'·'출고'가 보이지 않게)
     const WIDGET_LABELS_IND = {
-      RECEIPT_QUOTE: '영수증 안내표', VS_FINANCE_BATTLE: '가격·혜택 비교', SMARTKEY_DELIVERY: '완료 축하 배너',
-      MONTHLY_PAYMENT_HERO: '가격 히어로 보드', RACING_RIBBON: '사선 리본', SPEEDOMETER_RPM_DIAL: '게이지 다이얼',
-      CONTRACT_STAMP_SIGN: '확인 도장', STOCK_COUNTDOWN: '선착순 잔여 게이지', TECH_HUD: '포커스 타겟'
+      RECEIPT_QUOTE: '안내표', VS_FINANCE_BATTLE: '가격 비교', SMARTKEY_DELIVERY: '완료 축하',
+      MONTHLY_PAYMENT_HERO: '가격 강조', SPEEDOMETER_RPM_DIAL: '게이지',
+      CONTRACT_STAMP_SIGN: '확인 도장', STOCK_COUNTDOWN: '남은 자리'
     };
     const WIDGET_LABELS = new Proxy(WIDGET_LABELS_RAW, {
       get(target, k) {
@@ -4172,9 +4173,10 @@ function renderStoryArchetypesUI() {
       const cutBadge = document.getElementById('mobileDockCutBadge');
       if (cutBadge) {
         if (t >= mainDur) {
-          cutBadge.textContent = '엔딩 · 카마스터 명함';
+          cutBadge.textContent = IND.key === 'auto' ? '엔딩 · 카마스터 명함' : '엔딩 · 명함';
         } else {
-          cutBadge.textContent = `${cutIdx + 1}컷 · ${wLabel}`;
+          const capTxt = String((campaign.cutCaptions && campaign.cutCaptions[cutIdx]) || '').replace(/\s+/g, ' ').trim();
+          cutBadge.textContent = `${cutIdx + 1}컷 · ${capTxt || wLabel}`;
         }
       }
 
@@ -4201,14 +4203,19 @@ function renderStoryArchetypesUI() {
       const mon = document.getElementById('mainMonitorColumn');
       if (!dock || window.innerWidth >= 1024 || !mon || mon.classList.contains('hidden')) {
         if (dock) dock.classList.remove('dock-fixed-mode');
+        document.documentElement.style.setProperty('--dock-h', '0px');
         return;
       }
       // 미리보기가 화면 밖(위든 아래든)에 있으면 항상 위에 작은 미리보기 바를 띄움
       // (사진·사운드 단계에서 맨 위를 볼 때도 결과가 보이도록)
+      // 화면 고정용이라 body 바로 아래로 옮김 (부모의 효과 때문에 맨 위에서 24px 떨어져 탭 바를 덮었음)
+      if (dock.parentElement !== document.body) document.body.appendChild(dock);
       const rect = mon.getBoundingClientRect();
       const monVisible = rect.top < window.innerHeight - 140 && rect.bottom > 72;
       const shouldShow = !monVisible;
       dock.classList.toggle('dock-fixed-mode', shouldShow);
+      // 단계 탭 바가 작은 미리보기 바 밑에 가려지지 않도록 그 높이만큼 아래에 붙임
+      document.documentElement.style.setProperty('--dock-h', shouldShow ? `${Math.round(dock.getBoundingClientRect().bottom)}px` : '0px');
     }
     window.addEventListener('scroll', syncMobileDockVisibility, { passive: true });
     window.addEventListener('resize', syncMobileDockVisibility, { passive: true });

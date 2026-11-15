@@ -4552,7 +4552,7 @@
         c.fillStyle = '#ffffff';
         c.font = '900 16px "Noto Sans KR", sans-serif';
         c.textAlign = 'left';
-        c.fillText(`🔴 LIVE · ${wLbl || '핵심 안내'}`, 24, 81);
+        c.fillText(`🔴 LIVE · ${place} 소식`, 24, 81);
       } else if (widgetType === 'GIANT_DISCOUNT_STAMP') {
         c.translate(W - 108, 132);
         c.rotate(-0.18);
@@ -4620,7 +4620,7 @@
           c.fillStyle = '#ffffff';
           c.font = '800 15px "Noto Sans KR", sans-serif';
           c.textAlign = 'left';
-          c.fillText(`✦ ${wLbl || cta}`, 42, 102);
+          c.fillText(`✦ ${[`${place} 소식`, `${cta} 안내`, '오늘의 추천', '지금 확인하세요'][cutIdx % 4]}`, 42, 102); // 영상 위에 부품 이름(예: '방송국 와이드 하단바')이 보이지 않게
         }
       }
       c.restore();

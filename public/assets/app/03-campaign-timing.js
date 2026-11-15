@@ -3,11 +3,12 @@
     // 카마스터별 스마트 자동 변주 (Smart Per-Dealer Variation & Anti-Duplicate Engine)
     // ============================================================================
     const CUT_NAMES = ['외관 디자인', '파노라믹 운전석', '2열 독립 캡틴시트', '즉시출고 스마트키'];
+    // 손님에게 보이는 이름이라 쉬운 우리말로 (순서는 움직임 번호와 같아야 함)
     const CAMERA_NAMES = [
-      '고속 줌인(Push-In)', '와이드 패닝(Pan)', '줌아웃 리빌(Reveal)', '대각선 돌리(Dolly)',
-      '역방향 패닝(Pan Left)', '틸트 업(Tilt Up)', '틸트 다운(Tilt Down)', '로테이트 줌(Rotate)',
-      '비트 펀치인(Punch)', '핸드헬드 플로팅(Handheld)', '3D 스윙(Swing)', '크래시 줌(Crash Zoom)',
-      '오빗 무빙(Orbit)', '더치 앵글(Dutch)'
+      '빠르게 다가가기', '옆으로 훑기', '멀어지며 보여주기', '비스듬히 다가가기',
+      '반대로 훑기', '아래에서 위로', '위에서 아래로', '돌며 다가가기',
+      '박자 맞춰 튀기', '손에 든 듯 흔들기', '입체로 흔들기', '확 당기기',
+      '둘레 돌기', '기울여 보기'
     ];
     const TRANSITION_NAMES = [
       '크로스 디졸브', '휩 팬', '줌 블러 펀치', '세로 푸시', '아이리스 리빌', '대각선 와이프',
@@ -473,8 +474,8 @@
         }).join('');
 
         const curCam = plan.customCam !== undefined ? String(plan.customCam) : 'auto';
-        const camOpts = `<option value="auto" ${curCam === 'auto' ? 'selected' : ''}>모션: 자동</option>` +
-          camNames.map((cn, cIdx) => `<option value="${cIdx}" ${curCam === String(cIdx) ? 'selected' : ''}>모션: ${cn}</option>`).join('');
+        const camOpts = `<option value="auto" ${curCam === 'auto' ? 'selected' : ''}>자동</option>` +
+          camNames.map((cn, cIdx) => `<option value="${cIdx}" ${curCam === String(cIdx) ? 'selected' : ''}>${cn}</option>`).join('');
 
         // 대본 탭: 컷별 헤드라인·성우 대사만 (사진·화면·모션은 사진 탭)
         html += `
@@ -501,31 +502,33 @@
                   <div class="flex items-center gap-1.5">
                     <span id="cutWidgetBadge${i}" class="text-[11px] text-[#a1a1a6]">${wLabel}</span>
                     <button type="button" onclick="cycleCutDesign(${i})" class="px-2.5 py-1 rounded-[6px] bg-[#232325] hover:bg-[#3b82f6] text-[11px] font-medium text-[#ededed] cursor-pointer transition-colors" title="누를 때마다 이 컷의 디자인을 바꾸고 바로 미리보기로 보여줍니다">
-                      디자인 변경
+                      꾸밈 바꾸기
                     </button>
                   </div>
                 </div>
                 <p class="text-[13px] text-[#d4d4d8] leading-snug line-clamp-2">${subVal || '(대본 탭에서 문구를 적어 주세요)'}</p>
               </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2.5 border-t border-[#222225]">
-              <div class="flex items-center gap-1.5">
-                <label class="h-8 px-2.5 rounded-[7px] bg-[#1e1e22] hover:bg-[#2a2a30] border border-[var(--border)] text-[12px] text-[#ededed] flex items-center justify-center cursor-pointer shrink-0 whitespace-nowrap" title="이 컷만 내 사진 또는 영상으로 교체">
-                  📁 사진·영상 올리기
-                  <input type="file" accept="image/*,video/*" class="hidden" onchange="replaceCutMedia(${i}, event)" />
-                </label>
-                <select onchange="pickCutDefaultPhoto(${i}, this.value)" title="이 컷의 기본 이미지 선택" class="studio-input flex-1 min-w-0 h-8 px-2 text-[12px] bg-[#1a1a1d] text-[#d4d4d8] cursor-pointer">
+            <div class="cut-ctl-grid pt-2.5 border-t border-[#222225]">
+              <label class="cut-ctl"><span>사진</span>
+                <select onchange="pickCutDefaultPhoto(${i}, this.value)" title="이 컷의 기본 이미지 선택" class="studio-input">
                   ${photoOpts || '<option value="0">기본 장면</option>'}
                 </select>
-              </div>
-              <div class="flex items-center gap-1.5">
-                <select id="cutWidgetSelect${i}" onchange="updateCutSceneSetting(${i}, 'widget', this.value)" title="이 컷의 화면 위젯/디자인 변경" class="studio-input flex-1 min-w-0 h-8 px-2 text-[12px] bg-[#1a1a1d] text-[#d4d4d8] cursor-pointer">
+              </label>
+              <label class="cut-ctl"><span>꾸밈</span>
+                <select id="cutWidgetSelect${i}" onchange="updateCutSceneSetting(${i}, 'widget', this.value)" title="이 컷의 화면 꾸밈 변경" class="studio-input">
                   ${widgetOpts}
                 </select>
-                <select onchange="updateCutSceneSetting(${i}, 'customCam', this.value)" title="이 컷의 카메라 모션 변경" class="studio-input flex-1 min-w-0 h-8 px-2 text-[12px] bg-[#1a1a1d] text-[#d4d4d8] cursor-pointer">
+              </label>
+              <label class="cut-ctl"><span>움직임</span>
+                <select onchange="updateCutSceneSetting(${i}, 'customCam', this.value)" title="이 컷의 카메라 움직임 변경" class="studio-input">
                   ${camOpts}
                 </select>
-              </div>
+              </label>
+              <label class="cut-upload" title="이 컷만 내 사진 또는 영상으로 교체">
+                📁 이 컷을 내 사진·영상으로 바꾸기
+                <input type="file" accept="image/*,video/*" class="hidden" onchange="replaceCutMedia(${i}, event)" />
+              </label>
             </div>
           </div>
         `;

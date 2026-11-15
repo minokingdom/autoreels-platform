@@ -1023,3 +1023,18 @@
       #mobileLiveDock.dock-fixed-mode > div:nth-child(2) { display: none; }
       #mobileLiveDock.dock-fixed-mode button:has(#mobileMiniCanvas) { width: 45px; height: 80px; }
     }
+
+/* 사진 탭 컷 카드: 선택 상자마다 이름표를 붙이고, 좁은 화면에서 글자가 잘리지 않게 한 줄씩 */
+.cut-ctl-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+@media (min-width: 640px) { .cut-ctl-grid { grid-template-columns: 1fr 1fr 1fr; } .cut-ctl-grid .cut-upload { grid-column: 1 / -1; } }
+.cut-ctl { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cut-ctl > span { flex: 0 0 44px; font-size: 12px; color: #85858b; }
+.cut-ctl > select { flex: 1 1 auto; min-width: 0; height: 36px; padding: 0 10px; font-size: 13px; background: #1a1a1d; color: #e4e4e7; cursor: pointer; text-overflow: ellipsis; }
+.cut-upload { display: flex; align-items: center; justify-content: center; height: 38px; border-radius: 8px; border: 1px dashed #3a3a40; background: #18181b; color: #ededed; font-size: 13px; cursor: pointer; }
+.cut-upload:hover { border-color: #3b82f6; }
+
+/* 모바일: 작은 미리보기 바를 화면 맨 위에 딱 붙이고, 단계 탭 바는 그 바로 밑에 고정 (예전엔 미리보기 바가 탭을 덮었음) */
+@media (max-width: 1023px) {
+  #mobileLiveDock.dock-fixed-mode { top: 0; left: 0; right: 0; width: 100%; border-radius: 0 0 14px 14px; border-top: 0; }
+  div.sticky:has(> .studio-tablist) { top: var(--dock-h, 0px); padding-top: 8px; padding-bottom: 8px; transition: top .15s ease; }
+}

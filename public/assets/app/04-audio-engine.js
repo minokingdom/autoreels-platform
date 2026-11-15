@@ -129,7 +129,7 @@
         const statusText = document.getElementById('lyriaBgmStatusText');
         if (statusText) {
           statusText.classList.remove('hidden');
-          statusText.textContent = `✨ ${label || 'Lyria AI BGM'} 적용됨 (영상 추출 시 그대로 합성됩니다)`;
+          statusText.textContent = `✨ ${label || 'AI 배경음악'} 적용됨 (완성 영상에도 그대로 들어가요)`;
         }
         if (!this.enabled) {
           toggleAudioMaster(true);
@@ -1318,11 +1318,20 @@
       }
     }
 
+    // 서버의 영어 오류 문구(요금 한도 등)를 손님에게 그대로 보여 주지 않음
+    function arFriendlyBgmError(err, fellBack) {
+      const m = String((err && err.message) || '');
+      const why = /rate|quota|limit|429|exceeded/i.test(m) ? '지금 AI 음악을 만드는 사람이 많아요. 잠시 뒤 다시 눌러 주세요.'
+        : /key|auth|403|401/i.test(m) ? 'AI 음악 만들기를 지금 쓸 수 없어요.'
+        : 'AI 음악을 만들지 못했어요. 잠시 뒤 다시 눌러 주세요.';
+      return `⚠️ ${why}${fellBack ? ' 지금은 기본 배경음악으로 들려드려요.' : ''}`;
+    }
+
     async function arSelectLyriaBgm(presetId) {
       const st = document.getElementById('lyriaBgmStatusText');
       if (st) {
         st.classList.remove('hidden');
-        st.textContent = '✨ 구글 Lyria AI 배경음악 준비 중... (최초 1회 약 10~15초)';
+        st.textContent = '✨ AI 배경음악 준비 중… (처음 한 번만 10~15초)';
       }
       try {
         if (!window.__arLyriaMap) {
@@ -1347,7 +1356,7 @@
       } catch (err) {
         if (st) {
           st.classList.remove('hidden');
-          st.textContent = `⚠️ ${err && err.message ? err.message : 'Lyria 생성 실패 — 내장 비트로 재생합니다.'}`;
+          st.textContent = arFriendlyBgmError(err, true);
         }
         AudioEngine.bgmStyle = 'showroom';
         const sel = document.getElementById('bgmStyleSelect');
@@ -1367,7 +1376,7 @@
         return;
       }
       if (btn) { btn.disabled = true; btn.textContent = '✨ 생성 중...'; }
-      if (st) { st.classList.remove('hidden'); st.textContent = '✨ 구글 Lyria AI가 30초 맞춤 음악을 작곡하고 있습니다...'; }
+      if (st) { st.classList.remove('hidden'); st.textContent = '✨ AI가 30초짜리 맞춤 음악을 만들고 있어요…'; }
       try {
         const res = await fetch('/api/tts-voices?action=generate-bgm', {
           method: 'POST',
@@ -1382,7 +1391,7 @@
         if (sel) sel.value = 'custom_mp3';
         AudioEngine.loadRemoteBgmUrl(data.url, data.label);
       } catch (err) {
-        if (st) { st.classList.remove('hidden'); st.textContent = `⚠️ ${err && err.message || 'Lyria 생성 실패'}`; }
+        if (st) { st.classList.remove('hidden'); st.textContent = arFriendlyBgmError(err, false); }
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = '✨ AI BGM 만들기'; }
       }
