@@ -3704,6 +3704,45 @@
       updateTrendSwapStatusUI(`인스타 스타일 '${obj.name}' + 1컷 훅 문구 적용됨`);
     }
 
+    // 서버 DB 캐시(/api/trends)에서 이번 주 인기 캡컷·업종 릴스를 자동으로 디자인 스타일에 반영
+    window.__arWeeklyTrendKeys = window.__arWeeklyTrendKeys || {};
+    async function arAutoLoadWeeklyTrendStyles(indKey) {
+      const k = indKey || (typeof IND !== 'undefined' ? IND.key : 'auto');
+      if (!window.location.protocol.startsWith('http') || window.__arWeeklyTrendKeys[k]) return;
+      window.__arWeeklyTrendKeys[k] = true;
+      try {
+        const [indRes, capRes] = await Promise.all([
+          fetch(`/api/trends?industry=${encodeURIComponent(k)}`).then((r) => r.json()).catch(() => null),
+          fetch('/api/trends?industry=capcut').then((r) => r.json()).catch(() => null)
+        ]);
+        const indItems = (indRes && Array.isArray(indRes.items) ? indRes.items : []).slice(0, 2);
+        const capItems = (capRes && Array.isArray(capRes.items) ? capRes.items : []).slice(0, 2);
+        const picked = [
+          ...capItems.map((it) => ({ it, scopeInd: null })),
+          ...indItems.map((it) => ({ it, scopeInd: k }))
+        ];
+        if (!picked.length) return;
+        const added = [];
+        picked.forEach(({ it, scopeInd }) => {
+          if (!it || !it.theme) return;
+          const t = it.theme;
+          const wid = `weekly_${t.id}`;
+          if (DESIGN_STYLES.some((d) => d.id === wid) || added.some((d) => d.id === wid)) return;
+          const obj = makeTrendDesignObj([
+            wid, `🔥 ${t.name}`, t.layout, t.cap, t.font, t.deco, t.trans, t.outro, t.grade, t.head, t.bg, t.label, t.accent, t.accent2
+          ], scopeInd, DESIGN_STYLES.length + added.length);
+          obj.cat = '이번 주 인기';
+          obj.isWeeklyTrend = true;
+          obj.desc = `이번 주 인기 릴스 패턴 · ${it.views || '최신 트렌드'} (${it.title ? it.title.slice(0, 28) : t.label})`;
+          added.push(obj);
+        });
+        if (added.length) {
+          DESIGN_STYLES.unshift(...added);
+          if (typeof renderDesignStylePicker === 'function') renderDesignStylePicker();
+        }
+      } catch (e) {}
+    }
+
     function pickVictimDesignForSwap(indKey) {
       const vis = arVisibleDesigns().filter((d) => d.id !== campaign.designStyle);
       if (!vis.length) return null;
@@ -3831,9 +3870,15 @@
     }
     function arDesignCats() {
       const key = typeof IND !== 'undefined' ? IND.key : 'auto';
-      if (key === 'auto') return DESIGN_CATS;
       const vis = arVisibleDesigns();
-      return ['전체', '내 업종', ...DESIGN_CATS.filter((c) => c !== '전체' && vis.some((d) => !d.industry && d.cat === c))];
+      const hasWeekly = vis.some((d) => d.cat === '이번 주 인기');
+      if (key === 'auto') return hasWeekly ? ['전체', '이번 주 인기', ...DESIGN_CATS.filter((c) => c !== '전체')] : DESIGN_CATS;
+      return [
+        '전체',
+        ...(hasWeekly ? ['이번 주 인기'] : []),
+        '내 업종',
+        ...DESIGN_CATS.filter((c) => c !== '전체' && vis.some((d) => !d.industry && d.cat === c))
+      ];
     }
 
     // 내 스타일은 이 브라우저에만 보관. TODO: 서버 모드에서는 인증 세션의 소유자로

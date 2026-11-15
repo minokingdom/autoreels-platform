@@ -475,4 +475,5 @@ async function handler(req, res) {
 module.exports = handler;
 module.exports.INDUSTRY_QUERIES = INDUSTRY_QUERIES;
 module.exports.fetchTrendsForIndustry = fetchTrendsForIndustry;
+module.exports.readTrendCache = readTrendCache;
 module.exports.writeTrendCache = writeTrendCache;

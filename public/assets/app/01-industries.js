@@ -935,6 +935,7 @@
       arRenderAiPromptHints();
       // 스크립트를 다 읽은 뒤 실행되도록 미룸 (처음 불러올 때 주제 코드가 아직 준비 전일 수 있음)
       setTimeout(() => { if (typeof arLoadTopics === 'function') { try { arLoadTopics(false); } catch (e) {} } }, 0);
+      setTimeout(() => { if (typeof arAutoLoadWeeklyTrendStyles === 'function') { try { arAutoLoadWeeklyTrendStyles(IND.key); } catch (e) {} } }, 300);
       arIndWalk(document.body);
       arIndStartObserver();
       if (typeof renderPresetDrawer === 'function') { try { renderPresetDrawer(); } catch (e) {} }
