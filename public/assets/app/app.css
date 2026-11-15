@@ -993,3 +993,33 @@
   .ar-custom-saved{margin-top:0;padding-top:8px}.ar-custom-saved>div{flex-wrap:wrap}.ar-custom-saved span{flex-basis:100%}
   .ar-custom-form fieldset{margin-top:18px}.ar-custom-color{column-gap:5px;padding:8px}.ar-custom-save{align-items:stretch;flex-direction:column}.ar-custom-save button{width:100%}
 }
+
+
+    /* ===== 모바일 아래 고정 단계 바 ===== */
+    #mobileStepBar { display: none; }
+    @media (max-width: 1023px) {
+      #mobileStepBar {
+        display: flex; align-items: center; gap: 8px;
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+        background: rgba(13, 13, 16, 0.94);
+        -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+        border-top: 1px solid var(--border);
+      }
+      #mobileStepBar .msb-btn {
+        height: 44px; min-width: 84px; padding: 0 12px; border-radius: 12px;
+        background: #232325; color: #ededed; font-size: 13px; font-weight: 600; border: 1px solid var(--border);
+      }
+      #mobileStepBar .msb-btn:disabled { opacity: .35; }
+      #mobileStepBar .msb-next { background: #ededed; color: #111; border-color: #ededed; min-width: 120px; }
+      #mobileStepBar .msb-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; line-height: 1.15; background: transparent; border: 0; }
+      #mobileStepBar .msb-count { font-size: 11px; color: #85858b; font-family: ui-monospace, monospace; }
+      #mobileStepBar .msb-name { font-size: 14px; font-weight: 700; color: #ededed; }
+      body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+      body.ar-cut-editing #mobileStepBar { display: none; }
+      /* 아래 고정 바가 있으니 단계 끝의 [이전]·[다음] 줄은 모바일에서 숨김 */
+      .studio-panel div:has(> button[onclick^="switchStudioTab("]):not(:has(> :not(button[onclick^="switchStudioTab("]))) { display: none; }
+      /* 위 작은 미리보기 바는 간단하게: 색상 줄은 사진 단계에 있으니 숨기고 미리보기 썸네일은 조금 크게 */
+      #mobileLiveDock.dock-fixed-mode > div:nth-child(2) { display: none; }
+      #mobileLiveDock.dock-fixed-mode button:has(#mobileMiniCanvas) { width: 45px; height: 80px; }
+    }

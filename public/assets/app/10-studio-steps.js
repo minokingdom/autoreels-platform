@@ -259,7 +259,57 @@
         bar.scrollIntoView({ block: 'start', behavior: 'smooth' });
       }
       arUpdateEasyGuide(key);
+      arUpdateMobileStepBar(key);
       if (key === 'publish' && !arFinalAudioUnlocked) arStartFinalPreview();
+    }
+
+    // ==========================================================================
+    // ★ 모바일 아래 고정 단계 바: 긴 화면 맨 끝까지 내려가지 않아도 [이전]·[다음]으로 이동
+    // ==========================================================================
+    const AR_STEP_NAMES = { topic: '주제', script: '대본', photo: '사진', sound: '사운드', card: '명함', publish: '발행' };
+    function arEnsureMobileStepBar() {
+      let bar = document.getElementById('mobileStepBar');
+      if (bar) return bar;
+      bar = document.createElement('nav');
+      bar.id = 'mobileStepBar';
+      bar.setAttribute('aria-label', '단계 이동');
+      bar.innerHTML = `
+        <button type="button" id="mobileStepPrev" class="msb-btn">←</button>
+        <button type="button" id="mobileStepMid" class="msb-mid" aria-label="미리보기로 이동">
+          <span id="mobileStepCount" class="msb-count"></span>
+          <span id="mobileStepName" class="msb-name"></span>
+        </button>
+        <button type="button" id="mobileStepNext" class="msb-btn msb-next"></button>`;
+      document.body.appendChild(bar);
+      bar.querySelector('#mobileStepMid').onclick = () => {
+        const mon = document.getElementById('mainMonitorColumn');
+        if (mon && !mon.classList.contains('hidden')) scrollToMainMonitor();
+        else window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+      return bar;
+    }
+    function arUpdateMobileStepBar(key) {
+      const bar = arEnsureMobileStepBar();
+      const idx = STUDIO_TABS.indexOf(key);
+      const prev = STUDIO_TABS[idx - 1];
+      const next = STUDIO_TABS[idx + 1];
+      const go = (k) => () => {
+        switchStudioTab(k);
+        // 새 단계는 맨 위(안내 문구)부터 보이게
+        const panel = document.getElementById(`studioPanel_${k}`);
+        const top = panel ? panel.getBoundingClientRect().top + window.scrollY - 150 : 0;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      };
+      const pb = bar.querySelector('#mobileStepPrev');
+      const nb = bar.querySelector('#mobileStepNext');
+      pb.disabled = !prev;
+      pb.textContent = prev ? `← ${AR_STEP_NAMES[prev]}` : '←';
+      pb.onclick = prev ? go(prev) : null;
+      nb.style.visibility = next ? 'visible' : 'hidden';
+      nb.textContent = next ? `다음: ${AR_STEP_NAMES[next]} →` : '';
+      nb.onclick = next ? go(next) : null;
+      bar.querySelector('#mobileStepCount').textContent = `${idx + 1} / ${STUDIO_TABS.length}`;
+      bar.querySelector('#mobileStepName').textContent = AR_STEP_NAMES[key] || '';
     }
 
     // ==========================================================================

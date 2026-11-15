@@ -4203,10 +4203,11 @@ function renderStoryArchetypesUI() {
         if (dock) dock.classList.remove('dock-fixed-mode');
         return;
       }
-      const scrollY = window.scrollY || window.pageYOffset;
+      // 미리보기가 화면 밖(위든 아래든)에 있으면 항상 위에 작은 미리보기 바를 띄움
+      // (사진·사운드 단계에서 맨 위를 볼 때도 결과가 보이도록)
       const rect = mon.getBoundingClientRect();
-      const monVisible = rect.top < window.innerHeight - 60 && rect.bottom > 72;
-      const shouldShow = scrollY > 120 && !monVisible;
+      const monVisible = rect.top < window.innerHeight - 140 && rect.bottom > 72;
+      const shouldShow = !monVisible;
       dock.classList.toggle('dock-fixed-mode', shouldShow);
     }
     window.addEventListener('scroll', syncMobileDockVisibility, { passive: true });

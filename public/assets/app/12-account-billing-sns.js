@@ -1058,6 +1058,10 @@
     syncTechPanel();
     applyRoleViewModeUI();
     arSetUiMode(arLoadUiMode(), false);
+    try {
+      const curTab = STUDIO_TABS.find((k) => { const el = document.getElementById(`studioPanel_${k}`); return el && !el.classList.contains('hidden'); }) || 'topic';
+      arUpdateMobileStepBar(curTab);
+    } catch (e) {}
     arUpdateEasyGuide('topic');
     setTimeout(() => { try { if (!window.__arTopics) arLoadTopics(false); } catch (e) {} }, 0);
     window.__timelines['main'].seek(0);
