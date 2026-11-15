@@ -233,6 +233,16 @@
       c.restore();
       if (warm) inWarm(c, x, y, w, h, warm);
     }
+    // 사진 가장자리에서 서서히 걷히는 명암. 자막 영역에 사각 경계가 생기지 않는다.
+    function inCaptionScrim(c, x, y, w, h, center, light = false) {
+      const top = center <= 0.5, reach = top ? Math.min(1, center + 0.48) : Math.max(0, center - 0.48);
+      const shade = c.createLinearGradient(0, top ? y : y + h, 0, y + h * reach);
+      const rgb = light ? '246,241,231' : '24,19,15';
+      shade.addColorStop(0, `rgba(${rgb},0.84)`);
+      shade.addColorStop(0.48, `rgba(${rgb},0.72)`);
+      shade.addColorStop(1, `rgba(${rgb},0)`);
+      c.save(); c.fillStyle = shade; c.fillRect(x, y, w, h); c.restore();
+    }
     function mBg(c, W, H, spec, t) {
       const g = c.createLinearGradient(0, 0, W * 0.4, H);
       g.addColorStop(0, spec.bg1);
@@ -1345,22 +1355,25 @@
         c.strokeStyle = 'rgba(255,248,238,0.38)';
         c.lineWidth = Math.max(1, Math.round(W * 0.0018));
         c.strokeRect(W * 0.045, H * 0.035, W * 0.91, H * 0.93);
-        // 크림색 전시 명패 카드
+        // 저장한 내 스타일은 사진 위에 직접 쓰고, 기본 전시 명패는 유지한다.
         const slide = (1 - ent) * H * 0.018;
         const cx = W * 0.08, cy = H * (custom ? { top: 0.17, middle: 0.37, bottom: 0.59 }[custom.caption.position] : 0.64) + slide, cw = W * 0.78, ch = H * 0.245;
-        c.save();
-        c.shadowColor = 'rgba(20,14,10,0.22)';
-        c.shadowBlur = 10;
-        c.fillStyle = custom ? custom.colors.primary : 'rgba(248,243,234,0.94)';
-        gRoundRect(c, cx, cy, cw, ch, Math.round(W * 0.008));
-        c.fill();
-        c.restore();
+        if (custom) inCaptionScrim(c, 0, 0, W, H, cy / H + 0.12);
+        else {
+          c.save();
+          c.shadowColor = 'rgba(20,14,10,0.22)';
+          c.shadowBlur = 10;
+          c.fillStyle = 'rgba(248,243,234,0.94)';
+          gRoundRect(c, cx, cy, cw, ch, Math.round(W * 0.008));
+          c.fill();
+          c.restore();
+        }
         // 명패 내부 디테일
         c.fillStyle = custom ? custom.colors.accent : '#8c7a6b';
         c.fillRect(cx + cw * 0.07, cy + ch * 0.23, cw * 0.12, Math.max(1, Math.round(W * 0.002)));
-        inLabel(c, `전시 기록 · 제 ${String(cutIdx + 1).padStart(2, '0')}장`, cx + cw * 0.07, cy + ch * 0.14, custom ? sp.accent2 : '#7a6a5c', 'left', Math.round(W * 0.025));
-        mCaption(c, caption, cx + cw * 0.07, cy + ch * 0.30, cw * 0.86, ch * 0.48, W * (custom ? custom.caption.sizeRatio : 0.056), custom ? custom.fontKey : 'maru', custom ? sp.accent2 : '#2b241f', e, 'left');
-        inSign(c, d, cx + cw * 0.93, cy + ch * 0.86, custom ? sp.accent2 : '#6e5f52', 'right', Math.round(W * 0.029));
+        inLabel(c, `전시 기록 · 제 ${String(cutIdx + 1).padStart(2, '0')}장`, cx + cw * 0.07, cy + ch * 0.14, custom ? '#fffaf2' : '#7a6a5c', 'left', Math.round(W * 0.025));
+        mCaption(c, caption, cx + cw * 0.07, cy + ch * 0.30, cw * 0.86, ch * 0.48, W * (custom ? custom.caption.sizeRatio : 0.056), custom ? custom.fontKey : 'maru', custom ? '#fffaf2' : '#2b241f', e, 'left');
+        inSign(c, d, cx + cw * 0.93, cy + ch * 0.86, custom ? '#fffaf2' : '#6e5f52', 'right', Math.round(W * 0.029));
         inGrain(c, W, H, t, 0.065);
       } else if (M === 'in_h_panes') {
         // 세 갈래 시선: 같은 사진을 세 개의 세로 창으로 나누어 미묘한 시차로 흐르게 연출
@@ -1838,14 +1851,16 @@
         const safeDealer = arDealerForCopy(d);
         const full = role === 0 || role === 3 || role === 5;
         c.fillStyle = paper; c.fillRect(0, 0, W, H);
-        const print = (k, x, y, w, h, angle = 0, zoom = 1.03) => {
+        const print = (k, x, y, w, h, angle = 0, zoom = 1.03, shade = false) => {
           c.save(); c.globalAlpha = photoE;
           c.translate(W * (x + w / 2), H * (y + h / 2) + (1 - photoE) * H * 0.015);
           c.rotate(angle * photoE);
           const px = -W * w / 2, py = -H * h / 2, edge = W * 0.018;
           c.fillStyle = '#fffcf6'; c.fillRect(px - edge, py - edge, W * w + edge * 2, H * h + edge * 2);
           mPhoto(c, S, k, px, py, W * w, H * h, zoom + lp * 0.015);
-          inWarm(c, px, py, W * w, H * h, 0.65); c.restore();
+          inWarm(c, px, py, W * w, H * h, 0.65);
+          if (shade) inCaptionScrim(c, px, py, W * w, H * h, 0.22);
+          c.restore();
         };
         const title = (x, y, w, h, color = ink, align = 'left', size = 0.062) => {
           if (custom) return; // 사용자 자막은 모든 사진 위에 마지막으로 그린다.
@@ -1853,32 +1868,26 @@
         };
         if (full) {
           inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, (role === 3 ? 1.48 : 1.025) + lp * 0.025, 0.75);
-          const shade = c.createLinearGradient(0, 0, W * 0.8, H);
-          shade.addColorStop(0, 'rgba(36,30,25,0.67)');
-          shade.addColorStop(0.6, 'rgba(36,30,25,0.12)');
-          shade.addColorStop(1, 'rgba(36,30,25,0.45)');
-          c.fillStyle = shade; c.fillRect(0, 0, W, H);
+          inCaptionScrim(c, 0, 0, W, H, custom ? { top: 0.29, middle: 0.48, bottom: 0.68 }[custom.caption.position] : role === 3 ? 0.72 : role === 5 ? 0.52 : 0.29);
         }
         if (role === 0) {
           // 도입: 표지 사진과 질문, 제호는 보조 정보로 나중에 등장.
-          title(0.09, 0.19, 0.76, 0.25, paper, 'left', 0.085);
+          title(0.09, 0.19, 0.76, 0.25, '#fffaf2', 'left', 0.085);
         } else if (role === 1) {
           // 공개: 종이 위 오른쪽 인화지와 왼쪽 기사 제목.
           print(0, 0.43, 0.22, 0.48, 0.56, 0.035);
           title(0.08, 0.31, 0.30, 0.37);
           c.fillStyle = '#cabbab'; c.fillRect(W * 0.08, H * 0.25, W * 0.20 * photoE, H * 0.001);
         } else if (role === 2) {
-          // 상황: 넓은 맥락 사진 위에 작은 메모를 겹침.
-          print(0, 0.075, 0.16, 0.85, 0.64, -0.012, 1);
-          if (!custom) { c.fillStyle = paper; c.fillRect(W * 0.11, H * 0.19, W * 0.65, H * 0.23); }
-          title(0.16, 0.205, 0.55, 0.20);
+          // 상황: 인화지 위쪽의 부드러운 명암 위에 직접 메모한다.
+          print(0, 0.075, 0.16, 0.85, 0.64, -0.012, 1, !custom);
+          title(0.16, 0.205, 0.55, 0.20, '#fffaf2');
         } else if (role === 3) {
           // 근거: 디테일 확대와 주석. 수치·효능은 만들어 넣지 않음.
           c.save(); c.globalAlpha = infoE; c.strokeStyle = paper; c.lineWidth = W * 0.0015;
           c.beginPath(); c.arc(W * 0.65, H * 0.36, W * 0.06, 0, Math.PI * 2); c.stroke();
           c.beginPath(); c.moveTo(W * 0.61, H * 0.39); c.lineTo(W * 0.44, H * 0.58); c.stroke(); c.restore();
-          if (!custom) { c.fillStyle = paper; c.fillRect(W * 0.09, H * 0.58, W * 0.72, H * 0.25); }
-          title(0.15, 0.61, 0.60, 0.19);
+          title(0.15, 0.61, 0.60, 0.19, '#fffaf2');
         } else if (role === 4) {
           // 선택: 실제로 다른 사진이 있을 때만 두 장을 비교.
           const current = kitImg(S, 0);
@@ -1892,16 +1901,22 @@
           }
         } else {
           // 마무리: 실제 입력한 매장·혜택만 사용. 비어 있으면 본문 기록만 남김.
-          if (!custom) { c.fillStyle = paper; c.fillRect(W * 0.13, H * 0.28, W * 0.74, H * 0.48); }
-          title(0.20, 0.37, 0.60, 0.24);
+          title(0.20, 0.37, 0.60, 0.24, '#fffaf2');
           c.save(); c.globalAlpha = infoE;
           if (!custom) {
             c.fillStyle = '#cabbab'; c.fillRect(W * 0.20, H * 0.65, W * 0.60, H * 0.001);
-            mCaption(c, safeDealer.promoTag || safeDealer.name, W * 0.20, H * 0.67, W * 0.60, H * 0.06, W * 0.03, 'maru', muted, infoE, 'left');
+            mCaption(c, safeDealer.promoTag || safeDealer.name, W * 0.20, H * 0.67, W * 0.60, H * 0.06, W * 0.03, 'maru', '#fffaf2', infoE, 'left');
           }
           c.restore();
         }
+        // 명암은 제호·쪽 번호보다 먼저 그려 작은 글자가 흐려지지 않게 한다.
+        if (custom && !full) {
+          const center = { top: 0.29, middle: 0.48, bottom: 0.68 }[custom.caption.position];
+          c.save(); c.globalAlpha = photoE;
+          inCaptionScrim(c, 0, 0, W, H, center, ink !== '#fffaf2'); c.restore();
+        }
         c.save(); c.globalAlpha = infoE;
+        if (full) { c.shadowColor = 'rgba(0,0,0,0.22)'; c.shadowBlur = Math.min(10, W * 0.006); }
         inLabel(c, custom ? custom.name : '우리의 작은 잡지', W * 0.08, H * 0.065, custom ? (full ? '#fffaf2' : ink) : (full ? paper : muted), 'left', W * 0.026);
         inLabel(c, `${String(cutIdx + 1).padStart(2, '0')} / ${String(totalCuts).padStart(2, '0')}`, W * 0.92, H * 0.065, custom ? (full ? '#fffaf2' : ink) : (full ? paper : muted), 'right', W * 0.026);
         if (!custom) inLabel(c, ['첫 장면', '오늘의 발견', '머무는 순간', '자세히 보기', '다른 시선', safeDealer.name ? '다시 만날 곳' : '남겨둘 장면'][role], W * 0.08, H * 0.87, full ? paper : muted, 'left', W * 0.026);
@@ -1910,13 +1925,12 @@
         if (custom) {
           const y = H * { top: 0.17, middle: 0.36, bottom: 0.56 }[custom.caption.position];
           c.save(); c.globalAlpha = photoE;
-          c.fillStyle = paper; c.fillRect(W * 0.08, y, W * 0.84, H * 0.25);
           c.fillStyle = muted; c.fillRect(W * 0.13, y + H * 0.025, W * 0.12, H * 0.002);
-          mCaption(c, caption, W * 0.13, y + H * 0.04, W * 0.74, H * 0.18, W * custom.caption.sizeRatio, custom.fontKey, ink, titleE, 'left');
+          mCaption(c, caption, W * 0.13, y + H * 0.04, W * 0.74, H * 0.18, W * custom.caption.sizeRatio, custom.fontKey, full ? '#fffaf2' : ink, titleE, 'left');
           c.restore();
         }
       } else if (M === 'in_card_news') {
-        // 사진을 가득 담은 카드 위에 불투명 글 상자. 앞 페이지도 함께 밀어 빈 프레임을 막음.
+        // 사진 위에 직접 얹은 페이지 번호·제목·본문. 앞 페이지도 함께 밀어 빈 프레임을 막음.
         const turnDur = Math.min(0.48, cutDur * 0.18), turn = cutIdx ? mEase(local / turnDur) : 1;
         const drawPage = (pageIdx, offset, settled) => {
           const pageTime = pageIdx === cutIdx ? t : (pageIdx + 1) * cutDur - 0.001;
@@ -1927,17 +1941,16 @@
           const headline = parts.shift() || '', body = parts.join(' ');
           const pace = Math.min(1, cutDur / 2), pe = settled ? 1 : mClamp((local / pace - 0.18) / 0.8);
           const be = settled ? 1 : mClamp((local / pace - 0.52) / 0.7);
-          const boxY = custom ? { top: 0.17, middle: 0.33, bottom: 0.49 }[custom.caption.position] : pageIdx % 2 ? 0.44 : 0.18;
+          const textY = custom ? { top: 0.17, middle: 0.33, bottom: 0.49 }[custom.caption.position] : pageIdx % 2 ? 0.44 : 0.18;
           c.save(); c.translate(offset, 0);
           gRoundRect(c, W * 0.04, H * 0.035, W * 0.92, H * 0.85, W * 0.035); c.clip();
           mPhoto(c, pageScene, 0, W * 0.04, H * 0.035, W * 0.92, H * 0.85, 1.025);
           inWarm(c, W * 0.04, H * 0.035, W * 0.92, H * 0.85, 0.45);
-          c.fillStyle = custom ? custom.colors.primary : '#f6f1e7';
-          gRoundRect(c, W * 0.09, H * boxY, W * 0.82, H * 0.35, W * 0.018); c.fill();
-          inLabel(c, `${pageIdx + 1} / ${totalCuts}`, W * 0.15, H * (boxY + 0.038), custom ? sp.accent2 : '#655644', 'left', W * 0.03);
-          mCaption(c, headline, W * 0.15, H * (boxY + 0.065), W * 0.70, H * 0.15, W * (custom ? custom.caption.sizeRatio : 0.08), custom ? custom.fontKey : 'sans', custom ? sp.accent2 : '#29241e', pe, 'left');
-          c.fillStyle = custom ? custom.colors.accent : '#cabbab'; c.fillRect(W * 0.15, H * (boxY + 0.235), W * 0.12, H * 0.0015);
-          mCaption(c, body, W * 0.15, H * (boxY + 0.252), W * 0.70, H * 0.075, W * (custom ? custom.caption.sizeRatio * 0.65 : 0.043), custom ? custom.fontKey : 'pretL', custom ? sp.accent2 : '#655644', be, 'left');
+          inCaptionScrim(c, W * 0.04, H * 0.035, W * 0.92, H * 0.85, (textY + 0.17 - 0.035) / 0.85);
+          inLabel(c, `${pageIdx + 1} / ${totalCuts}`, W * 0.15, H * (textY + 0.038), '#fffaf2', 'left', W * 0.03);
+          mCaption(c, headline, W * 0.15, H * (textY + 0.065), W * 0.70, H * 0.15, W * (custom ? custom.caption.sizeRatio : 0.08), custom ? custom.fontKey : 'sans', '#fffaf2', pe, 'left');
+          c.fillStyle = custom ? custom.colors.accent : '#cabbab'; c.fillRect(W * 0.15, H * (textY + 0.235), W * 0.12, H * 0.0015);
+          mCaption(c, body, W * 0.15, H * (textY + 0.252), W * 0.70, H * 0.075, W * (custom ? custom.caption.sizeRatio * 0.65 : 0.043), custom ? custom.fontKey : 'pretL', '#fffaf2', be, 'left');
           c.restore();
         };
         c.save(); c.beginPath(); c.rect(0, 0, W, H * 0.91); c.clip();
