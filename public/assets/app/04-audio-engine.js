@@ -1514,6 +1514,13 @@
 
       const voiceChanged = (AudioEngine.ttsVoice !== prevVoice) || (AudioEngine.ttsSpeed !== prevSpeed);
       if (typeof renderBgmRecommendations === 'function') renderBgmRecommendations();
+      if (String(pickedBgm).startsWith('ace_')) {
+        const trackId = String(pickedBgm).slice(4).replace(/[^a-z0-9_-]/gi, '');
+        const optLabel = bgmEl && bgmEl.selectedOptions && bgmEl.selectedOptions[0] ? bgmEl.selectedOptions[0].textContent : trackId;
+        AudioEngine.loadRemoteBgmUrl(`/assets/bgm/pack/${trackId}.mp3`, optLabel);
+        if (voiceChanged && AudioEngine.enabled) arResetAndRebuildNarration();
+        return;
+      }
       if (String(pickedBgm).startsWith('lyria_')) {
         arSelectLyriaBgm(pickedBgm);
         if (voiceChanged && AudioEngine.enabled) arResetAndRebuildNarration();
@@ -1579,49 +1586,49 @@
         bump('lofi', 9, '감성 무드'); bump('vlog', 8, '일상 브이로그'); bump('ballad', 6, '잔잔한 피아노');
       }
       if (/프리미엄|럭셔리|고급|하이엔드|신축|수입|VIP|호텔|라운지/.test(text)) {
-        bump('luxury', 9, '고급 라운지'); bump('jazz', 7, '세련된 재즈'); bump('lyria_realestate', 6, '프리미엄');
+        bump('ace_realestate', 9, '고급 라운지'); bump('luxury', 7, '라운지'); bump('jazz', 6, '세련된 재즈');
       }
       if (/카페|커피|디저트|베이커리|브런치|케이크|라떼/.test(text)) {
-        bump('lyria_cafe', 10, '카페 맞춤'); bump('lofi', 7, '감성'); bump('jazz', 6, '재즈');
+        bump('ace_cafe', 10, '카페 맞춤'); bump('lofi', 7, '감성'); bump('jazz', 6, '재즈');
       }
       if (/맛집|고기|식당|파스타|초밥|배달|안주|술집/.test(text)) {
-        bump('lyria_restaurant', 10, '맛집 맞춤'); bump('funk', 7, '경쾌한 그루브'); bump('vlog', 6, '브이로그');
+        bump('ace_restaurant', 10, '맛집 맞춤'); bump('funk', 7, '경쾌한 그루브'); bump('vlog', 6, '브이로그');
       }
       if (/뷰티|헤어|네일|피부|메이크업|에스테틱|염색|펌/.test(text)) {
-        bump('lyria_beauty', 10, '뷰티 맞춤'); bump('bright', 8, '트렌디 시티팝'); bump('luxury', 5, '세련됨');
+        bump('ace_beauty', 10, '뷰티 맞춤'); bump('bright', 8, '트렌디 시티팝'); bump('luxury', 5, '세련됨');
       }
       if (/헬스|PT|다이어트|운동|필라테스|근력|체지방|챌린지/.test(text)) {
-        bump('lyria_fitness', 10, '운동 에너지'); bump('edm', 8, '업템포'); bump('urban', 7, '파워 비트');
+        bump('ace_fitness', 10, '운동 에너지'); bump('edm', 8, '업템포'); bump('urban', 7, '파워 비트');
       }
       if (/학원|수업|공부|합격|성적|수능|영어|코딩|강의/.test(text)) {
-        bump('lyria_academy', 10, '집중·신뢰'); bump('lofi', 7, '로파이'); bump('ballad', 5, '차분함');
+        bump('ace_academy', 10, '집중·신뢰'); bump('lofi', 7, '로파이'); bump('ballad', 5, '차분함');
       }
       if (/병원|클리닉|치과|시술|진료|교정|임플란트|피부과/.test(text)) {
-        bump('lyria_clinic', 10, '신뢰감'); bump('luxury', 6, '차분한 라운지'); bump('lofi', 5, '편안함');
+        bump('ace_clinic', 10, '신뢰감'); bump('luxury', 6, '차분한 라운지'); bump('lofi', 5, '편안함');
       }
       if (/인테리어|시공|리모델링|가구|공간|아파트|분양|매물/.test(text)) {
-        bump('lyria_interior', 9, '공간 감성'); bump('lyria_realestate', 8, '하우스 라운지'); bump('cinema', 6, '웅장함');
+        bump('ace_interior', 9, '공간 감성'); bump('ace_realestate', 8, '하우스 라운지'); bump('cinema', 6, '웅장함');
       }
       if (/신차|출고|중고차|리스|렌트|드라이브|시승|엔진/.test(text)) {
-        bump('lyria_showroom', 10, '쇼룸 맞춤'); bump('showroom', 8, '칠 하우스'); bump('drive', 7, '드라이브');
+        bump('ace_showroom', 10, '쇼룸 맞춤'); bump('showroom', 8, '칠 하우스'); bump('drive', 7, '드라이브');
       }
       if (/신상|코디|쇼핑|패션|룩북|세일|오픈/.test(text)) {
-        bump('lyria_shop', 10, '쇼핑몰 맞춤'); bump('bright', 8, '시티팝'); bump('funk', 6, '그루브');
+        bump('ace_shop', 10, '쇼핑몰 맞춤'); bump('bright', 8, '시티팝'); bump('funk', 6, '그루브');
       }
 
       // 2) 업종 기본 매칭
       const indDefault = {
-        car: ['lyria_showroom', 'showroom', 'drive'],
-        cafe: ['lyria_cafe', 'lofi', 'jazz'],
-        restaurant: ['lyria_restaurant', 'funk', 'vlog'],
-        beauty: ['lyria_beauty', 'bright', 'luxury'],
-        fitness: ['lyria_fitness', 'edm', 'urban'],
-        realestate: ['lyria_realestate', 'luxury', 'cinema'],
-        academy: ['lyria_academy', 'lofi', 'ballad'],
-        clinic: ['lyria_clinic', 'luxury', 'lofi'],
-        shop: ['lyria_shop', 'bright', 'funk'],
-        interior: ['lyria_interior', 'luxury', 'lofi']
-      }[ind] || ['showroom', 'bright', 'lofi'];
+        car: ['ace_showroom', 'showroom', 'drive'],
+        cafe: ['ace_cafe', 'lofi', 'jazz'],
+        restaurant: ['ace_restaurant', 'funk', 'vlog'],
+        beauty: ['ace_beauty', 'bright', 'luxury'],
+        fitness: ['ace_fitness', 'edm', 'urban'],
+        realestate: ['ace_realestate', 'luxury', 'cinema'],
+        academy: ['ace_academy', 'lofi', 'ballad'],
+        clinic: ['ace_clinic', 'luxury', 'lofi'],
+        shop: ['ace_shop', 'bright', 'funk'],
+        interior: ['ace_interior', 'luxury', 'lofi']
+      }[ind] || ['ace_showroom', 'bright', 'lofi'];
       indDefault.forEach((id, i) => bump(id, 5 - i, '업종 추천'));
 
       // 3) 디자인 카테고리 매칭
@@ -1634,6 +1641,10 @@
         luxury: 'Luxury Lounge', lofi: 'Lo-fi 감성', vlog: 'Acoustic Pop 브이로그',
         cinema: 'Cinematic 트레일러', drive: 'Synthwave 드라이브', edm: 'EDM 페스티벌',
         funk: 'Funk 그루브', ballad: 'Piano 발라드', news: 'Breaking News', jazz: 'Jazz 라운지',
+        ace_showroom: '쇼룸 하우스 (고품질)', ace_cafe: '감성 카페 (고품질)', ace_restaurant: '맛집 그루브 (고품질)',
+        ace_beauty: '뷰티 R&B (고품질)', ace_fitness: '피트니스 트랩 (고품질)', ace_realestate: '하우스 라운지 (고품질)',
+        ace_academy: '학원 로파이 (고품질)', ace_clinic: '클리닉 앰비언트 (고품질)', ace_shop: '쇼핑몰 시티팝 (고품질)',
+        ace_interior: '인테리어 미니멀 (고품질)',
         lyria_showroom: 'AI 쇼룸 하우스', lyria_cafe: 'AI 카페 보사노바', lyria_restaurant: 'AI 맛집 그루브',
         lyria_beauty: 'AI 뷰티 R&B', lyria_fitness: 'AI 피트니스 트랩', lyria_realestate: 'AI 하우스 라운지',
         lyria_academy: 'AI 학원 로파이', lyria_clinic: 'AI 클리닉 앰비언트', lyria_shop: 'AI 쇼핑몰 시티팝',
