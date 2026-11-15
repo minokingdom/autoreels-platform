@@ -486,39 +486,46 @@
         `;
         // 사진 탭: 컷별 사진/영상 · 화면 디자인 · 카메라 모션
         mediaHtml += `
-          <div class="p-3 rounded-[8px] bg-[#141415] border border-[var(--border)] space-y-2">
-            <div class="flex items-start gap-2.5">
-              <button type="button" onclick="seekToTime(${seekSec})" title="이 장면(${s}초)으로 미리보기 이동" class="w-10 aspect-[9/14] rounded-[6px] overflow-hidden border border-[var(--border)] hover:border-[#3b82f6] bg-black shrink-0 cursor-pointer relative">
+          <div class="p-3.5 rounded-[10px] bg-[#141415] border border-[var(--border)] space-y-3">
+            <div class="flex items-start gap-3">
+              <button type="button" onclick="seekToTime(${seekSec})" title="이 장면(${s}초)으로 미리보기 이동" class="w-12 aspect-[9/16] rounded-[8px] overflow-hidden border border-[var(--border)] hover:border-[#3b82f6] bg-black shrink-0 cursor-pointer relative">
                 ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" />` : ''}
-                ${activeImg && activeImg._isVideo ? '<span class="absolute bottom-0 inset-x-0 bg-[#3b82f6]/90 text-[8px] text-white text-center">영상</span>' : ''}
+                ${activeImg && activeImg._isVideo ? '<span class="absolute bottom-0 inset-x-0 bg-[#3b82f6]/90 text-[9px] text-white text-center py-0.5">영상</span>' : ''}
               </button>
-              <div class="flex-1 min-w-0 space-y-1">
-                <div class="flex items-center justify-between gap-1 text-[12px]">
-                  <span class="font-mono text-[#ededed] font-medium">CUT ${i + 1} (${s}~${e}초)</span>
-                  <div class="flex items-center gap-1">
-                    <span id="cutWidgetBadge${i}" class="font-mono text-[10px] text-[#85858b] truncate max-w-[110px]">${wLabel}</span>
-                    <button type="button" onclick="cycleCutDesign(${i})" class="px-1.5 py-0.5 rounded bg-[#232325] hover:bg-[#3b82f6] text-[10px] font-mono text-[#ededed] cursor-pointer" title="누를 때마다 이 컷의 디자인을 바꾸고 바로 미리보기로 보여줍니다">
-                      변경
+              <div class="flex-1 min-w-0 space-y-1.5">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded bg-[#232325] font-mono text-[11px] text-[#ededed] font-semibold">CUT ${i + 1}</span>
+                    <span class="font-mono text-[11px] text-[#85858b]">${s}~${e}초</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span id="cutWidgetBadge${i}" class="text-[11px] text-[#a1a1a6]">${wLabel}</span>
+                    <button type="button" onclick="cycleCutDesign(${i})" class="px-2.5 py-1 rounded-[6px] bg-[#232325] hover:bg-[#3b82f6] text-[11px] font-medium text-[#ededed] cursor-pointer transition-colors" title="누를 때마다 이 컷의 디자인을 바꾸고 바로 미리보기로 보여줍니다">
+                      디자인 변경
                     </button>
                   </div>
                 </div>
-                <p class="text-[12px] text-[#a1a1a6] truncate">${subVal || '(대본 탭에서 문구를 적어 주세요)'}</p>
+                <p class="text-[13px] text-[#d4d4d8] leading-snug line-clamp-2">${subVal || '(대본 탭에서 문구를 적어 주세요)'}</p>
               </div>
             </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-1 border-t border-[#222225]">
-              <label class="h-7 px-2 rounded-[6px] bg-[#1e1e22] hover:bg-[#2a2a30] border border-[var(--border)] text-[11px] text-[#d4d4d8] flex items-center justify-center cursor-pointer truncate" title="이 컷만 내 사진 또는 영상으로 교체">
-                사진/영상 변경
-                <input type="file" accept="image/*,video/*" class="hidden" onchange="replaceCutMedia(${i}, event)" />
-              </label>
-              <select onchange="pickCutDefaultPhoto(${i}, this.value)" title="이 컷의 기본 이미지 선택" class="studio-input h-7 px-1.5 text-[11px] bg-[#1a1a1d] text-[#d4d4d8] cursor-pointer">
-                ${photoOpts || '<option value="0">기본 장면</option>'}
-              </select>
-              <select id="cutWidgetSelect${i}" onchange="updateCutSceneSetting(${i}, 'widget', this.value)" title="이 컷의 화면 위젯/디자인 변경" class="studio-input h-7 px-1.5 text-[11px] bg-[#1a1a1d] text-[#d4d4d8] cursor-pointer">
-                ${widgetOpts}
-              </select>
-              <select onchange="updateCutSceneSetting(${i}, 'customCam', this.value)" title="이 컷의 카메라 모션 변경" class="studio-input h-7 px-1.5 text-[11px] bg-[#1a1a1d] text-[#d4d4d8] cursor-pointer">
-                ${camOpts}
-              </select>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2.5 border-t border-[#222225]">
+              <div class="flex items-center gap-1.5">
+                <label class="h-8 px-2.5 rounded-[7px] bg-[#1e1e22] hover:bg-[#2a2a30] border border-[var(--border)] text-[12px] text-[#ededed] flex items-center justify-center cursor-pointer shrink-0 whitespace-nowrap" title="이 컷만 내 사진 또는 영상으로 교체">
+                  📁 사진·영상 올리기
+                  <input type="file" accept="image/*,video/*" class="hidden" onchange="replaceCutMedia(${i}, event)" />
+                </label>
+                <select onchange="pickCutDefaultPhoto(${i}, this.value)" title="이 컷의 기본 이미지 선택" class="studio-input flex-1 min-w-0 h-8 px-2 text-[12px] bg-[#1a1a1d] text-[#d4d4d8] cursor-pointer">
+                  ${photoOpts || '<option value="0">기본 장면</option>'}
+                </select>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <select id="cutWidgetSelect${i}" onchange="updateCutSceneSetting(${i}, 'widget', this.value)" title="이 컷의 화면 위젯/디자인 변경" class="studio-input flex-1 min-w-0 h-8 px-2 text-[12px] bg-[#1a1a1d] text-[#d4d4d8] cursor-pointer">
+                  ${widgetOpts}
+                </select>
+                <select onchange="updateCutSceneSetting(${i}, 'customCam', this.value)" title="이 컷의 카메라 모션 변경" class="studio-input flex-1 min-w-0 h-8 px-2 text-[12px] bg-[#1a1a1d] text-[#d4d4d8] cursor-pointer">
+                  ${camOpts}
+                </select>
+              </div>
             </div>
           </div>
         `;
