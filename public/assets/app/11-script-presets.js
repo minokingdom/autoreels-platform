@@ -341,9 +341,10 @@
       setTimeout(() => openPresetDrawer('right'), 350);
     }
     function setSfxMode(v) {
-      AudioEngine.sfxMode = v === 'off' ? 'off' : 'scene';
+      const allowed = ['scene', 'whoosh', 'ka-ching', 'impact', 'sparkle', 'pop', 'shutter', 'boost', 'tick', 'drop', 'off'];
+      AudioEngine.sfxMode = allowed.includes(v) ? v : 'scene';
       try { localStorage.setItem('autoreels_sfx', AudioEngine.sfxMode); } catch (e) {}
-      if (AudioEngine.sfxMode === 'scene' && AudioEngine.ensureContext()) AudioEngine.sfxPop(AudioEngine.ctx.currentTime + 0.02);
+      if (AudioEngine.sfxMode !== 'off') AudioEngine.previewSfxMode(AudioEngine.sfxMode);
     }
     try { const sel = document.getElementById('sfxModeSelect'); if (sel) sel.value = AudioEngine.sfxMode; } catch (e) {}
 
@@ -360,7 +361,9 @@
         const c = Math.random() < 0.4 ? { id: 'default' } : colors[Math.floor(Math.random() * colors.length)];
         if (c) selectColorPalette(c.id);
       }
-      if (AudioEngine.enabled && AudioEngine.sfxMode !== 'off' && AudioEngine.ctx) AudioEngine.sfxPop(AudioEngine.ctx.currentTime + 0.01);
+      if (AudioEngine.enabled && AudioEngine.sfxMode !== 'off' && AudioEngine.ctx) {
+        if (!AudioEngine.playPlink('pop', { gain: 0.3 })) AudioEngine.sfxPop(AudioEngine.ctx.currentTime + 0.01);
+      }
       renderPresetDrawer();
     }
 

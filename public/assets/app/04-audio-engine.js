@@ -58,6 +58,7 @@
         if (this.ctx && this.ctx.state !== 'running') {
           this.ctx.resume().catch(() => {});
         }
+        try { this.loadPlinkfx(); } catch (e) {}
         return this.ctx;
       },
 
@@ -1036,9 +1037,87 @@
         }
       },
 
-      // ---------- 장면 효과음: 우쉬 · 셔터 · 임팩트 · 틱 · 스와이프 · 차임 (장면이 바뀔 때만, 작게) ----------
+      // ---------- 장면 효과음: plinkfx (CC0 274종) + 내장 WebAudio 폴백 ----------
       sfxMode: (() => { try { return localStorage.getItem('autoreels_sfx') || 'scene'; } catch (e) { return 'scene'; } })(),
       lastSfxSlot: -2,
+      plinkfx: null,
+      _plinkPromise: null,
+      _plinkCache: {},
+      _plinkVariant: {},
+      loadPlinkfx() {
+        if (this.plinkfx) return Promise.resolve(this.plinkfx);
+        if (this._plinkPromise) return this._plinkPromise;
+        this._plinkPromise = import('https://cdn.jsdelivr.net/npm/plinkfx@0.3.0/dist/index.js')
+          .then((mod) => {
+            this.plinkfx = mod;
+            return mod;
+          })
+          .catch(() => null);
+        return this._plinkPromise;
+      },
+      playPlink(name, opts = {}) {
+        const ctx = this.ctx;
+        if (!ctx || !this.plinkfx || typeof this.plinkfx.render !== 'function') return false;
+        try {
+          const prevVar = this._plinkVariant[name];
+          const variant = opts.variant !== undefined
+            ? opts.variant
+            : (prevVar === undefined ? 0 : (prevVar + 1) % 4);
+          this._plinkVariant[name] = variant;
+          const cacheKey = `${name}:${variant}:${ctx.sampleRate}`;
+          let buf = this._plinkCache[cacheKey];
+          if (!buf) {
+            const samples = this.plinkfx.render(name, { sampleRate: ctx.sampleRate, variant });
+            if (!samples || !samples.length) return false;
+            buf = ctx.createBuffer(1, samples.length, ctx.sampleRate);
+            buf.getChannelData(0).set(samples);
+            this._plinkCache[cacheKey] = buf;
+          }
+          const src = ctx.createBufferSource();
+          src.buffer = buf;
+          if (opts.rate && Number.isFinite(opts.rate)) src.playbackRate.value = opts.rate;
+          const g = ctx.createGain();
+          g.gain.value = typeof opts.gain === 'number' ? opts.gain : 0.36;
+          src.connect(g);
+          g.connect(this.sfxOut());
+          const when = typeof opts.when === 'number' ? opts.when : ctx.currentTime + 0.01;
+          src.start(when);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      },
+      previewSfxMode(mode) {
+        if (!mode || mode === 'off') return;
+        const ctx = this.ensureContext();
+        if (!ctx) return;
+        const run = () => {
+          const map = {
+            'scene': 'pop',
+            'whoosh': 'whoosh',
+            'ka-ching': 'ka-ching',
+            'impact': 'hit-heavy',
+            'sparkle': 'sparkle',
+            'pop': 'pop',
+            'shutter': 'card-flip',
+            'boost': 'boost',
+            'tick': 'tick',
+            'drop': 'water-drop'
+          };
+          const plinkName = map[mode] || 'pop';
+          if (this.playPlink(plinkName, { gain: 0.38 })) return;
+          const when = ctx.currentTime + 0.02;
+          if (mode === 'whoosh') return this.sfxWhoosh(when);
+          if (mode === 'shutter') return this.sfxShutter(when);
+          if (mode === 'impact') return this.sfxImpact(when);
+          if (mode === 'tick') return this.sfxTick(when);
+          if (mode === 'drop') return this.sfxDrop(when);
+          if (mode === 'ka-ching' || mode === 'sparkle') return this.sfxChime(when);
+          return this.sfxPop(when);
+        };
+        if (this.plinkfx) run();
+        else this.loadPlinkfx().then(run);
+      },
       sfxOut() {
         if (!this.sfxGain) {
           this.sfxGain = this.ctx.createGain();
@@ -1147,25 +1226,48 @@
       },
       playSceneSfx(t, slot, totalCuts) {
         const when = this.ctx.currentTime + 0.01;
-        if (slot >= totalCuts) return this.sfxSparkle(when);
-        if (this.sfxMode === 'whoosh') return this.sfxWhoosh(when);
-        if (this.sfxMode === 'shutter') return this.sfxShutter(when);
-        if (this.sfxMode === 'impact') return this.sfxImpact(when);
-        if (this.sfxMode === 'tick') return this.sfxTick(when);
-        if (this.sfxMode === 'drop') return this.sfxDrop(when);
+        if (slot >= totalCuts) {
+          if (this.playPlink('sparkle', { when, gain: 0.34 })) return;
+          return this.sfxSparkle(when);
+        }
+        if (this.sfxMode === 'whoosh') return this.playPlink('whoosh', { when, gain: 0.36 }) || this.sfxWhoosh(when);
+        if (this.sfxMode === 'ka-ching') return this.playPlink('ka-ching', { when, gain: 0.36 }) || this.sfxChime(when);
+        if (this.sfxMode === 'shutter') return this.playPlink('card-flip', { when, gain: 0.36 }) || this.sfxShutter(when);
+        if (this.sfxMode === 'impact') return this.playPlink('hit-heavy', { when, gain: 0.34 }) || this.sfxImpact(when);
+        if (this.sfxMode === 'sparkle') return this.playPlink('sparkle', { when, gain: 0.34 }) || this.sfxSparkle(when);
+        if (this.sfxMode === 'pop') return this.playPlink('pop', { when, gain: 0.38 }) || this.sfxPop(when);
+        if (this.sfxMode === 'boost') return this.playPlink('boost', { when, gain: 0.32 }) || this.sfxWhoosh(when);
+        if (this.sfxMode === 'tick') return this.playPlink('tick', { when, gain: 0.38 }) || this.sfxTick(when);
+        if (this.sfxMode === 'drop') return this.playPlink('water-drop', { when, gain: 0.38 }) || this.sfxDrop(when);
+
         const ds = typeof getActiveDesign === 'function' ? getActiveDesign() : null;
         const cat = ds ? (ds.cat || '') : '';
         const cap = String((campaign.cutCaptions || [])[slot] || '');
-        if (/만\s?원|\d+\s?%|할인|특가|혜택|\d+원|1\+1/.test(cap)) {
+        const ind = typeof getIndustryId === 'function' ? getIndustryId() : (campaign && campaign.industry) || '';
+        if (/만\s?원|\d+\s?%|할인|특가|혜택|\d+원|1\+1|무료|증정/.test(cap)) {
+          if (this.playPlink('ka-ching', { when, gain: 0.36 })) return;
           this.sfxImpact(when, 0.18);
           return this.sfxChime(when + 0.1);
         }
+        if (/긴급|필독|주의|놓치면|마감|단\s?\d+일|충격|비교/.test(cap)) {
+          if (this.playPlink('hit-heavy', { when, gain: 0.34 })) return;
+          return this.sfxImpact(when);
+        }
+        if (ind === 'car' && slot === 0) {
+          if (this.playPlink('engine-rev', { when, gain: 0.28 })) return;
+        }
         if (['타이포', '스포츠', '특가', '테크'].includes(cat)) {
+          const pool = ['whoosh', 'hit-punch', 'glitch', 'click-hard'];
+          if (this.playPlink(pool[slot % pool.length], { when, gain: 0.34 })) return;
           return [() => this.sfxImpact(when), () => this.sfxWhoosh(when), () => this.sfxTick(when)][slot % 3]();
         }
         if (['브이로그', '감성', '신규', '손글씨', '고급'].includes(cat)) {
+          const pool = ['swipe', 'page-turn', 'pop', 'harp'];
+          if (this.playPlink(pool[slot % pool.length], { when, gain: 0.34 })) return;
           return [() => this.sfxShutter(when), () => this.sfxWhoosh(when), () => this.sfxSwipe(when)][slot % 3]();
         }
+        const defPool = ['whoosh', 'pop', 'card-flip', 'plink'];
+        if (this.playPlink(defPool[slot % defPool.length], { when, gain: 0.34 })) return;
         return [() => this.sfxWhoosh(when), () => this.sfxTick(when), () => this.sfxShutter(when), () => this.sfxPop(when)][slot % 4]();
       },
       handleSceneSfx(t) {
