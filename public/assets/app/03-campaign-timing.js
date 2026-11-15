@@ -481,7 +481,9 @@
         html += `
           <div class="p-3 rounded-[8px] bg-[#141415] border border-[var(--border)] space-y-1.5">
             <button type="button" onclick="seekToTime(${seekSec})" id="cutTimeLabel${i}" class="font-mono text-[12px] text-[#ededed] font-medium hover:text-[#38bdf8] cursor-pointer" title="이 장면(${s}초)으로 미리보기 이동">CUT ${i + 1} (${s}~${e}초)</button>
+            <span class="block text-[11px] text-[#85858b]">화면 자막</span>
             <input id="cutSub${i}" type="text" value="${subVal}" oninput="updateCustomCutCaptions()" placeholder="${i + 1}컷 화면 헤드라인" class="studio-input w-full h-8 px-2.5 text-[12px]" />
+            <span class="block text-[11px] text-[#85858b]">성우 대사</span>
             <input id="cutTts${i}" type="text" value="${ttsVal}" oninput="updateCustomCutCaptions()" placeholder="${i + 1}컷 성우 대사 (짧을수록 영상이 짧아집니다)" title="숫자가 다르게 읽히면 한글로 적어 주세요. 예: 네 대" class="studio-input w-full h-7 px-2.5 text-[11px] text-[#a1a1a6]" />
           </div>
         `;
@@ -533,7 +535,20 @@
           </div>
         `;
       }
-      container.innerHTML = html;
+      {
+        // 모바일은 대본 카드도 옆으로 넘기므로, 다시 그려도 보던 컷 위치를 유지
+        const keepX = container.scrollLeft;
+        container.innerHTML = html;
+        container.scrollLeft = keepX;
+        let hint = document.getElementById('cutScriptSwipeHint');
+        if (!hint) {
+          hint = document.createElement('p');
+          hint.id = 'cutScriptSwipeHint';
+          hint.className = 'lg:hidden text-[12px] text-[#85858b] mb-1';
+          container.parentNode.insertBefore(hint, container);
+        }
+        hint.textContent = `컷 ${targetCuts}개 · 옆으로 넘겨 컷마다 자막·대사를 고쳐요 →`;
+      }
       const mediaBox = document.getElementById('cutMediaCardsContainer');
       if (mediaBox) {
         // 모바일은 옆으로 넘기는 카드라, 다시 그려도 보던 컷 위치를 유지
