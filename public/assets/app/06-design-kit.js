@@ -3797,7 +3797,7 @@
       DESIGN_STYLES.length = 0;
       BASE_DESIGN_SNAPSHOT.forEach((d) => DESIGN_STYLES.push({ ...d }));
       const vis = arVisibleDesigns();
-      if (!DESIGN_STYLES.some((d) => d.id === campaign.designStyle) && vis[0]) {
+      if (!arFindDesign(campaign.designStyle) && vis[0]) {
         campaign.designStyle = vis[0].id;
       }
       if (typeof designThumbCache !== 'undefined') designThumbCache.fresh = {};
@@ -3836,21 +3836,224 @@
       return ['전체', '내 업종', ...DESIGN_CATS.filter((c) => c !== '전체' && vis.some((d) => !d.industry && d.cat === c))];
     }
 
+    // 내 스타일은 이 브라우저에만 보관. TODO: 서버 모드에서는 인증 세션의 소유자로
+    // api/account.js의 mode를 확장해 계정 저장·가져오기·버전 충돌을 처리한다.
+    // 이메일/전화번호를 키에 넣지 않으며, 지금은 계정별 동기화를 하지 않는다.
+    const AR_CUSTOM_STYLE_KEY = 'autoreels:user-styles:v1:browser';
+    const AR_CUSTOM_BASES = ['in_x_cover', 'in_h_plaque', 'in_card_news'];
+    const AR_CUSTOM_FONTS = ['maru', 'pretM', 'pen'];
+    let arCustomStyles = [], arCustomDesigns = [], arCustomLoaded = false, arCustomStorageNotice = '';
+    let arCustomDraft = null, arCustomOpenSource = null, arCustomPreviewJob = 0, arCustomUploadToken = 0;
+    const arCustomLogoImages = new Map();
+    function arValidateCustomStyle(value) {
+      if (!value || typeof value !== 'object' || !/^custom:[a-z0-9-]{8,64}$/.test(value.id)) return null;
+      const name = typeof value.name === 'string' ? value.name.trim().slice(0, 24) : '';
+      const colors = value.colors || {}, caption = value.caption || {}, logo = value.logo || {};
+      if (!name || !AR_CUSTOM_BASES.includes(value.baseStyleId) || !AR_CUSTOM_FONTS.includes(value.fontKey)) return null;
+      if (![colors.primary, colors.accent].every(v => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v))) return null;
+      if (!['top', 'middle', 'bottom'].includes(caption.position) || !Number.isFinite(caption.sizeRatio) || caption.sizeRatio < 0.045 || caption.sizeRatio > 0.085) return null;
+      if (!['top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(logo.corner)) return null;
+      if (logo.dataUrl != null && (typeof logo.dataUrl !== 'string' || logo.dataUrl.length > 180000 || !/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(logo.dataUrl))) return null;
+      return { id: value.id, name, baseStyleId: value.baseStyleId, colors: { primary: colors.primary, accent: colors.accent },
+        fontKey: value.fontKey, caption: { position: caption.position, sizeRatio: caption.sizeRatio },
+        logo: { dataUrl: logo.dataUrl || null, corner: logo.corner, widthRatio: 0.12 }, pinned: true };
+    }
+    function arCustomContrast(color) {
+      const rgb = color.slice(1).match(/../g).map(h => { const n = parseInt(h, 16) / 255; return n <= 0.04045 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4); });
+      return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722 > 0.179 ? '#201e1b' : '#fffaf2';
+    }
+    function arMakeCustomDesign(style) {
+      // getActiveDesign → renderGenreFrame 경로를 미리보기·내보내기가 함께 쓰므로 원본 대신 복제본만 전달한다.
+      const base = DESIGN_STYLES.find(d => d.id === style.baseStyleId);
+      return base ? { ...base, id: style.id, name: style.name, label: style.name, custom: style,
+        bg1: style.colors.primary, bg2: style.colors.primary, accent: style.colors.accent,
+        accent2: arCustomContrast(style.colors.primary), font: style.fontKey, desc: `내 스타일 · ${base.name}` } : null;
+    }
+    function arPrepareCustomLogo(dataUrl) {
+      if (!dataUrl) return Promise.resolve(null);
+      if (arCustomLogoImages.has(dataUrl)) return arCustomLogoImages.get(dataUrl).ready;
+      const img = new Image(), entry = { img, ready: null };
+      entry.ready = new Promise(resolve => {
+        img.onload = () => {
+          if (img.naturalWidth > 256 || img.naturalHeight > 256) { entry.img = null; resolve(null); return; }
+          resolve(img);
+          if (typeof designThumbCache !== 'undefined') designThumbCache.fresh = {};
+          if (window.__timelines?.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+        };
+        img.onerror = () => { entry.img = null; resolve(null); };
+      });
+      arCustomLogoImages.set(dataUrl, entry); img.src = dataUrl;
+      return entry.ready;
+    }
+    function arRefreshCustomDesigns() {
+      arCustomDesigns = arCustomStyles.map(arMakeCustomDesign).filter(Boolean);
+      const used = new Set(arCustomStyles.map(s => s.logo.dataUrl));
+      for (const key of arCustomLogoImages.keys()) if (!used.has(key)) arCustomLogoImages.delete(key);
+      arCustomStyles.forEach(s => arPrepareCustomLogo(s.logo.dataUrl));
+    }
+    function arLoadCustomStyles() {
+      if (arCustomLoaded) return;
+      arCustomLoaded = true;
+      try {
+        const raw = localStorage.getItem(AR_CUSTOM_STYLE_KEY);
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data.version !== 1 || !Array.isArray(data.styles)) throw new Error('형식');
+          const seen = new Set();
+          arCustomStyles = data.styles.slice(0, 5).map(arValidateCustomStyle).filter(s => s && !seen.has(s.id) && seen.add(s.id));
+          if (arCustomStyles.length !== data.styles.length) arCustomStorageNotice = '읽을 수 없는 스타일은 제외했어요. 나머지는 편집·저장할 수 있어요.';
+        }
+      } catch (e) { arCustomStorageNotice = '저장한 스타일을 읽지 못했어요. 새로 만들거나 브라우저 저장 설정을 확인해 주세요.'; }
+      arRefreshCustomDesigns();
+    }
+    function arFindDesign(id) { return arCustomDesigns.find(d => d.id === id) || DESIGN_STYLES.find(d => d.id === id); }
+    function arCustomEscape(value) { return String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+    function arCustomPickerCards(prefix) {
+      return arCustomDesigns.map(d => `<div class="ar-custom-picker ${d.id === campaign.designStyle ? 'on' : ''}">
+        <button type="button" data-custom-action="select" data-custom-id="${d.id}" aria-pressed="${d.id === campaign.designStyle}">
+          <img id="${prefix}${d.id}" src="${designThumbCache.urls[d.id] || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'}" alt="">
+          <small>내 스타일 · 고정</small><span>${arCustomEscape(d.name)}</span></button>
+        <button type="button" data-custom-action="edit" data-custom-id="${d.id}" aria-label="${arCustomEscape(d.name)} 편집">편집</button></div>`).join('');
+    }
+    function arCustomStatus(message) { document.getElementById('arCustomStatus').textContent = message; }
+    function arRenderCustomSavedList() {
+      const box = document.getElementById('arCustomSavedList');
+      box.innerHTML = `<p>저장한 스타일 ${arCustomStyles.length} / 5</p>` + arCustomStyles.map(s => `<div><span>${arCustomEscape(s.name)}</span><button type="button" data-custom-action="edit" data-custom-id="${s.id}">편집</button><button type="button" data-custom-action="delete" data-custom-id="${s.id}" aria-label="${arCustomEscape(s.name)} 삭제">삭제</button></div>`).join('');
+    }
+    function arOpenCustomStyle(id) {
+      arLoadCustomStyles();
+      const panel = document.getElementById('arCustomStylePanel'), form = document.getElementById('arCustomStyleForm');
+      const saved = arCustomStyles.find(s => s.id === id);
+      arCustomDraft = saved ? JSON.parse(JSON.stringify(saved)) : { id: 'custom:' + crypto.randomUUID(), name: '', baseStyleId: 'in_x_cover',
+        colors: { primary: '#f6f1e7', accent: '#756452' }, fontKey: 'maru', logo: { dataUrl: null, corner: 'top-left', widthRatio: 0.12 }, caption: { position: 'top', sizeRatio: 0.06 } };
+      arCustomUploadToken++;
+      form.querySelector('[type="submit"]').disabled = false;
+      const fields = { name: arCustomDraft.name, ...arCustomDraft.colors, fontKey: arCustomDraft.fontKey, baseStyleId: arCustomDraft.baseStyleId,
+        corner: arCustomDraft.logo.corner, position: arCustomDraft.caption.position, sizeRatio: arCustomDraft.caption.sizeRatio };
+      for (const [key, value] of Object.entries(fields)) form.elements.namedItem(key).value = value;
+      document.getElementById('arCustomLogoFile').value = '';
+      document.getElementById('arCustomTitle').textContent = saved ? '내 스타일 편집' : '내 스타일 만들기';
+      arCustomStatus(arCustomStorageNotice || (arCustomStyles.length >= 5 && !saved ? '5개를 모두 저장했어요. 기존 스타일을 편집하거나 삭제해 주세요.' : ''));
+      arRenderCustomSavedList();
+      if (!panel.open) { arCustomOpenSource = document.activeElement; panel.showModal(); }
+      arUpdateCustomPreview();
+    }
+    function arReadCustomForm() {
+      const data = new FormData(document.getElementById('arCustomStyleForm'));
+      return { ...arCustomDraft, name: String(data.get('name')).trim(), baseStyleId: data.get('baseStyleId'), fontKey: data.get('fontKey'),
+        colors: { primary: data.get('primary'), accent: data.get('accent') },
+        caption: { position: data.get('position'), sizeRatio: Number(data.get('sizeRatio')) }, logo: { ...arCustomDraft.logo, corner: data.get('corner') } };
+    }
+    async function arUpdateCustomPreview() {
+      const job = ++arCustomPreviewJob;
+      if (!arCustomDraft) return;
+      const draft = arReadCustomForm(), style = arValidateCustomStyle({ ...draft, name: draft.name || '내 스타일' });
+      if (!style) return;
+      document.getElementById('arCustomPreviewName').textContent = style.name;
+      document.querySelectorAll('[data-custom-color]').forEach(el => { el.textContent = style.colors[el.dataset.customColor].toUpperCase(); });
+      document.getElementById('arCustomSize').textContent = style.caption.sizeRatio < 0.06 ? '작게' : style.caption.sizeRatio > 0.065 ? '크게' : '보통';
+      const thumb = document.getElementById('arCustomLogoThumb');
+      thumb.hidden = !style.logo.dataUrl;
+      if (style.logo.dataUrl) thumb.src = style.logo.dataUrl; else thumb.removeAttribute('src');
+      await Promise.all([kitEnsureFont(style.fontKey), arPrepareCustomLogo(style.logo.dataUrl)]);
+      if (job !== arCustomPreviewJob || !document.getElementById('arCustomStylePanel').open) return;
+      const cv = document.getElementById('arCustomPreview'), c = cv.getContext('2d');
+      const previousCut = window.__arActiveRenderCutIdx;
+      try {
+        // 편집 패널의 미리보기는 컷 편집 선택/좌표 기록을 변경하지 않는다.
+        window.__arActiveRenderCutIdx = -1;
+        c.clearRect(0, 0, cv.width, cv.height);
+        renderMotionFrame(c, cv.width, cv.height, 1.6, 18, 6, arDealerForCopy(getSelectedDealer()), arMakeCustomDesign(style), {});
+      } finally { window.__arActiveRenderCutIdx = previousCut; }
+    }
+    function arWriteCustomStyles(next) {
+      try { localStorage.setItem(AR_CUSTOM_STYLE_KEY, JSON.stringify({ version: 1, styles: next })); }
+      catch (e) { arCustomStatus('저장 공간이 부족하거나 브라우저가 저장을 차단했어요. 로고를 제거하거나 저장 설정을 확인해 주세요.'); return false; }
+      const oldIds = arCustomStyles.map(s => s.id);
+      arCustomStyles = next; arCustomStorageNotice = ''; arRefreshCustomDesigns();
+      oldIds.concat(next.map(s => s.id)).forEach(id => { delete designThumbCache.urls[id]; delete designThumbCache.fresh[id]; });
+      arRenderCustomSavedList();
+      return true;
+    }
+    async function arUploadCustomLogo(file) {
+      if (!file || !arCustomDraft) return;
+      if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) { arCustomStatus('5MB 이하의 PNG·JPG·WebP 이미지를 골라 주세요.'); return; }
+      const token = ++arCustomUploadToken, button = document.querySelector('#arCustomStyleForm [type="submit"]');
+      button.disabled = true; arCustomStatus('로고를 작게 변환하고 있어요.');
+      const url = URL.createObjectURL(file);
+      try {
+        const img = new Image(); img.src = url; await img.decode();
+        const cv = document.createElement('canvas'), scale = Math.min(1, 256 / Math.max(img.naturalWidth, img.naturalHeight));
+        cv.width = Math.max(1, Math.round(img.naturalWidth * scale)); cv.height = Math.max(1, Math.round(img.naturalHeight * scale));
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        const dataUrl = cv.toDataURL('image/png');
+        if (dataUrl.length > 180000) throw new Error('용량');
+        if (token !== arCustomUploadToken) return;
+        arCustomDraft.logo.dataUrl = dataUrl; arCustomStatus('로고를 불러왔어요. 저장하면 적용돼요.'); await arUpdateCustomPreview();
+      } catch (e) { if (token === arCustomUploadToken) arCustomStatus('이미지를 읽지 못했거나 로고 용량이 커요. 더 단순한 이미지로 다시 골라 주세요.'); }
+      finally { URL.revokeObjectURL(url); if (token === arCustomUploadToken) button.disabled = false; }
+    }
+    document.addEventListener('click', event => {
+      const button = event.target.closest('[data-custom-action]');
+      if (!button) return;
+      const action = button.dataset.customAction, id = button.dataset.customId;
+      if (action === 'new' || action === 'edit') arOpenCustomStyle(action === 'edit' ? id : null);
+      else if (action === 'close') document.getElementById('arCustomStylePanel').close();
+      else if (action === 'select') {
+        if (button.closest('#presetDrawerList') && typeof choosePresetFromDrawer === 'function') choosePresetFromDrawer(id);
+        else selectDesignStyle(id);
+      }
+      else if (action === 'remove-logo') {
+        arCustomUploadToken++; arCustomDraft.logo.dataUrl = null;
+        document.getElementById('arCustomLogoFile').value = '';
+        document.querySelector('#arCustomStyleForm [type="submit"]').disabled = false;
+        arUpdateCustomPreview();
+      } else if (action === 'delete') {
+        if (!arWriteCustomStyles(arCustomStyles.filter(s => s.id !== id))) return;
+        if (campaign.designStyle === id) selectDesignStyle('in_x_cover');
+        else renderDesignStylePicker();
+        if (arCustomDraft?.id === id) arOpenCustomStyle();
+        arCustomStatus('스타일을 삭제했어요.');
+      }
+    });
+    document.getElementById('arCustomStyleForm').addEventListener('input', event => { if (event.target.type !== 'file') arUpdateCustomPreview(); });
+    document.getElementById('arCustomLogoFile').addEventListener('change', event => arUploadCustomLogo(event.target.files[0]));
+    document.getElementById('arCustomStyleForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const style = arValidateCustomStyle(arReadCustomForm());
+      if (!style) { arCustomStatus('스타일 이름과 설정을 확인해 주세요.'); return; }
+      const index = arCustomStyles.findIndex(s => s.id === style.id);
+      if (index < 0 && arCustomStyles.length >= 5) { arCustomStatus('최대 5개까지 저장할 수 있어요. 기존 스타일을 편집하거나 삭제해 주세요.'); return; }
+      const next = arCustomStyles.slice();
+      if (index < 0) next.unshift(style); else next[index] = style;
+      if (!arWriteCustomStyles(next)) return;
+      arCustomDraft = style; campaign.designCat = '전체';
+      if (typeof pdCat !== 'undefined') pdCat = '전체';
+      selectDesignStyle(style.id);
+      document.getElementById('arCustomTitle').textContent = '내 스타일 편집';
+      arCustomStatus('저장했어요. ‘전체’ 맨 위에서 다시 고를 수 있어요.');
+    });
+    document.getElementById('arCustomStylePanel').addEventListener('close', () => {
+      arCustomPreviewJob++; arCustomUploadToken++;
+      if (arCustomOpenSource?.isConnected) arCustomOpenSource.focus();
+    });
+
     function loadDesignPrefs() {
+      arLoadCustomStyles();
       try {
         let s = localStorage.getItem('autoreels_design_style');
         const c = localStorage.getItem('autoreels_color');
         if (s && KIT_LEGACY_ALIASES[s] && !DESIGN_STYLES.some((d) => d.id === s)) {
           s = KIT_LEGACY_ALIASES[s];
         }
-        if (s && DESIGN_STYLES.some((d) => d.id === s)) campaign.designStyle = s;
+        if (s && arFindDesign(s)) campaign.designStyle = s;
         if (c && COLOR_PALETTES.some((p) => p.id === c)) campaign.colorKey = c;
       } catch (e) {}
-      if (!campaign.designStyle || !DESIGN_STYLES.some((d) => d.id === campaign.designStyle)) campaign.designStyle = DESIGN_STYLES[0].id;
+      if (!campaign.designStyle || !arFindDesign(campaign.designStyle)) campaign.designStyle = DESIGN_STYLES[0].id;
       if (!campaign.colorKey) campaign.colorKey = 'default';
     }
     function getActiveDesign() {
-      return DESIGN_STYLES.find((d) => d.id === campaign.designStyle) || DESIGN_STYLES[0];
+      return arFindDesign(campaign.designStyle) || DESIGN_STYLES[0];
     }
     function getActivePalette() {
       return COLOR_PALETTES.find((p) => p.id === campaign.colorKey) || COLOR_PALETTES[0];
@@ -3892,7 +4095,7 @@
     function getDesignPickerList() {
       const cat = campaign.designCat || '전체';
       const vis = arVisibleDesigns();
-      return cat === '전체' ? vis : vis.filter((ds) => ds.cat === cat);
+      return cat === '전체' ? arCustomDesigns.concat(vis) : vis.filter((ds) => ds.cat === cat);
     }
     function renderDesignThumbBatch(list) {
       const saved = campaign.designStyle;
@@ -3928,7 +4131,7 @@
           designThumbJob = setTimeout(step, key ? 1500 : 700);
           return;
         }
-        const todo = getDesignPickerList().concat(arVisibleDesigns()).filter((ds) => !designThumbCache.fresh[ds.id]);
+        const todo = arCustomDesigns.concat(getDesignPickerList(), arVisibleDesigns()).filter((ds) => !designThumbCache.fresh[ds.id]);
         if (!todo.length) return;
         const batch = todo.filter((ds, i, arr) => arr.indexOf(ds) === i).slice(0, 6);
         const fonts = [...new Set(batch.filter((ds) => ds.engine === 'kit').flatMap((ds) => [ds.font, ds.sfont, 'brush'].filter(Boolean)))];
@@ -3989,12 +4192,12 @@
       if (tabs) {
         const vis = arVisibleDesigns();
         tabs.innerHTML = arDesignCats().map((c) => {
-          const n = c === '전체' ? vis.length : vis.filter((ds) => ds.cat === c).length;
+          const n = c === '전체' ? vis.length + arCustomDesigns.length : vis.filter((ds) => ds.cat === c).length;
           const on = c === cat;
           return `<button type="button" onclick="selectDesignCat('${c}')" class="shrink-0 px-2.5 py-1 rounded-[6px] text-[11px] font-medium border cursor-pointer ${on ? 'border-[#ededed] bg-[#232325] text-white' : 'border-[var(--border)] text-[#a1a1a6] hover:text-[#ededed]'}">${c} <span class="text-[#6e6e73]">${n}</span></button>`;
         }).join('');
       }
-      if (grid) grid.innerHTML = getDesignPickerList().map((ds) => {
+      if (grid) grid.innerHTML = (cat === '전체' ? arCustomPickerCards('dthumb_') : '') + getDesignPickerList().filter(ds => !ds.custom).map((ds) => {
         const on = ds.id === active;
         const src = urls[ds.id] || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
         return `
@@ -4005,7 +4208,7 @@
           </button>`;
       }).join('');
       const nameEl = document.getElementById('activeDesignName');
-      if (nameEl) nameEl.textContent = `${getActiveDesign().name} · ${getActivePalette().name}`;
+      if (nameEl) nameEl.textContent = `${getActiveDesign().name} · ${getActiveDesign().custom ? '내 스타일' : getActivePalette().name}`;
       const descEl = document.getElementById('activeDesignDesc');
       if (descEl) {
         const bk = typeof AudioEngine !== 'undefined' && AudioEngine.bgmStyle ? AudioEngine.bgmStyle : getDesignBgm(getActiveDesign());
@@ -4013,7 +4216,7 @@
         descEl.textContent = `${getActiveDesign().desc}  ·  배경음악: ${bl}`;
       }
       const countEl = document.getElementById('designStyleCount');
-      if (countEl) countEl.textContent = String(arVisibleDesigns().length);
+      if (countEl) countEl.textContent = String(arVisibleDesigns().length + arCustomDesigns.length);
       if (typeof updateTrendSwapStatusUI === 'function') updateTrendSwapStatusUI();
       scheduleDesignThumbs();
       const pd = document.getElementById('presetDrawer');
@@ -4254,11 +4457,11 @@
     }
 
     function selectDesignStyle(id) {
-      if (!DESIGN_STYLES.some((d) => d.id === id)) return;
+      if (!arFindDesign(id)) return;
       campaign.designStyle = id;
       try { localStorage.setItem('autoreels_design_style', id); } catch (e) {}
       if (typeof recordDesignUse === 'function') recordDesignUse(id);
-      const dsel = DESIGN_STYLES.find((d) => d.id === id);
+      const dsel = arFindDesign(id);
       applyDesignBgm(dsel, true);
       if (dsel && (dsel.engine === 'kit' || dsel.engine === 'motion')) {
         Promise.all([dsel.font, dsel.sfont, dsel.engine === 'kit' ? 'brush' : null, dsel.insta ? 'maruL' : null, dsel.insta ? 'pretL' : null, dsel.insta ? 'maru' : null, dsel.insta ? 'pretM' : null].filter(Boolean).map(kitEnsureFont)).then(() => {

@@ -901,7 +901,7 @@
       if ((changed || opts.force) && typeof arVisibleDesigns === 'function' && typeof selectDesignStyle === 'function') {
         const vis = arVisibleDesigns();
         const cur = typeof getActiveDesign === 'function' ? getActiveDesign() : null;
-        if (IND.key !== 'auto' && vis[0] && vis[0].industry) { campaign.designCat = '전체'; selectDesignStyle(vis[0].id); }
+        if (!cur?.custom && IND.key !== 'auto' && vis[0] && vis[0].industry) { campaign.designCat = '전체'; selectDesignStyle(vis[0].id); }
         else if (cur && !arDesignVisible(cur) && vis[0]) selectDesignStyle(vis[0].id);
         if (typeof renderDesignStylePicker === 'function') { try { renderDesignStylePicker(); } catch (e) {} }
       }

@@ -516,6 +516,7 @@
                   <button type="button" onclick="closePresetDrawer()" class="pd-close" aria-label="닫기">✕</button>
                 </div>
               </div>
+              <button type="button" class="ar-custom-entry" data-custom-action="new">＋ 내 스타일 만들기</button>
               <div id="pdCats" class="pd-cats"></div>
               <div class="px-2.5 py-1.5 border-b border-[var(--border)] bg-[#141416] space-y-1.5">
                 <div class="flex items-center justify-between gap-1">
@@ -937,6 +938,7 @@
             <!-- 컷별 사진/영상 · 화면 구도 · 카메라 모션 (사진 칸과 구도 칸을 하나로 합침) -->
             <div id="cutMediaCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[480px] overflow-y-auto pr-1"></div>
             <p id="photoUploadStatus" class="text-[12px] text-[#85858b]">기본 실사 화보가 적용되어 있습니다</p>
+            <button type="button" class="ar-custom-entry" data-custom-action="new">＋ 내 스타일 만들기</button>
             <input type="file" id="customVideoInput" accept="video/*" onchange="handleCustomVideoUpload(event)" class="hidden" />
           </div>
 
@@ -944,6 +946,51 @@
           <!-- ★ 디자인 스타일 (136종, 서로 다른 화면) + 색상 (따로 선택) -->
           <!--   모바일은 위쪽 미리보기에 디자인 손잡이·색상이 이미 있어 겹치므로 숨김 (PC에서만 보임) -->
           <!-- ================================================================= -->
+          <dialog id="arCustomStylePanel" class="ar-custom-panel" aria-labelledby="arCustomTitle">
+            <header class="ar-custom-heading">
+              <div><h2 id="arCustomTitle">내 스타일 만들기</h2><p>우리 가게의 색과 글꼴로, 매번 익숙한 분위기.</p></div>
+              <button type="button" data-custom-action="close">닫기</button>
+            </header>
+            <div class="ar-custom-workspace">
+              <aside class="ar-custom-preview">
+                <span>미리보기 · 첫 번째 컷</span>
+                <canvas id="arCustomPreview" width="540" height="960" aria-label="내 스타일 영상 미리보기"></canvas>
+                <div><strong id="arCustomPreviewName">내 스타일</strong><p>저장하면 ‘전체’ 맨 위에 고정돼요.</p></div>
+                <div id="arCustomSavedList" class="ar-custom-saved" aria-label="저장한 내 스타일"></div>
+              </aside>
+              <form id="arCustomStyleForm" class="ar-custom-form">
+                <label for="arCustomName">스타일 이름</label>
+                <input id="arCustomName" name="name" maxlength="24" required placeholder="예: 느린 오후" autocomplete="off">
+                <fieldset><legend>01 · 브랜드 색</legend><div class="ar-custom-two">
+                  <label class="ar-custom-color">기본색<input type="color" name="primary" value="#f6f1e7"><output data-custom-color="primary">#F6F1E7</output></label>
+                  <label class="ar-custom-color">포인트색<input type="color" name="accent" value="#756452"><output data-custom-color="accent">#756452</output></label>
+                </div></fieldset>
+                <fieldset><legend>02 · 글꼴</legend><div class="ar-custom-choices">
+                  <label><input type="radio" name="fontKey" value="maru" checked><span>마루부리<small>차분한 명조</small></span></label>
+                  <label><input type="radio" name="fontKey" value="pretM"><span>프리텐다드<small>또렷한 고딕</small></span></label>
+                  <label><input type="radio" name="fontKey" value="pen"><span>나눔손글씨 펜<small>손으로 쓴 듯</small></span></label>
+                </div></fieldset>
+                <fieldset><legend>03 · 로고</legend>
+                  <div class="ar-custom-upload"><img id="arCustomLogoThumb" alt="선택한 로고" hidden><label>로고 불러오기<input type="file" id="arCustomLogoFile" accept="image/png,image/jpeg,image/webp"></label><button type="button" data-custom-action="remove-logo">제거</button></div>
+                  <p>PNG·JPG·WebP, 최대 5MB · 긴 변 256px 이하로 저장해요.</p>
+                  <label class="ar-custom-inline">모서리 위치<select name="corner"><option value="top-left">왼쪽 위</option><option value="top-right">오른쪽 위</option><option value="bottom-left">왼쪽 아래</option><option value="bottom-right">오른쪽 아래</option></select></label>
+                </fieldset>
+                <fieldset><legend>04 · 자막</legend><div class="ar-custom-choices">
+                  <label><input type="radio" name="position" value="top" checked><span>위쪽</span></label>
+                  <label><input type="radio" name="position" value="middle"><span>가운데</span></label>
+                  <label><input type="radio" name="position" value="bottom"><span>아래쪽</span></label>
+                </div><label class="ar-custom-inline">글자 크기<input type="range" name="sizeRatio" min="0.045" max="0.085" step="0.005" value="0.06"><output id="arCustomSize">보통</output></label></fieldset>
+                <fieldset><legend>05 · 기본 구성</legend><div class="ar-custom-choices">
+                  <label><input type="radio" name="baseStyleId" value="in_x_cover" checked><span>작은 잡지</span></label>
+                  <label><input type="radio" name="baseStyleId" value="in_h_plaque"><span>전시 캡션</span></label>
+                  <label><input type="radio" name="baseStyleId" value="in_card_news"><span>카드뉴스</span></label>
+                </div></fieldset>
+                <p id="arCustomStatus" role="status" aria-live="polite"></p>
+                <div class="ar-custom-save"><p>이 브라우저에 최대 5개 저장해요.</p><button type="submit">내 스타일 저장</button></div>
+                <p>브라우저 데이터를 지우면 사라져요. 계정·다른 기기 동기화는 추후 지원 예정이에요.</p>
+              </form>
+            </div>
+          </dialog>
           <div id="scriptDesignBox" class="studio-sub p-4 space-y-3">
             <!-- 모바일은 설명과 버튼을 위아래로 (좁은 폭에서 설명이 세로로 눌리지 않게) -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">

@@ -363,12 +363,26 @@
       realestate: ['#0ea5e9', '#06101a', '#0c2a44'], academy: ['#3b82f6', '#081024', '#132a5c'], clinic: ['#14b8a6', '#05201d', '#0b3b36'],
       fitness: ['#ef4444', '#140606', '#3a0d0d'], shop: ['#a855f7', '#120a1c', '#2a1442'], interior: ['#ca8a04', '#14110c', '#2e2618']
     };
+    function arDrawCustomLogo(c, W, H, custom) {
+      const img = arCustomLogoImages.get(custom.logo.dataUrl)?.img;
+      if (!img || !img.complete || !img.naturalWidth) return;
+      const scale = Math.min(W * 0.12 / img.naturalWidth, H * 0.045 / img.naturalHeight);
+      const w = img.naturalWidth * scale, h = img.naturalHeight * scale;
+      const x = custom.logo.corner.endsWith('right') ? W * 0.92 - w : W * 0.08;
+      const y = custom.logo.corner.startsWith('bottom') ? H * 0.90 - h : H * 0.095;
+      c.save(); c.globalAlpha = 1; c.shadowBlur = 0; c.drawImage(img, x, y, w, h); c.restore();
+    }
     function renderMotionFrame(c, W, H, t, mainDuration, totalCuts, d, spec, V) {
+      const custom = spec.custom;
       const userColor = campaign.colorKey && campaign.colorKey !== 'default';
       const pal = typeof IND !== 'undefined' && IND.key !== 'auto' ? AR_IND_PALETTE[IND.key] : null;
-      const accent = userColor ? ((V && V.accent) || spec.accent) : pal ? pal[0] : spec.accent;
+      const accent = custom ? custom.colors.accent : userColor ? ((V && V.accent) || spec.accent) : pal ? pal[0] : spec.accent;
       const sp = Object.assign({}, spec, { accent }, pal && !spec.light && !spec.insta && !userColor ? { bg1: pal[1], bg2: pal[2] } : {});
-      if (t >= mainDuration) return renderMotionOutro(c, W, H, t, mainDuration, d, sp);
+      if (t >= mainDuration) {
+        renderMotionOutro(c, W, H, t, mainDuration, d, sp);
+        if (custom) arDrawCustomLogo(c, W, H, custom);
+        return;
+      }
       const cutDur = mainDuration / totalCuts;
       const cutIdx = Math.min(totalCuts - 1, Math.floor(t / cutDur));
       const local = t - cutIdx * cutDur;
@@ -1333,20 +1347,20 @@
         c.strokeRect(W * 0.045, H * 0.035, W * 0.91, H * 0.93);
         // 크림색 전시 명패 카드
         const slide = (1 - ent) * H * 0.018;
-        const cx = W * 0.08, cy = H * 0.64 + slide, cw = W * 0.78, ch = H * 0.245;
+        const cx = W * 0.08, cy = H * (custom ? { top: 0.17, middle: 0.37, bottom: 0.59 }[custom.caption.position] : 0.64) + slide, cw = W * 0.78, ch = H * 0.245;
         c.save();
         c.shadowColor = 'rgba(20,14,10,0.22)';
         c.shadowBlur = 10;
-        c.fillStyle = 'rgba(248,243,234,0.94)';
+        c.fillStyle = custom ? custom.colors.primary : 'rgba(248,243,234,0.94)';
         gRoundRect(c, cx, cy, cw, ch, Math.round(W * 0.008));
         c.fill();
         c.restore();
         // 명패 내부 디테일
-        c.fillStyle = '#8c7a6b';
+        c.fillStyle = custom ? custom.colors.accent : '#8c7a6b';
         c.fillRect(cx + cw * 0.07, cy + ch * 0.23, cw * 0.12, Math.max(1, Math.round(W * 0.002)));
-        inLabel(c, `전시 기록 · 제 ${String(cutIdx + 1).padStart(2, '0')}장`, cx + cw * 0.07, cy + ch * 0.14, '#7a6a5c', 'left', Math.round(W * 0.025));
-        mCaption(c, caption, cx + cw * 0.07, cy + ch * 0.30, cw * 0.86, ch * 0.48, Math.round(W * 0.056), 'maru', '#2b241f', e, 'left');
-        inSign(c, d, cx + cw * 0.93, cy + ch * 0.86, '#6e5f52', 'right', Math.round(W * 0.029));
+        inLabel(c, `전시 기록 · 제 ${String(cutIdx + 1).padStart(2, '0')}장`, cx + cw * 0.07, cy + ch * 0.14, custom ? sp.accent2 : '#7a6a5c', 'left', Math.round(W * 0.025));
+        mCaption(c, caption, cx + cw * 0.07, cy + ch * 0.30, cw * 0.86, ch * 0.48, W * (custom ? custom.caption.sizeRatio : 0.056), custom ? custom.fontKey : 'maru', custom ? sp.accent2 : '#2b241f', e, 'left');
+        inSign(c, d, cx + cw * 0.93, cy + ch * 0.86, custom ? sp.accent2 : '#6e5f52', 'right', Math.round(W * 0.029));
         inGrain(c, W, H, t, 0.065);
       } else if (M === 'in_h_panes') {
         // 세 갈래 시선: 같은 사진을 세 개의 세로 창으로 나누어 미묘한 시차로 흐르게 연출
@@ -1818,7 +1832,7 @@
         inGrain(c, W, H, t, 0.055);
       } else if (M === 'in_x_cover') {
         // 한 잡지 안의 여섯 역할. 컷 순서로 결정하므로 다시 탐색해도 구도가 같음.
-        const role = cutIdx % 6, paper = '#f6f1e7', ink = '#392e25', muted = '#756452';
+        const role = cutIdx % 6, paper = custom ? custom.colors.primary : '#f6f1e7', ink = custom ? sp.accent2 : '#392e25', muted = custom ? custom.colors.accent : '#756452';
         const beat = Math.min(1, cutDur / 2), titleE = mClamp((local / beat - 0.22) / 0.8);
         const infoE = mEase((local / beat - 0.72) / 0.35), photoE = mEase(local / (0.3 * beat));
         const safeDealer = arDealerForCopy(d);
@@ -1834,6 +1848,7 @@
           inWarm(c, px, py, W * w, H * h, 0.65); c.restore();
         };
         const title = (x, y, w, h, color = ink, align = 'left', size = 0.062) => {
+          if (custom) return; // 사용자 자막은 모든 사진 위에 마지막으로 그린다.
           mCaption(c, caption, W * x, H * y, W * w, H * h, W * size, 'maru', color, titleE, align);
         };
         if (full) {
@@ -1855,14 +1870,14 @@
         } else if (role === 2) {
           // 상황: 넓은 맥락 사진 위에 작은 메모를 겹침.
           print(0, 0.075, 0.16, 0.85, 0.64, -0.012, 1);
-          c.fillStyle = paper; c.fillRect(W * 0.11, H * 0.19, W * 0.65, H * 0.23);
+          if (!custom) { c.fillStyle = paper; c.fillRect(W * 0.11, H * 0.19, W * 0.65, H * 0.23); }
           title(0.16, 0.205, 0.55, 0.20);
         } else if (role === 3) {
           // 근거: 디테일 확대와 주석. 수치·효능은 만들어 넣지 않음.
           c.save(); c.globalAlpha = infoE; c.strokeStyle = paper; c.lineWidth = W * 0.0015;
           c.beginPath(); c.arc(W * 0.65, H * 0.36, W * 0.06, 0, Math.PI * 2); c.stroke();
           c.beginPath(); c.moveTo(W * 0.61, H * 0.39); c.lineTo(W * 0.44, H * 0.58); c.stroke(); c.restore();
-          c.fillStyle = paper; c.fillRect(W * 0.09, H * 0.58, W * 0.72, H * 0.25);
+          if (!custom) { c.fillStyle = paper; c.fillRect(W * 0.09, H * 0.58, W * 0.72, H * 0.25); }
           title(0.15, 0.61, 0.60, 0.19);
         } else if (role === 4) {
           // 선택: 실제로 다른 사진이 있을 때만 두 장을 비교.
@@ -1877,19 +1892,29 @@
           }
         } else {
           // 마무리: 실제 입력한 매장·혜택만 사용. 비어 있으면 본문 기록만 남김.
-          c.fillStyle = paper; c.fillRect(W * 0.13, H * 0.28, W * 0.74, H * 0.48);
+          if (!custom) { c.fillStyle = paper; c.fillRect(W * 0.13, H * 0.28, W * 0.74, H * 0.48); }
           title(0.20, 0.37, 0.60, 0.24);
           c.save(); c.globalAlpha = infoE;
-          c.fillStyle = '#cabbab'; c.fillRect(W * 0.20, H * 0.65, W * 0.60, H * 0.001);
-          mCaption(c, safeDealer.promoTag || safeDealer.name, W * 0.20, H * 0.67, W * 0.60, H * 0.06, W * 0.03, 'maru', muted, infoE, 'left');
+          if (!custom) {
+            c.fillStyle = '#cabbab'; c.fillRect(W * 0.20, H * 0.65, W * 0.60, H * 0.001);
+            mCaption(c, safeDealer.promoTag || safeDealer.name, W * 0.20, H * 0.67, W * 0.60, H * 0.06, W * 0.03, 'maru', muted, infoE, 'left');
+          }
           c.restore();
         }
         c.save(); c.globalAlpha = infoE;
-        inLabel(c, '우리의 작은 잡지', W * 0.08, H * 0.065, full ? paper : muted, 'left', W * 0.026);
-        inLabel(c, `${String(cutIdx + 1).padStart(2, '0')} / ${String(totalCuts).padStart(2, '0')}`, W * 0.92, H * 0.065, full ? paper : muted, 'right', W * 0.026);
-        inLabel(c, ['첫 장면', '오늘의 발견', '머무는 순간', '자세히 보기', '다른 시선', safeDealer.name ? '다시 만날 곳' : '남겨둘 장면'][role], W * 0.08, H * 0.87, full ? paper : muted, 'left', W * 0.026);
+        inLabel(c, custom ? custom.name : '우리의 작은 잡지', W * 0.08, H * 0.065, custom ? (full ? '#fffaf2' : ink) : (full ? paper : muted), 'left', W * 0.026);
+        inLabel(c, `${String(cutIdx + 1).padStart(2, '0')} / ${String(totalCuts).padStart(2, '0')}`, W * 0.92, H * 0.065, custom ? (full ? '#fffaf2' : ink) : (full ? paper : muted), 'right', W * 0.026);
+        if (!custom) inLabel(c, ['첫 장면', '오늘의 발견', '머무는 순간', '자세히 보기', '다른 시선', safeDealer.name ? '다시 만날 곳' : '남겨둘 장면'][role], W * 0.08, H * 0.87, full ? paper : muted, 'left', W * 0.026);
         c.restore();
         inGrain(c, W, H, t, 0.045);
+        if (custom) {
+          const y = H * { top: 0.17, middle: 0.36, bottom: 0.56 }[custom.caption.position];
+          c.save(); c.globalAlpha = photoE;
+          c.fillStyle = paper; c.fillRect(W * 0.08, y, W * 0.84, H * 0.25);
+          c.fillStyle = muted; c.fillRect(W * 0.13, y + H * 0.025, W * 0.12, H * 0.002);
+          mCaption(c, caption, W * 0.13, y + H * 0.04, W * 0.74, H * 0.18, W * custom.caption.sizeRatio, custom.fontKey, ink, titleE, 'left');
+          c.restore();
+        }
       } else if (M === 'in_card_news') {
         // 사진을 가득 담은 카드 위에 불투명 글 상자. 앞 페이지도 함께 밀어 빈 프레임을 막음.
         const turnDur = Math.min(0.48, cutDur * 0.18), turn = cutIdx ? mEase(local / turnDur) : 1;
@@ -1902,17 +1927,17 @@
           const headline = parts.shift() || '', body = parts.join(' ');
           const pace = Math.min(1, cutDur / 2), pe = settled ? 1 : mClamp((local / pace - 0.18) / 0.8);
           const be = settled ? 1 : mClamp((local / pace - 0.52) / 0.7);
-          const boxY = pageIdx % 2 ? 0.44 : 0.18;
+          const boxY = custom ? { top: 0.17, middle: 0.33, bottom: 0.49 }[custom.caption.position] : pageIdx % 2 ? 0.44 : 0.18;
           c.save(); c.translate(offset, 0);
           gRoundRect(c, W * 0.04, H * 0.035, W * 0.92, H * 0.85, W * 0.035); c.clip();
           mPhoto(c, pageScene, 0, W * 0.04, H * 0.035, W * 0.92, H * 0.85, 1.025);
           inWarm(c, W * 0.04, H * 0.035, W * 0.92, H * 0.85, 0.45);
-          c.fillStyle = '#f6f1e7';
+          c.fillStyle = custom ? custom.colors.primary : '#f6f1e7';
           gRoundRect(c, W * 0.09, H * boxY, W * 0.82, H * 0.35, W * 0.018); c.fill();
-          inLabel(c, `${pageIdx + 1} / ${totalCuts}`, W * 0.15, H * (boxY + 0.038), '#655644', 'left', W * 0.03);
-          mCaption(c, headline, W * 0.15, H * (boxY + 0.065), W * 0.70, H * 0.15, W * 0.08, 'sans', '#29241e', pe, 'left');
-          c.fillStyle = '#cabbab'; c.fillRect(W * 0.15, H * (boxY + 0.235), W * 0.12, H * 0.0015);
-          mCaption(c, body, W * 0.15, H * (boxY + 0.252), W * 0.70, H * 0.075, W * 0.043, 'pretL', '#655644', be, 'left');
+          inLabel(c, `${pageIdx + 1} / ${totalCuts}`, W * 0.15, H * (boxY + 0.038), custom ? sp.accent2 : '#655644', 'left', W * 0.03);
+          mCaption(c, headline, W * 0.15, H * (boxY + 0.065), W * 0.70, H * 0.15, W * (custom ? custom.caption.sizeRatio : 0.08), custom ? custom.fontKey : 'sans', custom ? sp.accent2 : '#29241e', pe, 'left');
+          c.fillStyle = custom ? custom.colors.accent : '#cabbab'; c.fillRect(W * 0.15, H * (boxY + 0.235), W * 0.12, H * 0.0015);
+          mCaption(c, body, W * 0.15, H * (boxY + 0.252), W * 0.70, H * 0.075, W * (custom ? custom.caption.sizeRatio * 0.65 : 0.043), custom ? custom.fontKey : 'pretL', custom ? sp.accent2 : '#655644', be, 'left');
           c.restore();
         };
         c.save(); c.beginPath(); c.rect(0, 0, W, H * 0.91); c.clip();
@@ -2583,6 +2608,7 @@
         if (isPrice) mPrice(c, W, capY + 6, sp, e);
         mCaption(c, caption, W / 2, capY + (isPrice ? 44 : 8), W - 60, capH - (isPrice ? 44 : 8), 40, sp.font, sp.accent2, e);
       }
+      if (custom) arDrawCustomLogo(c, W, H, custom);
       // 시네마는 위 띠에, 크레딧은 크레딧 안에 이름이 나오므로 아래 이름 칩을 그리지 않음
       if (M !== 'story' && M !== 'feed' && M !== 'cinema' && M !== 'credits' && !sp.insta) mChip(c, d, W, H, sp, mEase(t / 0.6));
     }
@@ -2590,7 +2616,8 @@
     // 인스타 감성 엔딩: 크림 카드에 작은 사진, 명조 가게 이름, 얇은 선, 주소·연락처, 담백한 댓글 안내
     function renderInstaOutro(c, W, H, t, mainDuration, d, sp) {
       const lt = t - mainDuration;
-      c.fillStyle = '#f3ece1';
+      const customFont = sp.custom ? KIT_FONTS[sp.font] : null;
+      c.fillStyle = sp.custom ? sp.custom.colors.primary : '#f3ece1';
       c.fillRect(0, 0, W, H);
       const S = kitScene(t, mainDuration, true);
       const a = (k) => mEase((lt - k) / 0.6);
@@ -2608,22 +2635,22 @@
       c.textAlign = 'center';
       c.textBaseline = 'middle';
       c.globalAlpha = a(0.2);
-      c.fillStyle = '#2b2622';
-      gDrawLine(c, (d && d.name) || '', W / 2, ny, W - 80, 40, 24, KIT_FONTS.maru.f, 600);
-      c.fillStyle = '#cbbfae';
+      c.fillStyle = sp.custom ? sp.accent2 : '#2b2622';
+      gDrawLine(c, (d && d.name) || '', W / 2, ny, W - 80, 40, 24, (customFont || KIT_FONTS.maru).f, 600);
+      c.fillStyle = sp.custom ? sp.accent : '#cbbfae';
       c.fillRect(W / 2 - 20, ny + 36, 40, 1);
       c.globalAlpha = a(0.35);
-      c.fillStyle = '#7a6d61';
+      c.fillStyle = sp.custom ? sp.accent2 : '#7a6d61';
       const sub = [(d && d.title) || '', (d && d.branch) || ''].filter(Boolean).join(' · ');
-      if (sub) gDrawLine(c, sub, W / 2, ny + 68, W - 90, 17, 12, KIT_FONTS.pretL.f, 500);
+      if (sub) gDrawLine(c, sub, W / 2, ny + 68, W - 90, 17, 12, (customFont || KIT_FONTS.pretL).f, 500);
       const phone = String((d && d.phone) || '').trim();
-      if (phone) gDrawLine(c, phone, W / 2, ny + 98, W - 90, 18, 12, KIT_FONTS.pretL.f, 500);
+      if (phone) gDrawLine(c, phone, W / 2, ny + 98, W - 90, 18, 12, (customFont || KIT_FONTS.pretL).f, 500);
       const promo = String((d && d.promoTag) || '').trim();
-      if (promo) { c.fillStyle = '#8a6a4f'; gDrawLine(c, promo, W / 2, ny + 132, W - 90, 17, 12, KIT_FONTS.maruL.f, 400); }
+      if (promo) { c.fillStyle = sp.custom ? sp.accent2 : '#8a6a4f'; gDrawLine(c, promo, W / 2, ny + 132, W - 90, 17, 12, (customFont || KIT_FONTS.maruL).f, 400); }
       c.globalAlpha = a(0.55);
-      c.fillStyle = '#2b2622';
-      gDrawLine(c, arCta(), W / 2, H - 120, W - 100, 19, 13, KIT_FONTS.pretL.f, 600);
-      c.fillStyle = '#2b2622';
+      c.fillStyle = sp.custom ? sp.accent2 : '#2b2622';
+      gDrawLine(c, arCta(), W / 2, H - 120, W - 100, 19, 13, (customFont || KIT_FONTS.pretL).f, 600);
+      c.fillStyle = sp.custom ? sp.accent2 : '#2b2622';
       c.fillRect(W / 2 - 60, H - 104, 120, 1);
       c.globalAlpha = 1;
       inGrain(c, W, H, t, 0.07);

@@ -209,14 +209,14 @@
         cats.innerHTML = arDesignCats().map((c) => `<button type="button" class="pd-cat ${c === pdCat ? 'on' : ''}" onclick="selectPdCat('${c}')">${c}</button>`).join('');
       }
       const cnt = document.getElementById('pdCount');
-      if (cnt) cnt.textContent = String(arVisibleDesigns().length);
+      if (cnt) cnt.textContent = String(arVisibleDesigns().length + arCustomDesigns.length);
       const active = getActiveDesign().id;
       const urls = (typeof designThumbCache !== 'undefined' && designThumbCache.urls) || {};
       const blank = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
       if (!arDesignCats().includes(pdCat)) pdCat = '전체';
       const vis = arVisibleDesigns();
       const items = pdCat === '전체' ? vis : vis.filter((d) => d.cat === pdCat);
-      list.innerHTML = `<button type="button" class="pd-card pd-random" onclick="pickRandomTheme(true)" title="디자인과 색을 무작위로 바꿔 봅니다">
+      list.innerHTML = (pdCat === '전체' ? arCustomPickerCards('pdthumb_') : '') + `<button type="button" class="pd-card pd-random" onclick="pickRandomTheme(true)" title="디자인과 색을 무작위로 바꿔 봅니다">
           <span class="pd-dice">🎲</span>
           <div>랜덤 테마</div>
         </button>` + items.map((d) => `<button type="button" class="pd-card ${d.id === active ? 'on' : ''}" onclick="choosePresetFromDrawer('${d.id}')" title="${d.desc}">

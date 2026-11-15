@@ -929,3 +929,66 @@
       max-height: 88vh;
       overflow-y: auto;
     }
+/* 내 스타일 만들기: 스튜디오 공통 색과 키보드/모바일 조작 영역 */
+.ar-custom-entry{min-height:44px;padding:10px 14px;border:1px solid #424246;border-radius:8px;background:#232325;color:#ededed;font-weight:600;cursor:pointer}
+.ar-custom-panel{box-sizing:border-box;width:min(1000px,calc(100vw - 32px));max-height:calc(100dvh - 32px);margin:auto;padding:28px;border:1px solid #303033;border-radius:16px;background:#0f0f10;color:#ededed;font:14px/1.5 'Pretendard Variable',Pretendard,sans-serif;overflow:auto;color-scheme:dark}
+.ar-custom-panel::backdrop{background:rgba(0,0,0,.72)}
+.ar-custom-panel *{box-sizing:border-box}
+.ar-custom-panel button,.ar-custom-panel select,.ar-custom-panel input{font:inherit}
+.ar-custom-panel button,.ar-custom-panel select{min-height:40px;padding:8px 12px;border:1px solid #3c3c40;border-radius:8px;background:#232325;color:#ededed;cursor:pointer}
+.ar-custom-panel button:disabled{opacity:.45;cursor:wait}
+.ar-custom-panel :focus-visible,.ar-custom-entry:focus-visible,.ar-custom-picker button:focus-visible{outline:2px solid #ededed;outline-offset:3px}
+.ar-custom-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:24px}
+.ar-custom-heading h2{margin:0 0 6px;font-size:26px;font-weight:700;letter-spacing:-.8px}
+.ar-custom-panel p{margin:6px 0;color:#a1a1a6;font-size:12px}
+.ar-custom-workspace{display:grid;grid-template-columns:290px minmax(0,1fr);gap:32px}
+.ar-custom-preview{align-self:start;padding:18px;border:1px solid #303033;border-radius:12px;background:#18181b}
+.ar-custom-preview>span{display:block;margin-bottom:14px;font-size:12px;color:#a1a1a6}
+.ar-custom-preview canvas{display:block;width:204px;max-width:100%;height:auto;margin:0 auto 18px;border-radius:10px;background:#232325}
+.ar-custom-preview strong{font-size:18px;overflow-wrap:anywhere}
+.ar-custom-form>label{display:block;margin-bottom:8px;font-weight:600}
+.ar-custom-form input[name="name"]{width:100%;min-height:44px;padding:10px 12px;border:1px solid #3c3c40;border-radius:8px;background:#18181b;color:#ededed}
+.ar-custom-form fieldset{margin:20px 0 0;padding:16px 0 0;border:0;border-top:1px solid #303033;min-width:0}
+.ar-custom-form legend{padding:0 8px 0 0;font-weight:600}
+.ar-custom-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ar-custom-color{display:grid;grid-template-columns:44px 1fr;align-items:center;column-gap:10px;padding:10px;border:1px solid #303033;border-radius:8px;font-size:12px}
+.ar-custom-color input{grid-column:1;grid-row:1/3;width:44px;height:44px;padding:2px;background:none;border:0;cursor:pointer}
+.ar-custom-color output{grid-column:2;color:#a1a1a6;font-size:11px}
+.ar-custom-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ar-custom-choices label{position:relative;cursor:pointer}
+.ar-custom-choices input{position:absolute;opacity:0;width:1px;height:1px}
+.ar-custom-choices span{display:flex;flex-direction:column;justify-content:center;min-height:44px;height:100%;padding:10px 5px;border:1px solid #303033;border-radius:8px;background:#18181b;text-align:center;font-size:12px}
+.ar-custom-choices small{font-size:10px;color:#a1a1a6;margin-top:3px}
+.ar-custom-choices input:checked+span{border-color:#ededed;background:#232325}
+.ar-custom-choices input:focus-visible+span{outline:2px solid #ededed;outline-offset:3px}
+.ar-custom-upload{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.ar-custom-upload img{width:48px;height:48px;object-fit:contain;background:#ede8df;border-radius:6px}
+.ar-custom-upload label{flex:1;min-width:180px;font-size:12px;color:#a1a1a6}
+.ar-custom-upload input{display:block;width:100%;min-height:40px;max-width:270px;margin-top:4px;font-size:11px}
+.ar-custom-upload input::file-selector-button{min-height:40px;border:1px solid #3c3c40;border-radius:6px;background:#232325;color:#ededed;cursor:pointer}
+.ar-custom-inline{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;font-size:12px}
+.ar-custom-inline input[type="range"]{width:45%;height:40px;accent-color:#ededed}
+.ar-custom-inline output{min-width:28px;color:#a1a1a6}
+.ar-custom-save{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px}
+.ar-custom-save button{background:#ededed;color:#141415;font-weight:700;min-height:44px;white-space:nowrap}
+#arCustomStatus{color:#b9dccb;min-height:18px;margin-top:16px;overflow-wrap:anywhere}
+.ar-custom-saved{margin-top:16px;padding-top:12px;border-top:1px solid #303033}
+.ar-custom-saved>div{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:12px}
+.ar-custom-saved span{flex:1;min-width:0;overflow-wrap:anywhere}
+.ar-custom-saved button{padding:6px 8px;flex-shrink:0}
+.ar-custom-picker{min-width:0;padding:5px;border:1px solid #55514a;border-radius:9px;background:#1c1b19}
+.ar-custom-picker.on{border-color:#ededed}
+.ar-custom-picker button{display:block;width:100%;min-height:40px;border:0;border-radius:6px;background:none;color:#ededed;cursor:pointer;text-align:left;padding:3px}
+.ar-custom-picker img{display:block;width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:6px;background:#141415}
+.ar-custom-picker small{display:block;color:#b7ad9c;font-size:10px;margin-top:7px}
+.ar-custom-picker span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.ar-custom-picker button+button{margin-top:5px;text-align:center;background:#2e2b26;font-size:11px}
+@media(max-width:650px){
+  .ar-custom-panel{width:calc(100vw - 16px);max-height:calc(100dvh - 16px);padding:18px;border-radius:12px}
+  .ar-custom-heading{gap:10px;margin-bottom:18px}.ar-custom-heading h2{font-size:23px}.ar-custom-heading p{font-size:11px}.ar-custom-heading button{flex-shrink:0}
+  .ar-custom-workspace{grid-template-columns:1fr;gap:22px}
+  .ar-custom-preview{display:grid;grid-template-columns:104px minmax(0,1fr);gap:10px 14px;padding:14px}
+  .ar-custom-preview>span{grid-column:1/-1;margin:0}.ar-custom-preview canvas{grid-column:1;grid-row:2/4;width:104px;margin:0}.ar-custom-preview>div{grid-column:2}.ar-custom-preview strong{font-size:15px}
+  .ar-custom-saved{margin-top:0;padding-top:8px}.ar-custom-saved>div{flex-wrap:wrap}.ar-custom-saved span{flex-basis:100%}
+  .ar-custom-form fieldset{margin-top:18px}.ar-custom-color{column-gap:5px;padding:8px}.ar-custom-save{align-items:stretch;flex-direction:column}.ar-custom-save button{width:100%}
+}
