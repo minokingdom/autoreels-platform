@@ -1262,6 +1262,8 @@
     }
 
     function onAudioConfigChange() {
+      const prevVoice = AudioEngine.ttsVoice;
+      const prevSpeed = AudioEngine.ttsSpeed;
       const bgmEl = document.getElementById('bgmStyleSelect');
       const ttsEl = document.getElementById('ttsVoiceSelect');
       if (bgmEl) AudioEngine.bgmStyle = bgmEl.value;
@@ -1271,18 +1273,22 @@
       try {
         if (ttsEl && ttsEl.value !== 'off') localStorage.setItem('autoreels_tts_voice', ttsEl.value);
       } catch (e) {}
+
+      const voiceChanged = (AudioEngine.ttsVoice !== prevVoice) || (AudioEngine.ttsSpeed !== prevSpeed);
       if (!AudioEngine.enabled) {
-        AudioEngine.masterBuffer = null;
-        AudioEngine.masterDuration = 0;
+        if (voiceChanged) {
+          AudioEngine.masterBuffer = null;
+          AudioEngine.masterCutBounds = null;
+          AudioEngine.masterDuration = 0;
+        }
         toggleAudioMaster(true);
-      } else {
-        AudioEngine.startBgmLoop();
-        AudioEngine.stopTts();
-        AudioEngine.masterBuffer = null;
-        AudioEngine.masterDuration = 0;
-        AudioEngine.lastSpokenCut = -1;
-        AudioEngine.prefetchTtsBuffers();
-        AudioEngine.syncWithTimeline(window.__timelines['main'].currentTime);
+        return;
+      }
+
+      // 배경음악만 바꿨을 때는 성우 나레이션(masterBuffer)을 건드리지 않고 배경음악만 즉시 교체
+      AudioEngine.startBgmLoop();
+      if (voiceChanged) {
+        arResetAndRebuildNarration();
       }
     }
 
