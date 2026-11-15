@@ -4153,6 +4153,61 @@ function renderStoryArchetypesUI() {
       }
     }
 
+    // ★ 작은 미리보기를 누르면 아래로 내려가지 않고 그 자리에서 크게 보여 주는 팝업
+    function arEnsurePreviewPop() {
+      let pop = document.getElementById('arPreviewPop');
+      if (pop) return pop;
+      pop = document.createElement('div');
+      pop.id = 'arPreviewPop';
+      pop.className = 'ar-modal hidden fixed inset-0 z-[90]';
+      pop.setAttribute('role', 'dialog');
+      pop.setAttribute('aria-label', '영상 크게 보기');
+      pop.innerHTML = `
+        <div class="arpp-wrap">
+          <div class="arpp-top">
+            <span id="arPreviewPopCut" class="arpp-cut"></span>
+            <button type="button" class="ar-modal-x" aria-label="닫기">✕</button>
+          </div>
+          <canvas id="arPreviewPopCanvas" width="540" height="960"></canvas>
+          <div class="arpp-ctl">
+            <button type="button" id="arPreviewPopReplay" class="arpp-btn">↺ 처음부터</button>
+            <button type="button" id="arPreviewPopPlay" class="arpp-btn arpp-main"></button>
+          </div>
+        </div>`;
+      document.body.appendChild(pop);
+      pop.querySelector('.ar-modal-x').onclick = arClosePreviewPop;
+      pop.addEventListener('click', (e) => { if (e.target === pop) arClosePreviewPop(); });
+      pop.querySelector('#arPreviewPopPlay').onclick = () => { togglePlayPause(); arSyncPreviewPopBtn(); };
+      pop.querySelector('#arPreviewPopReplay').onclick = () => {
+        if (typeof seekToTime === 'function') seekToTime(0);
+        if (!isPlaying) togglePlayPause();
+        arSyncPreviewPopBtn();
+      };
+      return pop;
+    }
+    function arSyncPreviewPopBtn() {
+      const b = document.getElementById('arPreviewPopPlay');
+      if (b) b.textContent = isPlaying ? '⏸ 일시정지' : '▶ 재생';
+    }
+    function arOpenPreviewPop() {
+      const pop = arEnsurePreviewPop();
+      pop.classList.remove('hidden');
+      pop.style.display = 'flex';
+      if (!isPlaying) togglePlayPause();
+      arSyncPreviewPopBtn();
+      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+    }
+    function arClosePreviewPop() {
+      const pop = document.getElementById('arPreviewPop');
+      if (!pop) return;
+      pop.classList.add('hidden');
+      pop.style.display = 'none';
+    }
+    function arPreviewPopOpen() {
+      const pop = document.getElementById('arPreviewPop');
+      return !!(pop && !pop.classList.contains('hidden'));
+    }
+
     function scrollToMainMonitor() {
       const mon = document.getElementById('mainMonitorColumn');
       if (mon) {
@@ -4177,6 +4232,8 @@ function renderStoryArchetypesUI() {
         } else {
           const capTxt = String((campaign.cutCaptions && campaign.cutCaptions[cutIdx]) || '').replace(/\s+/g, ' ').trim();
           cutBadge.textContent = `${cutIdx + 1}컷 · ${capTxt || wLabel}`;
+          const popCut = document.getElementById('arPreviewPopCut');
+          if (popCut) popCut.textContent = cutBadge.textContent;
         }
       }
 

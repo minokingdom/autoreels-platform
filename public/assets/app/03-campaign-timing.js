@@ -458,7 +458,7 @@
 
         const activePhotoIdx = (plan.photoIdx !== undefined && photos[plan.photoIdx])
           ? plan.photoIdx
-          : (photos.length > 0 ? (i % photos.length) : -1);
+          : (photos.length > 0 ? Math.min(photos.length - 1, Math.round((i * photos.length) / targetCuts)) : -1); // 화면은 사진을 컷 길이에 나눠 보여 주므로 그 컷 구간의 첫 사진
         const activeImg = activePhotoIdx >= 0 ? photos[activePhotoIdx] : null;
         const thumbUrl = activeImg ? (activeImg._dataUrl || activeImg.src || '') : '';
         const seekSec = (getCutStart(i) + 0.1).toFixed(2);
@@ -535,7 +535,20 @@
       }
       container.innerHTML = html;
       const mediaBox = document.getElementById('cutMediaCardsContainer');
-      if (mediaBox) mediaBox.innerHTML = mediaHtml;
+      if (mediaBox) {
+        // 모바일은 옆으로 넘기는 카드라, 다시 그려도 보던 컷 위치를 유지
+        const keepX = mediaBox.scrollLeft;
+        mediaBox.innerHTML = mediaHtml;
+        mediaBox.scrollLeft = keepX;
+        let hint = document.getElementById('cutMediaSwipeHint');
+        if (!hint) {
+          hint = document.createElement('p');
+          hint.id = 'cutMediaSwipeHint';
+          hint.className = 'lg:hidden text-[12px] text-[#85858b] mb-2';
+          mediaBox.parentNode.insertBefore(hint, mediaBox);
+        }
+        hint.textContent = `컷 ${targetCuts}개 · 옆으로 넘겨 보세요 →`;
+      }
     }
 
     // ============================================================================

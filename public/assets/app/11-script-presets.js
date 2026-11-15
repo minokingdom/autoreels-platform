@@ -48,7 +48,89 @@
         } else {
           proceduralRestyleCurrentScene();
         }
+        arMatchPhotosToCaptions();
         if (typeof saveAiScriptPrefs === 'function') saveAiScriptPrefs();
+    }
+
+    // ★ 컷 문구에 맞는 기본 사진 고르기
+    //   예전에는 1컷=1번 사진, 2컷=2번 사진처럼 순서대로만 붙어서 "두피 상태 확인" 컷에 네일 사진이 나왔음.
+    //   손님이 직접 올린 사진이나 컷별로 직접 고른 사진은 건드리지 않음.
+    const AR_PHOTO_SYNONYMS = [
+      [/머리|머릿결|헤어|펌|염색|커트|컷트|스타일|변신|볼륨|매직/, ' 헤어 스타일링 모발'],
+      [/두피|각질|탈모|모발|클리닉/, ' 두피 모발 진단 케어'],
+      [/손톱|네일|젤/, ' 네일 아트'],
+      [/피부|얼굴|관리|팩|진정/, ' 피부 케어'],
+      [/예약|위치|오시는 길|방문|문의|만나요|찾아오/, ' 위치 예약 안내 매장'],
+      [/국물|탕|찌개|메뉴|요리|한 그릇|맛/, ' 시그니처 메인 요리'],
+      [/점심|정식|가성비/, ' 점심 특선 정식'],
+      [/회식|모임|단체/, ' 단체 회식 모임'],
+      [/포장|배달/, ' 포장 배달'],
+      [/커피|라떼|음료|원두/, ' 라떼 원두 음료'],
+      [/케이크|디저트|빵|베이커리/, ' 케이크 디저트 베이커리'],
+      [/혜택|할인|적립|쿠폰|이벤트/, ' 혜택 적립 쿠폰']
+    ];
+    function arPhotoMatchText(t) {
+      let out = String(t || '');
+      AR_PHOTO_SYNONYMS.forEach(([re, add]) => { if (re.test(out)) out += add; });
+      return out;
+    }
+    function arBigrams(t) {
+      const set = new Set();
+      String(t || '').split(/[^가-힣a-zA-Z0-9]+/).forEach((w) => {
+        for (let i = 0; i + 1 < w.length; i++) set.add(w.slice(i, i + 2));
+      });
+      return set;
+    }
+    function arMatchPhotosToCaptions() {
+      if (campaign.isUserCustomPhotos) return;
+      const photos = Array.isArray(campaign.uploadedPhotos) ? campaign.uploadedPhotos.filter(Boolean) : [];
+      const caps = Array.isArray(campaign.cutCaptions) ? campaign.cutCaptions : [];
+      const nCuts = Math.min(getTargetCutCount(), caps.length);
+      if (photos.length < 2 || !nCuts || photos.length !== campaign.uploadedPhotos.length) return;
+      const deck = (typeof AR_INDUSTRY_SCENE_DECKS !== 'undefined' && AR_INDUSTRY_SCENE_DECKS[IND.key]) || [];
+      const deckRow = (ph) => deck.find((r) => r[1] === ph._sceneTitle) || [];
+      const gramsOf = (ph) => arBigrams([ph._sceneTitle || String(ph._label || '').replace(/^\d+\.\s*/, ''), deckRow(ph)[2]].filter(Boolean).join(' '));
+      const pg = photos.map(gramsOf);
+      // 화면은 사진을 순서대로 컷 길이에 나눠 보여 주므로, 사진 순서를 컷 문구에 맞게 다시 줄 세움
+      // (컷 c의 구간에는 그 컷 문구와 가장 잘 맞는 사진이 먼저 오도록)
+      const n = photos.length;
+      const used = new Set();
+      const slotsOf = (c) => Math.round(((c + 1) * n) / nCuts) - Math.round((c * n) / nCuts);
+      const picks = Array.from({ length: nCuts }, () => []);
+      // 1차: 컷마다 문구와 맞는 사진(점수 > 0)만 먼저 가져감 (점수가 높은 컷 → 낮은 컷 순)
+      const scores = Array.from({ length: nCuts }, (_, c) => {
+        // 화면 자막(굵게 보이는 문구)을 성우 대사보다 두 배로 침
+        const gc = arBigrams(arPhotoMatchText(caps[c]));
+        const gt = arBigrams(arPhotoMatchText(campaign.ttsLines && campaign.ttsLines[c]));
+        return photos.map((ph, i) => { let sc = 0; pg[i].forEach((x) => { if (gc.has(x)) sc += 2; else if (gt.has(x)) sc += 1; }); return { i, sc }; });
+      });
+      // 라운드마다 각 컷이 가장 잘 맞는 사진을 하나씩 가져감 (한 컷이 맞는 사진을 다 가져가지 않게)
+      for (let round = 0; round < n; round++) {
+        const wants = [];
+        for (let c = 0; c < nCuts; c++) {
+          if (picks[c].length >= slotsOf(c)) continue;
+          const best = scores[c].filter((r) => r.sc > 0 && !used.has(r.i)).sort((x, y) => y.sc - x.sc || x.i - y.i)[0];
+          if (best) wants.push({ c, i: best.i, sc: best.sc });
+        }
+        if (!wants.length) break;
+        wants.sort((x, y) => y.sc - x.sc || x.c - y.c);
+        wants.forEach(({ c, i }) => { if (!used.has(i) && picks[c].length < slotsOf(c)) { used.add(i); picks[c].push(i); } });
+      }
+      // 2차: 빈 자리는 남은 사진을 원래 순서대로
+      const rest = photos.map((_, i) => i).filter((i) => !used.has(i));
+      picks.forEach((arr, c) => { while (arr.length < slotsOf(c) && rest.length) { const i = rest.shift(); used.add(i); arr.push(i); } });
+      const order = [].concat(...picks);
+      photos.forEach((_, i) => { if (!used.has(i)) order.push(i); });
+      if (order.every((v, k) => v === k)) return;
+      campaign.uploadedPhotos = order.map((i) => photos[i]);
+      // 사진 이름 앞 번호도 새 순서로
+      campaign.uploadedPhotos.forEach((ph, k) => {
+        if (ph && ph._label) ph._label = `${k + 1}. ${String(ph._label).replace(/^\d+\.\s*/, '')}`;
+      });
+      if (Array.isArray(campaign.scenePlan)) campaign.scenePlan.forEach((pl) => { if (pl && !pl.photoManual) delete pl.photoIdx; });
+      if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+      if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
     }
 
     // 자동차: 서버에 연결하지 못했을 때 화면에서 바로 채우는 기본 대본
@@ -408,6 +490,7 @@
       setVal('inputDiscountNum', campaign.discountNum);
       setVal('inputDiscount', campaign.discount);
       setVal('inputBullets', campaign.bullets.join('\n'));
+      arMatchPhotosToCaptions();
       syncPreviewPanel();
       syncTechPanel();
       AudioEngine.lastSpokenCut = -1;
@@ -1032,6 +1115,7 @@ POST https://graph.facebook.com/v19.0/${d.igUsername.replace('@', '')}/media
       if (!Array.isArray(campaign.scenePlan)) campaign.scenePlan = [];
       if (!campaign.scenePlan[cutIdx]) campaign.scenePlan[cutIdx] = {};
       campaign.scenePlan[cutIdx].photoIdx = idx;
+      campaign.scenePlan[cutIdx].photoManual = true;
       if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
       if (typeof seekToTime === 'function' && typeof getCutStart === 'function') {
         seekToTime(getCutStart(cutIdx) + 0.1);

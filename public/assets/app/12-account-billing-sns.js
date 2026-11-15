@@ -1067,6 +1067,8 @@
       arUpdateMobileStepBar(curTab);
     } catch (e) {}
     arUpdateEasyGuide('topic');
+    // 처음 열 때도 기본 대본 문구에 맞게 사진 순서를 맞춤 (업종 사진·대본이 모두 정해진 뒤)
+    setTimeout(() => { try { arMatchPhotosToCaptions(); } catch (e) {} }, 0);
     setTimeout(() => { try { if (!window.__arTopics) arLoadTopics(false); } catch (e) {} }, 0);
     window.__timelines['main'].seek(0);
     requestAnimationFrame(tick);

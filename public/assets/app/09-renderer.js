@@ -3480,6 +3480,12 @@
           mCtx.drawImage(canvas, 0, 0, miniCanvas.width, miniCanvas.height);
         }
       }
+      // 크게 보기 팝업이 열려 있으면 같은 화면을 크게 그림
+      if (typeof arPreviewPopOpen === 'function' && arPreviewPopOpen()) {
+        const pc = document.getElementById('arPreviewPopCanvas');
+        const pctx = pc && pc.getContext('2d');
+        if (pctx) pctx.drawImage(canvas, 0, 0, pc.width, pc.height);
+      }
       syncMobileDockUI(t);
     }
 

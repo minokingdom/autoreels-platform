@@ -313,9 +313,11 @@
         </button>
         <button type="button" id="mobileStepNext" class="msb-btn msb-next"></button>`;
       document.body.appendChild(bar);
+      bar.querySelector('#mobileStepMid').setAttribute('aria-label', '영상 크게 보기');
       bar.querySelector('#mobileStepMid').onclick = () => {
         const mon = document.getElementById('mainMonitorColumn');
-        if (mon && !mon.classList.contains('hidden')) scrollToMainMonitor();
+        // 가운데(단계 이름)를 누르면 영상을 그 자리에서 크게 보기 (주제·대본 단계는 맨 위로)
+        if (mon && !mon.classList.contains('hidden')) arOpenPreviewPop();
         else window.scrollTo({ top: 0, behavior: 'smooth' });
       };
       return bar;

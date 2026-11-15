@@ -894,6 +894,7 @@
       }
       campaign.uploadedPhotos = arIndustryPlaceholderPhotos();
       campaign._indPhotos = true;
+      if (typeof arMatchPhotosToCaptions === 'function') arMatchPhotosToCaptions();
       if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
       if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
       if (typeof applyVideoDurations === 'function') { try { applyVideoDurations(); } catch (e) {} }
