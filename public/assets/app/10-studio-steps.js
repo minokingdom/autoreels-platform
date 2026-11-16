@@ -1454,13 +1454,16 @@
               ttsLines: Array.from({ length: totalCuts }, (_, i) => baseTts[i % baseTts.length])
             };
             applyAiScriptToCampaign(offlineAi, d, stripExcludedLocal);
-            if (noticeEl) noticeEl.textContent = `주제 [${topicTitle}] 기본 대본을 채웠고, 맞춤 이미지를 적용합니다.`;
+            arFinishScriptApply(totalCuts);
+            if (noticeEl) noticeEl.textContent = `주제 [${topicTitle}] 대본이 반영되었고, 맞춤 이미지를 생성하고 있습니다...`;
+            triggerTopicImages(campaign.cutCaptions);
+            return;
           } else {
             if (campaign.presetKey && (AR_INDUSTRY_PRESETS[IND.key] || {})[campaign.presetKey]) applyIndustryPreset(campaign.presetKey);
             if (noticeEl) noticeEl.textContent = `AI 대본을 만들지 못해 기본 대본으로 채웠습니다. (${err.message || '연결 오류'})`;
+            triggerTopicImages(campaign.cutCaptions);
+            return;
           }
-          triggerTopicImages(campaign.cutCaptions);
-          return;
         }
         arFillAutoScriptOffline(parsedLocal, d);
         triggerTopicImages(campaign.cutCaptions);
@@ -1497,7 +1500,7 @@
 
     async function arApplyTopicSceneImages(payload) {
       const genId = (arApplyTopicSceneImages._seq = (arApplyTopicSceneImages._seq || 0) + 1);
-      const noticeEl = document.getElementById('aiDirectorStatusNotice');
+      const noticeEl = document.getElementById('aiGenNotice');
       const applySlotImage = (slot, dataUrl, doneCb) => {
         const img = new Image();
         img._dataUrl = dataUrl;
