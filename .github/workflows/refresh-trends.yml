@@ -16,24 +16,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install treg CLI (when TREG_TOKEN is configured)
-        if: ${{ secrets.TREG_TOKEN != '' }}
-        run: |
-          curl -fsSL https://treg.to/install.sh | sh -s -- --token "${{ secrets.TREG_TOKEN }}"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Refresh daily trends
-        run: |
-          if [ -n "${{ secrets.TREG_TOKEN }}" ]; then
-            node scripts/refresh-trends.mjs --treg
-          else
-            node scripts/refresh-trends.mjs
-          fi
+      - name: Refresh daily trends (with treg if configured, else /api/trends)
         env:
+          TREG_TOKEN: ${{ secrets.TREG_TOKEN }}
           KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
           KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
           KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
           KAKAO_ALERT_WEBHOOK: ${{ secrets.KAKAO_ALERT_WEBHOOK }}
-      - name: 바뀌었으면 커밋
+        run: |
+          if [ -n "$TREG_TOKEN" ]; then
+            curl -fsSL https://treg.to/install.sh | sh -s -- --token "$TREG_TOKEN"
+            export PATH="$HOME/.local/bin:$PATH"
+            node scripts/refresh-trends.mjs --treg
+          else
+            node scripts/refresh-trends.mjs
+          fi
+      - name: Commit trends if changed
         run: |
           if git diff --quiet -- public/trends-today.json; then echo "no change"; exit 0; fi
           git config user.name "autoreels-bot"
@@ -42,11 +40,17 @@ jobs:
           git commit -m "chore: 오늘의 인기 키워드 갱신"
           git push
       - name: Trigger Kaggle GPU nightly media worker (optional)
-        if: ${{ secrets.KAGGLE_USERNAME != '' && secrets.KAGGLE_KEY != '' }}
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
         run: |
+          if [ -z "$KAGGLE_USERNAME" ] || [ -z "$KAGGLE_KEY" ]; then
+            echo "KAGGLE_USERNAME or KAGGLE_KEY secret not set; skipping Kaggle GPU worker."
+            exit 0
+          fi
           python3 -m pip install -q kaggle
           mkdir -p ~/.kaggle
-          printf '{"username":"%s","key":"%s"}\n' "${{ secrets.KAGGLE_USERNAME }}" "${{ secrets.KAGGLE_KEY }}" > ~/.kaggle/kaggle.json
+          printf '{"username":"%s","key":"%s"}\n' "$KAGGLE_USERNAME" "$KAGGLE_KEY" > ~/.kaggle/kaggle.json
           chmod 600 ~/.kaggle/kaggle.json
-          sed -i 's/__KAGGLE_USERNAME__/${{ secrets.KAGGLE_USERNAME }}/g' scripts/kaggle/kernel-metadata.json
+          python3 -c 'import os,pathlib; p=pathlib.Path("scripts/kaggle/kernel-metadata.json"); p.write_text(p.read_text().replace("__KAGGLE_USERNAME__", os.environ["KAGGLE_USERNAME"]))'
           kaggle kernels push -p scripts/kaggle
