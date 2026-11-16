@@ -1,5 +1,5 @@
 {
-  "id": "__KAGGLE_USERNAME__/autoreels-nightly-media",
+  "id": "__KAGGLE_USERNAME__/autoreels-nightly-media-worker",
   "title": "AutoReels Nightly Media Worker",
   "code_file": "nightly_media.py",
   "language": "python",
