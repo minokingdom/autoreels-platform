@@ -41,16 +41,26 @@ jobs:
           git push
       - name: Trigger Kaggle GPU nightly media worker (optional)
         env:
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
         run: |
-          if [ -z "$KAGGLE_USERNAME" ] || [ -z "$KAGGLE_KEY" ]; then
-            echo "KAGGLE_USERNAME or KAGGLE_KEY secret not set; skipping Kaggle GPU worker."
+          if [ -z "$KAGGLE_API_TOKEN" ] && { [ -z "$KAGGLE_USERNAME" ] || [ -z "$KAGGLE_KEY" ]; }; then
+            echo "Kaggle secret not set; skipping Kaggle GPU worker."
             exit 0
           fi
-          python3 -m pip install -q kaggle
+          python3 -m pip install -q -U kaggle
           mkdir -p ~/.kaggle
-          printf '{"username":"%s","key":"%s"}\n' "$KAGGLE_USERNAME" "$KAGGLE_KEY" > ~/.kaggle/kaggle.json
-          chmod 600 ~/.kaggle/kaggle.json
-          python3 -c 'import os,pathlib; p=pathlib.Path("scripts/kaggle/kernel-metadata.json"); p.write_text(p.read_text().replace("__KAGGLE_USERNAME__", os.environ["KAGGLE_USERNAME"]))'
+          if [ -n "$KAGGLE_API_TOKEN" ]; then
+            printf '%s\n' "$KAGGLE_API_TOKEN" > ~/.kaggle/access_token
+            chmod 600 ~/.kaggle/access_token
+            if [ -z "$KAGGLE_USERNAME" ]; then
+              KAGGLE_USERNAME=$(python3 -c 'import json,os,urllib.request; req=urllib.request.Request("https://www.kaggle.com/api/v1/hello", headers={"Authorization":"Bearer "+os.environ["KAGGLE_API_TOKEN"]}); print(json.loads(urllib.request.urlopen(req).read())["userName"])')
+            fi
+          fi
+          if [ -n "$KAGGLE_USERNAME" ] && [ -n "$KAGGLE_KEY" ]; then
+            printf '{"username":"%s","key":"%s"}\n' "$KAGGLE_USERNAME" "$KAGGLE_KEY" > ~/.kaggle/kaggle.json
+            chmod 600 ~/.kaggle/kaggle.json
+          fi
+          KAGGLE_USERNAME="$KAGGLE_USERNAME" python3 -c 'import os,pathlib; p=pathlib.Path("scripts/kaggle/kernel-metadata.json"); p.write_text(p.read_text().replace("__KAGGLE_USERNAME__", os.environ["KAGGLE_USERNAME"]))'
           kaggle kernels push -p scripts/kaggle

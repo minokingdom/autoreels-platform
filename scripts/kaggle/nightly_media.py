@@ -201,6 +201,7 @@ def run_worker() -> None:
     diff = subprocess.run(["git", "-C", str(work_dir), "diff", "--cached", "--quiet"])
     if diff.returncode != 0:
         subprocess.run(["git", "-C", str(work_dir), "commit", "-m", f"chore(kaggle): nightly topics & 100 topic icons ({date_str})"], check=True)
+        subprocess.run(["git", "-C", str(work_dir), "pull", "--rebase", "origin", "main"], check=True)
         subprocess.run(["git", "-C", str(work_dir), "push", "origin", "main"], check=True)
         print("Pushed updated topics and icons to GitHub!")
     else:
