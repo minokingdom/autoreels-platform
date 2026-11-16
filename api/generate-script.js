@@ -388,6 +388,9 @@ async function handleTopics(body, res) {
   const events = (Array.isArray(dc.events) ? dc.events : []).slice(0, 6).map((e) => clip(e, 40)).filter(Boolean);
   const trends = (Array.isArray(body.trends) ? body.trends : []).slice(0, 8).map((t) => clip(t, 60)).filter(Boolean);
   const storeHint = clip(body.storeHint, 60);
+  const excludeTitles = Array.isArray(body.excludeTitles)
+    ? body.excludeTitles.map((x) => clip(x, 30)).filter(Boolean).slice(0, 12)
+    : [];
 
   const system = `당신은 대한민국 ${indName} 업종 사장님을 돕는 숏폼(릴스·쇼츠) 기획자입니다.
 오늘 날짜 정보와 요즘 인기 키워드를 보고, 오늘 올리기 좋은 영상 주제 6개를 고르세요.
@@ -402,7 +405,7 @@ JSON으로만 출력: {"topics":[{"title":"","why":"","prompt":""}]}`;
   const user = `[업종]: ${indName} / 화자: ${role}
 [오늘]: ${clip(dc.dateStr, 30)} ${clip(dc.weekday, 10)} · 계절 ${clip(dc.season, 10)}${dc.timeOfDay ? ` · ${clip(dc.timeOfDay, 10)}` : ''}
 [다가오는 날]: ${events.length ? events.join(', ') : '없음'}
-[요즘 인기 키워드·영상 제목]: ${trends.length ? trends.join(' / ') : '없음'}${storeHint ? `\n[가게 정보]: ${storeHint}` : ''}`;
+[요즘 인기 키워드·영상 제목]: ${trends.length ? trends.join(' / ') : '없음'}${storeHint ? `\n[가게 정보]: ${storeHint}` : ''}${excludeTitles.length ? `\n[이미 보여준 주제 (겹치지 않게 완전히 새로운 6개 추천)]: ${excludeTitles.join(', ')}` : ''}`;
 
   const tries = [];
 

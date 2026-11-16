@@ -157,6 +157,9 @@
       try {
         const d = typeof getSelectedDealer === 'function' ? getSelectedDealer() : null;
         const copy = d && typeof arDealerForCopy === 'function' ? arDealerForCopy(d) : null;
+        const prevTitles = force && Array.isArray(window.__arTopics)
+          ? window.__arTopics.map((t) => t && t.title).filter(Boolean).slice(0, 12)
+          : [];
         const res = await fetch('/api/generate-script', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -166,6 +169,8 @@
             industryInfo: { name: IND.name, role: IND.role, product: IND.product, aiRole: IND.aiRole },
             dateContext: dc,
             trends,
+            excludeTitles: prevTitles,
+            refreshNonce: force ? Date.now() : 0,
             storeHint: copy ? [copy.name, copy.branch].filter(Boolean).join(' ') : ''
           })
         }).then((r) => r.json());
