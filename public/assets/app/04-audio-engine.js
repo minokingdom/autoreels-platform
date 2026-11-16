@@ -333,9 +333,16 @@
 
         const resumed = ctx.state === 'running' ? Promise.resolve() : ctx.resume().catch(() => {});
 
-        // 내가 불러온 릴스·숏츠 MP3: 컨텍스트 재개 후 재생 (재개 전 재생 시 무음 방지)
+        // 내가 불러온 릴스·숏츠 MP3: 사용자 클릭 제스처 안에서 동기 play() 먼저 시도 후 컨텍스트 재개 폴백
         if (this.bgmStyle === 'custom_mp3' && this.customBgmAudioEl) {
-          resumed.then(() => this.customBgmAudioEl.play().catch(() => {}));
+          try {
+            const p = this.customBgmAudioEl.play();
+            if (p && typeof p.catch === 'function') {
+              p.catch(() => resumed.then(() => this.customBgmAudioEl.play().catch(() => {})));
+            }
+          } catch (e) {
+            resumed.then(() => this.customBgmAudioEl.play().catch(() => {}));
+          }
           return;
         }
 
@@ -1461,6 +1468,12 @@
         window.__arLyriaMap[presetId] = { id: presetId, label: data.label, url: data.url };
         AudioEngine.loadRemoteBgmUrl(data.url, data.label);
       } catch (err) {
+        if (String(presetId || '').startsWith('lyria_')) {
+          const shortId = String(presetId).slice(6).replace(/[^a-z0-9_-]/gi, '');
+          const meta = AR_BGM_META[presetId] || [];
+          AudioEngine.loadRemoteBgmUrl(`/assets/bgm/pack/${shortId}.mp3`, meta[1] || shortId);
+          return;
+        }
         if (st) {
           st.classList.remove('hidden');
           st.textContent = arFriendlyBgmError(err, true);
@@ -1817,7 +1830,12 @@
       if (!sel) return;
       const same = sel.value === id;
       sel.value = id;
-      if (!same) onAudioConfigChange();
+      const needsLoad = !same || (id !== 'off' && AudioEngine.bgmStyle !== 'custom_mp3' && AR_BGM_COVER_IDS.has(id.replace(/^(ace|lyria)_/, '')));
+      if (needsLoad) onAudioConfigChange();
+      else if (id !== 'off' && !AudioEngine.enabled) toggleAudioMaster(true);
+      else if (id !== 'off' && AudioEngine.bgmStyle === 'custom_mp3' && AudioEngine.customBgmAudioEl && AudioEngine.customBgmAudioEl.paused) {
+        AudioEngine.startBgmLoop();
+      }
       if (id !== 'off' && typeof seekToTime === 'function') {
         seekToTime(0);
         if (typeof isPlaying !== 'undefined' && !isPlaying && typeof togglePlayPause === 'function') togglePlayPause();

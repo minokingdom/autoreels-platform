@@ -113,7 +113,11 @@ module.exports = async function handler(req, res) {
   if (action === 'bgm-list') {
     if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'method_not_allowed' });
     const cachedMap = await listCachedBgmUrls();
-    const tracks = LYRIA_BGM_PACK.map((t) => ({ id: t.id, label: t.label, url: cachedMap[t.id] || null }));
+    const tracks = LYRIA_BGM_PACK.map((t) => ({
+      id: t.id,
+      label: t.label,
+      url: cachedMap[t.id] || `/assets/bgm/pack/${t.id.replace(/^lyria_/, '')}.mp3`
+    }));
     res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=300');
     return res.status(200).json({ ok: true, geminiReady: Boolean((process.env.GEMINI_API_KEY || '').trim()), tracks });
   }
