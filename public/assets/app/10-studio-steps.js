@@ -1376,6 +1376,7 @@
             topic: window.arTodayTopic || null,
             industry: IND.key,
             industryInfo: IND.key === 'auto' ? null : { name: IND.name },
+            themeInfo: arBuildThemeContextForImages(),
             captions: Array.isArray(captions) ? captions : (campaign.cutCaptions || []),
             count: Math.min(4, totalCuts),
             totalCuts,
@@ -1477,6 +1478,49 @@
       arFinishScriptApply(totalCuts);
     }
 
+    function arBuildThemeContextForImages() {
+      const ds = typeof getActiveDesign === 'function' ? getActiveDesign() : null;
+      const pal = typeof getActivePalette === 'function' ? getActivePalette() : null;
+      const dirTheme = (typeof DIRECTOR_THEMES !== 'undefined' && campaign && campaign.themeId) ? DIRECTOR_THEMES[campaign.themeId] : null;
+      return {
+        designName: ds ? (ds.name || ds.label || ds.id || '') : '',
+        designCat: ds ? (ds.cat || '') : '',
+        designBg: ds ? (ds.bg || '') : '',
+        designGrade: ds ? (ds.grade || '') : '',
+        designLayout: ds ? (ds.layout || '') : '',
+        accentColor: (pal && pal.accent) || (ds && ds.accent) || (dirTheme && dirTheme.accent) || '',
+        themeName: dirTheme ? (dirTheme.name || dirTheme.label || '') : ''
+      };
+    }
+
+    function arRegenerateThemeImages() {
+      const totalCuts = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
+      const tp = window.arTodayTopic;
+      const promptEl = document.getElementById('aiPromptInput');
+      const rawPrompt = (promptEl && promptEl.value || '').trim();
+      const topicText = (tp && tp.title) || rawPrompt || campaign.vehicle || IND.name;
+      campaign.isUserCustomPhotos = false;
+      const btn = document.getElementById('regenTopicImgBtn');
+      const th = arBuildThemeContextForImages();
+      if (btn) { btn.disabled = true; btn.textContent = '✨ 이미지 생성 중...'; }
+      if (typeof arToast === 'function') arToast(`[${topicText}] · [${th.designName || '기본'} / ${th.themeName || '테마'}] 맞춤 이미지를 만들고 있어요`);
+      Promise.resolve(arApplyTopicSceneImages({
+        prompt: topicText,
+        vehicle: campaign.vehicle,
+        topic: tp || null,
+        industry: IND.key,
+        industryInfo: IND.key === 'auto' ? null : { name: IND.name },
+        themeInfo: th,
+        captions: Array.isArray(campaign.cutCaptions) ? campaign.cutCaptions : [],
+        count: Math.min(4, totalCuts),
+        totalCuts,
+        adminGeminiKey: localStorage.getItem('autoreels_admin_gemini_key') || ''
+      })).finally(() => {
+        if (btn) { btn.disabled = false; btn.textContent = '✨ 주제·테마 맞춤 이미지'; }
+      });
+    }
+    if (typeof window !== 'undefined') window.arRegenerateThemeImages = arRegenerateThemeImages;
+
     async function arDownscaleSceneDataUrl(dataUrl) {
       return new Promise((resolve) => {
         const rawImg = new Image();
@@ -1561,8 +1605,9 @@
             for (let slot = idx; slot < totalCutsTarget; slot += prompts.length) {
               applySlotImage(slot, compactUrl, () => {
                 readyCount += 1;
-                if (noticeEl && readyCount >= totalCutsTarget) {
-                  noticeEl.textContent = `주제 [${payload.prompt}] 맞춤 대본·이미지(${prompts.length}컷)가 적용되었습니다.`;
+                if (readyCount === totalCutsTarget) {
+                  if (noticeEl) noticeEl.textContent = `주제 [${payload.prompt}] · 디자인 테마 맞춤 대본·이미지(${prompts.length}컷)가 적용되었습니다.`;
+                  if (typeof arToast === 'function') arToast('주제와 디자인 테마에 맞춘 이미지가 적용되었어요');
                 }
               });
             }

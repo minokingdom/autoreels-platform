@@ -908,7 +908,10 @@
                 <span id="photoSectionHeaderTitle" class="text-[13px] font-medium text-[#ededed]">컷별 사진 · 구도</span>
                 <p class="text-[12px] text-[#85858b] mt-0.5">컷마다 사진·영상을 바꾸고 화면 구도·카메라 움직임을 고르세요. 썸네일을 누르면 그 장면으로 이동합니다</p>
               </div>
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 flex-wrap">
+                <button type="button" id="regenTopicImgBtn" onclick="arRegenerateThemeImages()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer text-[#4cc38a] border-[#4cc38a]/40">
+                  ✨ 주제·테마 맞춤 이미지
+                </button>
                 <button data-advanced type="button" onclick="randomizeCurrentDealerVariation()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">
                   구도 섞기
                 </button>
@@ -2022,7 +2025,7 @@
         </div>
       </div>
     </div>
-  <script src="/assets/app/app.js?v=20261116h"></script>
+  <script src="/assets/app/app.js?v=20261116i"></script>
   <!--
     가독성 보정 (A단계, 2026-11-13)
     - Tailwind CDN 이 만드는 스타일보다 뒤에 오도록 body 끝에 둡니다.

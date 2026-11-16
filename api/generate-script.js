@@ -491,6 +491,16 @@ async function buildTopicScenePrompts(body, apiKey, count) {
   const topicText = String((body.topic && body.topic.title) || body.prompt || body.vehicle || '').trim();
   const captions = Array.isArray(body.captions) ? body.captions.slice(0, count).map((c) => String(c || '').trim()) : [];
   const indName = (body.industryInfo && body.industryInfo.name) ? String(body.industryInfo.name) : (body.industry || '비즈니스');
+  const th = body.themeInfo && typeof body.themeInfo === 'object' ? body.themeInfo : {};
+  const themeDesc = [
+    th.designName ? `Design Style: ${th.designName}` : '',
+    th.designCat ? `Mood Category: ${th.designCat}` : '',
+    th.designBg ? `Surface Tone: ${th.designBg}` : '',
+    th.designGrade ? `Color Grade: ${th.designGrade}` : '',
+    th.themeName ? `Theme: ${th.themeName}` : '',
+    th.accentColor ? `Accent Palette: ${th.accentColor}` : '',
+    th.designLayout ? `Layout: ${th.designLayout}` : ''
+  ].filter(Boolean).join(' | ');
   let prompts = [];
   try {
     const promptReq = {
@@ -500,13 +510,16 @@ async function buildTopicScenePrompts(body, apiKey, count) {
           text: `You are a commercial short-form video art director.
 Industry: ${indName}
 Topic / Product: ${topicText}
+Visual Design & Theme: ${themeDesc || 'Clean modern editorial Reels'}
 Cut captions (${count}): ${captions.join(' | ') || topicText}
 
-Return ONLY a JSON array of ${count} concise English photography prompts (one per cut) for vertical 9:16 Reels backgrounds that directly depict the topic "${topicText}".
-Rules: photorealistic editorial photography, natural lighting, shallow depth of field, NO text, NO typography, NO watermarks, NO logos, NO UI.`
+Return ONLY a JSON array of ${count} concise English photography prompts (one per cut) for vertical 9:16 Reels backgrounds that:
+1) Directly depict the topic "${topicText}" in real-world "${indName}" context, matching each cut caption.
+2) Visually harmonize with the active design & theme (${themeDesc || 'modern editorial'}) — match its background brightness (dark/moody vs bright/cream/pastel), color grading, and accent tone, and leave clean uncluttered space for overlay Korean text.
+Rules: cohesive visual series across all ${count} cuts, photorealistic editorial photography, natural lighting, shallow depth of field, NO text, NO typography, NO watermarks, NO logos, NO UI.`
         }]
       }],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 700, responseMimeType: 'application/json' }
+      generationConfig: { temperature: 0.7, maxOutputTokens: 900, responseMimeType: 'application/json' }
     };
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
       method: 'POST',
@@ -522,8 +535,9 @@ Rules: photorealistic editorial photography, natural lighting, shallow depth of 
     }
   } catch (e) {}
   if (!prompts.length) {
+    const toneHint = themeDesc ? `, harmonized with ${themeDesc}` : '';
     prompts = Array.from({ length: count }, (_, i) => (
-      `Vertical 9:16 editorial commercial photography for "${topicText}" (${indName}), scene ${i + 1}, crisp natural lighting, photorealistic, no text, no watermark, no logos`
+      `Vertical 9:16 editorial commercial photography for "${topicText}" (${indName})${toneHint}, scene ${i + 1}, crisp lighting, clean space for typography, photorealistic, no text, no watermark, no logos`
     ));
   }
   return prompts;
