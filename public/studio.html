@@ -1446,16 +1446,10 @@
       </div>
     </section>
 
-    <!-- 하단 푸터 (본사 관리자 로그인 진입점) -->
+    <!-- 하단 푸터 -->
     <footer class="mt-12 pt-6 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#6e6e73]">
       <div>
         © 2026 AutoReels Studio
-      </div>
-      <div class="flex items-center gap-4">
-        <button type="button" onclick="openAdminAuthModal()" class="text-[#6e6e73] hover:text-[#fbbf24] transition-colors flex items-center gap-1.5 cursor-pointer">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-          본사 관리자 콘솔 🔒
-        </button>
       </div>
     </footer>
 
@@ -2025,6 +2019,21 @@
           </div>
         </details>
       </div>
+
+      <!-- 4. 본사 관리자 콘솔 (평소에는 숨김, 설정 내에서만 진입) -->
+      <details class="studio-sub fold">
+        <summary class="p-3 flex items-center justify-between text-[12px] text-[#85858b] cursor-pointer">
+          <span>운영 · 본사 관리</span>
+          <span class="text-[11px] text-[#6e6e73]">열기</span>
+        </summary>
+        <div class="px-3 pb-3 flex items-center justify-between gap-3">
+          <span class="text-[11.5px] text-[#85858b]">본사 관리자 인증 후 전체 관리 콘솔을 엽니다.</span>
+          <button type="button" onclick="closeStudioSettingsModal(); toggleRoleViewMode();" class="btn-secondary h-8 px-3 text-[12px] text-[#a1a1a6] hover:text-[#fbbf24] flex items-center gap-1.5 cursor-pointer shrink-0">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            본사 관리자 콘솔 🔒
+          </button>
+        </div>
+      </details>
     </div>
   </div>
   <div id="arLegalModal" class="hidden fixed inset-0 z-50 flex ar-modal" onclick="if(event.target===this)closeArLegalModal()">
