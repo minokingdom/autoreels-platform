@@ -1,4 +1,5 @@
 # 매일 한국 시간 새벽 4시(UTC 19시)에 업종별 인기 키워드를 받아 public/trends-today.json 으로 저장·배포
+# + KAGGLE_USERNAME / KAGGLE_KEY 시크릿이 있으면 PC가 꺼져 있어도 캐글 무료 GPU 노트북을 자동 실행
 name: refresh-trends
 on:
   schedule:
@@ -15,7 +16,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: node scripts/refresh-trends.mjs
+      - name: Install treg CLI (when TREG_TOKEN is configured)
+        if: ${{ secrets.TREG_TOKEN != '' }}
+        run: |
+          curl -fsSL https://treg.to/install.sh | sh -s -- --token "${{ secrets.TREG_TOKEN }}"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Refresh daily trends
+        run: |
+          if [ -n "${{ secrets.TREG_TOKEN }}" ]; then
+            node scripts/refresh-trends.mjs --treg
+          else
+            node scripts/refresh-trends.mjs
+          fi
         env:
           KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
           KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
@@ -29,3 +41,12 @@ jobs:
           git add public/trends-today.json
           git commit -m "chore: 오늘의 인기 키워드 갱신"
           git push
+      - name: Trigger Kaggle GPU nightly media worker (optional)
+        if: ${{ secrets.KAGGLE_USERNAME != '' && secrets.KAGGLE_KEY != '' }}
+        run: |
+          python3 -m pip install -q kaggle
+          mkdir -p ~/.kaggle
+          printf '{"username":"%s","key":"%s"}\n' "${{ secrets.KAGGLE_USERNAME }}" "${{ secrets.KAGGLE_KEY }}" > ~/.kaggle/kaggle.json
+          chmod 600 ~/.kaggle/kaggle.json
+          sed -i 's/__KAGGLE_USERNAME__/${{ secrets.KAGGLE_USERNAME }}/g' scripts/kaggle/kernel-metadata.json
+          kaggle kernels push -p scripts/kaggle
