@@ -228,12 +228,48 @@
       const seq = base.slice(k).concat(base.slice(0, k));
       return seq[(i - 1) % 3];
     }
+    // ★ 컷마다 카메라 움직임도 다르게 (천천히 다가가기·물러나기·옆으로 흐르기·위로 올려 보기)
+    //   같은 디자인이라도 컷이 바뀔 때마다 화면의 '호흡'이 달라져 단조롭지 않게.
+    function arCutCamera(design, i) {
+      if (!design || i < 0) return null;
+      let h = 7;
+      String(design.id || '').split('').forEach((ch) => { h = (h * 33 + ch.charCodeAt(0)) >>> 0; });
+      const moves = ['in', 'panR', 'out', 'panL', 'up'];
+      return moves[(i + h) % moves.length];
+    }
+    function arApplyCamera(move, w, h, scale, px, py) {
+      const p = Math.max(0, Math.min(1, window.__arCutProg || 0));
+      const q = p * p * (3 - 2 * p);
+      if (move === 'in') return [scale * (1 + 0.09 * q), px, py];
+      if (move === 'out') return [scale * (1.1 - 0.09 * q), px, py];
+      if (move === 'panR') return [scale * 1.1, px + w * 0.045 * (q * 2 - 1), py];
+      if (move === 'panL') return [scale * 1.1, px - w * 0.045 * (q * 2 - 1), py];
+      if (move === 'up') return [scale * 1.1, px, py + h * 0.03 * (1 - q * 2)];
+      return [scale, px, py];
+    }
     function arDrawComposition(c, img, variant, x, y, w, h, scale, px, py) {
       if (variant === 'zoom') { kitCover(c, img, x, y, w, h, scale * 1.38, px, py - h * 0.04); return; }
       if (variant === 'split') {
         const photos = (typeof campaign !== 'undefined' && campaign.uploadedPhotos) || [];
+        // 옆 칸에는 지금 사진과 '다른' 사진 (같은 사진이 두 번 나오지 않게)
+        // 견본 사진 중 파일 이름만 다르고 내용이 같은 사진이 있어, 작게 줄인 픽셀로 같은 사진인지 판단
+        const key = (im) => {
+          if (!im) return im;
+          if (im._arSig) return im._arSig;
+          try {
+            if (im._isVideo) return (im._arSig = im.currentSrc || im.src || im);
+            const cv = document.createElement('canvas'); cv.width = 8; cv.height = 8;
+            const g = cv.getContext('2d'); g.drawImage(im, 0, 0, 8, 8);
+            const d = g.getImageData(0, 0, 8, 8).data;
+            let sig = '';
+            for (let q = 0; q < d.length; q += 4) sig += ((d[q] + d[q + 1] + d[q + 2]) >> 5).toString(32);
+            im._arSig = sig;
+          } catch (err) { im._arSig = im.currentSrc || im.src || String(Math.random()); }
+          return im._arSig;
+        };
+        const others = photos.filter((ph) => ph && key(ph) !== key(img));
         const at = photos.indexOf(img);
-        const other = photos.length > 1 ? photos[((at < 0 ? 0 : at) + 1) % photos.length] : img;
+        const other = others.length ? others[(Math.max(0, at) + Math.max(0, window.__arActiveRenderCutIdx || 0)) % others.length] : img;
         const gap = Math.round(w * 0.006);
         const hw = (w - gap) / 2;
         c.save(); c.fillStyle = '#0b0b0d'; c.fillRect(x, y, w, h); c.restore();
@@ -266,6 +302,8 @@
       const sh = img.videoHeight || img.naturalHeight || img.height;
       if (!sw || !sh) return;
       const vr = window.__arCompVariant;
+      const fullCanvas = c.canvas && Math.abs(x) < 2 && Math.abs(y) < 2 && w >= c.canvas.width - 2 && h >= c.canvas.height - 2;
+      if (fullCanvas && window.__arCutCam && !window.__arCompBusy) [scale, px, py] = arApplyCamera(window.__arCutCam, w, h, scale, px, py);
       if (vr && vr !== 'full' && !window.__arCompBusy && c.canvas && Math.abs(x) < 2 && Math.abs(y) < 2 && w >= c.canvas.width - 2 && h >= c.canvas.height - 2) {
         window.__arCompBusy = true;
         try { arDrawComposition(c, img, vr, x, y, w, h, scale, px, py); } finally { window.__arCompBusy = false; }
