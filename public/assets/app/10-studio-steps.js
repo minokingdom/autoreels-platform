@@ -216,10 +216,19 @@
         try {
           const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
           if (cached && Array.isArray(cached.topics) && cached.topics.length && (!serverUpdatedAt || cached.trendsAt === serverUpdatedAt)) {
-            arRenderTopics(cached.topics, '오늘의 추천 주제예요. 마음에 드는 게 없으면 [다른 주제 보기]를 눌러 보세요.', false, { hydrate: true, cacheKey, serverUpdatedAt });
+            arRenderTopics(cached.topics, '오늘의 추천 주제예요. 마음에 드는 게 없으면 [다른 주제 보기]를 눌러 보세요.', false);
             return;
           }
         } catch (e) {}
+        // 서버(trends-today.json)에 미리 제작된 주제·이미지가 있으면 추가 AI 과금 없이 즉시 표시
+        const serverTopics = pre && pre.industries && pre.industries[IND.key] && Array.isArray(pre.industries[IND.key].topics)
+          ? pre.industries[IND.key].topics
+          : null;
+        if (serverTopics && serverTopics.length) {
+          try { localStorage.setItem(cacheKey, JSON.stringify({ topics: serverTopics, at: Date.now(), trendsAt: serverUpdatedAt })); } catch (e) {}
+          arRenderTopics(serverTopics, '오늘 날짜와 요즘 인기 키워드로 준비한 주제예요. 하나를 누르면 대본을 바로 만들어요.', false);
+          return;
+        }
       }
       // 먼저 기본 주제를 바로 보여 주고, AI 추천이 오면 바꿈
       const myJob = ++arTopicsLoading;
@@ -258,7 +267,7 @@
         if (myJob !== arTopicsLoading) return;
         if (res && res.ok && Array.isArray(res.topics) && res.topics.length) {
           try { localStorage.setItem(cacheKey, JSON.stringify({ topics: res.topics, at: Date.now(), trendsAt: serverUpdatedAt })); } catch (e) {}
-          arRenderTopics(res.topics, `오늘 날짜${trends.length ? '와 요즘 인기 키워드' : ''}로 고른 주제예요. 하나를 누르면 대본을 바로 만들어요.`, false, { hydrate: true, cacheKey, serverUpdatedAt });
+          arRenderTopics(res.topics, `오늘 날짜${trends.length ? '와 요즘 인기 키워드' : ''}로 고른 주제예요. 하나를 누르면 대본을 바로 만들어요.`, false);
           return;
         }
       } catch (e) {}
@@ -1446,20 +1455,11 @@
         noticeEl.textContent = `중앙 AI 엔진이 [${raw || campaign.vehicle}] 맞춤 ${totalCuts}컷 영상 대본·성우 음성·카톡 대화를 생성 중입니다...`;
       }
 
-      const triggerTopicImages = (captions) => {
-        if (!campaign.isUserCustomPhotos && (raw || (window.arTodayTopic && window.arTodayTopic.title))) {
-          arApplyTopicSceneImages({
-            prompt: raw || (window.arTodayTopic && window.arTodayTopic.title) || campaign.vehicle,
-            vehicle: campaign.vehicle,
-            topic: window.arTodayTopic || null,
-            industry: IND.key,
-            industryInfo: IND.key === 'auto' ? null : { name: IND.name },
-            themeInfo: arBuildThemeContextForImages(),
-            captions: Array.isArray(captions) ? captions : (campaign.cutCaptions || []),
-            count: Math.min(4, totalCuts),
-            totalCuts,
-            adminGeminiKey: localStorage.getItem('autoreels_admin_gemini_key') || ''
-          });
+      const triggerTopicImages = () => {
+        // 고객 클릭마다 유료 이미지 API가 자동 과금되지 않도록, 사전 제작 이미지(/assets/scenes, /assets/topics)를 0원으로 매칭하고
+        // 필요 시 [3 사진] 탭의 '✨ 주제·테마 맞춤 이미지' 버튼으로만 직접 생성
+        if (!campaign.isUserCustomPhotos && typeof arMatchPhotosToCaptions === 'function') {
+          try { arMatchPhotosToCaptions(); } catch (e) {}
         }
       };
 
