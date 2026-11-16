@@ -1703,8 +1703,16 @@
       if (!sel) return [];
       return [...sel.options].filter((o) => !o.classList.contains('hidden')).map((o) => ({ id: o.value, name: o.textContent.trim() }));
     }
+    const AR_BGM_COVER_IDS = new Set([
+      'showroom', 'cafe', 'restaurant', 'beauty', 'fitness',
+      'realestate', 'academy', 'clinic', 'shop', 'interior'
+    ]);
     function arBgmCover(id, size) {
       const m = AR_BGM_META[id] || ['', '', '#3f3f46', '#18181b'];
+      const packId = String(id || '').replace(/^(ace|lyria)_/, '');
+      if (AR_BGM_COVER_IDS.has(packId)) {
+        return `<span class="bgm-cover overflow-hidden" style="width:${size}px;height:${size}px;background:linear-gradient(135deg, ${m[2]}, ${m[3]})"><img src="/assets/bgm/pack/${packId}.jpg" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit" onerror="this.remove()" /></span>`;
+      }
       return `<span class="bgm-cover" style="width:${size}px;height:${size}px;background:linear-gradient(135deg, ${m[2]}, ${m[3]})">${id === 'off' ? '✕' : '♪'}</span>`;
     }
     function renderBgmRecommendations() {
