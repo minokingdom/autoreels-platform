@@ -544,6 +544,34 @@ ${instruction}`
       if (Array.isArray(parsed)) prompts = parsed.map((s) => String(s || '').trim()).filter(Boolean).slice(0, count);
     }
   } catch (e) {}
+  if (!prompts.length && process.env.KIE_API_KEY) {
+    try {
+      const kieModel = String(process.env.KIE_SCRIPT_MODEL || 'gemini-4-hydrogen-openai').split(',')[0].trim();
+      const kr = await fetch(`https://api.kie.ai/${encodeURIComponent(kieModel)}/v1/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.KIE_API_KEY}` },
+        signal: AbortSignal.timeout(20000),
+        body: JSON.stringify({
+          stream: true,
+          reasoning_effort: 'low',
+          messages: [{
+            role: 'user',
+            content: [{
+              type: 'text',
+              text: isIcon && topicsList.length
+                ? `Industry: ${indName}\nTopics:\n${topicsList.map((t, i) => `${i + 1}. ${t.title || ''} (${t.why || ''})`).join('\n')}\nOutput ONLY a JSON array of ${topicsList.length} vivid English 1:1 visual object/scene photography prompts (no Korean text, no portrait headshots unless necessary, no text/letters/watermarks).`
+                : `Industry: ${indName}, Topic: ${topicText}, Captions: ${captions.join(' | ')}\nOutput ONLY a JSON array of ${count} English 9:16 photography prompts (no Korean text, no text/watermarks).`
+            }]
+          }]
+        })
+      });
+      if (kr.ok) {
+        const { text } = await readKieStream(kr);
+        const parsed = parseJsonLoose(text);
+        if (Array.isArray(parsed)) prompts = parsed.map((s) => String(s || '').trim()).filter(Boolean).slice(0, count);
+      }
+    } catch (e) {}
+  }
   if (!prompts.length) {
     const toneHint = themeDesc ? `, harmonized with ${themeDesc}` : '';
     if (isIcon && topicsList.length) {
