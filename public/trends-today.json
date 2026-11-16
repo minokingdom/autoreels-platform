@@ -13,6 +13,68 @@
     "🚗 신차 출고 대기기간 TOP7! EV5·쏘렌토 무려 8개월? 😱 | 2026년 11월",
     "🚘 좋아요 누르고 함께 행운받아가세요 7777?! 이런 행운이🔥 #현대자동차 #신차출고 #7777",
     "현대 그랜저 7일 출고!ㅣ올라타 강력 추천차량!"
+   ],
+   "topics": [
+    {
+     "title": "그랜저 일주일 만에 타기",
+     "why": "월요일 빠른 출고 수요",
+     "prompt": "오래 기다리기 지친 고객에게 일주일 만에 출고되는 그랜저로 바로 해결",
+     "iconUrl": "/assets/topics/auto/1.jpg"
+    },
+    {
+     "title": "11월 신차 대기기간 정리",
+     "why": "쏘렌토 등 대기기간 관심",
+     "prompt": "차 언제 나오나 답답한 고객에게 11월 기준 대기기간과 빠른 대안 안내",
+     "iconUrl": "/assets/topics/auto/2.jpg"
+    },
+    {
+     "title": "초기비용 부담 줄이는 법",
+     "why": "연말 앞두고 자금 부담",
+     "prompt": "목돈 쓰기 부담스러운 고객에게 초기비용 낮춘 장기렌트로 해결",
+     "iconUrl": "/assets/topics/auto/3.jpg"
+    },
+    {
+     "title": "신차 출고 전 필수 검수",
+     "why": "내 차 하자 걱정 해소",
+     "prompt": "혹시 불량일까 걱정하는 고객에게 꼼꼼한 신차 검수 과정으로 안심 제공",
+     "iconUrl": "/assets/topics/auto/4.jpg"
+    },
+    {
+     "title": "가을철 타이어 공기압 체크",
+     "why": "일교차 큰 가을 안전운전",
+     "prompt": "기온 떨어져 경고등 뜬 고객에게 간단한 공기압 관리 팁으로 안전 확보",
+     "iconUrl": "/assets/topics/auto/5.jpg"
+    },
+    {
+     "title": "할부와 장기렌트 차이점",
+     "why": "구매 방식 고민하는 고객",
+     "prompt": "어떤 게 유리할지 헷갈리는 고객에게 상황별 맞춤 구매 방식 비교",
+     "iconUrl": "/assets/topics/auto/6.jpg"
+    },
+    {
+     "title": "7인승 전기 SUV 출고기",
+     "why": "대형 패밀리카 수요 증가",
+     "prompt": "가족과 넓고 조용하게 타고 싶은 고객에게 아이오닉9 출고 사례 공유",
+     "iconUrl": "/assets/topics/auto/7.jpg"
+    },
+    {
+     "title": "11월 즉시출고 물량 안내",
+     "why": "월요일 선착순 물량 확인",
+     "prompt": "올해 안에 차 받고 싶은 고객에게 대기 없는 즉시출고 차량 연결",
+     "iconUrl": "/assets/topics/auto/8.jpg"
+    },
+    {
+     "title": "뚜벅이 탈출 첫차 아반떼",
+     "why": "사회초년생 첫차 구매 고민",
+     "prompt": "출퇴근 지친 사회초년생에게 부담 적은 아반떼로 편한 이동 선물",
+     "iconUrl": "/assets/topics/auto/9.jpg"
+    },
+    {
+     "title": "가을 나들이엔 역시 카니발",
+     "why": "가을 가족 여행 차량 수요",
+     "prompt": "짐 많고 인원 많은 가을 여행을 넉넉한 카니발로 편하게 떠나기",
+     "iconUrl": "/assets/topics/auto/10.jpg"
+    }
    ]
   },
   "restaurant": {
@@ -26,6 +88,68 @@
     "대구 웨이팅 맛집 TOP 14 (테이블링 8월 2일 기준)",
     "맛집 웨이팅 1시간, 돈 내면 먼저 들어가는 일본 식당",
     "1시간 달려왔는데… 식당 크기부터 압도적오픈과 동시에 웨이팅 생기는 곳 운정점 #산들해밥상"
+   ],
+   "topics": [
+    {
+     "title": "월요병 날리는 오늘의 추천",
+     "why": "월요일 점심 메뉴 고민",
+     "prompt": "월요일이라 지친 직장인, 든든한 우리 시그니처 메뉴로 힘내기",
+     "iconUrl": "/assets/topics/restaurant/1.jpg"
+    },
+    {
+     "title": "가을 끝자락 따뜻한 한 끼",
+     "why": "11월 중순 쌀쌀한 날씨",
+     "prompt": "날씨가 추워지니 따뜻한 밥 생각이 간절할 때 우리 가게 대표 메뉴",
+     "iconUrl": "/assets/topics/restaurant/2.jpg"
+    },
+    {
+     "title": "웨이팅 없이 즐기는 꿀팁",
+     "why": "요즘 웨이팅 맛집 인기",
+     "prompt": "줄 서기 싫어하는 손님, 웨이팅 피해서 편하게 시그니처 메뉴 먹는 시간대",
+     "iconUrl": "/assets/topics/restaurant/3.jpg"
+    },
+    {
+     "title": "재료 손질부터 조리까지",
+     "why": "음식에 대한 신뢰감 형성",
+     "prompt": "깨끗하고 정성스런 음식을 원할 때, 매일 아침 직접 만드는 시그니처 메뉴",
+     "iconUrl": "/assets/topics/restaurant/4.jpg"
+    },
+    {
+     "title": "집에서 따라하는 맛있게 먹기",
+     "why": "단골들이 자주 묻는 팁",
+     "prompt": "우리 메뉴를 더 맛있게 즐기고 싶은 손님께 사장님이 알려주는 조합",
+     "iconUrl": "/assets/topics/restaurant/5.jpg"
+    },
+    {
+     "title": "가게 오픈 전후 비포애프터",
+     "why": "분주한 맛집 분위기 전달",
+     "prompt": "손님 맞을 준비로 바쁜 주방, 곧 꽉 찰 홀을 보며 시그니처 메뉴 기대감",
+     "iconUrl": "/assets/topics/restaurant/6.jpg"
+    },
+    {
+     "title": "자주 묻는 주차·예약 질문",
+     "why": "방문 전 궁금증 해결",
+     "prompt": "처음 오는 손님의 주차와 웨이팅 걱정, 편하게 방문해 시그니처 메뉴 즐기기",
+     "iconUrl": "/assets/topics/restaurant/7.jpg"
+    },
+    {
+     "title": "단골이 극찬한 숨은 맛",
+     "why": "실제 손님 반응 공유",
+     "prompt": "웨이팅 맛집 찾아다니는 손님, 단골이 인정한 우리 시그니처 메뉴 맛보기",
+     "iconUrl": "/assets/topics/restaurant/8.jpg"
+    },
+    {
+     "title": "평일 점심 타임특가 안내",
+     "why": "월요일 점심 방문 유도",
+     "prompt": "월요일 점심 가성비 좋은 한 끼가 필요할 때, 할인된 가격으로 시그니처 메뉴",
+     "iconUrl": "/assets/topics/restaurant/9.jpg"
+    },
+    {
+     "title": "이번 주 방문 이벤트 예고",
+     "why": "주초 매장 관심도 높이기",
+     "prompt": "이번 주 외식 계획 세우는 손님, 소소한 혜택과 함께 시그니처 메뉴 즐기기",
+     "iconUrl": "/assets/topics/restaurant/10.jpg"
+    }
    ]
   },
   "cafe": {
@@ -39,6 +163,68 @@
     "오픈한 지 한 달된 현재 가장 Hot한 신상 카페",
     "부산 해운대 신상 카페! 디저트 비주얼이 끝내주고 오션뷰와 함께 할 수 있는 아틀리에 스미",
     "밥값보다 비싼 먹방코스 #성수동디저트 #성수동데이트 #성수카페"
+   ],
+   "topics": [
+    {
+     "title": "월요병 깨는 모닝커피",
+     "why": "월요일 출근길 피로",
+     "prompt": "월요일 아침 졸리고 피곤한 직장인에게 갓 내린 커피 한 잔으로",
+     "iconUrl": "/assets/topics/cafe/1.jpg"
+    },
+    {
+     "title": "가을 한정 디저트 소개",
+     "why": "가을 시즌 메뉴 수요",
+     "prompt": "쌀쌀한 가을 바람에 달콤한 게 당길 때 제철 디저트로",
+     "iconUrl": "/assets/topics/cafe/2.jpg"
+    },
+    {
+     "title": "디저트 굽는 과정 공개",
+     "why": "신선함 강조",
+     "prompt": "갓 구운 빵 냄새가 그리운 오후에 따뜻한 디저트 굽는 모습으로",
+     "iconUrl": "/assets/topics/cafe/3.jpg"
+    },
+    {
+     "title": "커피 맛있게 마시는 팁",
+     "why": "홈카페 관심 증가",
+     "prompt": "집에서도 맛있는 커피를 마시고 싶은 손님에게 원두 보관 팁으로",
+     "iconUrl": "/assets/topics/cafe/4.jpg"
+    },
+    {
+     "title": "요즘 뜨는 분좋카 감성",
+     "why": "신상·감성 카페 인기",
+     "prompt": "예쁜 공간에서 사진 찍고 쉬고 싶은 손님에게 우리 매장 분위기로",
+     "iconUrl": "/assets/topics/cafe/5.jpg"
+    },
+    {
+     "title": "원두 로스팅 전후 비교",
+     "why": "재료 진정성 어필",
+     "prompt": "커피 맛이 다 거기서 거기라 느끼는 손님에게 로스팅 전후 차이로",
+     "iconUrl": "/assets/topics/cafe/6.jpg"
+    },
+    {
+     "title": "자주 묻는 디카페인 질문",
+     "why": "오후 카페인 부담",
+     "prompt": "늦은 오후 커피는 마시고 싶지만 잠 못 잘까 걱정될 때 디카페인으로",
+     "iconUrl": "/assets/topics/cafe/7.jpg"
+    },
+    {
+     "title": "단골이 매일 찾는 메뉴",
+     "why": "실제 인기 메뉴 궁금증",
+     "prompt": "뭐 마실지 고민되는 손님에게 단골들이 가장 많이 찾는 메뉴로",
+     "iconUrl": "/assets/topics/cafe/8.jpg"
+    },
+    {
+     "title": "오후 타임 디저트 할인",
+     "why": "오후 간식 시간대",
+     "prompt": "오후에 당 떨어지고 출출한 손님에게 부담 없는 타임 특가로",
+     "iconUrl": "/assets/topics/cafe/9.jpg"
+    },
+    {
+     "title": "비 오는 날 창가 자리",
+     "why": "가을 날씨 감성 자극",
+     "prompt": "조용히 책 읽거나 쉬고 싶은 날에 아늑한 창가 자리와 따뜻한 음료로",
+     "iconUrl": "/assets/topics/cafe/10.jpg"
+    }
    ]
   },
   "beauty": {
@@ -127,6 +313,68 @@
     "신혼부부 전세 vs 월세, 어떤 선택을 할까요? #부동산투자 #내집마련 #투자",
     "신혼부부의 서울 내 집 마련기 | 1편. 대기업 직장인 부부의 신혼집(현실편)",
     "신축 전세 들어간 신혼부부 최후"
+   ],
+   "topics": [
+    {
+     "title": "신혼집 월세 vs 전세 vs 매매",
+     "why": "신혼집 고민 많은 요즘 인기 주제",
+     "prompt": "결혼 준비로 집 구할 때 월세, 전세, 매매 중 뭘 골라야 할지 막막한 신혼부부에게 딱 맞는 매물과 기준을 알려줌",
+     "iconUrl": "/assets/topics/realestate/1.jpg"
+    },
+    {
+     "title": "월요일 급매물 먼저 보기",
+     "why": "한 주 시작하며 좋은 집 찾는 수요",
+     "prompt": "주말 사이 나온 따끈한 급매물을 월요일 아침에 남들보다 먼저 보고 계약할 수 있게 도와줌",
+     "iconUrl": "/assets/topics/realestate/2.jpg"
+    },
+    {
+     "title": "가을 이사철 체크리스트",
+     "why": "가을 이사 성수기 실수 방지 팁",
+     "prompt": "가을 이사철을 맞아 집 보러 다닐 때 놓치기 쉬운 하자와 체크사항을 꼼꼼히 짚어줘서 안전한 계약을 도움",
+     "iconUrl": "/assets/topics/realestate/3.jpg"
+    },
+    {
+     "title": "신축 전세 들어가기 전 주의점",
+     "why": "신축 전세 관련 인기 영상 활용",
+     "prompt": "신축 전세 들어갔다가 낭패 볼까 봐 걱정하는 신혼부부에게 등기부등본과 보증보험 확인법을 알려줌",
+     "iconUrl": "/assets/topics/realestate/4.jpg"
+    },
+    {
+     "title": "중개사가 집 보러 가는 과정",
+     "why": "현장 임장 과정으로 신뢰감 형성",
+     "prompt": "손님 대신 직접 발품 팔아 채광과 주변 소음까지 꼼꼼히 확인하는 공인중개사의 현장 답사 과정을 보여줌",
+     "iconUrl": "/assets/topics/realestate/5.jpg"
+    },
+    {
+     "title": "1억으로 내 집 마련 가능할까",
+     "why": "소액 내 집 마련 인기 키워드 활용",
+     "prompt": "적은 종잣돈으로 내 집 마련을 꿈꾸는 직장인 부부에게 현실적인 대출 활용과 추천 매물 조건을 설명해줌",
+     "iconUrl": "/assets/topics/realestate/6.jpg"
+    },
+    {
+     "title": "전세 사기 피하는 3가지 질문",
+     "why": "손님들이 가장 자주 묻는 안전 질문",
+     "prompt": "전세 계약이 무서운 사회초년생과 신혼부부가 집주인에게 꼭 물어봐야 할 핵심 질문을 정리해줌",
+     "iconUrl": "/assets/topics/realestate/7.jpg"
+    },
+    {
+     "title": "구축 아파트 인테리어 전후",
+     "why": "가성비 구축 매물 관심 유도",
+     "prompt": "낡아서 망설여지던 구축 아파트가 깔끔한 수리 후 어떻게 변하는지 보여주며 가성비 매물의 매력을 전달함",
+     "iconUrl": "/assets/topics/realestate/8.jpg"
+    },
+    {
+     "title": "신혼부부 고객 실제 계약 후기",
+     "why": "비슷한 조건 손님들의 공감대 형성",
+     "prompt": "예산 때문에 고민하던 신혼부부가 중개사의 추천으로 딱 맞는 직주근접 신혼집을 구해 만족한 이야기를 들려줌",
+     "iconUrl": "/assets/topics/realestate/9.jpg"
+    },
+    {
+     "title": "이번 주 마감 임박 추천 매물",
+     "why": "좋은 조건 매물 빠른 문의 유도",
+     "prompt": "조건이 좋아 금방 나갈 것 같은 이번 주 추천 매물을 소개해 집 구하는 손님이 놓치지 않게 안내함",
+     "iconUrl": "/assets/topics/realestate/10.jpg"
+    }
    ]
   },
   "academy": {
@@ -140,6 +388,68 @@
     "분당청솔 수학전문관 등급올리기 #shortvideo #shrots #수학 #공부법",
     "상위 1% 공부법?? 제발 혼자 보세요",
     "정말로 학원 안 다니고 1등 하는 애들 이렇게 한다 #공부법 #효율성"
+   ],
+   "topics": [
+    {
+     "title": "월요일 공부 루틴 잡기",
+     "why": "월요일 한 주 계획 세우는 날",
+     "prompt": "월요일마다 흐트러지는 공부 습관, 우리 학원 관리 시스템으로 한 주를 단단하게 잡아요.",
+     "iconUrl": "/assets/topics/academy/1.jpg"
+    },
+    {
+     "title": "숙제 많이 내는 진짜 이유",
+     "why": "인기 키워드 '숙제 이유' 활용",
+     "prompt": "숙제가 많다고 불평하는 아이와 부모님께 우리 학원의 꼼꼼한 복습 커리큘럼을 설명해요.",
+     "iconUrl": "/assets/topics/academy/2.jpg"
+    },
+    {
+     "title": "자습이 위험한 이유",
+     "why": "인기 키워드 '자습 위험' 활용",
+     "prompt": "혼자 공부하다 잘못된 습관이 드는 아이들에게 우리 학원 선생님의 밀착 피드백을 전해요.",
+     "iconUrl": "/assets/topics/academy/3.jpg"
+    },
+    {
+     "title": "시험 실수 줄이는 법",
+     "why": "인기 키워드 '시험 실수' 활용",
+     "prompt": "아는 문제도 틀려 속상한 학생들에게 우리 학원의 오답 노트 관리법을 알려줘요.",
+     "iconUrl": "/assets/topics/academy/4.jpg"
+    },
+    {
+     "title": "가을 끝자락 성적 점검",
+     "why": "늦가을 기말고사 대비 시기",
+     "prompt": "기말고사가 다가오며 불안한 학생들에게 우리 학원의 맞춤형 내신 대비 수업을 소개해요.",
+     "iconUrl": "/assets/topics/academy/5.jpg"
+    },
+    {
+     "title": "등급 올리는 가장 쉬운 법",
+     "why": "인기 키워드 '등급 올리기' 활용",
+     "prompt": "성적이 정체되어 답답한 학생들에게 우리 학원의 핵심 개념 정리 수업을 추천해요.",
+     "iconUrl": "/assets/topics/academy/6.jpg"
+    },
+    {
+     "title": "원장님의 수업 준비 과정",
+     "why": "수업의 진정성 보여주기",
+     "prompt": "아이들 성적을 올리고 싶은 마음, 매일 밤늦게까지 연구하는 원장님의 교재 준비 과정이에요.",
+     "iconUrl": "/assets/topics/academy/7.jpg"
+    },
+    {
+     "title": "상위 1%의 공부 습관",
+     "why": "인기 키워드 '상위 1%' 활용",
+     "prompt": "성적을 올리고 싶은 학생들에게 우리 학원 우수생들이 실제로 쓰는 공부법을 공유해요.",
+     "iconUrl": "/assets/topics/academy/8.jpg"
+    },
+    {
+     "title": "학원 안 다니고 1등?",
+     "why": "인기 키워드 '독학' 반박",
+     "prompt": "혼자서도 잘할 수 있을지 고민하는 학부모님께 우리 학원만의 체계적인 로드맵을 보여드려요.",
+     "iconUrl": "/assets/topics/academy/9.jpg"
+    },
+    {
+     "title": "신규생 상담 마감 안내",
+     "why": "월요일 주간 상담 예약 유도",
+     "prompt": "새 학기 전 성적을 올리고 싶은 분들을 위해 이번 주 원장님 직접 상담 일정을 안내해요.",
+     "iconUrl": "/assets/topics/academy/10.jpg"
+    }
    ]
   },
   "clinic": {
@@ -153,6 +463,68 @@
     "집에서 관리하는 건조한 피부",
     "관리가 편안하셨나요~? #끗한의원 #구디피부과 #리프팅효과 #구로피부과",
     "피부과 전문의가 실제로 주기적으로 받는 피부관리｜LDM"
+   ],
+   "topics": [
+    {
+     "title": "가을 건조함 LDM으로 잡기",
+     "why": "가을철 피부 건조 고민 증가",
+     "prompt": "찬바람에 건조해진 피부, 촉촉한 수분감을 채우는 LDM 관리로 편안하게 해결해요.",
+     "iconUrl": "/assets/topics/clinic/1.jpg"
+    },
+    {
+     "title": "원장님이 직접 받는 관리",
+     "why": "전문의의 실제 루틴 궁금증",
+     "prompt": "피부과 원장님이 주기적으로 받는 관리 비결, 믿을 수 있는 케어로 피부를 지켜요.",
+     "iconUrl": "/assets/topics/clinic/2.jpg"
+    },
+    {
+     "title": "월요병 날리는 리프팅 케어",
+     "why": "월요일 직장인 피로감 공감",
+     "prompt": "끝없는 업무로 처진 피부와 피로감, 가벼운 리프팅 케어로 활력을 되찾아 드려요.",
+     "iconUrl": "/assets/topics/clinic/3.jpg"
+    },
+    {
+     "title": "교정 중 받아도 되는 시술",
+     "why": "치아 교정 환자의 시술 문의",
+     "prompt": "교정 중이라 망설여지는 피부과 시술, 안전하게 받을 수 있는 맞춤 케어를 알려드려요.",
+     "iconUrl": "/assets/topics/clinic/4.jpg"
+    },
+    {
+     "title": "턱보톡스 진짜 기준 공개",
+     "why": "시술 기준에 대한 정보 탐색",
+     "prompt": "턱보톡스 맞기 전 꼭 알아야 할 기준, 원장님이 정확하고 안전하게 짚어드려요.",
+     "iconUrl": "/assets/topics/clinic/5.jpg"
+    },
+    {
+     "title": "집에서 하는 가을 보습 팁",
+     "why": "환절기 홈케어 관심 상승",
+     "prompt": "건조한 가을철 집에서 실천하는 보습 습관, 병원 케어와 함께하면 효과가 더 좋아요.",
+     "iconUrl": "/assets/topics/clinic/6.jpg"
+    },
+    {
+     "title": "PDRN 성분 제대로 알기",
+     "why": "인기 성분 PDRN 관심 증가",
+     "prompt": "요즘 핫한 PDRN 성분, 내 피부 상태에 맞게 어떻게 활용하는지 원장님이 설명해 드려요.",
+     "iconUrl": "/assets/topics/clinic/7.jpg"
+    },
+    {
+     "title": "가을철 피부 탄력 전후 비교",
+     "why": "환절기 탄력 저하 고민",
+     "prompt": "푸석하고 힘없는 가을 피부, 꾸준한 탄력 관리로 달라진 피부 결을 확인해 보세요.",
+     "iconUrl": "/assets/topics/clinic/8.jpg"
+    },
+    {
+     "title": "시술 후 편안한 회복 과정",
+     "why": "시술 통증과 회복 걱정",
+     "prompt": "관리가 편안하셨나요, 통증 걱정 줄이고 편안하게 회복하는 우리 병원만의 케어예요.",
+     "iconUrl": "/assets/topics/clinic/9.jpg"
+    },
+    {
+     "title": "이번 주 평일 타임 케어",
+     "why": "월요일 주간 예약 수요",
+     "prompt": "바쁜 평일 틈새 시간, 부담 없이 들러 지친 피부를 빠르게 진정시켜 보세요.",
+     "iconUrl": "/assets/topics/clinic/10.jpg"
+    }
    ]
   },
   "fitness": {
@@ -166,6 +538,68 @@
     "헬스VS필라테스 뭐하지?! 더자세한 내용은 댓글 참고해조😘 #다이어트 #유지어터 #운동 #여자헬스",
     "필라테스가 운동 1티어인 이유",
     "하루 딱 100번만 해보세요❤️ #홈트 #홈트레이닝 #다이어트 #다이어터"
+   ],
+   "topics": [
+    {
+     "title": "월요일 20분 필라테스 루틴",
+     "why": "월요일 가벼운 운동 시작",
+     "prompt": "월요일 몸이 무거울 때 집에서 20분 필라테스 루틴으로 가볍게 시작하기",
+     "iconUrl": "/assets/topics/fitness/1.jpg"
+    },
+    {
+     "title": "가을철 뱃살 빼기 필라테스",
+     "why": "가을 식욕 증가 대비",
+     "prompt": "가을철 늘어난 뱃살이 고민일 때 필라테스 코어 운동으로 군살 정리하기",
+     "iconUrl": "/assets/topics/fitness/2.jpg"
+    },
+    {
+     "title": "헬스 vs 필라테스 비교",
+     "why": "운동 선택 고민 해결",
+     "prompt": "다이어트할 때 헬스와 필라테스 중 고민된다면 내 체형에 맞는 운동 고르기",
+     "iconUrl": "/assets/topics/fitness/3.jpg"
+    },
+    {
+     "title": "수업 전 기구 세팅 과정",
+     "why": "수업 신뢰도 높이기",
+     "prompt": "회원님 오시기 전 기구 소독과 세팅 과정을 보여주며 안심하고 운동하기",
+     "iconUrl": "/assets/topics/fitness/4.jpg"
+    },
+    {
+     "title": "필라테스 뱃살 진짜 빠지나요",
+     "why": "자주 묻는 질문 해결",
+     "prompt": "필라테스로 뱃살이 빠지는지 궁금한 분들을 위해 코어 근육과 체지방 원리 설명하기",
+     "iconUrl": "/assets/topics/fitness/5.jpg"
+    },
+    {
+     "title": "가을맞이 1대1 체험 혜택",
+     "why": "가을 신규 회원 모집",
+     "prompt": "선선한 가을 운동 시작하려는 분들을 위해 1대1 체험 수업으로 부담 없이 경험하기",
+     "iconUrl": "/assets/topics/fitness/6.jpg"
+    },
+    {
+     "title": "단골 회원님 체형 변화",
+     "why": "꾸준한 운동 효과 증명",
+     "prompt": "몇 달간 꾸준히 나오신 회원님의 바른 자세 변화를 통해 운동 동기 부여하기",
+     "iconUrl": "/assets/topics/fitness/7.jpg"
+    },
+    {
+     "title": "하루 100번 코어 홈트",
+     "why": "인기 홈트 키워드 활용",
+     "prompt": "센터 못 오는 날 집에서 하루 100번만 따라 하는 코어 운동으로 땀 빼기",
+     "iconUrl": "/assets/topics/fitness/8.jpg"
+    },
+    {
+     "title": "월요일 저녁 잔여석 안내",
+     "why": "당일 수업 마감 임박",
+     "prompt": "오늘 저녁 퇴근 후 운동하고 싶은 분들을 위해 남은 소수 정예 자리 안내하기",
+     "iconUrl": "/assets/topics/fitness/9.jpg"
+    },
+    {
+     "title": "초보자 필라테스 호흡법",
+     "why": "운동 기본기 팁 제공",
+     "prompt": "필라테스 처음 시작할 때 헷갈리는 호흡법을 쉽게 배워서 운동 효과 높이기",
+     "iconUrl": "/assets/topics/fitness/10.jpg"
+    }
    ]
   },
   "shop": {
@@ -179,6 +613,68 @@
     "이구위크 추천템 #29cm #데일리룩코디",
     "쇼핑몰 + 도매브랜드에서 건진 여름 살안타템💪🏻 여름코디 데일리룩 | 하객룩 출근룩 | #데일리룩 #ootd",
     "\"압도적 분위기\" 공효진·기은세 실물 픽 가을 감성백 🤎 얼마?"
+   ],
+   "topics": [
+    {
+     "title": "겨울 기본템 데일리룩",
+     "why": "월요일 출근룩 고민 많은 날",
+     "prompt": "월요일 아침 옷장 앞 고민 → 매일 손이 가는 옷이 필요할 때 → 우리 겨울 기본템이 해결해 줌",
+     "iconUrl": "/assets/topics/shop/1.jpg"
+    },
+    {
+     "title": "유행템 vs 유행지난템",
+     "why": "겨울 트렌드 궁금한 시기",
+     "prompt": "겨울 옷 사기 전 고민 → 올해 입을 만한 옷을 찾고 싶을 때 → 디렉터가 고른 신상템으로 해결",
+     "iconUrl": "/assets/topics/shop/2.jpg"
+    },
+    {
+     "title": "꾸안꾸 포인트 스타일링",
+     "why": "평범한 룩에 힘주고 싶은 날",
+     "prompt": "무난한 데일리룩이 지겨울 때 → 과하지 않은 포인트를 원할 때 → 포인트 아이템 하나로 분위기 완성",
+     "iconUrl": "/assets/topics/shop/3.jpg"
+    },
+    {
+     "title": "겨울 신상 촬영 비하인드",
+     "why": "신상 퀄리티 궁금한 고객용",
+     "prompt": "온라인 쇼핑 실물 걱정될 때 → 핏과 소재를 미리 보고 싶을 때 → 촬영 현장 원단 디테일 공개",
+     "iconUrl": "/assets/topics/shop/4.jpg"
+    },
+    {
+     "title": "가을 감성백 수납력 팁",
+     "why": "가을 가방 인기 키워드 활용",
+     "prompt": "예쁜데 많이 들어가는 가방 찾을 때 → 출근길 소지품 다 넣고 싶을 때 → 감성백 수납 테스트로 확인",
+     "iconUrl": "/assets/topics/shop/5.jpg"
+    },
+    {
+     "title": "출근룩 1분 코디 변신",
+     "why": "바쁜 월요일 아침 공감대",
+     "prompt": "아침마다 옷 갈아입기 바쁠 때 → 아우터 하나로 분위기 바꾸고 싶을 때 → 코트 핏 비포 애프터로 보여줌",
+     "iconUrl": "/assets/topics/shop/6.jpg"
+    },
+    {
+     "title": "사이즈 고르는 꿀팁 Q&A",
+     "why": "겨울 니트·아우터 구매 전 질문",
+     "prompt": "두꺼운 겨울옷 사이즈 고민될 때 → 실패 없는 핏을 고르고 싶을 때 → 체형별 추천 사이즈 안내",
+     "iconUrl": "/assets/topics/shop/7.jpg"
+    },
+    {
+     "title": "단골들이 재구매하는 이유",
+     "why": "후기 좋은 기본템 신뢰도 상승",
+     "prompt": "오래 입을 기본템 찾고 있을 때 → 실제 구매자 반응이 궁금할 때 → 재구매율 높은 인기 상품 소개",
+     "iconUrl": "/assets/topics/shop/8.jpg"
+    },
+    {
+     "title": "월요병 날리는 타임특가",
+     "why": "월요일 저녁 쇼핑 수요 공략",
+     "prompt": "월요일 퇴근 후 소소한 보상 원할 때 → 합리적인 가격에 득템하고 싶을 때 → 오늘 자정 마감 특가 안내",
+     "iconUrl": "/assets/topics/shop/9.jpg"
+    },
+    {
+     "title": "주간 베스트 3종 요약",
+     "why": "이번 주 인기 상품 한눈에",
+     "prompt": "뭐 살지 고르기 어려울 때 → 요즘 제일 잘 나가는 옷이 궁금할 때 → 이번 주 베스트 아이템 추천",
+     "iconUrl": "/assets/topics/shop/10.jpg"
+    }
    ]
   },
   "interior": {
@@ -192,6 +688,68 @@
     "32년 된 아파트를 고쳐보았다. (17평 신혼집)",
     "45평 아파트 화이트톤 인테리어🤍 #아파트인테리어 #집꾸미기 #interiordesign #랜선집들이",
     "33평 새아파트 거실주방 룸투어 #홈스타일링 #인테리어 #룸투어 #interior"
+   ],
+   "topics": [
+    {
+     "title": "30평대 화이트톤 랜선집들이",
+     "why": "화이트톤 룸투어 인기",
+     "prompt": "새집처럼 깔끔한 집을 원할 때 화이트톤 인테리어로 넓고 환한 공간을 보여줌",
+     "iconUrl": "/assets/topics/interior/1.jpg"
+    },
+    {
+     "title": "1층 아파트 단점 극복 팁",
+     "why": "1층 구축 문의 증가",
+     "prompt": "사생활 침해와 채광 걱정되는 1층 아파트를 구조 변경과 조명으로 해결함",
+     "iconUrl": "/assets/topics/interior/2.jpg"
+    },
+    {
+     "title": "가을철 결로 막는 단열 시공",
+     "why": "늦가을 기온 급감 대비",
+     "prompt": "추워지는 날씨에 곰팡이 걱정될 때 꼼꼼한 단열 시공으로 따뜻한 집을 만듦",
+     "iconUrl": "/assets/topics/interior/3.jpg"
+    },
+    {
+     "title": "30년 된 구축 신혼집 변신",
+     "why": "구축 신혼집 리모델링 인기",
+     "prompt": "오래된 아파트의 낡은 흔적을 지우고 신혼부부 취향에 맞춘 실용적 공간 완성",
+     "iconUrl": "/assets/topics/interior/4.jpg"
+    },
+    {
+     "title": "가성비 살린 20평대 인테리어",
+     "why": "비용 대비 높은 퀄리티 관심",
+     "prompt": "예산은 아끼고 고급스러운 느낌을 원할 때 실용적인 자재 조합으로 만족감을 줌",
+     "iconUrl": "/assets/topics/interior/5.jpg"
+    },
+    {
+     "title": "현장 시공 과정 타임랩스",
+     "why": "투명한 시공 과정 신뢰도 상승",
+     "prompt": "우리 집이 어떻게 고쳐지는지 궁금한 고객에게 꼼꼼한 철거와 목공 과정을 공개함",
+     "iconUrl": "/assets/topics/interior/6.jpg"
+    },
+    {
+     "title": "리모델링 자주 묻는 질문",
+     "why": "월요일 상담 전 궁금증 해소",
+     "prompt": "견적과 공사 기간이 막막한 예비 고객에게 핵심 체크리스트를 쉽게 알려줌",
+     "iconUrl": "/assets/topics/interior/7.jpg"
+    },
+    {
+     "title": "리조트 느낌 욕실 리모델링",
+     "why": "호텔식 욕실 인테리어 유행",
+     "prompt": "하루 피로를 풀고 싶은 고객에게 타일과 조명으로 고급스러운 욕실을 제안함",
+     "iconUrl": "/assets/topics/interior/8.jpg"
+    },
+    {
+     "title": "11월 무료 방문 실측 안내",
+     "why": "연말 전 시공 예약 마감 임박",
+     "prompt": "올겨울 따뜻하게 보내고 싶은 고객에게 꼼꼼한 현장 실측과 맞춤 상담을 제공함",
+     "iconUrl": "/assets/topics/interior/9.jpg"
+    },
+    {
+     "title": "시공 후 고객 실제 후기",
+     "why": "실제 거주자 만족도 궁금증",
+     "prompt": "공사 후 생활이 편해졌는지 궁금할 때 동선 개선으로 만족한 고객 이야기를 전함",
+     "iconUrl": "/assets/topics/interior/10.jpg"
+    }
    ]
   }
  }
