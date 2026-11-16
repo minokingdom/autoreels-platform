@@ -1122,9 +1122,11 @@
       sfxOut() {
         if (!this.sfxGain) {
           this.sfxGain = this.ctx.createGain();
-          this.sfxGain.gain.value = 0.7;
           this.sfxGain.connect(this.masterGain);
         }
+        // 나레이션이 없을 때(배경음악만 재생 시) 효과음이 튀지 않도록 게인을 자동 낮춤
+        const hasNarration = this.ttsVoice && this.ttsVoice !== 'off';
+        this.sfxGain.gain.value = hasNarration ? 0.55 : 0.26;
         return this.sfxGain;
       },
       sfxNoiseBuf(dur = 0.25) {
