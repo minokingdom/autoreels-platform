@@ -10,6 +10,7 @@ AutoReels Nightly Kaggle GPU Worker (runs headless in Kaggle T4/P100 while PC is
 import datetime
 import json
 import os
+import re
 import subprocess
 import sys
 import traceback
@@ -17,6 +18,10 @@ import urllib.parse
 import urllib.request
 import zipfile
 from pathlib import Path
+
+
+def strip_surrogates(text: str) -> str:
+    return re.sub(r"[\ud800-\udfff]", "", text)
 
 
 def get_secret(name: str, default: str = "") -> str:
@@ -138,7 +143,7 @@ def run_worker() -> None:
     gh_token = get_secret("GITHUB_TOKEN")
     gh_repo = get_secret("GITHUB_REPO", "minokingdom/dealer-reels-platform")
 
-    work_dir = Path("/kaggle/working/repo")
+    work_dir = Path("/tmp/autoreels_repo")
     if work_dir.exists():
         subprocess.run(["rm", "-rf", str(work_dir)], check=True)
     remote = f"https://x-access-token:{gh_token}@github.com/{gh_repo}.git" if gh_token else f"https://github.com/{gh_repo}.git"
@@ -212,7 +217,8 @@ def run_worker() -> None:
             t["iconUrl"] = f"/assets/topics/{ind}/{idx + 1}.jpg"
             print(f"[ok] {ind}/{idx + 1}.jpg")
 
-    trends_path.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    trends_payload = strip_surrogates(json.dumps(data, ensure_ascii=False, indent=1) + "\n")
+    trends_path.write_text(trends_payload, encoding="utf-8")
 
     bundle_path = Path("/kaggle/working/autoreels_nightly_bundle.zip")
     with zipfile.ZipFile(bundle_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:

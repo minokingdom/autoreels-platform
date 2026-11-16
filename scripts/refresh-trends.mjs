@@ -27,6 +27,11 @@ const TREG_QUERIES = {
   interior: '아파트 인테리어 룸투어 리모델링'
 };
 const OUT = new URL('../public/trends-today.json', import.meta.url);
+function cleanTrendTitle(raw) {
+  const noTags = String(raw || '').replace(/#[^\s#]+/g, '').replace(/\s+/g, ' ').trim();
+  const sliced = Array.from(noTags).slice(0, 50).join('');
+  return sliced.replace(/[\uD800-\uDFFF]/g, '').trim();
+}
 
 function extractTregTitles(node, out = []) {
   if (!node || typeof node !== 'object') return out;
@@ -66,7 +71,7 @@ async function fetchViaTreg(ind) {
   const seen = new Set();
   const clean = [];
   for (const raw of rawTitles) {
-    const title = raw.replace(/#[^\s#]+/g, '').replace(/\s+/g, ' ').trim().slice(0, 50);
+    const title = cleanTrendTitle(raw);
     const tags = (raw.match(/#[가-힣a-zA-Z0-9_]+/g) || []).slice(0, 4).join(' ');
     const line = [title, tags].join(' ').trim();
     if (!title || title.length < 4 || seen.has(title)) continue;
@@ -162,7 +167,7 @@ for (const ind of INDUSTRIES) {
       source = j.source || '';
       items = (Array.isArray(j.items) ? j.items : [])
         .map((it) => {
-          const title = String(it.title || (it.theme && it.theme.hookCaption) || '').replace(/#[^\s#]+/g, '').replace(/\s+/g, ' ').trim().slice(0, 50);
+          const title = cleanTrendTitle(it.title || (it.theme && it.theme.hookCaption) || '');
           const tags = (String(it.fullCaption || it.title || '').match(/#[가-힣a-zA-Z0-9_]+/g) || []).slice(0, 4).join(' ');
           return [title, tags].join(' ').trim();
         })
@@ -207,5 +212,5 @@ if (!okCount) {
   console.log('받은 업종이 없어 파일을 바꾸지 않습니다');
   process.exit(0);
 }
-await writeFile(OUT, JSON.stringify(out, null, 1) + '\n');
+await writeFile(OUT, (JSON.stringify(out, null, 1) + '\n').replace(/[\uD800-\uDFFF]/g, ''));
 console.log('saved', okCount, 'industries');

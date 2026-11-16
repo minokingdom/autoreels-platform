@@ -75,7 +75,7 @@ jobs:
           echo "Waiting for Kaggle GPU kernel $KERNEL_SLUG..."
           sleep 15
           STATUS="unknown"
-          for i in $(seq 1 60); do
+          for i in $(seq 1 75); do
             STATUS=$(KAGGLE_SLUG="$KERNEL_SLUG" python3 -c '
           import json, os, urllib.request, urllib.parse
           u, s = os.environ["KAGGLE_SLUG"].split("/", 1)
