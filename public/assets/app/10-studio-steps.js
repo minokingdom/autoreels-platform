@@ -1410,6 +1410,7 @@
             industryInfo: IND.key === 'auto' ? null : { name: IND.name },
             captions: Array.isArray(variants[0]?.cutCaptions) ? variants[0].cutCaptions : [],
             count: Math.min(4, totalCuts),
+            totalCuts,
             adminGeminiKey
           });
         }
@@ -1452,30 +1453,31 @@
 
         if (!Array.isArray(campaign.uploadedPhotos)) campaign.uploadedPhotos = [];
         if (!Array.isArray(campaign.scenePlan)) campaign.scenePlan = [];
+        const targetSlots = Math.max(j.images.length, Math.min(10, Number(payload.totalCuts) || j.images.length));
         let loadedCount = 0;
-        j.images.forEach((item) => {
-          if (!item || !item.dataUrl || typeof item.index !== 'number') return;
-          const idx = item.index;
+        for (let slot = 0; slot < targetSlots; slot++) {
+          const item = j.images[slot % j.images.length];
+          if (!item || !item.dataUrl) continue;
           const img = new Image();
           img._dataUrl = item.dataUrl;
-          img._label = `${idx + 1}. ${payload.prompt}`;
+          img._label = `${slot + 1}. ${payload.prompt}`;
           img._sceneTitle = payload.prompt;
           img.onload = () => {
             if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
-            campaign.uploadedPhotos[idx] = img;
-            if (!campaign.scenePlan[idx]) campaign.scenePlan[idx] = {};
-            campaign.scenePlan[idx].photoIdx = idx;
+            campaign.uploadedPhotos[slot] = img;
+            if (!campaign.scenePlan[slot]) campaign.scenePlan[slot] = {};
+            campaign.scenePlan[slot].photoIdx = slot;
             loadedCount += 1;
             if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
             if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
             if (typeof renderCutEditorPanel === 'function') renderCutEditorPanel();
             if (typeof renderInlineQuickEditBar === 'function') renderInlineQuickEditBar();
             if (window.__timelines?.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
-            if (noticeEl && loadedCount === j.images.length) {
-              noticeEl.textContent = `주제 [${payload.prompt}] 맞춤 대본·이미지(${loadedCount}컷)가 적용되었습니다.`;
+            if (noticeEl && loadedCount === targetSlots) {
+              noticeEl.textContent = `주제 [${payload.prompt}] 맞춤 대본·이미지(${j.images.length}컷)가 적용되었습니다.`;
             }
           };
           img.src = item.dataUrl;
-        });
+        }
       } catch (e) {}
     }

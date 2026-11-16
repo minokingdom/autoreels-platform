@@ -934,6 +934,13 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
   return respond(isOther ? 'AutoReels 기본 대본' : 'AutoReels AI Automotive Director', fallbackVariants, aiDiag);
 };
 
-// 사용량 계산·한도 (회원 서버가 켜져 있을 때만 동작)
+// 사용량 계산·한도 (회원 서버가 켜져 있을 때만 동작; 주제 추천 및 씬 이미지 동반 생성은 추가 과금 없음)
 const { withMeter } = require('../lib/server/meter');
-module.exports = withMeter(handler, 'ai', (req) => (req.method === 'POST' ? 1 : 0));
+module.exports = withMeter(handler, 'ai', (req) => {
+  if (req.method !== 'POST') return 0;
+  try {
+    const b = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    if (b && (b.mode === 'topics' || b.mode === 'scene-images')) return 0;
+  } catch (e) {}
+  return 1;
+});
