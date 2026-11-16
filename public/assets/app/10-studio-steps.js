@@ -1360,6 +1360,22 @@
         noticeEl.textContent = `중앙 AI 엔진이 [${raw || campaign.vehicle}] 맞춤 ${totalCuts}컷 영상 대본·성우 음성·카톡 대화를 생성 중입니다...`;
       }
 
+      const triggerTopicImages = (captions) => {
+        if (!campaign.isUserCustomPhotos && (raw || (window.arTodayTopic && window.arTodayTopic.title))) {
+          arApplyTopicSceneImages({
+            prompt: raw || (window.arTodayTopic && window.arTodayTopic.title) || campaign.vehicle,
+            vehicle: campaign.vehicle,
+            topic: window.arTodayTopic || null,
+            industry: IND.key,
+            industryInfo: IND.key === 'auto' ? null : { name: IND.name },
+            captions: Array.isArray(captions) ? captions : (campaign.cutCaptions || []),
+            count: Math.min(4, totalCuts),
+            totalCuts,
+            adminGeminiKey: localStorage.getItem('autoreels_admin_gemini_key') || ''
+          });
+        }
+      };
+
       try {
         const adminOpenAiKey = localStorage.getItem('autoreels_admin_openai_key') || '';
         const adminGeminiKey = localStorage.getItem('autoreels_admin_gemini_key') || '';
@@ -1401,29 +1417,19 @@
         arScriptVariants.strip = stripExcludedLocal;
         applyAiScriptToCampaign(variants[0], d, stripExcludedLocal);
         renderScriptVariantPicker();
-        if (!campaign.isUserCustomPhotos && (raw || (window.arTodayTopic && window.arTodayTopic.title))) {
-          arApplyTopicSceneImages({
-            prompt: raw || campaign.vehicle,
-            vehicle: campaign.vehicle,
-            topic: window.arTodayTopic || null,
-            industry: IND.key,
-            industryInfo: IND.key === 'auto' ? null : { name: IND.name },
-            captions: Array.isArray(variants[0]?.cutCaptions) ? variants[0].cutCaptions : [],
-            count: Math.min(4, totalCuts),
-            totalCuts,
-            adminGeminiKey
-          });
-        }
+        triggerTopicImages(variants[0]?.cutCaptions);
       } catch (err) {
         arScriptVariants.list = [];
         renderScriptVariantPicker();
         if (IND.key !== 'auto') {
-          // 자동차가 아닌 업종: 실패하면 지금 상품 프리셋 대본으로 되돌림
+          // 자동차가 아닌 업종: 실패하면 지금 상품 프리셋 대본으로 되돌리되 주제 이미지는 교체
           if (campaign.presetKey && (AR_INDUSTRY_PRESETS[IND.key] || {})[campaign.presetKey]) applyIndustryPreset(campaign.presetKey);
           if (noticeEl) noticeEl.textContent = `AI 대본을 만들지 못해 기본 대본으로 채웠습니다. (${err.message || '연결 오류'})`;
+          triggerTopicImages(campaign.cutCaptions);
           return;
         }
         arFillAutoScriptOffline(parsedLocal, d);
+        triggerTopicImages(campaign.cutCaptions);
       } finally {
         if (btnEl) {
           btnEl.disabled = false;
