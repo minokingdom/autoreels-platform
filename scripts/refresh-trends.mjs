@@ -165,7 +165,11 @@ for (const ind of INDUSTRIES) {
         .slice(0, 8);
     }
     if (items.length) {
-      out.industries[ind] = { source, keywords: items };
+      const prevInd = (prev.industries && prev.industries[ind] && typeof prev.industries[ind] === 'object')
+        ? { ...prev.industries[ind] }
+        : {};
+      delete prevInd.stale;
+      out.industries[ind] = { ...prevInd, source, keywords: items };
       okCount++;
     } else {
       problems.push(`${ind}: 키워드 0건`);
