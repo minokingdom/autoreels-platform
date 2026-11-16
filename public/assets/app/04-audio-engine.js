@@ -1525,8 +1525,8 @@
         try { localStorage.setItem('autoreels_bgm_style', pickedBgm); } catch (e) {}
       }
       if (typeof renderBgmRecommendations === 'function') renderBgmRecommendations();
-      if (String(pickedBgm).startsWith('ace_')) {
-        const trackId = String(pickedBgm).slice(4).replace(/[^a-z0-9_-]/gi, '');
+      if (String(pickedBgm).startsWith('ace_') || AR_BGM_COVER_IDS.has(String(pickedBgm))) {
+        const trackId = String(pickedBgm).replace(/^ace_/, '').replace(/[^a-z0-9_-]/gi, '');
         const optLabel = bgmEl && bgmEl.selectedOptions && bgmEl.selectedOptions[0] ? bgmEl.selectedOptions[0].textContent : trackId;
         AudioEngine.loadRemoteBgmUrl(`/assets/bgm/pack/${trackId}.mp3`, optLabel);
         if (voiceChanged && AudioEngine.enabled) arResetAndRebuildNarration();
@@ -1838,8 +1838,8 @@
             sel.value = savedBgm;
             AudioEngine.bgmStyle = savedBgm;
             AudioEngine.userPickedBgm = true;
-            if (savedBgm.startsWith('ace_')) {
-              const trackId = savedBgm.slice(4).replace(/[^a-z0-9_-]/gi, '');
+            if (savedBgm.startsWith('ace_') || AR_BGM_COVER_IDS.has(savedBgm)) {
+              const trackId = savedBgm.replace(/^ace_/, '').replace(/[^a-z0-9_-]/gi, '');
               const optLabel = sel.selectedOptions && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : trackId;
               AudioEngine.loadRemoteBgmUrl(`/assets/bgm/pack/${trackId}.mp3`, optLabel, false);
             }

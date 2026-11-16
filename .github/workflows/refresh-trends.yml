@@ -10,7 +10,7 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -75,7 +75,7 @@ jobs:
           echo "Waiting for Kaggle GPU kernel $KERNEL_SLUG..."
           sleep 15
           STATUS="unknown"
-          for i in $(seq 1 75); do
+          for i in $(seq 1 85); do
             STATUS=$(KAGGLE_SLUG="$KERNEL_SLUG" python3 -c '
           import json, os, urllib.request, urllib.parse
           u, s = os.environ["KAGGLE_SLUG"].split("/", 1)
@@ -113,11 +113,11 @@ jobs:
 
           git config user.name "autoreels-kaggle-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add public/trends-today.json public/assets/topics/
+          git add public/trends-today.json public/assets/topics/ public/assets/scenes/
           if git diff --cached --quiet; then
             echo "No new Kaggle assets to commit."
             exit 0
           fi
-          git commit -m "chore(kaggle): nightly topics & 100 topic icons"
+          git commit -m "chore(kaggle): nightly topics, 100 icons & vertical scene pack"
           git pull --rebase origin main
           git push origin main

@@ -126,6 +126,79 @@ IND_VISUAL_HINT = {
     "interior": "warm architectural Scandinavian apartment interior design",
 }
 
+EXTRA_SCENE_PROMPTS = {
+    "auto": [
+        "vertical 9:16 automotive editorial photography of a sleek modern sedan driving on a wet Seoul neon avenue at night, dramatic headlights, photorealistic",
+        "vertical 9:16 photography of an open SUV tailgate ready for camping with neat outdoor gear by a calm pine forest, warm daylight",
+        "vertical 9:16 interior cabin photography of a digital hybrid dashboard cluster and glowing ambient console in evening dusk",
+        "vertical 9:16 close-up automotive photography of forged multi-spoke alloy wheels and gleaming brake calipers on clean showroom epoxy floor",
+        "vertical 9:16 upward view through a wide panoramic glass car sunroof looking at crisp blue sky and sunlit city architecture",
+    ],
+    "restaurant": [
+        "vertical 9:16 gourmet Korean food editorial photo of steaming rich signature broth noodle bowl with garnish on dark wooden table",
+        "vertical 9:16 lifestyle dining photography of chilled crisp draft craft beer beside golden grilled platter in warm evening bar light",
+        "vertical 9:16 appetizing close-up of sizzling Korean iron pan fried rice with golden egg yolk and seaweed flakes, moody dining lighting",
+        "vertical 9:16 charcoal grill photography of tender marbled steak cuts searing over glowing embers with subtle aromatic smoke",
+        "vertical 9:16 warm cozy Korean bistro dining table full of shared plates and happy ambiance, shallow depth of field",
+    ],
+    "cafe": [
+        "vertical 9:16 dessert photography of glossy seasonal fresh strawberry tart topped with whipped cream on ceramic plate by sunlit window",
+        "vertical 9:16 artisan pour-over hand-drip coffee brewing in glass server with steam rising, warm specialty coffee bar",
+        "vertical 9:16 sunlit minimalist cafe corner with green indoor olive tree, oak chair and warm shadows on plaster wall",
+        "vertical 9:16 morning brunch flatlay of toasted sesame bagel sandwich and iced americano on travertine stone table",
+        "vertical 9:16 moody evening cafe interior illuminated by warm amber pendant lamps and wooden counter glow",
+    ],
+    "beauty": [
+        "vertical 9:16 macro beauty photography of velvet magnetic cat-eye glitter gel nails holding clean frosted glass perfume bottle",
+        "vertical 9:16 clean luxury nail salon tabletop with manicure bottles, cuticle oil dropper and soft linen towel",
+        "vertical 9:16 serene luxury head-spa treatment room with warm botanical steam mist and ceramic wash basin, no portrait",
+        "vertical 9:16 editorial salon vanity mirror setup with sleek styling brush, ceramic hair iron and warm studio backlighting",
+        "vertical 9:16 bridal sheer syrup nude glossy manicured hands resting on white silk ribbon fabric",
+    ],
+    "realestate": [
+        "vertical 9:16 high-rise modern Seoul apartment balcony view overlooking sunlit river and green parklands at golden hour",
+        "vertical 9:16 bright clean underground apartment parking garage with wide EV charging bays and modern architectural lighting",
+        "vertical 9:16 landscaped serene apartment courtyard walking path lined with maple trees and morning sunlight",
+        "vertical 9:16 minimalist custom built-in pantry and walk-in dressing closet with warm LED strip shelving",
+        "vertical 9:16 sunlit Scandinavian newlywed living room interior with cream sofa, sheer curtains and warm oak flooring",
+    ],
+    "academy": [
+        "vertical 9:16 inspiring stack of crisp study awards, notebooks and fountain pen on warm oak desk under brass lamp",
+        "vertical 9:16 neat clean exam workbook with crisp handwritten notes and timer on minimalist study desk",
+        "vertical 9:16 bright calm private mentoring classroom table with clean whiteboard and neatly arranged study tablet",
+        "vertical 9:16 organized colorful study planner calendar with highlighters and wooden ruler in sunny study room",
+        "vertical 9:16 safe clean modern academy lobby entrance with warm timber panels and bright welcoming lighting",
+    ],
+    "clinic": [
+        "vertical 9:16 sterile modern medical dental treatment room with stainless sterilized instrument tray and clean bright lighting",
+        "vertical 9:16 calm private dermatology wellness skincare suite with clean white medical bed and soft warm indirec lighting",
+        "vertical 9:16 peaceful integrative medical consultation desk with botanical plant and warm natural sunlight",
+        "vertical 9:16 clean minimalist dental hygiene x-ray monitor and digital scanner workstation in bright clinic",
+        "vertical 9:16 serene sunlit modern hospital waiting lounge with curved bouclé armchairs and travertine reception desk",
+    ],
+    "fitness": [
+        "vertical 9:16 sleek modern cardio treadmill zone with panoramic city window view and morning sunlight",
+        "vertical 9:16 minimalist sunlit pilates studio rack with foam rollers, kettlebells and wooden stretching equipment",
+        "vertical 9:16 healthy clean wellness protein shake bar with matte shaker bottle and chilled mineral water on stone counter",
+        "vertical 9:16 moody boutique gym functional training corner with kettlebells, battle rope and dumbbell rack",
+        "vertical 9:16 sleek 24-hour luxury fitness studio at night with warm accent LED mirror strips and clean rubber floor",
+    ],
+    "shop": [
+        "vertical 9:16 clean boutique clothing rack displaying neutral wool coats and cashmere knitwear in warm studio light",
+        "vertical 9:16 editorial accessory flatlay of structured leather handbag, silk scarf and sunglasses on limestone plinth",
+        "vertical 9:16 natural daylight linen garment texture close-up hanging beside sunlit sheer curtain",
+        "vertical 9:16 curated matching outfit flatlay folded neatly with linen trousers, cardigan and minimalist box",
+        "vertical 9:16 luxury kraft gift boutique packaging tied with satin ribbon and dried botanical stem on stone table",
+    ],
+    "interior": [
+        "vertical 9:16 architectural photography of sleek slim anodized aluminum glass apartment foyer partition and terrazzo tile entrance",
+        "vertical 9:16 custom ceiling-height matte cream built-in wardrobe closets with concealed recessed handle profile",
+        "vertical 9:16 sunlit apartment balcony transformed into serene wood-deck home cafe nook with lounge chair and potted olive tree",
+        "vertical 9:16 minimal triple-glazed thermal window frame bathed in crisp morning light overlooking clean apartment view",
+        "vertical 9:16 warm Korean minimalist living space blending white oak paneling and limewash plaster wall textures",
+    ],
+}
+
 
 def load_diffusers():
     try:
@@ -220,17 +293,37 @@ def run_worker() -> None:
     trends_payload = strip_surrogates(json.dumps(data, ensure_ascii=False, indent=1) + "\n")
     trends_path.write_text(trends_payload, encoding="utf-8")
 
+    # Generate missing 9:16 vertical scene slots (11..15) + 1 rotating scene slot per night per industry
+    scenes_dir = work_dir / "public" / "assets" / "scenes"
+    kst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+    rot_slot = 11 + (kst_now.timetuple().tm_yday % 5)
+    for ind, scene_prompts in EXTRA_SCENE_PROMPTS.items():
+        scene_ind = scenes_dir / ind
+        scene_ind.mkdir(parents=True, exist_ok=True)
+        for offset, sp in enumerate(scene_prompts):
+            slot = 11 + offset
+            dst = scene_ind / f"{slot}.jpg"
+            if dst.exists() and slot != rot_slot:
+                continue
+            seed = 4200 + slot * 31 + kst_now.timetuple().tm_yday + sum(ord(c) for c in ind)
+            gen = torch.Generator("cuda").manual_seed(seed)
+            img = pipe(prompt=sp, negative_prompt=neg, width=576, height=1024, num_inference_steps=6, guidance_scale=2.0, generator=gen).images[0]
+            img.save(dst, format="JPEG", quality=88)
+            print(f"[scene] {ind}/{slot}.jpg")
+
     bundle_path = Path("/kaggle/working/autoreels_nightly_bundle.zip")
     with zipfile.ZipFile(bundle_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         zf.write(trends_path, "public/trends-today.json")
         for jpg in sorted(topics_dir.glob("*/*.jpg")):
+            zf.write(jpg, str(jpg.relative_to(work_dir)).replace("\\", "/"))
+        for jpg in sorted(scenes_dir.glob("*/*.jpg")):
             zf.write(jpg, str(jpg.relative_to(work_dir)).replace("\\", "/"))
     print(f"Created {bundle_path} ({bundle_path.stat().st_size} bytes)")
 
     if gh_token:
         subprocess.run(["git", "-C", str(work_dir), "config", "user.name", "autoreels-kaggle-bot"], check=True)
         subprocess.run(["git", "-C", str(work_dir), "config", "user.email", "actions@users.noreply.github.com"], check=True)
-        subprocess.run(["git", "-C", str(work_dir), "add", "public/trends-today.json", "public/assets/topics/"], check=True)
+        subprocess.run(["git", "-C", str(work_dir), "add", "public/trends-today.json", "public/assets/topics/", "public/assets/scenes/"], check=True)
         diff = subprocess.run(["git", "-C", str(work_dir), "diff", "--cached", "--quiet"])
         if diff.returncode != 0:
             subprocess.run(["git", "-C", str(work_dir), "commit", "-m", f"chore(kaggle): nightly topics & 100 topic icons ({date_str})"], check=True)
