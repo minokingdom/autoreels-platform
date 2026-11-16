@@ -41,7 +41,13 @@
   ],
   "headers": [
     {
-      "source": "/(studio|studio\\.html|index\\.html|trends-today\\.json)?",
+      "source": "/",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/(studio|studio\\.html|index\\.html|trends-today\\.json)",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
