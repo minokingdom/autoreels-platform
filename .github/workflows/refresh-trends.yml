@@ -1,9 +1,9 @@
-# 매일 한국 시간 새벽 4시(UTC 19시)에 업종별 인기 키워드를 받아 public/trends-today.json 으로 저장·배포
+# 매일 한국 시간 새벽 4시 13분(UTC 19시 13분, 정각 혼잡 회피)에 업종별 인기 키워드를 받아 public/trends-today.json 으로 저장·배포
 # + KAGGLE_API_TOKEN 시크릿이 있으면 PC가 꺼져 있어도 캐글 무료 GPU 노트북을 원격 실행하고 결과 번들을 자동 커밋
 name: refresh-trends
 on:
   schedule:
-    - cron: '0 19 * * *'
+    - cron: '13 19 * * *'
   workflow_dispatch:
 permissions:
   contents: write
