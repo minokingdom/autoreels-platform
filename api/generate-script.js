@@ -393,8 +393,8 @@ async function handleTopics(body, res) {
     : [];
 
   const system = `당신은 대한민국 ${indName} 업종 사장님을 돕는 숏폼(릴스·쇼츠) 기획자입니다.
-오늘 날짜 정보와 요즘 인기 키워드를 보고, 오늘 올리기 좋은 영상 주제 6개를 고르세요.
-- 주제마다 방향이 서로 달라야 합니다 (예: 오늘의 추천, 시즌·기념일, 혜택·이벤트, 만드는 과정 보여주기, 정보·팁, 인기 키워드 활용).
+오늘 날짜 정보와 요즘 인기 키워드를 보고, 오늘 올리기 좋은 영상 주제 10개를 고르세요.
+- 주제마다 방향이 서로 달라야 합니다 (예: 오늘의 추천, 시즌·기념일, 혜택·이벤트, 만드는 과정 보여주기, 정보·팁, 인기 키워드 활용, 비포·애프터, 자주 묻는 질문, 단골 후기형, 타임특가·마감안내).
 - title: 화면 카드에 쓸 주제 이름, 공백 포함 14자 이내.
 - why: 왜 오늘 이 주제인지 한 줄, 25자 이내 (예: "금요일 저녁 외식 수요", "수능 D-5").
 - prompt: 이 주제로 대본을 만들 때 AI에 넣을 상황 한 줄, 50자 이내. "계기 → 손님의 마음·필요 → 우리 ${product}이(가) 채워 줌"이 한 줄에 이어지게 쓰세요.
@@ -405,7 +405,7 @@ JSON으로만 출력: {"topics":[{"title":"","why":"","prompt":""}]}`;
   const user = `[업종]: ${indName} / 화자: ${role}
 [오늘]: ${clip(dc.dateStr, 30)} ${clip(dc.weekday, 10)} · 계절 ${clip(dc.season, 10)}${dc.timeOfDay ? ` · ${clip(dc.timeOfDay, 10)}` : ''}
 [다가오는 날]: ${events.length ? events.join(', ') : '없음'}
-[요즘 인기 키워드·영상 제목]: ${trends.length ? trends.join(' / ') : '없음'}${storeHint ? `\n[가게 정보]: ${storeHint}` : ''}${excludeTitles.length ? `\n[이미 보여준 주제 (겹치지 않게 완전히 새로운 6개 추천)]: ${excludeTitles.join(', ')}` : ''}`;
+[요즘 인기 키워드·영상 제목]: ${trends.length ? trends.join(' / ') : '없음'}${storeHint ? `\n[가게 정보]: ${storeHint}` : ''}${excludeTitles.length ? `\n[이미 보여준 주제 (겹치지 않게 완전히 새로운 10개 추천)]: ${excludeTitles.join(', ')}` : ''}`;
 
   const tries = [];
 
@@ -435,7 +435,7 @@ JSON으로만 출력: {"topics":[{"title":"","why":"","prompt":""}]}`;
         const topics = (parsed && Array.isArray(parsed.topics) ? parsed.topics : [])
           .map((x) => ({ title: clip(x && x.title, 20), why: clip(x && x.why, 40), prompt: clip(x && x.prompt, 80) }))
           .filter((x) => x.title && x.prompt)
-          .slice(0, 6);
+          .slice(0, 10);
         if (topics.length >= 3) return res.status(200).json({ ok: true, provider: `Google ${model}`, topics });
         t.error = 'topics 부족';
       } catch (err) {
@@ -475,7 +475,7 @@ JSON으로만 출력: {"topics":[{"title":"","why":"","prompt":""}]}`;
         const topics = (parsed && Array.isArray(parsed.topics) ? parsed.topics : [])
           .map((x) => ({ title: clip(x && x.title, 20), why: clip(x && x.why, 40), prompt: clip(x && x.prompt, 80) }))
           .filter((x) => x.title && x.prompt)
-          .slice(0, 6);
+          .slice(0, 10);
         if (topics.length >= 3) return res.status(200).json({ ok: true, provider: `kie.ai ${model}`, topics });
         t.error = 'topics 부족';
       } catch (err) {
@@ -490,6 +490,8 @@ JSON으로만 출력: {"topics":[{"title":"","why":"","prompt":""}]}`;
 async function buildTopicScenePrompts(body, apiKey, count) {
   const topicText = String((body.topic && body.topic.title) || body.prompt || body.vehicle || '').trim();
   const captions = Array.isArray(body.captions) ? body.captions.slice(0, count).map((c) => String(c || '').trim()) : [];
+  const topicsList = Array.isArray(body.topicsList) ? body.topicsList.slice(0, count) : [];
+  const isIcon = Boolean(body.isIcon);
   const indName = (body.industryInfo && body.industryInfo.name) ? String(body.industryInfo.name) : (body.industry || '비즈니스');
   const th = body.themeInfo && typeof body.themeInfo === 'object' ? body.themeInfo : {};
   const themeDesc = [
@@ -503,23 +505,31 @@ async function buildTopicScenePrompts(body, apiKey, count) {
   ].filter(Boolean).join(' | ');
   let prompts = [];
   try {
+    const instruction = isIcon && topicsList.length
+      ? `Topics (${topicsList.length}):\n${topicsList.map((t, i) => `${i + 1}. ${t.title || ''} (${t.why || ''})`).join('\n')}
+
+Return ONLY a JSON array of ${topicsList.length} concise English square 1:1 thumbnail icon prompts (one per topic in exact order).
+Each icon must feature a clear, unmistakable central visual subject depicting THAT specific topic in "${indName}" context, harmonized with the design mood (${themeDesc || 'clean modern editorial'}), readable even at 52x52px thumbnail size.
+Rules: clean centered studio photography or 3D editorial object, shallow depth of field, NO text, NO typography, NO letters, NO numbers, NO watermarks, NO logos.`
+      : `Topic / Product: ${topicText}
+Cut captions (${count}): ${captions.join(' | ') || topicText}
+
+Return ONLY a JSON array of ${count} concise English photography prompts (one per cut) for vertical 9:16 Reels backgrounds that:
+1) Directly depict the topic "${topicText}" in real-world "${indName}" context, matching each cut caption.
+2) Visually harmonize with the active design & theme (${themeDesc || 'modern editorial'}) — match its background brightness (dark/moody vs bright/cream/pastel), color grading, and accent tone, and leave clean uncluttered space for overlay Korean text.
+Rules: cohesive visual series across all ${count} cuts, photorealistic editorial photography, natural lighting, shallow depth of field, NO text, NO typography, NO watermarks, NO logos, NO UI.`;
+
     const promptReq = {
       contents: [{
         role: 'user',
         parts: [{
           text: `You are a commercial short-form video art director.
 Industry: ${indName}
-Topic / Product: ${topicText}
 Visual Design & Theme: ${themeDesc || 'Clean modern editorial Reels'}
-Cut captions (${count}): ${captions.join(' | ') || topicText}
-
-Return ONLY a JSON array of ${count} concise English photography prompts (one per cut) for vertical 9:16 Reels backgrounds that:
-1) Directly depict the topic "${topicText}" in real-world "${indName}" context, matching each cut caption.
-2) Visually harmonize with the active design & theme (${themeDesc || 'modern editorial'}) — match its background brightness (dark/moody vs bright/cream/pastel), color grading, and accent tone, and leave clean uncluttered space for overlay Korean text.
-Rules: cohesive visual series across all ${count} cuts, photorealistic editorial photography, natural lighting, shallow depth of field, NO text, NO typography, NO watermarks, NO logos, NO UI.`
+${instruction}`
         }]
       }],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 900, responseMimeType: 'application/json' }
+      generationConfig: { temperature: 0.7, maxOutputTokens: isIcon ? 1400 : 900, responseMimeType: 'application/json' }
     };
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
       method: 'POST',
@@ -536,22 +546,29 @@ Rules: cohesive visual series across all ${count} cuts, photorealistic editorial
   } catch (e) {}
   if (!prompts.length) {
     const toneHint = themeDesc ? `, harmonized with ${themeDesc}` : '';
-    prompts = Array.from({ length: count }, (_, i) => (
-      `Vertical 9:16 editorial commercial photography for "${topicText}" (${indName})${toneHint}, scene ${i + 1}, crisp lighting, clean space for typography, photorealistic, no text, no watermark, no logos`
-    ));
+    if (isIcon && topicsList.length) {
+      prompts = topicsList.map((t, i) => (
+        `Square 1:1 studio editorial thumbnail for "${t.title || topicText}" (${indName})${toneHint}, centered clear subject, clean background, no text, no watermark, scene ${i + 1}`
+      ));
+    } else {
+      prompts = Array.from({ length: count }, (_, i) => (
+        `Vertical 9:16 editorial commercial photography for "${topicText}" (${indName})${toneHint}, scene ${i + 1}, crisp lighting, clean space for typography, photorealistic, no text, no watermark, no logos`
+      ));
+    }
   }
   return prompts;
 }
 
-async function generateSingleGeminiSceneImage(apiKey, promptText, idx) {
+async function generateSingleGeminiSceneImage(apiKey, promptText, idx, aspectRatio = '9:16') {
   try {
+    const ratio = aspectRatio === '1:1' ? '1:1' : '9:16';
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${encodeURIComponent(apiKey)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: AbortSignal.timeout(30000),
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: promptText }] }],
-        generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: '9:16' } }
+        generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: ratio } }
       })
     });
     if (r.ok) {
@@ -575,19 +592,20 @@ async function handleSceneImages(body, res) {
   if (body.mode === 'scene-image') {
     const imagePrompt = String(body.imagePrompt || body.prompt || '').trim();
     if (!imagePrompt) return res.status(200).json({ ok: false, error: 'missing_prompt', image: null });
-    const image = await generateSingleGeminiSceneImage(apiKey, imagePrompt, Number(body.index) || 0);
+    const image = await generateSingleGeminiSceneImage(apiKey, imagePrompt, Number(body.index) || 0, body.aspectRatio || '9:16');
     return res.status(200).json({ ok: Boolean(image), image });
   }
+  const hasTopics = Array.isArray(body.topicsList) && body.topicsList.length > 0;
   const topicText = String((body.topic && body.topic.title) || body.prompt || body.vehicle || '').trim();
-  if (!topicText) {
+  if (!topicText && !hasTopics) {
     return res.status(200).json({ ok: false, error: 'missing_topic', images: [], prompts: [] });
   }
-  const count = Math.max(1, Math.min(4, Number(body.count) || 4));
+  const count = Math.max(1, Math.min(10, Number(body.count) || (hasTopics ? body.topicsList.length : 4)));
   const prompts = await buildTopicScenePrompts(body, apiKey, count);
   if (body.mode === 'scene-prompts') {
     return res.status(200).json({ ok: prompts.length > 0, prompts });
   }
-  const results = await Promise.all(prompts.map((p, idx) => generateSingleGeminiSceneImage(apiKey, p, idx)));
+  const results = await Promise.all(prompts.map((p, idx) => generateSingleGeminiSceneImage(apiKey, p, idx, body.aspectRatio || '9:16')));
   const images = results.filter(Boolean);
   return res.status(200).json({ ok: images.length > 0, images });
 }

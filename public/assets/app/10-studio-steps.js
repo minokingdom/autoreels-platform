@@ -66,7 +66,12 @@
       }
       out.push({ title: `${dc.season} 시즌 추천`, why: `${dc.season}에 찾는 사람이 많음`, prompt: `${dc.season}에 딱 맞는 ${P} 추천` });
       out.push({ title: '자주 묻는 질문 답하기', why: '문의를 줄이고 신뢰를 높임', prompt: `손님들이 자주 묻는 ${P} 질문에 답하기` });
-      return out.slice(0, 6);
+      out.push({ title: '비포 · 애프터 비교', why: '변화를 한눈에 보여 주기', prompt: `${P} 진행 전후 차이와 달라지는 점` });
+      out.push({ title: '초보자가 많이 하는 실수', why: '저장·공유율이 높은 정보형', prompt: `${P} 고를 때 실패하지 않는 기준 3가지` });
+      out.push({ title: '예약 · 방문 전 체크', why: '노쇼·오해를 줄이는 안내', prompt: `${P} 방문 전 미리 알면 좋은 꿀팁` });
+      out.push({ title: '손님 후기 · 만족 포인트', why: '재방문이 많은 이유 소개', prompt: `실제로 찾은 분들이 가장 만족하는 ${P} 포인트` });
+      out.push({ title: '이번 주 마감 임박 안내', why: '망설이는 고객에게 계기 주기', prompt: `이번 주 예약·혜택 마감 전 챙겨야 할 ${P}` });
+      return out.slice(0, 10);
     }
     let arTopicsLoading = 0;
     // 주제는 한 화면에 5개씩만 (나머지는 다음 페이지)
@@ -80,7 +85,88 @@
       const box = document.getElementById('topicCards');
       if (box && box.getBoundingClientRect().top < 120) window.scrollTo({ top: Math.max(0, box.getBoundingClientRect().top + window.scrollY - 170), behavior: 'smooth' });
     }
-    function arRenderTopics(topics, statusText, keepPage) {
+    function arPickFallbackTopicPhoto(indKey, idx) {
+      const k = indKey && indKey !== 'undefined' ? indKey : 'auto';
+      const slot = ((idx % 10) + 1);
+      return `/assets/scenes/${k}/${slot}.jpg`;
+    }
+    async function arDownscaleSquareIcon(dataUrl) {
+      return new Promise((resolve) => {
+        const raw = new Image();
+        raw.onload = () => {
+          try {
+            const size = 160;
+            const sw = raw.naturalWidth || size;
+            const sh = raw.naturalHeight || size;
+            const crop = Math.min(sw, sh);
+            const sx = Math.floor((sw - crop) / 2);
+            const sy = Math.floor((sh - crop) / 2);
+            const cv = document.createElement('canvas');
+            cv.width = size;
+            cv.height = size;
+            cv.getContext('2d').drawImage(raw, sx, sy, crop, crop, 0, 0, size, size);
+            resolve(cv.toDataURL('image/jpeg', 0.84));
+          } catch (e) { resolve(dataUrl); }
+        };
+        raw.onerror = () => resolve(dataUrl);
+        raw.src = dataUrl;
+      });
+    }
+    let arTopicIconJob = 0;
+    async function arHydrateTopicIcons(topics, cacheKey, serverUpdatedAt) {
+      if (!Array.isArray(topics) || !topics.length || !window.location.protocol.startsWith('http')) return;
+      const missing = topics.map((t, i) => ({ t, i })).filter(({ t }) => t && !t.iconUrl);
+      if (!missing.length) return;
+      const jobId = ++arTopicIconJob;
+      try {
+        const th = typeof arBuildThemeContextForImages === 'function' ? arBuildThemeContextForImages() : {};
+        const pRes = await fetch('/api/generate-script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mode: 'scene-prompts',
+            isIcon: true,
+            industry: IND.key,
+            industryInfo: { name: IND.name },
+            themeInfo: th,
+            topicsList: missing.map(({ t }) => ({ title: t.title, why: t.why })),
+            count: missing.length
+          })
+        });
+        const pj = await pRes.json().catch(() => ({}));
+        if (jobId !== arTopicIconJob || !pRes.ok || !pj.ok || !Array.isArray(pj.prompts)) return;
+
+        // 현재 보이는 1페이지(처음 5개)부터 먼저 생성 후 나머지 병렬 생성
+        const ordered = missing.map((m, k) => ({ ...m, prompt: pj.prompts[k] })).filter((x) => x.prompt);
+        const runBatch = async (batch) => {
+          await Promise.all(batch.map(async ({ t, i, prompt }) => {
+            try {
+              const ir = await fetch('/api/generate-script', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode: 'scene-image', imagePrompt: prompt, index: i, aspectRatio: '1:1' })
+              });
+              const ij = await ir.json().catch(() => ({}));
+              if (jobId !== arTopicIconJob || !ir.ok || !ij.ok || !ij.image || !ij.image.dataUrl) return;
+              const iconUrl = await arDownscaleSquareIcon(ij.image.dataUrl);
+              if (jobId !== arTopicIconJob) return;
+              t.iconUrl = iconUrl;
+              const imgEl = document.querySelector(`#topicCards [data-topic-idx="${i}"] .bgm-cover img`);
+              if (imgEl) imgEl.src = iconUrl;
+            } catch (e) {}
+          }));
+          if (jobId === arTopicIconJob && cacheKey) {
+            try {
+              localStorage.setItem(cacheKey, JSON.stringify({ topics, at: Date.now(), trendsAt: serverUpdatedAt || '' }));
+            } catch (e) {}
+          }
+        };
+        await runBatch(ordered.slice(0, 5));
+        if (ordered.length > 5 && jobId === arTopicIconJob) await runBatch(ordered.slice(5));
+      } catch (e) {}
+    }
+
+    function arRenderTopics(topics, statusText, keepPage, cacheInfo) {
       const box = document.getElementById('topicCards');
       if (!box) return;
       if (!keepPage) arTopicPage = 0;
@@ -94,35 +180,27 @@
           <span>${arTopicPage + 1} / ${pages}</span>
           <button type="button" onclick="arTopicGoPage(${arTopicPage + 1})" ${arTopicPage >= pages - 1 ? 'disabled' : ''}>다음 주제 →</button>
         </div>` : '';
-      // 인스타 목록처럼: 그림 칸 + 제목 + 이유 한 줄 + ›
-      const topicIcon = (t) => {
-        const x = [t.title, t.why, t.prompt].join(' ');
-        if (/수능|시험|입시/.test(x)) return ['📝', '#6366f1', '#1e1b4b'];
-        if (/블프|블랙|세일|할인|특가|혜택|쿠폰|이벤트/.test(x)) return ['🏷️', '#f43f5e', '#4c0519'];
-        if (/가을|겨울|봄|여름|날씨|비 오|눈 오|추위|건조|크리스마스|연말/.test(x)) return ['🍂', '#f59e0b', '#451a03'];
-        if (/비법|방법|팁|관리|주의|가이드|정보|과정/.test(x)) return ['💡', '#14b8a6', '#042f2e'];
-        if (/인기|요즘|유행|트렌드|키워드/.test(x)) return ['🔥', '#fb923c', '#431407'];
-        if (/바쁜|빠른|퇴근|점심|직장인|시간/.test(x)) return ['⏱️', '#38bdf8', '#082f49'];
-        if (/평일|주말|월요|금요|오늘/.test(x)) return ['📅', '#a78bfa', '#2e1065'];
-        return ['✨', '#4cc38a', '#052e16'];
-      };
       const curTopic = window.arTodayTopic && window.arTodayTopic.title;
+      const indKey = typeof IND !== 'undefined' && IND.key ? IND.key : 'auto';
       box.innerHTML = topics.slice(from, from + AR_TOPICS_PER_PAGE).map((t, k) => ({ t, i: from + k })).map(({ t, i }) => {
-        const ic = topicIcon(t);
+        const imgSrc = t.iconUrl || arPickFallbackTopicPhoto(indKey, i);
         return `
         <button type="button" data-topic-idx="${i}" class="bgm-row topic-row ${curTopic === t.title ? 'on' : ''}">
-          <span class="bgm-cover" style="width:52px;height:52px;background:linear-gradient(135deg, ${ic[1]}, ${ic[2]});font-size:22px">${ic[0]}</span>
+          <span class="bgm-cover overflow-hidden" style="width:52px;height:52px;background:#1c1c1e"><img src="${esc(imgSrc)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit" /></span>
           <span class="bgm-row-txt"><strong>${esc(t.title)}</strong><small><b>${esc(t.why)}</b>${t.prompt ? ' · ' + esc(t.prompt) : ''}</small></span>
           <span class="bgm-row-state">${curTopic === t.title ? '✓' : '›'}</span>        </button>`;
       }).join('') + pager;
       const st = document.getElementById('topicStatus');
       if (st && statusText !== null) st.textContent = statusText || '';
+      if (cacheInfo && cacheInfo.hydrate) {
+        arHydrateTopicIcons(topics, cacheInfo.cacheKey, cacheInfo.serverUpdatedAt);
+      }
     }
     async function arLoadTopics(force) {
       const dc = arDateContext();
       const line = document.getElementById('topicDateLine');
       if (line) line.textContent = `${dc.dateStr} ${dc.weekday} · ${dc.season}${dc.events.length ? ' · ' + dc.events.slice(0, 2).join(' · ') : ''}`;
-      const cacheKey = `ar_topics_v3_${IND.key}_${dc.dateKey}`;
+      const cacheKey = `ar_topics_v4_${IND.key}_${dc.dateKey}`;
       let pre = null;
       let trends = [];
       if (window.location.protocol.startsWith('http')) {
@@ -138,7 +216,7 @@
         try {
           const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
           if (cached && Array.isArray(cached.topics) && cached.topics.length && (!serverUpdatedAt || cached.trendsAt === serverUpdatedAt)) {
-            arRenderTopics(cached.topics, '오늘의 추천 주제예요. 마음에 드는 게 없으면 [다른 주제 보기]를 눌러 보세요.');
+            arRenderTopics(cached.topics, '오늘의 추천 주제예요. 마음에 드는 게 없으면 [다른 주제 보기]를 눌러 보세요.', false, { hydrate: true, cacheKey, serverUpdatedAt });
             return;
           }
         } catch (e) {}
@@ -180,7 +258,7 @@
         if (myJob !== arTopicsLoading) return;
         if (res && res.ok && Array.isArray(res.topics) && res.topics.length) {
           try { localStorage.setItem(cacheKey, JSON.stringify({ topics: res.topics, at: Date.now(), trendsAt: serverUpdatedAt })); } catch (e) {}
-          arRenderTopics(res.topics, `오늘 날짜${trends.length ? '와 요즘 인기 키워드' : ''}로 고른 주제예요. 하나를 누르면 대본을 바로 만들어요.`);
+          arRenderTopics(res.topics, `오늘 날짜${trends.length ? '와 요즘 인기 키워드' : ''}로 고른 주제예요. 하나를 누르면 대본을 바로 만들어요.`, false, { hydrate: true, cacheKey, serverUpdatedAt });
           return;
         }
       } catch (e) {}
