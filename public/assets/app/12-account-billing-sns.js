@@ -1066,11 +1066,11 @@
       const curTab = STUDIO_TABS.find((k) => { const el = document.getElementById(`studioPanel_${k}`); return el && !el.classList.contains('hidden'); }) || 'topic';
       arUpdateMobileStepBar(curTab);
       setTimeout(() => { try { arSyncIgSelects(); arSyncProductRows(); } catch (e) {} }, 0);
-      // 컷마다 다른 디자인 섞기는 기본으로 켜 둠 (사장님이 끄면 그 선택을 기억)
+      // 디자인 섞기 끔 (사장님 요청)
       setTimeout(() => {
         try {
-          // 다른 디자인끼리 섞기는 사장님이 켤 때만 (기본은 한 디자인 안에서 컷마다 장면 구성이 바뀜)
-          if (localStorage.getItem('autoreels_cut_mix') === '1' && !campaign.cutDesigns) campaign.cutDesigns = arBuildCutDesignMix();
+          // 디자인 섞기는 쓰지 않음 (한 스타일로 처음부터 끝까지)
+          campaign.cutDesigns = null;
           arRenderCutMixRow();
         } catch (e) {}
       }, 0);

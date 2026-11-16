@@ -215,100 +215,12 @@
       if (!S.n) return null;
       return S.photos[(((S.idx + k) % S.n) + S.n) % S.n];
     }
-    // ★ 컷마다 장면 구성 바꾸기 (모든 디자인 공통)
-    //   한 디자인이 처음부터 끝까지 똑같은 화면 구성으로만 나오지 않게, 화면을 꽉 채운 사진이
-    //   컷마다 '꽉 채움 → 사진 카드(흐린 배경 위) → 두 장 나란히 → 가까이 당겨 보기'로 바뀜.
-    //   첫 컷(훅)과 마지막 컷(안내)은 꽉 채움. 디자인마다 순서가 달라 같은 리듬이 반복되지 않음.
-    function arCutComposition(design, i, n) {
-      if (!design || i <= 0 || i >= n - 1) return 'full';
-      let h = 0;
-      String(design.id || '').split('').forEach((ch) => { h = (h * 31 + ch.charCodeAt(0)) >>> 0; });
-      const base = ['inset', 'split', 'zoom'];
-      const k = h % 3;
-      const seq = base.slice(k).concat(base.slice(0, k));
-      return seq[(i - 1) % 3];
-    }
-    // ★ 컷마다 카메라 움직임도 다르게 (천천히 다가가기·물러나기·옆으로 흐르기·위로 올려 보기)
-    //   같은 디자인이라도 컷이 바뀔 때마다 화면의 '호흡'이 달라져 단조롭지 않게.
-    function arCutCamera(design, i) {
-      if (!design || i < 0) return null;
-      let h = 7;
-      String(design.id || '').split('').forEach((ch) => { h = (h * 33 + ch.charCodeAt(0)) >>> 0; });
-      const moves = ['in', 'panR', 'out', 'panL', 'up'];
-      return moves[(i + h) % moves.length];
-    }
-    function arApplyCamera(move, w, h, scale, px, py) {
-      const p = Math.max(0, Math.min(1, window.__arCutProg || 0));
-      const q = p * p * (3 - 2 * p);
-      if (move === 'in') return [scale * (1 + 0.09 * q), px, py];
-      if (move === 'out') return [scale * (1.1 - 0.09 * q), px, py];
-      if (move === 'panR') return [scale * 1.1, px + w * 0.045 * (q * 2 - 1), py];
-      if (move === 'panL') return [scale * 1.1, px - w * 0.045 * (q * 2 - 1), py];
-      if (move === 'up') return [scale * 1.1, px, py + h * 0.03 * (1 - q * 2)];
-      return [scale, px, py];
-    }
-    function arDrawComposition(c, img, variant, x, y, w, h, scale, px, py) {
-      if (variant === 'zoom') { kitCover(c, img, x, y, w, h, scale * 1.38, px, py - h * 0.04); return; }
-      if (variant === 'split') {
-        const photos = (typeof campaign !== 'undefined' && campaign.uploadedPhotos) || [];
-        // 옆 칸에는 지금 사진과 '다른' 사진 (같은 사진이 두 번 나오지 않게)
-        // 견본 사진 중 파일 이름만 다르고 내용이 같은 사진이 있어, 작게 줄인 픽셀로 같은 사진인지 판단
-        const key = (im) => {
-          if (!im) return im;
-          if (im._arSig) return im._arSig;
-          try {
-            if (im._isVideo) return (im._arSig = im.currentSrc || im.src || im);
-            const cv = document.createElement('canvas'); cv.width = 8; cv.height = 8;
-            const g = cv.getContext('2d'); g.drawImage(im, 0, 0, 8, 8);
-            const d = g.getImageData(0, 0, 8, 8).data;
-            let sig = '';
-            for (let q = 0; q < d.length; q += 4) sig += ((d[q] + d[q + 1] + d[q + 2]) >> 5).toString(32);
-            im._arSig = sig;
-          } catch (err) { im._arSig = im.currentSrc || im.src || String(Math.random()); }
-          return im._arSig;
-        };
-        const others = photos.filter((ph) => ph && key(ph) !== key(img));
-        const at = photos.indexOf(img);
-        const other = others.length ? others[(Math.max(0, at) + Math.max(0, window.__arActiveRenderCutIdx || 0)) % others.length] : img;
-        const gap = Math.round(w * 0.006);
-        const hw = (w - gap) / 2;
-        c.save(); c.fillStyle = '#0b0b0d'; c.fillRect(x, y, w, h); c.restore();
-        c.save(); c.beginPath(); c.rect(x, y, hw, h); c.clip(); kitCover(c, img, x, y, hw, h, scale, px * 0.5, py); c.restore();
-        c.save(); c.beginPath(); c.rect(x + hw + gap, y, hw, h); c.clip(); kitCover(c, other, x + hw + gap, y, hw, h, scale * 1.04, -px * 0.5, py); c.restore();
-        return;
-      }
-      if (variant === 'inset') {
-        // 같은 사진을 흐리고 어둡게 깐 뒤, 가운데에 사진 카드 (사진을 '물건'처럼 놓는 구성)
-        c.save();
-        if ('filter' in c) { const f = c.filter; c.filter = `${f && f !== 'none' ? f + ' ' : ''}blur(${Math.round(w * 0.03)}px) brightness(0.6)`; }
-        kitCover(c, img, x - w * 0.05, y - h * 0.05, w * 1.1, h * 1.1, scale, px * 0.3, py * 0.3);
-        c.restore();
-        const mx = w * 0.09, cy = y + h * 0.15, cw = w - mx * 2, chh = h * 0.6, rad = w * 0.04;
-        c.save();
-        c.shadowColor = 'rgba(0,0,0,0.25)'; c.shadowBlur = 10; c.shadowOffsetY = 6;
-        gRoundRect(c, x + mx, cy, cw, chh, rad); c.fillStyle = '#111'; c.fill();
-        c.restore();
-        c.save(); gRoundRect(c, x + mx, cy, cw, chh, rad); c.clip();
-        kitCover(c, img, x + mx, cy, cw, chh, scale, px, py);
-        c.restore();
-        return;
-      }
-      kitCover(c, img, x, y, w, h, scale, px, py);
-    }
     function kitCover(c, img, x, y, w, h, scale, px, py) {
       if (!img) return;
       if (img._isVideo && img.readyState < 2) return;
       const sw = img.videoWidth || img.naturalWidth || img.width;
       const sh = img.videoHeight || img.naturalHeight || img.height;
       if (!sw || !sh) return;
-      const vr = window.__arCompVariant;
-      const fullCanvas = c.canvas && Math.abs(x) < 2 && Math.abs(y) < 2 && w >= c.canvas.width - 2 && h >= c.canvas.height - 2;
-      if (fullCanvas && window.__arCutCam && !window.__arCompBusy) [scale, px, py] = arApplyCamera(window.__arCutCam, w, h, scale, px, py);
-      if (vr && vr !== 'full' && !window.__arCompBusy && c.canvas && Math.abs(x) < 2 && Math.abs(y) < 2 && w >= c.canvas.width - 2 && h >= c.canvas.height - 2) {
-        window.__arCompBusy = true;
-        try { arDrawComposition(c, img, vr, x, y, w, h, scale, px, py); } finally { window.__arCompBusy = false; }
-        return;
-      }
       const r = Math.max(w / sw, h / sh) * scale;
       c.drawImage(img, x + (w - sw * r) / 2 + px, y + (h - sh * r) / 2 + py, sw * r, sh * r);
     }
@@ -4242,7 +4154,7 @@
       if (sw) sw.checked = on;
       if (again) again.classList.toggle('hidden', !on);
       if (list) {
-        list.textContent = on ? campaign.cutDesigns.map((id, i) => `${i + 1}컷 ${(arFindDesign(id) || {}).name || ''}`).join(' · ') : '꺼 두면 한 디자인 안에서 컷마다 장면 구성이 바뀌어요';
+        list.textContent = on ? campaign.cutDesigns.map((id, i) => `${i + 1}컷 ${(arFindDesign(id) || {}).name || ''}`).join(' · ') : '한 디자인으로 처음부터 끝까지';
       }
     }
     function getActivePalette() {

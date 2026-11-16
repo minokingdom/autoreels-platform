@@ -5496,13 +5496,7 @@
       // 컷마다 섞기: 이 컷에 정한 디자인으로 그림 (엔딩은 대표 디자인)
       window.__arMixCut = campaign.cutDesigns ? activeCutIdx : -1;
       const baseDesign = getActiveDesign();
-      // 컷마다 장면 구성 바꾸기 (사진 위치·확대를 직접 고친 컷은 그대로)
-      const photoTouched = activeCutIdx >= 0 && typeof isCutElementModified === 'function' && isCutElementModified(activeCutIdx, 'photo');
-      window.__arCompVariant = activeCutIdx >= 0 && !photoTouched && typeof arCutComposition === 'function' ? arCutComposition(baseDesign, activeCutIdx, totalCuts) : 'full';
       const localSec = activeCutIdx >= 0 ? (t - activeCutIdx * cutDur) : 0;
-      window.__arCutProg = cutDur > 0 ? localSec / cutDur : 0;
-      window.__arCutCam = activeCutIdx >= 0 && !photoTouched && typeof arCutCamera === 'function' ? arCutCamera(baseDesign, activeCutIdx) : null;
-      window.__arCapEntry = activeCutIdx >= 0 ? ['rise', 'slide', 'pop', 'type'][(activeCutIdx + String(baseDesign && baseDesign.id || '').length) % 4] : 'rise';
       const transId = (activeCutIdx >= 0 && campaign.cutTransitions && campaign.cutTransitions[activeCutIdx]) || 'default';
       window.__arActiveRenderCutIdx = activeCutIdx;
       window.__arActiveRenderLocalSec = localSec;

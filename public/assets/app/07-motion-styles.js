@@ -131,25 +131,10 @@
       c.textAlign = align;
       c.textBaseline = 'middle';
       c.font = gFont(F.w, r.size, F.f);
-      // 컷마다 자막 등장 방식이 바뀜: 아래서 올라오기 / 옆에서 밀려오기 / 커지며 또렷해지기 / 한 글자씩 써지기
-      const ent = window.__arCapEntry || 'rise';
-      const x0 = x;
       r.lines.forEach((ln, i) => {
         const p = mEase((e - i * 0.12) / 0.5);
-        let ly = top + i * r.lh + r.lh / 2 + (ent === 'rise' ? (1 - p) * 26 : 0);
-        let lx = x;
-        if (ent === 'slide') lx = x - (1 - p) * maxW * 0.18;
-        if (ent === 'type') {
-          const chars = Array.from(ln);
-          const shown = Math.ceil(chars.length * Math.max(0, Math.min(1, (e - i * 0.35) / 0.7)));
-          ln = chars.slice(0, shown).join('');
-        }
-        c.globalAlpha = ent === 'type' ? (ln ? 1 : 0) : p;
-        if (ent === 'pop') {
-          const sc = 0.86 + 0.14 * p;
-          c.save(); c.translate(x, ly); c.scale(sc, sc); c.translate(-x, -ly);
-        }
-        x = lx;
+        const ly = top + i * r.lh + r.lh / 2 + (1 - p) * 26;
+        c.globalAlpha = p;
         if (box) {
           const w = c.measureText(ln).width + 28;
           const bx = align === 'center' ? x - w / 2 : x - 14;
@@ -158,8 +143,6 @@
         }
         c.fillStyle = color;
         c.fillText(ln, x, ly);
-        if (ent === 'pop') c.restore();
-        x = x0;
       });
       c.restore();
       return { top, h: total };
