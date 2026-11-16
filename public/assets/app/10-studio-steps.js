@@ -1401,6 +1401,18 @@
         arScriptVariants.strip = stripExcludedLocal;
         applyAiScriptToCampaign(variants[0], d, stripExcludedLocal);
         renderScriptVariantPicker();
+        if (!campaign.isUserCustomPhotos && (raw || (window.arTodayTopic && window.arTodayTopic.title))) {
+          arApplyTopicSceneImages({
+            prompt: raw || campaign.vehicle,
+            vehicle: campaign.vehicle,
+            topic: window.arTodayTopic || null,
+            industry: IND.key,
+            industryInfo: IND.key === 'auto' ? null : { name: IND.name },
+            captions: Array.isArray(variants[0]?.cutCaptions) ? variants[0].cutCaptions : [],
+            count: Math.min(4, totalCuts),
+            adminGeminiKey
+          });
+        }
       } catch (err) {
         arScriptVariants.list = [];
         renderScriptVariantPicker();
@@ -1419,4 +1431,51 @@
       }
 
       arFinishScriptApply(totalCuts);
+    }
+
+    async function arApplyTopicSceneImages(payload) {
+      const genId = (arApplyTopicSceneImages._seq = (arApplyTopicSceneImages._seq || 0) + 1);
+      const noticeEl = document.getElementById('aiDirectorStatusNotice');
+      try {
+        if (noticeEl) {
+          noticeEl.classList.remove('hidden');
+          noticeEl.textContent = `주제 [${payload.prompt}]에 맞는 씬 이미지를 생성 중입니다...`;
+        }
+        const res = await fetch('/api/generate-script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'scene-images', ...payload })
+        });
+        const j = await res.json().catch(() => ({}));
+        if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
+        if (!res.ok || !j.ok || !Array.isArray(j.images) || !j.images.length) return;
+
+        if (!Array.isArray(campaign.uploadedPhotos)) campaign.uploadedPhotos = [];
+        if (!Array.isArray(campaign.scenePlan)) campaign.scenePlan = [];
+        let loadedCount = 0;
+        j.images.forEach((item) => {
+          if (!item || !item.dataUrl || typeof item.index !== 'number') return;
+          const idx = item.index;
+          const img = new Image();
+          img._dataUrl = item.dataUrl;
+          img._label = `${idx + 1}. ${payload.prompt}`;
+          img._sceneTitle = payload.prompt;
+          img.onload = () => {
+            if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
+            campaign.uploadedPhotos[idx] = img;
+            if (!campaign.scenePlan[idx]) campaign.scenePlan[idx] = {};
+            campaign.scenePlan[idx].photoIdx = idx;
+            loadedCount += 1;
+            if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+            if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+            if (typeof renderCutEditorPanel === 'function') renderCutEditorPanel();
+            if (typeof renderInlineQuickEditBar === 'function') renderInlineQuickEditBar();
+            if (window.__timelines?.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+            if (noticeEl && loadedCount === j.images.length) {
+              noticeEl.textContent = `주제 [${payload.prompt}] 맞춤 대본·이미지(${loadedCount}컷)가 적용되었습니다.`;
+            }
+          };
+          img.src = item.dataUrl;
+        });
+      } catch (e) {}
     }

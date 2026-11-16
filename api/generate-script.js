@@ -483,6 +483,86 @@ JSON으로만 출력: {"topics":[{"title":"","why":"","prompt":""}]}`;
   return res.status(200).json({ ok: false, error: 'ai_failed', tries, topics: [] });
 }
 
+// 주제 맞춤 9:16 씬 이미지 생성 ({ mode: 'scene-images' })
+async function handleSceneImages(body, res) {
+  const apiKey = String(body.adminGeminiKey || process.env.GEMINI_API_KEY || '').trim();
+  if (!apiKey) {
+    return res.status(200).json({ ok: false, error: 'missing_gemini_key', images: [] });
+  }
+  const topicText = String((body.topic && body.topic.title) || body.prompt || body.vehicle || '').trim();
+  if (!topicText) {
+    return res.status(200).json({ ok: false, error: 'missing_topic', images: [] });
+  }
+  const count = Math.max(1, Math.min(4, Number(body.count) || 4));
+  const captions = Array.isArray(body.captions) ? body.captions.slice(0, count).map((c) => String(c || '').trim()) : [];
+  const indName = (body.industryInfo && body.industryInfo.name) ? String(body.industryInfo.name) : (body.industry || '비즈니스');
+
+  let prompts = [];
+  try {
+    const promptReq = {
+      contents: [{
+        role: 'user',
+        parts: [{
+          text: `You are a commercial short-form video art director.
+Industry: ${indName}
+Topic / Product: ${topicText}
+Cut captions (${count}): ${captions.join(' | ') || topicText}
+
+Return ONLY a JSON array of ${count} concise English photography prompts (one per cut) for vertical 9:16 Reels backgrounds that directly depict the topic "${topicText}".
+Rules: photorealistic editorial photography, natural lighting, shallow depth of field, NO text, NO typography, NO watermarks, NO logos, NO UI.`
+        }]
+      }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 700, responseMimeType: 'application/json' }
+    };
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(15000),
+      body: JSON.stringify(promptReq)
+    });
+    if (r.ok) {
+      const j = await r.json();
+      const raw = j?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) prompts = parsed.map((s) => String(s || '').trim()).filter(Boolean).slice(0, count);
+    }
+  } catch (e) {}
+
+  if (!prompts.length) {
+    prompts = Array.from({ length: count }, (_, i) => (
+      `Vertical 9:16 editorial commercial photography for "${topicText}" (${indName}), scene ${i + 1}, crisp natural lighting, photorealistic, no text, no watermark, no logos`
+    ));
+  }
+
+  const genOne = async (p, idx) => {
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${encodeURIComponent(apiKey)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(30000),
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: p }] }],
+          generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: '9:16' } }
+        })
+      });
+      if (r.ok) {
+        const j = await r.json();
+        const parts = j?.candidates?.[0]?.content?.parts || [];
+        const imgPart = parts.find((pt) => pt.inlineData && pt.inlineData.data);
+        if (imgPart) {
+          const mime = imgPart.inlineData.mimeType || 'image/jpeg';
+          return { index: idx, dataUrl: `data:${mime};base64,${imgPart.inlineData.data}` };
+        }
+      }
+    } catch (e) {}
+    return null;
+  };
+
+  const results = await Promise.all(prompts.map((p, idx) => genOne(p, idx)));
+  const images = results.filter(Boolean);
+  return res.status(200).json({ ok: images.length > 0, images });
+}
+
 const { isSameSiteRequest } = require('../lib/server/usage');
 
 async function handler(req, res) {
@@ -517,6 +597,8 @@ async function handler(req, res) {
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
   // 오늘의 주제 추천: {mode:'topics'} — 대본 대신 오늘 올릴 주제 후보 6개를 돌려줌
   if (body.mode === 'topics') return handleTopics(body, res);
+  // 주제 맞춤 씬 이미지 생성: {mode:'scene-images'}
+  if (body.mode === 'scene-images') return handleSceneImages(body, res);
   const prompt = (body.prompt || '').trim();
   const excludeRaw = String(body.exclude || '').trim();
   const excludeTerms = excludeRaw.split(/[,，/\n]+/).map((s) => s.trim()).filter(Boolean).slice(0, 20);

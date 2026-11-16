@@ -1705,7 +1705,9 @@
     }
     const AR_BGM_COVER_IDS = new Set([
       'showroom', 'cafe', 'restaurant', 'beauty', 'fitness',
-      'realestate', 'academy', 'clinic', 'shop', 'interior'
+      'realestate', 'academy', 'clinic', 'shop', 'interior',
+      'urban', 'bright', 'luxury', 'lofi', 'vlog',
+      'cinema', 'drive', 'edm', 'funk', 'ballad', 'news', 'jazz'
     ]);
     function arBgmCover(id, size) {
       const m = AR_BGM_META[id] || ['', '', '#3f3f46', '#18181b'];
