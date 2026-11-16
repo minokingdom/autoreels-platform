@@ -1422,9 +1422,35 @@
         arScriptVariants.list = [];
         renderScriptVariantPicker();
         if (IND.key !== 'auto') {
-          // 자동차가 아닌 업종: 실패하면 지금 상품 프리셋 대본으로 되돌리되 주제 이미지는 교체
-          if (campaign.presetKey && (AR_INDUSTRY_PRESETS[IND.key] || {})[campaign.presetKey]) applyIndustryPreset(campaign.presetKey);
-          if (noticeEl) noticeEl.textContent = `AI 대본을 만들지 못해 기본 대본으로 채웠습니다. (${err.message || '연결 오류'})`;
+          const tp = window.arTodayTopic;
+          const topicTitle = (tp && tp.title) ? String(tp.title).trim() : (raw ? raw.slice(0, 24) : '');
+          if (topicTitle) {
+            const topicWhy = (tp && tp.why) ? String(tp.why).trim() : '';
+            const shortRaw = (raw || topicTitle).replace(/[.!?]+$/, '').trim();
+            const c1 = topicTitle;
+            const c2 = topicWhy ? topicWhy.slice(0, 26) : `${shortRaw.slice(0, 22)} 포인트`;
+            const c3 = `${IND.name} 맞춤 진행으로 깔끔하게`;
+            const c4 = `${IND.cta || '상담 문의'} 바로 받아보세요`;
+            const baseCaps = [c1, c2, c3, c4];
+            const baseTts = [
+              `${topicTitle}, 고민되시죠?`,
+              topicWhy ? `${topicWhy}.` : `${shortRaw}, 핵심만 짚어드릴게요.`,
+              `${IND.name}에서 딱 맞게 정리해 드립니다.`,
+              `지금 편하게 ${IND.cta || '문의'} 남겨보세요.`
+            ];
+            const offlineAi = {
+              vehicle: topicTitle,
+              hook: topicTitle,
+              discount: campaign.discount || (IND.cta || ''),
+              cutCaptions: Array.from({ length: totalCuts }, (_, i) => baseCaps[i % baseCaps.length]),
+              ttsLines: Array.from({ length: totalCuts }, (_, i) => baseTts[i % baseTts.length])
+            };
+            applyAiScriptToCampaign(offlineAi, d, stripExcludedLocal);
+            if (noticeEl) noticeEl.textContent = `주제 [${topicTitle}] 기본 대본을 채웠고, 맞춤 이미지를 적용합니다.`;
+          } else {
+            if (campaign.presetKey && (AR_INDUSTRY_PRESETS[IND.key] || {})[campaign.presetKey]) applyIndustryPreset(campaign.presetKey);
+            if (noticeEl) noticeEl.textContent = `AI 대본을 만들지 못해 기본 대본으로 채웠습니다. (${err.message || '연결 오류'})`;
+          }
           triggerTopicImages(campaign.cutCaptions);
           return;
         }
