@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 AutoReels Nightly Kaggle GPU Worker (runs headless in Kaggle T4/P100 while PC is off).
-1. Clones minokingdom/dealer-reels-platform (public read or authenticated via optional GITHUB_TOKEN).
+1. Clones minokingdom/autoreels-platform (public read or authenticated via optional GITHUB_TOKEN).
 2. Reads public/trends-today.json; fetches 10 fresh Korean topics + English 1:1 icon prompts per industry if missing/stale.
 3. Generates 1:1 topic icons on Kaggle GPU via Lykon/dreamshaper-xl-v2-turbo ($0 compute cost).
 4. Packages /kaggle/working/autoreels_nightly_bundle.zip for GitHub Actions pickup (and pushes directly if GITHUB_TOKEN is set).
@@ -141,7 +141,7 @@ def load_diffusers():
 
 def run_worker() -> None:
     gh_token = get_secret("GITHUB_TOKEN")
-    gh_repo = get_secret("GITHUB_REPO", "minokingdom/dealer-reels-platform")
+    gh_repo = get_secret("GITHUB_REPO", "minokingdom/autoreels-platform")
 
     work_dir = Path("/tmp/autoreels_repo")
     if work_dir.exists():

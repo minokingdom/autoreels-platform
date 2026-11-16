@@ -25,7 +25,7 @@
    - 화면: `npm i --no-save playwright@1.48.2 && npx playwright install chromium && node tests/smoke-render.mjs`
      (모든 디자인을 5개 업종 × 5개 시점으로 그리고, 버튼 함수·단계 탭까지 확인. 오류 0이어야 함)
 4. 관련 파일만 `git add`(`git add .` 금지 — 루트의 임시 `.ps1` 스크립트가 섞입니다). 커밋 후 `main`에 push하면 Vercel이 바로 운영에 배포합니다.
-5. 배포 확인: `gh api repos/minokingdom/dealer-reels-platform/commits/<sha>/status` 가 `success`, GitHub Actions `smoke`가 통과. 운영 주소 https://dealer-reels-platform.vercel.app 에서 직접 확인한 뒤에 완료라고 보고합니다.
+5. 배포 확인: `gh api repos/minokingdom/autoreels-platform/commits/<sha>/status` 가 `success`, GitHub Actions `smoke`가 통과. 운영 주소 https://autoreels-studio.vercel.app 에서 직접 확인한 뒤에 완료라고 보고합니다.
 6. 확인 못 한 것은 못 했다고 말합니다. "될 것 같다"를 완료처럼 보고하지 않습니다.
 
 ## 3. 디자인 규칙 (사장님이 직접 지적한 것들 · 상세: `docs/design-system.md`)

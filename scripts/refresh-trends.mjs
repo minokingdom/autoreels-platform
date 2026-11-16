@@ -12,7 +12,7 @@ import { join } from 'node:path';
 const execFileAsync = promisify(execFile);
 const args = process.argv.slice(2);
 const USE_TREG = args.includes('--treg');
-const BASE = args.find((a) => !a.startsWith('--')) || process.env.SITE_URL || 'https://dealer-reels-platform.vercel.app';
+const BASE = args.find((a) => !a.startsWith('--')) || process.env.SITE_URL || 'https://autoreels-studio.vercel.app';
 const INDUSTRIES = ['auto', 'restaurant', 'cafe', 'beauty', 'realestate', 'academy', 'clinic', 'fitness', 'shop', 'interior'];
 const TREG_QUERIES = {
   auto: '신차 출고 자동차 릴스',
