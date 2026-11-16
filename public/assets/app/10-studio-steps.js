@@ -122,11 +122,22 @@
       const dc = arDateContext();
       const line = document.getElementById('topicDateLine');
       if (line) line.textContent = `${dc.dateStr} ${dc.weekday} · ${dc.season}${dc.events.length ? ' · ' + dc.events.slice(0, 2).join(' · ') : ''}`;
-      const cacheKey = `ar_topics_v2_${IND.key}_${dc.dateKey}`;
+      const cacheKey = `ar_topics_v3_${IND.key}_${dc.dateKey}`;
+      let pre = null;
+      let trends = [];
+      if (window.location.protocol.startsWith('http')) {
+        try {
+          pre = await fetch('/trends-today.json', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null));
+          const row = pre && pre.industries && pre.industries[IND.key];
+          const ageDays = pre && pre.date ? (Date.now() - Date.parse(pre.date)) / 86400000 : 99;
+          if (row && Array.isArray(row.keywords) && ageDays < 3) trends = row.keywords.slice(0, 8);
+        } catch (e) {}
+      }
+      const serverUpdatedAt = String((pre && pre.updatedAt) || '');
       if (!force) {
         try {
           const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-          if (cached && Array.isArray(cached.topics) && cached.topics.length) {
+          if (cached && Array.isArray(cached.topics) && cached.topics.length && (!serverUpdatedAt || cached.trendsAt === serverUpdatedAt)) {
             arRenderTopics(cached.topics, '오늘의 추천 주제예요. 마음에 드는 게 없으면 [다른 주제 보기]를 눌러 보세요.');
             return;
           }
@@ -136,14 +147,6 @@
       const myJob = ++arTopicsLoading;
       arRenderTopics(arFallbackTopics(dc), '오늘 요일·계절·인기 키워드로 주제를 고르는 중… (10초 정도)');
       if (!window.location.protocol.startsWith('http')) return;
-      // 인기 키워드: 매일 새벽 4시에 미리 받아 둔 파일(trends-today.json)을 먼저 읽고, 없으면 실시간 조회(최대 6초)
-      let trends = [];
-      try {
-        const pre = await fetch('/trends-today.json', { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null));
-        const row = pre && pre.industries && pre.industries[IND.key];
-        const ageDays = pre && pre.date ? (Date.now() - Date.parse(pre.date)) / 86400000 : 99;
-        if (row && Array.isArray(row.keywords) && ageDays < 3) trends = row.keywords.slice(0, 8);
-      } catch (e) {}
       if (!trends.length) try {
         const ctrl = new AbortController();
         const timer = setTimeout(() => ctrl.abort(), 6000);
@@ -176,7 +179,7 @@
         }).then((r) => r.json());
         if (myJob !== arTopicsLoading) return;
         if (res && res.ok && Array.isArray(res.topics) && res.topics.length) {
-          try { localStorage.setItem(cacheKey, JSON.stringify({ topics: res.topics, at: Date.now() })); } catch (e) {}
+          try { localStorage.setItem(cacheKey, JSON.stringify({ topics: res.topics, at: Date.now(), trendsAt: serverUpdatedAt })); } catch (e) {}
           arRenderTopics(res.topics, `오늘 날짜${trends.length ? '와 요즘 인기 키워드' : ''}로 고른 주제예요. 하나를 누르면 대본을 바로 만들어요.`);
           return;
         }
@@ -1471,50 +1474,98 @@
       arFinishScriptApply(totalCuts);
     }
 
+    async function arDownscaleSceneDataUrl(dataUrl) {
+      return new Promise((resolve) => {
+        const rawImg = new Image();
+        rawImg.onload = () => {
+          try {
+            const w = Math.min(720, rawImg.naturalWidth || 720);
+            const h = Math.round(w * ((rawImg.naturalHeight || 1280) / Math.max(1, rawImg.naturalWidth || 720)));
+            const cv = document.createElement('canvas');
+            cv.width = w;
+            cv.height = h;
+            cv.getContext('2d').drawImage(rawImg, 0, 0, w, h);
+            resolve(cv.toDataURL('image/jpeg', 0.86));
+          } catch (e) {
+            resolve(dataUrl);
+          }
+        };
+        rawImg.onerror = () => resolve(dataUrl);
+        rawImg.src = dataUrl;
+      });
+    }
+
     async function arApplyTopicSceneImages(payload) {
       const genId = (arApplyTopicSceneImages._seq = (arApplyTopicSceneImages._seq || 0) + 1);
       const noticeEl = document.getElementById('aiDirectorStatusNotice');
+      const applySlotImage = (slot, dataUrl, doneCb) => {
+        const img = new Image();
+        img._dataUrl = dataUrl;
+        img._label = `${slot + 1}. ${payload.prompt}`;
+        img._sceneTitle = payload.prompt;
+        img.onload = () => {
+          if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
+          if (!Array.isArray(campaign.uploadedPhotos)) campaign.uploadedPhotos = [];
+          if (!Array.isArray(campaign.scenePlan)) campaign.scenePlan = [];
+          campaign.uploadedPhotos[slot] = img;
+          if (!campaign.scenePlan[slot]) campaign.scenePlan[slot] = {};
+          campaign.scenePlan[slot].photoIdx = slot;
+          if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+          if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+          if (typeof renderCutEditorPanel === 'function') renderCutEditorPanel();
+          if (typeof renderInlineQuickEditBar === 'function') renderInlineQuickEditBar();
+          if (window.__timelines?.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+          if (doneCb) doneCb();
+        };
+        img.src = dataUrl;
+      };
+
       try {
         if (noticeEl) {
           noticeEl.classList.remove('hidden');
           noticeEl.textContent = `주제 [${payload.prompt}]에 맞는 씬 이미지를 생성 중입니다...`;
         }
-        const res = await fetch('/api/generate-script', {
+        const promptRes = await fetch('/api/generate-script', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mode: 'scene-images', ...payload })
+          body: JSON.stringify({ mode: 'scene-prompts', ...payload })
         });
-        const j = await res.json().catch(() => ({}));
+        const pj = await promptRes.json().catch(() => ({}));
         if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
-        if (!res.ok || !j.ok || !Array.isArray(j.images) || !j.images.length) return;
-
-        if (!Array.isArray(campaign.uploadedPhotos)) campaign.uploadedPhotos = [];
-        if (!Array.isArray(campaign.scenePlan)) campaign.scenePlan = [];
-        const targetSlots = Math.max(j.images.length, Math.min(10, Number(payload.totalCuts) || j.images.length));
-        let loadedCount = 0;
-        for (let slot = 0; slot < targetSlots; slot++) {
-          const item = j.images[slot % j.images.length];
-          if (!item || !item.dataUrl) continue;
-          const img = new Image();
-          img._dataUrl = item.dataUrl;
-          img._label = `${slot + 1}. ${payload.prompt}`;
-          img._sceneTitle = payload.prompt;
-          img.onload = () => {
-            if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
-            campaign.uploadedPhotos[slot] = img;
-            if (!campaign.scenePlan[slot]) campaign.scenePlan[slot] = {};
-            campaign.scenePlan[slot].photoIdx = slot;
-            loadedCount += 1;
-            if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
-            if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
-            if (typeof renderCutEditorPanel === 'function') renderCutEditorPanel();
-            if (typeof renderInlineQuickEditBar === 'function') renderInlineQuickEditBar();
-            if (window.__timelines?.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
-            if (noticeEl && loadedCount === targetSlots) {
-              noticeEl.textContent = `주제 [${payload.prompt}] 맞춤 대본·이미지(${j.images.length}컷)가 적용되었습니다.`;
-            }
-          };
-          img.src = item.dataUrl;
+        const prompts = Array.isArray(pj.prompts) ? pj.prompts : [];
+        if (!promptRes.ok || !pj.ok || !prompts.length) {
+          if (noticeEl) noticeEl.textContent = `주제 [${payload.prompt}] 대본이 적용되었습니다. (이미지 생성 대기)`;
+          return;
         }
-      } catch (e) {}
+
+        const totalCutsTarget = Math.max(prompts.length, Math.min(10, Number(payload.totalCuts) || prompts.length));
+        let readyCount = 0;
+        const firstReady = new Array(prompts.length).fill(null);
+
+        await Promise.all(prompts.map(async (imagePrompt, idx) => {
+          try {
+            const imgRes = await fetch('/api/generate-script', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ mode: 'scene-image', imagePrompt, index: idx, adminGeminiKey: payload.adminGeminiKey || '' })
+            });
+            const ij = await imgRes.json().catch(() => ({}));
+            if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
+            if (!imgRes.ok || !ij.ok || !ij.image || !ij.image.dataUrl) return;
+            const compactUrl = await arDownscaleSceneDataUrl(ij.image.dataUrl);
+            if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
+            firstReady[idx] = compactUrl;
+            for (let slot = idx; slot < totalCutsTarget; slot += prompts.length) {
+              applySlotImage(slot, compactUrl, () => {
+                readyCount += 1;
+                if (noticeEl && readyCount >= totalCutsTarget) {
+                  noticeEl.textContent = `주제 [${payload.prompt}] 맞춤 대본·이미지(${prompts.length}컷)가 적용되었습니다.`;
+                }
+              });
+            }
+          } catch (e) {}
+        }));
+      } catch (e) {
+        if (noticeEl) noticeEl.textContent = `이미지 생성 중 일시적 지연이 발생했습니다. (${e.message || '네트워크 오류'})`;
+      }
     }
