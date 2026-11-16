@@ -139,6 +139,11 @@ async function notifyKakaoProblem(text) {
   }
 }
 
+if (args[0] === '--notify') {
+  await notifyKakaoProblem(args.slice(1).join(' ') || '야간 배치 점검 필요');
+  process.exit(0);
+}
+
 const kst = new Date(Date.now() + 9 * 3600000);
 const out = { date: kst.toISOString().slice(0, 10), updatedAt: new Date().toISOString(), industries: {} };
 let okCount = 0;

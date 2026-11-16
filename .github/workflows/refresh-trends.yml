@@ -1,5 +1,5 @@
 # 매일 한국 시간 새벽 4시(UTC 19시)에 업종별 인기 키워드를 받아 public/trends-today.json 으로 저장·배포
-# + KAGGLE_USERNAME / KAGGLE_KEY 시크릿이 있으면 PC가 꺼져 있어도 캐글 무료 GPU 노트북을 자동 실행
+# + KAGGLE_API_TOKEN 시크릿이 있으면 PC가 꺼져 있어도 캐글 무료 GPU 노트북을 원격 실행하고 결과 번들을 자동 커밋
 name: refresh-trends
 on:
   schedule:
@@ -10,7 +10,7 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,12 +38,17 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add public/trends-today.json
           git commit -m "chore: 오늘의 인기 키워드 갱신"
-          git push
-      - name: Trigger Kaggle GPU nightly media worker (optional)
+          git pull --rebase origin main
+          git push origin main
+      - name: Run Kaggle GPU nightly media worker and commit generated bundle
         env:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+          KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          KAKAO_ALERT_WEBHOOK: ${{ secrets.KAKAO_ALERT_WEBHOOK }}
         run: |
           if [ -z "$KAGGLE_API_TOKEN" ] && { [ -z "$KAGGLE_USERNAME" ] || [ -z "$KAGGLE_KEY" ]; }; then
             echo "Kaggle secret not set; skipping Kaggle GPU worker."
@@ -64,3 +69,55 @@ jobs:
           fi
           KAGGLE_USERNAME="$KAGGLE_USERNAME" python3 -c 'import os,pathlib; p=pathlib.Path("scripts/kaggle/kernel-metadata.json"); p.write_text(p.read_text().replace("__KAGGLE_USERNAME__", os.environ["KAGGLE_USERNAME"]))'
           kaggle kernels push -p scripts/kaggle
+          git checkout -- scripts/kaggle/kernel-metadata.json
+
+          KERNEL_SLUG="$KAGGLE_USERNAME/autoreels-nightly-media-worker"
+          echo "Waiting for Kaggle GPU kernel $KERNEL_SLUG..."
+          sleep 15
+          STATUS="unknown"
+          for i in $(seq 1 60); do
+            STATUS=$(KAGGLE_SLUG="$KERNEL_SLUG" python3 -c '
+          import json, os, urllib.request, urllib.parse
+          u, s = os.environ["KAGGLE_SLUG"].split("/", 1)
+          url = f"https://www.kaggle.com/api/v1/kernels/status?userName={urllib.parse.quote(u)}&kernelSlug={urllib.parse.quote(s)}"
+          req = urllib.request.Request(url, headers={"Authorization": "Bearer " + os.environ["KAGGLE_API_TOKEN"]}) if os.environ.get("KAGGLE_API_TOKEN") else urllib.request.Request(url)
+          if not os.environ.get("KAGGLE_API_TOKEN"):
+            import base64
+            auth = base64.b64encode((os.environ["KAGGLE_USERNAME"] + ":" + os.environ["KAGGLE_KEY"]).encode()).decode()
+            req.add_header("Authorization", "Basic " + auth)
+          print(json.loads(urllib.request.urlopen(req, timeout=20).read()).get("status", "unknown"))
+          ')
+            echo "[$i/60] Kaggle status: $STATUS"
+            if [ "$STATUS" = "complete" ]; then break; fi
+            if [ "$STATUS" = "error" ] || [ "$STATUS" = "cancelAcknowledged" ]; then
+              node scripts/refresh-trends.mjs --notify "캐글 GPU 야간 배치 실패 (status=$STATUS): https://www.kaggle.com/code/$KERNEL_SLUG" || true
+              exit 1
+            fi
+            sleep 20
+          done
+
+          if [ "$STATUS" != "complete" ]; then
+            node scripts/refresh-trends.mjs --notify "캐글 GPU 야간 배치 시간 초과 (last=$STATUS): https://www.kaggle.com/code/$KERNEL_SLUG" || true
+            exit 1
+          fi
+
+          rm -rf /tmp/kaggle_out && mkdir -p /tmp/kaggle_out
+          kaggle kernels output "$KERNEL_SLUG" -p /tmp/kaggle_out
+          if [ -f /tmp/kaggle_out/autoreels_nightly_bundle.zip ]; then
+            python3 -m zipfile -e /tmp/kaggle_out/autoreels_nightly_bundle.zip .
+          else
+            echo "Bundle zip not found in Kaggle output; listing files:"
+            ls -la /tmp/kaggle_out
+            exit 1
+          fi
+
+          git config user.name "autoreels-kaggle-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/trends-today.json public/assets/topics/
+          if git diff --cached --quiet; then
+            echo "No new Kaggle assets to commit."
+            exit 0
+          fi
+          git commit -m "chore(kaggle): nightly topics & 100 topic icons"
+          git pull --rebase origin main
+          git push origin main

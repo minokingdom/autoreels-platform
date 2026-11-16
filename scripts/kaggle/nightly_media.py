@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
 AutoReels Nightly Kaggle GPU Worker (runs headless in Kaggle T4/P100 while PC is off).
-1. Clones minokingdom/dealer-reels-platform using GITHUB_TOKEN.
+1. Clones minokingdom/dealer-reels-platform (public read or authenticated via optional GITHUB_TOKEN).
 2. Reads public/trends-today.json; fetches 10 fresh Korean topics + English 1:1 icon prompts per industry if missing/stale.
 3. Generates 1:1 topic icons on Kaggle GPU via Lykon/dreamshaper-xl-v2-turbo ($0 compute cost).
-4. Commits & pushes public/assets/topics/ and public/trends-today.json back to main (auto-deploys to Vercel).
+4. Packages /kaggle/working/autoreels_nightly_bundle.zip for GitHub Actions pickup (and pushes directly if GITHUB_TOKEN is set).
 5. Sends KakaoTalk Memo / webhook alert if any step fails.
 """
+import datetime
 import json
 import os
 import subprocess
@@ -14,6 +15,7 @@ import sys
 import traceback
 import urllib.parse
 import urllib.request
+import zipfile
 from pathlib import Path
 
 
@@ -85,6 +87,14 @@ def post_json(url: str, payload: dict) -> dict:
         return json.loads(r.read().decode("utf-8"))
 
 
+def get_kst_date_context(date_str: str) -> dict:
+    kst = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+    weekdays = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"]
+    m = kst.month
+    season = "봄" if m in (3, 4, 5) else ("여름" if m in (6, 7, 8) else ("가을" if m in (9, 10, 11) else "겨울"))
+    return {"dateStr": date_str or kst.strftime("%Y-%m-%d"), "weekday": weekdays[kst.weekday()], "season": season}
+
+
 INDUSTRY_INFO = {
     "auto": {"name": "자동차 영업", "role": "카마스터", "product": "차량", "aiRole": "자동차 영업 전문가"},
     "restaurant": {"name": "음식점", "role": "사장님", "product": "시그니처 메뉴", "aiRole": "맛집 사장님"},
@@ -112,30 +122,40 @@ IND_VISUAL_HINT = {
 }
 
 
+def load_diffusers():
+    try:
+        import torch  # type: ignore
+        from diffusers import AutoPipelineForText2Image, DPMSolverMultistepScheduler  # type: ignore
+        return torch, AutoPipelineForText2Image, DPMSolverMultistepScheduler
+    except Exception:
+        subprocess.run([sys.executable, "-m", "pip", "-q", "install", "diffusers", "accelerate", "safetensors", "pillow"], check=True)
+        import torch  # type: ignore
+        from diffusers import AutoPipelineForText2Image, DPMSolverMultistepScheduler  # type: ignore
+        return torch, AutoPipelineForText2Image, DPMSolverMultistepScheduler
+
+
 def run_worker() -> None:
     gh_token = get_secret("GITHUB_TOKEN")
     gh_repo = get_secret("GITHUB_REPO", "minokingdom/dealer-reels-platform")
-    if not gh_token:
-        raise RuntimeError("Missing GITHUB_TOKEN in Kaggle Secrets")
 
     work_dir = Path("/kaggle/working/repo")
     if work_dir.exists():
         subprocess.run(["rm", "-rf", str(work_dir)], check=True)
-    remote = f"https://x-access-token:{gh_token}@github.com/{gh_repo}.git"
+    remote = f"https://x-access-token:{gh_token}@github.com/{gh_repo}.git" if gh_token else f"https://github.com/{gh_repo}.git"
     subprocess.run(["git", "clone", "--depth", "1", remote, str(work_dir)], check=True)
 
     trends_path = work_dir / "public" / "trends-today.json"
     data = json.loads(trends_path.read_text(encoding="utf-8"))
-    date_str = data.get("date", "")
+    date_ctx = get_kst_date_context(data.get("date", ""))
+    date_str = date_ctx["dateStr"]
     topics_dir = work_dir / "public" / "assets" / "topics"
 
-    subprocess.run([sys.executable, "-m", "pip", "-q", "install", "-U", "diffusers", "transformers", "accelerate", "safetensors", "pillow"], check=True)
-    import torch  # type: ignore
-    from diffusers import AutoPipelineForText2Image, DPMSolverMultistepScheduler  # type: ignore
-
+    torch, AutoPipelineForText2Image, DPMSolverMultistepScheduler = load_diffusers()
     pipe = AutoPipelineForText2Image.from_pretrained(
         "Lykon/dreamshaper-xl-v2-turbo", torch_dtype=torch.float16, variant="fp16"
     ).to("cuda")
+    if hasattr(pipe, "upcast_vae"):
+        pipe.upcast_vae()
     pipe.scheduler = DPMSolverMultistepScheduler.from_config(
         pipe.scheduler.config, use_karras_sigmas=True, algorithm_type="sde-dpmsolver++"
     )
@@ -144,14 +164,13 @@ def run_worker() -> None:
     for ind, info in INDUSTRY_INFO.items():
         row = data.setdefault("industries", {}).setdefault(ind, {})
         keywords = row.get("keywords", [])[:8]
-        # Fetch fresh 10 topics if not already updated for this run
         if row.get("topicsDate") != date_str or not isinstance(row.get("topics"), list) or len(row["topics"]) < 10:
             try:
                 res = post_json("https://autoreels-studio.vercel.app/api/generate-script", {
                     "mode": "topics",
                     "industry": ind,
                     "industryInfo": info,
-                    "dateContext": {"dateStr": date_str, "weekday": "오늘", "season": "가을"},
+                    "dateContext": date_ctx,
                     "trends": keywords,
                 })
                 if res.get("ok") and isinstance(res.get("topics"), list) and len(res["topics"]) >= 5:
@@ -195,17 +214,26 @@ def run_worker() -> None:
             print(f"[ok] {ind}/{idx + 1}.jpg")
 
     trends_path.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    subprocess.run(["git", "-C", str(work_dir), "config", "user.name", "autoreels-kaggle-bot"], check=True)
-    subprocess.run(["git", "-C", str(work_dir), "config", "user.email", "actions@users.noreply.github.com"], check=True)
-    subprocess.run(["git", "-C", str(work_dir), "add", "public/trends-today.json", "public/assets/topics/"], check=True)
-    diff = subprocess.run(["git", "-C", str(work_dir), "diff", "--cached", "--quiet"])
-    if diff.returncode != 0:
-        subprocess.run(["git", "-C", str(work_dir), "commit", "-m", f"chore(kaggle): nightly topics & 100 topic icons ({date_str})"], check=True)
-        subprocess.run(["git", "-C", str(work_dir), "pull", "--rebase", "origin", "main"], check=True)
-        subprocess.run(["git", "-C", str(work_dir), "push", "origin", "main"], check=True)
-        print("Pushed updated topics and icons to GitHub!")
+
+    bundle_path = Path("/kaggle/working/autoreels_nightly_bundle.zip")
+    with zipfile.ZipFile(bundle_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.write(trends_path, "public/trends-today.json")
+        for jpg in sorted(topics_dir.glob("*/*.jpg")):
+            zf.write(jpg, str(jpg.relative_to(work_dir)).replace("\\", "/"))
+    print(f"Created {bundle_path} ({bundle_path.stat().st_size} bytes)")
+
+    if gh_token:
+        subprocess.run(["git", "-C", str(work_dir), "config", "user.name", "autoreels-kaggle-bot"], check=True)
+        subprocess.run(["git", "-C", str(work_dir), "config", "user.email", "actions@users.noreply.github.com"], check=True)
+        subprocess.run(["git", "-C", str(work_dir), "add", "public/trends-today.json", "public/assets/topics/"], check=True)
+        diff = subprocess.run(["git", "-C", str(work_dir), "diff", "--cached", "--quiet"])
+        if diff.returncode != 0:
+            subprocess.run(["git", "-C", str(work_dir), "commit", "-m", f"chore(kaggle): nightly topics & 100 topic icons ({date_str})"], check=True)
+            subprocess.run(["git", "-C", str(work_dir), "pull", "--rebase", "origin", "main"], check=True)
+            subprocess.run(["git", "-C", str(work_dir), "push", "origin", "main"], check=True)
+            print("Pushed updated topics and icons directly to GitHub!")
     else:
-        print("No git changes to push.")
+        print("No GITHUB_TOKEN in Kaggle Secrets; bundle saved for GitHub Actions download.")
 
 
 if __name__ == "__main__":
