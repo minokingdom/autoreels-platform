@@ -4268,11 +4268,17 @@
       }).join('');
       const nameEl = document.getElementById('activeDesignName');
       if (nameEl) nameEl.textContent = `${getActiveDesign().name} · ${getActiveDesign().custom ? '내 스타일' : getActivePalette().name}`;
+      const thumbEl = document.getElementById('activeDesignThumb');
+      if (thumbEl) {
+        const u = urls[getActiveDesign().id];
+        if (u) thumbEl.src = u;
+        else if (typeof canvas !== 'undefined' && canvas && canvas.width) { try { thumbEl.src = canvas.toDataURL('image/jpeg', 0.5); } catch (e) {} }
+      }
       const descEl = document.getElementById('activeDesignDesc');
       if (descEl) {
         const bk = typeof AudioEngine !== 'undefined' && AudioEngine.bgmStyle ? AudioEngine.bgmStyle : getDesignBgm(getActiveDesign());
         const bl = (typeof AudioEngine !== 'undefined' && AudioEngine.BGM_LABELS && AudioEngine.BGM_LABELS[bk]) || (bk === 'custom_mp3' ? '내가 불러온 음원' : bk === 'off' ? '끔' : bk);
-        descEl.textContent = `${getActiveDesign().desc}  ·  배경음악: ${bl}`;
+        descEl.textContent = `${getActiveDesign().cat || '디자인'} · ♪ ${bl}`;
       }
       const countEl = document.getElementById('designStyleCount');
       if (countEl) countEl.textContent = String(arVisibleDesigns().length + arCustomDesigns.length);

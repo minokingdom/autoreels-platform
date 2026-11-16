@@ -94,12 +94,27 @@
           <span>${arTopicPage + 1} / ${pages}</span>
           <button type="button" onclick="arTopicGoPage(${arTopicPage + 1})" ${arTopicPage >= pages - 1 ? 'disabled' : ''}>다음 주제 →</button>
         </div>` : '';
-      box.innerHTML = topics.slice(from, from + AR_TOPICS_PER_PAGE).map((t, k) => ({ t, i: from + k })).map(({ t, i }) => `
-        <button type="button" data-topic-idx="${i}" class="text-left p-3.5 rounded-[10px] bg-[#141415] hover:bg-[#1c1c20] border border-[var(--border)] hover:border-[#4cc38a] cursor-pointer transition">
-          <div class="text-[14px] font-semibold text-[#ededed]">${esc(t.title)}</div>
-          <div class="text-[12px] text-[#4cc38a] mt-0.5">${esc(t.why)}</div>
-          <div class="text-[11px] text-[#85858b] mt-1">${esc(t.prompt)}</div>
-        </button>`).join('') + pager;
+      // 인스타 목록처럼: 그림 칸 + 제목 + 이유 한 줄 + ›
+      const topicIcon = (t) => {
+        const x = [t.title, t.why, t.prompt].join(' ');
+        if (/수능|시험|입시/.test(x)) return ['📝', '#6366f1', '#1e1b4b'];
+        if (/블프|블랙|세일|할인|특가|혜택|쿠폰|이벤트/.test(x)) return ['🏷️', '#f43f5e', '#4c0519'];
+        if (/가을|겨울|봄|여름|날씨|비 오|눈 오|추위|건조|크리스마스|연말/.test(x)) return ['🍂', '#f59e0b', '#451a03'];
+        if (/비법|방법|팁|관리|주의|가이드|정보|과정/.test(x)) return ['💡', '#14b8a6', '#042f2e'];
+        if (/인기|요즘|유행|트렌드|키워드/.test(x)) return ['🔥', '#fb923c', '#431407'];
+        if (/바쁜|빠른|퇴근|점심|직장인|시간/.test(x)) return ['⏱️', '#38bdf8', '#082f49'];
+        if (/평일|주말|월요|금요|오늘/.test(x)) return ['📅', '#a78bfa', '#2e1065'];
+        return ['✨', '#4cc38a', '#052e16'];
+      };
+      const curTopic = window.arTodayTopic && window.arTodayTopic.title;
+      box.innerHTML = topics.slice(from, from + AR_TOPICS_PER_PAGE).map((t, k) => ({ t, i: from + k })).map(({ t, i }) => {
+        const ic = topicIcon(t);
+        return `
+        <button type="button" data-topic-idx="${i}" class="bgm-row topic-row ${curTopic === t.title ? 'on' : ''}">
+          <span class="bgm-cover" style="width:52px;height:52px;background:linear-gradient(135deg, ${ic[1]}, ${ic[2]});font-size:22px">${ic[0]}</span>
+          <span class="bgm-row-txt"><strong>${esc(t.title)}</strong><small><b>${esc(t.why)}</b>${t.prompt ? ' · ' + esc(t.prompt) : ''}</small></span>
+          <span class="bgm-row-state">${curTopic === t.title ? '✓' : '›'}</span>        </button>`;
+      }).join('') + pager;
       const st = document.getElementById('topicStatus');
       if (st && statusText !== null) st.textContent = statusText || '';
     }
@@ -328,6 +343,7 @@
       if (key === 'sound') AudioEngine.loadVoiceList();
       if (key === 'card' && typeof arRenderCardShowToggles === 'function') arRenderCardShowToggles();
       if (key === 'sound' && typeof renderBgmRecommendations === 'function') renderBgmRecommendations();
+      setTimeout(() => arSyncIgSelects(document.getElementById('studioPanel_' + key)), 0);
       // 사진 탭의 컷 카드에 대본 탭에서 고친 문구를 반영
       if (key === 'photo' && typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
       STUDIO_TABS.forEach((k) => {
@@ -437,7 +453,7 @@
         photo: ['사진 넣기', '내 사진이나 영상을 올리세요. 올리지 않으면 기본 사진으로 만들어집니다.'],
         sound: ['소리 고르기', '배경음악과 성우 목소리를 고르세요. 성우 목소리는 엔딩까지 마치면 발행 단계에서 음악과 함께 완성본으로 들려드려요.'],
         card: ['엔딩 꾸미기', '영상 마지막에 나올 가게 정보와 로고를 넣고, 보일 항목만 켜 두세요.'],
-        publish: ['완성본 확인 · SNS에 올리기', '배경음악과 성우가 들어간 완성본을 확인하고, 올릴 SNS를 고른 뒤 [선택한 SNS에 발행]을 누르세요.']
+        publish: ['완성본 확인 · SNS에 올리기', '배경음악과 성우가 들어간 완성본을 확인하고, 올릴 곳을 켜고 [공유하기]를 누르세요.']
       };
       const idx = STUDIO_TABS.indexOf(key);
       const step = steps[key];
@@ -510,6 +526,34 @@
       const cur = el.querySelector('.on');
       if (cur) cur.scrollIntoView({ block: 'center' });
     }
+    // ★ 인스타 느낌으로: 제작 단계 안의 선택 상자를 "이름 · 지금 값 ›" 한 줄로 보여 주고, 누르면 아래 시트
+    //   (컷 카드 안의 작은 선택칸·숨긴 선택칸은 그대로)
+    function arIgSelectEligible(sel) {
+      return sel && sel.tagName === 'SELECT' && !sel.multiple && !sel.hasAttribute('data-native') &&
+        sel.closest('.studio-panel') && !sel.closest('.cut-ctl') && !sel.classList.contains('hidden') &&
+        sel.id !== 'bgmStyleSelect';
+    }
+    function arSyncIgSelects(root) {
+      (root || document).querySelectorAll('.studio-panel select').forEach((sel) => {
+        let row = sel.__igRow;
+        if (!row) {
+          if (!arIgSelectEligible(sel)) return;
+          row = document.createElement('button');
+          row.type = 'button';
+          row.className = 'ig-select-row';
+          row.addEventListener('click', () => arOpenOptionSheet(sel));
+          sel.insertAdjacentElement('afterend', row);
+          sel.classList.add('ig-select-src');
+          sel.__igRow = row;
+          sel.addEventListener('change', () => arSyncIgSelects(sel.parentElement));
+        }
+        const o = sel.options[sel.selectedIndex];
+        const txt = o ? o.textContent.trim() : '';
+        row.innerHTML = `<span>${txt.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))}</span><b>›</b>`;
+        row.disabled = sel.disabled;
+      });
+    }
+
     let arSelTouch = null; // 화면을 밀다가 선택칸 위에서 손을 떼도 열리지 않게, 손가락 이동 거리 확인
     document.addEventListener('touchstart', (e) => {
       const t = e.touches && e.touches[0];
@@ -807,16 +851,18 @@
       ['ig', 'yt', 'tt', 'fb'].forEach((ch) => {
         const handleEl = document.getElementById(`snsHandle_${ch}`);
         const btnEl = document.getElementById(`snsStatusBtn_${ch}`);
-        const val = (sns[ch] || '').trim();
-        if (handleEl) {
-          handleEl.textContent = val || '미연결';
-          handleEl.className = val ? 'text-[12px] text-[#a1a1a6] font-mono' : 'text-[12px] text-[#85858b] font-mono';
-        }
+        const chkEl = document.getElementById(`snsCheck${ch[0].toUpperCase()}${ch[1]}`);
+        let val = (sns[ch] || '').trim();
+        // 견본 계정(@sample_…, OO자동차 …)은 연결된 것으로 보이지 않게
+        if (/^@sample_|OO자동차|^@hyundai_minjun|^@minjun_/.test(val)) val = '';
+        if (handleEl) handleEl.textContent = val || '연결 안 됨';
         if (btnEl) {
-          btnEl.textContent = val ? '연결됨' : '연결하기';
-          btnEl.className = val
-            ? 'tag-chip px-2 py-1 text-[11px] text-[#4cc38a] cursor-pointer'
-            : 'tag-chip px-2 py-1 text-[11px] text-[#85858b] cursor-pointer';
+          btnEl.textContent = val ? '바꾸기' : '연결하기';
+          btnEl.className = val ? 'tag-chip is-on' : 'tag-chip';
+        }
+        if (chkEl) {
+          chkEl.disabled = !val;
+          if (!val) chkEl.checked = false;
         }
       });
     }
@@ -989,7 +1035,7 @@
       const isAuto = typeof IND !== 'undefined' && IND.key === 'auto';
       box.innerHTML = AR_CARD_FIELDS
         .filter(([k]) => !(isAuto && k === 'phone')) // 자동차 판매는 영상에 전화번호를 넣지 않음
-        .map(([k, label]) => `<label class="card-show-chip"><input type="checkbox" ${arCardFieldShown(d, k) ? 'checked' : ''} onchange="arToggleCardField('${k}', this.checked)" /><span>${label}</span></label>`).join('');
+        .map(([k, label]) => `<label class="ig-switch-row"><span>${label}</span><input type="checkbox" ${arCardFieldShown(d, k) ? 'checked' : ''} onchange="arToggleCardField('${k}', this.checked)" /><i></i></label>`).join('');
       const has = !!d.logoImg;
       const pv = document.getElementById('dealerLogoPreview');
       const tx = document.getElementById('dealerLogoLabelText');

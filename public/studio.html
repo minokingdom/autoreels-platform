@@ -700,7 +700,7 @@
             <div class="text-[16px] font-semibold text-[#ededed]">오늘은 어떤 내용으로 올릴까요?</div>
             <p id="topicDateLine" class="text-[12px] text-[#85858b] mt-1"></p>
           </div>
-          <div id="topicCards" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+          <div id="topicCards" class="ig-list"></div>
           <div class="flex items-center justify-between gap-2 flex-wrap">
             <p id="topicStatus" class="text-[11px] text-[#85858b]"></p>
             <button type="button" onclick="arLoadTopics(true)" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">↻ 다른 주제 보기</button>
@@ -995,17 +995,16 @@
           </dialog>
           <div id="scriptDesignBox" class="studio-sub p-4 space-y-3">
             <!-- 모바일은 설명과 버튼을 위아래로 (좁은 폭에서 설명이 세로로 눌리지 않게) -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div class="min-w-0">
-                <div class="text-[11px] text-[#85858b]">디자인 스타일 <span id="designStyleCount" class="font-mono">136</span>종</div>
-                <div id="activeDesignName" class="text-[14px] font-semibold text-[#ededed] truncate"></div>
-                <p id="activeDesignDesc" class="text-[11px] text-[#a1a1a6] mt-0.5"></p>
-              </div>
-              <div class="grid grid-cols-2 sm:flex gap-1.5 shrink-0">
-                <button type="button" onclick="pickRandomTheme(false)" class="btn-secondary h-9 px-3 text-[12px] cursor-pointer" title="디자인과 색을 무작위로">🎲 랜덤</button>
-                <button type="button" onclick="openDesignSidebarFromPanel()" class="btn-secondary h-9 px-3 text-[12px] cursor-pointer">디자인 바꾸기 ›</button>
-              </div>
+            <!-- 인스타 음악 고르기처럼: 지금 디자인 한 줄 → 누르면 디자인 목록 -->
+            <div class="ig-now-wrap">
+              <button type="button" class="bgm-now ig-design-now" onclick="openDesignSidebarFromPanel()">
+                <img id="activeDesignThumb" alt="" class="ig-now-thumb" />
+                <span class="bgm-now-txt"><strong id="activeDesignName"></strong><small id="activeDesignDesc"></small></span>
+                <span class="bgm-now-go">바꾸기 ›</span>
+              </button>
+              <button type="button" onclick="pickRandomTheme(false)" class="ig-round-btn" title="디자인과 색을 무작위로" aria-label="랜덤 디자인">🎲</button>
             </div>
+            <div class="hidden"><span id="designStyleCount"></span></div>
             <p data-advanced class="text-[11px] text-[#6e6e73]">미리보기 화면을 옆으로 밀어도 디자인 목록이 열립니다.</p>
             <details data-advanced class="fold pt-2 border-t border-[var(--border)]">
               <summary class="py-1.5 text-[12px] text-[#a1a1a6]">🔥 인기 릴스 스타일 가져오기 · 키워드로 찾기</summary>
@@ -1236,93 +1235,49 @@
           <div class="studio-sub p-4 space-y-3">
             <div class="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <label class="text-[13px] font-medium text-[#ededed]">
-                  내 SNS 계정 연결 및 동시 발행 채널
-                </label>
-                <p class="text-[12px] text-[#85858b] mt-0.5">오른쪽 상태 표시를 누르면 계정을 연결하거나 바꿀 수 있습니다</p>
+                <label class="text-[15px] font-semibold text-[#ededed]">공유 대상</label>
+                <p class="text-[12px] text-[#85858b] mt-0.5">켜 둔 곳에 한 번에 올려요. 연결 안 된 곳은 [연결하기]를 눌러요.</p>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-[13px]">
-              <div class="flex items-center justify-between p-3 rounded-[8px] border border-[var(--border)] bg-[#141415]">
-                <label class="flex items-center gap-2.5 cursor-pointer">
-                  <input id="snsCheckIg" type="checkbox" checked class="accent-[#ededed]" />
-                  <div>
-                    <div class="font-medium text-[#ededed]">Instagram Reels</div>
-                    <div id="snsHandle_ig" class="text-[12px] text-[#a1a1a6] font-mono">@hyundai_minjun_official</div>
-                  </div>
-                </label>
-                <button type="button" onclick="openSnsConnectModal('ig')" id="snsStatusBtn_ig" class="tag-chip px-2 py-1 text-[11px] cursor-pointer">
-                  연결됨
-                </button>
+            <div class="ig-sns-list">
+              <div class="ig-sns-row">
+                <span class="ig-sns-ic" style="background:linear-gradient(135deg,#f43f5e,#7c3aed)">IG</span>
+                <div class="ig-sns-txt"><strong>Instagram 릴스</strong><small id="snsHandle_ig">연결 안 됨</small></div>
+                <button type="button" onclick="openSnsConnectModal('ig')" id="snsStatusBtn_ig" class="tag-chip">연결하기</button>
+                <label class="ig-switch" aria-label="Instagram 릴스에 올리기"><input id="snsCheckIg" type="checkbox" checked /><i></i></label>
               </div>
-
-              <div class="flex items-center justify-between p-3 rounded-[8px] border border-[var(--border)] bg-[#141415]">
-                <label class="flex items-center gap-2.5 cursor-pointer">
-                  <input id="snsCheckYt" type="checkbox" checked class="accent-[#ededed]" />
-                  <div>
-                    <div class="font-medium text-[#ededed]">YouTube Shorts</div>
-                    <div id="snsHandle_yt" class="text-[12px] text-[#a1a1a6] font-mono">@minjun_car_tv</div>
-                  </div>
-                </label>
-                <button type="button" onclick="openSnsConnectModal('yt')" id="snsStatusBtn_yt" class="tag-chip px-2 py-1 text-[11px] cursor-pointer">
-                  연결됨
-                </button>
+              <div class="ig-sns-row">
+                <span class="ig-sns-ic" style="background:linear-gradient(135deg,#ef4444,#7f1d1d)">▶</span>
+                <div class="ig-sns-txt"><strong>YouTube 쇼츠</strong><small id="snsHandle_yt">연결 안 됨</small></div>
+                <button type="button" onclick="openSnsConnectModal('yt')" id="snsStatusBtn_yt" class="tag-chip">연결하기</button>
+                <label class="ig-switch" aria-label="YouTube 쇼츠에 올리기"><input id="snsCheckYt" type="checkbox" checked /><i></i></label>
               </div>
-
-              <div class="flex items-center justify-between p-3 rounded-[8px] border border-[var(--border)] bg-[#141415]">
-                <label class="flex items-center gap-2.5 cursor-pointer">
-                  <input id="snsCheckTt" type="checkbox" checked class="accent-[#ededed]" />
-                  <div>
-                    <div class="font-medium text-[#ededed]">TikTok</div>
-                    <div id="snsHandle_tt" class="text-[12px] text-[#a1a1a6] font-mono">@minjun_autoteam</div>
-                  </div>
-                </label>
-                <button type="button" onclick="openSnsConnectModal('tt')" id="snsStatusBtn_tt" class="tag-chip px-2 py-1 text-[11px] cursor-pointer">
-                  연결됨
-                </button>
+              <div class="ig-sns-row">
+                <span class="ig-sns-ic" style="background:linear-gradient(135deg,#111827,#0f766e)">♪</span>
+                <div class="ig-sns-txt"><strong>TikTok</strong><small id="snsHandle_tt">연결 안 됨</small></div>
+                <button type="button" onclick="openSnsConnectModal('tt')" id="snsStatusBtn_tt" class="tag-chip">연결하기</button>
+                <label class="ig-switch" aria-label="TikTok에 올리기"><input id="snsCheckTt" type="checkbox" checked /><i></i></label>
               </div>
-
-              <div class="flex items-center justify-between p-3 rounded-[8px] border border-[var(--border)] bg-[#141415]">
-                <label class="flex items-center gap-2.5 cursor-pointer">
-                  <input id="snsCheckFb" type="checkbox" checked class="accent-[#ededed]" />
-                  <div>
-                    <div class="font-medium text-[#ededed]">Facebook Reels</div>
-                    <div id="snsHandle_fb" class="text-[12px] text-[#a1a1a6] font-mono">OO자동차 홍길동 페이지</div>
-                  </div>
-                </label>
-                <button type="button" onclick="openSnsConnectModal('fb')" id="snsStatusBtn_fb" class="tag-chip px-2 py-1 text-[11px] cursor-pointer">
-                  연결됨
-                </button>
+              <div class="ig-sns-row">
+                <span class="ig-sns-ic" style="background:linear-gradient(135deg,#2563eb,#1e3a8a)">f</span>
+                <div class="ig-sns-txt"><strong>Facebook 릴스</strong><small id="snsHandle_fb">연결 안 됨</small></div>
+                <button type="button" onclick="openSnsConnectModal('fb')" id="snsStatusBtn_fb" class="tag-chip">연결하기</button>
+                <label class="ig-switch" aria-label="Facebook 릴스에 올리기"><input id="snsCheckFb" type="checkbox" checked /><i></i></label>
               </div>
-
-              <div class="flex items-center justify-between p-3 rounded-[8px] border border-[var(--border)] bg-[#141415] sm:col-span-2">
-                <label class="flex items-center gap-2.5 cursor-pointer">
-                  <input id="snsCheckTh" type="checkbox" class="accent-[#ededed]" />
-                  <div>
-                    <div class="font-medium text-[#ededed]">Threads (스레드)</div>
-                    <div id="snsHandle_th" class="text-[12px] text-[#a1a1a6] font-mono">연결 안 됨</div>
-                  </div>
-                </label>
-                <button type="button" onclick="openSnsConnectModal('th')" id="snsStatusBtn_th" class="tag-chip px-2 py-1 text-[11px] cursor-pointer">
-                  연결하기
-                </button>
+              <div class="ig-sns-row">
+                <span class="ig-sns-ic" style="background:linear-gradient(135deg,#27272a,#09090b)">@</span>
+                <div class="ig-sns-txt"><strong>Threads</strong><small id="snsHandle_th">연결 안 됨</small></div>
+                <button type="button" onclick="openSnsConnectModal('th')" id="snsStatusBtn_th" class="tag-chip">연결하기</button>
+                <label class="ig-switch" aria-label="Threads에 올리기"><input id="snsCheckTh" type="checkbox" disabled /><i></i></label>
               </div>
             </div>
           </div>
 
           <!-- 예약 발행 & 인스타 첫 댓글 해시태그 옵션 -->
-          <div class="p-3 rounded-[10px] border border-[var(--border)] bg-[#141415] space-y-2.5">
-            <div class="flex items-center justify-between flex-wrap gap-2">
-              <label class="flex items-center gap-2 text-[12px] text-[#ededed] cursor-pointer">
-                <input id="snsScheduleEnabled" type="checkbox" onchange="document.getElementById('snsScheduleWrap').classList.toggle('hidden', !this.checked)" class="accent-[#ededed]" />
-                <span>원하는 날짜·시간에 예약 발행</span>
-              </label>
-              <label class="flex items-center gap-2 text-[12px] text-[#a1a1a6] cursor-pointer">
-                <input id="snsIgFirstComment" type="checkbox" class="accent-[#ededed]" />
-                <span>인스타 해시태그 첫 댓글로 분리</span>
-              </label>
-            </div>
+          <div class="studio-sub p-4 space-y-0">
+            <label class="ig-switch-row"><span>원하는 날짜·시간에 예약 발행</span><input id="snsScheduleEnabled" type="checkbox" onchange="document.getElementById('snsScheduleWrap').classList.toggle('hidden', !this.checked)" /><i></i></label>
+            <label class="ig-switch-row"><span>해시태그는 인스타 첫 댓글로</span><input id="snsIgFirstComment" type="checkbox" /><i></i></label>
             <div id="snsScheduleWrap" class="hidden flex items-center gap-2 flex-wrap">
               <input id="snsScheduleAt" type="datetime-local" class="studio-input h-9 px-2.5 text-[12px] flex-1 min-w-[200px]" />
               <span class="text-[11px] text-[#85858b]">최대 30일 이내 예약 가능</span>
@@ -1332,7 +1287,7 @@
           <!-- SNS 본문 캡션 & 해시태그 -->
           <div class="space-y-2">
             <div class="flex items-center justify-between flex-wrap gap-2">
-              <label class="text-[13px] font-medium text-[#ededed]">SNS 본문 캡션 및 해시태그</label>
+              <label class="text-[15px] font-semibold text-[#ededed]">문구 · 해시태그</label>
               <div class="flex items-center gap-2">
                 <span data-advanced id="igAccountBadge" class="hidden sm:inline text-[12px] font-mono text-[#85858b]"></span>
                 <button type="button" onclick="copyDealerCaption()" id="copyCaptionBtn" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">
@@ -1346,7 +1301,7 @@
           <!-- 하단 핵심 액션 2개 -->
           <div class="pt-1">
             <button onclick="approveAndPublishToInstagram()" class="btn-primary w-full h-10 px-4 text-[13px] flex items-center justify-center gap-2 cursor-pointer">
-              <span>선택한 SNS에 발행</span>
+              <span>공유하기</span>
             </button>
           </div>
 
