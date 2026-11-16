@@ -122,7 +122,7 @@
       const dc = arDateContext();
       const line = document.getElementById('topicDateLine');
       if (line) line.textContent = `${dc.dateStr} ${dc.weekday} · ${dc.season}${dc.events.length ? ' · ' + dc.events.slice(0, 2).join(' · ') : ''}`;
-      const cacheKey = `ar_topics_${IND.key}_${dc.dateKey}`;
+      const cacheKey = `ar_topics_v2_${IND.key}_${dc.dateKey}`;
       if (!force) {
         try {
           const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');

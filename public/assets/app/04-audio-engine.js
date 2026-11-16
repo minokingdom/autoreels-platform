@@ -107,7 +107,7 @@
       },
 
       // 구글 Lyria AI BGM 등 외부/Blob 음원 URL 로드
-      loadRemoteBgmUrl(url, label) {
+      loadRemoteBgmUrl(url, label, autoPlay = true) {
         const ctx = this.ensureContext();
         if (this.customBgmUrl) {
           URL.revokeObjectURL(this.customBgmUrl);
@@ -133,10 +133,12 @@
           statusText.classList.remove('hidden');
           statusText.textContent = `✨ ${label || 'AI 배경음악'} 적용됨 (완성 영상에도 그대로 들어가요)`;
         }
-        if (!this.enabled) {
-          toggleAudioMaster(true);
-        } else {
-          this.startBgmLoop();
+        if (autoPlay !== false) {
+          if (!this.enabled) {
+            toggleAudioMaster(true);
+          } else {
+            this.startBgmLoop();
+          }
         }
       },
 
@@ -1839,7 +1841,7 @@
             if (savedBgm.startsWith('ace_')) {
               const trackId = savedBgm.slice(4).replace(/[^a-z0-9_-]/gi, '');
               const optLabel = sel.selectedOptions && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : trackId;
-              AudioEngine.loadRemoteBgmUrl(`/assets/bgm/pack/${trackId}.mp3`, optLabel);
+              AudioEngine.loadRemoteBgmUrl(`/assets/bgm/pack/${trackId}.mp3`, optLabel, false);
             }
           }
         } catch (e) {}

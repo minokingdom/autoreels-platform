@@ -4221,9 +4221,9 @@
       const opts = DESIGN_BGM_BY_CAT[ds.cat] || ['showroom'];
       return opts[gHash(ds.id) % opts.length];
     }
-    // 디자인을 바꾸면 배경음악도 바꿈. 단, 사용자가 직접 골랐거나 저장한 BGM·내 음원·BGM 끄기는 덮어쓰지 않음
+    // 디자인을 바꾸면 배경음악도 바꿈. 단, 초기 진입(!restart)이거나 사용자가 직접 골랐거나 저장한 BGM·내 음원·BGM 끄기는 덮어쓰지 않음
     function applyDesignBgm(ds, restart) {
-      if (typeof AudioEngine === 'undefined') return;
+      if (typeof AudioEngine === 'undefined' || !restart) return;
       if (AudioEngine.userPickedBgm || AudioEngine.bgmStyle === 'custom_mp3' || AudioEngine.bgmStyle === 'off') return;
       try { if (localStorage.getItem('autoreels_bgm_style')) return; } catch (e) {}
       const key = getDesignBgm(ds);

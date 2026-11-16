@@ -39,6 +39,14 @@
       "destination": "/studio.html"
     }
   ],
+  "headers": [
+    {
+      "source": "/(studio|studio\\.html|index\\.html|trends-today\\.json)?",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    }
+  ],
   "crons": [
     {
       "path": "/api/cron-billing",
