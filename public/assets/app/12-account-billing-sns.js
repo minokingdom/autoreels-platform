@@ -1069,7 +1069,8 @@
       // 컷마다 다른 디자인 섞기는 기본으로 켜 둠 (사장님이 끄면 그 선택을 기억)
       setTimeout(() => {
         try {
-          if (localStorage.getItem('autoreels_cut_mix') !== '0' && !campaign.cutDesigns) campaign.cutDesigns = arBuildCutDesignMix();
+          // 다른 디자인끼리 섞기는 사장님이 켤 때만 (기본은 한 디자인 안에서 컷마다 장면 구성이 바뀜)
+          if (localStorage.getItem('autoreels_cut_mix') === '1' && !campaign.cutDesigns) campaign.cutDesigns = arBuildCutDesignMix();
           arRenderCutMixRow();
         } catch (e) {}
       }, 0);
