@@ -1518,6 +1518,10 @@
       } catch (e) {}
 
       const voiceChanged = (AudioEngine.ttsVoice !== prevVoice) || (AudioEngine.ttsSpeed !== prevSpeed);
+      if (pickedBgm) {
+        AudioEngine.userPickedBgm = true;
+        try { localStorage.setItem('autoreels_bgm_style', pickedBgm); } catch (e) {}
+      }
       if (typeof renderBgmRecommendations === 'function') renderBgmRecommendations();
       if (String(pickedBgm).startsWith('ace_')) {
         const trackId = String(pickedBgm).slice(4).replace(/[^a-z0-9_-]/gi, '');
@@ -1825,6 +1829,20 @@
       window.applyRecommendedBgm = applyRecommendedBgm;
       window.generateKeywordLyriaBgm = generateKeywordLyriaBgm;
       window.addEventListener('DOMContentLoaded', () => {
+        try {
+          const savedBgm = localStorage.getItem('autoreels_bgm_style');
+          const sel = document.getElementById('bgmStyleSelect');
+          if (savedBgm && sel && [...sel.options].some((o) => o.value === savedBgm)) {
+            sel.value = savedBgm;
+            AudioEngine.bgmStyle = savedBgm;
+            AudioEngine.userPickedBgm = true;
+            if (savedBgm.startsWith('ace_')) {
+              const trackId = savedBgm.slice(4).replace(/[^a-z0-9_-]/gi, '');
+              const optLabel = sel.selectedOptions && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : trackId;
+              AudioEngine.loadRemoteBgmUrl(`/assets/bgm/pack/${trackId}.mp3`, optLabel);
+            }
+          }
+        } catch (e) {}
         setTimeout(renderBgmRecommendations, 400);
         const ti = document.getElementById('topicInput');
         if (ti) ti.addEventListener('input', () => { clearTimeout(window.__bgmRecT); window.__bgmRecT = setTimeout(renderBgmRecommendations, 300); });
