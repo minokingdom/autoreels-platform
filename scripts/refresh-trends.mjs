@@ -206,6 +206,7 @@ if (USE_TREG) {
 }
 
 if (problems.length > 0) {
+  out.problems = problems;
   await notifyKakaoProblem(`트렌드 갱신 점검 필요 (${okCount}/${INDUSTRIES.length} 성공)\n- ${problems.join('\n- ')}`);
 }
 if (!okCount) {
