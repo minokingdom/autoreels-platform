@@ -125,13 +125,13 @@ IND_VISUAL_HINT = {
 def load_diffusers():
     try:
         import torch  # type: ignore
-        from diffusers import AutoPipelineForText2Image, DPMSolverMultistepScheduler  # type: ignore
-        return torch, AutoPipelineForText2Image, DPMSolverMultistepScheduler
+        from diffusers import AutoencoderKL, AutoPipelineForText2Image, DPMSolverMultistepScheduler  # type: ignore
+        return torch, AutoencoderKL, AutoPipelineForText2Image, DPMSolverMultistepScheduler
     except Exception:
         subprocess.run([sys.executable, "-m", "pip", "-q", "install", "diffusers", "accelerate", "safetensors", "pillow"], check=True)
         import torch  # type: ignore
-        from diffusers import AutoPipelineForText2Image, DPMSolverMultistepScheduler  # type: ignore
-        return torch, AutoPipelineForText2Image, DPMSolverMultistepScheduler
+        from diffusers import AutoencoderKL, AutoPipelineForText2Image, DPMSolverMultistepScheduler  # type: ignore
+        return torch, AutoencoderKL, AutoPipelineForText2Image, DPMSolverMultistepScheduler
 
 
 def run_worker() -> None:
@@ -150,12 +150,11 @@ def run_worker() -> None:
     date_str = date_ctx["dateStr"]
     topics_dir = work_dir / "public" / "assets" / "topics"
 
-    torch, AutoPipelineForText2Image, DPMSolverMultistepScheduler = load_diffusers()
+    torch, AutoencoderKL, AutoPipelineForText2Image, DPMSolverMultistepScheduler = load_diffusers()
+    vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix", torch_dtype=torch.float16)
     pipe = AutoPipelineForText2Image.from_pretrained(
-        "Lykon/dreamshaper-xl-v2-turbo", torch_dtype=torch.float16, variant="fp16"
+        "Lykon/dreamshaper-xl-v2-turbo", vae=vae, torch_dtype=torch.float16, variant="fp16"
     ).to("cuda")
-    if hasattr(pipe, "upcast_vae"):
-        pipe.upcast_vae()
     pipe.scheduler = DPMSolverMultistepScheduler.from_config(
         pipe.scheduler.config, use_karras_sigmas=True, algorithm_type="sde-dpmsolver++"
     )
