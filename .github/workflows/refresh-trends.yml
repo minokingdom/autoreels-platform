@@ -16,6 +16,11 @@ jobs:
         with:
           node-version: '20'
       - run: node scripts/refresh-trends.mjs
+        env:
+          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+          KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          KAKAO_ALERT_WEBHOOK: ${{ secrets.KAKAO_ALERT_WEBHOOK }}
       - name: 바뀌었으면 커밋
         run: |
           if git diff --quiet -- public/trends-today.json; then echo "no change"; exit 0; fi

@@ -80,9 +80,69 @@ async function fetchViaTreg(ind) {
 let prev = { industries: {} };
 try { prev = JSON.parse(await readFile(OUT, 'utf8')); } catch (e) { /* 처음 실행 */ }
 
+async function notifyKakaoProblem(text) {
+  const restKey = String(process.env.KAKAO_REST_API_KEY || '').trim();
+  const refreshToken = String(process.env.KAKAO_REFRESH_TOKEN || '').trim();
+  const webhookUrl = String(process.env.KAKAO_ALERT_WEBHOOK || '').trim();
+
+  if (restKey && refreshToken) {
+    try {
+      const form = new URLSearchParams({
+        grant_type: 'refresh_token',
+        client_id: restKey,
+        refresh_token: refreshToken
+      });
+      if (process.env.KAKAO_CLIENT_SECRET) form.set('client_secret', String(process.env.KAKAO_CLIENT_SECRET).trim());
+      const tkRes = await fetch('https://kauth.kakao.com/oauth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8' },
+        body: form,
+        signal: AbortSignal.timeout(10000)
+      });
+      const tk = await tkRes.json();
+      if (tk.access_token) {
+        const template = {
+          object_type: 'text',
+          text: `[AutoReels 알림]\n${String(text).slice(0, 900)}`,
+          link: { web_url: 'https://autoreels-studio.vercel.app', mobile_web_url: 'https://autoreels-studio.vercel.app' },
+          button_title: '스튜디오 확인'
+        };
+        const msgRes = await fetch('https://kapi.kakao.com/v2/api/talk/memo/default/send', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${tk.access_token}`,
+            'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+          },
+          body: new URLSearchParams({ template_object: JSON.stringify(template) }),
+          signal: AbortSignal.timeout(10000)
+        });
+        console.log('kakao notify status:', msgRes.status);
+      } else {
+        console.log('kakao token error:', tk.error_description || tk.error || tkRes.status);
+      }
+    } catch (e) {
+      console.log('kakao notify failed:', e.message);
+    }
+  }
+
+  if (webhookUrl) {
+    try {
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: `[AutoReels 알림]\n${text}` }),
+        signal: AbortSignal.timeout(10000)
+      });
+    } catch (e) {
+      console.log('kakao webhook failed:', e.message);
+    }
+  }
+}
+
 const kst = new Date(Date.now() + 9 * 3600000);
 const out = { date: kst.toISOString().slice(0, 10), updatedAt: new Date().toISOString(), industries: {} };
 let okCount = 0;
+const problems = [];
 for (const ind of INDUSTRIES) {
   try {
     let source = '';
@@ -107,14 +167,32 @@ for (const ind of INDUSTRIES) {
     if (items.length) {
       out.industries[ind] = { source, keywords: items };
       okCount++;
-    } else if (prev.industries && prev.industries[ind]) {
-      out.industries[ind] = { ...prev.industries[ind], stale: true };
+    } else {
+      problems.push(`${ind}: 키워드 0건`);
+      if (prev.industries && prev.industries[ind]) out.industries[ind] = { ...prev.industries[ind], stale: true };
     }
     console.log(ind, source, items.length);
   } catch (e) {
     console.log(ind, 'error', e.message);
+    problems.push(`${ind}: ${e.message}`);
     if (prev.industries && prev.industries[ind]) out.industries[ind] = { ...prev.industries[ind], stale: true };
   }
+}
+
+if (USE_TREG) {
+  try {
+    const tregBin = process.env.TREG_BIN || (process.platform === 'win32' ? join(homedir(), '.local', 'bin', 'treg.exe') : 'treg');
+    const { stdout } = await execFileAsync(tregBin, ['--json', 'balance'], { timeout: 15000 });
+    const bal = JSON.parse(stdout);
+    const usd = Number(bal.balance_usd ?? (Number(bal.balance_micro || 0) / 1e6));
+    if (Number.isFinite(usd) && usd < 0.1) {
+      problems.push(`treg 잔액 부족: $${usd.toFixed(4)} 남음`);
+    }
+  } catch (e) {}
+}
+
+if (problems.length > 0) {
+  await notifyKakaoProblem(`트렌드 갱신 점검 필요 (${okCount}/${INDUSTRIES.length} 성공)\n- ${problems.join('\n- ')}`);
 }
 if (!okCount) {
   console.log('받은 업종이 없어 파일을 바꾸지 않습니다');
