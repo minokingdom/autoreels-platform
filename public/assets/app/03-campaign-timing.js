@@ -743,7 +743,11 @@
 
     function setVideoTotalDuration(sec) {
       BASE_DURATION = Math.max(6, Math.min(60, Number(sec) || 12));
-      if (typeof campaign !== 'undefined') { delete campaign.cutCountOverride; campaign.cutLenScale = []; }
+      if (typeof campaign !== 'undefined') {
+        delete campaign.cutCountOverride; campaign.cutLenScale = [];
+        // 컷 수가 바뀌면 컷마다 섞기도 새 컷 수에 맞춰 다시
+        if (campaign.cutDesigns && typeof arBuildCutDesignMix === 'function') setTimeout(() => { campaign.cutDesigns = arBuildCutDesignMix(); if (typeof arRenderCutMixRow === 'function') arRenderCutMixRow(); }, 0);
+      }
       applyVideoDurations();
       // 컷 수가 바뀌면 새 컷의 성우 음성을 받아 길이를 다시 맞춤
       if (audioEngineReady() && AudioEngine.enabled) AudioEngine.prefetchTtsBuffers();

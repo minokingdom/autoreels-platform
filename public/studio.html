@@ -993,6 +993,14 @@
               <button type="button" onclick="pickRandomTheme(false)" class="ig-round-btn" title="디자인과 색을 무작위로" aria-label="랜덤 디자인">🎲</button>
             </div>
             <div class="hidden"><span id="designStyleCount"></span></div>
+            <!-- 컷마다 다른 디자인으로 섞기 -->
+            <div class="cut-mix-row">
+              <label class="ig-switch-row" style="border:0">
+                <span class="flex flex-col"><span>컷마다 다른 디자인</span><small id="cutMixList" class="text-[12px] text-[#85858b]">한 디자인으로 처음부터 끝까지</small></span>
+                <input id="cutMixSwitch" type="checkbox" onchange="arSetCutDesignMix(this.checked)" /><i></i>
+              </label>
+              <button type="button" id="cutMixAgain" class="hidden ig-text-btn" onclick="arSetCutDesignMix(true)">↻ 다시 섞기</button>
+            </div>
             <p data-advanced class="text-[11px] text-[#6e6e73]">미리보기 화면을 옆으로 밀어도 디자인 목록이 열립니다.</p>
             <details data-advanced class="fold pt-2 border-t border-[var(--border)]">
               <summary class="py-1.5 text-[12px] text-[#a1a1a6]">🔥 인기 릴스 스타일 가져오기 · 키워드로 찾기</summary>

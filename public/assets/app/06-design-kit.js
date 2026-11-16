@@ -4108,7 +4108,54 @@
       if (!campaign.colorKey) campaign.colorKey = 'default';
     }
     function getActiveDesign() {
+      // 컷마다 섞기: 영상을 그리는 중이면 그 컷에 정한 디자인 (화면 설정·목록에서는 늘 대표 디자인)
+      if (campaign.cutDesigns && window.__arMixCut >= 0) {
+        const id = campaign.cutDesigns[window.__arMixCut];
+        const md = id && arFindDesign(id);
+        if (md) return md;
+      }
       return arFindDesign(campaign.designStyle) || DESIGN_STYLES[0];
+    }
+    // ★ 컷마다 다른 디자인으로 섞기 (인스타 템플릿처럼 장면마다 구성이 바뀜)
+    //   대표 디자인과 같은 묶음·분위기에서 골라 색·글꼴 결이 튀지 않게, 이웃 컷끼리는 겹치지 않게.
+    //   색상(팔레트)은 영상 전체에 같이 적용됨.
+    function arBuildCutDesignMix() {
+      const main = arFindDesign(campaign.designStyle) || DESIGN_STYLES[0];
+      const n = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
+      const vis = (typeof arVisibleDesigns === 'function' ? arVisibleDesigns() : DESIGN_STYLES).filter((d) => !d.custom && d.id !== main.id);
+      const sameEngine = vis.filter((d) => d.engine === main.engine);
+      let pool = sameEngine.filter((d) => d.cat === main.cat || (main.industry && d.industry));
+      if (pool.length < 3 && typeof AR_DESIGN_MOODS !== 'undefined' && typeof arDesignHay === 'function') {
+        const moods = AR_DESIGN_MOODS.filter((m) => m.re.test(arDesignHay(main)));
+        pool = pool.concat(sameEngine.filter((d) => !pool.includes(d) && moods.some((m) => m.re.test(arDesignHay(d)))));
+      }
+      if (pool.length < 3) pool = pool.concat(sameEngine.filter((d) => !pool.includes(d)));
+      if (pool.length < 2) pool = vis;
+      const out = [main.id];
+      const bag = pool.slice().sort(() => Math.random() - 0.5);
+      for (let i = 1; i < n; i++) {
+        let pick = bag.find((d) => d.id !== out[i - 1] && !out.includes(d.id)) || bag.find((d) => d.id !== out[i - 1]) || main;
+        out.push(pick.id);
+      }
+      return out;
+    }
+    function arSetCutDesignMix(on) {
+      campaign.cutDesigns = on ? arBuildCutDesignMix() : null;
+      try { localStorage.setItem('autoreels_cut_mix', on ? '1' : '0'); } catch (e) {}
+      arRenderCutMixRow();
+      if (typeof seekToTime === 'function') seekToTime(0.05);
+      if (typeof isPlaying !== 'undefined' && !isPlaying && typeof togglePlayPause === 'function') togglePlayPause();
+    }
+    function arRenderCutMixRow() {
+      const sw = document.getElementById('cutMixSwitch');
+      const again = document.getElementById('cutMixAgain');
+      const list = document.getElementById('cutMixList');
+      const on = !!campaign.cutDesigns;
+      if (sw) sw.checked = on;
+      if (again) again.classList.toggle('hidden', !on);
+      if (list) {
+        list.textContent = on ? campaign.cutDesigns.map((id, i) => `${i + 1}컷 ${(arFindDesign(id) || {}).name || ''}`).join(' · ') : '한 디자인으로 처음부터 끝까지';
+      }
     }
     function getActivePalette() {
       return COLOR_PALETTES.find((p) => p.id === campaign.colorKey) || COLOR_PALETTES[0];
@@ -4526,6 +4573,8 @@
     function selectDesignStyle(id) {
       if (!arFindDesign(id)) return;
       campaign.designStyle = id;
+      // 섞기를 켜 둔 상태면 새 대표 디자인을 기준으로 다시 섞음
+      if (campaign.cutDesigns) { campaign.cutDesigns = arBuildCutDesignMix(); setTimeout(arRenderCutMixRow, 0); }
       try { localStorage.setItem('autoreels_design_style', id); } catch (e) {}
       if (typeof recordDesignUse === 'function') recordDesignUse(id);
       const dsel = arFindDesign(id);

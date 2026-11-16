@@ -1333,3 +1333,6 @@ select.ig-select-src { display: none !important; }
 #productSheet .aos-head strong { font-size: 17px; color: #fff; }
 #todayTopicBadge { display: none !important; } /* 위쪽 '주제 · 상품' 칩이 대신 보여 줌 */
 #aiGenNotice { font-size: 12px; line-height: 1.5; }
+.cut-mix-row { display: flex; align-items: center; gap: 6px; padding: 2px 4px 2px 12px; border-radius: 14px; background: #141416; border: 1px solid var(--border); }
+.cut-mix-row .ig-switch-row { flex: 1; min-width: 0; }
+.cut-mix-row .ig-switch-row small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 230px; }

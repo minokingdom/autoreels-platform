@@ -39,7 +39,18 @@
       // ========================================================================
       if (USE_GENRE_ENGINE) {
         // 장르 엔진 v2 (위에서 정의). 아래 기존 그리기 코드는 USE_GENRE_ENGINE=false일 때만 사용
-        renderGenreFrame(t, mainDuration, totalCuts, d);
+        try {
+          renderGenreFrame(t, mainDuration, totalCuts, d);
+        } finally { window.__arMixCut = -1; }
+        // 컷마다 섞기: 디자인이 바뀌는 컷 경계에서 짧게 번쩍 넘어감 (인스타 템플릿 전환 느낌)
+        const mci = window.__arActiveRenderCutIdx, msec = window.__arActiveRenderLocalSec || 0;
+        if (campaign.cutDesigns && mci > 0 && msec < 0.16 && campaign.cutDesigns[mci] !== campaign.cutDesigns[mci - 1]) {
+          ctx.save();
+          ctx.globalAlpha = (1 - msec / 0.16) * 0.55;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, W, H);
+          ctx.restore();
+        }
       } else if (t < mainDuration) {
         const vid = document.getElementById('hiddenCustomVideo');
 

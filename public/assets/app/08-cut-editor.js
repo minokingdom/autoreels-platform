@@ -5491,9 +5491,11 @@
       const c = ctx;
       const W = canvas.width;
       const H = canvas.height;
-      const baseDesign = getActiveDesign();
       const cutDur = mainDuration / totalCuts;
       const activeCutIdx = t < mainDuration ? Math.min(totalCuts - 1, Math.floor(t / cutDur)) : -1;
+      // 컷마다 섞기: 이 컷에 정한 디자인으로 그림 (엔딩은 대표 디자인)
+      window.__arMixCut = campaign.cutDesigns ? activeCutIdx : -1;
+      const baseDesign = getActiveDesign();
       const localSec = activeCutIdx >= 0 ? (t - activeCutIdx * cutDur) : 0;
       const transId = (activeCutIdx >= 0 && campaign.cutTransitions && campaign.cutTransitions[activeCutIdx]) || 'default';
       window.__arActiveRenderCutIdx = activeCutIdx;
