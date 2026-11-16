@@ -700,55 +700,35 @@
             <div class="text-[16px] font-semibold text-[#ededed]">오늘은 어떤 내용으로 올릴까요?</div>
             <p id="topicDateLine" class="text-[12px] text-[#85858b] mt-1"></p>
           </div>
+          <button type="button" class="bgm-now" onclick="arOpenProductSheet()">
+            <span class="bgm-cover" style="width:44px;height:44px;background:linear-gradient(135deg,#4cc38a,#065f46)">🛍️</span>
+            <span class="bgm-now-txt"><strong class="ar-product-name">내 상품</strong><small class="ar-product-sub">무엇을 알릴지 정해 두면 대본에 들어가요</small></span>
+            <span class="bgm-now-go">바꾸기 ›</span>
+          </button>
+          <div class="ig-search-row">
+            <input id="topicCustomInput" type="text" placeholder="오늘 올릴 내용 적기 (예: 신메뉴 출시, 오늘만 할인)" onkeydown="if(event.key==='Enter'){event.preventDefault();arPickCustomTopic();}" class="studio-input" />
+            <button type="button" onclick="arPickCustomTopic()" class="ig-search-go">만들기</button>
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[13px] font-semibold text-[#ededed]">추천 주제</span>
+            <button type="button" onclick="arLoadTopics(true)" class="ig-text-btn">↻ 다른 주제</button>
+          </div>
           <div id="topicCards" class="ig-list"></div>
-          <div class="flex items-center justify-between gap-2 flex-wrap">
-            <p id="topicStatus" class="text-[11px] text-[#85858b]"></p>
-            <button type="button" onclick="arLoadTopics(true)" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">↻ 다른 주제 보기</button>
-          </div>
-          <div class="studio-sub p-3 space-y-2">
-            <label for="topicCustomInput" class="block text-[12px] text-[#a1a1a6]">직접 적기</label>
-            <div class="flex flex-col sm:flex-row gap-2">
-              <input id="topicCustomInput" type="text" placeholder="예: 짬뽕 신메뉴 출시, 오늘만 1천 원 할인" onkeydown="if(event.key==='Enter'){event.preventDefault();arPickCustomTopic();}" class="studio-input flex-1 h-9 px-3 text-[13px]" />
-              <button type="button" onclick="arPickCustomTopic()" class="btn-primary h-9 px-4 text-[13px] cursor-pointer shrink-0">이 주제로 만들기</button>
-            </div>
-          </div>
+          <p id="topicStatus" class="text-[11px] text-[#85858b]"></p>
         </div>
 
         <div id="studioPanel_script" role="tabpanel" aria-labelledby="studioTabBtn_script" class="studio-panel hidden p-5 sm:p-6 space-y-5">
+          <!-- 맨 위: 오늘 주제 · 내 상품 (누르면 바꾸기) -->
+          <div class="ig-chip-row">
+            <button type="button" class="ig-ctx-chip" onclick="switchStudioTab('topic')"><span>주제</span><strong id="todayTopicChip">고르기</strong></button>
+            <button type="button" class="ig-ctx-chip" onclick="arOpenProductSheet()"><span>상품</span><strong class="ar-product-name">내 상품</strong></button>
+          </div>
           <p id="todayTopicBadge" class="hidden text-[12px] text-[#4cc38a]"></p>
-          <div>
-            <label class="block text-[12px] text-[#a1a1a6] mb-1.5">차종 프리셋</label>
-            <select id="presetSelect" onchange="applyPreset(this.value)" class="studio-input w-full h-9 px-3 text-[13px] cursor-pointer">
-              <option value="sorento">2026 쏘렌토 하이브리드 (할인 480만원)</option>
-              <option value="grandeur">2026 디 올 뉴 그랜저 하이브리드 (할인 450만원)</option>
-              <option value="santafe">디 올 뉴 싼타페 하이브리드 (할인 420만원)</option>
-              <option value="carnival">더 뉴 카니발 하이브리드 9인승 (할인 390만원)</option>
-              <option value="gv80">제네시스 GV80 페이스리프트 (할인 620만원)</option>
-              <option value="bmw5">BMW 520i M 스포츠 특판 (할인 1,150만원)</option>
-              <option value="used">무사고 인증 중고차 특가 (할인 350만원)</option>
-            </select>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div>
-              <label class="block text-[12px] text-[#a1a1a6] mb-1.5">차종 타이틀</label>
-              <input id="inputVehicle" type="text" value="2026 쏘렌토 하이브리드" oninput="updateCampaignFromInputs()" class="studio-input w-full h-9 px-3 text-[13px]" />
-            </div>
-            <div>
-              <label class="block text-[12px] text-[#a1a1a6] mb-1.5">최대 할인 금액 (만원)</label>
-              <input id="inputDiscountNum" type="number" value="480" oninput="updateCampaignFromInputs()" class="studio-input w-full h-9 px-3 text-[13px] font-mono" />
-            </div>
-            <div>
-              <label class="block text-[12px] text-[#a1a1a6] mb-1.5">월 납입금 · 출고 조건</label>
-              <input id="inputDiscount" type="text" value="월 46만원대 · 3일 즉시출고" oninput="updateCampaignFromInputs()" class="studio-input w-full h-9 px-3 text-[13px]" />
-            </div>
-          </div>
-
           <!-- 생성형 씬 디렉터 & 레이아웃 엔진 -->
           <div class="studio-sub p-4 space-y-3">
             <div class="flex items-center justify-between flex-wrap gap-2">
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-[14px] font-semibold text-[#ededed]">AI로 대본 만들기</span>
+                <span class="text-[15px] font-semibold text-[#ededed]">대본 고르기</span>
                 <span data-advanced id="aiEngineStatusBadge" class="tag-chip px-2 py-0.5 text-[12px] flex items-center gap-1.5">
                   <span class="w-1.5 h-1.5 rounded-full bg-[#4cc38a]"></span>중앙 AI 엔진 활성
                 </span>
@@ -756,32 +736,37 @@
               </div>
             </div>
 
-            <!-- AI 대본으로 영상이 만들어지는 원리 안내 -->
-            <details data-advanced class="fold rounded-[8px] bg-[#141415] border border-[var(--border)] text-[12px] text-[#a1a1a6] leading-relaxed">
-              <summary class="px-3 py-2 text-[12px] text-[#a1a1a6]">AI 대본으로 영상이 만들어지는 과정 보기</summary>
-              <!-- 업종을 바꾸면 arRenderAiPromptHints() 가 예시 문구를 바꿈 -->
-              <div class="px-3 pb-3"> 아래에 <code id="aiHowtoExample" class="text-[#ededed] font-mono">"30대 여성, 그랜저"</code>처럼 상황을 적고 [AI로 만들기]를 누르면 ① 대본 3안이 만들어지고, ② 설정된 영상 길이(4컷~10컷)에 맞춰 <strong class="text-[#ededed]">사진 컷 + 모션 그래픽 + 한국어 성우 음성 + 배경음악</strong>이 합성되어 바로 재생됩니다.</div>
-            </details>
 
+            <p id="aiGenNotice" class="hidden text-[12px] text-[#4cc38a]"></p>
+            <!-- AI 대본 3안: 생성 후 표시, 누르면 그 대본으로 바로 다시 재생 -->
+            <div id="aiVariantPicker" class="hidden flex flex-col gap-1.5">
+              <p class="text-[12px] text-[#85858b]">AI가 쓴 3가지 · 옆으로 넘겨 골라요</p>
+              <div id="aiVariantList" class="ig-variant-row no-scrollbar"></div>
+            </div>
+
+            <!-- 동적 N컷(4컷~10컷) 자막 + 성우 TTS 대본 카드 컨테이너 (시간이 늘어나면 컷 카드도 자동으로 늘어남) -->
+            <div id="dynamicCutCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 max-h-[430px] overflow-y-auto pr-1"></div>
+          </div>
+
+          <div class="studio-sub p-4 space-y-2">
+            <div class="text-[15px] font-semibold text-[#ededed]">다른 느낌으로 다시 쓰기</div>
+            <p class="text-[12px] text-[#85858b]">원하는 내용·말투를 적고 [다시 쓰기]를 누르면 3가지를 새로 써요.</p>
             <div class="flex flex-col sm:flex-row gap-2">
               <input id="aiPromptInput" type="text" placeholder="예: 30대 여성, 그랜저 하브 선점차 2대 즉시출고 / 법인 대표님 GV80 비용처리" class="studio-input flex-1 h-9 px-3 text-[13px]" />
               <button type="button" id="aiGenBtn" onclick="generateStoryboardFromPrompt()" class="btn-primary h-9 px-4 text-[13px] cursor-pointer shrink-0">
-                AI로 만들기
+                다시 쓰기
               </button>
             </div>
             <div data-advanced class="flex items-center gap-2">
               <label for="aiExcludeInput" class="text-[11px] font-mono text-[#85858b] shrink-0">뺄 문구</label>
               <input id="aiExcludeInput" type="text" placeholder="예: 견적, 최저가, 무료, 1등 (쉼표로 구분 · AI 대본에서 자동 제외)" class="studio-input flex-1 h-8 px-2.5 text-[12px] text-[#d4d4d8]" />
             </div>
-            <p id="aiGenNotice" class="hidden text-[12px] text-[#4cc38a]"></p>
-            <!-- AI 대본 3안: 생성 후 표시, 누르면 그 대본으로 바로 다시 재생 -->
-            <div id="aiVariantPicker" class="hidden flex flex-col gap-1.5">
-              <p class="text-[11px] font-mono text-[#85858b]">대본 3안 · 눌러서 바꿔 보기</p>
-              <div id="aiVariantList" class="grid grid-cols-1 sm:grid-cols-3 gap-2"></div>
-            </div>
-
-            <!-- 동적 N컷(4컷~10컷) 자막 + 성우 TTS 대본 카드 컨테이너 (시간이 늘어나면 컷 카드도 자동으로 늘어남) -->
-            <div id="dynamicCutCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 max-h-[430px] overflow-y-auto pr-1"></div>
+            <!-- AI 대본으로 영상이 만들어지는 원리 안내 -->
+            <details data-advanced class="fold rounded-[8px] bg-[#141415] border border-[var(--border)] text-[12px] text-[#a1a1a6] leading-relaxed">
+              <summary class="px-3 py-2 text-[12px] text-[#a1a1a6]">AI 대본으로 영상이 만들어지는 과정 보기</summary>
+              <!-- 업종을 바꾸면 arRenderAiPromptHints() 가 예시 문구를 바꿈 -->
+              <div class="px-3 pb-3"> 아래에 <code id="aiHowtoExample" class="text-[#ededed] font-mono">"30대 여성, 그랜저"</code>처럼 상황을 적고 [AI로 만들기]를 누르면 ① 대본 3안이 만들어지고, ② 설정된 영상 길이(4컷~10컷)에 맞춰 <strong class="text-[#ededed]">사진 컷 + 모션 그래픽 + 한국어 성우 음성 + 배경음악</strong>이 합성되어 바로 재생됩니다.</div>
+            </details>
           </div>
 
           <details data-advanced id="scriptTemplateFold" class="fold rounded-[12px] border border-[var(--border)] bg-[#111113]">
@@ -2001,6 +1986,42 @@
     </div>
   </div>
   <!-- 앱 스크립트: 원본은 public/assets/app/NN-*.js, 배포 때 scripts/build-app.mjs 가 app.js 하나로 합침 (한 번에 실행되어야 함) -->
+    <!-- 내 상품 시트: 주제·대본 탭의 '내 상품' 줄을 누르면 열림 (한 번 정하면 기억) -->
+    <div id="productSheet" class="ar-modal hidden fixed inset-0 z-[95]" onclick="if(event.target===this)arCloseProductSheet()">
+      <div class="aos-card studio-panel product-sheet-card">
+        <div class="aos-head"><strong>내 상품 · 혜택</strong><button type="button" class="bgm-done" onclick="arCloseProductSheet()">완료</button></div>
+        <div class="space-y-3 overflow-y-auto">
+          <div>
+            <label class="block text-[12px] text-[#a1a1a6] mb-1.5">차종 프리셋</label>
+            <select id="presetSelect" onchange="applyPreset(this.value)" class="studio-input w-full h-9 px-3 text-[13px] cursor-pointer">
+              <option value="sorento">2026 쏘렌토 하이브리드 (할인 480만원)</option>
+              <option value="grandeur">2026 디 올 뉴 그랜저 하이브리드 (할인 450만원)</option>
+              <option value="santafe">디 올 뉴 싼타페 하이브리드 (할인 420만원)</option>
+              <option value="carnival">더 뉴 카니발 하이브리드 9인승 (할인 390만원)</option>
+              <option value="gv80">제네시스 GV80 페이스리프트 (할인 620만원)</option>
+              <option value="bmw5">BMW 520i M 스포츠 특판 (할인 1,150만원)</option>
+              <option value="used">무사고 인증 중고차 특가 (할인 350만원)</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-1 gap-3">
+            <div>
+              <label class="block text-[12px] text-[#a1a1a6] mb-1.5">차종 타이틀</label>
+              <input id="inputVehicle" type="text" value="2026 쏘렌토 하이브리드" oninput="updateCampaignFromInputs()" class="studio-input w-full h-9 px-3 text-[13px]" />
+            </div>
+            <div>
+              <label class="block text-[12px] text-[#a1a1a6] mb-1.5">최대 할인 금액 (만원)</label>
+              <input id="inputDiscountNum" type="number" value="480" oninput="updateCampaignFromInputs()" class="studio-input w-full h-9 px-3 text-[13px] font-mono" />
+            </div>
+            <div>
+              <label class="block text-[12px] text-[#a1a1a6] mb-1.5">월 납입금 · 출고 조건</label>
+              <input id="inputDiscount" type="text" value="월 46만원대 · 3일 즉시출고" oninput="updateCampaignFromInputs()" class="studio-input w-full h-9 px-3 text-[13px]" />
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
   <script src="/assets/app/app.js"></script>
   <!--
     가독성 보정 (A단계, 2026-11-13)

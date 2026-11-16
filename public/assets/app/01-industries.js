@@ -448,6 +448,21 @@
       }
       const lab = sel.previousElementSibling;
       if (lab && lab.tagName === 'LABEL') lab.textContent = `${IND.product} 프리셋`;
+      // 할인·조건 칸 이름도 업종 말로 (자동차가 아니면 '월 납입금'·'만원'이 어색함)
+      const setLab = (id, txt) => {
+        const el = document.getElementById(id);
+        const l = el && el.previousElementSibling;
+        if (l && l.tagName === 'LABEL') { l.setAttribute('data-noind', ''); l.textContent = txt; }
+      };
+      if (IND.key === 'auto') {
+        setLab('inputVehicle', '차종 타이틀');
+        setLab('inputDiscountNum', '최대 할인 금액 (만원)');
+        setLab('inputDiscount', '월 납입금 · 출고 조건');
+      } else {
+        setLab('inputVehicle', `${IND.product} 이름`);
+        setLab('inputDiscountNum', '할인 (숫자만 · 없으면 0)');
+        setLab('inputDiscount', '혜택 · 조건 한 줄');
+      }
     }
     function escapeHtmlInd(s) {
       return String(s == null ? '' : s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));

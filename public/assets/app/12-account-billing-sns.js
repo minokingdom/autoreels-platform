@@ -1065,7 +1065,7 @@
     try {
       const curTab = STUDIO_TABS.find((k) => { const el = document.getElementById(`studioPanel_${k}`); return el && !el.classList.contains('hidden'); }) || 'topic';
       arUpdateMobileStepBar(curTab);
-      setTimeout(() => { try { arSyncIgSelects(); } catch (e) {} }, 0);
+      setTimeout(() => { try { arSyncIgSelects(); arSyncProductRows(); } catch (e) {} }, 0);
     } catch (e) {}
     arUpdateEasyGuide('topic');
     // 처음 열 때도 기본 대본 문구에 맞게 사진 순서를 맞춤 (업종 사진·대본이 모두 정해진 뒤)

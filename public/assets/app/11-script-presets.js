@@ -248,9 +248,12 @@
         const on = i === arScriptVariants.index;
         const label = v.angleLabel || `대본 ${i + 1}`;
         const hook = v.hook || (Array.isArray(v.cutCaptions) ? v.cutCaptions[0] : '');
-        return `<button type="button" data-script-variant="${i}" aria-pressed="${on}" class="${on ? 'btn-primary' : 'btn-secondary'} h-auto min-h-[52px] px-3 py-2 text-[12px] cursor-pointer flex-col items-start text-left whitespace-normal">`
-          + `<span class="font-mono text-[11px] opacity-70">${i + 1}안 · ${esc(label)}</span>`
-          + `<span class="w-full truncate">${esc(hook)}</span></button>`;
+        // 인스타 카드처럼: 몇 번째 안 · 말투, 첫 문장 크게, 이어지는 컷 문구 미리보기
+        const rest = (Array.isArray(v.cutCaptions) ? v.cutCaptions.slice(1, 4) : []).map((x) => esc(String(x).replace(/\n+/g, ' '))).join(' · ');
+        return `<button type="button" data-script-variant="${i}" aria-pressed="${on}" class="ig-variant ${on ? 'on' : ''}">`
+          + `<span class="ig-variant-top"><em>${i + 1}안</em><span>${esc(label)}</span>${on ? '<b>✓ 선택됨</b>' : ''}</span>`
+          + `<strong>${esc(String(hook).replace(/\n+/g, ' '))}</strong>`
+          + `<small>${rest}</small></button>`;
       }).join('');
       wrap.classList.remove('hidden');
     }
@@ -531,6 +534,7 @@
     }
 
     function updateCampaignFromInputs() {
+      setTimeout(() => { if (typeof arSyncProductRows === 'function') arSyncProductRows(); }, 0);
       const d = getSelectedDealer();
       const hookEl = document.getElementById('inputHook');
       if (hookEl) campaign.hook = hookEl.value;

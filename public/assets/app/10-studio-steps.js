@@ -182,9 +182,49 @@
       }
     }
     // 주제 선택 → 대본 탭으로 이동해 그 주제로 AI 대본을 바로 만듦
+    // ★ 내 상품 시트 (주제·대본 탭의 '내 상품' 한 줄) — 상품을 먼저 정해 두면 대본이 처음부터 맞게 나옴
+    let arProductSnap = '';
+    function arProductKey() {
+      return ['inputVehicle', 'inputDiscountNum', 'inputDiscount'].map((id) => (document.getElementById(id) || {}).value || '').join('|');
+    }
+    function arSyncProductRows() {
+      const name = String((typeof campaign !== 'undefined' && campaign.vehicle) || (document.getElementById('inputVehicle') || {}).value || '').trim() || '내 상품';
+      const sub = String((document.getElementById('inputDiscount') || {}).value || '').trim();
+      const num = Number((document.getElementById('inputDiscountNum') || {}).value || 0);
+      document.querySelectorAll('.ar-product-name').forEach((el) => { el.textContent = name; });
+      document.querySelectorAll('.ar-product-sub').forEach((el) => { el.textContent = [num > 0 && typeof IND !== 'undefined' && IND.key === 'auto' ? `최대 ${num}만원 할인` : '', sub].filter(Boolean).join(' · ') || '무엇을 알릴지 정해 두면 대본에 들어가요'; });
+      const chip = document.getElementById('todayTopicChip');
+      if (chip) chip.textContent = (window.arTodayTopic && window.arTodayTopic.title) || '고르기';
+    }
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.id === 'presetSelect') setTimeout(arSyncProductRows, 60);
+    });
+    function arOpenProductSheet() {
+      const el = document.getElementById('productSheet');
+      if (!el) return;
+      arProductSnap = arProductKey();
+      el.classList.remove('hidden');
+      el.style.display = 'flex';
+      setTimeout(() => arSyncIgSelects(el), 0);
+    }
+    function arCloseProductSheet() {
+      const el = document.getElementById('productSheet');
+      if (!el) return;
+      el.classList.add('hidden');
+      el.style.display = 'none';
+      arSyncProductRows();
+      // 주제를 고른 뒤 상품을 바꿨으면, 바뀐 상품으로 대본을 다시 씀 (상품과 대본이 어긋나지 않게)
+      if (arProductKey() !== arProductSnap && window.arTodayTopic && typeof generateStoryboardFromPrompt === 'function') {
+        if (typeof arToast === 'function') arToast('바뀐 상품으로 대본을 다시 써요.');
+        generateStoryboardFromPrompt();
+      }
+    }
+
     function arPickTopic(topic) {
       if (!topic || !topic.prompt) return;
       window.arTodayTopic = topic;
+      setTimeout(arSyncProductRows, 0);
+      setTimeout(() => window.scrollTo({ top: Math.max(0, (document.getElementById('studioTabBtn_script') || document.body).getBoundingClientRect().top + window.scrollY - 160), behavior: 'smooth' }), 60);
       const promptEl = document.getElementById('aiPromptInput');
       if (promptEl) promptEl.value = topic.prompt;
       const badge = document.getElementById('todayTopicBadge');
@@ -344,6 +384,7 @@
       if (key === 'card' && typeof arRenderCardShowToggles === 'function') arRenderCardShowToggles();
       if (key === 'sound' && typeof renderBgmRecommendations === 'function') renderBgmRecommendations();
       setTimeout(() => arSyncIgSelects(document.getElementById('studioPanel_' + key)), 0);
+      if (key === 'topic' || key === 'script') setTimeout(arSyncProductRows, 0);
       // 사진 탭의 컷 카드에 대본 탭에서 고친 문구를 반영
       if (key === 'photo' && typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
       STUDIO_TABS.forEach((k) => {
@@ -530,11 +571,11 @@
     //   (컷 카드 안의 작은 선택칸·숨긴 선택칸은 그대로)
     function arIgSelectEligible(sel) {
       return sel && sel.tagName === 'SELECT' && !sel.multiple && !sel.hasAttribute('data-native') &&
-        sel.closest('.studio-panel') && !sel.closest('.cut-ctl') && !sel.classList.contains('hidden') &&
+        (sel.closest('.studio-panel') || sel.closest('#productSheet')) && !sel.closest('.cut-ctl') && !sel.classList.contains('hidden') &&
         sel.id !== 'bgmStyleSelect';
     }
     function arSyncIgSelects(root) {
-      (root || document).querySelectorAll('.studio-panel select').forEach((sel) => {
+      (root || document).querySelectorAll('.studio-panel select, #productSheet select').forEach((sel) => {
         let row = sel.__igRow;
         if (!row) {
           if (!arIgSelectEligible(sel)) return;
