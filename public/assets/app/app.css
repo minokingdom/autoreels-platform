@@ -1336,3 +1336,74 @@ select.ig-select-src { display: none !important; }
 .cut-mix-row { display: flex; align-items: center; gap: 6px; padding: 2px 4px 2px 12px; border-radius: 14px; background: #141416; border: 1px solid var(--border); }
 .cut-mix-row .ig-switch-row { flex: 1; min-width: 0; }
 .cut-mix-row .ig-switch-row small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 230px; }
+
+/* ==========================================================================
+   ★ 미리보기 고정 + 바텀시트 (2026-11-17 사장님 요청)
+   휴대폰: 위에는 재생 중인 미리보기가 항상 떠 있고, 아래 바텀시트(화면 약 절반)에서 단계별로 고름.
+   손잡이를 누르거나 끌어내리면 시트가 접히고 미리보기가 커짐. 컷 편집 중에는 원래 화면 흐름으로.
+   ========================================================================== */
+/* PC: 미리보기 틀 바깥 오른쪽 / 휴대폰: 화면 오른쪽 */
+#mainMonitorColumn > .monitor-frame { position: relative; }
+#arQuickBar { position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%); z-index: 15; display: flex; flex-direction: column; gap: 10px; }
+#arQuickBar .aq-btn { width: 52px; display: flex; flex-direction: column; align-items: center; gap: 3px; border: 0; background: transparent; color: #fff; cursor: pointer; padding: 0; font-family: inherit; }
+#arQuickBar .aq-dot { width: 40px; height: 40px; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.42); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); transition: transform .12s ease, background .15s ease; }
+#arQuickBar .aq-btn:active .aq-dot { transform: scale(0.9); }
+#arQuickBar .aq-btn.is-off .aq-dot { background: rgba(0,0,0,0.65); opacity: .75; }
+#arQuickBar .aq-label { font-size: 11px; font-weight: 700; line-height: 1.1; text-shadow: 0 1px 4px rgba(0,0,0,.6); white-space: nowrap; }
+body.ar-cut-editing #arQuickBar { display: none; }
+#arSheetHandle { display: none; }
+
+@media (max-width: 1023px) {
+  body.ar-sheet { --ar-msb: 64px; --ar-sheet: calc(52dvh - var(--ar-msb)); overflow: hidden; overscroll-behavior: none; }
+  body.ar-sheet.ar-sheet-min { --ar-sheet: 82px; }
+  /* 접었을 때는 손잡이 + 단계 탭만 보이게 */
+  body.ar-sheet.ar-sheet-min:not(.ar-cut-editing) #studioWorkflowColumn > .studio-card > div:first-child { display: none; }
+  body.ar-sheet:not(.ar-cut-editing) header,
+  body.ar-sheet:not(.ar-cut-editing) #mobileLiveDock,
+  body.ar-sheet:not(.ar-cut-editing) footer,
+  body.ar-sheet:not(.ar-cut-editing) #dealerQuickSelectorBar { display: none !important; }
+
+  /* 위: 미리보기 (항상 보임) */
+  body.ar-sheet:not(.ar-cut-editing) #mainMonitorColumn {
+    display: flex !important; position: fixed; left: 0; right: 0; top: 0;
+    bottom: calc(var(--ar-sheet) + var(--ar-msb)); z-index: 30;
+    padding: max(8px, env(safe-area-inset-top)) 0 8px; box-sizing: border-box;
+    align-items: center; justify-content: center; background: #0b0b0d; transition: bottom .3s ease;
+  }
+  body.ar-sheet:not(.ar-cut-editing) #mainMonitorColumn > .monitor-frame {
+    padding: 0; border: 0; background: transparent; box-shadow: none; height: 100%; width: auto; max-width: none;
+    display: flex; justify-content: center; align-items: center;
+  }
+  body.ar-sheet:not(.ar-cut-editing) #mainMonitorColumn > .monitor-frame > :not(#previewViewport):not(#arQuickBar) { display: none !important; }
+  body.ar-sheet:not(.ar-cut-editing) #previewViewport { height: 100%; width: auto; aspect-ratio: 9 / 16; }
+  body.ar-sheet:not(.ar-cut-editing) #arQuickBar {
+    position: fixed; left: auto; right: 6px; top: calc((100dvh - var(--ar-sheet) - var(--ar-msb)) / 2);
+    transition: top .3s ease;
+  }
+  /* 시트를 접어 미리보기가 커지면, 릴스처럼 오른쪽 아래로 (가운데 '디자인' 손잡이와 겹치지 않게) */
+  body.ar-sheet.ar-sheet-min:not(.ar-cut-editing) #arQuickBar {
+    top: auto; bottom: calc(var(--ar-sheet) + var(--ar-msb) + 70px); transform: none; right: 10px; gap: 8px;
+  }
+
+  /* 아래: 바텀시트 */
+  body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn {
+    position: fixed; left: 0; right: 0; bottom: var(--ar-msb); height: var(--ar-sheet); z-index: 35;
+    overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+    background: var(--card, #161618); border-radius: 18px 18px 0 0; border-top: 1px solid var(--border);
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.35); transition: height .3s ease;
+  }
+  body.ar-sheet.ar-sheet-min:not(.ar-cut-editing) #studioWorkflowColumn { overflow: hidden; }
+  body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn > .studio-card { border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  body.ar-sheet:not(.ar-cut-editing) #previewDealerHeader { display: none; }
+  body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn > .studio-card > div:first-child { padding-top: 0; }
+  body.ar-sheet:not(.ar-cut-editing) #arSheetHandle {
+    display: flex; position: sticky; top: 0; z-index: 25; width: 100%; height: 24px; align-items: center; justify-content: center;
+    background: var(--card, #161618); border: 0; cursor: pointer; touch-action: none; padding: 0;
+  }
+  #arSheetHandle span { width: 40px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.32); display: block; }
+  body.ar-sheet:not(.ar-cut-editing) div.sticky:has(> .studio-tablist) { top: 24px !important; }
+
+  /* 컷 편집 중: 시트는 숨기고 미리보기 쪽 편집 화면만 */
+  body.ar-sheet.ar-cut-editing #studioWorkflowColumn { display: none; }
+  body.ar-sheet.ar-cut-editing { overflow: auto; }
+}

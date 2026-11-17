@@ -763,9 +763,9 @@
       },
 
       // 모든 컷 + 마지막 명함 멘트 음성을 미리 받아 두고, 받은 길이에 맞춰 영상 길이를 조정
-      prefetchTtsBuffers() {
-        // 명함 단계까지 마치기 전에는 성우 녹음을 받지 않음 (발행 단계에서 완성본으로 한 번에)
-        if (this.ttsVoice === 'off' || !arVoiceAllowed()) {
+      prefetchTtsBuffers(force) {
+        // 소리를 켠 사람에게만 성우 녹음을 받음 (소리 꺼 둔 방문자마다 녹음하면 크레딧 낭비). 영상 내보내기는 force
+        if (this.ttsVoice === 'off' || !arVoiceAllowed() || (!this.enabled && !force)) {
           refitDurationToNarration();
           return Promise.resolve([]);
         }
@@ -1383,7 +1383,7 @@
       const unlock = (ev) => {
         if (window.__arUserMuted || AudioEngine.enabled) return;
         const t = ev && ev.target;
-        if (t && typeof t.closest === 'function' && t.closest('#soundToggleBtn, #mobileDockSoundBtn')) return;
+        if (t && typeof t.closest === 'function' && t.closest('#soundToggleBtn, #mobileDockSoundBtn, #arQuickBar [data-qb="sound"]')) return;
         toggleAudioMaster(true);
       };
       window.addEventListener('pointerdown', unlock, { once: true, passive: true });

@@ -630,7 +630,7 @@
       if (AudioEngine.ttsVoice !== 'off') {
         if (expText) expText.textContent = '성우 음성 준비 중…';
         await Promise.race([
-          AudioEngine.prefetchTtsBuffers(),
+          AudioEngine.prefetchTtsBuffers(true),
           // 무료 모델은 10컷 대본 한 번 녹음에 10초 넘게 걸리므로 넉넉히 기다림
           new Promise((resolve) => setTimeout(resolve, 45000))
         ]);

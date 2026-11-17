@@ -1066,6 +1066,8 @@
       const curTab = STUDIO_TABS.find((k) => { const el = document.getElementById(`studioPanel_${k}`); return el && !el.classList.contains('hidden'); }) || 'topic';
       arUpdateMobileStepBar(curTab);
       setTimeout(() => { try { arSyncIgSelects(); arSyncProductRows(); } catch (e) {} }, 0);
+      // 휴대폰: 미리보기 위 고정 + 아래 바텀시트, 미리보기 옆 바로 누르는 버튼
+      setTimeout(() => { try { if (window.innerWidth < 1024) arUpdateMobileStepBar('topic'); arSetupSheetMode(); } catch (e) {} }, 0);
       // 디자인 섞기 끔 (사장님 요청)
       setTimeout(() => {
         try {

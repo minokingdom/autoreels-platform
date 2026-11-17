@@ -4216,6 +4216,7 @@ function renderStoryArchetypesUI() {
     }
 
     function syncMobileDockUI(t) {
+      if (typeof arSyncQuickBar === 'function') arSyncQuickBar();
       const dock = document.getElementById('mobileLiveDock');
       if (!dock) return;
 

@@ -429,8 +429,10 @@
     //   그 전에는 성우 녹음을 받지도 틀지도 않음 (배경음악 미리 듣기는 가능)
     //   발행 단계에 들어오면 고른 배경음악 + 성우 목소리를 섞은 완성본을 처음부터 재생
     const arStepsVisited = new Set(['topic']);
-    let arFinalAudioUnlocked = false; // AGENTS.md: 성우 녹음은 발행 단계에서 처음 (그 전엔 받지도 틀지도 않음 — 크레딧 절약, 이전 대본 목소리 섞임 방지)
-    function arVoiceAllowed() { return arFinalAudioUnlocked; }
+    let arFinalAudioUnlocked = false;
+    // ★ 2026-11-17 사장님 요청: 성우 목소리를 첫 화면부터 바로 들려줌 (발행 단계까지 기다리지 않음)
+    //   크레딧 절약은 '소리를 켰을 때만 녹음'(prefetchTtsBuffers)으로, 이전 대본 목소리 섞임은 대본별 녹음(masterWantKey)으로 막음
+    function arVoiceAllowed() { return true; }
     function arFirstMissingStep() {
       return ['topic', 'script', 'photo', 'sound', 'card'].find((k) => !arStepsVisited.has(k)) || null;
     }
@@ -494,8 +496,8 @@
             : 'studio-tab text-[#85858b] hover:text-[#ededed] font-normal';
         }
       });
-      // 주제·대본 단계에서는 미리보기를 숨겨 넓게 쓰고, 사진 탭부터 미리보기 표시
-      const showPreview = !['topic', 'script'].includes(key);
+      // ★ 2026-11-17: 미리보기는 첫 단계(주제)부터 항상 보임 (예전: 사진 탭부터)
+      const showPreview = true;
       const monCol = document.getElementById('mainMonitorColumn');
       const wfCol = document.getElementById('studioWorkflowColumn');
       if (monCol) monCol.classList.toggle('hidden', !showPreview);
@@ -514,6 +516,7 @@
       }
       arUpdateEasyGuide(key);
       arUpdateMobileStepBar(key);
+      arSetupSheetMode();
       if (key === 'publish' && !arFinalAudioUnlocked) arStartFinalPreview();
     }
 
@@ -544,6 +547,122 @@
       };
       return bar;
     }
+    // ==========================================================================
+    // ★ 휴대폰: 미리보기 위 고정 + 아래 바텀시트 (2026-11-17 사장님 요청)
+    //   body.ar-sheet 일 때 CSS 가 미리보기를 위에, 단계 칸을 아래 시트(화면 약 절반)로 고정
+    // ==========================================================================
+    function arToggleSheet(force) {
+      const min = typeof force === 'boolean' ? force : !document.body.classList.contains('ar-sheet-min');
+      document.body.classList.toggle('ar-sheet-min', min);
+      const h = document.getElementById('arSheetHandle');
+      if (h) h.setAttribute('aria-expanded', min ? 'false' : 'true');
+    }
+    function arSetupSheetMode() {
+      const on = window.innerWidth < 1024;
+      document.body.classList.toggle('ar-sheet', on);
+      arEnsureQuickBar();
+      if (!on) return;
+      const bar = document.getElementById('mobileStepBar');
+      if (bar && bar.offsetHeight) document.body.style.setProperty('--ar-msb', `${bar.offsetHeight}px`);
+      const wf = document.getElementById('studioWorkflowColumn');
+      if (wf && !document.getElementById('arSheetHandle')) {
+        const h = document.createElement('button');
+        h.type = 'button';
+        h.id = 'arSheetHandle';
+        h.setAttribute('aria-label', '아래 칸 접기·펼치기');
+        h.setAttribute('aria-expanded', 'true');
+        h.innerHTML = '<span></span>';
+        // 누르면 접기·펼치기, 끌어내리면 접기, 끌어올리면 펼치기
+        let y0 = null;
+        let moved = false;
+        h.addEventListener('pointerdown', (e) => { y0 = e.clientY; moved = false; });
+        h.addEventListener('pointermove', (e) => { if (y0 != null && Math.abs(e.clientY - y0) > 8) moved = true; });
+        h.addEventListener('pointerup', (e) => {
+          if (y0 == null) return;
+          const dy = e.clientY - y0;
+          y0 = null;
+          if (!moved) { arToggleSheet(); return; }
+          arToggleSheet(dy > 0);
+        });
+        wf.insertBefore(h, wf.firstChild);
+      }
+    }
+    window.addEventListener('resize', () => { try { arSetupSheetMode(); } catch (e) {} });
+
+    // ★ 미리보기 옆 바로 누르는 버튼: 소리 · 섞기 · 성우 · 처음부터 (어느 단계에서든)
+    const AR_QB_ICONS = {
+      sound: '<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M19 6a8 8 0 0 1 0 12"/>',
+      mute: '<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M22 9l-6 6"/><path d="M16 9l6 6"/>',
+      shuffle: '<path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/>',
+      voice: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>',
+      restart: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>'
+    };
+    function arQbSvg(k) { return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${AR_QB_ICONS[k]}</svg>`; }
+    function arEnsureQuickBar() {
+      const vp = document.querySelector('#mainMonitorColumn > .monitor-frame');
+      if (!vp || document.getElementById('arQuickBar')) return;
+      const qb = document.createElement('div');
+      qb.id = 'arQuickBar';
+      qb.setAttribute('role', 'group');
+      qb.setAttribute('aria-label', '미리보기 바로 조작');
+      qb.innerHTML = ['sound', 'shuffle', 'voice', 'restart'].map((k) => `<button type="button" class="aq-btn" data-qb="${k}"><span class="aq-dot">${arQbSvg(k === 'sound' ? 'mute' : k)}</span><span class="aq-label"></span></button>`).join('');
+      qb.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-qb]');
+        if (!b) return;
+        e.stopPropagation();
+        arQuickAction(b.getAttribute('data-qb'));
+      });
+      vp.appendChild(qb);
+      arSyncQuickBar();
+    }
+    function arQuickRestart() {
+      if (!window.__timelines || !window.__timelines.main) return;
+      if (typeof AudioEngine !== 'undefined') AudioEngine.stopTts();
+      isPlaying = true;
+      const pp = document.getElementById('playPauseBtn');
+      if (pp) pp.textContent = '⏸ 일시정지';
+      window.__timelines.main.seek(0);
+      if (typeof AudioEngine !== 'undefined' && AudioEngine.enabled && AudioEngine.masterBuffer) AudioEngine.playMasterAt(0);
+    }
+    function arQuickAction(k) {
+      if (k === 'sound') toggleAudioMaster();
+      else if (k === 'shuffle') randomizePreviewDesignOnly();
+      else if (k === 'restart') arQuickRestart();
+      else if (k === 'voice') {
+        const sel = document.getElementById('ttsVoiceSelect');
+        if (sel) {
+          let saved = '';
+          try { saved = localStorage.getItem('autoreels_tts_voice') || ''; } catch (e) {}
+          const firstOn = Array.from(sel.options).map((o) => o.value).find((v) => v && v !== 'off') || '';
+          sel.value = sel.value === 'off' ? (saved && Array.from(sel.options).some((o) => o.value === saved) ? saved : firstOn) : 'off';
+          if (typeof onAudioConfigChange === 'function') onAudioConfigChange();
+          if (typeof arSyncIgSelects === 'function') arSyncIgSelects();
+          // 성우를 켰는데 소리가 꺼져 있으면 함께 켬
+          if (sel.value !== 'off' && typeof AudioEngine !== 'undefined' && !AudioEngine.enabled) toggleAudioMaster(true);
+        }
+      }
+      arSyncQuickBar();
+    }
+    function arSyncQuickBar() {
+      const qb = document.getElementById('arQuickBar');
+      if (!qb || typeof AudioEngine === 'undefined') return;
+      const on = !!AudioEngine.enabled;
+      const voiceOn = AudioEngine.ttsVoice !== 'off';
+      const set = (k, label, icon, off) => {
+        const b = qb.querySelector(`[data-qb="${k}"]`);
+        if (!b) return;
+        const l = b.querySelector('.aq-label');
+        if (l.textContent !== label) l.textContent = label;
+        if (b.getAttribute('data-icon') !== icon) { b.setAttribute('data-icon', icon); b.querySelector('.aq-dot').innerHTML = arQbSvg(icon); }
+        b.classList.toggle('is-off', !!off);
+        b.setAttribute('aria-label', label);
+      };
+      set('sound', on ? '소리 켜짐' : '소리 켜기', on ? 'sound' : 'mute', !on);
+      set('shuffle', '섞기', 'shuffle', false);
+      set('voice', voiceOn ? '성우 켜짐' : '성우 꺼짐', 'voice', !voiceOn);
+      set('restart', '처음부터', 'restart', false);
+    }
+
     function arUpdateMobileStepBar(key) {
       const bar = arEnsureMobileStepBar();
       const idx = STUDIO_TABS.indexOf(key);
@@ -551,6 +670,13 @@
       const next = STUDIO_TABS[idx + 1];
       const go = (k) => () => {
         switchStudioTab(k);
+        // 바텀시트에서는 시트 안을 맨 위로 (미리보기는 그대로)
+        if (document.body.classList.contains('ar-sheet')) {
+          const wf = document.getElementById('studioWorkflowColumn');
+          if (wf) wf.scrollTop = 0;
+          arToggleSheet(false);
+          return;
+        }
         // 새 단계는 맨 위(안내 문구)부터 보이게
         const panel = document.getElementById(`studioPanel_${k}`);
         const top = panel ? panel.getBoundingClientRect().top + window.scrollY - 150 : 0;
@@ -587,7 +713,7 @@
         topic: ['오늘의 주제', '오늘 올릴 주제를 골라 주세요. 고르면 그 주제로 AI가 대본 3안을 바로 만들어 드려요.'],
         script: ['대본 고르기', '상품 이름과 혜택을 확인하고 [AI로 만들기]를 누르세요. 대본 3안 중 마음에 드는 것을 고르면 됩니다.'],
         photo: ['사진 넣기', '내 사진이나 영상을 올리세요. 올리지 않으면 기본 사진으로 만들어집니다.'],
-        sound: ['소리 고르기', '배경음악과 성우 목소리를 고르세요. 성우 목소리는 엔딩까지 마치면 발행 단계에서 음악과 함께 완성본으로 들려드려요.'],
+        sound: ['소리 고르기', '배경음악과 성우 목소리를 고르세요. 고르는 대로 위 미리보기에서 바로 들려드려요.'],
         card: ['엔딩 꾸미기', '영상 마지막에 나올 가게 정보와 로고를 넣고, 보일 항목만 켜 두세요.'],
         publish: ['완성본 확인 · SNS에 올리기', '배경음악과 성우가 들어간 완성본을 확인하고, 올릴 곳을 켜고 [공유하기]를 누르세요.']
       };
