@@ -117,7 +117,7 @@ IND_VISUAL_HINT = {
     "auto": "modern sleek car showroom photography",
     "restaurant": "appetizing Korean gourmet food tabletop photography",
     "cafe": "artisanal latte and dessert cozy cafe photography",
-    "beauty": "macro photography of glossy gel manicured nails and salon tools on stone, no portrait, no face",
+    "beauty": "luxury nail polish bottles, crystal nail art display stand and warm stone salon decor, no hands, no people, no portrait",
     "realestate": "bright modern apartment interior living room photography",
     "academy": "clean focused study desk and warm notebook lighting photography",
     "clinic": "serene minimalist modern wellness clinic lounge photography",
@@ -149,11 +149,11 @@ EXTRA_SCENE_PROMPTS = {
         "vertical 9:16 moody evening cafe interior illuminated by warm amber pendant lamps and wooden counter glow",
     ],
     "beauty": [
-        "vertical 9:16 macro beauty photography of velvet magnetic cat-eye glitter gel nails holding clean frosted glass perfume bottle",
-        "vertical 9:16 clean luxury nail salon tabletop with manicure bottles, cuticle oil dropper and soft linen towel",
+        "vertical 9:16 macro beauty photography of luxury gel nail polish bottles and translucent pastel color chart stand on travertine stone, no hands",
+        "vertical 9:16 clean luxury nail salon tabletop with manicure bottles, cuticle oil dropper and soft linen towel, no hands",
         "vertical 9:16 serene luxury head-spa treatment room with warm botanical steam mist and ceramic wash basin, no portrait",
-        "vertical 9:16 editorial salon vanity mirror setup with sleek styling brush, ceramic hair iron and warm studio backlighting",
-        "vertical 9:16 bridal sheer syrup nude glossy manicured hands resting on white silk ribbon fabric",
+        "vertical 9:16 editorial salon vanity mirror setup with sleek styling brush, ceramic hair iron and warm studio backlighting, no hands",
+        "vertical 9:16 pearl velvet gift tray with glossy nude gel nail tip display palette, pearl beads and white silk ribbon fabric, no hands",
     ],
     "realestate": [
         "vertical 9:16 high-rise modern Seoul apartment balcony view overlooking sunlit river and green parklands at golden hour",
@@ -236,7 +236,7 @@ def run_worker() -> None:
     pipe.scheduler = DPMSolverMultistepScheduler.from_config(
         pipe.scheduler.config, use_karras_sigmas=True, algorithm_type="sde-dpmsolver++"
     )
-    neg = "human face, portrait, headshot, passport photo, person standing, text, typography, letters, words, watermark, logo, signature, blurry, ugly, low quality, collage"
+    neg = "human face, portrait, headshot, passport photo, person standing, hands, fingers, extra fingers, deformed fingers, mutated hands, text, typography, letters, words, watermark, logo, signature, blurry, ugly, low quality, collage"
 
     for ind, info in INDUSTRY_INFO.items():
         row = data.setdefault("industries", {}).setdefault(ind, {})

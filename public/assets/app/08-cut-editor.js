@@ -2968,15 +2968,17 @@
               let ny = Math.max(0.05, Math.min(0.94, origY + dy));
               const trash = document.getElementById('igTrashZone');
               const topBar = document.getElementById('igTopBar');
+              const inlineBar = document.getElementById('arInlineEditBar');
               if (moved) {
                 if (topBar) topBar.classList.add('opacity-0');
+                if (inlineBar) { inlineBar.style.opacity = '0'; inlineBar.style.pointerEvents = 'none'; }
                 if (trash) trash.classList.remove('hidden');
               }
-              overTrash = moved && ny > 0.83 && Math.abs(nx - 0.5) < 0.16;
+              overTrash = moved && ny > 0.87 && Math.abs(nx - 0.5) < 0.14;
               if (trash) {
-                trash.style.transform = overTrash ? 'translateX(-50%) scale(1.22)' : 'translateX(-50%) scale(1)';
-                trash.style.backgroundColor = overTrash ? 'rgba(229,72,77,0.9)' : 'rgba(0,0,0,0.65)';
-                trash.style.borderColor = overTrash ? '#ffffff' : 'rgba(255,255,255,0.3)';
+                trash.style.transform = overTrash ? 'translateX(-50%) scale(1.16)' : 'translateX(-50%) scale(1)';
+                trash.style.backgroundColor = overTrash ? 'rgba(229,72,77,0.94)' : 'rgba(0,0,0,0.82)';
+                trash.style.borderColor = overTrash ? '#ffffff' : 'rgba(255,255,255,0.4)';
               }
               const nearV = !overTrash && Math.abs(nx - 0.5) < 0.025;
               const nearH = !overTrash && Math.abs(ny - 0.5) < 0.025;
@@ -3005,16 +3007,18 @@
           const trash = document.getElementById('igTrashZone');
           const topBar = document.getElementById('igTopBar');
           const selBar = document.getElementById('igSelectedBar');
+          const inlineBar = document.getElementById('arInlineEditBar');
           if (moved) {
             if (topBar) topBar.classList.add('opacity-0');
+            if (inlineBar) { inlineBar.style.opacity = '0'; inlineBar.style.pointerEvents = 'none'; }
             if (selBar) selBar.classList.add('hidden');
             if (trash) trash.classList.remove('hidden');
           }
-          overTrash = moved && ny > 0.83 && Math.abs(nx - 0.5) < 0.16;
+          overTrash = moved && ny > 0.87 && Math.abs(nx - 0.5) < 0.14;
           if (trash) {
-            trash.style.transform = overTrash ? 'translateX(-50%) scale(1.22)' : 'translateX(-50%) scale(1)';
-            trash.style.backgroundColor = overTrash ? 'rgba(229,72,77,0.9)' : 'rgba(0,0,0,0.65)';
-            trash.style.borderColor = overTrash ? '#ffffff' : 'rgba(255,255,255,0.3)';
+            trash.style.transform = overTrash ? 'translateX(-50%) scale(1.16)' : 'translateX(-50%) scale(1)';
+            trash.style.backgroundColor = overTrash ? 'rgba(229,72,77,0.94)' : 'rgba(0,0,0,0.82)';
+            trash.style.borderColor = overTrash ? '#ffffff' : 'rgba(255,255,255,0.4)';
           }
           const nearV = !overTrash && Math.abs(nx - 0.5) < 0.025;
           const nearH = !overTrash && Math.abs(ny - 0.5) < 0.025;
@@ -3050,10 +3054,12 @@
             const snapH = document.getElementById('cutSnapH');
             const trash = document.getElementById('igTrashZone');
             const topBar = document.getElementById('igTopBar');
+            const inlineBar = document.getElementById('arInlineEditBar');
             if (snapV) snapV.classList.add('hidden');
             if (snapH) snapH.classList.add('hidden');
             if (trash) trash.classList.add('hidden');
             if (topBar) topBar.classList.remove('opacity-0');
+            if (inlineBar) { inlineBar.style.opacity = ''; inlineBar.style.pointerEvents = ''; }
             if (wasTrash && finishedKey !== 'photo') {
               updateCutElementOverride(window.__arPinnedCut, finishedKey, 'hidden', true, true);
               return;
@@ -3079,10 +3085,12 @@
             const snapH = document.getElementById('cutSnapH');
             const trash = document.getElementById('igTrashZone');
             const topBar = document.getElementById('igTopBar');
+            const inlineBar = document.getElementById('arInlineEditBar');
             if (snapV) snapV.classList.add('hidden');
             if (snapH) snapH.classList.add('hidden');
             if (trash) trash.classList.add('hidden');
             if (topBar) topBar.classList.remove('opacity-0');
+            if (inlineBar) { inlineBar.style.opacity = ''; inlineBar.style.pointerEvents = ''; }
             if (wasTrash) {
               pushCutOverlayUndo();
               getCutOverlayList(window.__arPinnedCut).splice(finishedIdx, 1);
@@ -3734,6 +3742,11 @@
       if (typeof closePresetDrawer === 'function') closePresetDrawer();
       const n = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
       const targetIdx = typeof cutIdx === 'number' && cutIdx >= 0 ? Math.min(n - 1, cutIdx) : (window.__arPinnedCut >= 0 ? window.__arPinnedCut : 0);
+      window.__arInlineEditActive = false;
+      const inlineBar = document.getElementById('arInlineEditBar');
+      if (inlineBar) inlineBar.classList.add('hidden');
+      const vpEl = document.getElementById('previewViewport');
+      if (vpEl) vpEl.classList.remove('ar-inline-edit-active', 'ar-longpress-holding');
       window.__arCutEditorOpen = true;
       if (elKey) {
         window.__arActiveCutElKey = elKey;
@@ -5667,38 +5680,41 @@
     (function enhanceCanvasSelectionAndDirectEdit() {
       function recordCutElementBox(cutIdx, key, defCx, defCy, defW, defH) {
         if (cutIdx < 0 || cutIdx > 3) return;
-        const ov = (typeof getCutElementOverride === 'function') ? getCutElementOverride(cutIdx, key) : null;
-        const dx = ov ? ((Number(ov.x) || 50) - 50) * 5.4 : 0;
-        const dy = ov ? ((Number(ov.y) || 50) - 50) * 9.6 : 0;
-        const sc = ov ? (Number(ov.scale) || 100) / 100 : 1;
+        const allOv = (typeof getCutElementOverride === 'function') ? getCutElementOverride(cutIdx) : null;
+        const ov = (allOv && allOv[key]) ? allOv[key] : null;
+        const cxBase = (ov && ov.customPos && typeof ov.x === 'number') ? ov.x * 540 : defCx;
+        const cyBase = (ov && ov.customPos && typeof ov.y === 'number') ? ov.y * 960 : defCy;
+        const rawScale = ov && typeof ov.scale === 'number' && ov.scale > 0 ? ov.scale : 1;
+        const sc = rawScale > 4 ? rawScale / 100 : rawScale;
         window.__arLastRenderedBoxes = window.__arLastRenderedBoxes || {};
         window.__arLastRenderedBoxes[cutIdx] = window.__arLastRenderedBoxes[cutIdx] || {};
         window.__arLastRenderedBoxes[cutIdx][key] = {
-          cx: Math.max(40, Math.min(500, defCx + dx)),
-          cy: Math.max(40, Math.min(920, defCy + dy)),
+          cx: Math.max(40, Math.min(500, cxBase)),
+          cy: Math.max(40, Math.min(920, cyBase)),
           w: Math.max(80, Math.min(520, defW * sc)),
           h: Math.max(44, Math.min(340, defH * sc)),
           key
         };
       }
 
-      // 1) Genre Engine exact card boxes
+      // 1) Genre Engine exact card boxes (info.high / sig / isPrice 반영)
       const genreCaptionCardDefs = {
-        drawSaleMain:    { cx: 270, cy: 761, w: 484, h: 178 },
-        drawLuxuryMain:  { cx: 270, cy: 765, w: 460, h: 170 },
-        drawEvMain:      { cx: 270, cy: 761, w: 484, h: 178 },
-        drawSportsMain:  { cx: 270, cy: 761, w: 484, h: 178 },
-        drawFinanceMain: { cx: 270, cy: 750, w: 484, h: 180 },
-        drawTrustMain:   { cx: 270, cy: 756, w: 476, h: 184 }
+        drawSaleMain:    (W, H, info) => ({ cx: W / 2, cy: (info && info.high) ? 300 : 560, w: 484, h: 178 }),
+        drawLuxuryMain:  (W, H, info) => { const bar = (info && info.V && info.V.sig === 'film') ? 128 : 92; return { cx: W / 2, cy: (info && info.high) ? (bar + 218) : (H - bar - 140), w: 460, h: 165 }; },
+        drawEvMain:      (W, H, info) => ({ cx: W / 2, cy: ((info && info.high) ? 190 : 590) + 75, w: 484, h: 165 }),
+        drawSportsMain:  (W, H, info) => ({ cx: W / 2, cy: ((info && info.high) ? 190 : 600) + 68, w: 484, h: 155 }),
+        drawFinanceMain: (W, H, info) => { const split = info && info.V && info.V.sig === 'split'; const cy = (info && info.isPrice) ? (split ? 825 : 715) : (split ? 525 : 610); return { cx: W / 2, cy, w: 484, h: 150 }; },
+        drawTrustMain:   (W, H, info) => ({ cx: W / 2, cy: (info && info.high) ? 150 : 775, w: 476, h: 160 })
       };
       Object.keys(genreCaptionCardDefs).forEach((fnName) => {
         const orig = window[fnName];
         if (typeof orig === 'function' && !orig.__arBoxWrapped) {
-          const box = genreCaptionCardDefs[fnName];
-          const wrapped = function (c, W, H, s, t, p, text) {
+          const getBox = genreCaptionCardDefs[fnName];
+          const wrapped = function (c, W, H, t, info) {
             const cutIdx = (typeof window.__arActiveRenderCutIdx === 'number') ? window.__arActiveRenderCutIdx : -1;
-            const res = orig.call(this, c, W, H, s, t, p, text);
+            const res = orig.call(this, c, W, H, t, info);
             if (cutIdx >= 0 && cutIdx < 4) {
+              const box = getBox(W || 540, H || 960, info);
               recordCutElementBox(cutIdx, 'caption', box.cx, box.cy, box.w, box.h);
             }
             return res;

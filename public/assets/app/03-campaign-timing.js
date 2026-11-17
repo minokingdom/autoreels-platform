@@ -492,7 +492,10 @@
         // 대본 탭: 컷별 헤드라인·성우 대사만 (사진·화면·모션은 사진 탭)
         html += `
           <div class="p-3 rounded-[8px] bg-[#141415] border border-[var(--border)] space-y-1.5">
-            <button type="button" onclick="seekToTime(${seekSec})" id="cutTimeLabel${i}" class="font-mono text-[12px] text-[#ededed] font-medium hover:text-[#38bdf8] cursor-pointer" title="이 장면(${s}초)으로 미리보기 이동">CUT ${i + 1} (${s}~${e}초)</button>
+            <div class="flex items-center justify-between gap-2">
+              <button type="button" onclick="seekToTime(${seekSec})" id="cutTimeLabel${i}" class="font-mono text-[12px] text-[#ededed] font-medium hover:text-[#38bdf8] cursor-pointer" title="이 장면(${s}초)으로 미리보기 이동">CUT ${i + 1} (${s}~${e}초)</button>
+              <button type="button" onclick="openCutEditor(${i}, 'caption')" class="px-2 py-0.5 rounded-[6px] bg-white/10 hover:bg-white/20 text-[11px] font-semibold text-[#ededed] cursor-pointer transition">🎛️ 컷 편집</button>
+            </div>
             <span class="block text-[11px] text-[#85858b]">화면 자막 <span class="text-[#6e6e73]">· " / "로 줄 나누기 (비우면 자동)</span></span>
             <input id="cutSub${i}" type="text" value="${subVal}" oninput="updateCustomCutCaptions()" placeholder="${i + 1}컷 화면 헤드라인" class="studio-input w-full h-8 px-2.5 text-[12px]" />
             <span class="block text-[11px] text-[#85858b]">성우 대사</span>
@@ -515,6 +518,7 @@
                   </div>
                   <div class="flex items-center gap-1.5">
                     <span id="cutWidgetBadge${i}" class="text-[11px] text-[#a1a1a6]">${wLabel}</span>
+                    <button type="button" onclick="openCutEditor(${i}, 'photo')" class="px-2 py-1 rounded-[6px] bg-white/10 hover:bg-white/20 text-[11px] font-semibold text-[#ededed] cursor-pointer transition">🎛️ 편집</button>
                     <button type="button" onclick="cycleCutDesign(${i})" class="px-2.5 py-1 rounded-[6px] bg-[#232325] hover:bg-[#3b82f6] text-[11px] font-medium text-[#ededed] cursor-pointer transition-colors" title="누를 때마다 이 컷의 디자인을 바꾸고 바로 미리보기로 보여줍니다">
                       꾸밈 바꾸기
                     </button>
@@ -543,6 +547,9 @@
                 📁 이 컷을 내 사진·영상으로 바꾸기
                 <input type="file" accept="image/*,video/*" class="hidden" onchange="replaceCutMedia(${i}, event)" />
               </label>
+              <button type="button" onclick="arApplySinglePhotoAllCuts(${Math.max(0, activePhotoIdx)})" class="cut-upload cursor-pointer" title="지금 컷의 사진 1장으로 모든 컷을 통일합니다">
+                🖼️ 이 사진 1장으로 전체 통일
+              </button>
             </div>
           </div>
         `;
@@ -577,6 +584,29 @@
         hint.textContent = `컷 ${targetCuts}개 · 옆으로 넘겨 보세요 →`;
       }
     }
+
+    function arApplySinglePhotoAllCuts(photoIdx) {
+      const photos = Array.isArray(campaign.uploadedPhotos) ? campaign.uploadedPhotos : [];
+      if (!photos.length) return;
+      const n = getTargetCutCount();
+      let idx = typeof photoIdx === 'number' && !Number.isNaN(photoIdx) ? photoIdx : -1;
+      if (idx < 0 || idx >= photos.length) {
+        const curT = (window.__timelines && window.__timelines.main) ? (window.__timelines.main.currentTime || 0) : 0;
+        const cutIdx = typeof getCutIndexAt === 'function' ? getCutIndexAt(curT) : 0;
+        const p0 = campaign.scenePlan && campaign.scenePlan[cutIdx];
+        idx = (p0 && typeof p0.photoIdx === 'number' && photos[p0.photoIdx]) ? p0.photoIdx : 0;
+      }
+      if (!Array.isArray(campaign.scenePlan)) campaign.scenePlan = [];
+      for (let i = 0; i < n; i++) {
+        if (!campaign.scenePlan[i]) campaign.scenePlan[i] = {};
+        campaign.scenePlan[i].photoIdx = idx;
+      }
+      if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+      if (typeof renderCutEditorPanel === 'function' && window.__arCutEditorOpen) renderCutEditorPanel();
+      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+      if (typeof arToast === 'function') arToast('🖼️ 선택한 사진 1장을 모든 컷에 적용했어요', true);
+    }
+    window.arApplySinglePhotoAllCuts = arApplySinglePhotoAllCuts;
 
     // ============================================================================
     // 영상 총 길이(8초 / 12초 / 15초 / 20초 / 30초 / 직접 입력) 동적 변경 컨트롤러
@@ -743,7 +773,7 @@
 
     function setVideoTotalDuration(sec) {
       const prevCuts = getTargetCutCount();
-      BASE_DURATION = Math.max(6, Math.min(60, Number(sec) || 12));
+      BASE_DURATION = Math.max(6, Math.min(90, Number(sec) || 12));
       if (typeof campaign !== 'undefined') {
         delete campaign.cutCountOverride; campaign.cutLenScale = [];
         // 컷 수가 바뀌면 컷마다 섞기도 새 컷 수에 맞춰 다시

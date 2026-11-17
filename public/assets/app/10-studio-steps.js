@@ -598,7 +598,10 @@
       voice: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>',
       restart: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>'
     };
-    function arQbSvg(k) { return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${AR_QB_ICONS[k]}</svg>`; }
+    function arQbSvg(k) {
+      if (k === 'shuffle') return '<span style="font-size:18px;line-height:1" aria-hidden="true">🎲</span>';
+      return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${AR_QB_ICONS[k]}</svg>`;
+    }
     function arEnsureQuickBar() {
       const vp = document.querySelector('#mainMonitorColumn > .monitor-frame');
       if (!vp || document.getElementById('arQuickBar')) return;
@@ -606,7 +609,7 @@
       qb.id = 'arQuickBar';
       qb.setAttribute('role', 'group');
       qb.setAttribute('aria-label', '미리보기 바로 조작');
-      qb.innerHTML = ['sound', 'design', 'shuffle', 'voice', 'restart'].map((k) => `<button type="button" class="aq-btn" data-qb="${k}"><span class="aq-dot">${arQbSvg(k === 'sound' ? 'mute' : k)}</span><span class="aq-label"></span></button>`).join('');
+      qb.innerHTML = ['sound', 'voice', 'shuffle', 'design', 'restart'].map((k) => `<button type="button" class="aq-btn" data-qb="${k}"><span class="aq-dot">${arQbSvg(k === 'sound' ? 'mute' : k)}</span><span class="aq-label"></span></button>`).join('');
       qb.addEventListener('click', (e) => {
         const b = e.target.closest('[data-qb]');
         if (!b) return;
@@ -659,10 +662,10 @@
         b.classList.toggle('is-off', !!off);
         b.setAttribute('aria-label', label);
       };
-      set('sound', on ? '소리 켜짐' : '소리 켜기', on ? 'sound' : 'mute', !on);
+      set('sound', on ? '소리켜짐' : '소리켜기', on ? 'sound' : 'mute', !on);
+      set('voice', voiceOn ? '나레이션' : '나레이션끔', 'voice', !voiceOn);
+      set('shuffle', '랜덤섞기', 'shuffle', false);
       set('design', '디자인', 'design', false);
-      set('shuffle', '섞기', 'shuffle', false);
-      set('voice', voiceOn ? '성우 켜짐' : '성우 꺼짐', 'voice', !voiceOn);
       set('restart', '처음부터', 'restart', false);
     }
 

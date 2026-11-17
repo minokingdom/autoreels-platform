@@ -156,7 +156,10 @@ module.exports = async function handler(req, res) {
     }
 
     const user = await currentUser(req);
-    if (!user) return send(res, 401, { ok: false, error: 'login_required', message: '로그인이 필요합니다.' });
+    if (!user) {
+      if (action === 'me') return send(res, 200, { ok: false, error: 'login_required', guest: true });
+      return send(res, 401, { ok: false, error: 'login_required', message: '로그인이 필요합니다.' });
+    }
 
     if (action === 'me') return send(res, 200, await mePayload(user));
 
