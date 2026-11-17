@@ -1356,11 +1356,13 @@ select.ig-select-src { display: none !important; }
 #arQuickBar .aq-label { font-size: 11px; font-weight: 700; line-height: 1.1; text-shadow: 0 1px 4px rgba(0,0,0,.6); white-space: nowrap; }
 body.ar-cut-editing #arQuickBar { display: none; }
 #arSheetHandle { display: none; }
-#customDurationInput, #scriptCustomDurationInput { padding: 0 2px !important; text-align: center; -moz-appearance: textfield; }
+#customDurationInput, #scriptCustomDurationInput, #mobCustomDurationInput { padding: 0 2px !important; text-align: center; -moz-appearance: textfield; }
 #customDurationInput::-webkit-outer-spin-button,
 #customDurationInput::-webkit-inner-spin-button,
 #scriptCustomDurationInput::-webkit-outer-spin-button,
-#scriptCustomDurationInput::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+#scriptCustomDurationInput::-webkit-inner-spin-button,
+#mobCustomDurationInput::-webkit-outer-spin-button,
+#mobCustomDurationInput::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 @media (max-width: 1023px) {
   body.ar-sheet { --ar-msb: 64px; --ar-sheet: calc(52dvh - var(--ar-msb)); overflow: hidden; overscroll-behavior: none; }
@@ -1391,9 +1393,11 @@ body.ar-cut-editing #arQuickBar { display: none; }
   }
   body.ar-sheet:not(.ar-cut-editing) #arQuickBar .aq-dot { width: 34px; height: 34px; border-radius: 17px; }
   body.ar-sheet:not(.ar-cut-editing) #arQuickBar .aq-label { font-size: 10px; }
-  /* 시트를 접어 미리보기가 커지면, 릴스처럼 오른쪽 아래로 (가운데 '디자인' 손잡이와 겹치지 않게) */
+  /* 모바일 바텀시트에서는 #arQuickBar의 '디자인' 버튼이 대신하므로 캔버스 위 세로 손잡이(#presetHandle) 숨김 (확대 시 겹침·스티커 가림 방지) */
+  body.ar-sheet #presetHandle { display: none !important; }
+  /* 시트를 접어 미리보기가 커지면, 릴스처럼 오른쪽 아래에 5개 버튼 깔끔하게 고정 */
   body.ar-sheet.ar-sheet-min:not(.ar-cut-editing) #arQuickBar {
-    top: auto; bottom: calc(var(--ar-sheet) + var(--ar-msb) + 70px); transform: none; right: 10px; gap: 8px;
+    top: auto; bottom: calc(var(--ar-sheet) + var(--ar-msb) + 16px); transform: none; right: 10px; gap: 7px;
   }
 
   /* 아래: 바텀시트 */

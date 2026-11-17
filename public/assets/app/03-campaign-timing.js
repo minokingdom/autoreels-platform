@@ -810,6 +810,10 @@
       if (scriptCustomIn) {
         scriptCustomIn.value = String(Math.round(BASE_DURATION));
       }
+      const mobCustomIn = document.getElementById('mobCustomDurationInput');
+      if (mobCustomIn) {
+        mobCustomIn.value = String(Math.round(BASE_DURATION));
+      }
       const scriptBadge = document.getElementById('scriptDurationCutBadge');
       if (scriptBadge) {
         scriptBadge.textContent = `${Math.round(BASE_DURATION)}초 · ${targetCuts}컷`;
@@ -820,7 +824,7 @@
       }
       const mobileChip = document.getElementById('mobileSheetDurationChip');
       if (mobileChip) {
-        mobileChip.textContent = `⏱ ${Math.round(BASE_DURATION)}초`;
+        mobileChip.textContent = `⏱ ${Math.round(BASE_DURATION)}초 ▾`;
       }
 
       // 상단 빠른 시간 버튼 하이라이트 동기화 (미리보기 + 대본 탭)
@@ -843,6 +847,12 @@
           tBtn.className = isActive
             ? 'h-6 px-2 rounded-[5px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer'
             : 'h-6 px-2 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer';
+        }
+        const mBtn = document.getElementById(`mobDurBtn_${dVal}`);
+        if (mBtn) {
+          mBtn.className = isActive
+            ? 'h-7 rounded-[6px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer'
+            : 'h-7 rounded-[6px] text-[11px] font-mono text-[#a1a1a6] bg-[#1c1c1f] cursor-pointer';
         }
       });
 

@@ -40,7 +40,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Black+Han+Sans&family=Noto+Serif+KR:wght@700;900&family=Do+Hyeon&family=Jua&family=Nanum+Pen+Script&family=Gugi&family=Gaegu:wght@700&family=Hi+Melody&family=East+Sea+Dokdo&family=Single+Day&family=Yeon+Sung&family=Poor+Story&family=Gamja+Flower&family=Nanum+Brush+Script&family=Gasoek+One&family=Bagel+Fat+One&family=Song+Myung&family=Black+And+White+Picture&family=Dongle:wght@700&family=Great+Vibes&family=Pinyon+Script&display=swap" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.css"></script>
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261117c" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261117e" />
   <link rel="stylesheet" href="/assets/app/splash.css" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -666,7 +666,7 @@
           <div class="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 pt-3 lg:pt-5">
             <div class="flex items-center gap-2 flex-wrap">
               <h2 id="previewDealerHeader" class="text-[16px] font-medium text-[#ededed]">오늘의 릴스 만들기</h2>
-              <button type="button" id="mobileSheetDurationChip" onclick="switchStudioTab('script')" class="lg:hidden h-7 px-2.5 rounded-full bg-[#232325] border border-[var(--border)] text-[11px] font-mono text-[#ededed] flex items-center gap-1 cursor-pointer" title="대본 탭에서 영상 길이 바꾸기">⏱ 12초</button>
+              <button type="button" id="mobileSheetDurationChip" onclick="var d=document.getElementById('mobileDurationDrawer');if(d)d.classList.toggle('hidden');" class="lg:hidden h-7 px-2.5 rounded-full bg-[#232325] border border-[var(--border)] text-[11px] font-mono text-[#ededed] flex items-center gap-1 cursor-pointer" title="영상 길이 바로 바꾸기">⏱ 12초 ▾</button>
               <button type="button" id="mobileSheetSettingsBtn" onclick="openStudioSettingsModal()" class="lg:hidden h-7 px-2.5 rounded-full bg-[#232325] border border-[var(--border)] text-[11px] text-[#ededed] flex items-center gap-1 cursor-pointer" title="구독 상태 · 업종 설정">⚙️ 설정</button>
               <span id="wasmEngineBadge" class="hidden tag-chip px-2 py-0.5 font-mono text-[11px]">Rust Wasm v1.0</span>
               <span class="hidden text-xs text-[#85858b]"><code id="stagingUrlText">https://staging.autoreels.kr/v/tok_minjun</code></span>
@@ -678,6 +678,20 @@
                 <span class="ems-label">편집 모드</span>
               </button>
               <div id="previewStatusBadge"></div>
+            </div>
+          </div>
+          <div id="mobileDurationDrawer" class="hidden lg:hidden mx-4 mt-1 mb-1 p-2.5 rounded-[10px] bg-[#141415] border border-[var(--border)] space-y-1.5">
+            <div class="flex items-center justify-between text-[11px] text-[#85858b]">
+              <span>⏱ 영상 길이 선택 (길이에 따라 컷·대본 수 변경)</span>
+              <button type="button" onclick="document.getElementById('mobileDurationDrawer').classList.add('hidden')" class="text-[#a1a1a6] px-1">✕</button>
+            </div>
+            <div class="grid grid-cols-6 gap-1">
+              <button type="button" id="mobDurBtn_8" onclick="setVideoTotalDuration(8)" class="h-7 rounded-[6px] text-[11px] font-mono text-[#a1a1a6] bg-[#1c1c1f] cursor-pointer">8초</button>
+              <button type="button" id="mobDurBtn_12" onclick="setVideoTotalDuration(12)" class="h-7 rounded-[6px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer">12초</button>
+              <button type="button" id="mobDurBtn_15" onclick="setVideoTotalDuration(15)" class="h-7 rounded-[6px] text-[11px] font-mono text-[#a1a1a6] bg-[#1c1c1f] cursor-pointer">15초</button>
+              <button type="button" id="mobDurBtn_20" onclick="setVideoTotalDuration(20)" class="h-7 rounded-[6px] text-[11px] font-mono text-[#a1a1a6] bg-[#1c1c1f] cursor-pointer">20초</button>
+              <button type="button" id="mobDurBtn_30" onclick="setVideoTotalDuration(30)" class="h-7 rounded-[6px] text-[11px] font-mono text-[#a1a1a6] bg-[#1c1c1f] cursor-pointer">30초</button>
+              <input id="mobCustomDurationInput" type="number" min="6" max="60" value="12" onchange="setVideoTotalDuration(this.value)" class="studio-input w-full h-7 px-1 text-[11px] font-mono text-center" aria-label="영상 길이 직접 입력" />
             </div>
           </div>
 
@@ -712,15 +726,6 @@
         </div>
         <!-- ★ 1단계 · 오늘의 주제: 요일·계절·다가오는 날·인기 키워드로 오늘 올릴 주제 후보를 보여 주고, 고르면 AI 대본을 바로 만듦 -->
         <div id="studioPanel_topic" role="tabpanel" aria-labelledby="studioTabBtn_topic" class="studio-panel p-5 sm:p-6 space-y-4">
-          <div>
-            <div class="text-[16px] font-semibold text-[#ededed]">오늘은 어떤 내용으로 올릴까요?</div>
-            <p id="topicDateLine" class="text-[12px] text-[#85858b] mt-1"></p>
-          </div>
-          <button type="button" class="bgm-now" onclick="arOpenProductSheet()">
-            <span class="bgm-cover" style="width:44px;height:44px;background:linear-gradient(135deg,#4cc38a,#065f46)">🛍️</span>
-            <span class="bgm-now-txt"><strong class="ar-product-name">내 상품</strong><small class="ar-product-sub">무엇을 알릴지 정해 두면 대본에 들어가요</small></span>
-            <span class="bgm-now-go">바꾸기 ›</span>
-          </button>
           <div class="flex flex-wrap items-center justify-between gap-2 bg-[#141415] px-3 py-2 rounded-[10px] border border-[var(--border)]">
             <div class="flex items-center gap-1 flex-wrap">
               <span class="text-[11px] text-[#85858b] mr-1">⏱ 길이</span>
@@ -732,6 +737,15 @@
             </div>
             <button type="button" onclick="openPresetDrawer('right')" class="h-7 px-2.5 rounded-[7px] bg-[#232325] hover:bg-[#323236] border border-[var(--border)] text-[11px] font-medium text-[#ededed] cursor-pointer shrink-0">🎨 디자인 ›</button>
           </div>
+          <div>
+            <div class="text-[16px] font-semibold text-[#ededed]">오늘은 어떤 내용으로 올릴까요?</div>
+            <p id="topicDateLine" class="text-[12px] text-[#85858b] mt-1"></p>
+          </div>
+          <button type="button" class="bgm-now" onclick="arOpenProductSheet()">
+            <span class="bgm-cover" style="width:44px;height:44px;background:linear-gradient(135deg,#4cc38a,#065f46)">🛍️</span>
+            <span class="bgm-now-txt"><strong class="ar-product-name">내 상품</strong><small class="ar-product-sub">무엇을 알릴지 정해 두면 대본에 들어가요</small></span>
+            <span class="bgm-now-go">바꾸기 ›</span>
+          </button>
           <div class="ig-search-row">
             <input id="topicCustomInput" type="text" placeholder="오늘 올릴 내용 적기 (예: 신메뉴 출시, 오늘만 할인)" onkeydown="if(event.key==='Enter'){event.preventDefault();arPickCustomTopic();}" class="studio-input" />
             <button type="button" onclick="arPickCustomTopic()" class="ig-search-go">만들기</button>
@@ -2083,9 +2097,9 @@
     if (window.__AR_MOBILE_SHELL) {
       document.head.innerHTML = '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AutoReels — 모바일 보기 (390×844)</title><style>*{box-sizing:border-box}html,body{margin:0;height:100%;background:#09090b;color:#ededed;font-family:Pretendard,system-ui,sans-serif;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px}.bar{display:flex;align-items:center;justify-content:space-between;width:394px;max-width:100%;font-size:12px;color:#a1a1a6}.bar a{color:#ededed;text-decoration:none;padding:5px 10px;border-radius:8px;background:#232325;border:1px solid rgba(255,255,255,.14)}.frame{width:394px;height:min(848px,calc(100dvh - 54px));border-radius:26px;overflow:hidden;border:2px solid rgba(255,255,255,.16);box-shadow:0 24px 64px rgba(0,0,0,.75);background:#0f0f10}iframe{width:100%;height:100%;border:0;display:block}</style>';
       document.body.className = '';
-      document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117c" title="AutoReels 모바일 스튜디오"></iframe></div>';
+      document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117e" title="AutoReels 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261117c"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261117e"><\/script>');
     }
   </script>
   <!--
