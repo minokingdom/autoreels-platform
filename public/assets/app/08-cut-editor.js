@@ -5733,7 +5733,19 @@
           in_cal:        { caption: { cx: 270, cy: 694, w: 468, h: 228 }, badge: { cx: 270, cy: 615, w: 468, h: 70 }, price: { cx: 270, cy: 768, w: 420, h: 52 } },
           in_h_plaque:   { caption: { cx: 270, cy: 720, w: 468, h: 200 }, badge: { cx: 270, cy: 655, w: 280, h: 44 }, price: { cx: 270, cy: 782, w: 320, h: 44 } },
           in_g_bookmark: { caption: { cx: 270, cy: 692, w: 452, h: 236 }, badge: { cx: 270, cy: 604, w: 300, h: 44 }, price: { cx: 270, cy: 774, w: 300, h: 44 } },
-          poll:          { caption: { cx: 270, cy: 676, w: 468, h: 232 }, badge: { cx: 270, cy: 590, w: 240, h: 44 }, price: { cx: 270, cy: 735, w: 428, h: 108 } }
+          cn_deck:       { caption: { cx: 270, cy: 642, w: 404, h: 175 }, badge: { cx: 115, cy: 122, w: 120, h: 38 }, price: { cx: 270, cy: 556, w: 280, h: 44 } },
+          cn_summary:    { caption: { cx: 270, cy: 630, w: 428, h: 195 }, badge: { cx: 150, cy: 140, w: 220, h: 40 }, price: { cx: 270, cy: 528, w: 280, h: 44 } },
+          cn_boldquote:  { caption: { cx: 270, cy: 178, w: 464, h: 154 }, badge: { cx: 100, cy: 62,  w: 140, h: 36 }, price: { cx: 270, cy: 716, w: 280, h: 44 } },
+          cn_splitbar:   { caption: { cx: 270, cy: 702, w: 452, h: 165 }, badge: { cx: 110, cy: 589, w: 120, h: 36 }, price: { cx: 270, cy: 636, w: 280, h: 44 } },
+          stm_split:       { caption: { cx: 270, cy: 725, w: 460, h: 150 }, badge: { cx: 140, cy: 68,  w: 200, h: 36 }, price: { cx: 270, cy: 650, w: 280, h: 44 } },
+          stm_ticket:      { caption: { cx: 270, cy: 702, w: 440, h: 130 }, badge: { cx: 120, cy: 584, w: 160, h: 36 }, price: { cx: 270, cy: 642, w: 280, h: 44 } },
+          cn_timeline:     { caption: { cx: 299, cy: 640, w: 414, h: 180 }, badge: { cx: 160, cy: 514, w: 180, h: 36 }, price: { cx: 299, cy: 560, w: 280, h: 44 } },
+          cn_qna:          { caption: { cx: 270, cy: 668, w: 424, h: 145 }, badge: { cx: 120, cy: 87,  w: 140, h: 36 }, price: { cx: 270, cy: 610, w: 280, h: 44 } },
+          cn_compare:      { caption: { cx: 270, cy: 662, w: 432, h: 185 }, badge: { cx: 111, cy: 102, w: 140, h: 36 }, price: { cx: 270, cy: 586, w: 280, h: 44 } },
+          cn_receipt:      { caption: { cx: 270, cy: 628, w: 404, h: 175 }, badge: { cx: 120, cy: 116, w: 160, h: 36 }, price: { cx: 270, cy: 552, w: 280, h: 44 } },
+          cn_polaroid_duo: { caption: { cx: 270, cy: 675, w: 456, h: 165 }, badge: { cx: 270, cy: 558, w: 200, h: 36 }, price: { cx: 270, cy: 606, w: 280, h: 44 } },
+          stm_glassbar:    { caption: { cx: 276, cy: 714, w: 412, h: 108 }, badge: { cx: 130, cy: 636, w: 180, h: 36 }, price: { cx: 270, cy: 672, w: 280, h: 44 } },
+          poll:            { caption: { cx: 270, cy: 676, w: 468, h: 232 }, badge: { cx: 270, cy: 590, w: 240, h: 44 }, price: { cx: 270, cy: 735, w: 428, h: 108 } }
         };
         const wrappedMotion = function (c, W, H, s, t, m) {
           const res = origMotion.apply(this, arguments);

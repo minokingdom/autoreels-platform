@@ -3304,7 +3304,7 @@
     });
     DESIGN_STYLES.push(...KIT_DESIGNS);
     // 스타일 분류는 이 12개로 고정: 새 스타일을 추가할 때 분류를 새로 만들지 말고 아래 중 하나에 넣을 것
-    const DESIGN_CATS = ['전체', '신규', '비포·애프터', '브이로그', '손글씨', '타이포', '특가', '고급', '테크', '스포츠', '상담·정보', '신뢰', '감성', '재미', '뉴스·방송'];
+    const DESIGN_CATS = ['전체', '신규', '카드뉴스', '비포·애프터', '브이로그', '손글씨', '타이포', '특가', '고급', '테크', '스포츠', '상담·정보', '신뢰', '감성', '재미', '뉴스·방송'];
     // ★ 업종 전용 테마: 그 업종을 고른 사람에게만 보이고, 업종을 바꾸면 첫 테마가 바로 적용됨
     // [id, 이름, (분류는 '내 업종'), layout, cap, font, deco, trans, outro, grade, head, bg, label, accent, accent2, script, sfont]
     // 2026-11: 업종 디자인은 사진을 꽉 채우고 자막을 사진 위에 올림 (위 사진·아래 글자로 나누는 구성은 촌스럽다는 의견)
@@ -3874,7 +3874,7 @@
     }
     // ★ 세부 편집이 다 되는 디자인 (자막·위 라벨·아래 이름을 컷 편집에서 모두 골라 바꿀 수 있음)
     //   kit 디자인은 전부, motion 디자인은 아래 목록 (2026-11-16 전 디자인을 그려 확인)
-    const AR_FINE_EDIT_MOTION = new Set(['in_film', 'in_mood', 'in_letter', 'in_vlog', 'in_collage', 'in_h_plaque', 'in_h_panes', 'in_h_double', 'in_h_vinyl', 'in_g_sub', 'in_g_arch', 'in_g_strip', 'in_g_postcard', 'in_g_cam', 'in_g_bookmark', 'ed_vogue', 'ed_arch', 'stm_kinetic', 'stm_cinema', 'stm_sonar', 'stm_glint']);
+    const AR_FINE_EDIT_MOTION = new Set(['in_film', 'in_mood', 'in_letter', 'in_vlog', 'in_collage', 'in_h_plaque', 'in_h_panes', 'in_h_double', 'in_h_vinyl', 'in_g_sub', 'in_g_arch', 'in_g_strip', 'in_g_postcard', 'in_g_cam', 'in_g_bookmark', 'ed_vogue', 'ed_arch', 'stm_kinetic', 'stm_cinema', 'stm_sonar', 'stm_glint', 'cn_deck', 'cn_summary', 'cn_boldquote', 'cn_splitbar', 'stm_split', 'stm_ticket', 'cn_timeline', 'cn_qna', 'cn_compare', 'cn_receipt', 'cn_polaroid_duo', 'stm_glassbar']);
     function arDesignFineEdit(d) { return !!d && (d.engine === 'kit' || AR_FINE_EDIT_MOTION.has(d.id)); }
     const AR_FINE_BADGE = '<span class="fine-edit-badge" title="자막·위 라벨·아래 이름을 컷마다 세세하게 바꿀 수 있어요">세부 편집</span>';
     function arVisibleDesigns() {

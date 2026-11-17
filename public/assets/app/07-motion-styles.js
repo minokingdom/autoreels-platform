@@ -86,7 +86,20 @@
       ['stm_cinema', '🎬 시네마틱 룩', 'stm_cinema', 'gowun', '#09090b', '#141210', '#e6ccb2', '#ffffff', false],
       ['stm_sonar', '◎ 소나 핑 모션', 'stm_sonar', 'pretL', '#090d12', '#111822', '#cbd5e1', '#ffffff', false],
       ['stm_glint', '✨ 글로우 스파크', 'stm_glint', 'maruL', '#0d0b0a', '#1a1613', '#f3e5ab', '#ffffff', false],
-      ['in_card_news', '한 장씩, 카드뉴스', 'in_card_news', 'sans', '#f6f1e7', '#efe7da', '#655644', '#29241e', true]
+      ['in_card_news', '한 장씩, 카드뉴스', 'in_card_news', 'sans', '#f6f1e7', '#efe7da', '#655644', '#29241e', true],
+      // 카드뉴스 · 트렌드 릴스 6종 (2026-11 로컬 확장)
+      ['cn_deck', '카드뉴스 · 스택 덱', 'cn_deck', 'pretM', '#f5f1ea', '#ebe4d8', '#1f2937', '#111827', true],
+      ['cn_summary', '카드뉴스 · 핵심 요약', 'cn_summary', 'sans', '#0f172a', '#1e293b', '#38bdf8', '#ffffff', false],
+      ['cn_boldquote', '카드뉴스 · 매거진 표지', 'cn_boldquote', 'maru', '#111215', '#1b1d22', '#e8d5bc', '#ffffff', false],
+      ['cn_splitbar', '카드뉴스 · 컬러 배너', 'cn_splitbar', 'dohyeon', '#18181b', '#27272a', '#f97316', '#ffffff', false],
+      ['stm_split', '✦ 모던 스플릿 프레임', 'stm_split', 'maruL', '#101012', '#1a1a1e', '#e5d4b7', '#ffffff', false],
+      ['stm_ticket', '🎫 미니 바우처 티켓', 'stm_ticket', 'pretM', '#0b0d11', '#141820', '#4cc38a', '#ffffff', false],
+      ['cn_timeline', '카드뉴스 · 4단계 타임라인', 'cn_timeline', 'sans', '#0f172a', '#1e293b', '#38bdf8', '#ffffff', false],
+      ['cn_qna', '카드뉴스 · Q&A 가이드', 'cn_qna', 'pretM', '#faf7f2', '#f1ebe1', '#0ea5e9', '#0f172a', true],
+      ['cn_compare', '카드뉴스 · 체크 포인트', 'cn_compare', 'sans', '#0b1612', '#11221c', '#10b981', '#ffffff', false],
+      ['cn_receipt', '카드뉴스 · 클린 영수증', 'cn_receipt', 'pretM', '#f5f2eb', '#e8e2d5', '#18181b', '#18181b', true],
+      ['cn_polaroid_duo', '카드뉴스 · 투컷 앨범', 'cn_polaroid_duo', 'maru', '#f3ede3', '#e7ded0', '#c2603f', '#292524', true],
+      ['stm_glassbar', '💎 글래스 네온 바', 'stm_glassbar', 'pretM', '#0b0e14', '#131924', '#38bdf8', '#ffffff', false]
     ];
     // 모션 디자인도 별도 분류를 만들지 않고 기존 분류에 넣음
     const MOTION_CAT = {
@@ -99,12 +112,15 @@
       in_g_sub: '브이로그', in_g_arch: '감성', in_g_strip: '브이로그', in_g_postcard: '감성', in_g_cam: '브이로그', in_g_bookmark: '감성',
       in_h_plaque: '감성', in_h_panes: '감성', in_h_double: '감성', in_h_vinyl: '감성',
       in_music: '감성', in_memo: '브이로그', in_lock: '감성', in_dump: '브이로그', in_cal: '감성',
-      in_x_contact: '브이로그', in_x_linen: '감성', in_x_cover: '감성', in_card_news: '상담·정보',
+      in_x_contact: '브이로그', in_x_linen: '감성', in_x_cover: '감성', in_card_news: '카드뉴스',
       in_x_tabs: '브이로그', in_x_walk: '브이로그', in_x_window: '감성',
       in_y_chat: '브이로그', 
       in_y_torn: '감성', in_y_mosaic: '브이로그',
       ed_vogue: '신규', ed_glasspill: '신규', ed_kinetic: '신규', ed_arch: '신규', ed_duotone: '신규',
       stm_kinetic: '신규', stm_cinema: '신규', stm_sonar: '신규', stm_glint: '신규',
+      cn_deck: '카드뉴스', cn_summary: '카드뉴스', cn_boldquote: '카드뉴스', cn_splitbar: '카드뉴스',
+      cn_timeline: '카드뉴스', cn_qna: '카드뉴스', cn_compare: '카드뉴스', cn_receipt: '카드뉴스', cn_polaroid_duo: '카드뉴스',
+      stm_split: '신규', stm_ticket: '신규', stm_glassbar: '신규',
       ba_slider: '비포·애프터', ba_diagonal: '비포·애프터', ba_collage: '비포·애프터', ba_flash: '비포·애프터', ba_polaroid: '비포·애프터'
     };
     const MOTION_DESIGNS = MOTION_ROWS.map((r, i) => ({
@@ -2523,6 +2539,346 @@
           snap(W * 0.66, 360, 0.05, 0, 'AFTER', sp.accent, kTextOn(sp.accent), 0.94 + 0.08 * ent);
           mCaption(c, caption, W / 2, 585, W - 70, 170, 32, sp.font, '#2b2622', e);
         }
+      } else if (M === 'cn_deck') {
+        // 카드뉴스 · 스택 덱: 겹쳐진 페이퍼 카드 + 상단 9:11 사진 + 번호/스와이프 인디케이터 + 깔끔한 요약 자막
+        c.fillStyle = sp.bg1 || '#f5f1ea';
+        c.fillRect(0, 0, W, H);
+        const slideIn = cutIdx > 0 ? mEase(local / 0.42) : 1;
+        // 뒤쪽 겹쳐진 종이 카드 장식
+        c.save();
+        c.translate(W / 2, H * 0.44);
+        c.rotate(-0.025);
+        c.fillStyle = 'rgba(0,0,0,0.06)';
+        gRoundRect(c, -216, -330, 432, 668, 22); c.fill();
+        c.rotate(0.05);
+        c.fillStyle = '#ebe4d8';
+        gRoundRect(c, -216, -330, 432, 668, 22); c.fill();
+        c.restore();
+        // 메인 전면 카드
+        const cardX = 46 + (1 - slideIn) * 60;
+        const cardY = 82;
+        const cardW = W - 92;
+        const cardH = 700;
+        c.save();
+        c.globalAlpha = Math.min(1, slideIn + 0.25);
+        c.shadowColor = 'rgba(20, 16, 12, 0.14)'; c.shadowBlur = 24; c.shadowOffsetY = 10;
+        c.fillStyle = '#fffdf9';
+        gRoundRect(c, cardX, cardY, cardW, cardH, 22); c.fill();
+        c.shadowBlur = 0; c.shadowOffsetY = 0;
+        // 상단 사진 영역
+        c.save();
+        gRoundRect(c, cardX + 14, cardY + 14, cardW - 28, 396, 16); c.clip();
+        mPhoto(c, S, 0, cardX + 14, cardY + 14, cardW - 28, 396, 1.03 + lp * 0.035);
+        c.restore();
+        // 카드 상단 번호 칩 & 총 컷 도트
+        c.fillStyle = sp.accent || '#1f2937';
+        gRoundRect(c, cardX + 26, cardY + 26, 86, 26, 13); c.fill();
+        c.fillStyle = kTextOn(sp.accent || '#1f2937');
+        c.font = gFont(800, 11, GENRE_FONTS.sans);
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(`CARD 0${cutIdx + 1}`, cardX + 69, cardY + 40);
+        // 페이지 도트
+        for (let di = 0; di < totalCuts; di++) {
+          c.fillStyle = di === cutIdx ? (sp.accent || '#1f2937') : '#d6d0c4';
+          c.beginPath(); c.arc(cardX + cardW - 30 - (totalCuts - 1 - di) * 14, cardY + 432, di === cutIdx ? 4.5 : 3.5, 0, Math.PI * 2); c.fill();
+        }
+        inLabel(c, `${String(cutIdx + 1).padStart(2, '0')} / ${String(totalCuts).padStart(2, '0')}`, cardX + 24, cardY + 432, '#78716c', 'left', 12);
+        c.fillStyle = '#e7e1d6';
+        c.fillRect(cardX + 24, cardY + 450, cardW - 48, 1);
+        if (isPrice) mPrice(c, W, cardY + 462, sp, e);
+        mCaption(c, caption, W / 2, cardY + (isPrice ? 506 : 472), cardW - 44, 175, 29, 'pretM', '#1c1917', mClamp(local / 0.55), 'center');
+        inSign(c, d, W / 2, cardY + cardH - 24, '#78716c');
+        c.restore();
+      } else if (M === 'cn_summary') {
+        // 카드뉴스 · 핵심 요약: 은은한 블러 배경 + 화이트/글래스 정보 카드 + 상단 POINT 진행바
+        c.save();
+        c.filter = 'blur(8px) brightness(0.68)';
+        mPhoto(c, S, 0, -16, -16, W + 32, H + 32, 1.08);
+        c.restore();
+        const cx = 32, cy = 88, cw = W - 64, ch = 730;
+        c.save();
+        c.shadowColor = 'rgba(0,0,0,0.34)'; c.shadowBlur = 32; c.shadowOffsetY = 12;
+        c.fillStyle = 'rgba(255,255,255,0.96)';
+        gRoundRect(c, cx, cy, cw, ch, 24); c.fill();
+        c.shadowBlur = 0; c.shadowOffsetY = 0;
+        // 카드 헤더: 포인트 번호 + 진행 스텝 바
+        const segW = (cw - 48 - (totalCuts - 1) * 6) / Math.max(1, totalCuts);
+        for (let si = 0; si < totalCuts; si++) {
+          c.fillStyle = si <= cutIdx ? (sp.accent || '#0ea5e9') : '#e2e8f0';
+          gRoundRect(c, cx + 24 + si * (segW + 6), cy + 22, segW, 5, 3); c.fill();
+        }
+        inLabel(c, `POINT 0${cutIdx + 1} · 핵심 안내`, cx + 24, cy + 52, sp.accent || '#0284c7', 'left', 13);
+        // 카드 내부 사진
+        c.save();
+        gRoundRect(c, cx + 20, cy + 72, cw - 40, 340, 16); c.clip();
+        mPhoto(c, S, 0, cx + 20, cy + 72, cw - 40, 340, 1.04 + lp * 0.04);
+        c.restore();
+        if (isPrice) mPrice(c, W, cy + 432, sp, e);
+        mCaption(c, caption, W / 2, cy + (isPrice ? 478 : 444), cw - 48, 195, 30, 'sans', '#0f172a', mClamp(local / 0.5), 'center');
+        c.fillStyle = '#e2e8f0';
+        c.fillRect(cx + 24, cy + ch - 52, cw - 48, 1);
+        inSign(c, d, cx + cw / 2, cy + ch - 26, '#64748b');
+        c.restore();
+      } else if (M === 'cn_boldquote') {
+        // 카드뉴스 · 매거진 표지형: 딥 차콜 프레임 + 이슈 넘버 + 상단 Bold 헤더 + 중앙 와이드 화보 + 하단 크레딧
+        c.fillStyle = '#111215';
+        c.fillRect(0, 0, W, H);
+        const pw = W - 64, ph = 390, px = 32, py = 278;
+        c.fillStyle = sp.accent || '#e8d5bc';
+        c.font = gFont(800, 12, GENRE_FONTS.sans);
+        c.textAlign = 'left'; c.textBaseline = 'middle';
+        c.fillText(`ISSUE NO. 0${cutIdx + 1}`, 34, 62);
+        c.fillStyle = 'rgba(255,255,255,0.45)';
+        c.textAlign = 'right';
+        c.fillText(`${cutIdx + 1} / ${totalCuts}`, W - 34, 62);
+        c.fillStyle = 'rgba(255,255,255,0.14)';
+        c.fillRect(34, 82, W - 68, 1);
+        mCaption(c, caption, W / 2, 102, W - 76, 154, 30, 'maru', '#ffffff', mClamp(local / 0.55), 'center');
+        c.save();
+        gRoundRect(c, px, py, pw, ph, 14); c.clip();
+        inPhotoFade(c, S, cutIdx, local, px, py, pw, ph, 1.03 + lp * 0.04, 1);
+        c.restore();
+        c.strokeStyle = 'rgba(255,255,255,0.14)'; c.lineWidth = 1;
+        gRoundRect(c, px, py, pw, ph, 14); c.stroke();
+        if (isPrice) mPrice(c, W, py + ph + 32, sp, e);
+        else {
+          c.fillStyle = sp.accent || '#e8d5bc';
+          c.fillRect(W / 2 - 24, py + ph + 36, 48, 2);
+        }
+      } else if (M === 'cn_splitbar') {
+        // 카드뉴스 · 컬러 배너: 상단 사진(56%) + 하단 강렬한 포인트 컬러 카드(34%)
+        c.fillStyle = '#18181b';
+        c.fillRect(0, 0, W, H);
+        const cardPad = 24;
+        const photoH = 510;
+        c.save();
+        gRoundRect(c, cardPad, 34, W - cardPad * 2, photoH, 20); c.clip();
+        inPhotoFade(c, S, cutIdx, local, cardPad, 34, W - cardPad * 2, photoH, 1.04 + lp * 0.04, 1);
+        c.restore();
+        const botY = 34 + photoH + 14;
+        const botH = 310;
+        const acc = sp.accent || '#f97316';
+        const fg = kTextOn(acc);
+        c.save();
+        c.fillStyle = acc;
+        gRoundRect(c, cardPad, botY, W - cardPad * 2, botH, 20); c.fill();
+        c.fillStyle = fg === '#111111' ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.18)';
+        gRoundRect(c, cardPad + 20, botY + 18, 92, 24, 12); c.fill();
+        c.fillStyle = fg;
+        c.font = gFont(800, 11, GENRE_FONTS.sans);
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(`GUIDE 0${cutIdx + 1}`, cardPad + 66, botY + 31);
+        if (isPrice) mPrice(c, W, botY + 62, { accent: fg, accent2: fg }, e);
+        mCaption(c, caption, W / 2, botY + (isPrice ? 104 : 62), W - cardPad * 2 - 40, 165, 32, 'dohyeon', fg, mClamp(local / 0.5), 'center');
+        inSign(c, d, W / 2, botY + botH - 22, fg);
+        c.restore();
+      } else if (M === 'stm_split') {
+        // ✦ 모던 스플릿 프레임: 다크 갤러리 매트 + 선명한 얇은 테두리 사진 + 하단 얇은 명조 자막 + 언더라인
+        c.fillStyle = '#101012';
+        c.fillRect(0, 0, W, H);
+        const fx = 38, fy = 112, fw = W - 76, fh = 500;
+        inLabel(c, `0${cutIdx + 1} · ${(sp.label || 'CURATION').slice(0, 14)}`, 40, 68, sp.accent || '#e5d4b7', 'left', 12);
+        c.save();
+        gRoundRect(c, fx, fy, fw, fh, 12); c.clip();
+        inPhotoFade(c, S, cutIdx, local, fx, fy, fw, fh, 1.03 + lp * 0.04, 1);
+        c.restore();
+        c.strokeStyle = 'rgba(229, 212, 183, 0.35)'; c.lineWidth = 1;
+        gRoundRect(c, fx, fy, fw, fh, 12); c.stroke();
+        if (isPrice) mPrice(c, W, fy + fh + 28, sp, e);
+        mCaption(c, caption, W / 2, fy + fh + (isPrice ? 70 : 38), W - 80, 150, 26, 'maruL', '#ffffff', mClamp(local / 0.65), 'center');
+        c.fillStyle = sp.accent || '#e5d4b7';
+        c.fillRect(W / 2 - 42 * mEase(local / 0.7), fy + fh + 198, 84 * mEase(local / 0.7), 1.5);
+      } else if (M === 'stm_ticket') {
+        // 🎫 미니 바우처 티켓: 풀스크린 배경 + 하단 티켓 노치 바우처 카드 + 점선 절취선
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.03 + lp * 0.035, 1);
+        const bgGrad = c.createLinearGradient(0, H * 0.45, 0, H);
+        bgGrad.addColorStop(0, 'rgba(0,0,0,0)');
+        bgGrad.addColorStop(1, 'rgba(9,11,15,0.82)');
+        c.fillStyle = bgGrad; c.fillRect(0, H * 0.45, W, H * 0.55);
+        const tx = 28, tw = W - 56, ty = 552, th = 266;
+        c.save();
+        c.shadowColor = 'rgba(0,0,0,0.45)'; c.shadowBlur = 24;
+        c.fillStyle = 'rgba(20, 24, 32, 0.92)';
+        gRoundRect(c, tx, ty, tw, th, 20); c.fill();
+        c.shadowBlur = 0;
+        c.strokeStyle = 'rgba(255,255,255,0.16)'; c.lineWidth = 1;
+        gRoundRect(c, tx, ty, tw, th, 20); c.stroke();
+        // 좌우 티켓 홈 + 점선
+        c.fillStyle = '#090b0f';
+        c.beginPath(); c.arc(tx, ty + 62, 10, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(tx + tw, ty + 62, 10, 0, Math.PI * 2); c.fill();
+        c.strokeStyle = 'rgba(255,255,255,0.18)'; c.setLineDash([5, 5]);
+        c.beginPath(); c.moveTo(tx + 18, ty + 62); c.lineTo(tx + tw - 18, ty + 62); c.stroke();
+        c.setLineDash([]);
+        c.fillStyle = sp.accent || '#4cc38a';
+        c.font = gFont(800, 12, GENRE_FONTS.sans);
+        c.textAlign = 'left'; c.textBaseline = 'middle';
+        c.fillText(`PASS · NO.0${cutIdx + 1}`, tx + 22, ty + 32);
+        c.fillStyle = 'rgba(255,255,255,0.62)';
+        c.textAlign = 'right';
+        c.fillText(String((d && d.name) || 'SPECIAL OFFER').slice(0, 14), tx + tw - 22, ty + 32);
+        if (isPrice) mPrice(c, W, ty + 82, sp, e);
+        mCaption(c, caption, W / 2, ty + (isPrice ? 124 : 84), tw - 44, 130, 26, 'pretM', '#ffffff', mClamp(local / 0.55), 'center');
+        inSign(c, d, W / 2, ty + th - 20, 'rgba(255,255,255,0.68)');
+        c.restore();
+      } else if (M === 'cn_timeline') {
+        // 카드뉴스 · 4단계 타임라인: 왼쪽 세로 스텝 라인 + 상단 사진 카드 + 하단 핵심 캡션
+        c.fillStyle = '#0f172a';
+        c.fillRect(0, 0, W, H);
+        const railX = 48;
+        c.strokeStyle = 'rgba(148,163,184,0.22)'; c.lineWidth = 3;
+        c.beginPath(); c.moveTo(railX, 110); c.lineTo(railX, 740); c.stroke();
+        const progH = 630 * ((cutIdx + 1) / Math.max(1, totalCuts));
+        c.strokeStyle = sp.accent || '#38bdf8'; c.lineWidth = 3;
+        c.beginPath(); c.moveTo(railX, 110); c.lineTo(railX, 110 + progH); c.stroke();
+        for (let si = 0; si < Math.min(totalCuts, 6); si++) {
+          const sy = 130 + si * (560 / Math.max(1, Math.min(totalCuts, 6) - 1));
+          const act = si === cutIdx;
+          c.fillStyle = si <= cutIdx ? (sp.accent || '#38bdf8') : '#1e293b';
+          c.beginPath(); c.arc(railX, sy, act ? 16 : 11, 0, Math.PI * 2); c.fill();
+          c.fillStyle = si <= cutIdx ? kTextOn(sp.accent || '#38bdf8') : '#94a3b8';
+          c.font = gFont(800, act ? 12 : 10, GENRE_FONTS.sans);
+          c.textAlign = 'center'; c.textBaseline = 'middle';
+          c.fillText(`${si + 1}`, railX, sy + 1);
+        }
+        const cx = 86, cw = W - cx - 28;
+        c.save();
+        gRoundRect(c, cx, 94, cw, 388, 18); c.clip();
+        inPhotoFade(c, S, cutIdx, local, cx, 94, cw, 388, 1.03 + lp * 0.04, 1);
+        c.restore();
+        inLabel(c, `STEP 0${cutIdx + 1} / 0${totalCuts}`, cx + 4, 514, sp.accent || '#38bdf8', 'left', 13);
+        if (isPrice) mPrice(c, W, 540, sp, e);
+        mCaption(c, caption, cx + cw / 2, isPrice ? 584 : 548, cw - 12, 180, 29, 'sans', '#f8fafc', mClamp(local / 0.5), 'center');
+      } else if (M === 'cn_qna') {
+        // 카드뉴스 · Q&A 가이드: 크림 캔버스 + 상단 Q 뱃지 + 사진 카드 + 깔끔한 A 답변 카드
+        c.fillStyle = '#faf7f2';
+        c.fillRect(0, 0, W, H);
+        const acc = sp.accent || '#0ea5e9';
+        c.fillStyle = acc;
+        gRoundRect(c, 36, 70, 96, 32, 16); c.fill();
+        c.fillStyle = kTextOn(acc);
+        c.font = gFont(800, 12, GENRE_FONTS.sans);
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(`Q&A · 0${cutIdx + 1}`, 84, 87);
+        c.fillStyle = '#78716c'; c.textAlign = 'right';
+        c.font = gFont(700, 12, GENRE_FONTS.sans);
+        c.fillText(`${cutIdx + 1} / ${totalCuts}`, W - 36, 87);
+        c.save();
+        gRoundRect(c, 36, 120, W - 72, 390, 20); c.clip();
+        inPhotoFade(c, S, cutIdx, local, 36, 120, W - 72, 390, 1.03 + lp * 0.04, 1);
+        c.restore();
+        c.save();
+        c.shadowColor = 'rgba(15,23,42,0.08)'; c.shadowBlur = 18; c.shadowOffsetY = 6;
+        c.fillStyle = '#ffffff';
+        gRoundRect(c, 36, 532, W - 72, 232, 20); c.fill();
+        c.restore();
+        c.fillStyle = acc;
+        gRoundRect(c, 58, 554, 4, 30, 2); c.fill();
+        inLabel(c, 'KEY ANSWER', 72, 569, acc, 'left', 12);
+        if (isPrice) mPrice(c, W, 594, sp, e);
+        mCaption(c, caption, W / 2, isPrice ? 632 : 596, W - 116, 145, 28, 'pretM', '#0f172a', mClamp(local / 0.5), 'center');
+      } else if (M === 'cn_compare') {
+        // 카드뉴스 · 체크 포인트: 다크 에메랄드 매트 + 상단 화보 + 체크 배지 카드
+        c.fillStyle = '#0b1612';
+        c.fillRect(0, 0, W, H);
+        c.save();
+        gRoundRect(c, 32, 68, W - 64, 456, 20); c.clip();
+        inPhotoFade(c, S, cutIdx, local, 32, 68, W - 64, 456, 1.04 + lp * 0.04, 1);
+        c.restore();
+        const acc = sp.accent || '#10b981';
+        c.fillStyle = acc;
+        gRoundRect(c, 48, 86, 126, 30, 15); c.fill();
+        c.fillStyle = kTextOn(acc);
+        c.font = gFont(800, 12, GENRE_FONTS.sans);
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(`✓ CHECK 0${cutIdx + 1}`, 111, 102);
+        c.fillStyle = 'rgba(255,255,255,0.07)';
+        gRoundRect(c, 32, 542, W - 64, 240, 20); c.fill();
+        c.strokeStyle = 'rgba(255,255,255,0.12)'; c.lineWidth = 1;
+        gRoundRect(c, 32, 542, W - 64, 240, 20); c.stroke();
+        if (isPrice) mPrice(c, W, 566, sp, e);
+        mCaption(c, caption, W / 2, isPrice ? 608 : 570, W - 108, 185, 30, 'sans', '#ecfdf5', mClamp(local / 0.5), 'center');
+      } else if (M === 'cn_receipt') {
+        // 카드뉴스 · 클린 영수증: 블러 사진 위 모던 영수증 카드 + 점선 + 깔끔한 자막
+        c.save();
+        c.filter = 'blur(7px) brightness(0.74)';
+        mPhoto(c, S, 0, -16, -16, W + 32, H + 32, 1.08);
+        c.restore();
+        const rx = 44, rw = W - 88, ry = 82, rh = 696;
+        c.save();
+        c.shadowColor = 'rgba(0,0,0,0.34)'; c.shadowBlur = 28; c.shadowOffsetY = 12;
+        c.fillStyle = '#fcfaf5';
+        gRoundRect(c, rx, ry, rw, rh, 14); c.fill();
+        c.restore();
+        c.fillStyle = '#18181b';
+        c.font = gFont(800, 12, GENRE_FONTS.sans);
+        c.textAlign = 'left'; c.textBaseline = 'middle';
+        c.fillText(`RECEIPT · #0${cutIdx + 1}`, rx + 24, ry + 34);
+        c.fillStyle = '#71717a'; c.textAlign = 'right';
+        c.fillText(String((d && d.name) || 'NOTE').slice(0, 12), rx + rw - 24, ry + 34);
+        c.strokeStyle = '#d4d4d8'; c.setLineDash([4, 4]);
+        c.beginPath(); c.moveTo(rx + 22, ry + 54); c.lineTo(rx + rw - 22, ry + 54); c.stroke();
+        c.setLineDash([]);
+        c.save();
+        gRoundRect(c, rx + 22, ry + 70, rw - 44, 340, 10); c.clip();
+        inPhotoFade(c, S, cutIdx, local, rx + 22, ry + 70, rw - 44, 340, 1.03 + lp * 0.035, 1);
+        c.restore();
+        c.strokeStyle = '#d4d4d8'; c.setLineDash([4, 4]);
+        c.beginPath(); c.moveTo(rx + 22, ry + 432); c.lineTo(rx + rw - 22, ry + 432); c.stroke();
+        c.setLineDash([]);
+        if (isPrice) mPrice(c, W, ry + 448, sp, e);
+        mCaption(c, caption, W / 2, ry + (isPrice ? 492 : 458), rw - 48, 175, 28, 'pretM', '#18181b', mClamp(local / 0.55), 'center');
+        c.fillStyle = '#18181b';
+        for (let bi = 0; bi < 28; bi++) {
+          const bw = (bi % 3 === 0 ? 4 : 2);
+          c.fillRect(W / 2 - 84 + bi * 6, ry + rh - 38, bw, 16);
+        }
+      } else if (M === 'cn_polaroid_duo') {
+        // 카드뉴스 · 투컷 앨범: 틸트된 배경 포토 프레임 + 전면 스퀘어 카드뉴스 + 넘버 배지
+        c.fillStyle = '#f3ede3';
+        c.fillRect(0, 0, W, H);
+        c.save();
+        c.translate(W * 0.56, 300); c.rotate(0.06);
+        c.fillStyle = '#e7ded0';
+        gRoundRect(c, -180, -180, 360, 360, 14); c.fill();
+        c.save();
+        gRoundRect(c, -166, -166, 332, 332, 10); c.clip();
+        mPhoto(c, S, -1, -166, -166, 332, 332, 1.03);
+        c.restore();
+        c.restore();
+        c.save();
+        c.translate(W * 0.46, 315); c.rotate(-0.025);
+        c.shadowColor = 'rgba(40,30,20,0.18)'; c.shadowBlur = 22; c.shadowOffsetY = 8;
+        c.fillStyle = '#fffdf9';
+        gRoundRect(c, -188, -198, 376, 396, 14); c.fill();
+        c.shadowBlur = 0;
+        c.save();
+        gRoundRect(c, -172, -182, 344, 344, 10); c.clip();
+        inPhotoFade(c, S, cutIdx, local, -172, -182, 344, 344, 1.03 + lp * 0.04, 1);
+        c.restore();
+        c.restore();
+        inLabel(c, `PAGE 0${cutIdx + 1} / 0${totalCuts}`, W / 2, 558, sp.accent || '#c2603f', 'center', 13);
+        if (isPrice) mPrice(c, W, 586, sp, e);
+        mCaption(c, caption, W / 2, isPrice ? 628 : 592, W - 84, 165, 30, 'maru', '#292524', mClamp(local / 0.55), 'center');
+      } else if (M === 'stm_glassbar') {
+        // 💎 글래스 네온 바: 풀블리드 화보 + 하단 반투명 글래스 스트립 + 네온 세로 바
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.03 + lp * 0.035, 1);
+        const grad = c.createLinearGradient(0, H * 0.5, 0, H);
+        grad.addColorStop(0, 'rgba(0,0,0,0)');
+        grad.addColorStop(1, 'rgba(9,12,18,0.72)');
+        c.fillStyle = grad; c.fillRect(0, H * 0.5, W, H * 0.5);
+        const bx = 28, bw = W - 56, by = 602, bh = 180;
+        c.save();
+        c.fillStyle = 'rgba(15, 23, 42, 0.62)';
+        gRoundRect(c, bx, by, bw, bh, 18); c.fill();
+        c.strokeStyle = 'rgba(255,255,255,0.18)'; c.lineWidth = 1;
+        gRoundRect(c, bx, by, bw, bh, 18); c.stroke();
+        c.fillStyle = sp.accent || '#38bdf8';
+        gRoundRect(c, bx + 18, by + 26, 4, bh - 52, 2); c.fill();
+        inLabel(c, `0${cutIdx + 1} · HIGHLIGHT`, bx + 36, by + 34, sp.accent || '#38bdf8', 'left', 12);
+        if (isPrice) mPrice(c, W, by + 56, sp, e);
+        mCaption(c, caption, W / 2 + 6, by + (isPrice ? 96 : 58), bw - 72, 108, 26, 'pretM', '#ffffff', mClamp(local / 0.5), 'center');
+        c.restore();
       } else if (M === 'cinema') {
         // 시네마틱: 위아래 검은 띠 + 가장자리 비네트, 컷은 부드럽게 겹쳐 바뀜 (캡컷 "영화 화면"·"비네트")
         const fade = cutIdx > 0 ? mEase(local / 0.45) : 1;
