@@ -1775,6 +1775,9 @@
       } catch (_) { return false; }
     }
 
+    // 업종 진입이 URL을 정리하기 전에 이 브라우저의 로컬 선택을 기억합니다.
+    arUseLocalSceneImages();
+
     function arSceneImageContextKey() {
       return JSON.stringify([IND.key, window.arTodayTopic?.title || '', campaign.vehicle, campaign.cutCaptions,
         campaign.designStyle, campaign.themeId, typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4]);

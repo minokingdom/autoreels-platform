@@ -33,8 +33,9 @@ try {
    }
    return route.fulfill({status:200,headers:cors,contentType:'application/json',body:JSON.stringify(result)});
  });
- await page.goto('http://127.0.0.1:4173/studio?localImages=1',{waitUntil:'load',timeout:90000});
+ await page.goto('http://127.0.0.1:4173/studio?localImages=1&ind=cafe',{waitUntil:'load',timeout:90000});
  await page.evaluate(()=>{setIndustry('cafe');window.arTodayTopic={title:'가을 라떼와 크루아상',why:'따뜻한 카페 시간'};campaign.vehicle='가을 라떼와 크루아상';campaign.cutCaptions=['따뜻한 라떼 한 잔','바삭한 버터 크루아상','햇살 가득한 창가 자리','오늘도 편하게 쉬어 가세요'];switchStudioTab('photo');});
+ assert.equal(await page.evaluate(()=>arUseLocalSceneImages()),true);
  const before=await page.evaluate(()=>campaign.uploadedPhotos?.map(x=>x?.src)||[]);
  const start=Date.now();await page.locator('#regenTopicImgBtn').click();
  await page.waitForFunction(()=>document.getElementById('regenTopicImgBtn').disabled===false,null,{timeout:360000});
