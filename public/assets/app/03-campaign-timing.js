@@ -706,20 +706,21 @@
           if (longestCut > 0) mainDur = Math.max(mainDur, cuts * (longestCut + 0.3));
         }
 
-        // 마지막 엔딩 명함 멘트 길이 확보 (음성이 완전히 끝나고도 충분히 유지)
+        // 마지막 엔딩 명함 멘트 길이 확보 (음성이 완전히 끝나고도 충분히 유지하되 과도하게 늘리지 않음)
         if (outroSec > 0) {
-          outro = Math.max(outro, outroSec + 2.0);
+          outro = Math.max(outro, outroSec + 1.8);
         } else {
-          outro = Math.max(outro, 4.2);
+          outro = Math.max(outro, 4.0);
         }
 
-        // 원테이크 마스터 음성이 있을 때: 남는 시간은 엔딩 명함 구간으로 흡수하여 본편 컷 싱크를 유지
-        if (AudioEngine.masterBuffer && AudioEngine.masterDuration > 0) {
-          const masterDur = AudioEngine.masterDuration;
-          const targetTotal = Math.max(BASE_DURATION, masterDur + 2.2);
-          if (mainDur + outro < targetTotal) {
-            outro = Math.max(outro, targetTotal - mainDur);
-          }
+        // 선택한 영상 길이(예: 30초)가 본편 음성보다 길면, 남는 시간을 엔딩에 몰아주지 않고 각 본편 컷에 고르게 배분
+        const targetMain = Math.max(mainDur, BASE_DURATION - outro);
+        if (exactMasterLocked && lengths.length > 0 && targetMain > mainDur + 0.05) {
+          const scale = targetMain / Math.max(0.1, mainDur);
+          lengths = lengths.map((x) => x * scale);
+          mainDur = targetMain;
+        } else if (mainDur < targetMain) {
+          mainDur = targetMain;
         }
       }
       // 명함이 비었으면 명함 화면 없이: 한 호흡 음성이 끝까지 들어가게 확보 (마지막 컷만 연장)

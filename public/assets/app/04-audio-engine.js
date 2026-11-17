@@ -830,9 +830,24 @@
         }, delayMs);
       },
 
+      shouldUseCutSyncedPlayback() {
+        if (!this.masterBuffer || !Array.isArray(this.masterCutBounds)) return false;
+        const cuts = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
+        if (this.masterCutBounds.length < cuts + 1) return false;
+        const spokenMainDur = Math.max(0, Number(this.masterCutBounds[cuts]) || 0);
+        const mainDur = typeof getMainDuration === 'function' ? getMainDuration() : 8;
+        return mainDur > spokenMainDur + 0.8;
+      },
+
       playMasterAt(startT = 0) {
         const ctx = this.ensureContext();
         if (!ctx || !this.enabled || !this.masterBuffer || this.ttsVoice === 'off' || !arVoiceAllowed()) return;
+        if (this.shouldUseCutSyncedPlayback()) {
+          this.stopTts();
+          this.lastSpokenCut = -1;
+          this.syncWithTimeline(Math.max(0, startT));
+          return;
+        }
         this.stopTts();
         const dur = this.masterBuffer.duration;
         if (startT >= dur - 0.05) return;
@@ -1009,8 +1024,8 @@
             // 음성을 받는 사이 다른 컷으로 넘어갔거나 사운드를 껐으면 재생하지 않음
             if (token !== this.ttsSpeakToken) return;
             if (!this.enabled && !forceSpeak) return;
-            // 기다리는 사이 한 호흡 녹음이 도착해 재생 중이면 컷 조각은 겹쳐 틀지 않음
-            if (this.masterBuffer && isPlaying && !forceSpeak) return;
+            // 기다리는 사이 한 호흡 녹음이 도착해 연속 재생 중이면 컷 조각은 겹쳐 틀지 않음
+            if (this.masterBuffer && !this.shouldUseCutSyncedPlayback() && isPlaying && !forceSpeak) return;
             this.playTtsBuffer(buffer, cutIdx);
           },
           () => {
@@ -1298,8 +1313,8 @@
       syncWithTimeline(t) {
         if (!this.enabled) return;
         try { this.handleSceneSfx(t); } catch (e) {}
-        // 1. 원테이크 마스터 음성이 있으면 컷 경계마다 끊지 않고 한 호흡으로 자연스럽게 이어서 재생!
-        if (this.masterBuffer) {
+        // 1. 본편 길이가 음성과 딱 맞을 때는 원테이크 마스터 음성을 끊김 없이 연속 재생
+        if (this.masterBuffer && !this.shouldUseCutSyncedPlayback()) {
           // 타임라인이 끝에 도달하여 0초로 루프되거나 처음으로 감긴 경우 마스터 트랙 재시작
           if (t < 0.15 && this.lastTimelineT > 1.0) {
             this.playMasterAt(0);
@@ -1309,7 +1324,7 @@
         }
         this.lastTimelineT = t;
 
-        // 2. 마스터 오디오가 준비되지 않은 개별 문장 폴백:
+        // 2. 개별 문장 또는 컷별 여유 배치(예: 20초/30초에서 각 컷 시작 시 해당 컷 음성을 정확히 재생)
         const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
         const totalCuts = getTargetCutCount();
         const slot = t < mainDur ? getCutIndexAt(t) : totalCuts;
