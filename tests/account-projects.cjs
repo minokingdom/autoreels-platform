@@ -76,6 +76,10 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
  await assert.rejects(()=>sns.startPublish(other,{...b,requestId:'another-123456789'}),e=>e.status===403);
  await pg.query("UPDATE ar_publish_jobs SET scheduled_at=now()-interval '1 minute' WHERE status='scheduled'");
  await sns.runScheduledAndPending();assert.equal((await pg.query("SELECT status FROM ar_publish_jobs WHERE id=$1",[jobs[1].id])).rows[0].status,'failed');
+ // 오래전에 만든 예약도 실제 실행 시각부터 처리 지연을 계산합니다.
+ await pg.query("INSERT INTO ar_publish_jobs(user_id,provider,status,created_at,scheduled_at) VALUES(1,'threads','processing',now()-interval '2 days',now())");
+ await sns.runScheduledAndPending();
+ assert.equal((await pg.query("SELECT status FROM ar_publish_jobs WHERE provider='threads' AND request_key IS NULL")).rows[0].status,'processing');
  await scheduler.heartbeat();await pg.exec("UPDATE ar_worker_health SET last_success=now()-interval '3 minutes'");assert.equal(await scheduler.available(),false);
  console.log('account/projects/scheduler PostgreSQL tests ok: ownership, revisions, limits, OTP expiry/replay/attempts, session revocation, heartbeat, schedule dedup/cancel/worker');
  }finally{await pg.close();}
