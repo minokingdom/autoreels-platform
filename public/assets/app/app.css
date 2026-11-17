@@ -1453,4 +1453,23 @@ body.ar-cut-editing #arQuickBar { display: none; }
   body.ar-sheet.ar-cut-editing #cutEditorPanel:not(.hidden) {
     flex: 0 0 auto; width: 100%; max-height: 45dvh; overflow-y: auto; overscroll-behavior: contain; margin-top: 0;
   }
+  /* 모바일 디자인 서랍 열림: 바텀시트에 가리지 않게 전체 오버레이로 올려서 카드뉴스/디자인 썸네일이 시원하게 보이도록 */
+  body.ar-sheet #mainMonitorColumn:has(#presetDrawer.open) {
+    z-index: 60 !important;
+    bottom: 0 !important;
+  }
+  body.ar-sheet #presetDrawer.open {
+    position: fixed;
+    inset: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)) 8px;
+    width: auto;
+    height: auto;
+    max-width: none;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.14);
+    z-index: 65;
+  }
+  body.ar-sheet #presetDrawer.open .pd-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px;
+  }
 }
