@@ -2422,6 +2422,7 @@
       const body = document.getElementById('igSheetContent');
       const applyAll = document.getElementById('igSheetApplyAllBtn');
       if (!back || !body) return;
+      if (window.__arInlineEditActive) closeInlineQuickEdit();
       window.__arIgSheetMode = mode;
       back.classList.remove('hidden');
       if (mode === 'deco') {
