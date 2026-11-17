@@ -4168,7 +4168,7 @@ function renderStoryArchetypesUI() {
             <span id="arPreviewPopCut" class="arpp-cut"></span>
             <button type="button" class="ar-modal-x" aria-label="닫기">✕</button>
           </div>
-          <canvas id="arPreviewPopCanvas" width="540" height="960"></canvas>
+          <div class="arpp-video"><canvas id="arPreviewPopCanvas" width="540" height="960"></canvas><span class="ar-play-feedback" aria-hidden="true"></span></div>
           <div class="arpp-ctl">
             <button type="button" id="arPreviewPopReplay" class="arpp-btn">↺ 처음부터</button>
             <button type="button" id="arPreviewPopPlay" class="arpp-btn arpp-main"></button>

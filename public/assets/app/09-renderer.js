@@ -3596,8 +3596,32 @@
       document.getElementById('playPauseBtn').textContent = isPlaying ? '⏸ 일시정지' : '▶️ 재생';
       if (!isPlaying) pauseAllCutVideos();
       AudioEngine.onPlayStateChange(isPlaying);
+      arShowPlaybackFeedback();
     }
 
+    let arPlaybackFeedbackTimer;
+    function arShowPlaybackFeedback() {
+      clearTimeout(arPlaybackFeedbackTimer);
+      document.querySelectorAll('.ar-play-feedback').forEach((badge) => {
+        badge.textContent = isPlaying ? '▶' : '❚❚';
+        badge.classList.add('is-visible');
+      });
+      arPlaybackFeedbackTimer = setTimeout(() => {
+        document.querySelectorAll('.ar-play-feedback').forEach((badge) => {
+          if (isPlaying) badge.classList.remove('is-visible');
+          else badge.textContent = '▶';
+        });
+      }, 650);
+    }
+
+    // 미리보기 화면 클릭은 재생을 전환하고, 컷 편집 중 터치는 편집에만 사용한다.
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!target || (target.id !== 'reelCanvas' && target.id !== 'arPreviewPopCanvas')) return;
+      if (target.id === 'reelCanvas' && (window.__arPinnedCut >= 0 || document.body.classList.contains('ar-cut-editing'))) return;
+      togglePlayPause();
+      if (typeof arSyncPreviewPopBtn === 'function') arSyncPreviewPopBtn();
+    });
     // 다중 차량 사진 업로드 핸들러 (자동 3D Ken Burns 슬라이드쇼 · 1~10장 지원)
     // 컷에 들어간 영상 클립을 모두 멈춤
     function pauseAllCutVideos() {
