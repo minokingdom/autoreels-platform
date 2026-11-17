@@ -791,10 +791,13 @@
         if (this.ttsPrefetchTimer) { clearTimeout(this.ttsPrefetchTimer); this.ttsPrefetchTimer = null; }
 
         // 1순위: 대본 전체를 한 번에 녹음. 실패하면 문장별 녹음으로 대체
-        const perLine = () => Promise.all(lines.map((t) => this.fetchLineBuffer(t).catch(() => null)));
+        const perLine = () => (!arVoiceAllowed() || this.masterWantKey !== wantKey)
+          ? Promise.resolve([])
+          : Promise.all(lines.map((t) => this.fetchLineBuffer(t).catch(() => null)));
         const job = (Date.now() < this.ttsBlockedUntil ? perLine() : this.fetchScriptNarration(lines).catch(perLine)).then(
           (result) => {
             if (this.scriptPending === job) this.scriptPending = null;
+            if (!arVoiceAllowed() || this.masterWantKey !== wantKey) return result;
             refitDurationToNarration();
             // 재생 중에 마스터 음성이 도착하면 즉시 타임라인 현재 시간에 맞춰 재생
             if (isPlaying && this.enabled && this.masterBuffer && !this._restartOnReady) {
@@ -1309,6 +1312,7 @@
       syncWithTimeline(t) {
         if (!this.enabled) return;
         try { this.handleSceneSfx(t); } catch (e) {}
+        if (!arVoiceAllowed()) return;
         // 1. 본편 길이가 음성과 딱 맞을 때는 원테이크 마스터 음성을 끊김 없이 연속 재생
         if (this.masterBuffer && !this.shouldUseCutSyncedPlayback()) {
           // 타임라인이 끝에 도달하여 0초로 루프되거나 처음으로 감긴 경우 마스터 트랙 재시작
@@ -1394,7 +1398,7 @@
       const unlock = (ev) => {
         if (window.__arUserMuted || AudioEngine.enabled) return;
         const t = ev && ev.target;
-        if (t && typeof t.closest === 'function' && t.closest('#soundToggleBtn, #mobileDockSoundBtn, #arQuickBar [data-qb="sound"]')) return;
+        if (t && typeof t.closest === 'function' && t.closest('#soundToggleBtn, #mobileDockSoundBtn, #arQuickBar [data-qb="sound"], #topicCards')) return;
         toggleAudioMaster(true);
       };
       window.addEventListener('pointerdown', unlock, { once: true, passive: true });

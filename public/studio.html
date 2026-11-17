@@ -750,7 +750,15 @@
             <button type="button" onclick="generateStoryboardFromPrompt()" class="h-7 px-2.5 rounded-[6px] bg-[#3b82f6] hover:bg-[#2563eb] text-white text-[11px] font-semibold shrink-0 cursor-pointer">AI 대본 다시 쓰기</button>
           </div>
           <p id="todayTopicBadge" class="hidden text-[12px] text-[#4cc38a]"></p>
-          <div id="scriptGeneratingStatus" class="studio-sub p-4 hidden" role="status" aria-live="polite">선택한 주제로 대본을 만들고 있습니다.</div>
+          <div id="scriptGeneratingStatus" class="studio-sub ar-script-loading hidden" role="status" aria-live="polite">
+            <div class="ar-script-loading-art" aria-hidden="true">
+              <div class="ar-script-loading-card"><span></span><span></span><span></span></div>
+              <span class="ar-script-loading-spark">✦</span>
+            </div>
+            <p class="ar-script-loading-title">선택한 주제로 대본을 만들고 있어요</p>
+            <p class="ar-script-loading-copy">잠시만 기다려 주세요</p>
+            <div class="ar-script-loading-track" role="progressbar" aria-label="대본 생성 중"><span></span></div>
+          </div>
           <!-- 생성형 씬 디렉터 & 레이아웃 엔진 -->
           <div id="scriptResultsPanel" class="studio-sub p-4 space-y-3">
             <div class="flex items-center justify-between flex-wrap gap-2">

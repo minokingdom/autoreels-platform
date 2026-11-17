@@ -339,6 +339,7 @@
 
     function arPickTopic(topic) {
       if (!topic || !topic.prompt) return;
+      arSuspendScriptNarration();
       window.arTodayTopic = topic;
       setTimeout(arSyncProductRows, 0);
       setTimeout(() => window.scrollTo({ top: Math.max(0, (document.getElementById('studioTabBtn_script') || document.body).getBoundingClientRect().top + window.scrollY - 160), behavior: 'smooth' }), 60);
@@ -454,7 +455,7 @@
     let arFinalAudioUnlocked = false;
     // ★ 2026-11-17 사장님 요청: 성우 목소리를 첫 화면부터 바로 들려줌 (발행 단계까지 기다리지 않음)
     //   크레딧 절약은 '소리를 켰을 때만 녹음'(prefetchTtsBuffers)으로, 이전 대본 목소리 섞임은 대본별 녹음(masterWantKey)으로 막음
-    function arVoiceAllowed() { return true; }
+    function arVoiceAllowed() { return !window.__arScriptGenerating; }
     function arFirstMissingStep() {
       return ['topic', 'script', 'photo', 'sound', 'card'].find((k) => !arStepsVisited.has(k)) || null;
     }
@@ -1569,7 +1570,24 @@
     }
 
     let arScriptGenerationId = 0;
+    function arSuspendScriptNarration() {
+      window.__arScriptGenerating = true;
+      if (typeof AudioEngine === 'undefined') return;
+      AudioEngine.stopTts();
+      AudioEngine.masterWantKey = '';
+      AudioEngine.masterKey = '';
+      AudioEngine.masterBuffer = null;
+      AudioEngine.masterCutBounds = null;
+      AudioEngine.masterDuration = 0;
+      AudioEngine.lastSpokenCut = -1;
+      AudioEngine.scriptPending = null;
+      if (AudioEngine.ttsPrefetchTimer) clearTimeout(AudioEngine.ttsPrefetchTimer);
+      AudioEngine.ttsPrefetchTimer = null;
+      AudioEngine._restartOnReady = false;
+    }
     function arSetScriptGenerating(loading) {
+      if (loading) arSuspendScriptNarration();
+      else window.__arScriptGenerating = false;
       const panel = document.getElementById('studioPanel_script');
       if (panel) panel.setAttribute('aria-busy', loading ? 'true' : 'false');
       const status = document.getElementById('scriptGeneratingStatus');
@@ -1708,6 +1726,7 @@
               ttsLines: Array.from({ length: totalCuts }, (_, i) => baseTts[i % baseTts.length])
             };
             applyAiScriptToCampaign(offlineAi, d, stripExcludedLocal);
+            arSetScriptGenerating(false);
             arFinishScriptApply(totalCuts);
             if (noticeEl) noticeEl.textContent = `AI 대본을 만들지 못해 주제 [${topicTitle}]의 기본 대본을 표시합니다. 다시 쓰기로 재시도할 수 있어요.`;
             triggerTopicImages(campaign.cutCaptions);
