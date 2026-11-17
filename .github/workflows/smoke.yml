@@ -4,9 +4,9 @@ name: smoke
 on:
   push:
     branches: [main]
-    paths: ['public/**', 'tests/**', 'scripts/build-app.mjs', 'api/**', 'lib/**', '.github/workflows/smoke.yml']
+    paths: ['public/**', 'tests/**', 'scripts/build-app.mjs', 'scripts/alerts/**', 'api/**', 'lib/**', '.github/workflows/smoke.yml']
   pull_request:
-    paths: ['public/**', 'tests/**', 'scripts/build-app.mjs', 'api/**', 'lib/**', '.github/workflows/smoke.yml']
+    paths: ['public/**', 'tests/**', 'scripts/build-app.mjs', 'scripts/alerts/**', 'api/**', 'lib/**', '.github/workflows/smoke.yml']
   workflow_dispatch:
 
 jobs:

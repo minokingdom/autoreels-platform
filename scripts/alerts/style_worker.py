@@ -30,7 +30,7 @@ def write(file,data):
 
 def download(url,directory):
     url=extract_url('!분석 '+url)
-    common=[sys.executable,'-m','yt_dlp','--ignore-config','--no-playlist','--no-warnings','--socket-timeout','20','--retries','1','--no-progress']
+    common=[sys.executable,'-m','yt_dlp','--ignore-config','--js-runtimes','node','--no-playlist','--no-warnings','--socket-timeout','20','--retries','1','--no-progress']
     meta=json.loads(run(common+['--skip-download','--dump-single-json','--',url],timeout=90))
     if meta.get('_type') in ('playlist','multi_video') or meta.get('is_live') or not isinstance(meta.get('duration'),(int,float)) or not 1<=meta['duration']<=180:
         raise ValueError('3분 이하의 공개 영상 하나만 분석할 수 있습니다. 라이브·목록·길이 미확인 영상은 제외합니다.')
