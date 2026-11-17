@@ -2333,7 +2333,7 @@
         c.beginPath(); c.moveTo(0, 68.5); c.lineTo(W, 68.5); c.moveTo(0, H - 68.5); c.lineTo(W, H - 68.5); c.stroke();
         inLabel(c, `SCENE 0${cutIdx + 1}`, 32, 38, 'rgba(230,204,178,0.78)');
         if (isPrice) mPrice(c, W, H - 245, sp, e);
-        mCaption(c, caption, 44, H - 190, W - 88, 100, 23, 'gowun', 'rgba(255,255,255,0.95)', mClamp(local / 0.7), 'center');
+        mCaption(c, caption, W / 2, H - 190, W - 88, 100, 23, 'gowun', 'rgba(255,255,255,0.95)', mClamp(local / 0.7), 'center');
         inSign(c, d, W - 32, H - 36, 'rgba(230,204,178,0.75)');
         inGrain(c, W, H, t, 0.04);
       } else if (M === 'stm_sonar') {
@@ -2355,7 +2355,7 @@
         c.fillStyle = botG; c.fillRect(0, H * 0.58, W, H * 0.42);
         inLabel(c, `0${cutIdx + 1} · ${sp.label || 'STORY'}`, 34, 46, 'rgba(226,232,240,0.85)');
         if (isPrice) mPrice(c, W, H - 255, sp, e);
-        mCaption(c, caption, 44, H - 198, W - 88, 105, 24, 'pretL', '#ffffff', mClamp(local / 0.65), 'center', { bg: 'rgba(15, 20, 28, 0.52)', border: 'rgba(255,255,255,0.22)', r: 22 });
+        mCaption(c, caption, W / 2, H - 198, W - 88, 105, 24, 'pretL', '#ffffff', mClamp(local / 0.65), 'center', 'rgba(15, 20, 28, 0.52)');
         inSign(c, d, W - 34, H - 46, 'rgba(226,232,240,0.78)');
       } else if (M === 'stm_glint') {
         // script-to-motion: 샴페인 웜 보케 + 24px 얇은 명조 자막 + 은은한 실버 글린트
@@ -2379,7 +2379,7 @@
         c.fillStyle = botG; c.fillRect(0, H * 0.56, W, H * 0.44);
         inLabel(c, sp.label || 'MOMENT', 34, 46, 'rgba(243,229,171,0.85)');
         if (isPrice) mPrice(c, W, H - 260, sp, e);
-        mCaption(c, caption, 44, H - 196, W - 88, 105, 25, 'maruL', '#ffffff', mClamp(local / 0.7), 'center');
+        mCaption(c, caption, W / 2, H - 196, W - 88, 105, 25, 'maruL', '#ffffff', mClamp(local / 0.7), 'center');
         if (local >= 0.4 && local <= 1.35) {
           const gp = (local - 0.4) / 0.95;
           const gx = W * (-0.1 + 1.2 * gp);
