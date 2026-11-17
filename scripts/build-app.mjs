@@ -8,12 +8,15 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 
+import referenceStyles from '../lib/reference-style.cjs';
 export function buildApp(repoRoot) {
   const dir = path.join(repoRoot, 'public', 'assets', 'app');
   const parts = fs.readdirSync(dir).filter((f) => /^\d\d-.+\.js$/.test(f)).sort();
   if (!parts.length) throw new Error('no app parts in ' + dir);
   const body = parts.map((f) => `// ===== ${f} =====\n` + fs.readFileSync(path.join(dir, f), 'utf8').replace(/\s+$/, '') + '\n').join('\n');
-  const out = `// 자동 생성 파일 — 고치지 마세요. 원본: public/assets/app/NN-*.js (scripts/build-app.mjs)\n` + body;
+  const catalog = referenceStyles.validateCatalog(JSON.parse(fs.readFileSync(path.join(repoRoot, 'public/assets/reference-styles.json'), 'utf8')));
+  const referenceData = 'const AR_REFERENCE_STYLES = ' + JSON.stringify(catalog) + ';\n';
+  const out = referenceData + `// 자동 생성 파일 — 고치지 마세요. 원본: public/assets/app/NN-*.js (scripts/build-app.mjs)\n` + body;
   fs.writeFileSync(path.join(dir, 'app.js'), out);
   const lp = buildLandingIndustries(repoRoot);
   return { parts: parts.length, bytes: Buffer.byteLength(out), landingIndustries: lp };

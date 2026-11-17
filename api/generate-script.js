@@ -682,6 +682,7 @@ async function handler(req, res) {
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
   // 오늘의 주제 추천: {mode:'topics'} — 대본 대신 오늘 올릴 주제 후보 6개를 돌려줌
   if (body.mode === 'topics') return handleTopics(body, res);
+  if (body.mode === 'reference-style') return require('../lib/reference-analysis.cjs').handleReferenceAnalysis(body, res);
   // 주제 맞춤 씬 이미지 생성: {mode:'scene-prompts' | 'scene-image' | 'scene-images'}
   if (body.mode === 'scene-images' || body.mode === 'scene-prompts' || body.mode === 'scene-image') return handleSceneImages(body, res);
   const prompt = (body.prompt || '').trim();

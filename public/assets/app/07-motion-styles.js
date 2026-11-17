@@ -518,11 +518,17 @@
       const pal = typeof IND !== 'undefined' && IND.key !== 'auto' ? AR_IND_PALETTE[IND.key] : null;
       const accent = custom ? custom.colors.accent : userColor ? ((V && V.accent) || spec.accent) : pal ? pal[0] : spec.accent;
       const sp = Object.assign({}, spec, { accent }, pal && !spec.light && !spec.insta && !userColor ? { bg1: pal[1], bg2: pal[2] } : {});
+      if (spec.referenceStyle && t >= mainDuration) {
+        const r = spec.referenceStyle;
+        renderInstaOutro(c, W, H, t, mainDuration, d, { ...spec, accent2: r.foreground, custom: { colors: { primary: r.background } } });
+        return;
+      }
       if (t >= mainDuration) {
         renderMotionOutro(c, W, H, t, mainDuration, d, sp);
         if (custom) arDrawCustomLogo(c, W, H, custom);
         return;
       }
+      if (spec.referenceStyle) { arRenderReferenceFrame(c, W, H, t, mainDuration, totalCuts, d, spec); return; }
       const cutDur = mainDuration / totalCuts;
       const cutIdx = Math.min(totalCuts - 1, Math.floor(t / cutDur));
       const local = t - cutIdx * cutDur;

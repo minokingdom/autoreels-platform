@@ -13,6 +13,7 @@
 | `05-genre-engine.js` | 캔버스 준비, 장르 엔진 |
 | `06-design-kit.js` | 디자인 스타일 목록, 디자인 키트, 분류 |
 | `07-motion-styles.js` | 모션·인스타 감성 스타일 (`MOTION_ROWS`, `renderMotionFrame`) |
+| `07-reference-styles.js` | URL 분석 카탈로그 등록·선언형 스타일 렌더 |
 | `08-cut-editor.js` | 컷 편집(스티커·필터·그리기) |
 | `09-renderer.js` | 한 프레임 그리기(`renderHyperFramesComposition`), 재생 루프 |
 | `10-studio-steps.js` | 오늘의 주제, 단계 진행, 쉬운 모드, 명함 |
@@ -21,7 +22,7 @@
 | `app.css`, `readability.css` | 스타일 |
 
 ## 규칙
-- 원본은 위 13개 파일이고, 배포·로컬 실행·테스트 때 `scripts/build-app.mjs`가 번호 순서대로 이어 붙여 `public/assets/app/app.js` 하나를 만듭니다. `index.html`은 이 `app.js` 하나만 불러옵니다. `app.js`는 자동 생성 파일이라 직접 고치거나 커밋하지 않습니다(.gitignore).
+- 원본은 위 14개 파일이고, 배포·로컬 실행·테스트 때 `scripts/build-app.mjs`가 번호 순서대로 이어 붙여 `public/assets/app/app.js` 하나를 만듭니다. `index.html`은 이 `app.js` 하나만 불러옵니다. `app.js`는 자동 생성 파일이라 직접 고치거나 커밋하지 않습니다(.gitignore).
   - 따로따로 불러오면 파일 사이사이에 타이머·Promise가 먼저 실행되어 뒤 파일 함수를 부르다 멈춥니다(2026-11-14 디자인 썸네일이 비던 문제). 그래서 한 덩어리로 합칩니다.
   - 모든 파일이 전역 이름을 공유합니다. `type="module"`·`defer`로 바꾸지 마세요.
 - 어떤 파일이 **불러오는 순간** 실행하는 코드에서 뒤 번호 파일의 함수·변수를 쓰면 안 됩니다. (버튼을 누른 뒤나 화면이 다 뜬 뒤 실행되는 코드는 괜찮습니다.)
