@@ -1387,10 +1387,10 @@ body.ar-cut-editing #arQuickBar { display: none; }
   body.ar-sheet:not(.ar-cut-editing) #previewViewport { height: 100%; width: auto; aspect-ratio: 9 / 16; }
   body.ar-sheet:not(.ar-cut-editing) #arQuickBar {
     position: fixed; left: auto; right: 6px; top: calc((100dvh - var(--ar-sheet) - var(--ar-msb)) / 2);
-    gap: 6px; transition: top .3s ease;
+    gap: 5px; transition: top .3s ease;
   }
-  body.ar-sheet:not(.ar-cut-editing) #arQuickBar .aq-dot { width: 34px; height: 34px; border-radius: 17px; }
-  body.ar-sheet:not(.ar-cut-editing) #arQuickBar .aq-label { font-size: 10px; }
+  body.ar-sheet:not(.ar-cut-editing) #arQuickBar .aq-dot { width: 32px; height: 32px; border-radius: 16px; }
+  body.ar-sheet:not(.ar-cut-editing) #arQuickBar .aq-label { font-size: 9.5px; }
   /* 모바일 바텀시트에서는 #arQuickBar의 '디자인' 버튼이 대신하므로 캔버스 위 세로 손잡이(#presetHandle) 숨김 (확대 시 겹침·스티커 가림 방지) */
   body.ar-sheet #presetHandle { display: none !important; }
   /* 시트를 접어 미리보기가 커지면, 릴스처럼 오른쪽 아래에 5개 버튼 깔끔하게 고정 */
