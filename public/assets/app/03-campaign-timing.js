@@ -713,14 +713,11 @@
           outro = Math.max(outro, 4.0);
         }
 
-        // 선택한 영상 길이(예: 30초)가 본편 음성보다 길면, 남는 시간을 엔딩에 몰아주지 않고 각 본편 컷에 고르게 배분
-        const targetMain = Math.max(mainDur, BASE_DURATION - outro);
-        if (exactMasterLocked && lengths.length > 0 && targetMain > mainDur + 0.05) {
-          const scale = targetMain / Math.max(0.1, mainDur);
-          lengths = lengths.map((x) => x * scale);
-          mainDur = targetMain;
-        } else if (mainDur < targetMain) {
-          mainDur = targetMain;
+        // 음성의 문장 경계를 유지하고, 선택 길이의 남는 시간은 마지막 화면에서 유지.
+        if (exactMasterLocked) {
+          outro = Math.max(outro, BASE_DURATION - mainDur);
+        } else {
+          mainDur = Math.max(mainDur, BASE_DURATION - outro);
         }
       }
       // 명함이 비었으면 명함 화면 없이: 한 호흡 음성이 끝까지 들어가게 확보 (마지막 컷만 연장)
@@ -736,9 +733,9 @@
         }
         mainDur = targetMain;
       }
-      // 컷 편집에서 고른 컷 길이(배율) 반영. 성우 문장에 맞춰 고정된 경우에는 늘리기만 (줄이면 말이 잘림)
+      // 음성 경계가 없을 때만 수동 컷 길이 반영. 전체 녹음이 있으면 영상이 음성을 따름
       const lenScale = (typeof campaign !== 'undefined' && Array.isArray(campaign.cutLenScale)) ? campaign.cutLenScale : null;
-      if (lenScale && lenScale.some((v) => v && Math.abs(v - 1) > 0.01)) {
+      if (!exactMasterLocked && lenScale && lenScale.some((v) => v && Math.abs(v - 1) > 0.01)) {
         if (!lengths.length) lengths = new Array(cuts).fill(mainDur / cuts);
         lengths = lengths.map((x, i) => {
           const k = Number(lenScale[i]) || 1;

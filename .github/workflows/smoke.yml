@@ -32,5 +32,9 @@ jobs:
         run: |
           npm i --no-save playwright@1.48.2
           npx playwright install --with-deps chromium
+      - name: Narration follows voice timing
+        run: |
+          node tests/narration-continuity.mjs
+          node tests/narration-browser.mjs
       - name: Render every design
         run: node tests/smoke-render.mjs

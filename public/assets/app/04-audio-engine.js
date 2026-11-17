@@ -831,12 +831,8 @@
       },
 
       shouldUseCutSyncedPlayback() {
-        if (!this.masterBuffer || !Array.isArray(this.masterCutBounds)) return false;
-        const cuts = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
-        if (this.masterCutBounds.length < cuts + 1) return false;
-        const spokenMainDur = Math.max(0, Number(this.masterCutBounds[cuts]) || 0);
-        const mainDur = typeof getMainDuration === 'function' ? getMainDuration() : 8;
-        return mainDur > spokenMainDur + 0.8;
+        // 전체 녹음은 영상 길이와 무관하게 연속 재생. 컷 사이에 대기 시간을 넣지 않음.
+        return false;
       },
 
       playMasterAt(startT = 0) {
