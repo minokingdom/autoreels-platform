@@ -633,7 +633,7 @@
       qb.id = 'arQuickBar';
       qb.setAttribute('role', 'group');
       qb.setAttribute('aria-label', '미리보기 바로 조작');
-      qb.innerHTML = ['sound', 'voice', 'shuffle', 'design', 'restart', 'settings'].map((k) => `<button type="button" class="aq-btn" data-qb="${k}"><span class="aq-dot">${arQbSvg(k === 'sound' ? 'mute' : k)}</span><span class="aq-label"></span></button>`).join('');
+      qb.innerHTML = ['sound', 'voice', 'shuffle', 'shuffleScope', 'design', 'restart', 'settings'].map((k) => `<button type="button" class="aq-btn" data-qb="${k}"><span class="aq-dot">${arQbSvg(k === 'sound' ? 'mute' : k === 'shuffleScope' ? 'settings' : k)}</span><span class="aq-label"></span></button>`).join('');
       qb.addEventListener('click', (e) => {
         const b = e.target.closest('[data-qb]');
         if (!b) return;
@@ -656,6 +656,7 @@
       if (k === 'sound') toggleAudioMaster();
       else if (k === 'design' && typeof openPresetDrawer === 'function') openPresetDrawer('right');
       else if (k === 'shuffle') randomizePreviewDesignOnly();
+      else if (k === 'shuffleScope' && typeof toggleShuffleFilterPanel === 'function') toggleShuffleFilterPanel(true);
       else if (k === 'restart') arQuickRestart();
       else if (k === 'settings' && typeof openStudioSettingsModal === 'function') openStudioSettingsModal();
       else if (k === 'voice') {
@@ -690,6 +691,7 @@
       set('sound', on ? '소리켜짐' : '소리켜기', on ? 'sound' : 'mute', !on);
       set('voice', voiceOn ? '나레이션' : '나레이션끔', 'voice', !voiceOn);
       set('shuffle', '랜덤섞기', 'shuffle', false);
+      set('shuffleScope', '섞기 범위', 'settings', false);
       set('design', '디자인', 'design', false);
       set('restart', '처음부터', 'restart', false);
       set('settings', '설정', 'settings', false);

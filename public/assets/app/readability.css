@@ -61,4 +61,7 @@
   .pd-popular input, .pd-popular input + button { min-height: 36px; }
 }
 
-.pd-shuffle-scope { margin: 4px 10px; min-height: 36px; padding: 6px 10px; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; background: #232325; color: #ededed; font-size: 12px; text-align: left; }
+
+#arQuickBar [data-qb="shuffleScope"] { position: absolute; right: 56px; top: 33%; width: 42px; }
+#arQuickBar [data-qb="shuffleScope"] .aq-dot { width: 30px; height: 30px; }
+#arQuickBar [data-qb="shuffleScope"] .aq-label { font-size: 9px; }
