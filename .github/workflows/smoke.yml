@@ -36,5 +36,9 @@ jobs:
         run: |
           node tests/narration-continuity.mjs
           node tests/narration-browser.mjs
+      - name: Production cost and export safety
+        run: |
+          node tests/production-safety.cjs
+          node tests/export-safety.mjs
       - name: Render every design
         run: node tests/smoke-render.mjs

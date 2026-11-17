@@ -1,10 +1,16 @@
 // AutoReels — 09-renderer.js  (public/index.html 에서 나눔. 일반 <script> 로 순서대로 불러오며 전역 이름을 공유함)
     // ★ 장르 엔진 끝
 
+    // 540×960 논리 좌표를 유지하면서 출력 캔버스에 벡터·사진을 직접 그립니다.
     function renderHyperFramesComposition(t) {
+      ctx.save();
+      ctx.setTransform(canvas.width / 540, 0, 0, canvas.height / 960, 0, 0);
+      try { arRenderLogicalComposition(t); } finally { ctx.restore(); }
+    }
+    function arRenderLogicalComposition(t) {
       const d = arDisplayDealer(getSelectedDealer());
-      const W = canvas.width;
-      const H = canvas.height;
+      const W = 540;
+      const H = 960;
       const HYUNDAI_NAVY = '#002C5F';
       const KIA_RED = '#BB162B';
       const mainDuration = getMainDuration();

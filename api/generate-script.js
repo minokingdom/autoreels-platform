@@ -612,6 +612,10 @@ async function generateSingleGeminiSceneImage(apiKey, promptText, idx, aspectRat
   return null;
 }
 
+function sceneImageCount(body) {
+  const raw = Number(body.count) || (Array.isArray(body.topicsList) && body.topicsList.length ? body.topicsList.length : 4);
+  return Math.max(1, Math.min(10, Math.floor(raw)));
+}
 async function handleSceneImages(body, res) {
   const apiKey = String(body.adminGeminiKey || process.env.GEMINI_API_KEY || '').trim();
   if (!apiKey) {
@@ -628,7 +632,7 @@ async function handleSceneImages(body, res) {
   if (!topicText && !hasTopics) {
     return res.status(200).json({ ok: false, error: 'missing_topic', images: [], prompts: [] });
   }
-  const count = Math.max(1, Math.min(10, Number(body.count) || (hasTopics ? body.topicsList.length : 4)));
+  const count = sceneImageCount(body);
   const prompts = await buildTopicScenePrompts(body, apiKey, count);
   if (body.mode === 'scene-prompts') {
     return res.status(200).json({ ok: prompts.length > 0, prompts });
@@ -1015,7 +1019,8 @@ module.exports = withMeter(handler, 'ai', (req) => {
   if (req.method !== 'POST') return 0;
   try {
     const b = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    if (b && (b.mode === 'topics' || b.mode === 'scene-images' || b.mode === 'scene-prompts' || b.mode === 'scene-image')) return 0;
+    if (b.mode === 'scene-images') return 1 + sceneImageCount(b);
+    // 주제·프롬프트·단일 이미지도 각각 생성 사용량에 포함합니다.
   } catch (e) {}
   return 1;
 });

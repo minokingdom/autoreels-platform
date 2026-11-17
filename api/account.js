@@ -92,6 +92,7 @@ module.exports = async function handler(req, res) {
       billingReady: ready.billing,
       veyonEnv: ready.veyonEnv,
       sns: ready.sns,
+      snsScheduling: false,
       plans: publicPlans()
     });
   }
@@ -196,7 +197,9 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'consume-export' && req.method === 'POST') {
-      const q = await consume(req, 'export', 1);
+      const body = await readBody(req);
+      if (!/^[a-zA-Z0-9_-]{16,100}$/.test(String(body.requestId || ''))) return send(res, 400, {ok:false,error:'request_id_required',message:'화면을 새로고침한 뒤 다시 저장해 주세요.'});
+      const q = await consume(req, 'export', 1, {requestId: body.requestId});
       if (!q.ok) return send(res, q.status, q.body);
       return send(res, 200, { ok: true, used: q.used, cap: q.cap });
     }

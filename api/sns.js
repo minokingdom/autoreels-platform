@@ -105,12 +105,21 @@ module.exports = async function handler(req, res) {
       return send(res, 200, { ok: true, ...(await sns.uploadToken(user, b)) });
     }
     if (action === 'publish') {
-      const q = await consume(req, 'export', 1);
+      if (b.scheduledAt) return send(res,503,{ok:false,error:'scheduling_unavailable',message:'예약 발행은 준비 중입니다. 지금 게시만 이용할 수 있습니다.'});
+      if (!/^[a-zA-Z0-9_-]{16,100}$/.test(String(b.requestId || ''))) return send(res,400,{ok:false,error:'request_id_required',message:'화면을 새로고침한 뒤 다시 게시해 주세요.'});
+      const expectedJobs = new Set((Array.isArray(b.targets) ? b.targets : []).filter(t => sns.TARGETS.includes(t))).size;
+      if (!expectedJobs) return send(res,400,{ok:false,error:'targets_required',message:'발행할 SNS를 골라 주세요.'});
+      const q = await consume(req, 'export', 1, {requestId:b.requestId,expectedJobs});
       if (!q.ok) return send(res, q.status, q.body);
       try {
-        return send(res, 200, { ok: true, jobs: await sns.startPublish(user, b), usage: { used: q.used, cap: q.cap } });
+        const jobs = await sns.startPublish(user, b);
+        if (jobs.length && jobs.every(job => job.status === 'failed')) {
+          const restored = await refundUsage(req, 'export', 1, q);
+          return send(res,502,{ok:false,error:'publish_failed',jobs,message:restored ? '모든 SNS 게시가 실패했습니다. 이용 횟수를 되돌렸습니다.' : '모든 SNS 게시가 실패했습니다. 이용 횟수 복구 확인이 필요합니다.'});
+        }
+        return send(res, 200, { ok: true, jobs, usage: { used: q.used, cap: q.cap } });
       } catch (pubErr) {
-        await refundUsage(req, 'export', 1);
+        try { await sns.refundFailedRequest(user.id,b.requestId,true); } catch (_) {}
         throw pubErr;
       }
     }

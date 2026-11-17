@@ -1,0 +1,98 @@
+// 화면 스모크 테스트: 페이지를 실제 브라우저로 열고, 모든 디자인 스타일을 여러 업종·여러 시점에서 그려 본다.
+// 오류(예외)가 하나라도 나면 실패. 사용: node tests/smoke-render.mjs [url]  (기본: public 폴더를 직접 띄움)
+import { chromium } from 'playwright';
+import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = process.env.SMOKE_ROOT || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.png': 'image/png', '.wasm': 'application/wasm' };
+
+async function serve() {
+  const srv = http.createServer((req, res) => {
+    const u = decodeURIComponent(req.url.split('?')[0]);
+    if (u.startsWith('/api/')) { res.writeHead(503, { 'content-type': 'application/json' }); return res.end('{"ok":false}'); }
+    let f = path.join(root, u === '/' ? 'index.html' : u);
+    if (!f.startsWith(root) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) f = path.join(root, 'studio.html');
+    res.writeHead(200, { 'content-type': TYPES[path.extname(f)] || 'application/octet-stream' });
+    fs.createReadStream(f).pipe(res);
+  });
+  await new Promise((r) => srv.listen(0, '127.0.0.1', r));
+  return srv;
+}
+
+if (!process.argv[2]) {
+  const { buildApp } = await import('../scripts/build-app.mjs');
+  buildApp(path.resolve(root, '..'));
+}
+const srv = process.argv[2] ? null : await serve();
+const url = process.argv[2] || `http://127.0.0.1:${srv.address().port}/studio`;
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+const pageErrors = [];
+page.on('pageerror', (e) => pageErrors.push(String(e && e.stack || e).split('\n').slice(0, 3).join(' | ')));
+// Promise 안에서 난 오류(처리 안 된 rejection)도 모음 — 화면이 조용히 멈추는 원인
+await page.addInitScript(() => {
+  window.__smokeAsyncErrors = [];
+  window.addEventListener('unhandledrejection', (ev) => {
+    const r = ev.reason;
+    window.__smokeAsyncErrors.push(String((r && (r.stack || r.message)) || r).split('\n').slice(0, 3).join(' | '));
+  });
+});
+await page.goto(url, { waitUntil: 'load', timeout: 90000 });
+
+import assert from 'node:assert/strict';
+try {
+  await page.evaluate(() => {
+    isPlaying=false;AudioEngine.stopTts();arFinalAudioUnlocked=true;evaluateDealerDrmStatus=()=>1;
+    window.__charges=[];window.__notices=[];arToast=m=>window.__notices.push(m);
+    AR_SERVER.mode=true;arApi=async(action,body)=>{window.__charges.push({action,body});return {ok:true,body:{used:window.__charges.length,cap:20}}};
+    arCardEmpty=()=>true;campaign.cutCountOverride=4;
+    AudioEngine.prefetchTtsBuffers=()=>Promise.resolve([]);AudioEngine.schedulePrefetch=()=>{};
+    window.__originalRecorder=MediaRecorder;
+  });
+  await page.evaluate(async()=>{window.MediaRecorder=undefined;await exportSynthesizedVideo();window.MediaRecorder=window.__originalRecorder});
+  assert.equal(await page.evaluate(()=>window.__charges.length),0);
+  await page.evaluate(async()=>{AudioEngine.ttsVoice='audit';AudioEngine.masterBuffer=null;await exportSynthesizedVideo()});
+  assert.equal(await page.evaluate(()=>window.__charges.length),0);
+  assert.equal(await page.evaluate(()=>arExportBusy),false);
+  const prepare=async()=>page.evaluate(async()=>{
+    isPlaying=false;AudioEngine.stopTts();const ctx=AudioEngine.ensureContext();await ctx.resume();
+    AudioEngine.enabled=true;AudioEngine.ttsVoice='audit';AudioEngine.bgmStyle='off';AudioEngine.sfxMode='off';
+    const b=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate),samples=b.getChannelData(0);
+    for(let i=0;i<samples.length;i++)samples[i]=.04*Math.sin(2*Math.PI*220*i/ctx.sampleRate);
+    AudioEngine.masterBuffer=b;AudioEngine.masterDuration=2;AudioEngine.masterCutBounds=[0,.5,1,1.5,2];
+    AudioEngine.masterKey='audit';AudioEngine.masterWantKey='audit';refitDurationToNarration();
+    window.lastRecordedVideoBlob=null;
+  });
+  await prepare();
+  // 화면을 떠나는 경우 완성 처리·차감하지 않고 모든 실행 상태를 복원합니다.
+  await page.evaluate(()=>{window.__run=exportSynthesizedVideo()});
+  await page.waitForFunction(()=>window.__exportingVideo===true);
+  await page.evaluate(async()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));await window.__run;delete document.hidden});
+  assert.equal(await page.evaluate(()=>window.__charges.length),0);
+  assert.equal(await page.evaluate(()=>arExportBusy),false);
+  await prepare();
+  await page.evaluate(async()=>{await exportSynthesizedVideo()});
+  const result=await page.evaluate(async()=>{
+    const b=window.lastRecordedVideoBlob;const v=document.createElement('video');v.src=window.lastRecordedVideoUrl;
+    await new Promise((resolve,reject)=>{v.onloadedmetadata=resolve;v.onerror=reject});
+    return {width:v.videoWidth,height:v.videoHeight,type:b.type,filename:window.lastRecordedFilename,charges:window.__charges.length,key:window.__charges[0].body.requestId,restored:[canvas.width,canvas.height],busy:arExportBusy,size:b.size};
+  });
+  assert.equal(result.width,1080);assert.equal(result.height,1920);assert.equal(result.charges,1);assert.match(result.key,/^[a-zA-Z0-9_-]{16,100}$/);assert.equal(result.busy,false);assert.deepEqual(result.restored,[540,960]);
+  assert.ok(result.filename.endsWith(result.type.includes('mp4')?'.mp4':'.webm'));
+  if(process.env.EXPORT_PROBE_DIR){
+    const bytes=await page.evaluate(async()=>Array.from(new Uint8Array(await window.lastRecordedVideoBlob.arrayBuffer())));
+    fs.writeFileSync(path.join(process.env.EXPORT_PROBE_DIR,result.filename),Buffer.from(bytes));
+  }
+  await prepare();
+  // 저장 확인 응답이 유실되어도 같은 생성물은 같은 요청 ID로 재시도합니다.
+  await page.evaluate(()=>{const originalSupport=MediaRecorder.isTypeSupported.bind(MediaRecorder);MediaRecorder.isTypeSupported=type=>type.startsWith('video/webm') && originalSupport(type);window.__retryKeys=[];arApi=async(a,b)=>{window.__retryKeys.push(b.requestId);return window.__retryKeys.length===1?{ok:false,body:{message:'retry'}}:{ok:true,body:{used:2,cap:20}};};});
+  await page.evaluate(()=>exportSynthesizedVideo());assert.equal(await page.evaluate(()=>!!arPendingExport),true);
+  await page.evaluate(()=>exportSynthesizedVideo());
+  const keys=await page.evaluate(()=>window.__retryKeys);assert.equal(keys.length,2);assert.equal(keys[0],keys[1]); assert.equal(await page.evaluate(()=>window.lastRecordedMime),'video/webm'); assert.ok((await page.evaluate(()=>window.lastRecordedFilename)).endsWith('.webm'));
+  assert.equal(await page.evaluate(()=>arPendingExport),null);
+  assert.deepEqual(pageErrors,[]);assert.deepEqual(await page.evaluate(()=>window.__smokeAsyncErrors),[]);
+  console.log('export safety ok',JSON.stringify(result));
+} finally {await browser.close();if(srv)srv.close();}

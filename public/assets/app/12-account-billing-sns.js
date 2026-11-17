@@ -642,7 +642,7 @@
           <div class="pt-2 border-t border-[var(--border)]">
             <div class="flex justify-between text-[11px] text-[#85858b]"><span>이번 달 AI 성우 사용량</span><span class="font-mono">${(u.ttsChars || 0).toLocaleString()} / ${(u.ttsLimit || 0).toLocaleString()}자</span></div>
             <div class="h-1.5 rounded bg-[#232325] mt-1 overflow-hidden"><div style="width:${pct}%" class="h-full bg-[#4cc38a]"></div></div>
-            <div class="flex justify-between text-[11px] text-[#85858b] mt-1.5"><span>AI 대본 생성</span><span class="font-mono">${u.aiScripts || 0} / ${u.aiLimit || 0}회</span></div>
+            <div class="flex justify-between text-[11px] text-[#85858b] mt-1.5"><span>AI 대본·주제·이미지 생성</span><span class="font-mono">${u.aiScripts || 0} / ${u.aiLimit || 0}회</span></div>
             <div class="flex justify-between text-[11px] text-[#85858b] mt-1"><span>다운로드 · SNS 게시</span><span class="font-mono">${u.exports || 0} / ${u.exportLimit == null ? '무제한' : `${u.exportLimit}회`}</span></div>
           </div>`;
       }
@@ -871,7 +871,9 @@
       return arVercelBlob;
     }
 
+    let arSnsPublishing = false;
     async function arSnsPublish() {
+      if (arSnsPublishing) return;
       const stepStatus = document.getElementById('publishStepStatus');
       const lines = document.getElementById('publishLogLines');
       if (lines) lines.innerHTML = '';
@@ -889,6 +891,9 @@
       const d = getSelectedDealer();
       const caption = document.getElementById('dlrCaptionTextarea')?.value || buildCaption(d);
       const title = campaign.hook || campaign.vehicle || '';
+      if (document.getElementById('snsScheduleEnabled')?.checked) { arSnsLog('예약 발행은 준비 중입니다. 지금 게시만 이용할 수 있습니다.', 'err'); return; }
+      arSnsPublishing = true;
+      const requestId = crypto.randomUUID();
       if (stepStatus) stepStatus.textContent = '영상 올리는 중...';
       try {
         const tk = await arSnsApi('upload-token', { size: blob.size, type: blob.type || 'video/mp4' });
@@ -905,13 +910,13 @@
         const schedRaw = document.getElementById('snsScheduleAt')?.value;
         const scheduledAt = schedOn && schedRaw ? new Date(schedRaw).toISOString() : '';
         const igFirstComment = Boolean(document.getElementById('snsIgFirstComment')?.checked);
-        const pub = await arSnsApi('publish', { targets, videoUrl: up.url, caption, title, scheduledAt, igFirstComment });
+        const pub = await arSnsApi('publish', { targets, videoUrl: up.url, caption, title, scheduledAt, igFirstComment, requestId });
         if (!pub.ok) throw new Error(pub.body.message || '발행을 시작하지 못했습니다');
         await arSnsTrackJobs(pub.body.jobs || []);
       } catch (e) {
         arSnsLog(`발행 실패: ${e.message || e}`, 'err');
         if (stepStatus) stepStatus.textContent = '발행 실패';
-      }
+      } finally { arSnsPublishing = false; }
     }
 
     async function arSnsTrackJobs(jobs) {
@@ -926,6 +931,7 @@
           const when = j.scheduledAt ? new Date(j.scheduledAt).toLocaleString('ko-KR') : '지정 시간';
           msg = `🗓️ ${name}: ${when} 예약 완료`; kind = 'ok';
         }
+        else if (j.status === 'review') { msg = `⚠️ ${name}: 게시 결과 확인 필요 · 중복 방지를 위해 재게시하지 마세요.`; kind = 'err'; }
         else if (j.status === 'failed') { msg = `❌ ${name}: ${j.error || '실패'}`; kind = 'err'; }
         else { msg = `⏳ ${name}: 처리 중...`; }
         if (j.target === 'tiktok' && j.status === 'done' && !j.note) msg += ' (틱톡 앱 알림함에서 게시를 마무리해 주세요)';
@@ -944,7 +950,8 @@
       }
       const all = Object.values(rows).map((el) => el.className);
       const okCount = all.filter((c) => c.includes('emerald')).length;
-      if (stepStatus) stepStatus.textContent = pending.length ? '아직 처리 중인 SNS가 있습니다. 잠시 후 각 앱에서 확인해 주세요.' : `${okCount}/${jobs.length}개 SNS 발행 완료`;
+      const reviewCount = Object.values(rows).filter(el => el.textContent.includes('게시 결과 확인 필요')).length;
+      if (stepStatus) stepStatus.textContent = reviewCount ? `${reviewCount}개 SNS의 게시 결과 확인이 필요합니다.` : pending.length ? '아직 처리 중인 SNS가 있습니다. 잠시 후 각 앱에서 확인해 주세요.' : `${okCount}/${jobs.length}개 SNS 발행 완료`;
       if (okCount) {
         const d = getSelectedDealer();
         d.status = 'PUBLISHED';

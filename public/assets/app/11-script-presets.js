@@ -572,183 +572,138 @@
       if (modal) modal.classList.add('hidden');
     }
 
+    let arExportBusy = false;
+    let arPendingExport = null;
+    function arRecordedFilename(blob, seconds) {
+      return `autoreels_dealer_${Math.round(seconds)}s.${String(blob.type).includes('mp4') ? 'mp4' : 'webm'}`;
+    }
+    async function arValidateRecordedVideo(blob) {
+      if (!blob || blob.size < 1000) throw new Error('영상 파일이 완성되지 않았습니다. 다시 만들어 주세요.');
+      const url = URL.createObjectURL(blob);
+      const video = document.createElement('video');
+      try {
+        await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('완성 영상 확인 시간이 초과되었습니다.')), 10000);
+          video.onloadedmetadata = () => { clearTimeout(timer); resolve(); };
+          video.onerror = () => { clearTimeout(timer); reject(new Error('완성 영상을 읽지 못했습니다.')); };
+          video.src = url;
+        });
+        if (video.videoWidth !== 1080 || video.videoHeight !== 1920) throw new Error('영상 해상도를 확인하지 못했습니다. 다시 만들어 주세요.');
+      } finally { video.removeAttribute('src'); video.load(); URL.revokeObjectURL(url); }
+    }
     async function exportSynthesizedVideo() {
-      // 성우가 들어간 완성본은 명함까지 마친 뒤 발행 단계에서 만들 수 있음
+      if (arExportBusy) return;
       if (!arFinalAudioUnlocked) {
-        if (typeof arToast === 'function') arToast('엔딩까지 순서대로 마치면 발행 단계에서 음악·성우가 들어간 완성본을 만들 수 있어요.');
-        switchStudioTab(arFirstMissingStep() || 'publish');
-        return;
+        arToast('엔딩까지 마치면 발행 단계에서 완성본을 만들 수 있어요.');
+        switchStudioTab(arFirstMissingStep() || 'publish'); return;
       }
-      const d = getSelectedDealer();
-      const drmCode = evaluateDealerDrmStatus(d);
-      if (drmCode === 3) {
-        alert(`[정품 보안 차단]\n현재 엔딩 연락처(${d.phone})가 구독에 등록된 번호(${d.licensedPhone})와 다릅니다.\n계정 공유가 감지되어 영상 추출이 차단되었습니다.`);
-        return;
+      const d = getSelectedDealer(), drmCode = evaluateDealerDrmStatus(d);
+      if (drmCode === 3) { arToast('엔딩 연락처와 구독에 등록된 연락처를 확인해 주세요.'); return; }
+      if (drmCode !== 1) { openBillingCheckoutModal(true); return; }
+      if (typeof MediaRecorder === 'undefined' || typeof canvas.captureStream !== 'function') {
+        arToast('이 브라우저는 영상 저장을 지원하지 않습니다. 최신 Chrome 또는 Safari에서 열어 주세요.'); return;
       }
-      if (drmCode !== 1) {
-        // 미구독(체험판) 카마스터 → 결제창을 바로 띄워 결제 후 즉시 추출 가능하도록 연결
-        openBillingCheckoutModal(true);
-        return;
-      }
-      if (window.AR_SERVER && AR_SERVER.mode && typeof arApi === 'function') {
-        try {
-          const q = await arApi('consume-export', {});
-          if (!q.ok) {
-            if (typeof arToast === 'function') arToast((q.body && q.body.message) || '이번 달 다운로드·게시 횟수를 모두 사용했습니다.');
-            if (q.status === 429 || q.status === 402) openBillingCheckoutModal(true);
-            return;
-          }
-          if (AR_SERVER.me && AR_SERVER.me.usage) {
-            AR_SERVER.me.usage.exports = q.body.used;
-            AR_SERVER.me.usage.exportLimit = q.body.cap;
-          }
-        } catch (e) {}
-      }
-      if (typeof MediaRecorder === 'undefined') {
-        alert('현재 브라우저에서 MediaRecorder를 지원하지 않습니다.');
-        return;
-      }
-      const btn = document.getElementById('exportVideoBtn');
-      const expText = document.getElementById('exportBtnText');
-      if (btn) btn.disabled = true;
-
-      // 본문 캡션도 자동으로 클립보드에 복사 시도
-      copyDealerCaption();
-
-      // 녹화 시 BGM + 한국어 TTS 사운드 자동 활성화 및 오디오 트랙 합성
-      if (!AudioEngine.enabled) {
-        toggleAudioMaster();
-      } else {
-        AudioEngine.ensureContext();
-        AudioEngine.lastSpokenCut = -1;
-        AudioEngine.startBgmLoop();
-      }
-
-      // 녹화 전에 모든 컷의 성우 음성을 미리 받아 둠 (첫 컷부터 음성이 영상에 들어가도록, 최대 20초 대기)
-      isPlaying = false;
-      AudioEngine.stopTts();
-      if (AudioEngine.ttsVoice !== 'off') {
-        if (expText) expText.textContent = '성우 음성 준비 중…';
-        await Promise.race([
-          AudioEngine.prefetchTtsBuffers(true),
-          // 무료 모델은 10컷 대본 한 번 녹음에 10초 넘게 걸리므로 넉넉히 기다림
-          new Promise((resolve) => setTimeout(resolve, 45000))
-        ]);
-      }
-      if (AudioEngine.bgmStyle === 'custom_mp3' && AudioEngine.customBgmAudioEl) {
-        try { AudioEngine.customBgmAudioEl.currentTime = 0; } catch (e) {}
-        AudioEngine.customBgmAudioEl.play().catch(() => {});
-      }
-
-      // 0.0초부터 TOTAL_DURATION까지 전 구간(본편 컷 + 마지막 카마스터 명함) 녹화 시작
-      window.__exportingVideo = true; // 녹화 중에는 끝에서 처음으로 되감지 않음
-      window.__timelines['main'].seek(0);
-      isPlaying = true;
-      if (AudioEngine.masterBuffer) {
-        AudioEngine.playMasterAt(0);
-      } else {
-        AudioEngine.lastSpokenCut = -1;
-        AudioEngine.speakCutLine(0, true);
-      }
-
-      const canvasStream = canvas.captureStream(30);
-      const combinedTracks = [...canvasStream.getVideoTracks()];
-      if (AudioEngine.streamDest && AudioEngine.streamDest.stream) {
-        const audioTracks = AudioEngine.streamDest.stream.getAudioTracks();
-        if (audioTracks.length > 0) {
-          combinedTracks.push(audioTracks[0]);
-        }
-      }
-      const stream = new MediaStream(combinedTracks);
-
-      const chunks = [];
-      const candidateTypes = [
-        'video/mp4;codecs="avc1.42E01E,mp4a.40.2"', // H.264 + AAC: 인스타·아이폰·카톡에서 그대로 재생
+      const candidates = [
+        'video/mp4;codecs="avc1.42E01E,mp4a.40.2"',
         'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
-        'video/mp4;codecs=avc1',
-        'video/mp4',
-        'video/webm;codecs=vp9,opus',
-        'video/webm;codecs=vp8,opus',
-        'video/webm'
+        'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'
       ];
-      let mimeType = '';
-      for (const c of candidateTypes) {
-        if (typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported(c)) {
-          mimeType = c;
-          break;
+      const mimeType = candidates.find(type => MediaRecorder.isTypeSupported(type));
+      if (!mimeType) { arToast('이 브라우저에서 지원하는 영상 저장 형식이 없습니다.'); return; }
+      const btn = document.getElementById('exportVideoBtn'), text = document.getElementById('exportBtnText');
+      const width = canvas.width, height = canvas.height;
+      const fingerprint = JSON.stringify([campaign.vehicle, campaign.cutCaptions, campaign.ttsLines, campaign.designStyle, campaign.scenePlan, (campaign.uploadedPhotos || []).map(p => p && p.src), AudioEngine.ttsVoice, AudioEngine.bgmStyle, arCardEmpty(), d.name, d.phone, d.branch]);
+      let canvasStream, recorder, progressTimer, stopTimer, onVisibility;
+      arExportBusy = true;
+      if (btn) btn.disabled = true;
+      try {
+        let pending = arPendingExport && arPendingExport.fingerprint === fingerprint ? arPendingExport : null;
+        if (!pending) {
+          arPendingExport = null;
+          if (document.hidden) throw new Error('화면을 열어 둔 상태에서 영상을 만들어 주세요.');
+          isPlaying = false; AudioEngine.stopTts();
+          if (!AudioEngine.enabled) toggleAudioMaster(true);
+          const audioContext = AudioEngine.ensureContext();
+          await audioContext.resume();
+          if (AudioEngine.ttsVoice !== 'off') {
+            if (text) text.textContent = '성우 음성 준비 중…';
+            let timeout;
+            try {
+              await Promise.race([AudioEngine.prefetchTtsBuffers(true), new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('성우 음성이 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.')), 45000); })]);
+            } finally { clearTimeout(timeout); }
+            if (!AudioEngine.masterBuffer || (AudioEngine.masterWantKey && AudioEngine.masterKey !== AudioEngine.masterWantKey)) throw new Error('성우 음성을 만들지 못했습니다. 음성을 다시 준비한 뒤 저장해 주세요.');
+          }
+          refitDurationToNarration();
+          canvas.width = 1080; canvas.height = 1920;
+          window.__exportingVideo = true;
+          window.__timelines.main.seek(0);
+          canvasStream = canvas.captureStream(30);
+          const tracks = [...canvasStream.getVideoTracks(), ...(AudioEngine.streamDest ? AudioEngine.streamDest.stream.getAudioTracks() : [])];
+          recorder = new MediaRecorder(new MediaStream(tracks), { mimeType, videoBitsPerSecond: 8000000 });
+          const cleanMime = recorder.mimeType.includes('mp4') ? 'video/mp4' : 'video/webm';
+          const seconds = TOTAL_DURATION, chunks = [];
+          const blob = await new Promise((resolve, reject) => {
+            let stopped = false;
+            const fail = message => {
+              if (stopped) return; stopped = true;
+              if (recorder.state !== 'inactive') recorder.stop();
+              reject(new Error(message));
+            };
+            onVisibility = () => { if (document.hidden) fail('화면이 닫혀 영상 만들기를 중단했습니다. 이용 횟수는 차감하지 않았습니다.'); };
+            document.addEventListener('visibilitychange', onVisibility);
+            recorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+            recorder.onerror = () => fail('영상 저장 중 오류가 발생했습니다. 이용 횟수는 차감하지 않았습니다.');
+            recorder.onstop = () => { if (!stopped) { stopped = true; resolve(new Blob(chunks, { type: cleanMime })); } };
+            const started = performance.now();
+            recorder.start(200);
+            isPlaying = true;
+            if (AudioEngine.ttsVoice !== 'off') AudioEngine.playMasterAt(0);
+            AudioEngine.startBgmLoop();
+            if (AudioEngine.bgmStyle === 'custom_mp3' && AudioEngine.customBgmAudioEl) {
+              AudioEngine.customBgmAudioEl.currentTime = 0; AudioEngine.customBgmAudioEl.play().catch(() => {});
+            }
+            progressTimer = setInterval(() => { if (text) text.textContent = `영상 만드는 중 ${Math.min(99, Math.round((performance.now() - started) / (seconds * 10)))}%`; }, 200);
+            stopTimer = setTimeout(() => { if (recorder.state === 'recording') recorder.stop(); }, seconds * 1000);
+          });
+          isPlaying = false; AudioEngine.onPlayStateChange(false);
+          clearInterval(progressTimer);
+          await arValidateRecordedVideo(blob);
+          pending = { blob, seconds, fingerprint, requestId: crypto.randomUUID() };
+          arPendingExport = pending;
         }
-      }
-      const recorderOptions = mimeType
-        ? { mimeType, videoBitsPerSecond: 4000000 }
-        : { videoBitsPerSecond: 4000000 };
-      const recorder = new MediaRecorder(stream, recorderOptions);
-      const actualMime = recorder.mimeType || mimeType || 'video/mp4';
-      const isMp4 = actualMime.includes('mp4');
-      const fileExt = isMp4 ? 'mp4' : 'webm';
-      const cleanMime = isMp4 ? 'video/mp4' : 'video/webm';
-
-      recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) chunks.push(e.data);
-      };
-
-      const durSec = Math.round(TOTAL_DURATION);
-      const startMs = performance.now();
-      const recordDurationMs = TOTAL_DURATION * 1000;
-      const progressTimer = setInterval(() => {
-        const elapsed = performance.now() - startMs;
-        const pct = Math.min(99, Math.round((elapsed / recordDurationMs) * 100));
-        if (expText) {
-          expText.textContent = `영상 만드는 중 ${pct}%`;
-        } else if (btn) {
-          btn.textContent = `영상 만드는 중 ${pct}%`;
+        if (window.AR_SERVER && AR_SERVER.mode) {
+          if (text) text.textContent = '완성 영상 저장 확인 중…';
+          const q = await arApi('consume-export', { requestId: pending.requestId });
+          if (!q.ok) throw new Error((q.body && q.body.message) || '저장 확인을 완료하지 못했습니다. 다시 누르면 같은 영상으로 재시도합니다.');
+          if (AR_SERVER.me && AR_SERVER.me.usage) { AR_SERVER.me.usage.exports = q.body.used; AR_SERVER.me.usage.exportLimit = q.body.cap; }
         }
-      }, 200);
-
-      recorder.onstop = () => {
-        clearInterval(progressTimer);
-        const blob = new Blob(chunks, { type: cleanMime });
-        const videoUrl = URL.createObjectURL(blob);
-        const sizeKb = (blob.size / 1024).toFixed(1);
-
-        window.lastRecordedVideoBlob = blob;
-        window.lastRecordedVideoUrl = videoUrl;
-        window.lastRecordedMime = cleanMime;
-        window.lastRecordedFilename = `autoreels_dealer_${durSec}s.mp4`;
-
-        // 화면 내 비디오 플레이어 모달에 추출된 영상 로드 및 즉시 재생
+        if (window.lastRecordedVideoUrl) URL.revokeObjectURL(window.lastRecordedVideoUrl);
+        window.lastRecordedVideoBlob = pending.blob;
+        window.lastRecordedVideoUrl = URL.createObjectURL(pending.blob);
+        window.lastRecordedMime = pending.blob.type;
+        window.lastRecordedFilename = arRecordedFilename(pending.blob, pending.seconds);
+        arPendingExport = null;
         const player = document.getElementById('exportedVideoPlayer');
-        const metaText = document.getElementById('exportedVideoMeta');
-        const modal = document.getElementById('exportedVideoModal');
-
-        // 추출된 영상이 재생되는 동안 미리보기 소리가 겹치지 않도록 미리보기를 멈춤
-        window.__exportingVideo = false;
-        isPlaying = false;
-        pauseAllCutVideos();
-        AudioEngine.onPlayStateChange(false);
-        const ppBtnAfter = document.getElementById('playPauseBtn');
-        if (ppBtnAfter) ppBtnAfter.textContent = '▶️ 재생';
-
-        if (player) {
-          player.src = videoUrl;
-          player.play();
-        }
-        if (metaText) {
-          metaText.textContent = `${d.name} ${d.title}님 전용 ${durSec}초 ${fileExt.toUpperCase()} 영상 완성 (${sizeKb} KB / 9:16 세로형 / BGM 합성)`;
-        }
-        if (modal) {
-          modal.classList.remove('hidden');
-        }
-
+        if (player) { player.src = window.lastRecordedVideoUrl; player.play().catch(() => {}); }
+        const meta = document.getElementById('exportedVideoMeta');
+        if (meta) meta.textContent = `${Math.round(pending.seconds)}초 · 1080×1920 · ${pending.blob.type.includes('mp4') ? 'MP4' : 'WebM (이 브라우저는 MP4 저장 미지원)'} · ${(pending.blob.size / 1048576).toFixed(1)}MB`;
+        document.getElementById('exportedVideoModal')?.classList.remove('hidden');
+      } catch (e) {
+        arToast(e.message || '영상 만들기에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      } finally {
+        clearInterval(progressTimer); clearTimeout(stopTimer);
+        if (onVisibility) document.removeEventListener('visibilitychange', onVisibility);
+        if (recorder && recorder.state !== 'inactive') recorder.stop();
+        if (canvasStream) canvasStream.getTracks().forEach(track => track.stop());
+        window.__exportingVideo = false; isPlaying = false;
+        pauseAllCutVideos(); AudioEngine.onPlayStateChange(false);
+        canvas.width = width; canvas.height = height;
+        window.__timelines.main.seek(0);
+        if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
+        arExportBusy = false;
         if (btn) btn.disabled = false;
-        if (expText) {
-          expText.textContent = `영상 만들기 · ${durSec}초`;
-        }
-      };
-
-      recorder.start(200);
-      setTimeout(() => {
-        if (recorder.state === 'recording') recorder.stop();
-      }, recordDurationMs);
+        if (text) text.textContent = arPendingExport ? '완성 영상 저장 다시 확인' : `영상 만들기 · ${Math.round(TOTAL_DURATION)}초`;
+      }
     }
 
     async function shareRecordedVideoMobile() {
@@ -792,7 +747,7 @@
       const notice = document.getElementById('saveStatusNotice');
       const blob = window.lastRecordedVideoBlob;
       const durSec = Math.round(TOTAL_DURATION || 12);
-      const safeFilename = `autoreels_dealer_${durSec}s.mp4`;
+      const safeFilename = window.lastRecordedFilename || arRecordedFilename(blob, durSec);
 
       if (!blob) {
         if (notice) notice.textContent = '⚠️ 먼저 영상 제작 버튼을 눌러 녹화를 완료해주세요.';
@@ -805,8 +760,8 @@
           const handle = await window.showSaveFilePicker({
             suggestedName: safeFilename,
             types: [{
-              description: 'MP4 동영상 파일 (*.mp4)',
-              accept: { 'video/mp4': ['.mp4'] }
+              description: blob.type.includes('mp4') ? 'MP4 동영상' : 'WebM 동영상',
+              accept: { [blob.type.includes('mp4') ? 'video/mp4' : 'video/webm']: [blob.type.includes('mp4') ? '.mp4' : '.webm'] }
             }]
           });
           const writable = await handle.createWritable();
@@ -857,7 +812,7 @@
         return;
       }
       const durSec = Math.round(TOTAL_DURATION || 12);
-      const safeFilename = `autoreels_dealer_${durSec}s.mp4`;
+      const safeFilename = window.lastRecordedFilename || arRecordedFilename(blob, durSec);
       const url = URL.createObjectURL(blob);
 
       const win = window.open('', '_blank');
