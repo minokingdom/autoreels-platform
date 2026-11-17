@@ -216,11 +216,18 @@
       const tt = isOutro ? mainDuration - 0.01 : t;
       const idx = Math.min(n - 1, Math.floor(tt / sceneDur));
       const into = tt - idx * sceneDur;
-      if (!isOutro) syncCutVideos(idx, Math.max(0, (window.__realTimelineT || 0) - toRealTime(idx * sceneDur)));
-      return { photos, n, idx, p: Math.min(1, into / sceneDur), tp: idx === 0 || isOutro ? 1 : Math.min(1, into / 0.5), into, sceneDur };
+      const cuts = Math.max(1, getTargetCutCount());
+      const cutIdx = Math.min(cuts - 1, Math.max(0, Math.floor(tt / mainDuration * cuts)));
+      const selected = campaign.scenePlan && campaign.scenePlan[cutIdx];
+      const chosen = selected && Number.isInteger(selected.photoIdx) && campaign.uploadedPhotos[selected.photoIdx] ? selected.photoIdx : idx;
+      if (!isOutro) syncCutVideos(chosen, Math.max(0, (window.__realTimelineT || 0) - (selected && Number.isInteger(selected.photoIdx) ? getCutStart(cutIdx) : toRealTime(idx * sceneDur))));
+      return { photos, n, idx, cutIdx, cuts, p: Math.min(1, into / sceneDur), tp: idx === 0 || isOutro ? 1 : Math.min(1, into / 0.5), into, sceneDur };
     }
     function kitImg(S, k) {
       if (!S.n) return null;
+      const cut = Math.max(0, Math.min(S.cuts - 1, S.cutIdx + k));
+      const plan = campaign.scenePlan && campaign.scenePlan[cut];
+      if (plan && Number.isInteger(plan.photoIdx) && campaign.uploadedPhotos[plan.photoIdx]) return campaign.uploadedPhotos[plan.photoIdx];
       return S.photos[(((S.idx + k) % S.n) + S.n) % S.n];
     }
     function kitCover(c, img, x, y, w, h, scale, px, py) {

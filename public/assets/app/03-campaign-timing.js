@@ -600,6 +600,7 @@
       for (let i = 0; i < n; i++) {
         if (!campaign.scenePlan[i]) campaign.scenePlan[i] = {};
         campaign.scenePlan[i].photoIdx = idx;
+        campaign.scenePlan[i].photoManual = true;
       }
       if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
       if (typeof renderCutEditorPanel === 'function' && window.__arCutEditorOpen) renderCutEditorPanel();

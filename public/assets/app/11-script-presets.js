@@ -83,6 +83,7 @@
     }
     function arMatchPhotosToCaptions() {
       if (campaign.isUserCustomPhotos) return;
+      if (Array.isArray(campaign.scenePlan) && campaign.scenePlan.some((p) => p && p.photoManual)) return;
       const photos = Array.isArray(campaign.uploadedPhotos) ? campaign.uploadedPhotos.filter(Boolean) : [];
       const caps = Array.isArray(campaign.cutCaptions) ? campaign.cutCaptions : [];
       const nCuts = Math.min(getTargetCutCount(), caps.length);
@@ -1250,6 +1251,7 @@ POST https://graph.facebook.com/v19.0/${d.igUsername.replace('@', '')}/media
     }
 
     function resetToAiPhotos() {
+      if (Array.isArray(campaign.scenePlan)) campaign.scenePlan.forEach((p) => { if (p) { delete p.photoIdx; delete p.photoManual; } });
       campaign.uploadedPhotos.forEach(arReleasePhoto);
       if (IND.key !== 'auto') { pauseAllCutVideos(); campaign.isUserCustomPhotos = false; campaign.hasCustomVideo = false; return arApplyIndustryPhotos(); }
       pauseAllCutVideos();

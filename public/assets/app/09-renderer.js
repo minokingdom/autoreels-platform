@@ -3800,6 +3800,7 @@
       campaign.hasCustomVideo = false;
       campaign.uploadedPhotos.forEach(arReleasePhoto);
       campaign.uploadedPhotos = items;
+      if (Array.isArray(campaign.scenePlan)) campaign.scenePlan.forEach((p) => { if (p) { delete p.photoIdx; delete p.photoManual; } });
 
       applyVideoDurations(); // 장면이 바뀌었으므로 길이·썸네일을 다시 계산
       if (AudioEngine.enabled) AudioEngine.prefetchTtsBuffers();
