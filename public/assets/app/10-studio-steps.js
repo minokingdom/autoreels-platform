@@ -1568,7 +1568,21 @@
       return { matchedCar, targetPersona, stockNum };
     }
 
+    let arScriptGenerationId = 0;
+    function arSetScriptGenerating(loading) {
+      const panel = document.getElementById('studioPanel_script');
+      if (panel) panel.setAttribute('aria-busy', loading ? 'true' : 'false');
+      const status = document.getElementById('scriptGeneratingStatus');
+      if (status) status.classList.toggle('hidden', !loading);
+      ['scriptResultsPanel', 'scriptRewritePanel', 'scriptCutsPanel'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', loading);
+      });
+    }
+
     async function generateStoryboardFromPrompt() {
+      const generationId = ++arScriptGenerationId;
+      arSetScriptGenerating(true);
       const promptEl = document.getElementById('aiPromptInput');
       const excludeEl = document.getElementById('aiExcludeInput');
       const btnEl = document.getElementById('aiGenBtn');
@@ -1652,6 +1666,7 @@
         });
 
         const result = await response.json();
+        if (generationId !== arScriptGenerationId) return;
         if (!response.ok || !result.ok || !result.data) {
           throw new Error(result.error || 'AI 서버 응답 오류');
         }
@@ -1665,6 +1680,7 @@
         renderScriptVariantPicker();
         triggerTopicImages(variants[0]?.cutCaptions);
       } catch (err) {
+        if (generationId !== arScriptGenerationId) return;
         arScriptVariants.list = [];
         renderScriptVariantPicker();
         if (IND.key !== 'auto') {
@@ -1693,7 +1709,7 @@
             };
             applyAiScriptToCampaign(offlineAi, d, stripExcludedLocal);
             arFinishScriptApply(totalCuts);
-            if (noticeEl) noticeEl.textContent = `주제 [${topicTitle}] 대본이 반영되었고, 맞춤 이미지를 생성하고 있습니다...`;
+            if (noticeEl) noticeEl.textContent = `AI 대본을 만들지 못해 주제 [${topicTitle}]의 기본 대본을 표시합니다. 다시 쓰기로 재시도할 수 있어요.`;
             triggerTopicImages(campaign.cutCaptions);
             return;
           } else {
@@ -1706,7 +1722,8 @@
         arFillAutoScriptOffline(parsedLocal, d);
         triggerTopicImages(campaign.cutCaptions);
       } finally {
-        if (btnEl) {
+        if (generationId === arScriptGenerationId) arSetScriptGenerating(false);
+        if (btnEl && generationId === arScriptGenerationId) {
           btnEl.disabled = false;
           btnEl.textContent = 'AI로 다시 만들기';
         }
