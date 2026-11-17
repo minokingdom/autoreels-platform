@@ -493,7 +493,7 @@
         html += `
           <div class="p-3 rounded-[8px] bg-[#141415] border border-[var(--border)] space-y-1.5">
             <button type="button" onclick="seekToTime(${seekSec})" id="cutTimeLabel${i}" class="font-mono text-[12px] text-[#ededed] font-medium hover:text-[#38bdf8] cursor-pointer" title="이 장면(${s}초)으로 미리보기 이동">CUT ${i + 1} (${s}~${e}초)</button>
-            <span class="block text-[11px] text-[#85858b]">화면 자막 <span class="text-[#6e6e73]">· 띄어쓰기 / 띄어쓰기로 줄 나누기 (안 넣으면 자동)</span></span>
+            <span class="block text-[11px] text-[#85858b]">화면 자막 <span class="text-[#6e6e73]">· " / "로 줄 나누기 (비우면 자동)</span></span>
             <input id="cutSub${i}" type="text" value="${subVal}" oninput="updateCustomCutCaptions()" placeholder="${i + 1}컷 화면 헤드라인" class="studio-input w-full h-8 px-2.5 text-[12px]" />
             <span class="block text-[11px] text-[#85858b]">성우 대사</span>
             <input id="cutTts${i}" type="text" value="${ttsVal}" oninput="updateCustomCutCaptions()" placeholder="${i + 1}컷 성우 대사 (짧을수록 영상이 짧아집니다)" title="숫자가 다르게 읽히면 한글로 적어 주세요. 예: 네 대" class="studio-input w-full h-7 px-2.5 text-[11px] text-[#a1a1a6]" />
@@ -742,6 +742,7 @@
     }
 
     function setVideoTotalDuration(sec) {
+      const prevCuts = getTargetCutCount();
       BASE_DURATION = Math.max(6, Math.min(60, Number(sec) || 12));
       if (typeof campaign !== 'undefined') {
         delete campaign.cutCountOverride; campaign.cutLenScale = [];
@@ -749,6 +750,17 @@
         if (campaign.cutDesigns && typeof arBuildCutDesignMix === 'function') setTimeout(() => { campaign.cutDesigns = arBuildCutDesignMix(); if (typeof arRenderCutMixRow === 'function') arRenderCutMixRow(); }, 0);
       }
       applyVideoDurations();
+      const nextCuts = getTargetCutCount();
+      const rwBar = document.getElementById('scriptDurRewriteBar');
+      const rwTxt = document.getElementById('scriptDurRewriteText');
+      if (rwBar) {
+        if (nextCuts !== prevCuts && Array.isArray(campaign.cutCaptions) && campaign.cutCaptions.length) {
+          if (rwTxt) rwTxt.textContent = `길이가 ${Math.round(BASE_DURATION)}초(${nextCuts}컷)로 바뀌었어요. 새 길이에 맞춰 AI 대본을 다시 쓸까요?`;
+          rwBar.classList.remove('hidden');
+        } else {
+          rwBar.classList.add('hidden');
+        }
+      }
       // 컷 수가 바뀌면 새 컷의 성우 음성을 받아 길이를 다시 맞춤
       if (audioEngineReady() && AudioEngine.enabled) AudioEngine.prefetchTtsBuffers();
     }
@@ -794,16 +806,37 @@
       if (customIn) {
         customIn.value = String(Math.round(BASE_DURATION));
       }
+      const scriptCustomIn = document.getElementById('scriptCustomDurationInput');
+      if (scriptCustomIn) {
+        scriptCustomIn.value = String(Math.round(BASE_DURATION));
+      }
+      const scriptBadge = document.getElementById('scriptDurationCutBadge');
+      if (scriptBadge) {
+        scriptBadge.textContent = `${Math.round(BASE_DURATION)}초 · ${targetCuts}컷`;
+      }
+      const previewBadge = document.getElementById('previewDurationCutLabel');
+      if (previewBadge) {
+        previewBadge.textContent = `${targetCuts}컷 기준`;
+      }
+      const mobileChip = document.getElementById('mobileSheetDurationChip');
+      if (mobileChip) {
+        mobileChip.textContent = `⏱ ${Math.round(BASE_DURATION)}초`;
+      }
 
-      // 상단 빠른 시간 버튼 하이라이트 동기화
+      // 상단 빠른 시간 버튼 하이라이트 동기화 (미리보기 + 대본 탭)
       [8, 12, 15, 20, 30].forEach((dVal) => {
+        const isActive = Math.round(BASE_DURATION) === dVal;
         const btn = document.getElementById(`durBtn_${dVal}`);
         if (btn) {
-          if (Math.round(BASE_DURATION) === dVal) {
-            btn.className = 'h-6 px-2 rounded-[5px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer';
-          } else {
-            btn.className = 'h-6 px-2 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer';
-          }
+          btn.className = isActive
+            ? 'h-6 px-2 rounded-[5px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer'
+            : 'h-6 px-2 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer';
+        }
+        const sBtn = document.getElementById(`scriptDurBtn_${dVal}`);
+        if (sBtn) {
+          sBtn.className = isActive
+            ? 'h-7 px-1 rounded-[6px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer'
+            : 'h-7 px-1 rounded-[6px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] bg-[#141415] border border-[var(--border)] cursor-pointer';
         }
       });
 

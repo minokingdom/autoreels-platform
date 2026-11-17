@@ -1344,7 +1344,11 @@ select.ig-select-src { display: none !important; }
    ========================================================================== */
 /* PC: 미리보기 틀 바깥 오른쪽 / 휴대폰: 화면 오른쪽 */
 #mainMonitorColumn > .monitor-frame { position: relative; }
-#arQuickBar { position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%); z-index: 15; display: flex; flex-direction: column; gap: 10px; }
+@media (min-width: 1024px) {
+  /* 데스크톱에서 오른쪽 빠른 버튼(#arQuickBar)이 우측 대본/주제 카드와 겹치지 않게 프레임 오른쪽 여백 확보 */
+  #mainMonitorColumn > .monitor-frame { margin-right: 54px; }
+}
+#arQuickBar { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); z-index: 15; display: flex; flex-direction: column; gap: 10px; }
 #arQuickBar .aq-btn { width: 52px; display: flex; flex-direction: column; align-items: center; gap: 3px; border: 0; background: transparent; color: #fff; cursor: pointer; padding: 0; font-family: inherit; }
 #arQuickBar .aq-dot { width: 40px; height: 40px; border-radius: 20px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.42); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); transition: transform .12s ease, background .15s ease; }
 #arQuickBar .aq-btn:active .aq-dot { transform: scale(0.9); }
@@ -1352,6 +1356,11 @@ select.ig-select-src { display: none !important; }
 #arQuickBar .aq-label { font-size: 11px; font-weight: 700; line-height: 1.1; text-shadow: 0 1px 4px rgba(0,0,0,.6); white-space: nowrap; }
 body.ar-cut-editing #arQuickBar { display: none; }
 #arSheetHandle { display: none; }
+#customDurationInput, #scriptCustomDurationInput { padding: 0 2px !important; text-align: center; -moz-appearance: textfield; }
+#customDurationInput::-webkit-outer-spin-button,
+#customDurationInput::-webkit-inner-spin-button,
+#scriptCustomDurationInput::-webkit-outer-spin-button,
+#scriptCustomDurationInput::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 @media (max-width: 1023px) {
   body.ar-sheet { --ar-msb: 64px; --ar-sheet: calc(52dvh - var(--ar-msb)); overflow: hidden; overscroll-behavior: none; }
@@ -1389,13 +1398,18 @@ body.ar-cut-editing #arQuickBar { display: none; }
   body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn {
     position: fixed; left: 0; right: 0; bottom: var(--ar-msb); height: var(--ar-sheet); z-index: 35;
     overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;
     background: var(--card, #161618); border-radius: 18px 18px 0 0; border-top: 1px solid var(--border);
     box-shadow: 0 -8px 24px rgba(0,0,0,0.35); transition: height .3s ease;
   }
+  body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn::-webkit-scrollbar { width: 4px; }
+  body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn::-webkit-scrollbar-track { background: transparent; }
+  body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.22); border-radius: 9999px; }
   body.ar-sheet.ar-sheet-min:not(.ar-cut-editing) #studioWorkflowColumn { overflow: hidden; }
   body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn > .studio-card { border: 0; border-radius: 0; background: transparent; box-shadow: none; }
   body.ar-sheet:not(.ar-cut-editing) #previewDealerHeader { display: none; }
-  body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn > .studio-card > div:first-child { padding-top: 0; }
+  body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn > .studio-card > div:first-child { padding: 2px 16px 6px; }
+  body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn > .studio-card > div.sticky { padding-top: 8px; padding-bottom: 8px; }
   body.ar-sheet:not(.ar-cut-editing) #arSheetHandle {
     display: flex; position: sticky; top: 0; z-index: 25; width: 100%; height: 24px; align-items: center; justify-content: center;
     background: var(--card, #161618); border: 0; cursor: pointer; touch-action: none; padding: 0;

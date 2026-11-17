@@ -273,7 +273,7 @@
       } catch (e) {}
       if (myJob === arTopicsLoading) {
         const st = document.getElementById('topicStatus');
-        if (st) st.textContent = 'AI 추천을 받지 못해 기본 주제를 보여 드려요. 잠시 뒤 [다른 주제 보기]를 눌러 보세요.';
+        if (st) st.textContent = 'AI 추천을 받지 못해 기본 주제를 보여 드려요. 잠시 뒤 [↻ 다른 주제]를 눌러 보세요.';
       }
     }
     // 주제 선택 → 대본 탭으로 이동해 그 주제로 AI 대본을 바로 만듦
@@ -711,7 +711,7 @@
     function arUpdateEasyGuide(key) {
       const steps = {
         topic: ['오늘의 주제', '오늘 올릴 주제를 골라 주세요. 고르면 그 주제로 AI가 대본 3안을 바로 만들어 드려요.'],
-        script: ['대본 고르기', '상품 이름과 혜택을 확인하고 [AI로 만들기]를 누르세요. 대본 3안 중 마음에 드는 것을 고르면 됩니다.'],
+        script: ['대본 고르기', '영상 길이와 상품을 확인하고 대본을 고르세요. 바꾸고 싶으면 아래에 적어 [다시 쓰기]를 누르면 됩니다.'],
         photo: ['사진 넣기', '내 사진이나 영상을 올리세요. 올리지 않으면 기본 사진으로 만들어집니다.'],
         sound: ['소리 고르기', '배경음악과 성우 목소리를 고르세요. 고르는 대로 위 미리보기에서 바로 들려드려요.'],
         card: ['엔딩 꾸미기', '영상 마지막에 나올 가게 정보와 로고를 넣고, 보일 항목만 켜 두세요.'],
@@ -1542,6 +1542,8 @@
       const excludeEl = document.getElementById('aiExcludeInput');
       const btnEl = document.getElementById('aiGenBtn');
       const noticeEl = document.getElementById('aiGenNotice');
+      const rwBar = document.getElementById('scriptDurRewriteBar');
+      if (rwBar) rwBar.classList.add('hidden');
       const raw = (promptEl?.value || '').trim();
       const excludeRaw = (excludeEl?.value || '').trim();
       const stripExcludedLocal = (txt) => {

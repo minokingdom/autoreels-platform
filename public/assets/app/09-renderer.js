@@ -3461,24 +3461,24 @@
       // 정품 확인은 화면용 명함(항목을 끈 것)이 아니라 실제 계정 정보로
       const drmCode = evaluateDealerDrmStatus(getSelectedDealer());
       // ★ 2026-11-17: 미리보기가 첫 화면부터 보이므로, 미구독 띠는 완성 영상(내보내기)에만 크게 넣고
-      //   미리보기에서는 작은 '체험판' 표시만. (번호 무단 변경 차단은 미리보기에서도 그대로 크게)
+      //   미리보기에서는 작은 '체험판 미리보기' 표시만 (상단 제목 바와 겹치지 않게 오른쪽 아래 구석에 배치).
       if (drmCode !== 1 && drmCode !== 3 && !window.__exportingVideo) {
         {
           ctx.save();
-          const fs = Math.round(W * 0.026);
+          const fs = Math.round(W * 0.023);
           ctx.font = `700 ${fs}px "Pretendard Variable", sans-serif`;
           const label = '체험판 미리보기';
-          const pw = ctx.measureText(label).width + fs * 1.6;
-          const ph = fs * 2;
-          const px = W * 0.04;
-          const py = H * 0.04;
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.38)';
+          const pw = ctx.measureText(label).width + fs * 1.5;
+          const ph = fs * 1.9;
+          const px = W - pw - W * 0.035;
+          const py = H - ph - H * 0.03;
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
           drawRoundedRect(ctx, px, py, pw, ph, ph / 2);
           ctx.fill();
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
           ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
-          ctx.fillText(label, px + fs * 0.8, py + ph / 2 + 1);
+          ctx.fillText(label, px + fs * 0.75, py + ph / 2 + 1);
           ctx.restore();
         }
       }

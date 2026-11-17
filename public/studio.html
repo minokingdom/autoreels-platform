@@ -31,7 +31,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Black+Han+Sans&family=Noto+Serif+KR:wght@700;900&family=Do+Hyeon&family=Jua&family=Nanum+Pen+Script&family=Gugi&family=Gaegu:wght@700&family=Hi+Melody&family=East+Sea+Dokdo&family=Single+Day&family=Yeon+Sung&family=Poor+Story&family=Gamja+Flower&family=Nanum+Brush+Script&family=Gasoek+One&family=Bagel+Fat+One&family=Song+Myung&family=Black+And+White+Picture&family=Dongle:wght@700&family=Great+Vibes&family=Pinyon+Script&display=swap" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.css"></script>
-  <link rel="stylesheet" href="/assets/app/app.css" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261117a" />
   <link rel="stylesheet" href="/assets/app/splash.css" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -595,7 +595,11 @@
           </div>
 
           <!-- 영상 총 길이(초) 원클릭 선택 -->
-          <div class="flex items-center justify-between gap-1.5 bg-[#141415] px-2.5 py-1.5 rounded-[8px] border border-[var(--border)]">
+          <div class="space-y-1 bg-[#141415] px-2.5 py-2 rounded-[8px] border border-[var(--border)]">
+            <div class="flex items-center justify-between text-[11px] text-[#85858b]">
+              <span>⏱ 영상 길이</span>
+              <span id="previewDurationCutLabel" class="font-mono text-[#a1a1a6]">4컷 기준</span>
+            </div>
             <div class="grid grid-cols-6 gap-1 w-full">
               <button type="button" id="durBtn_8" onclick="setVideoTotalDuration(8)" class="h-6 px-2 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer">8s</button>
               <button type="button" id="durBtn_12" onclick="setVideoTotalDuration(12)" class="h-6 px-2 rounded-[5px] text-[11px] font-mono bg-[#232325] text-[#ededed] cursor-pointer">12s</button>
@@ -649,9 +653,11 @@
       <!-- 우측(PC) / 최상단(모바일): 오늘의 릴스 만들기 (주제 → 대본 → 사진 → 사운드 → 명함 → 발행) -->
       <div id="studioWorkflowColumn" class="lg:col-span-7 order-1 lg:order-2">
         <div class="studio-card">
-          <div class="flex flex-wrap items-center justify-between gap-2 px-5 sm:px-6 pt-5">
+          <div class="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-6 pt-3 lg:pt-5">
             <div class="flex items-center gap-2 flex-wrap">
               <h2 id="previewDealerHeader" class="text-[16px] font-medium text-[#ededed]">오늘의 릴스 만들기</h2>
+              <button type="button" id="mobileSheetDurationChip" onclick="switchStudioTab('script')" class="lg:hidden h-7 px-2.5 rounded-full bg-[#232325] border border-[var(--border)] text-[11px] font-mono text-[#ededed] flex items-center gap-1 cursor-pointer" title="대본 탭에서 영상 길이 바꾸기">⏱ 12초</button>
+              <button type="button" id="mobileSheetSettingsBtn" onclick="openStudioSettingsModal()" class="lg:hidden h-7 px-2.5 rounded-full bg-[#232325] border border-[var(--border)] text-[11px] text-[#ededed] flex items-center gap-1 cursor-pointer" title="구독 상태 · 업종 설정">⚙️ 설정</button>
               <span id="wasmEngineBadge" class="hidden tag-chip px-2 py-0.5 font-mono text-[11px]">Rust Wasm v1.0</span>
               <span class="hidden text-xs text-[#85858b]"><code id="stagingUrlText">https://staging.autoreels.kr/v/tok_minjun</code></span>
             </div>
@@ -723,6 +729,25 @@
             <button type="button" class="ig-ctx-chip" onclick="switchStudioTab('topic')"><span>주제</span><strong id="todayTopicChip">고르기</strong></button>
             <button type="button" class="ig-ctx-chip" onclick="arOpenProductSheet()"><span>상품</span><strong class="ar-product-name">내 상품</strong></button>
           </div>
+          <!-- 영상 길이 선택 (대본 분량/컷 수 기준) -->
+          <div id="scriptPanelDurationRow" class="studio-sub p-3 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[12px] font-medium text-[#ededed]">⏱ 영상 길이 <span class="text-[#85858b] font-normal">(길이에 따라 컷 수·대본 길이가 달라져요)</span></span>
+              <span id="scriptDurationCutBadge" class="font-mono text-[11px] text-[#4cc38a] shrink-0">12초 · 4컷</span>
+            </div>
+            <div class="grid grid-cols-6 gap-1.5">
+              <button type="button" id="scriptDurBtn_8" onclick="setVideoTotalDuration(8)" class="h-7 px-1 rounded-[6px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] bg-[#141415] border border-[var(--border)] cursor-pointer">8초</button>
+              <button type="button" id="scriptDurBtn_12" onclick="setVideoTotalDuration(12)" class="h-7 px-1 rounded-[6px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer">12초</button>
+              <button type="button" id="scriptDurBtn_15" onclick="setVideoTotalDuration(15)" class="h-7 px-1 rounded-[6px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] bg-[#141415] border border-[var(--border)] cursor-pointer">15초</button>
+              <button type="button" id="scriptDurBtn_20" onclick="setVideoTotalDuration(20)" class="h-7 px-1 rounded-[6px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] bg-[#141415] border border-[var(--border)] cursor-pointer">20초</button>
+              <button type="button" id="scriptDurBtn_30" onclick="setVideoTotalDuration(30)" class="h-7 px-1 rounded-[6px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] bg-[#141415] border border-[var(--border)] cursor-pointer">30초</button>
+              <input id="scriptCustomDurationInput" type="number" min="6" max="60" value="12" onchange="setVideoTotalDuration(this.value)" class="studio-input w-full h-7 px-1 text-[11px] font-mono text-center" title="영상 길이 직접 입력 (초)" aria-label="영상 길이 직접 입력 (초)" />
+            </div>
+            <div id="scriptDurRewriteBar" class="hidden flex items-center justify-between gap-2 pt-1.5 border-t border-[var(--border)]">
+              <span id="scriptDurRewriteText" class="text-[11px] text-[#f5a524]">컷 수가 바뀌었어요. 새 길이에 맞춰 대본을 다시 쓸까요?</span>
+              <button type="button" onclick="generateStoryboardFromPrompt()" class="h-7 px-2.5 rounded-[6px] bg-[#3b82f6] hover:bg-[#2563eb] text-white text-[11px] font-semibold shrink-0 cursor-pointer">AI 대본 다시 쓰기</button>
+            </div>
+          </div>
           <p id="todayTopicBadge" class="hidden text-[12px] text-[#4cc38a]"></p>
           <!-- 생성형 씬 디렉터 & 레이아웃 엔진 -->
           <div class="studio-sub p-4 space-y-3">
@@ -745,7 +770,7 @@
             </div>
 
             <!-- 동적 N컷(4컷~10컷) 자막 + 성우 TTS 대본 카드 컨테이너 (시간이 늘어나면 컷 카드도 자동으로 늘어남) -->
-            <div id="dynamicCutCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 max-h-[430px] overflow-y-auto pr-1"></div>
+            <div id="dynamicCutCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 lg:max-h-[600px] overflow-y-auto pr-1"></div>
           </div>
 
           <div class="studio-sub p-4 space-y-2">
@@ -2033,7 +2058,7 @@
         </div>
       </div>
     </div>
-  <script src="/assets/app/app.js?v=20261116m"></script>
+  <script src="/assets/app/app.js?v=20261117a"></script>
   <!--
     가독성 보정 (A단계, 2026-11-13)
     - Tailwind CDN 이 만드는 스타일보다 뒤에 오도록 body 끝에 둡니다.
