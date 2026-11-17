@@ -519,7 +519,7 @@
               <div class="pd-head">
                 <div>
                   <div class="text-[13px] font-semibold text-[#ededed]">디자인 스타일 <span id="pdCount" class="text-[#85858b] font-normal"></span></div>
-                  <div class="text-[11px] text-[#85858b]">고르면 바로 미리보기에 반영돼요</div>
+                  <div class="text-[11px] text-[#85858b]">고르면 자막 배치와 화면 효과가 바뀌어요</div>
                 </div>
                 <div class="flex items-center gap-1.5">
                   <button type="button" onclick="randomizePreviewDesignOnly()" class="px-2 py-1 rounded-[6px] bg-[#1e293b] hover:bg-[#3b82f6] border border-[#38bdf8]/40 text-[11px] font-semibold text-[#38bdf8] hover:text-white cursor-pointer transition">
@@ -529,13 +529,16 @@
                 </div>
               </div>
               <button type="button" class="ar-custom-entry" data-custom-action="new">＋ 내 스타일 만들기</button>
+              <button type="button" class="pd-shuffle-scope" onclick="toggleShuffleFilterPanel(true)">⚙ 섞을 카테고리 선택</button>
               <div id="pdRecommend" class="pd-reco"></div>
+              <p class="pd-section-help">분류를 고르면 해당 분위기의 디자인만 보여요</p>
               <div id="pdCats" class="pd-cats"></div>
-              <div class="px-2.5 py-1.5 border-b border-[var(--border)] bg-[#141416] space-y-1.5">
+              <div class="pd-popular px-2.5 py-1.5 border-b border-[var(--border)] bg-[#141416] space-y-1.5">
                 <div class="flex items-center justify-between gap-1">
                   <span class="text-[10px] font-semibold text-[#fb923c]">🔥 이 업종 인기 템플릿</span>
                   <button type="button" onclick="importAllPopularTrends()" class="px-2 py-0.5 rounded-[5px] bg-[#ea580c]/20 hover:bg-[#ea580c] text-[#fb923c] hover:text-white border border-[#ea580c]/40 text-[10px] font-semibold cursor-pointer transition">한 번에 담기</button>
                 </div>
+                <p class="pd-section-help">원하는 이름을 누르면 디자인이 적용돼요</p>
                 <div id="pdPopularTrendChips" class="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none"></div>
                 <div class="flex items-center gap-1">
                   <input id="pdTrendThemeQuery" type="text" placeholder="직접 키워드 입력 (예: 비포애프터, 오픈런)"
@@ -576,7 +579,7 @@
                 ⏸ 일시정지
               </button>
               <button type="button" id="shuffleFilterBtn" onclick="toggleShuffleFilterPanel()" class="btn-secondary h-9 px-2 text-[12px] flex items-center justify-center gap-1 cursor-pointer" title="스타일 섞기에 포함할 카테고리 및 제외 스타일 설정">
-                ⚙️ 설정
+                ⚙ 섞기 범위
               </button>
             </div>
             <div id="shuffleFilterPanel" class="hidden fixed inset-0 z-[85] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onclick="if (event.target === this) toggleShuffleFilterPanel(false)">

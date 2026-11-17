@@ -425,7 +425,7 @@
         if ((fromLeft && dx < 0) || (!fromLeft && dx > 0)) closePresetDrawer();
       };
       dr.addEventListener('touchstart', (ev) => {
-        if (ev.target.closest && ev.target.closest('.pd-cats')) return; // 분류 줄은 가로로 넘기는 곳
+        if (ev.target.closest && ev.target.closest('.pd-cats, #pdPopularTrendChips')) return; // 분류 줄은 가로로 넘기는 곳
         const t = ev.touches[0];
         sx = lx = t.clientX; sy = ly = t.clientY; tracking = true;
       }, { passive: true });

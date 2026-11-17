@@ -4471,6 +4471,7 @@
     function toggleShuffleFilterPanel(force) {
       const panel = document.getElementById('shuffleFilterPanel');
       if (!panel) return;
+      if (panel.parentElement !== document.body) document.body.appendChild(panel);
       const show = typeof force === 'boolean' ? force : panel.classList.contains('hidden');
       panel.classList.toggle('hidden', !show);
       if (show) renderShuffleFilterPanel();
