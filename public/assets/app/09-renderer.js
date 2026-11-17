@@ -7,7 +7,7 @@
       const H = canvas.height;
       const HYUNDAI_NAVY = '#002C5F';
       const KIA_RED = '#BB162B';
-      const mainDuration = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+      const mainDuration = getMainDuration();
       const totalCuts = getTargetCutCount();
       const cutDuration = mainDuration / totalCuts;
       const theme = DIRECTOR_THEMES[campaign.themeId] || DIRECTOR_THEMES.royal;

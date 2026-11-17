@@ -372,7 +372,7 @@
     function syncDynamicCutCountAndPhotos() {
       const targetCuts = getTargetCutCount();
       const d = getSelectedDealer();
-      const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+      const mainDur = getMainDuration();
       const cutDur = mainDur / targetCuts;
 
       while (campaign.cutCaptions.length < targetCuts) {
@@ -450,7 +450,7 @@
       const container = document.getElementById('dynamicCutCardsContainer');
       if (!container) return;
       const targetCuts = getTargetCutCount();
-      const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+      const mainDur = getMainDuration();
       const cutDur = mainDur / targetCuts;
       const photos = Array.isArray(campaign.uploadedPhotos) ? campaign.uploadedPhotos : [];
       const widgetKeys = typeof WIDGET_LABELS !== 'undefined' ? Object.keys(WIDGET_LABELS) : (WIDGET_POOL || []);
@@ -619,7 +619,7 @@
     let CUT_LENGTHS = []; // 컷별 실제 길이(초). 비어 있으면 모든 컷이 같은 길이
 
     function getMainDuration() {
-      return Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+      return Math.max(0.01, TOTAL_DURATION - OUTRO_DURATION);
     }
     function getCutLengths() {
       const n = getTargetCutCount();
@@ -683,6 +683,21 @@
           ? AudioEngine.masterCutBounds
           : null;
 
+        // 전체 음성이 기준: 엔딩 없으면 본문 끝, 있으면 엔딩 멘트 끝에 영상도 종료.
+        const voiceDuration = AudioEngine.masterBuffer && AudioEngine.masterBuffer.duration;
+        if (bounds && Number.isFinite(voiceDuration) && voiceDuration > 0) {
+          const mainEnd = arCardEmpty() ? voiceDuration : Math.min(voiceDuration, bounds[cuts]);
+          const voiceLengths = [];
+          let previous = 0;
+          for (let i = 0; i < cuts; i++) {
+            const end = i === cuts - 1 ? mainEnd : Math.min(mainEnd, bounds[i + 1]);
+            voiceLengths.push(end - previous);
+            previous = end;
+          }
+          if (voiceLengths.every((length) => Number.isFinite(length) && length > 0)) {
+            return { total: voiceDuration, outro: voiceDuration - mainEnd, lengths: voiceLengths };
+          }
+        }
         if (bounds) {
           // 원테이크 마스터 음성의 실제 문장 경계(bounds)에 컷 전환 시점을 1:1로 고정
           exactMasterLocked = true;
@@ -810,7 +825,7 @@
           fitNotice.classList.add('hidden');
         }
       }
-      const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+      const mainDur = getMainDuration();
       const targetCuts = getTargetCutCount();
       const cutDur = mainDur / targetCuts;
       if (typeof window.__arPinnedCut === 'number' && window.__arPinnedCut >= targetCuts) {

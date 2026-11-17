@@ -936,7 +936,7 @@
 
         // 문장이 컷 길이보다 조금 길면 살짝 빠르게 읽어 컷 안에 맞춤 (최대 1.12배)
         const totalCuts = getTargetCutCount();
-        const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+        const mainDur = getMainDuration();
         const slotDur = cutIdx < totalCuts ? getCutLengths()[cutIdx] : OUTRO_DURATION;
         const speechLen = typeof buffer.__len === 'number' ? buffer.__len : buffer.duration;
         const fit = speechLen / Math.max(0.5, slotDur - 0.1);
@@ -1045,7 +1045,7 @@
             this.playMasterAt(curT);
           } else {
             this.lastSpokenCut = -1;
-            const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+            const mainDur = getMainDuration();
             const totalCuts = getTargetCutCount();
             const slot = curT < mainDur ? getCutIndexAt(curT) : totalCuts;
             this.speakCutLine(slot, false);
@@ -1295,7 +1295,7 @@
       },
       handleSceneSfx(t) {
         if (this.sfxMode === 'off' || !this.ctx) return;
-        const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+        const mainDur = getMainDuration();
         const totalCuts = getTargetCutCount();
         const slot = t < mainDur ? getCutIndexAt(t) : totalCuts;
         const dt = t - this.lastTimelineT;
@@ -1321,7 +1321,7 @@
         this.lastTimelineT = t;
 
         // 2. 개별 문장 또는 컷별 여유 배치(예: 20초/30초에서 각 컷 시작 시 해당 컷 음성을 정확히 재생)
-        const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+        const mainDur = getMainDuration();
         const totalCuts = getTargetCutCount();
         const slot = t < mainDur ? getCutIndexAt(t) : totalCuts;
         if (slot !== this.lastSpokenCut) {
@@ -1361,7 +1361,7 @@
       if (!AudioEngine.enabled) {
         toggleAudioMaster(true);
       }
-      const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+      const mainDur = getMainDuration();
       const totalCuts = getTargetCutCount();
       const seekT = cutIdx < totalCuts ? (getCutStart(cutIdx) + 0.1) : (mainDur + 0.1);
       window.__timelines['main'].seek(seekT);
@@ -1370,7 +1370,7 @@
 
     function testCurrentCutTtsNow() {
       const t = window.__timelines['main'].currentTime || 0;
-      const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+      const mainDur = getMainDuration();
       const totalCuts = getTargetCutCount();
       const slot = t < mainDur ? getCutIndexAt(t) : totalCuts;
       testCutTts(slot);

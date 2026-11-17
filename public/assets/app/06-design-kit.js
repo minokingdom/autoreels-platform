@@ -4209,7 +4209,7 @@
     }
     function renderDesignThumbBatch(list) {
       const saved = campaign.designStyle;
-      const mainDuration = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+      const mainDuration = getMainDuration();
       const totalCuts = getTargetCutCount();
       const thumb = document.createElement('canvas');
       thumb.width = 162;

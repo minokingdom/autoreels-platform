@@ -3154,7 +3154,7 @@
         const ppBtn = document.getElementById('playPauseBtn');
         if (ppBtn) ppBtn.textContent = '▶️ 재생';
         if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
-        const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+        const mainDur = getMainDuration();
         const totalCuts = getTargetCutCount();
         const cutDur = mainDur / totalCuts;
         const seekT = idx * cutDur + Math.min(0.55, cutDur * 0.35);
@@ -3173,7 +3173,7 @@
         window.__arAnimPreviewTimer = null;
       }
       const n = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
-      const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+      const mainDur = getMainDuration();
       const cutDur = mainDur / n;
       const startT = cutIdx * cutDur;
       const dur = Math.min(0.85, cutDur * 0.72);
@@ -3321,7 +3321,7 @@
       const n = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
       let targetIdx = typeof cutIdx === 'number' && cutIdx >= 0 ? Math.min(n - 1, cutIdx) : window.__arPinnedCut;
       if (typeof targetIdx !== 'number' || targetIdx < 0) {
-        const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+        const mainDur = getMainDuration();
         const curT = (window.__timelines && window.__timelines.main) ? window.__timelines.main.currentTime : 0;
         const cutDur = mainDur / n;
         targetIdx = curT < mainDur ? Math.min(n - 1, Math.max(0, Math.floor(curT / cutDur))) : 0;
@@ -3345,7 +3345,7 @@
       if (ppBtn) ppBtn.textContent = '▶️ 재생';
       if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
 
-      const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+      const mainDur = getMainDuration();
       const cutDur = mainDur / n;
       const curT = (window.__timelines && window.__timelines.main) ? window.__timelines.main.currentTime : 0;
       if (curT < targetIdx * cutDur || curT >= (targetIdx + 1) * cutDur) {
@@ -3679,7 +3679,7 @@
           const nx = Math.max(0, Math.min(1, relX / rect.width));
           const ny = Math.max(0, Math.min(1, relY / rect.height));
           const n = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
-          const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+          const mainDur = getMainDuration();
           const curT = (window.__timelines && window.__timelines.main) ? window.__timelines.main.currentTime : 0;
           const cutDur = mainDur / n;
           const targetIdx = window.__arPinnedCut >= 0
@@ -3764,7 +3764,7 @@
         const ppBtn = document.getElementById('playPauseBtn');
         if (ppBtn) ppBtn.textContent = '▶️ 재생';
         if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
-        const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+        const mainDur = getMainDuration();
         const cutDur = mainDur / n;
         const seekT = targetIdx * cutDur + Math.min(0.55, cutDur * 0.35);
         if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(seekT);

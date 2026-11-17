@@ -4221,7 +4221,7 @@ function renderStoryArchetypesUI() {
       if (!dock) return;
 
       const totalCuts = getTargetCutCount();
-      const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+      const mainDur = getMainDuration();
       const cutIdx = t < mainDur ? getCutIndexAt(t) : totalCuts - 1;
       const wKey = campaign.scenePlan[cutIdx]?.widget || WIDGET_POOL[cutIdx % WIDGET_POOL.length];
       const wLabel = WIDGET_LABELS[wKey] || wKey;

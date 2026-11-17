@@ -153,6 +153,7 @@
               t.iconUrl = iconUrl;
               const imgEl = document.querySelector(`#topicCards [data-topic-idx="${i}"] .bgm-cover img`);
               if (imgEl) imgEl.src = iconUrl;
+              arSyncProductRows();
             } catch (e) {}
           }));
           if (jobId === arTopicIconJob && cacheKey) {
@@ -190,6 +191,7 @@
           <span class="bgm-row-txt"><strong>${esc(t.title)}</strong><small><b>${esc(t.why)}</b>${t.prompt ? ' · ' + esc(t.prompt) : ''}</small></span>
           <span class="bgm-row-state">${curTopic === t.title ? '✓' : '›'}</span>        </button>`;
       }).join('') + pager;
+      arSyncProductRows();
       const st = document.getElementById('topicStatus');
       if (st && statusText !== null) st.textContent = statusText || '';
       if (cacheInfo && cacheInfo.hydrate) {
@@ -282,12 +284,32 @@
     function arProductKey() {
       return ['inputVehicle', 'inputDiscountNum', 'inputDiscount'].map((id) => (document.getElementById(id) || {}).value || '').join('|');
     }
+    function arProductPhoto(name) {
+      const photos = campaign.uploadedPhotos || [];
+      const photo = photos.find((p) => p && p.src);
+      if (campaign.isUserCustomPhotos && photo) return photo.src;
+      // 기본 업종 사진보다 상품명과 겹치는 주제 사진을 우선합니다.
+      const words = String(name || '').split(/\s+/).filter((word) => word.length > 1);
+      let best = null, bestScore = 0;
+      for (const topic of (window.__arTopics || [])) {
+        if (!topic.iconUrl) continue;
+        const title = String(topic.title || '');
+        const score = words.filter((word) => title.includes(word)).length;
+        if (score > bestScore) { best = topic; bestScore = score; }
+      }
+      return (best && best.iconUrl) || (photo && photo.src) || arPickFallbackTopicPhoto(IND.key, 0);
+    }
     function arSyncProductRows() {
       const name = String((typeof campaign !== 'undefined' && campaign.vehicle) || (document.getElementById('inputVehicle') || {}).value || '').trim() || '내 상품';
       const sub = String((document.getElementById('inputDiscount') || {}).value || '').trim();
       const num = Number((document.getElementById('inputDiscountNum') || {}).value || 0);
       document.querySelectorAll('.ar-product-name').forEach((el) => { el.textContent = name; });
       document.querySelectorAll('.ar-product-sub').forEach((el) => { el.textContent = [num > 0 && typeof IND !== 'undefined' && IND.key === 'auto' ? `최대 ${num}만원 할인` : '', sub].filter(Boolean).join(' · ') || '무엇을 알릴지 정해 두면 대본에 들어가요'; });
+      const photoSrc = arProductPhoto(name);
+      document.querySelectorAll('.ar-product-photo').forEach((img) => {
+        if (img.getAttribute('src') !== photoSrc) img.src = photoSrc;
+        img.alt = name;
+      });
       const chip = document.getElementById('todayTopicChip');
       if (chip) chip.textContent = (window.arTodayTopic && window.arTodayTopic.title) || '고르기';
     }
@@ -1451,7 +1473,7 @@
       }
 
       syncScenePlanUI();
-      const mainDur = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+      const mainDur = getMainDuration();
       window.__timelines['main'].seek((window.__timelines['main'].currentTime + mainDur / totalCuts) % mainDur);
     }
 

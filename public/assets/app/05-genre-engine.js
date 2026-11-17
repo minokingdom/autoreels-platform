@@ -24,7 +24,7 @@
     };
 
     function updateTimelineUI(t) {
-      const mainDuration = Math.max(4.0, TOTAL_DURATION - OUTRO_DURATION);
+      const mainDuration = getMainDuration();
       const totalCuts = getTargetCutCount();
       const cutDuration = mainDuration / totalCuts;
       const slider = document.getElementById('timelineSlider');

@@ -86,10 +86,40 @@ try {
   await page.evaluate(()=>seekToTime(0));
   const count=await page.evaluate(()=>window.__voiceStarts.length);
   await page.waitForTimeout(5400);
-  const result=await page.evaluate(()=>({starts:window.__voiceStarts.length,active:!!AudioEngine.masterSource,t:window.__timelines.main.currentTime,boundaries:[getCutStart(1),getCutStart(2),getCutStart(3)],rate:AudioEngine.masterSource?.playbackRate.value}));
+  const result=await page.evaluate(()=>({starts:window.__voiceStarts.length,active:!!AudioEngine.masterSource,t:window.__timelines.main.currentTime,total:TOTAL_DURATION,voiceDuration:AudioEngine.masterBuffer.duration,outro:OUTRO_DURATION,boundaries:[getCutStart(1),getCutStart(2),getCutStart(3)],rate:AudioEngine.masterSource?.playbackRate.value}));
+  assert.equal(result.total,result.voiceDuration);
+  assert.equal(result.outro,0);
   assert.equal(result.starts,count,JSON.stringify(result));
   assert.equal(result.active,true);
   assert.equal(result.rate,1);
   result.boundaries.forEach((t,i)=>assert.ok(Math.abs(t-[2.21,3.65,5.03][i])<.01));
   console.log('browser narration continuity ok',JSON.stringify(result));
+  const ending = await page.evaluate(() => {
+    isPlaying=false; AudioEngine.stopTts(); arCardEmpty=()=>false;
+    const ctx=AudioEngine.ensureContext();
+    AudioEngine.masterBuffer=ctx.createBuffer(1,Math.round(ctx.sampleRate*7.4),ctx.sampleRate);
+    AudioEngine.masterDuration=AudioEngine.masterBuffer.duration;
+    AudioEngine.masterCutBounds=[0,2.21,3.65,5.03,5.8775,AudioEngine.masterDuration];
+    refitDurationToNarration();
+    window.__timelines.main.seek(6.2);
+    return {total:TOTAL_DURATION,voice:AudioEngine.masterDuration,main:getMainDuration(),outro:OUTRO_DURATION};
+  });
+  assert.equal(ending.total,ending.voice);
+  assert.ok(Math.abs(ending.main-5.8775)<.001);
+  assert.ok(Math.abs(ending.outro-1.5225)<.001);
+  console.log('browser ending timing ok',JSON.stringify(ending));
+  await page.evaluate(() => {
+    campaign.vehicle='가을 컬러 네일'; campaign.isUserCustomPhotos=false;
+    window.__arTopics=[{title:'요즘 유행하는 3D 네일',iconUrl:'/assets/topics/beauty/2.jpg'},{title:'가을 찰떡 네일 추천',iconUrl:'/assets/topics/beauty/1.jpg'}];
+    arSyncProductRows(); switchStudioTab('topic');
+  });
+  await page.waitForFunction(()=>document.querySelector('.ar-product-photo')?.naturalWidth>0);
+  assert.equal(await page.locator('.ar-product-photo').getAttribute('src'),'/assets/topics/beauty/1.jpg');
+  await page.locator('.ar-product-cover').click();
+  assert.equal(await page.locator('#productSheet').isVisible(),true);
+  await page.evaluate(()=>arCloseProductSheet());
+  assert.equal(await page.locator('#productSheet').isVisible(),false);
+  console.log('product photo and sheet click ok');
+  assert.deepEqual(pageErrors,[]);
+  assert.deepEqual(await page.evaluate(()=>window.__smokeAsyncErrors),[]);
 } finally { await browser.close(); if(srv)srv.close(); }

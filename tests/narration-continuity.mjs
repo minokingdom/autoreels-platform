@@ -7,7 +7,7 @@ const methods=['shouldUseCutSyncedPlayback','playMasterAt','stopMasterSource','s
  const m=audio.match(new RegExp('^      '+name+'\\([^]*?^      \\},?\\r?$','m'));
  assert.ok(m,name); return m[0].trimEnd().replace(/,$/, '');
 }).join(',\n');
-for(const factor of [1,4]) for (const card of [false,true]) for(const base of [8,12,20,30]) {
+for(const factor of [0.5,1,4]) for (const card of [false,true]) for(const base of [8,12,20,30]) {
  const rawBounds=card?[0,2.21,3.65,5.03,5.8775,7.4]:[0,2.21,3.65,5.03,5.8775];
  const bounds=rawBounds.map(x=>x*factor);
  const sources=[];
@@ -21,8 +21,9 @@ for(const factor of [1,4]) for (const card of [false,true]) for(const base of [8
  const fit=env.computeFittedDurations();
  let t=0;
  for(let i=0;i<3;i++){t+=fit.lengths[i];assert.ok(Math.abs(t-bounds[i+1])<.01, 'cut must follow narration: '+JSON.stringify({card,base,i,t,bound:bounds[i+1]}))}
- assert.ok(fit.total>=base-.01);
- assert.ok(fit.total>=bounds.at(-1));
+ assert.equal(fit.total,bounds.at(-1), "video must end with narration, without a padded tail");
+ assert.ok(Math.abs(fit.lengths.reduce((a,b)=>a+b,0)+fit.outro-fit.total)<0.001);
+ assert.ok(Math.abs(fit.outro-(card?bounds.at(-1)-bounds[4]:0))<0.001, "ending follows its own narration only");
  env.TOTAL_DURATION=fit.total;env.OUTRO_DURATION=fit.outro;
  env.AudioEngine.playMasterAt(0);
  assert.equal(sources.length,1);
@@ -37,4 +38,4 @@ for(const factor of [1,4]) for (const card of [false,true]) for(const base of [8
  env.AudioEngine.playMasterAt(0);
  assert.equal(env.AudioEngine.masterSource.offset,0);
 }
-console.log('narration continuity ok: 16 short/long narration and duration/card combinations, cut boundaries, pause/resume/restart');
+console.log('narration continuity ok: 24 short/long narration and duration/card combinations, cut boundaries, pause/resume/restart');

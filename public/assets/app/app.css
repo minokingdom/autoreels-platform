@@ -1473,3 +1473,7 @@ body.ar-cut-editing #arQuickBar { display: none; }
     gap: 8px;
   }
 }
+
+/* 상품 카드도 현재 상품에 맞는 사진을 사용합니다. */
+.ar-product-cover { width: 44px; height: 44px; overflow: hidden; background: #1c1c1e; }
+.ar-product-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
