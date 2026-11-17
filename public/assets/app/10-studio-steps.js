@@ -1950,6 +1950,8 @@
 
         const totalCutsTarget = Math.max(prompts.length, Math.min(10, Number(payload.totalCuts) || prompts.length));
         let readyCount = 0;
+        let failedCount = 0;
+        let firstError = '';
         const firstReady = new Array(prompts.length).fill(null);
 
         await Promise.all(prompts.map(async (imagePrompt, idx) => {
@@ -1961,7 +1963,7 @@
             });
             const ij = await imgRes.json().catch(() => ({}));
             if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
-            if (!imgRes.ok || !ij.ok || !ij.image || !ij.image.dataUrl) return;
+            if (!imgRes.ok || !ij.ok || !ij.image || !ij.image.dataUrl) { failedCount += 1; firstError = firstError || ij.error || 'kie_image_failed'; return; }
             const compactUrl = await arDownscaleSceneDataUrl(ij.image.dataUrl);
             if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
             firstReady[idx] = compactUrl;
@@ -1975,8 +1977,12 @@
                 }
               });
             }
-          } catch (e) {}
+          } catch (e) { failedCount += 1; firstError = firstError || 'kie_image_failed'; }
         }));
+        if (failedCount && noticeEl && stillCurrent()) {
+          const messages = { missing_kie_key: 'KIE API 키가 설정되지 않았습니다.', kie_insufficient_credits: 'KIE 크레딧이 부족합니다.', kie_invalid_key: 'KIE API 키를 확인해 주세요.', kie_rate_limited: '요청이 많습니다. 잠시 후 다시 시도해 주세요.', kie_image_timeout: '이미지 생성이 지연되고 있습니다. 잠시 후 확인해 주세요.', kie_image_download_failed: '생성된 이미지를 받지 못했습니다.', kie_image_failed: 'KIE 이미지 생성에 실패했습니다.' };
+          noticeEl.textContent = '이미지 생성 실패: ' + (messages[firstError] || messages.kie_image_failed) + ' (' + failedCount + '/' + prompts.length + ')';
+        }
       } catch (e) {
         if (noticeEl) noticeEl.textContent = `이미지 생성 중 일시적 지연이 발생했습니다. (${e.message || '네트워크 오류'})`;
       }

@@ -587,29 +587,39 @@ ${instruction}`
   return prompts;
 }
 
-async function generateSingleGeminiSceneImage(apiKey, promptText, idx, aspectRatio = '9:16') {
+async function generateSingleKieSceneImage(apiKey, promptText, idx, aspectRatio = '9:16') {
+  const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
+  const fail = (code) => ({ error: code });
+  const mapCode = (code) => Number(code) === 402 ? 'kie_insufficient_credits' : Number(code) === 401 ? 'kie_invalid_key' : Number(code) === 429 ? 'kie_rate_limited' : 'kie_image_failed';
   try {
-    const ratio = aspectRatio === '1:1' ? '1:1' : '9:16';
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${encodeURIComponent(apiKey)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: AbortSignal.timeout(30000),
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: promptText }] }],
-        generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: ratio } }
-      })
+    const created = await fetch('https://api.kie.ai/api/v1/jobs/createTask', {
+      method: 'POST', headers, signal: AbortSignal.timeout(10000),
+      body: JSON.stringify({ model: 'z-image', input: { prompt: String(promptText).slice(0, 1000), aspect_ratio: aspectRatio === '1:1' ? '1:1' : '9:16', nsfw_checker: true } })
     });
-    if (r.ok) {
-      const j = await r.json();
-      const parts = j?.candidates?.[0]?.content?.parts || [];
-      const imgPart = parts.find((pt) => pt.inlineData && pt.inlineData.data);
-      if (imgPart) {
-        const mime = imgPart.inlineData.mimeType || 'image/jpeg';
-        return { index: idx, dataUrl: `data:${mime};base64,${imgPart.inlineData.data}` };
-      }
+    const task = await created.json();
+    if (!created.ok || Number(task.code) !== 200 || !task.data?.taskId) return fail(mapCode(task.code || created.status));
+    const started = Date.now();
+    while (Date.now() - started < 32000) {
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+      const poll = await fetch(`https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${encodeURIComponent(task.data.taskId)}`, { headers, signal: AbortSignal.timeout(7000) });
+      const info = await poll.json();
+      if (!poll.ok || Number(info.code) !== 200) return fail(mapCode(info.code || poll.status));
+      if (info.data?.state === 'fail') return fail(mapCode(info.data.failCode));
+      if (info.data?.state !== 'success') continue;
+      const result = info.data.response || JSON.parse(info.data.resultJson || '{}');
+      const url = new URL(result.resultUrls?.[0] || '');
+      if (url.protocol !== 'https:' || !(url.hostname === 'aiquickdraw.com' || url.hostname.endsWith('.aiquickdraw.com')) || url.username || url.password || url.port) return fail('kie_image_download_failed');
+      const img = await fetch(url.href, { signal: AbortSignal.timeout(8000), redirect: 'error' });
+      const mime = (img.headers.get('content-type') || '').split(';')[0].toLowerCase();
+      const allowed = ['image/png', 'image/jpeg', 'image/webp'];
+      if (!img.ok || !allowed.includes(mime) || Number(img.headers.get('content-length') || 0) > 2500000) return fail('kie_image_download_failed');
+      const chunks = []; let size = 0;
+      for await (const chunk of img.body) { size += chunk.length; if (size > 2500000) return fail('kie_image_download_failed'); chunks.push(Buffer.from(chunk)); }
+      if (!size) return fail('kie_image_download_failed');
+      return { image: { index: idx, dataUrl: `data:${mime};base64,${Buffer.concat(chunks).toString('base64')}` } };
     }
-  } catch (e) {}
-  return null;
+    return fail('kie_image_timeout');
+  } catch (_) { return fail('kie_image_failed'); }
 }
 
 function sceneImageCount(body) {
@@ -617,29 +627,25 @@ function sceneImageCount(body) {
   return Math.max(1, Math.min(10, Math.floor(raw)));
 }
 async function handleSceneImages(body, res) {
-  const apiKey = String(body.adminGeminiKey || process.env.GEMINI_API_KEY || '').trim();
-  if (!apiKey) {
-    return res.status(200).json({ ok: false, error: 'missing_gemini_key', images: [], prompts: [] });
-  }
+  const geminiKey = String(body.adminGeminiKey || process.env.GEMINI_API_KEY || '').trim();
+  const kieKey = String(process.env.KIE_API_KEY || '').trim();
   if (body.mode === 'scene-image') {
+    if (!kieKey) return res.status(200).json({ ok: false, error: 'missing_kie_key', image: null });
     const imagePrompt = String(body.imagePrompt || body.prompt || '').trim();
     if (!imagePrompt) return res.status(200).json({ ok: false, error: 'missing_prompt', image: null });
-    const image = await generateSingleGeminiSceneImage(apiKey, imagePrompt, Number(body.index) || 0, body.aspectRatio || '9:16');
-    return res.status(200).json({ ok: Boolean(image), image });
+    const result = await generateSingleKieSceneImage(kieKey, imagePrompt, Number(body.index) || 0, body.aspectRatio || '9:16');
+    return res.status(200).json({ ok: Boolean(result.image), image: result.image || null, error: result.error });
   }
   const hasTopics = Array.isArray(body.topicsList) && body.topicsList.length > 0;
   const topicText = String((body.topic && body.topic.title) || body.prompt || body.vehicle || '').trim();
-  if (!topicText && !hasTopics) {
-    return res.status(200).json({ ok: false, error: 'missing_topic', images: [], prompts: [] });
-  }
+  if (!topicText && !hasTopics) return res.status(200).json({ ok: false, error: 'missing_topic', images: [], prompts: [] });
+  if (body.mode !== 'scene-prompts' && !kieKey) return res.status(200).json({ ok: false, error: 'missing_kie_key', images: [] });
   const count = sceneImageCount(body);
-  const prompts = await buildTopicScenePrompts(body, apiKey, count);
-  if (body.mode === 'scene-prompts') {
-    return res.status(200).json({ ok: prompts.length > 0, prompts });
-  }
-  const results = await Promise.all(prompts.map((p, idx) => generateSingleGeminiSceneImage(apiKey, p, idx, body.aspectRatio || '9:16')));
-  const images = results.filter(Boolean);
-  return res.status(200).json({ ok: images.length > 0, images });
+  const prompts = await buildTopicScenePrompts(body, geminiKey, count);
+  if (body.mode === 'scene-prompts') return res.status(200).json({ ok: prompts.length > 0, prompts });
+  const results = await Promise.all(prompts.map((p, idx) => generateSingleKieSceneImage(kieKey, p, idx, body.aspectRatio || '9:16')));
+  const images = results.map((r) => r.image).filter(Boolean);
+  return res.status(200).json({ ok: images.length > 0, images, error: images.length ? undefined : results[0]?.error });
 }
 
 const { isSameSiteRequest } = require('../lib/server/usage');
