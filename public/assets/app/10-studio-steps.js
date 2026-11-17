@@ -1766,6 +1766,86 @@
       };
     }
 
+    // 이 PC의 로컬 생성 모드. 다른 사용자에게 유료/로컬 설정을 강제로 바꾸지 않습니다.
+    function arUseLocalSceneImages() {
+      try {
+        const requested = new URLSearchParams(location.search).get('localImages');
+        if (requested === '1' || requested === '0') localStorage.setItem('autoreels_scene_image_provider', requested === '1' ? 'local' : 'gemini');
+        return localStorage.getItem('autoreels_scene_image_provider') === 'local';
+      } catch (_) { return false; }
+    }
+
+    function arSceneImageContextKey() {
+      return JSON.stringify([IND.key, window.arTodayTopic?.title || '', campaign.vehicle, campaign.cutCaptions,
+        campaign.designStyle, campaign.themeId, typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4]);
+    }
+
+    async function arLocalSceneRequest(path, payload, timeoutMs) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const response = await fetch('http://127.0.0.1:8193' + path, {
+          method: payload ? 'POST' : 'GET', signal: controller.signal,
+          ...(payload ? { headers: { 'Content-Type': 'application/json', 'X-AutoReels-Local': '1' }, body: JSON.stringify(payload) } : {})
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.error || '이 PC의 이미지 생성기가 아직 준비되지 않았어요. 로컬 이미지 시작 파일을 실행해 주세요.');
+        return data;
+      } catch (error) {
+        if (error.name === 'AbortError') throw new Error('로컬 이미지 생성 응답 시간이 초과됐어요. 진행 중인 작업이 끝난 뒤 다시 눌러 주세요.');
+        if (error instanceof TypeError) throw new Error('로컬 이미지 생성기에 연결할 수 없어요. 시작 파일을 실행하고 브라우저의 로컬 네트워크 접근을 허용해 주세요.');
+        throw error;
+      } finally { clearTimeout(timer); }
+    }
+
+    async function arApplyLocalSceneImages(payload, applySlotImage, stillCurrent, noticeEl) {
+      const btn = document.getElementById('regenTopicImgBtn');
+      let completed = 0;
+      const update = (message) => {
+        if (!stillCurrent()) return;
+        if (noticeEl) { noticeEl.classList.remove('hidden'); noticeEl.textContent = message; }
+        if (btn) btn.textContent = message;
+      };
+      try {
+        update('✨ 로컬 생성기 연결 중...');
+        const health = await arLocalSceneRequest('/health', null, 12000);
+        if (health.service !== 'autoreels-local-images') throw new Error('로컬 이미지 연결 주소를 확인해 주세요.');
+        if (!stillCurrent()) return;
+        update('✨ 주제에 맞는 장면 준비 중...');
+        // 비밀키는 로컬 연결 서버에도 보내지 않습니다.
+        const { adminGeminiKey, ...scenePayload } = payload;
+        const planned = await arLocalSceneRequest('/scene', { ...scenePayload, mode: 'scene-prompts' }, 250000);
+        if (!stillCurrent()) return;
+        const prompts = Array.isArray(planned.prompts) ? planned.prompts : [];
+        if (!prompts.length || prompts.length > 10) throw new Error('장면 설명을 만들지 못했어요. 다시 눌러 주세요.');
+        const total = Math.max(prompts.length, Math.min(10, Number(payload.totalCuts) || prompts.length));
+        for (let index = 0; index < prompts.length; index++) {
+          if (!stillCurrent()) return;
+          update(`✨ 로컬 이미지 ${index + 1}/${prompts.length} 생성 중...`);
+          const result = await arLocalSceneRequest('/scene', { mode: 'scene-image', imagePrompt: prompts[index], index }, 250000);
+          if (!stillCurrent()) return;
+          if (!result.image?.dataUrl?.startsWith('data:image/')) throw new Error('이미지를 받지 못했어요.');
+          const compact = await arDownscaleSceneDataUrl(result.image.dataUrl);
+          if (!stillCurrent()) return;
+          for (let slot = index; slot < total; slot += prompts.length) {
+            const applied = await new Promise(resolve => applySlotImage(slot, compact, resolve));
+            if (!stillCurrent()) return;
+            if (!applied) throw new Error('생성된 이미지를 컷에 넣지 못했어요.');
+          }
+          completed++;
+        }
+        if (stillCurrent()) {
+          if (noticeEl) noticeEl.textContent = `주제 [${payload.prompt}] · 로컬 이미지 ${completed}장이 ${total}컷에 적용되었습니다.`;
+          if (typeof arToast === 'function') arToast(`이 PC에서 만든 이미지 ${completed}장을 컷에 넣었어요`);
+        }
+      } catch (error) {
+        if (!stillCurrent()) return;
+        const message = `${completed ? completed + '장 적용 후 중단: ' : ''}${error.message || '로컬 이미지 생성에 실패했어요.'}`;
+        if (noticeEl) { noticeEl.classList.remove('hidden'); noticeEl.textContent = message; }
+        if (typeof arToast === 'function') arToast(message);
+      }
+    }
+
     function arRegenerateThemeImages() {
       const totalCuts = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
       const tp = window.arTodayTopic;
@@ -1777,7 +1857,7 @@
       const th = arBuildThemeContextForImages();
       if (btn) { btn.disabled = true; btn.textContent = '✨ 이미지 생성 중...'; }
       if (typeof arToast === 'function') arToast(`[${topicText}] · [${th.designName || '기본'} / ${th.themeName || '테마'}] 맞춤 이미지를 만들고 있어요`);
-      Promise.resolve(arApplyTopicSceneImages({
+      return Promise.resolve(arApplyTopicSceneImages({
         prompt: topicText,
         vehicle: campaign.vehicle,
         topic: tp || null,
@@ -1818,13 +1898,15 @@
     async function arApplyTopicSceneImages(payload) {
       const genId = (arApplyTopicSceneImages._seq = (arApplyTopicSceneImages._seq || 0) + 1);
       const noticeEl = document.getElementById('aiGenNotice');
+      const localContext = arSceneImageContextKey();
+      const stillCurrent = () => genId === arApplyTopicSceneImages._seq && !campaign.isUserCustomPhotos && localContext === arSceneImageContextKey();
       const applySlotImage = (slot, dataUrl, doneCb) => {
         const img = new Image();
         img._dataUrl = dataUrl;
         img._label = `${slot + 1}. ${payload.prompt}`;
         img._sceneTitle = payload.prompt;
         img.onload = () => {
-          if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
+          if (!stillCurrent()) { if (doneCb) doneCb(false); return; }
           if (!Array.isArray(campaign.uploadedPhotos)) campaign.uploadedPhotos = [];
           if (!Array.isArray(campaign.scenePlan)) campaign.scenePlan = [];
           campaign.uploadedPhotos[slot] = img;
@@ -1835,10 +1917,13 @@
           if (typeof renderCutEditorPanel === 'function') renderCutEditorPanel();
           if (typeof renderInlineQuickEditBar === 'function') renderInlineQuickEditBar();
           if (window.__timelines?.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
-          if (doneCb) doneCb();
+          if (doneCb) doneCb(true);
         };
+        img.onerror = () => { if (doneCb) doneCb(false); };
         img.src = dataUrl;
       };
+
+      if (arUseLocalSceneImages()) return arApplyLocalSceneImages(payload, applySlotImage, stillCurrent, noticeEl);
 
       try {
         if (noticeEl) {
@@ -1876,7 +1961,8 @@
             if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
             firstReady[idx] = compactUrl;
             for (let slot = idx; slot < totalCutsTarget; slot += prompts.length) {
-              applySlotImage(slot, compactUrl, () => {
+              applySlotImage(slot, compactUrl, (applied) => {
+                if (!applied) return;
                 readyCount += 1;
                 if (readyCount === totalCutsTarget) {
                   if (noticeEl) noticeEl.textContent = `주제 [${payload.prompt}] · 디자인 테마 맞춤 대본·이미지(${prompts.length}컷)가 적용되었습니다.`;
