@@ -63,4 +63,5 @@
 
 
 
-.pd-cats .pd-shuffle-filter { color: #ededed; border-color: rgba(255,255,255,.22); }
+.pd-cats .pd-shuffle-filter { color: #7dd3fc; background: #13283a; border-color: #38bdf8; font-weight: 700; }
+.pd-cats .pd-shuffle-filter:hover, .pd-cats .pd-shuffle-filter:focus-visible { color: #fff; background: #1b4d68; outline: 2px solid #7dd3fc; outline-offset: 1px; }
