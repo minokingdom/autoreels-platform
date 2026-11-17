@@ -838,6 +838,12 @@
             ? 'h-7 px-1 rounded-[6px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer'
             : 'h-7 px-1 rounded-[6px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] bg-[#141415] border border-[var(--border)] cursor-pointer';
         }
+        const tBtn = document.getElementById(`topicDurBtn_${dVal}`);
+        if (tBtn) {
+          tBtn.className = isActive
+            ? 'h-6 px-2 rounded-[5px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer'
+            : 'h-6 px-2 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer';
+        }
       });
 
       // 점프 버튼 업데이트

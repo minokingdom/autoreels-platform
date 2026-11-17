@@ -3,6 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <script>try { localStorage.setItem('ar_visited_studio', '1'); } catch (e) {}</script>
+  <script>
+    try {
+      if (window.self === window.top && new URLSearchParams(location.search).get('mobile') === '1' && window.innerWidth >= 500) {
+        window.__AR_MOBILE_SHELL = true;
+        document.documentElement.classList.add('ar-mobile-shell');
+      }
+    } catch (e) {}
+  </script>
+  <style>html.ar-mobile-shell body{display:none!important}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>AutoReels — 프로모션 영상 스튜디오</title>
   <meta name="description" content="사진만 올리면 카마스터 전용 릴스·쇼츠가 완성됩니다. 디자인 136종, AI 성우 내레이션, 9:16 MP4 바로 저장." />
@@ -31,7 +40,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Black+Han+Sans&family=Noto+Serif+KR:wght@700;900&family=Do+Hyeon&family=Jua&family=Nanum+Pen+Script&family=Gugi&family=Gaegu:wght@700&family=Hi+Melody&family=East+Sea+Dokdo&family=Single+Day&family=Yeon+Sung&family=Poor+Story&family=Gamja+Flower&family=Nanum+Brush+Script&family=Gasoek+One&family=Bagel+Fat+One&family=Song+Myung&family=Black+And+White+Picture&family=Dongle:wght@700&family=Great+Vibes&family=Pinyon+Script&display=swap" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.css"></script>
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261117a" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261117b" />
   <link rel="stylesheet" href="/assets/app/splash.css" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -287,6 +296,7 @@
 
         <!-- 상단 통합 설정 버튼 (구독상태 · 업종 · 명함은 설정창에서 한 번에 관리) -->
         <div class="flex items-center gap-2">
+          <a href="/studio?mobile=1" class="hidden lg:inline-flex btn-secondary h-8 px-2.5 text-[12px] items-center gap-1" title="넓은 PC 창에서 390×844 모바일 화면으로 보기">📱 모바일</a>
           <button type="button" id="headerSettingsBtn" onclick="openStudioSettingsModal()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer flex items-center gap-2" title="구독 상태 · 업종 설정">
             <span id="headerDrmDot" class="w-2 h-2 rounded-full bg-[#4cc38a] shrink-0"></span>
             <span>⚙️ 설정</span>
@@ -711,6 +721,17 @@
             <span class="bgm-now-txt"><strong class="ar-product-name">내 상품</strong><small class="ar-product-sub">무엇을 알릴지 정해 두면 대본에 들어가요</small></span>
             <span class="bgm-now-go">바꾸기 ›</span>
           </button>
+          <div class="flex flex-wrap items-center justify-between gap-2 bg-[#141415] px-3 py-2 rounded-[10px] border border-[var(--border)]">
+            <div class="flex items-center gap-1 flex-wrap">
+              <span class="text-[11px] text-[#85858b] mr-1">⏱ 길이</span>
+              <button type="button" id="topicDurBtn_8" onclick="setVideoTotalDuration(8)" class="h-6 px-2 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer">8초</button>
+              <button type="button" id="topicDurBtn_12" onclick="setVideoTotalDuration(12)" class="h-6 px-2 rounded-[5px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer">12초</button>
+              <button type="button" id="topicDurBtn_15" onclick="setVideoTotalDuration(15)" class="h-6 px-2 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer">15초</button>
+              <button type="button" id="topicDurBtn_20" onclick="setVideoTotalDuration(20)" class="h-6 px-2 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer">20초</button>
+              <button type="button" id="topicDurBtn_30" onclick="setVideoTotalDuration(30)" class="h-6 px-2 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer">30초</button>
+            </div>
+            <button type="button" onclick="openPresetDrawer('right')" class="h-7 px-2.5 rounded-[7px] bg-[#232325] hover:bg-[#323236] border border-[var(--border)] text-[11px] font-medium text-[#ededed] cursor-pointer shrink-0">🎨 디자인 ›</button>
+          </div>
           <div class="ig-search-row">
             <input id="topicCustomInput" type="text" placeholder="오늘 올릴 내용 적기 (예: 신메뉴 출시, 오늘만 할인)" onkeydown="if(event.key==='Enter'){event.preventDefault();arPickCustomTopic();}" class="studio-input" />
             <button type="button" onclick="arPickCustomTopic()" class="ig-search-go">만들기</button>
@@ -2058,7 +2079,15 @@
         </div>
       </div>
     </div>
-  <script src="/assets/app/app.js?v=20261117a"></script>
+  <script>
+    if (window.__AR_MOBILE_SHELL) {
+      document.head.innerHTML = '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AutoReels — 모바일 보기 (390×844)</title><style>*{box-sizing:border-box}html,body{margin:0;height:100%;background:#09090b;color:#ededed;font-family:Pretendard,system-ui,sans-serif;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px}.bar{display:flex;align-items:center;justify-content:space-between;width:394px;max-width:100%;font-size:12px;color:#a1a1a6}.bar a{color:#ededed;text-decoration:none;padding:5px 10px;border-radius:8px;background:#232325;border:1px solid rgba(255,255,255,.14)}.frame{width:394px;height:min(848px,calc(100dvh - 54px));border-radius:26px;overflow:hidden;border:2px solid rgba(255,255,255,.16);box-shadow:0 24px 64px rgba(0,0,0,.75);background:#0f0f10}iframe{width:100%;height:100%;border:0;display:block}</style>';
+      document.body.className = '';
+      document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117b" title="AutoReels 모바일 스튜디오"></iframe></div>';
+    } else {
+      document.write('<script src="/assets/app/app.js?v=20261117b"><\/script>');
+    }
+  </script>
   <!--
     가독성 보정 (A단계, 2026-11-13)
     - Tailwind CDN 이 만드는 스타일보다 뒤에 오도록 body 끝에 둡니다.

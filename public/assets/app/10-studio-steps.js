@@ -593,6 +593,7 @@
     const AR_QB_ICONS = {
       sound: '<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M19 6a8 8 0 0 1 0 12"/>',
       mute: '<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M22 9l-6 6"/><path d="M16 9l6 6"/>',
+      design: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
       shuffle: '<path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/>',
       voice: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>',
       restart: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>'
@@ -605,7 +606,7 @@
       qb.id = 'arQuickBar';
       qb.setAttribute('role', 'group');
       qb.setAttribute('aria-label', '미리보기 바로 조작');
-      qb.innerHTML = ['sound', 'shuffle', 'voice', 'restart'].map((k) => `<button type="button" class="aq-btn" data-qb="${k}"><span class="aq-dot">${arQbSvg(k === 'sound' ? 'mute' : k)}</span><span class="aq-label"></span></button>`).join('');
+      qb.innerHTML = ['sound', 'design', 'shuffle', 'voice', 'restart'].map((k) => `<button type="button" class="aq-btn" data-qb="${k}"><span class="aq-dot">${arQbSvg(k === 'sound' ? 'mute' : k)}</span><span class="aq-label"></span></button>`).join('');
       qb.addEventListener('click', (e) => {
         const b = e.target.closest('[data-qb]');
         if (!b) return;
@@ -626,6 +627,7 @@
     }
     function arQuickAction(k) {
       if (k === 'sound') toggleAudioMaster();
+      else if (k === 'design' && typeof openPresetDrawer === 'function') openPresetDrawer('right');
       else if (k === 'shuffle') randomizePreviewDesignOnly();
       else if (k === 'restart') arQuickRestart();
       else if (k === 'voice') {
@@ -658,6 +660,7 @@
         b.setAttribute('aria-label', label);
       };
       set('sound', on ? '소리 켜짐' : '소리 켜기', on ? 'sound' : 'mute', !on);
+      set('design', '디자인', 'design', false);
       set('shuffle', '섞기', 'shuffle', false);
       set('voice', voiceOn ? '성우 켜짐' : '성우 꺼짐', 'voice', !voiceOn);
       set('restart', '처음부터', 'restart', false);
