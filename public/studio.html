@@ -39,7 +39,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Black+Han+Sans&family=Noto+Serif+KR:wght@700;900&family=Do+Hyeon&family=Jua&family=Nanum+Pen+Script&family=Gugi&family=Gaegu:wght@700&family=Hi+Melody&family=East+Sea+Dokdo&family=Single+Day&family=Yeon+Sung&family=Poor+Story&family=Gamja+Flower&family=Nanum+Brush+Script&family=Gasoek+One&family=Bagel+Fat+One&family=Song+Myung&family=Black+And+White+Picture&family=Dongle:wght@700&family=Great+Vibes&family=Pinyon+Script&display=swap" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261117p" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261117q" />
   <link rel="stylesheet" href="/assets/app/splash.css" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -309,6 +309,7 @@
             <span id="headerDealerNameText">홍길동 수석 카마스터</span>
             <span id="headerDealerPhoneText">010-0000-0000</span>
           </div>
+          <button type="button" id="arProjectsOpen">내 프로젝트</button>
           <button type="button" id="headerAuthBtn" onclick="openDealerAuthModal()">카마스터 로그인 · 가입</button>
         </div>
       </div>
@@ -1189,7 +1190,7 @@
               <div class="text-[14px] font-semibold text-[#ededed]">영상 엔딩</div>
               <p id="cardTabSummaryText" class="text-[12px] text-[#85858b] mt-0.5">영상 마지막에 나오는 가게 정보예요. 넣고 싶은 항목만 켜 두세요. 모두 비우면 엔딩 없이 끝나요.</p>
             </div>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label id="dlrNameTitleLabel" data-noind class="block text-[12px] text-[#a1a1a6] mb-1.5">이름 및 직함</label>
@@ -1300,11 +1301,16 @@
 
           <!-- 예약 발행 & 인스타 첫 댓글 해시태그 옵션 -->
           <div class="studio-sub p-4 space-y-0">
-            <label class="ig-switch-row"><span>예약 발행 준비 중 · 지금 게시만 가능</span><input id="snsScheduleEnabled" type="checkbox" disabled onchange="document.getElementById('snsScheduleWrap').classList.toggle('hidden', !this.checked)" /><i></i></label>
+            <label class="ig-switch-row"><span id="arScheduleLabel">예약 실행 서비스 연결 준비 중</span><input id="snsScheduleEnabled" type="checkbox" disabled onchange="document.getElementById('snsScheduleWrap').classList.toggle('hidden', !this.checked)" /><i></i></label>
             <label class="ig-switch-row"><span>해시태그는 인스타 첫 댓글로</span><input id="snsIgFirstComment" type="checkbox" /><i></i></label>
+            <details class="studio-sub p-3 space-y-2">
+              <summary>예약·발행 내역</summary>
+              <button id="arHistoryRefresh" type="button" class="btn-secondary h-8 px-3">내역 새로고침</button>
+              <div id="arSnsHistory" class="space-y-2 text-[12px]" role="status">새로고침을 누르면 예약과 실패 내역을 확인할 수 있습니다.</div>
+            </details>
             <div id="snsScheduleWrap" class="hidden flex items-center gap-2 flex-wrap">
               <input id="snsScheduleAt" type="datetime-local" class="studio-input h-9 px-2.5 text-[12px] flex-1 min-w-[200px]" />
-              <span class="text-[11px] text-[#85858b]">최대 30일 이내 예약 가능</span>
+              <span class="text-[11px] text-[#85858b]">2분 뒤부터 7일 이내 · 기기의 현지 시간 기준</span>
             </div>
           </div>
 
@@ -1611,7 +1617,7 @@
         </div>
         <div>
           <label id="authPwLabel" class="block text-[12px] text-[#a1a1a6] mb-1">비밀번호 (4자리 이상)</label>
-          <input id="authPasswordInput" type="password" placeholder="••••" class="studio-input w-full h-9 px-3 text-[13px]" />
+          <input id="authPasswordInput" type="password" maxlength="128" autocomplete="current-password" placeholder="••••" class="studio-input w-full h-9 px-3 text-[13px]" />
         </div>
 
         <!-- 신규 가입 시 추가 입력 필드 -->
@@ -1645,6 +1651,13 @@
         </div>
       </div>
 
+      <div id="arPhoneVerification" class="hidden space-y-2">
+        <button id="arSendCode" type="button" class="btn-secondary h-9 px-3">문자 인증번호 받기</button>
+        <label for="arPhoneCode" class="block text-[12px]">인증번호 6자리</label>
+        <input id="arPhoneCode" class="studio-input w-full h-9 px-3" inputmode="numeric" autocomplete="one-time-code" maxlength="6" />
+        <p id="arPhoneNotice" role="status" class="text-[12px]"></p>
+      </div>
+      <button id="arForgotPassword" type="button" class="btn-secondary h-8 px-3">비밀번호 찾기</button>
       <p id="authModalNotice" class="hidden text-[12px] text-[#4cc38a] text-center"></p>
 
       <button type="button" onclick="submitDealerAuthForm()" id="authSubmitBtn" class="btn-primary w-full h-10 text-[13px] cursor-pointer">
@@ -1680,6 +1693,16 @@
 
       <!-- 회원 서버 모드: 내 구독 상태 -->
       <div id="billingAccountBox" class="hidden studio-sub p-3.5 space-y-2 text-[12px]"></div>
+      <details class="studio-sub p-3 space-y-2">
+        <summary>계정 보안 · 비밀번호 변경</summary>
+        <label for="arSecurityCurrent">현재 비밀번호</label>
+        <input id="arSecurityCurrent" type="password" autocomplete="current-password" class="studio-input w-full h-9 px-3" maxlength="128" />
+        <label for="arSecurityNext">새 비밀번호 (8~128자)</label>
+        <input id="arSecurityNext" type="password" autocomplete="new-password" class="studio-input w-full h-9 px-3" maxlength="128" />
+        <button id="arPasswordChange" type="button" class="btn-secondary h-8 px-3">비밀번호 변경</button>
+        <button id="arSessionsRevoke" type="button" class="btn-secondary h-8 px-3">다른 기기 로그아웃</button>
+        <p id="arSecurityNotice" role="status"></p>
+      </details>
       <!-- 라이선스 귀속 안내 -->
       <div id="billingLicenseBox" class="studio-sub p-3.5 flex items-center justify-between gap-2 text-[12px]">
         <div>
@@ -2073,13 +2096,26 @@
         </div>
       </div>
     </div>
-  <script>
+
+  <div id="arProjectsModal" class="hidden fixed inset-0 z-50 flex ar-modal" role="dialog" aria-modal="true" aria-labelledby="arProjectsTitle">
+    <div class="studio-card w-full space-y-4 ar-modal-card">
+      <div class="ar-modal-head"><h3 id="arProjectsTitle">내 프로젝트</h3><button id="arProjectsClose" type="button" class="ar-modal-x" aria-label="닫기">×</button></div>
+      <p class="text-[12px]">사진·대본·컷 편집·명함·음성 설정을 계정에 저장합니다. 저장한 프로젝트는 다른 기기에서도 불러올 수 있습니다. 최대 5개, 각 2MB. 직접 올린 동영상·MP3와 생성된 녹음 파일은 제외됩니다.</p>
+      <label for="arProjectName">프로젝트 이름</label>
+      <input id="arProjectName" class="studio-input w-full h-9 px-3" maxlength="80" placeholder="예: 가을 네일 소개" />
+      <div class="flex gap-2"><button id="arProjectSave" type="button" class="btn-primary h-9 px-3">저장</button><button id="arProjectSaveNew" type="button" class="btn-secondary h-9 px-3">새 프로젝트로 저장</button></div>
+      <p id="arProjectNotice" role="status" class="text-[12px]"></p>
+      <div id="arProjectList" class="space-y-2 text-[12px]"></div>
+    </div>
+  </div>
+
+<script>
     if (window.__AR_MOBILE_SHELL) {
       document.head.innerHTML = '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AutoReels — 모바일 보기 (390×844)</title><style>*{box-sizing:border-box}html,body{margin:0;height:100%;background:#09090b;color:#ededed;font-family:Pretendard,system-ui,sans-serif;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px}.bar{display:flex;align-items:center;justify-content:space-between;width:394px;max-width:100%;font-size:12px;color:#a1a1a6}.bar a{color:#ededed;text-decoration:none;padding:5px 10px;border-radius:8px;background:#232325;border:1px solid rgba(255,255,255,.14)}.frame{width:394px;height:min(848px,calc(100dvh - 54px));border-radius:26px;overflow:hidden;border:2px solid rgba(255,255,255,.16);box-shadow:0 24px 64px rgba(0,0,0,.75);background:#0f0f10}iframe{width:100%;height:100%;border:0;display:block}</style>';
       document.body.className = '';
-      document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117p" title="AutoReels 모바일 스튜디오"></iframe></div>';
+      document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117q" title="AutoReels 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261117p"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261117q"><\/script>');
     }
   </script>
   <!--

@@ -105,11 +105,12 @@ module.exports = async function handler(req, res) {
       return send(res, 200, { ok: true, ...(await sns.uploadToken(user, b)) });
     }
     if (action === 'publish') {
-      if (b.scheduledAt) return send(res,503,{ok:false,error:'scheduling_unavailable',message:'예약 발행은 준비 중입니다. 지금 게시만 이용할 수 있습니다.'});
+      if (b.scheduledAt) await sns.requireSchedule(b.scheduledAt);
       if (!/^[a-zA-Z0-9_-]{16,100}$/.test(String(b.requestId || ''))) return send(res,400,{ok:false,error:'request_id_required',message:'화면을 새로고침한 뒤 다시 게시해 주세요.'});
       const expectedJobs = new Set((Array.isArray(b.targets) ? b.targets : []).filter(t => sns.TARGETS.includes(t))).size;
       if (!expectedJobs) return send(res,400,{ok:false,error:'targets_required',message:'발행할 SNS를 골라 주세요.'});
-      const q = await consume(req, 'export', 1, {requestId:b.requestId,expectedJobs});
+      const signature='sns:'+require('node:crypto').createHash('sha256').update(JSON.stringify([[...new Set(b.targets)].sort(),b.videoUrl,b.caption||'',b.title||'',b.scheduledAt||'',Boolean(b.igFirstComment)])).digest('hex');
+      const q = await consume(req, 'export', 1, {requestId:b.requestId,expectedJobs,signature});
       if (!q.ok) return send(res, q.status, q.body);
       try {
         const jobs = await sns.startPublish(user, b);
@@ -123,6 +124,8 @@ module.exports = async function handler(req, res) {
         throw pubErr;
       }
     }
+    if (action === 'history') return send(res,200,{ok:true,jobs:await sns.history(user)});
+    if (action === 'cancel-job') return send(res,200,{ok:true,...await sns.cancelJob(user,b.id)});
     if (action === 'jobs') {
       return send(res, 200, { ok: true, jobs: await sns.jobStatus(user, b.ids) });
     }

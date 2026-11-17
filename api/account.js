@@ -3,6 +3,9 @@
 // 회원가입·로그인·내 정보·구독 결제(베이온)·해지·결제 내역을 한 곳에서 처리합니다.
 // (Vercel 함수 개수를 아끼려고 하나로 묶음)
 const db = require('../lib/server/db');
+const security = require('../lib/server/security');
+const projects = require('../lib/server/projects');
+const scheduler = require('../lib/server/scheduler');
 const { readiness } = require('../lib/server/config');
 const { setSession, clearSession, readSession, hashPassword, checkPassword, sameOrigin } = require('../lib/server/session');
 const billing = require('../lib/server/billing');
@@ -23,7 +26,7 @@ async function readBody(req) {
   }
   return await new Promise((resolve) => {
     let data = '';
-    req.on('data', (c) => { data += c; if (data.length > 100000) req.destroy(); });
+    req.on('data', (c) => { data += c; if (Buffer.byteLength(data) > 2200000) req.destroy(); });
     req.on('end', () => { try { resolve(JSON.parse(data || '{}')); } catch (e) { resolve({}); } });
     req.on('error', () => resolve({}));
   });
@@ -65,21 +68,6 @@ async function mePayload(u) {
   };
 }
 
-// 로그인 시도 제한: 같은 번호로 하루 10번 실패하면 잠금
-async function tooManyAttempts(phone) {
-  const day = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
-  const r = await db.query(`SELECT exports FROM ar_usage WHERE subject = $1 AND period = $2`, [`login:${phone}`, `d:${day}`]);
-  return r.rows[0] && r.rows[0].exports >= 10;
-}
-async function noteFailedAttempt(phone) {
-  const day = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
-  await db.query(
-    `INSERT INTO ar_usage (subject, period, exports) VALUES ($1, $2, 1)
-       ON CONFLICT (subject, period) DO UPDATE SET exports = ar_usage.exports + 1`,
-    [`login:${phone}`, `d:${day}`]
-  );
-}
-
 module.exports = async function handler(req, res) {
   const action = String((req.query && req.query.action) || '').trim();
   const ready = readiness();
@@ -92,7 +80,8 @@ module.exports = async function handler(req, res) {
       billingReady: ready.billing,
       veyonEnv: ready.veyonEnv,
       sns: ready.sns,
-      snsScheduling: false,
+      snsScheduling: await scheduler.available().catch(() => false),
+      phoneVerification: security.smsReady(),
       plans: publicPlans()
     });
   }
@@ -119,18 +108,34 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    if (['phone-code', 'password-reset'].includes(action) && req.method === 'POST') {
+      const b = await readBody(req);
+      const phone = normPhone(b.phone);
+      if (!phone) return send(res,400,{ok:false,error:'invalid_phone',message:'휴대폰 번호를 정확히 입력해 주세요.'});
+      if (action === 'phone-code') return send(res,200,{ok:true,...await security.requestCode(req,phone,b.purpose)});
+      await security.resetPassword(req,phone,b);
+      clearSession(req,res);
+      return send(res,200,{ok:true,message:'비밀번호가 변경되었습니다. 다시 로그인해 주세요.'});
+    }
     if (action === 'signup' && req.method === 'POST') {
       const b = await readBody(req);
       const phone = normPhone(b.phone);
       const pw = String(b.password || '');
       if (!phone) return send(res, 400, { ok: false, error: 'invalid_phone', message: '휴대폰 번호를 정확히 입력해 주세요.' });
       if (pw.length < 8) return send(res, 400, { ok: false, error: 'weak_password', message: '비밀번호는 8자 이상으로 정해 주세요.' });
+      if (pw.length > 128) return send(res,400,{ok:false,error:'weak_password',message:'비밀번호는 8~128자로 입력해 주세요.'});
+      if (!security.smsReady()) return send(res,503,{ok:false,error:'sms_not_ready',message:'문자 인증 연결 준비 중입니다. 기존 회원은 로그인할 수 있습니다.'});
+      const proof = await security.verifyCode(phone,'signup',b.challengeId,b.code);
+      if (!proof) return send(res,400,{ok:false,error:'invalid_code',message:'인증번호가 만료되었거나 맞지 않습니다.'});
       const industry = INDUSTRY_KEYS.includes(b.industry) ? b.industry : 'auto';
-      const ins = await db.query(
-        `INSERT INTO ar_users (phone, password_hash, name, title, branch, email, industry, promo)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (phone) DO NOTHING RETURNING *`,
+      const ins = await db.tx(async c => {
+        await security.consumeCode(c,proof);
+        return c.query(
+        `INSERT INTO ar_users (phone, password_hash, name, title, branch, email, industry, promo, phone_verified_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now()) ON CONFLICT (phone) DO NOTHING RETURNING *`,
         [phone, hashPassword(pw), cut(b.name, 40) || '대표', cut(b.title, 40), cut(b.branch, 80), cut(b.email, 120), industry, cut(b.promo, 120)]
       );
+      });
       if (!ins.rows.length) return send(res, 409, { ok: false, error: 'phone_taken', message: '이미 가입된 번호입니다. 로그인해 주세요.' });
       setSession(req, res, ins.rows[0]);
       return send(res, 200, await mePayload(ins.rows[0]));
@@ -140,18 +145,18 @@ module.exports = async function handler(req, res) {
       const b = await readBody(req);
       const phone = normPhone(b.phone);
       if (!phone) return send(res, 400, { ok: false, error: 'invalid_phone', message: '휴대폰 번호를 정확히 입력해 주세요.' });
-      if (await tooManyAttempts(phone)) return send(res, 429, { ok: false, error: 'locked', message: '로그인 시도가 너무 많습니다. 내일 다시 시도해 주세요.' });
+      await security.loginLimit(req,phone);
       const r = await db.query('SELECT * FROM ar_users WHERE phone = $1', [phone]);
       const u = r.rows[0];
-      if (!u || !checkPassword(String(b.password || ''), u.password_hash)) {
-        await noteFailedAttempt(phone);
+      if (String(b.password || '').length > 128 || !u || !checkPassword(String(b.password || ''), u.password_hash)) {
+        // 번호만으로 하루 종일 잠그지 않고 IP·번호 조합의 짧은 제한을 적용합니다.
         return send(res, 401, { ok: false, error: 'bad_credentials', message: '번호 또는 비밀번호가 맞지 않습니다.' });
       }
       setSession(req, res, u);
       return send(res, 200, await mePayload(u));
     }
 
-    if (action === 'logout') {
+    if (action === 'logout' && req.method === 'POST') {
       clearSession(req, res);
       return send(res, 200, { ok: true });
     }
@@ -163,6 +168,18 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'me') return send(res, 200, await mePayload(user));
+    if (action.startsWith('project-')) {
+      if (req.method !== 'POST') return send(res,405,{ok:false,error:'method'});
+      return send(res,200,{ok:true,...await projects.handle(user,action,await readBody(req))});
+    }
+    if (action === 'sessions-revoke' && req.method === 'POST') {
+      const b = await readBody(req);
+      await security.loginLimit(req,user.phone);
+      if (!checkPassword(String(b.password || '').slice(0,129),user.password_hash)) return send(res,401,{ok:false,error:'bad_credentials',message:'현재 비밀번호를 확인해 주세요.'});
+      const r = await db.query('UPDATE ar_users SET session_version = session_version + 1 WHERE id = $1 RETURNING *',[user.id]);
+      setSession(req,res,r.rows[0]);
+      return send(res,200,{ok:true});
+    }
 
     if (action === 'profile' && req.method === 'POST') {
       const b = await readBody(req);
@@ -177,8 +194,9 @@ module.exports = async function handler(req, res) {
 
     if (action === 'password' && req.method === 'POST') {
       const b = await readBody(req);
-      if (!checkPassword(String(b.current || ''), user.password_hash)) return send(res, 401, { ok: false, error: 'bad_credentials', message: '지금 비밀번호가 맞지 않습니다.' });
-      if (String(b.next || '').length < 8) return send(res, 400, { ok: false, error: 'weak_password', message: '새 비밀번호는 8자 이상으로 정해 주세요.' });
+      await security.loginLimit(req,user.phone);
+      if (String(b.current || '').length > 128 || !checkPassword(String(b.current || ''), user.password_hash)) return send(res, 401, { ok: false, error: 'bad_credentials', message: '지금 비밀번호가 맞지 않습니다.' });
+      if (String(b.next || '').length < 8 || String(b.next || '').length > 128) return send(res, 400, { ok: false, error: 'weak_password', message: '새 비밀번호는 8자 이상으로 정해 주세요.' });
       const r = await db.query('UPDATE ar_users SET password_hash = $2, session_version = session_version + 1, updated_at = now() WHERE id = $1 RETURNING *', [user.id, hashPassword(b.next)]);
       setSession(req, res, r.rows[0]);
       return send(res, 200, { ok: true });
@@ -199,7 +217,7 @@ module.exports = async function handler(req, res) {
     if (action === 'consume-export' && req.method === 'POST') {
       const body = await readBody(req);
       if (!/^[a-zA-Z0-9_-]{16,100}$/.test(String(body.requestId || ''))) return send(res, 400, {ok:false,error:'request_id_required',message:'화면을 새로고침한 뒤 다시 저장해 주세요.'});
-      const q = await consume(req, 'export', 1, {requestId: body.requestId});
+      const q = await consume(req, 'export', 1, {requestId: body.requestId,signature:'download'});
       if (!q.ok) return send(res, q.status, q.body);
       return send(res, 200, { ok: true, used: q.used, cap: q.cap });
     }

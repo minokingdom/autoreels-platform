@@ -54,13 +54,13 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
    if(sql.startsWith('UPDATE ar_publish_jobs')){const j=[...jobs.values()].find(x=>x.id===p[0]);j.status=p[1];j.error=p[3];return {rows:[]};}
    throw Error(sql);
  }};
- const sns=load('lib/server/sns.js',{'./db':snsDb,'./config':{clean:v=>String(v||'').trim(),siteUrl:()=>''}});
+ const sns=load('lib/server/sns.js',{'./db':snsDb,'./scheduler':{available:async()=>false},'./config':{clean:v=>String(v||'').trim(),siteUrl:()=>''}});
  const publishBody={targets:['instagram','instagram'],videoUrl:'https://test.public.blob.vercel-storage.com/publish/1/video.mp4',requestId:'sns-request-12345678'};
  const firstJobs=await sns.startPublish({id:1},publishBody),retryJobs=await sns.startPublish({id:1},publishBody);
  assert.equal(firstJobs.length,1);assert.equal(firstJobs[0].status,'failed');assert.equal(retryJobs[0].id,firstJobs[0].id);assert.equal(accesses,1);
  await assert.rejects(()=>sns.startPublish({id:1},{...publishBody,scheduledAt:'2026-12-01'}),e=>e.code==='scheduling_unavailable');
  let charged=0,returned=0;
- const snsApi=load('api/sns.js',{'../lib/server/db':{query:async()=>({rows:[{id:1,session_version:1}]})},'../lib/server/config':{readiness:()=>({serverMode:true}),siteUrl:()=>''},'../lib/server/session':{readSession:()=>({uid:'1',v:1}),sameOrigin:()=>true},'../lib/server/billing':{getSubscription:async()=>({})},'../lib/server/usage':{isActive:()=>true,consume:async()=>{charged++;return {ok:true}},refundUsage:async()=>{returned++}},'../lib/server/sns':{TARGETS:sns.TARGETS,SnsError:sns.SnsError,startPublish:async()=>[{status:'failed'}]}});
+ const snsApi=load('api/sns.js',{'../lib/server/db':{query:async()=>({rows:[{id:1,session_version:1}]})},'../lib/server/config':{readiness:()=>({serverMode:true}),siteUrl:()=>''},'../lib/server/session':{readSession:()=>({uid:'1',v:1}),sameOrigin:()=>true},'../lib/server/billing':{getSubscription:async()=>({})},'../lib/server/usage':{isActive:()=>true,consume:async()=>{charged++;return {ok:true}},refundUsage:async()=>{returned++}},'../lib/server/sns':{TARGETS:sns.TARGETS,SnsError:sns.SnsError,requireSchedule:sns.requireSchedule,startPublish:async()=>[{status:'failed'}]}});
  let reply=response();await snsApi({query:{action:'publish'},method:'POST',body:{...publishBody,scheduledAt:'2026-12-01'}},reply);assert.equal(reply.statusCode,503);assert.equal(charged,0);
  reply=response();await snsApi({query:{action:'publish'},method:'POST',body:publishBody},reply);assert.equal(reply.statusCode,502);assert.equal(charged,1);assert.equal(returned,1);
 

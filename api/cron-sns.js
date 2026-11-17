@@ -3,27 +3,6 @@
 const crypto = require('node:crypto');
 const sns = require('../lib/server/sns');
 const { readiness } = require('../lib/server/config');
-const trends = require('./trends');
-
-async function refreshStaleTrends() {
-  const keys = Object.keys(trends.INDUSTRY_QUERIES || {});
-  const updated = {};
-  for (const k of keys) {
-    try {
-      const cached = await trends.readTrendCache(k, 20);
-      if (cached) { updated[k] = 'cached'; continue; }
-      const { source, query, items } = await trends.fetchTrendsForIndustry(k, '');
-      if (items && items.length) {
-        await trends.writeTrendCache(k, source, query, items);
-      }
-      updated[k] = `${source}:${items ? items.length : 0}`;
-    } catch (e) {
-      updated[k] = `err:${e.message}`;
-    }
-  }
-  return updated;
-}
-
 function safeEqual(a, b) {
   const x = Buffer.from(String(a || ''));
   const y = Buffer.from(String(b || ''));
@@ -38,9 +17,12 @@ module.exports = async function handler(req, res) {
     if (!secret || !safeEqual(auth, `Bearer ${secret}`)) return res.status(401).json({ ok: false });
     if (!readiness().serverMode) return res.status(200).json({ ok: true, skipped: 'server_mode_off' });
     const out = await sns.runScheduledAndPending();
-    const trendRefresh = await refreshStaleTrends();
-    console.log('[cron-sns]', JSON.stringify({ ...out, trendRefresh }));
-    return res.status(200).json({ ok: true, ...out, trendRefresh });
+    const db=require('../lib/server/db');
+    await db.query("DELETE FROM ar_phone_codes WHERE expires_at < now()-interval '1 day'");
+    await db.query("DELETE FROM ar_auth_limits WHERE expires_at < now()-interval '1 day'");
+    await require('../lib/server/scheduler').heartbeat();
+    console.log('[cron-sns]', JSON.stringify(out));
+    return res.status(200).json({ ok: true, ...out });
   } catch (e) {
     console.error('[cron-sns]', e.code || '', e.message);
     return res.status(Number(e.status) || 500).json({ ok: false, error: e.code || 'server_error', message: e.message });

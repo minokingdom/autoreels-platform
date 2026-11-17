@@ -177,12 +177,12 @@
           priceTag: campaign.priceTag || '',
           rawPrompt: promptEl ? promptEl.value : ''
         };
-        localStorage.setItem('autoreels_saved_ai_script', JSON.stringify(payload));
+        localStorage.setItem('autoreels_saved_ai_script_'+(window.AR_SERVER?.me?.user?.id||'guest'), JSON.stringify(payload));
       } catch (e) {}
     }
     function restoreAiScriptPrefs() {
       try {
-        const raw = localStorage.getItem('autoreels_saved_ai_script');
+        const raw = localStorage.getItem('autoreels_saved_ai_script_'+(window.AR_SERVER?.me?.user?.id||'guest'));
         if (!raw) return false;
         const s = JSON.parse(raw);
         if (!s || s.industry !== (typeof IND !== 'undefined' ? IND.key : 'auto')) return false;

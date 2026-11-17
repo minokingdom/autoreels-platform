@@ -44,5 +44,5 @@
 ---
 
 ## 5. 컷 편집기 (`public/assets/app/08-cut-editor.js`)
-- 컷별 편집 상태(`cutDecos`, `cutOverlays`, `cutFilters`, `cutFrames`, `cutStrokes`)는 `localStorage`에 남기지 않고 새로고침 시 초기화합니다.
+- 컷별 편집 상태(`cutDecos`, `cutOverlays`, `cutFilters`, `cutFrames`, `cutStrokes`)는 공용 `localStorage`에 남기지 않습니다. 내 프로젝트에서 계정별 DB에 명시적으로 저장하며, 저장한 프로젝트만 새로고침 후 복원합니다.
 - 지원 폰트 14종(`CUT_TEXT_FONTS`), 드로우 3브러시(`펜`·`형광`·`네온`), 사진 스티커(`round`·`circle`·`polaroid`·`rect`)를 유지합니다.

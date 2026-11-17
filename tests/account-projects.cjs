@@ -1,0 +1,82 @@
+// 실제 PostgreSQL 엔진(PGlite)으로 SQL·트랜잭션을 검증합니다. 외부 문자·게시 요청은 보내지 않습니다.
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const {PGlite}=require('@electric-sql/pglite');
+const root=path.resolve(__dirname,'..');
+function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(root,file),'utf8'),{module,exports:module.exports,require:n=>Object.hasOwn(deps,n)?deps[n]:require(n),process:{env},Buffer,URL,URLSearchParams,Date,AbortSignal,console,setTimeout,clearTimeout,...extra});return module.exports;}
+(async()=>{
+ const pg=new PGlite();
+ try{
+ const schema=fs.readFileSync(path.join(root,'lib/server/db.js'),'utf8').match(/const SCHEMA = `([\s\S]*?)`;/)[1];await pg.exec(schema);await pg.exec(schema);
+ // PGlite는 단일 연결입니다. 트랜잭션 잠금 호출은 확인 후 생략하고 나머지 SQL은 실제 실행합니다.
+ const wrap=c=>({query:(q,p=[])=>q.includes('pg_advisory_xact_lock')?Promise.resolve({rows:[]}):c.query(q,p)});
+ const db={...wrap(pg),tx:fn=>pg.transaction(c=>fn(wrap(c)))};
+ await pg.query("INSERT INTO ar_users(id,phone,password_hash) VALUES(1,'010-0000-0001','test'),(2,'010-0000-0002','test')");
+ const projects=load('lib/server/projects.js',{'./db':db});
+ const snapshot={version:1,industry:'auto',campaign:{vehicle:'검증',cutCaptions:['한 컷'],ttsLines:['음성'],scenePlan:[]},photos:[{src:'/assets/scenes/auto/1.jpg'}]};
+ const u={id:1},other={id:2};
+ const saved=await projects.handle(u,'project-save',{name:'사진 프로젝트',snapshot});assert.equal(saved.project.revision,1);
+ const id=saved.project.id;
+ assert.equal((await projects.handle(u,'project-load',{id})).project.snapshot.campaign.vehicle,'검증');
+ await assert.rejects(()=>projects.handle(other,'project-load',{id}),e=>e.status===404);
+ await assert.rejects(()=>projects.handle(other,'project-save',{id,revision:1,snapshot}),e=>e.status===404);
+ await assert.rejects(()=>projects.handle(u,'project-save',{id,revision:0,snapshot}),e=>e.status===409);
+ await projects.handle(u,'project-save',{id,revision:1,name:'수정',snapshot});
+ await assert.rejects(()=>projects.handle(u,'project-delete',{id,revision:1}),e=>e.status===409);
+ await assert.rejects(()=>projects.handle(u,'project-save',{snapshot:{...snapshot,photos:[{src:'blob:lost'}]}}),e=>e.status===400);
+ await assert.rejects(()=>projects.handle(u,'project-save',{snapshot:{...snapshot,extra:'x'.repeat(2000000)}}),e=>e.status===413);
+ for(let i=0;i<4;i++)await projects.handle(u,'project-save',{name:'저장'+i,snapshot});
+ await assert.rejects(()=>projects.handle(u,'project-save',{snapshot}),e=>e.code==='project_limit');
+ assert.equal((await projects.handle(other,'project-list',{})).projects.length,0);
+ await projects.handle(u,'project-delete',{id,revision:2});
+ const env={AUTH_SECRET:'test-only-secret-'.repeat(4),SOLAPI_API_KEY:'test',SOLAPI_API_SECRET:'test',SOLAPI_FROM:'0200000000'};
+ let sentCode,sends=0;
+ const session=load('lib/server/session.js',{},env);
+ const security=load('lib/server/security.js',{'./db':db,'./session':session},env,{fetch:async(url,opt)=>{sends++;assert.equal(url,'https://api.solapi.com/messages/v4/send-many/detail');sentCode=JSON.parse(opt.body).messages[0].text.match(/\d{6}/)[0];return {ok:true,json:async()=>({groupInfo:{groupId:'test'}})};}});
+ const req={headers:{'x-vercel-forwarded-for':'192.0.2.1'}};
+ let code=await security.requestCode(req,'010-0000-0001','reset');
+ await assert.rejects(()=>security.requestCode(req,'010-0000-0001','reset'),e=>e.status===429);assert.equal(sends,1);
+ assert.equal(await security.verifyCode('010-0000-0002','reset',code.challengeId,sentCode),null);
+ assert.equal(await security.verifyCode('010-0000-0001','signup',code.challengeId,sentCode),null);
+ await security.resetPassword(req,'010-0000-0001',{challengeId:code.challengeId,code:sentCode,password:'new-test-password'});
+ const row=(await pg.query('SELECT * FROM ar_users WHERE id=1')).rows[0];assert.equal(row.session_version,2);assert.ok(session.checkPassword('new-test-password',row.password_hash));
+ assert.equal(await security.verifyCode('010-0000-0001','reset',code.challengeId,sentCode),null);
+ await pg.exec('DELETE FROM ar_auth_limits');
+ code=await security.requestCode(req,'010-0000-0001','signup');
+ for(let i=0;i<5;i++)assert.equal(await security.verifyCode('010-0000-0001','signup',code.challengeId,'000000'),null);
+ assert.equal(await security.verifyCode('010-0000-0001','signup',code.challengeId,sentCode),null);
+ await pg.exec('DELETE FROM ar_auth_limits');code=await security.requestCode(req,'010-0000-0001','signup');
+ await pg.query("UPDATE ar_phone_codes SET expires_at=now()-interval '1 second' WHERE id=$1",[code.challengeId]);
+ assert.equal(await security.verifyCode('010-0000-0001','signup',code.challengeId,sentCode),null);
+ for(let i=0;i<10;i++)await security.loginLimit(req,'010-0000-0001');
+ await assert.rejects(()=>security.loginLimit(req,'010-0000-0001'),e=>e.status===429);
+ await security.loginLimit({headers:{'x-vercel-forwarded-for':'192.0.2.2'}},'010-0000-0001');
+ const noSms=load('lib/server/security.js',{'./db':db,'./session':session},{AUTH_SECRET:env.AUTH_SECRET});await assert.rejects(()=>noSms.requestCode(req,'010-0000-0001','signup'),e=>e.status===503);
+ // 계정 API 자체도 실제 DB에 연결해 가입/세션/미인증 저장을 확인합니다.
+ await pg.exec("SELECT setval('ar_users_id_seq',2)");
+ const proof3=await security.requestCode(req,'010-0000-0003','signup');
+ const account=load('api/account.js',{'../lib/server/db':db,'../lib/server/config':{readiness:()=>({serverMode:true})},'../lib/server/security':security,'../lib/server/projects':projects,'../lib/server/scheduler':{available:async()=>false},'../lib/server/session':session,'../lib/server/billing':{getSubscription:async()=>null,publicSubscription:()=>null},'../lib/server/plans':{publicPlans:()=>[]},'../lib/server/usage':{usageFor:async()=>({}),isActive:()=>false}},env);
+ const response=()=>({statusCode:200,headers:{},setHeader(k,v){this.headers[k]=v},status(s){this.statusCode=s;return this},json(b){this.body=b}});
+ let reply=response();await account({headers:req.headers,query:{action:'signup'},method:'POST',body:{phone:'010-0000-0003',password:'strong-test-password',challengeId:proof3.challengeId,code:sentCode}},reply);
+ assert.equal(reply.statusCode,200);assert.ok(reply.headers['Set-Cookie']);
+ const cookie=reply.headers['Set-Cookie'].split(';')[0];
+ reply=response();await account({headers:{...req.headers,cookie},query:{action:'project-list'},method:'POST',body:{}},reply);assert.equal(reply.statusCode,200);
+ reply=response();await account({headers:req.headers,query:{action:'project-list'},method:'POST',body:{}},reply);assert.equal(reply.statusCode,401);
+ reply=response();await account({headers:req.headers,query:{action:'signup'},method:'POST',body:{phone:'010-0000-0004',password:'strong-test-password',challengeId:proof3.challengeId,code:sentCode}},reply);assert.equal(reply.statusCode,400);
+ const scheduler=load('lib/server/scheduler.js' ,{'./db':db},{SNS_SCHEDULING_ENABLED:'true',CRON_SECRET:'test'});
+ assert.equal(await scheduler.available(),false);
+ for(let i=0;i<3;i++){await scheduler.heartbeat();if(i<2)await pg.exec("UPDATE ar_worker_health SET last_success=now()-interval '60 seconds'");}
+ assert.equal(await scheduler.available(),true);
+ const sns=load('lib/server/sns.js',{'./db':db,'./scheduler':scheduler,'./config':{clean:v=>String(v||''),siteUrl:()=>''},'./usage':{refundUsage:async()=>true}},{});
+ const b={requestId:'test-request-123456789',targets:['instagram','threads'],videoUrl:'https://test.public.blob.vercel-storage.com/publish/1/v.mp4',scheduledAt:new Date(Date.now()+180000).toISOString()};
+ const jobs=await sns.startPublish(u,b);assert.equal(jobs.length,2);assert.equal((await sns.startPublish(u,b))[0].id,jobs[0].id);
+ assert.equal((await sns.history(other)).length,0);
+ await assert.rejects(()=>sns.cancelJob(other,jobs[0].id),e=>e.status===409);
+ assert.equal((await sns.cancelJob(u,jobs[0].id)).cancelled,true);
+ await assert.rejects(()=>sns.cancelJob(u,jobs[0].id),e=>e.status===409);
+ await assert.rejects(()=>sns.startPublish(other,{...b,requestId:'another-123456789'}),e=>e.status===403);
+ await pg.query("UPDATE ar_publish_jobs SET scheduled_at=now()-interval '1 minute' WHERE status='scheduled'");
+ await sns.runScheduledAndPending();assert.equal((await pg.query("SELECT status FROM ar_publish_jobs WHERE id=$1",[jobs[1].id])).rows[0].status,'failed');
+ await scheduler.heartbeat();await pg.exec("UPDATE ar_worker_health SET last_success=now()-interval '3 minutes'");assert.equal(await scheduler.available(),false);
+ console.log('account/projects/scheduler PostgreSQL tests ok: ownership, revisions, limits, OTP expiry/replay/attempts, session revocation, heartbeat, schedule dedup/cancel/worker');
+ }finally{await pg.close();}
+})().catch(e=>{console.error(e);process.exitCode=1});

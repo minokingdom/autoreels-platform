@@ -154,6 +154,7 @@
     }
 
     function switchAuthModalTab(tab) {
+      setTimeout(() => { if(typeof arAuthVerificationUI==='function')arAuthVerificationUI(); },0);
       authModalTab = tab;
       arFillSignupFieldsForIndustry(document.getElementById('authIndustryInput').value || IND.key);
       const on = 'h-8 rounded-[6px] text-[12px] font-medium bg-[#232325] text-[#ededed] cursor-pointer';
@@ -499,6 +500,7 @@
       });
       if (typeof arLockIndustry === 'function') arLockIndustry(u.industry || 'auto');
       if (typeof arSnsRefresh === 'function') arSnsRefresh();
+      if(typeof arRestoreLastProject==='function') arRestoreLastProject();
       const btn = document.getElementById('headerAuthBtn');
       if (btn) {
         btn.textContent = comp ? '무상 PRO · 내 계정' : '내 계정 · 로그아웃';
@@ -528,6 +530,7 @@
         return;
       }
       AR_SERVER.cfg = cfg;
+      const schedule=document.getElementById('snsScheduleEnabled');if(schedule){schedule.disabled=!cfg.snsScheduling;document.getElementById('arScheduleLabel').textContent=cfg.snsScheduling?'예약 발행 · 지정 시각부터 순서대로 게시':'예약 실행 서비스 연결 준비 중';}
       if (!cfg || !cfg.serverMode) return; // 시연 모드 유지
       AR_SERVER.mode = true;
       const demo = document.getElementById('authDemoSection');
@@ -556,17 +559,23 @@
       const btn = document.getElementById('authSubmitBtn');
       btn.disabled = true;
       try {
+        if(authModalTab==='reset'){
+          const r=await arApi('password-reset',{phone:val('authPhoneInput'),password:val('authPasswordInput'),challengeId:arPhoneChallenge?.id,code:val('arPhoneCode')});
+          if(!r.ok)return show(r.body.message||'재설정하지 못했습니다.',false);
+          arPhoneChallenge=null;document.getElementById('authPasswordInput').value='';switchAuthModalTab('login');show('비밀번호가 변경되었습니다. 다시 로그인해 주세요.',true);return;
+        }
         const r = authModalTab === 'signup'
           ? await arApi('signup', {
               phone: val('authPhoneInput'), password: val('authPasswordInput'), name: val('authNameInput'),
               title: val('authTitleInput'), branch: val('authBranchInput'), promo: val('authPromoInput'),
-              email: val('authEmailInput'), industry: val('authIndustryInput') || 'auto'
+              email: val('authEmailInput'), industry: val('authIndustryInput') || 'auto', challengeId: arPhoneChallenge?.id, code: val('arPhoneCode')
             })
           : await arApi('login', { phone: val('authPhoneInput'), password: val('authPasswordInput') });
         if (!r.ok) {
           if (r.body.error === 'phone_taken') switchAuthModalTab('login');
           return show(r.body.message || '처리하지 못했습니다.', false);
         }
+        arPhoneChallenge=null;document.getElementById('authPasswordInput').value='';document.getElementById('arPhoneCode').value='';
         arApplyMe(r.body);
         show(authModalTab === 'signup' ? '가입 완료! 무료 회원으로 바로 만들어 보세요.' : `${r.body.user.name}님 환영합니다!`, true);
         setTimeout(closeDealerAuthModal, 800);
@@ -891,7 +900,7 @@
       const d = getSelectedDealer();
       const caption = document.getElementById('dlrCaptionTextarea')?.value || buildCaption(d);
       const title = campaign.hook || campaign.vehicle || '';
-      if (document.getElementById('snsScheduleEnabled')?.checked) { arSnsLog('예약 발행은 준비 중입니다. 지금 게시만 이용할 수 있습니다.', 'err'); return; }
+      if (document.getElementById('snsScheduleEnabled')?.checked && (!AR_SERVER.cfg?.snsScheduling || !document.getElementById('snsScheduleAt')?.value)) { arSnsLog('예약 실행 상태와 예약 시간을 확인해 주세요.', 'err'); return; }
       arSnsPublishing = true;
       const requestId = crypto.randomUUID();
       if (stepStatus) stepStatus.textContent = '영상 올리는 중...';
@@ -913,6 +922,7 @@
         const pub = await arSnsApi('publish', { targets, videoUrl: up.url, caption, title, scheduledAt, igFirstComment, requestId });
         if (!pub.ok) throw new Error(pub.body.message || '발행을 시작하지 못했습니다');
         await arSnsTrackJobs(pub.body.jobs || []);
+        await arShowSnsHistory();
       } catch (e) {
         arSnsLog(`발행 실패: ${e.message || e}`, 'err');
         if (stepStatus) stepStatus.textContent = '발행 실패';
@@ -1262,3 +1272,163 @@
         try { history.replaceState({ arView: 'studio' }, '', '/studio' + (window.location.hash || '')); } catch (e) {}
       }
     })();
+
+// 계정별 프로젝트: 사진은 DB에 비공개 저장하고 라이선스·토큰은 저장하지 않습니다.
+const AR_PROJECT_FIELDS = 'atmosphereFx bgGradient bullets carTitle colorKey cutCaptions cutCountOverride cutDecos cutDesigns cutElementOverrides cutFilters cutFrames cutLenScale cutOverlays cutSceneIndices cutScripts cutStrokes cutTransitions designCat designStyle discount discountNum hook industry isUserCustomPhotos kakaoChat layoutMode motionSeed neonColor presetKey priceLine priceTag scenePlan themeId topic ttsLines vehicle'.split(' ');
+let arProjectCurrent=null, arProjectBusy=false;
+let arPhoneChallenge=null;
+function arPanelNotice(id,text) { const e=document.getElementById(id); if(e) e.textContent=text; }
+function arProjectUser() { return AR_SERVER.me?.user?.id; }
+async function arProjectCall(action,body={}) {
+  const r=await arApi(action,body);
+  if(!r.ok) throw new Error(r.body.message||'처리하지 못했습니다. 다시 시도해 주세요.');
+  return r.body;
+}
+async function arProjectImage(src,edge=1080) {
+  if(/^\/assets\/[a-zA-Z0-9_./-]+$/.test(src)) return src;
+  const img=new Image();img.crossOrigin='anonymous';img.src=src;
+  await Promise.race([img.decode(),new Promise((_,reject)=>setTimeout(()=>reject(new Error('사진을 읽지 못했습니다.')),10000))]);
+  const c=document.createElement('canvas'),scale=Math.min(1,edge/Math.max(img.naturalWidth,img.naturalHeight));
+  c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  return c.toDataURL(edge===480?'image/png':'image/jpeg',0.8);
+}
+async function arCaptureProject() {
+  let packPath='';
+  if(AudioEngine.bgmStyle==='custom_mp3' && AudioEngine.customBgmAudioEl?.src){const u=new URL(AudioEngine.customBgmAudioEl.src,location.href);if(u.origin===location.origin && /^\/assets\/bgm\/pack\/[a-zA-Z0-9_-]+\.mp3$/.test(u.pathname))packPath=u.pathname;}
+  if(campaign.hasCustomVideo || campaign.cutVideos?.some(Boolean) || (AudioEngine.bgmStyle==='custom_mp3'&&!packPath)) throw new Error('직접 올린 동영상·MP3는 아직 프로젝트 저장을 지원하지 않습니다. 사진과 기본 음악으로 저장해 주세요.');
+  const data={};for(const k of AR_PROJECT_FIELDS) if(campaign[k]!==undefined) data[k]=JSON.parse(JSON.stringify(campaign[k]));
+  const photos=[];
+  for(const img of campaign.uploadedPhotos) photos.push({src:await arProjectImage(img._dataUrl||img.src),label:img._label||'',title:img._sceneTitle||''});
+  for(const row of data.cutOverlays||[]) for(const overlay of row||[]) if(overlay.photoSrc) overlay.photoSrc=await arProjectImage(overlay.photoSrc,480);
+  const d=getSelectedDealer(),card={};
+  for(const k of ['name','title','branch','promoTag','cardHide','accentColor']) if(d[k]!==undefined) card[k]=JSON.parse(JSON.stringify(d[k]));
+  if(d.logoImg) card.logo=await arProjectImage(d.logoImg.src,480);
+  return {version:1,industry:IND.key,campaign:data,photos,card,duration:BASE_DURATION,prompt:document.getElementById('aiPromptInput')?.value||'',audio:{voice:AudioEngine.ttsVoice,speed:AudioEngine.ttsSpeed,bgm:document.getElementById('bgmStyleSelect')?.value||AudioEngine.bgmStyle,packPath}};
+}
+async function arRestoreProject(p) {
+  const s=p.snapshot;
+  if(!s||s.version!==1) throw new Error('지원하지 않는 프로젝트 버전입니다.');
+  if(s.industry!==IND.key) throw new Error('현재 계정 업종과 다른 프로젝트입니다.');
+  const photos=await Promise.all(s.photos.map(async ph=>{
+    const img=new Image();img.src=ph.src;img._dataUrl=ph.src;img._label=ph.label;img._sceneTitle=ph.title;
+    await Promise.race([img.decode(),new Promise((_,reject)=>setTimeout(()=>reject(new Error('저장된 사진을 읽지 못했습니다.')),10000))]);return img;
+  }));
+  let logo=null;if(s.card?.logo){logo=new Image();logo.src=s.card.logo;await logo.decode();}
+  isPlaying=false;pauseAllCutVideos();AudioEngine.stopBgmLoop();AudioEngine.stopTts();
+  for(const k of AR_PROJECT_FIELDS) { if(s.campaign[k]!==undefined) campaign[k]=s.campaign[k];else delete campaign[k]; }
+  campaign.uploadedPhotos.forEach(arReleasePhoto);campaign.uploadedPhotos=photos;campaign.hasCustomVideo=false;campaign.cutVideos=[];campaign.cutVideoUrls=[];
+  const d=getSelectedDealer();for(const k of ['name','title','branch','promoTag','cardHide','accentColor']) if(s.card?.[k]!==undefined)d[k]=s.card[k];d.logoImg=logo;
+  AudioEngine.masterBuffer=null;AudioEngine.masterCutBounds=[];AudioEngine.masterWantKey='';AudioEngine.masterDuration=0;AudioEngine.ttsCache.clear();
+  for(const [id,value] of [['bgmStyleSelect',s.audio?.bgm],['ttsVoiceSelect',s.audio?.voice],['ttsSpeedSelect',s.audio?.speed],['inputVehicle',campaign.vehicle],['inputDiscount',campaign.discount],['inputDiscountNum',campaign.discountNum],['aiPromptInput',s.prompt]]){
+    const e=document.getElementById(id);if(e && value!=null)e.value=String(value);
+  }
+  AudioEngine.ttsVoice=s.audio?.voice||'off';AudioEngine.ttsSpeed=Number(s.audio?.speed)||1.1;
+  AudioEngine.bgmStyle=s.audio?.bgm||'off';
+  if(/^\/assets\/bgm\/pack\/[a-zA-Z0-9_-]+\.mp3$/.test(s.audio?.packPath||''))AudioEngine.loadRemoteBgmUrl(s.audio.packPath,'저장한 배경음악',false);
+  BASE_DURATION=Math.max(6,Math.min(90,Number(s.duration)||12));
+  applyVideoDurations();renderDynamicCutCardsUI();renderPhotoThumbnailsGrid();syncPreviewPanel();arSyncProductRows();
+  if(window.__timelines?.main) window.__timelines.main.seek(0);
+  if(AudioEngine.enabled && AudioEngine.ttsVoice!=='off')AudioEngine.schedulePrefetch(900);
+  arProjectCurrent={id:p.id,revision:p.revision};
+  document.getElementById('arProjectName').value=p.name;
+  localStorage.setItem('ar_project_last_'+arProjectUser(),p.id);
+}
+async function arProjectRefresh() {
+  const data=await arProjectCall('project-list'),box=document.getElementById('arProjectList');box.replaceChildren();
+  for(const p of data.projects){
+    const row=document.createElement('div');row.className='studio-sub p-3 space-y-2';
+    const label=document.createElement('p');label.textContent=p.name+' · '+new Date(p.updated_at).toLocaleString('ko-KR');row.append(label);
+    const load=document.createElement('button');load.type='button';load.className='btn-secondary h-8 px-3';load.textContent='불러오기';
+    load.addEventListener('click',()=>arProjectWork(async()=>{
+      if(!confirm('현재 편집을 저장하지 않았다면 사라집니다. 이 프로젝트를 불러올까요?'))return;
+      const r=await arProjectCall('project-load',{id:p.id});await arRestoreProject(r.project);arPanelNotice('arProjectNotice','사진·대본·컷 편집을 불러왔습니다.');
+    }));
+    const del=document.createElement('button');del.type='button';del.className='btn-secondary h-8 px-3';del.textContent='삭제';
+    del.addEventListener('click',()=>arProjectWork(async()=>{
+      if(!confirm('이 저장 프로젝트를 삭제할까요?'))return;
+      await arProjectCall('project-delete',{id:p.id,revision:p.revision});if(arProjectCurrent?.id===p.id)arProjectCurrent=null;
+      await arProjectRefresh();arPanelNotice('arProjectNotice','저장 프로젝트를 삭제했습니다.');
+    }));row.append(load,del);box.append(row);
+  }
+  if(!data.projects.length)box.textContent='저장된 프로젝트가 없습니다.';
+}
+async function arProjectWork(fn) {
+  if(arProjectBusy)return;arProjectBusy=true;
+  document.querySelectorAll('#arProjectsModal button').forEach(b=>b.disabled=true);
+  try{await fn();}catch(e){arPanelNotice('arProjectNotice',e.message);}finally{arProjectBusy=false;document.querySelectorAll('#arProjectsModal button').forEach(b=>b.disabled=false);}
+}
+async function arOpenProjects() {
+  if(!arProjectUser()){openDealerAuthModal();return;}
+  document.getElementById('arProjectsModal').classList.remove('hidden');await arProjectWork(arProjectRefresh);
+}
+async function arSaveProject(asNew) {
+  await arProjectWork(async()=>{
+    arPanelNotice('arProjectNotice','사진과 편집 정보를 저장하는 중입니다…');
+    const snapshot=await arCaptureProject();
+    const name=document.getElementById('arProjectName').value||campaign.vehicle||'새 프로젝트';
+    const id=asNew||!arProjectCurrent?crypto.randomUUID():arProjectCurrent.id;
+    const r=await arProjectCall('project-save',{id,name,snapshot,revision:asNew?0:arProjectCurrent?.revision||0});
+    arProjectCurrent={id:r.project.id,revision:r.project.revision};localStorage.setItem('ar_project_last_'+arProjectUser(),r.project.id);
+    await arProjectRefresh();arPanelNotice('arProjectNotice','저장했습니다. 다른 기기에서도 내 프로젝트에서 불러올 수 있습니다.');
+  });
+}
+async function arSendPhoneCode() {
+  const btn=document.getElementById('arSendCode');btn.disabled=true;
+  try{
+    const phone=document.getElementById('authPhoneInput').value,purpose=authModalTab==='reset'?'reset':'signup';
+    const r=await arProjectCall('phone-code',{phone,purpose});arPhoneChallenge={id:r.challengeId,phone,purpose};
+    arPanelNotice('arPhoneNotice','인증번호를 발송했습니다. 5분 안에 입력해 주세요.');
+  }catch(e){arPanelNotice('arPhoneNotice',e.message);}finally{btn.disabled=false;}
+}
+function arAuthVerificationUI() {
+  const reset=authModalTab==='reset',needed=authModalTab==='signup'||reset;
+  document.getElementById('arPhoneVerification').classList.toggle('hidden',!needed);
+  if(reset)document.getElementById('authSubmitBtn').textContent='인증하고 비밀번호 재설정';
+  if(needed && !AR_SERVER.cfg?.phoneVerification) arPanelNotice('arPhoneNotice','문자 인증 연결 준비 중입니다. 기존 계정 로그인은 가능합니다.');
+}
+async function arSecurityAction(action) {
+  try{
+    const password=document.getElementById('arSecurityCurrent').value;
+    await arProjectCall(action,action==='password'?{current:password,next:document.getElementById('arSecurityNext').value}:{password});
+    document.getElementById('arSecurityCurrent').value='';document.getElementById('arSecurityNext').value='';
+    arPanelNotice('arSecurityNotice',action==='password'?'비밀번호를 변경하고 다른 기기의 로그인을 해제했습니다.':'다른 기기의 로그인을 해제했습니다.');
+  }catch(e){arPanelNotice('arSecurityNotice',e.message);}
+}
+async function arShowSnsHistory() {
+  const box=document.getElementById('arSnsHistory');box.textContent='조회 중…';
+  try{
+    const r=await arSnsApi('history',{});if(!r.ok)throw new Error(r.body.message||'로그인 후 확인할 수 있습니다.');box.replaceChildren();
+    const labels={scheduled:'예약 대기',cancelled:'취소됨',done:'게시 완료',failed:'실패',review:'게시 결과 확인 필요',starting:'게시 시작',processing:'처리 중',checking:'결과 확인 중',pending:'처리 중'};
+    for(const j of r.body.jobs){
+      const row=document.createElement('div');row.className='studio-sub p-3 space-y-2';
+      const text=document.createElement('p');text.textContent=`${AR_SNS_NAMES[j.target]||j.target} · ${labels[j.status]||j.status} · ${new Date(j.scheduledAt||j.createdAt).toLocaleString('ko-KR')}${j.error?' · '+j.error:''}`;row.append(text);
+      if(j.status==='scheduled'){
+        const b=document.createElement('button');b.type='button';b.className='btn-secondary h-8 px-3';b.textContent='예약 취소';
+        b.addEventListener('click',async()=>{b.disabled=true;try{const out=await arSnsApi('cancel-job',{id:j.id});if(!out.ok)throw new Error(out.body.message);await arShowSnsHistory();}catch(e){text.textContent=e.message;b.disabled=false;}});row.append(b);
+      }box.append(row);
+    }
+    if(!r.body.jobs.length)box.textContent='발행 내역이 없습니다.';
+  }catch(e){box.textContent=e.message;}
+}
+document.getElementById('arProjectsOpen').addEventListener('click',arOpenProjects);
+document.getElementById('arProjectsClose').addEventListener('click',()=>document.getElementById('arProjectsModal').classList.add('hidden'));
+document.getElementById('arProjectSave').addEventListener('click',()=>arSaveProject(false));
+document.getElementById('arProjectSaveNew').addEventListener('click',()=>arSaveProject(true));
+document.getElementById('arSendCode').addEventListener('click',arSendPhoneCode);
+document.getElementById('arForgotPassword').addEventListener('click',()=>{switchAuthModalTab('reset');arAuthVerificationUI();});
+document.getElementById('arPasswordChange').addEventListener('click',()=>arSecurityAction('password'));
+document.getElementById('arSessionsRevoke').addEventListener('click',()=>arSecurityAction('sessions-revoke'));
+document.getElementById('arHistoryRefresh').addEventListener('click',arShowSnsHistory);
+document.getElementById('authPhoneInput').addEventListener('input',()=>{arPhoneChallenge=null;});
+
+let arProjectInteracted=false,arProjectRestoredUser=null;
+document.addEventListener('pointerdown',()=>{arProjectInteracted=true;},{once:true,capture:true});
+document.addEventListener('keydown',()=>{arProjectInteracted=true;},{once:true,capture:true});
+async function arRestoreLastProject(){
+  const uid=arProjectUser();if(!uid||arProjectRestoredUser===uid)return;arProjectRestoredUser=uid;
+  let id;try{id=localStorage.getItem('ar_project_last_'+uid);}catch(_){}
+  if(!id||arProjectInteracted)return;
+  try{const r=await arProjectCall('project-load',{id});if(arProjectInteracted)return;await arRestoreProject(r.project);arToast('저장한 프로젝트를 복구했습니다.',true);}
+  catch(e){arToast('저장 프로젝트를 자동 복구하지 못했습니다. 내 프로젝트에서 다시 불러와 주세요.');}
+}

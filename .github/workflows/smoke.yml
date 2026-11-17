@@ -30,7 +30,7 @@ jobs:
           echo "api modules ok"
       - name: Install Playwright
         run: |
-          npm i --no-save playwright@1.48.2
+          npm i --no-save playwright@1.48.2 @electric-sql/pglite@0.3.14
           npx playwright install --with-deps chromium
       - name: Narration follows voice timing
         run: |
@@ -38,6 +38,8 @@ jobs:
           node tests/narration-browser.mjs
       - name: Production cost and export safety
         run: |
+          node tests/account-projects.cjs
+          node tests/projects-browser.mjs
           node tests/production-safety.cjs
           node tests/export-safety.mjs
       - name: Render every design
