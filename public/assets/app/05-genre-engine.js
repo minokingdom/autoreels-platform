@@ -164,9 +164,17 @@
       // "30대 여성"처럼 나이대를 뜻하는 경우 뒤에 오는 말
       const AGE_FOLLOWERS = /^\s?(여성|남성|여자|남자|직장인|고객|부부|주부|아빠|엄마|가장|초반|중반|후반|분들|사회초년생|이상|이하|부터|까지|에게|들이|들에게|인데|라면|도|가 |이 |의 )/;
 
-      // "취등록세 0원+보증금 0원"의 '+'는 '플러스'로 읽지 않고 짧게 쉬도록 쉼표로 바꿈 (1+1 같은 숫자 사이는 그대로)
+      // "-20%" -> "20프로 할인", "+" -> 쉼표, "%" -> "프로" 등 성우가 어색하게 읽는 기호를 자연스러운 한국어로 보정
       function softenSymbols(text) {
-        return String(text).replace(/\s*\+\s*/g, (m, offset, whole) => {
+        let out = String(text);
+        out = out.replace(/(^|[\s(,.:!?"'\[])-\s*([0-9]+(?:\.[0-9]+)?)\s*(%|프로|퍼센트)(\s*(?:즉시\s*|추가\s*|특별\s*)?할인)?/g, (_, before, num, _u, disc) => {
+          return `${before}${num}프로${disc ? disc : ' 할인'}`;
+        });
+        out = out.replace(/(^|[\s(,.:!?"'\[])-\s*([0-9,]+(?:\.[0-9]+)?)\s*(만\s*원|원)(\s*(?:즉시\s*|추가\s*|특별\s*)?할인)?/g, (_, before, num, unit, disc) => {
+          return `${before}${num}${unit}${disc ? disc : ' 할인'}`;
+        });
+        out = out.replace(/([0-9])\s*%/g, '$1프로');
+        return out.replace(/\s*\+\s*/g, (m, offset, whole) => {
           const prev = whole.slice(0, offset).trim().slice(-1);
           const next = whole.slice(offset + m.length).trim().charAt(0);
           if (/[0-9]/.test(prev) && /[0-9]/.test(next)) return m;
