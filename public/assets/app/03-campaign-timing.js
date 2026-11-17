@@ -806,28 +806,16 @@
       if (customIn) {
         customIn.value = String(Math.round(BASE_DURATION));
       }
-      const scriptCustomIn = document.getElementById('scriptCustomDurationInput');
-      if (scriptCustomIn) {
-        scriptCustomIn.value = String(Math.round(BASE_DURATION));
-      }
-      const mobCustomIn = document.getElementById('mobCustomDurationInput');
-      if (mobCustomIn) {
-        mobCustomIn.value = String(Math.round(BASE_DURATION));
-      }
-      const scriptBadge = document.getElementById('scriptDurationCutBadge');
-      if (scriptBadge) {
-        scriptBadge.textContent = `${Math.round(BASE_DURATION)}초 · ${targetCuts}컷`;
+      const topCustomIn = document.getElementById('topCustomDurationInput');
+      if (topCustomIn) {
+        topCustomIn.value = String(Math.round(BASE_DURATION));
       }
       const previewBadge = document.getElementById('previewDurationCutLabel');
       if (previewBadge) {
         previewBadge.textContent = `${targetCuts}컷 기준`;
       }
-      const mobileChip = document.getElementById('mobileSheetDurationChip');
-      if (mobileChip) {
-        mobileChip.textContent = `⏱ ${Math.round(BASE_DURATION)}초 ▾`;
-      }
 
-      // 상단 빠른 시간 버튼 하이라이트 동기화 (미리보기 + 대본 탭)
+      // 상단 빠른 시간 버튼 하이라이트 동기화 (미리보기 + 시트 상단)
       [8, 12, 15, 20, 30].forEach((dVal) => {
         const isActive = Math.round(BASE_DURATION) === dVal;
         const btn = document.getElementById(`durBtn_${dVal}`);
@@ -836,23 +824,11 @@
             ? 'h-6 px-2 rounded-[5px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer'
             : 'h-6 px-2 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer';
         }
-        const sBtn = document.getElementById(`scriptDurBtn_${dVal}`);
-        if (sBtn) {
-          sBtn.className = isActive
-            ? 'h-7 px-1 rounded-[6px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer'
-            : 'h-7 px-1 rounded-[6px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] bg-[#141415] border border-[var(--border)] cursor-pointer';
-        }
-        const tBtn = document.getElementById(`topicDurBtn_${dVal}`);
-        if (tBtn) {
-          tBtn.className = isActive
-            ? 'h-6 px-2 rounded-[5px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer'
-            : 'h-6 px-2 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer';
-        }
-        const mBtn = document.getElementById(`mobDurBtn_${dVal}`);
-        if (mBtn) {
-          mBtn.className = isActive
-            ? 'h-7 rounded-[6px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer'
-            : 'h-7 rounded-[6px] text-[11px] font-mono text-[#a1a1a6] bg-[#1c1c1f] cursor-pointer';
+        const topBtn = document.getElementById(`topDurBtn_${dVal}`);
+        if (topBtn) {
+          topBtn.className = isActive
+            ? 'h-6 px-1.5 rounded-[5px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer'
+            : 'h-6 px-1.5 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer';
         }
       });
 
