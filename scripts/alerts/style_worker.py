@@ -61,7 +61,7 @@ def analyse(video,directory):
 
 def request_style(frames,timeline,eid):
     body=json.dumps({'mode':'reference-style','frames':frames,'timeline':timeline,'requestId':'reference-'+eid}).encode()
-    request=urllib.request.Request(SITE+'/api/generate-script',data=body,headers={'Content-Type':'application/json'},method='POST')
+    request=urllib.request.Request(SITE+'/api/generate-script',data=body,headers={'Content-Type':'application/json','Origin':SITE},method='POST')
     try:
         with urllib.request.urlopen(request,timeout=65) as response:result=json.load(response)
     except urllib.error.HTTPError as exc:
