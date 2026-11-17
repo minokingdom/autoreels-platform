@@ -1792,11 +1792,11 @@
           ...(payload ? { headers: { 'Content-Type': 'application/json', 'X-AutoReels-Local': '1' }, body: JSON.stringify(payload) } : {})
         });
         const data = await response.json();
-        if (!response.ok || !data.ok) throw new Error(data.error || '이 PC의 이미지 생성기가 아직 준비되지 않았어요. 로컬 이미지 시작 파일을 실행해 주세요.');
+        if (!response.ok || !data.ok) throw new Error(data.error || '이미지 생성기가 아직 준비되지 않았어요. 생성기를 실행한 뒤 다시 눌러 주세요.');
         return data;
       } catch (error) {
-        if (error.name === 'AbortError') throw new Error('로컬 이미지 생성 응답 시간이 초과됐어요. 진행 중인 작업이 끝난 뒤 다시 눌러 주세요.');
-        if (error instanceof TypeError) throw new Error('로컬 이미지 생성기에 연결할 수 없어요. 시작 파일을 실행하고 브라우저의 로컬 네트워크 접근을 허용해 주세요.');
+        if (error.name === 'AbortError') throw new Error('이미지 생성 응답 시간이 초과됐어요. 진행 중인 작업이 끝난 뒤 다시 눌러 주세요.');
+        if (error instanceof TypeError) throw new Error('이미지 생성기에 연결할 수 없어요. 생성기를 실행하고 브라우저 연결 권한을 확인해 주세요.');
         throw error;
       } finally { clearTimeout(timer); }
     }
@@ -1810,40 +1810,42 @@
         if (btn) btn.textContent = message;
       };
       try {
-        update('✨ 로컬 생성기 연결 중...');
+        update('✨ 이미지 생성 준비 중...');
         const health = await arLocalSceneRequest('/health', null, 12000);
-        if (health.service !== 'autoreels-local-images') throw new Error('로컬 이미지 연결 주소를 확인해 주세요.');
+        if (health.service !== 'autoreels-local-images') throw new Error('이미지 생성기 연결을 확인해 주세요.');
         if (!stillCurrent()) return;
         update('✨ 주제에 맞는 장면 준비 중...');
         // 비밀키는 로컬 연결 서버에도 보내지 않습니다.
         const { adminGeminiKey, ...scenePayload } = payload;
+        const total = Math.max(1, Math.min(10, Number(payload.totalCuts) || Number(payload.count) || 4));
+        scenePayload.count = total;
         const planned = await arLocalSceneRequest('/scene', { ...scenePayload, mode: 'scene-prompts' }, 250000);
         if (!stillCurrent()) return;
         const prompts = Array.isArray(planned.prompts) ? planned.prompts : [];
-        if (!prompts.length || prompts.length > 10) throw new Error('장면 설명을 만들지 못했어요. 다시 눌러 주세요.');
-        const total = Math.max(prompts.length, Math.min(10, Number(payload.totalCuts) || prompts.length));
+        if (prompts.length !== total) throw new Error(`${total}컷에 맞는 장면 설명을 모두 만들지 못했어요. 다시 눌러 주세요.`);
         for (let index = 0; index < prompts.length; index++) {
           if (!stillCurrent()) return;
-          update(`✨ 로컬 이미지 ${index + 1}/${prompts.length} 생성 중...`);
+          update(`✨ 맞춤 이미지 ${index + 1}/${prompts.length} 생성 중...`);
           const result = await arLocalSceneRequest('/scene', { mode: 'scene-image', imagePrompt: prompts[index], index }, 250000);
           if (!stillCurrent()) return;
           if (!result.image?.dataUrl?.startsWith('data:image/')) throw new Error('이미지를 받지 못했어요.');
           const compact = await arDownscaleSceneDataUrl(result.image.dataUrl);
           if (!stillCurrent()) return;
-          for (let slot = index; slot < total; slot += prompts.length) {
-            const applied = await new Promise(resolve => applySlotImage(slot, compact, resolve));
-            if (!stillCurrent()) return;
-            if (!applied) throw new Error('생성된 이미지를 컷에 넣지 못했어요.');
-          }
+          const applied = await new Promise(resolve => applySlotImage(index, compact, resolve));
+          if (!stillCurrent()) return;
+          if (!applied) throw new Error('생성된 이미지를 컷에 넣지 못했어요.');
           completed++;
         }
         if (stillCurrent()) {
-          if (noticeEl) noticeEl.textContent = `주제 [${payload.prompt}] · 로컬 이미지 ${completed}장이 ${total}컷에 적용되었습니다.`;
-          if (typeof arToast === 'function') arToast(`이 PC에서 만든 이미지 ${completed}장을 컷에 넣었어요`);
+          campaign.uploadedPhotos = campaign.uploadedPhotos.slice(0, total);
+          if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+          if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+          if (noticeEl) noticeEl.textContent = `주제 [${payload.prompt}] · 이미지 ${completed}장이 각 컷에 적용되었습니다.`;
+          if (typeof arToast === 'function') arToast(`이미지 ${completed}장이 각 컷에 적용됐어요`);
         }
       } catch (error) {
         if (!stillCurrent()) return;
-        const message = `${completed ? completed + '장 적용 후 중단: ' : ''}${error.message || '로컬 이미지 생성에 실패했어요.'}`;
+        const message = `${completed ? completed + '장 적용 후 중단: ' : ''}${error.message || '이미지 생성에 실패했어요.'}`;
         if (noticeEl) { noticeEl.classList.remove('hidden'); noticeEl.textContent = message; }
         if (typeof arToast === 'function') arToast(message);
       }
@@ -1868,7 +1870,7 @@
         industryInfo: IND.key === 'auto' ? null : { name: IND.name },
         themeInfo: th,
         captions: Array.isArray(campaign.cutCaptions) ? campaign.cutCaptions : [],
-        count: Math.min(4, totalCuts),
+        count: arUseLocalSceneImages() ? totalCuts : Math.min(4, totalCuts),
         totalCuts,
         adminGeminiKey: localStorage.getItem('autoreels_admin_gemini_key') || ''
       })).finally(() => {
