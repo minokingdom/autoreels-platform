@@ -319,7 +319,7 @@
       if (!list || typeof DESIGN_STYLES === 'undefined') return;
       const cats = document.getElementById('pdCats');
       if (cats) {
-        cats.innerHTML = arDesignCats().map((c) => `<button type="button" class="pd-cat ${c === pdCat ? 'on' : ''}" onclick="selectPdCat('${c}')">${c}</button>`).join('');
+        cats.innerHTML = '<button type="button" class="pd-cat pd-shuffle-filter" onclick="toggleShuffleFilterPanel(true)">⚙ 섞기 범위</button>' + arDesignCats().map((c) => `<button type="button" class="pd-cat ${c === pdCat ? 'on' : ''}" onclick="selectPdCat('${c}')">${c}</button>`).join('');
       }
       const cnt = document.getElementById('pdCount');
       if (cnt) cnt.textContent = String(arVisibleDesigns().length + arCustomDesigns.length);

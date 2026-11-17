@@ -62,6 +62,5 @@
 }
 
 
-#arQuickBar [data-qb="shuffleScope"] { position: absolute; right: 56px; top: 33%; width: 42px; }
-#arQuickBar [data-qb="shuffleScope"] .aq-dot { width: 30px; height: 30px; }
-#arQuickBar [data-qb="shuffleScope"] .aq-label { font-size: 9px; }
+
+.pd-cats .pd-shuffle-filter { color: #ededed; border-color: rgba(255,255,255,.22); }
