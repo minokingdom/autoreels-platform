@@ -1653,7 +1653,7 @@
             const shortRaw = (raw || topicTitle).replace(/[.!?]+$/, '').trim();
             const c1 = topicTitle;
             const c2 = topicWhy ? topicWhy.slice(0, 26) : `${shortRaw.slice(0, 22)} 포인트`;
-            const c3 = `${IND.name} 맞춤 진행으로 깔끔하게`;
+            const c3 = `${IND.name} 1:1 진행으로 깔끔하게`;
             const c4 = `${IND.cta || '상담 문의'} 바로 받아보세요`;
             const baseCaps = [c1, c2, c3, c4];
             const baseTts = [

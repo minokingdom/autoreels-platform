@@ -1687,10 +1687,10 @@
         ace_beauty: '뷰티 R&B (고품질)', ace_fitness: '피트니스 트랩 (고품질)', ace_realestate: '하우스 라운지 (고품질)',
         ace_academy: '학원 로파이 (고품질)', ace_clinic: '클리닉 앰비언트 (고품질)', ace_shop: '쇼핑몰 시티팝 (고품질)',
         ace_interior: '인테리어 미니멀 (고품질)',
-        lyria_showroom: '쇼룸 하우스 (맞춤)', lyria_cafe: '카페 보사노바 (맞춤)', lyria_restaurant: '맛집 그루브 (맞춤)',
-        lyria_beauty: '뷰티 R&B (맞춤)', lyria_fitness: '피트니스 트랩 (맞춤)', lyria_realestate: '하우스 라운지 (맞춤)',
-        lyria_academy: '학원 로파이 (맞춤)', lyria_clinic: '클리닉 앰비언트 (맞춤)', lyria_shop: '쇼핑몰 시티팝 (맞춤)',
-        lyria_interior: '인테리어 미니멀 (맞춤)'
+        lyria_showroom: '쇼룸 하우스', lyria_cafe: '카페 보사노바', lyria_restaurant: '맛집 그루브',
+        lyria_beauty: '뷰티 R&B', lyria_fitness: '피트니스 트랩', lyria_realestate: '하우스 라운지',
+        lyria_academy: '학원 로파이', lyria_clinic: '클리닉 앰비언트', lyria_shop: '쇼핑몰 시티팝',
+        lyria_interior: '인테리어 미니멀'
       };
       return Array.from(scores.values())
         .sort((a, b) => b.pts - a.pts)
