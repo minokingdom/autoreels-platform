@@ -200,8 +200,16 @@
     const KIT_PHOTO_TOP = ['full', 'blinds', 'diag', 'dim', 'handheld'];
 
     // ---------- 장면(사진·영상) 계산 ----------
+    // ★ 영상에 실제로 깔리는 사진: 기본 견본 사진은 15장까지 늘어나 있어 전부 깔면 0.8초마다 넘어감
+    //   → 견본 사진은 컷 수만큼만(컷 하나에 사진 하나). 사장님이 올린 사진은 올린 만큼 모두.
+    function arScenePhotos() {
+      const all = (typeof campaign !== 'undefined' && campaign.uploadedPhotos) || [];
+      if (campaign.isUserCustomPhotos || typeof getTargetCutCount !== 'function') return all;
+      const n = Math.max(1, getTargetCutCount());
+      return all.length > n ? all.slice(0, n) : all;
+    }
     function kitScene(t, mainDuration, isOutro) {
-      const photos = campaign.uploadedPhotos || [];
+      const photos = arScenePhotos();
       const n = photos.length;
       if (!n) return { photos, n: 0, idx: 0, p: 0, tp: 1, into: t, sceneDur: mainDuration };
       const sceneDur = mainDuration / n;

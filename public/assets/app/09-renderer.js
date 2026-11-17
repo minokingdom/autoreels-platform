@@ -58,7 +58,7 @@
 
         // 배경: 카마스터마다 다른 사진 순서(cutOrder) 및 카메라 무빙 조합(cameraOrder) 적용
         if (campaign.uploadedPhotos.length > 0) {
-          const numPhotos = campaign.uploadedPhotos.length;
+          const numPhotos = typeof arScenePhotos === 'function' ? arScenePhotos().length : campaign.uploadedPhotos.length;
           const slideDuration = mainDuration / numPhotos;
           const idx = Math.min(numPhotos - 1, Math.floor(t / slideDuration));
           const localProgress = Easing.clamp((t - idx * slideDuration) / slideDuration, 0, 1);
