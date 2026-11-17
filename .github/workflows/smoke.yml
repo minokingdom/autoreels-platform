@@ -42,5 +42,7 @@ jobs:
           node tests/projects-browser.mjs
           node tests/production-safety.cjs
           node tests/export-safety.mjs
+      - name: Kinetic typography editing and seeking
+        run: node tests/motion-typography.mjs
       - name: Render every design
         run: node tests/smoke-render.mjs

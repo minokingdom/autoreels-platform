@@ -99,10 +99,15 @@
       ['cn_compare', '카드뉴스 · 체크 포인트', 'cn_compare', 'sans', '#0b1612', '#11221c', '#10b981', '#ffffff', false],
       ['cn_receipt', '카드뉴스 · 클린 영수증', 'cn_receipt', 'pretM', '#f5f2eb', '#e8e2d5', '#18181b', '#18181b', true],
       ['cn_polaroid_duo', '카드뉴스 · 투컷 앨범', 'cn_polaroid_duo', 'maru', '#f3ede3', '#e7ded0', '#c2603f', '#292524', true],
-      ['stm_glassbar', '💎 글래스 네온 바', 'stm_glassbar', 'pretM', '#0b0e14', '#131924', '#38bdf8', '#ffffff', false]
+      ['stm_glassbar', '💎 글래스 네온 바', 'stm_glassbar', 'pretM', '#0b0e14', '#131924', '#38bdf8', '#ffffff', false],
+      // Prompt Motion 연구에서 착안한 자체 Canvas 연출. 런타임 생성 API 없음.
+      ['ty_mask', '마스크 리빌', 'ty_mask', 'sans', '#111214', '#1d1d20', '#e9e1d3', '#ffffff', false],
+      ['ty_focus', '워드 포커스', 'ty_focus', 'sans', '#111214', '#1d1d20', '#d5f185', '#ffffff', false],
+      ['ty_spring', '스프링 스택', 'ty_spring', 'dohyeon', '#111214', '#1d1d20', '#f3d4bd', '#ffffff', false],
     ];
     // 모션 디자인도 별도 분류를 만들지 않고 기존 분류에 넣음
     const MOTION_CAT = {
+      ty_mask: '타이포', ty_focus: '타이포', ty_spring: '타이포',
       mo_blob: '재미', mo_sweep: '타이포', mo_tiles: '테크', mo_tunnel: '스포츠', mo_cards: '브이로그', mo_eq: '재미',
       mo_aurora: '감성', mo_dots: '재미', mo_number: '특가', mo_strips: '브이로그', mo_circle: '고급', mo_ribbon: '뉴스·방송',
       mo_doors: '고급', mo_bounce: '타이포', ig_story: '브이로그', ig_feed: '브이로그', ig_poll: '재미', mo_vhs: '브이로그',
@@ -182,6 +187,88 @@
       return arBeginMotionCaptionCard(c, W, H, cutIdx, local, cx, y0 + ((n - 1) * lh) / 2, mw + 28, n * lh + 18);
     }
     function mCapEnd(c) { if (typeof arEndMotionCaptionCard === 'function') arEndMotionCaptionCard(c); }
+
+    // All motion is a pure function of cut-local time, including backward seeks.
+    // Complete the entrance within the first 28% even for short narration cuts.
+    function mPromptType(c, W, H, text, cutIdx, local, cutDur, mode, options = {}) {
+      const key = mCapFont(cutIdx, options.font || 'sans');
+      const F = KIT_FONTS[key] || KIT_FONTS.sans;
+      const maxW = W * 0.82;
+      const wr = kWrap(c, text, maxW, 3, options.size || W * 0.078, W * 0.038, key);
+      const align = options.align || 'left';
+      const x = align === 'center' ? W / 2 : W * 0.09;
+      const lh = wr.lh * (mode === 'spring' ? 1.18 : 1.08);
+      const y0 = (options.bottom || H * 0.81) - (wr.lines.length - 1) * lh;
+      const enter = Math.max(0.001, Math.min(0.9, cutDur * 0.28));
+      const progress = mClamp(local / enter);
+      const color = mCapColor(cutIdx, options.color || '#ffffff');
+      const accent = options.accent || '#e9e1d3';
+      c.save();
+      c.font = gFont(F.w, wr.size, F.f);
+      c.textAlign = align;
+      c.textBaseline = 'middle';
+      c.shadowColor = 'transparent';
+      if (mCapBegin(c, W, H, cutIdx, local, wr.lines, x, y0, lh, align)) {
+        const inheritedAlpha = c.globalAlpha;
+        const tokens = [];
+        wr.lines.forEach((line, i) => {
+          let tx = align === 'center' ? x - c.measureText(line).width / 2 : x;
+          line.split(/\s+/).filter(Boolean).forEach((word) => {
+            const w = c.measureText(word).width;
+            tokens.push({ word, x: tx, y: y0 + i * lh, w });
+            tx += w + c.measureText(' ').width;
+          });
+        });
+        if (mode === 'focus' && tokens.length) {
+          // Visual reading rhythm only: no claim of word-level speech alignment.
+          const travel = mClamp((local - enter) / Math.max(0.001, cutDur * 0.5));
+          const pos = travel * (tokens.length - 1);
+          const a = tokens[Math.floor(pos)], b = tokens[Math.min(tokens.length - 1, Math.floor(pos) + 1)];
+          const mix = mEase(pos % 1);
+          const bx = a.x + (b.x - a.x) * mix, by = a.y + (b.y - a.y) * mix;
+          const bw = a.w + (b.w - a.w) * mix;
+          c.globalAlpha = inheritedAlpha * mEase(progress);
+          c.fillStyle = accent;
+          c.fillRect(bx, by + wr.size * 0.65, bw, Math.max(2, W * 0.006));
+          c.textAlign = 'left';
+          tokens.forEach((token, j) => {
+            const p = mEase((progress - 0.25 * j / Math.max(1, tokens.length - 1)) / 0.75);
+            c.globalAlpha = inheritedAlpha * (0.35 + 0.65 * p);
+            c.fillStyle = color;
+            c.fillText(token.word, token.x, token.y + (1 - p) * W * 0.025);
+          });
+        } else {
+          wr.lines.forEach((line, i) => {
+            const q = mClamp((progress - 0.22 * i / Math.max(1, wr.lines.length - 1)) / 0.78);
+            const y = y0 + i * lh, width = c.measureText(line).width;
+            const left = align === 'center' ? x - width / 2 : x;
+            c.save();
+            if (mode === 'spring') {
+              const spring = q >= 1 ? 1 : 1 - Math.exp(-7 * q) * Math.cos(10 * q);
+              c.globalAlpha *= mClamp(q * 5);
+              c.translate(x, y + (1 - spring) * W * 0.07);
+              c.scale(0.96 + spring * 0.04, 0.96 + spring * 0.04);
+              c.translate(-x, -y);
+              c.fillStyle = i === wr.lines.length - 1 ? accent : '#f6f1e7';
+              c.fillRect(left - W * 0.018, y - wr.size * 0.66, width + W * 0.036, wr.size * 1.32);
+              c.fillStyle = mCapColor(cutIdx, kTextOn(i === wr.lines.length - 1 ? accent : '#f6f1e7'));
+              c.fillText(line, x, y);
+            } else {
+              const p = mEase(q);
+              c.beginPath();
+              c.rect(left - W * 0.02, y - lh * 0.5, width + W * 0.04, lh);
+              c.clip();
+              c.fillStyle = color;
+              c.fillText(line, x, y + (1 - p) * lh);
+            }
+            c.restore();
+          });
+        }
+        mCapEnd(c);
+      }
+      c.restore();
+    }
+
     function mPhoto(c, S, k, x, y, w, h, scale = 1.06, px = 0, py = 0) {
       const img = kitImg(S, k);
       if (!img) {
@@ -452,7 +539,18 @@
       const M = sp.mstyle;
       mBg(c, W, H, sp, t);
 
-      if (M === 'blob') {
+      if (M === 'ty_mask' || M === 'ty_focus' || M === 'ty_spring') {
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.02 + lp * 0.035, 1);
+        const shade = c.createLinearGradient(0, H * 0.35, 0, H);
+        shade.addColorStop(0, 'rgba(12,12,14,0)');
+        shade.addColorStop(0.65, 'rgba(12,12,14,0.72)');
+        shade.addColorStop(1, 'rgba(12,12,14,0.82)');
+        c.fillStyle = shade; c.fillRect(0, H * 0.35, W, H * 0.65);
+        mPromptType(c, W, H, caption, cutIdx, local, cutDur,
+          M === 'ty_focus' ? 'focus' : M === 'ty_spring' ? 'spring' : 'mask',
+          { font: sp.font, accent: sp.accent });
+        if (isPrice) mPrice(c, W, H * 0.54, sp, e);
+      } else if (M === 'blob') {
         // 배경 위 떠다니는 원 + 출렁이는 블롭 안에 사진
         for (let i = 0; i < 5; i++) {
           c.beginPath();
@@ -2190,7 +2288,7 @@
           if (typeof arEndMotionCaptionCard === 'function') arEndMotionCaptionCard(c);
         }
       } else if (M === 'ed_kinetic') {
-        // 키네틱 포스터: 풀블리드 + 사선 빛 스윕 + 굵은 긴그림자(Long Shadow) 타이포
+        // 키네틱 포스터: 풀블리드 + 사선 빛 스윕 + 마스크 타이포
         mPhoto(c, S, 0, 0, 0, W, H, 1.06 + lp * 0.05);
         const g = c.createLinearGradient(0, H * 0.42, 0, H);
         g.addColorStop(0, 'rgba(0,0,0,0)');
@@ -2204,23 +2302,7 @@
           c.fillRect(0, 0, 140, H);
           c.restore();
         }
-        const capFk = mCapFont(cutIdx, 'impact');
-        const wr = kWrap(c, caption, W - 64, 2, 54, 30, capFk);
-        const F = KIT_FONTS[capFk];
-        c.save();
-        c.font = gFont(F.w, wr.size, F.f);
-        c.textAlign = 'left';
-        if (mCapBegin(c, W, H, cutIdx, local, wr.lines, 32, H - 232, wr.lh, 'left')) {
-          wr.lines.forEach((ln, i) => {
-            const p = mEase((e - i * 0.12) / 0.42);
-            const x = 32 + (1 - p) * -48;
-            const y = H - 220 + i * wr.lh;
-            c.globalAlpha = p;
-            kLongShadow(c, ln, x, y, mCapColor(cutIdx, i === 0 ? '#ffffff' : sp.accent), 'rgba(0,0,0,0.62)', 12, 0.85, 1);
-          });
-          mCapEnd(c);
-        }
-        c.restore();
+        mPromptType(c, W, H, caption, cutIdx, local, cutDur, 'mask', { font: 'impact', size: W * 0.095, accent: sp.accent });
       } else if (M === 'ed_arch') {
         // 아치 갤러리: 따뜻한 스톤 배경 위 아치형 창 + 얇은 골드 라인 + 명조 서명
         const ax = 40, ay = 74, aw = W - 80, ah = 590, r = aw / 2;
@@ -2302,27 +2384,7 @@
         }
         c.restore();
         inLabel(c, `0${cutIdx + 1} · ${inDateLabel()}`, 34, 46, 'rgba(232,213,188,0.82)');
-        const capFk = mCapFont(cutIdx, 'maru');
-        const wr = kWrap(c, caption, W - 88, 2, 25, 19, capFk);
-        const F = KIT_FONTS[capFk] || KIT_FONTS.sans;
-        c.save();
-        c.font = gFont(F.w, wr.size, F.f);
-        c.textAlign = 'center';
-        c.textBaseline = 'middle';
-        c.shadowColor = 'rgba(0,0,0,0.65)';
-        c.shadowBlur = 14;
-        c.shadowOffsetY = 2;
-        if (mCapBegin(c, W, H, cutIdx, local, wr.lines, W / 2, H - 195, wr.lh, 'center')) {
-          wr.lines.forEach((ln, i) => {
-            const lt = Math.max(0, local - i * 0.14);
-            const p = 1 - Math.pow(1 - Math.min(1, lt / 0.75), 4);
-            c.globalAlpha = p;
-            c.fillStyle = mCapColor(cutIdx, i === 0 ? '#ffffff' : 'rgba(255,255,255,0.88)');
-            c.fillText(ln, W / 2, H - 195 + i * wr.lh + (1 - p) * 18);
-          });
-          mCapEnd(c);
-        }
-        c.restore();
+        mPromptType(c, W, H, caption, cutIdx, local, cutDur, 'mask', { font: 'maru', size: W * 0.06, align: 'center', bottom: H * 0.81 });
         if (isPrice) mPrice(c, W, H - 265, sp, e);
         inSign(c, d, W - 34, H - 46, 'rgba(232,213,188,0.78)');
       } else if (M === 'stm_cinema') {
