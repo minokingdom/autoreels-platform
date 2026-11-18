@@ -107,8 +107,13 @@ try{
   }
   if (!adminAuthenticated) return route.fulfill({status:401,json:{ok:false}});
   const rows = [{industry:'clinic',specialty:'치과',accounts:2,attempted_day:'2026-11-18',last_result:'collected',keywords:['치과 검진 안내'],fresh:true}];
-  return route.fulfill({json:{ok:true,rows:params.get('industry')==='restaurant'?[]:rows,summary:{accounts:3,configured:2,specialties:1},hasNext:false}});
+  return route.fulfill({json:{ok:true,rows:params.get('industry')==='restaurant'?[]:rows,summary:{accounts:3,configured:2,specialties:1},hasNext:false,
+   lastRun:{status:'complete',finished_at:'2026-11-18T19:04:00.000Z',attempted:3,collected:1,failed:1}}});
  });
+ await page.route('**/trends-today.json', route => route.fulfill({json:{date:'2026-11-18',updatedAt:'2026-11-18T19:14:00.000Z',industries:{restaurant:{keywords:['태국식 메뉴 추천']}}}}));
+ await page.route('**/assets/reference-styles.json', route => route.fulfill({json:[
+  {id:'example',name:'검증용 포토 프레임',category:'감성',addedAt:new Date().toISOString()}
+ ]}));
  await page.goto(`http://127.0.0.1:${srv.address().port}/admin`);
  await page.getByLabel('관리자 키').fill('wrong');
  await page.getByRole('button',{name:'로그인',exact:true}).click();
@@ -116,6 +121,13 @@ try{
  await page.getByLabel('관리자 키').fill('local-admin');
  await page.getByRole('button',{name:'로그인',exact:true}).click();
  await page.getByText('치과 검진 안내',{exact:true}).waitFor();
+ await page.getByText('참조 스타일 1개 등록 · 신규 1개',{exact:false}).waitFor();
+ assert.match(await page.locator('#specialtyRunStatus').textContent(),/3개 시도, 1개 수집, 1개 결과 없음, 1개 실패/);
+ assert.match(await page.locator('#sharedTrendStatus').textContent(),/1\/10개 업종 갱신/);
+ await page.getByText('공통 업종 키워드 보기',{exact:true}).click();
+ assert.equal(await page.getByText('태국식 메뉴 추천',{exact:true}).isVisible(),true);
+ await page.getByText('등록된 스타일 보기',{exact:true}).click();
+ assert.equal(await page.getByText('검증용 포토 프레임 · 감성',{exact:false}).isVisible(),true);
  await page.getByLabel('대분류',{exact:true}).selectOption('restaurant');
  await page.getByText('이 페이지에 표시할 세부 업종이 없습니다.',{exact:true}).waitFor();
  await page.reload();

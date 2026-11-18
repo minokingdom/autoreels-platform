@@ -393,7 +393,7 @@ async function fetchTrendsForIndustry(indKey, customQ = '') {
 
 const { isSameSiteRequest, consume, refundUsage } = require('../lib/server/usage');
 const { timingSafeEqual } = require('node:crypto');
-const { refreshSpecialtyTrends } = require('../lib/server/specialty-trends');
+const { runScheduledSpecialtyTrends } = require('../lib/server/specialty-trends');
 
 async function handler(req, res) {
   if (req.query?.specialtyCron === '1' && req.method === 'GET') {
@@ -406,7 +406,7 @@ async function handler(req, res) {
       return res.status(401).json({ ok: false, error: 'unauthorized' });
     }
     try {
-      const summary = await refreshSpecialtyTrends();
+      const summary = await runScheduledSpecialtyTrends();
       console.log('[specialty-trends]', summary);
       return res.status(200).json({ ok: true, ...summary });
     } catch (e) {

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>오토릴스 운영 관리</title>
-  <link rel="stylesheet" href="/assets/admin.css?v=1">
+  <link rel="stylesheet" href="/assets/admin.css?v=2">
 </head>
 <body>
   <main>
@@ -13,6 +13,7 @@
       <h1>오토릴스 운영 관리</h1>
       <div class="actions">
         <a href="/studio">스튜디오</a>
+        <button type="button" id="refreshAdmin" hidden>다시 불러오기</button>
         <button type="button" id="adminLogout" hidden>로그아웃</button>
       </div>
     </header>
@@ -28,7 +29,32 @@
         <div class="panel"><dt>세부 업종을 입력한 회원</dt><dd id="configuredCount">–</dd></div>
         <div class="panel"><dt>등록된 세부 업종 유형</dt><dd id="specialtiesCount">–</dd></div>
       </dl>
-      <section class="panel">
+      <nav class="actions section-navigation" aria-label="운영 현황 바로가기">
+        <a href="#nightlyKeywords">새벽 키워드</a>
+        <a href="#styleCollection">스타일 수집</a>
+        <a href="#specialtyMembers">세부 업종</a>
+      </nav>
+      <section id="nightlyKeywords" class="panel monitor-panel" aria-labelledby="nightlyHeading">
+        <h2 id="nightlyHeading">새벽 키워드</h2>
+        <dl class="monitor-list">
+          <div><dt>공통 업종 · 04:13 예정</dt><dd id="sharedTrendStatus">불러오는 중…</dd></div>
+          <div><dt>세부 업종 · 04:00대 예정</dt><dd id="specialtyRunStatus">불러오는 중…</dd></div>
+        </dl>
+        <details>
+          <summary>공통 업종 키워드 보기</summary>
+          <dl id="sharedTrendRows" class="monitor-list"></dl>
+        </details>
+      </section>
+      <section id="styleCollection" class="panel monitor-panel" aria-labelledby="styleCollectionHeading">
+        <h2 id="styleCollectionHeading">스타일 수집</h2>
+        <p id="styleCollectionStatus" class="muted">불러오는 중…</p>
+        <p class="muted">수동 검토 또는 카카오 !분석으로 등록된 참조 스타일입니다. 등록 후 7일 동안 신규에 표시됩니다.</p>
+        <details>
+          <summary>등록된 스타일 보기</summary>
+          <ul id="collectedStyleRows" class="monitor-list"></ul>
+        </details>
+      </section>
+      <section id="specialtyMembers" class="panel">
         <div class="section-head">
           <div>
             <h2 id="specialtiesHeading">세부 업종과 수집 현황</h2>
@@ -37,7 +63,6 @@
           <div class="actions">
             <label for="industryFilter">대분류</label>
             <select id="industryFilter"><option value="">전체 업종</option></select>
-            <button type="button" id="refreshAdmin">다시 불러오기</button>
           </div>
         </div>
         <div class="table-scroll" role="region" aria-label="세부 업종별 수집 현황" tabindex="0">
@@ -55,6 +80,6 @@
     </section>
   </main>
   <script defer src="/assets/landing/industries.js"></script>
-  <script defer src="/assets/admin.js?v=1"></script>
+  <script defer src="/assets/admin.js?v=2"></script>
 </body>
 </html>

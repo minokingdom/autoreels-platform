@@ -78,10 +78,11 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
   searches.push(query);
   return [{title:'피부과 첫 방문 준비'}, {title:'치과 검진 안내'}, {title:'중식당 메뉴'}];
  };
- const nightly = await specialtyTrends.refreshSpecialtyTrends(mockSearch);
+ const nightly = await specialtyTrends.runScheduledSpecialtyTrends(mockSearch);
  assert.equal(nightly.attempted,2);
  assert.equal(nightly.collected,2);
  assert.equal(searches.filter(query=>query.startsWith('치과 ')).length,1);
+ assert.equal((await specialtyTrends.runScheduledSpecialtyTrends(mockSearch)).skipped,true);
  assert.equal((await specialtyTrends.refreshSpecialtyTrends(mockSearch)).attempted,0);
  assert.deepEqual((await member('specialty-trends')).body.keywords,['피부과 첫 방문 준비']);
  assert.deepEqual((await specialtyTrends.readSpecialtyTrends('clinic','치과')).keywords,['치과 검진 안내']);
@@ -100,6 +101,10 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
  assert.equal(overview.statusCode,200);
  assert.equal(overview.body.summary.configured,3);
  assert.equal(overview.body.summary.specialties,2);
+ assert.equal(overview.body.lastRun.status,'complete');
+ assert.equal(overview.body.lastRun.attempted,2);
+ assert.equal(overview.body.lastRun.collected,2);
+ assert.equal(overview.body.lastRun.failed,0);
  assert.equal(overview.body.rows[0].specialty,'치과');
  assert.equal(overview.body.rows[0].accounts,2);
  assert.equal(overview.body.rows[0].last_result,'collected');

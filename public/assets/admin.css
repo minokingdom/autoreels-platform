@@ -39,4 +39,14 @@ td:last-child { overflow-wrap: anywhere; font-size: 13px; }
 td[data-result="collected"] { color: #6cdda2; }
 td[data-result="failed"], td[data-result="started"] { color: #ffca84; }
 .pagination { justify-content: flex-end; margin-top: 14px; }
+.section-navigation, .monitor-panel { margin-bottom: 16px; }
+.monitor-panel { scroll-margin-top: 12px; }
+.monitor-panel h2 { margin-bottom: 8px; }
+.monitor-panel p + p { margin-top: 6px; }
+.monitor-panel details { margin-top: 12px; }
+.monitor-panel summary { cursor: pointer; font-weight: 600; width: fit-content; }
+.monitor-list { padding: 0; margin: 6px 0 0; list-style: none; }
+.monitor-list > * { padding: 7px 0; border-bottom: 1px solid #303034; overflow-wrap: anywhere; }
+.monitor-list dd { font-size: 14px; font-weight: 400; }
+.muted { color: #c4c4ca; }
 @media (max-width: 480px) { .summary dt { min-height: 2lh; } }
