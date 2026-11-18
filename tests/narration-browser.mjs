@@ -7,7 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = process.env.SMOKE_ROOT || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.png': 'image/png', '.wasm': 'application/wasm' };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.png': 'image/png', '.wasm': 'application/wasm', '.mp3': 'audio/mpeg' };
 
 async function serve() {
   const srv = http.createServer((req, res) => {
@@ -190,6 +190,52 @@ try {
   await page.evaluate(()=>arCloseProductSheet());
   assert.equal(await page.locator('#productSheet').isVisible(),false);
   console.log('product photo and sheet click ok');
+  await page.evaluate(() => {
+    switchStudioTab('sound');
+    window.__arUserMuted = true;
+    AudioEngine.enabled = true;
+    AudioEngine.sfxMode = 'off';
+    if (!isPlaying) togglePlayPause();
+    const ctx = AudioEngine.ensureContext();
+    window.__auditionAnalyser = ctx.createAnalyser();
+    AudioEngine.bgmGain.connect(window.__auditionAnalyser);
+    renderBgmRecommendations();
+  });
+  await page.locator('#bgmRecommendRow .bgm-now').click();
+  await page.waitForFunction(() => arEditSheetOpen && !isPlaying);
+  const musicTime = await page.evaluate(() => window.__timelines.main.currentTime);
+  const sheet = page.locator('#arBgmSheet');
+  const search = sheet.locator('#arBgmSearch');
+  const pick = async (name, id) => {
+    await search.fill(name);
+    await sheet.locator('.bgm-row').filter({ hasText: name }).click();
+    await page.waitForFunction(track => {
+      const audio = AudioEngine.customBgmAudioEl;
+      const analyser = window.__auditionAnalyser;
+      if (!audio || audio.paused || audio.currentTime < .12 || !audio.src.endsWith('/' + track + '.mp3')) return false;
+      const samples = new Float32Array(analyser.fftSize);
+      analyser.getFloatTimeDomainData(samples);
+      return samples.some(sample => Math.abs(sample) > .002);
+    }, id);
+    assert.equal(await sheet.locator('.bgm-row.on .bgm-eq').count(), 1);
+  };
+  await pick('네온 골목', 'original-city-01');
+  await pick('저녁 메모', 'original-lofi-01');
+  assert.equal(await page.evaluate(() => window.__timelines.main.currentTime), musicTime);
+  assert.equal(await page.evaluate(() => Boolean(AudioEngine.masterSource)), false);
+  await sheet.locator('.bgm-done').click();
+  await page.waitForFunction(time => isPlaying && window.__timelines.main.currentTime > time, musicTime);
+  assert.equal(await page.evaluate(() => localStorage.getItem('autoreels_bgm_style')), 'original-lofi-01');
+  assert.equal(await page.evaluate(() => arBgmListeningAudio), null);
+
+  await page.evaluate(() => toggleAudioMaster(false));
+  await page.locator('#bgmRecommendRow .bgm-now').click();
+  await page.waitForFunction(() => arEditSheetOpen && !isPlaying);
+  await pick('네온 골목', 'original-city-01');
+  assert.equal(await page.evaluate(() => AudioEngine.enabled), false);
+  await sheet.locator('.bgm-done').click();
+  assert.equal(await page.evaluate(() => AudioEngine.customBgmAudioEl.paused), true);
+  console.log('music sheet plays the selected track alone, preserves edit position and stops audition on close');
   assert.deepEqual(pageErrors,[]);
   assert.deepEqual(await page.evaluate(()=>window.__smokeAsyncErrors),[]);
 } finally { await browser.close(); if(srv)srv.close(); }

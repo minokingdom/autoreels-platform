@@ -1476,7 +1476,7 @@
       const unlock = (ev) => {
         if (window.__arUserMuted || AudioEngine.enabled) return;
         const t = ev && ev.target;
-        if (t && typeof t.closest === 'function' && t.closest('#soundToggleBtn, #mobileDockSoundBtn, #arQuickBar [data-qb="sound"], #topicCards')) return;
+        if (t && typeof t.closest === 'function' && t.closest('#soundToggleBtn, #mobileDockSoundBtn, #arQuickBar [data-qb="sound"], #topicCards, #bgmRecommendRow, #arBgmSheet')) return;
         toggleAudioMaster(true);
       };
       window.addEventListener('pointerdown', unlock, { once: true, passive: true });
@@ -1536,7 +1536,11 @@
       return `⚠️ ${why}${fellBack ? ' 지금은 기본 배경음악으로 들려드려요.' : ''}`;
     }
 
-    async function arSelectLyriaBgm(presetId) {
+    async function arSelectLyriaBgm(presetId, autoPlay = true) {
+      const selected = () => document.getElementById('bgmStyleSelect')?.value === presetId;
+      const applyTrack = (url, label) => {
+        if (selected()) AudioEngine.loadRemoteBgmUrl(url, label, autoPlay || (isPlaying && AudioEngine.enabled));
+      };
       const st = document.getElementById('lyriaBgmStatusText');
       if (st) {
         st.classList.remove('hidden');
@@ -1550,7 +1554,7 @@
         }
         const cached = window.__arLyriaMap[presetId];
         if (cached && cached.url) {
-          AudioEngine.loadRemoteBgmUrl(cached.url, cached.label);
+          applyTrack(cached.url, cached.label);
           return;
         }
         if (!arCanUseAi()) throw new Error('ai_access_required');
@@ -1562,12 +1566,13 @@
         const data = await res.json();
         if (!res.ok || !data.ok || !data.url) throw new Error(data.message || 'Lyria 생성 실패');
         window.__arLyriaMap[presetId] = { id: presetId, label: data.label, url: data.url };
-        AudioEngine.loadRemoteBgmUrl(data.url, data.label);
+        applyTrack(data.url, data.label);
       } catch (err) {
+        if (!selected()) return;
         if (String(presetId || '').startsWith('lyria_')) {
           const shortId = String(presetId).slice(6).replace(/[^a-z0-9_-]/gi, '');
           const meta = AR_BGM_META[presetId] || [];
-          AudioEngine.loadRemoteBgmUrl(`/assets/bgm/pack/${shortId}.mp3`, meta[1] || shortId);
+          applyTrack(`/assets/bgm/pack/${shortId}.mp3`, meta[1] || shortId);
           return;
         }
         if (st) {
@@ -1616,7 +1621,7 @@
       }
     }
 
-    function onAudioConfigChange() {
+    function onAudioConfigChange({ autoPlay = true } = {}) {
       const prevVoice = AudioEngine.ttsVoice;
       const prevSpeed = AudioEngine.ttsSpeed;
       const bgmEl = document.getElementById('bgmStyleSelect');
@@ -1638,16 +1643,19 @@
       const trackId = arBgmPackId(pickedBgm);
       if (trackId) {
         const optLabel = bgmEl && bgmEl.selectedOptions && bgmEl.selectedOptions[0] ? bgmEl.selectedOptions[0].textContent : trackId;
-        AudioEngine.loadRemoteBgmUrl(`/assets/bgm/pack/${trackId}.mp3`, optLabel);
+        AudioEngine.loadRemoteBgmUrl(`/assets/bgm/pack/${trackId}.mp3`, optLabel, autoPlay);
         if (voiceChanged && AudioEngine.enabled) arResetAndRebuildNarration();
         return;
       }
       if (String(pickedBgm).startsWith('lyria_')) {
-        arSelectLyriaBgm(pickedBgm);
         if (voiceChanged && AudioEngine.enabled) arResetAndRebuildNarration();
-        return;
+        return arSelectLyriaBgm(pickedBgm, autoPlay);
       }
       AudioEngine.bgmStyle = pickedBgm;
+      if (!autoPlay) {
+        AudioEngine.stopBgmLoop();
+        return;
+      }
       if (!AudioEngine.enabled) {
         if (voiceChanged) {
           AudioEngine.masterBuffer = null;
@@ -1914,17 +1922,34 @@
       }
       arWatchEditSheet(el);
       arBgmMood = '추천';
-      arRenderBgmSheet();
+      arRenderBgmSheet(false);
       el.classList.remove('hidden');
       el.style.display = 'flex';
     }
+    let arBgmListenRequest = 0;
+    let arBgmListeningId = '';
+    let arBgmListeningAudio = null;
+    let arBgmPendingLoad = null;
+
+    function arStopBgmListening() {
+      arBgmListenRequest++;
+      arBgmListeningAudio?.pause();
+      arBgmListeningAudio = null;
+      arBgmListeningId = '';
+    }
+
     function arCloseBgmSheet() {
       const el = document.getElementById('arBgmSheet');
-      if (el) { el.classList.add('hidden'); el.style.display = 'none'; }
+      if (el) {
+        arStopBgmListening();
+        el.classList.add('hidden');
+        el.style.display = 'none';
+      }
     }
-    function arRenderBgmSheet() {
+    function arRenderBgmSheet(keepScroll = true) {
       const el = document.getElementById('arBgmSheet');
       if (!el) return;
+      const scrollTop = keepScroll ? el.querySelector('.bgm-list')?.scrollTop || 0 : 0;
       const sel = document.getElementById('bgmStyleSelect');
       const cur = sel ? sel.value : '';
       const q = (el.querySelector('#arBgmSearch') || {}).value || '';
@@ -1955,36 +1980,63 @@
         return `<button type="button" class="bgm-row ${on ? 'on' : ''}" onclick="arPickBgm('${o.id}')">
             ${arBgmCover(o.id, 48)}
             <span class="bgm-row-txt"><strong>${esc(o.name)}</strong><small>${sub}</small></span>
-            <span class="bgm-row-state">${on ? (typeof isPlaying !== 'undefined' && isPlaying ? '<i class="bgm-eq"><i></i><i></i><i></i></i>' : '✓') : '▶'}</span>
+            <span class="bgm-row-state">${on ? (o.id === arBgmListeningId && !arBgmListeningAudio?.paused ? '<i class="bgm-eq"><i></i><i></i><i></i></i>' : '✓') : '▶'}</span>
           </button>`;
       }).join('');
       const hadFocus = document.activeElement && document.activeElement.id === 'arBgmSearch';
       el.innerHTML = `<div class="bgm-sheet">
           <div class="bgm-head"><strong>음악</strong><button type="button" class="bgm-done" onclick="arCloseBgmSheet()">완료</button></div>
-          <input id="arBgmSearch" class="bgm-search" type="search" placeholder="음악 검색 (예: 재즈, 신나는, 카페)" value="${esc(q)}" oninput="arRenderBgmSheet()" />
-          <div class="bgm-moods no-scrollbar">${AR_BGM_MOODS.map((md) => `<button type="button" class="${md === arBgmMood && !q ? 'on' : ''}" onclick="arBgmMood='${md}';const s=document.getElementById('arBgmSearch');if(s)s.value='';arRenderBgmSheet()">${md}</button>`).join('')}</div>
+          <input id="arBgmSearch" class="bgm-search" type="search" placeholder="음악 검색 (예: 재즈, 신나는, 카페)" value="${esc(q)}" oninput="arRenderBgmSheet(false)" />
+          <div class="bgm-moods no-scrollbar">${AR_BGM_MOODS.map((md) => `<button type="button" class="${md === arBgmMood && !q ? 'on' : ''}" onclick="arBgmMood='${md}';const s=document.getElementById('arBgmSearch');if(s)s.value='';arRenderBgmSheet(false)">${md}</button>`).join('')}</div>
           <div class="bgm-list">
             ${kw ? `<button type="button" class="bgm-row bgm-make" onclick="arCloseBgmSheet();generateKeywordLyriaBgm('${esc(kw).replace(/'/g, '')}')"><span class="bgm-cover bgm-cover-make">✨</span><span class="bgm-row-txt"><strong>'${esc(kw.length > 16 ? kw.slice(0, 16) + '…' : kw)}' 맞춤 음악 만들기</strong><small>오늘 주제에 맞춰 AI가 새로 작곡해요 (10~15초)</small></span><span class="bgm-row-state">＋</span></button>` : ''}
             ${rows || '<p class="bgm-empty">맞는 음악이 없어요</p>'}
             <label for="customBgmFileInput" class="bgm-row bgm-make"><span class="bgm-cover bgm-cover-make">⤒</span><span class="bgm-row-txt"><strong>내 음원 불러오기</strong><small>휴대폰에 있는 음악·영상 소리를 써요</small></span><span class="bgm-row-state">＋</span></label>
           </div>
         </div>`;
+      el.querySelector('.bgm-list').scrollTop = scrollTop;
       if (hadFocus) { const s2 = el.querySelector('#arBgmSearch'); if (s2) { s2.focus(); s2.setSelectionRange(s2.value.length, s2.value.length); } }
     }
-    // 목록에서 음악을 선택하고 시트가 닫히면 현재 위치에서 미리보기와 함께 재생합니다.
+    // 음악 목록은 영상 타임라인을 멈추고 선택한 음원만 미리 듣습니다.
     function arPickBgm(id) {
       const sel = document.getElementById('bgmStyleSelect');
       if (!sel) return;
+      arStopBgmListening();
+      AudioEngine.stopTts();
+      const request = arBgmListenRequest;
       const same = sel.value === id;
       sel.value = id;
       const needsLoad = !same || (id !== 'off' && AudioEngine.bgmStyle !== 'custom_mp3' && arBgmPackId(id));
-      if (needsLoad) onAudioConfigChange();
-      else if (id !== 'off' && !AudioEngine.enabled) toggleAudioMaster(true);
-      else if (id !== 'off' && AudioEngine.bgmStyle === 'custom_mp3' && AudioEngine.customBgmAudioEl && AudioEngine.customBgmAudioEl.paused) {
-        AudioEngine.startBgmLoop();
-      }
+      if (needsLoad) arBgmPendingLoad = onAudioConfigChange({ autoPlay: false }) || null;
+      const pending = arBgmPendingLoad;
       renderBgmRecommendations();
-      arRenderBgmSheet();
+
+      const listen = () => {
+        if (request !== arBgmListenRequest || id === 'off' || sel.value !== id) return;
+        const audio = AudioEngine.bgmStyle === 'custom_mp3' && AudioEngine.customBgmAudioEl;
+        if (!audio) return;
+        AudioEngine.ensureContext();
+        arBgmListeningAudio = audio;
+        audio.currentTime = 0;
+        audio.play().then(() => {
+          if (request !== arBgmListenRequest) return;
+          arBgmListeningId = id;
+          arRenderBgmSheet();
+        }).catch(() => {
+          if (request !== arBgmListenRequest) return;
+          arStopBgmListening();
+          arToast('음악을 재생하지 못했어요. 잠시 뒤 다시 눌러 주세요.');
+          arRenderBgmSheet();
+        });
+      };
+      if (pending) {
+        pending.then(() => {
+          if (arBgmPendingLoad === pending) arBgmPendingLoad = null;
+          listen();
+        });
+      } else {
+        listen();
+      }
     }
 
     if (typeof window !== 'undefined') {
