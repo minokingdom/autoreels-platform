@@ -79,6 +79,13 @@ try{
  await page.evaluate(()=>generateStoryboardFromPrompt());
  assert.equal(guestGenerationRequests.length,beforeExpired);
  await page.getByText('가입 후 7일 무료 AI 체험이 끝났어요.',{exact:true}).waitFor();
+ await page.evaluate(()=>{
+  AR_SERVER.me.entitlement={pro:true,tier:'pro'};
+  AR_SERVER.me.subscription={comp:true,plan:'pro',planName:'무상 PRO',status:'active'};
+  AR_SERVER.me.usage={aiScripts:12,aiLimit:null,ttsChars:50,ttsLimit:500000};
+  arServerPrepareBillingModal();
+ });
+ await page.locator('#billingAccountBox').getByText('무제한',{exact:true}).waitFor();
  const oldAddress=await browser.newPage({viewport:{width:390,height:844}});
  oldAddress.on('pageerror',error=>errors.push(error.message));
  let sendConfig;

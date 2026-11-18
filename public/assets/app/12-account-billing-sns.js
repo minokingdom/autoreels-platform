@@ -736,7 +736,7 @@
             ` : `
               <div class="flex justify-between text-[11px] text-[#85858b]"><span>이번 달 AI 성우 사용량</span><span class="font-mono">${(u.ttsChars || 0).toLocaleString()} / ${(u.ttsLimit || 0).toLocaleString()}자</span></div>
               <div class="h-1.5 rounded bg-[#232325] mt-1 overflow-hidden"><div style="width:${pct}%" class="h-full bg-[#4cc38a]"></div></div>
-              <div class="flex justify-between text-[11px] text-[#85858b] mt-1.5"><span>AI 대본·주제·이미지·음악 생성</span><span class="font-mono">${u.aiScripts || 0} / ${u.aiLimit || 0}회</span></div>
+              <div class="flex justify-between text-[11px] text-[#85858b] mt-1.5"><span>AI 대본·주제·이미지·음악 생성</span><span class="font-mono">${u.aiLimit === null ? '무제한' : `${u.aiScripts || 0} / ${u.aiLimit || 0}회`}</span></div>
             `}
             <div class="flex justify-between text-[11px] text-[#85858b] mt-1"><span>다운로드 · SNS 게시</span><span class="font-mono">${u.exports || 0} / ${u.exportLimit == null ? '무제한' : `${u.exportLimit}회`}</span></div>
           </div>`;

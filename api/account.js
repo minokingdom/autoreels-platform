@@ -76,7 +76,7 @@ async function mePayload(u) {
     user: publicUser(u),
     subscription: billing.publicSubscription(sub),
     entitlement: { pro: active, tier, until: active ? sub.current_period_end : null },
-    usage: await usageFor(u, tier)
+    usage: await usageFor(u, tier, sub)
   };
 }
 
