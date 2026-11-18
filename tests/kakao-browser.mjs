@@ -56,8 +56,14 @@ try{
  assert.deepEqual(guestGenerationRequests,[]);
  const user={id:'733',phone:null,name:'사용자',title:'',branch:'',promo:'',industry:'auto'};
  const activeUsage={aiScripts:5,aiLimit:30,ttsChars:40,ttsLimit:10000,trial:{active:true,endsAt:new Date(Date.now()+86400000).toISOString()}};
+ await page.evaluate(()=>{
+  localStorage.setItem('autoreels_my_dealer_profile_account_733',JSON.stringify({name:'테스트 담당자',title:'수석 카마스터',branch:'테스트 전시장',promoTag:''}));
+  localStorage.setItem('autoreels_saved_ai_script_733',JSON.stringify({industry:'auto',cutCaptions:['소개','외관','실내','사용자 수석 카마스터 문의']}));
+ });
  await page.evaluate(({user,usage})=>arApplyMe({user,entitlement:{pro:false},usage}),{user,usage:activeUsage});
  assert.equal(await page.evaluate(()=>selectedDealerId),'account_733');
+ assert.equal(await page.locator('#dlrInputName').inputValue(),'테스트 담당자');
+ assert.equal(await page.evaluate(()=>campaign.cutCaptions[3]),'테스트 담당자 수석 카마스터 문의');
  await page.locator('#arQuickBar [data-qb="settings"]').click();
  await settings.getByRole('button',{name:'계정 · 요금제'}).click();
  assert.equal(await page.locator('#arPasswordSecurity').isVisible(),false);

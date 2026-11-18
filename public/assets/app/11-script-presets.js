@@ -4,6 +4,50 @@
     // ==========================================================================
     const arScriptVariants = { list: [], index: 0, strip: null };
 
+    function arDealerContactIdentity(d) {
+      const view = arDisplayDealer(d);
+      const { name, title, branch } = arDealerForCopy(view);
+      return name.trim() ? [name.trim(), title.trim()].filter(Boolean).join(' ') : branch.trim() || '담당자';
+    }
+
+    // 예전 대본에 저장된 명함 이름을 문의 문구에서만 새 명함 이름으로 맞춥니다.
+    function arSyncEndingContactCopy(previousIdentity = '') {
+      const next = arDealerContactIdentity(getSelectedDealer());
+      const aliases = [previousIdentity, `사용자 ${IND.title || ''}`, `사용자 ${IND.role || ''}`, `담당자 ${IND.title || ''}`, '사용자', '담당자']
+        .map(value => value.trim()).filter(value => value && value !== next);
+      if (!aliases.length) return false;
+      const prefixes = [...new Set(aliases)].sort((a, b) => b.length - a.length)
+        .map(alias => alias.split(/\s+/).map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s*'));
+      const pattern = new RegExp(`^([\\s\\p{Extended_Pictographic}✔★-]*)(?:${prefixes.join('|')})(?=\\s*(?:님\\s*)?(?:(?:에게|께|로)\\s*)?(?:문의|상담|예약|견적|연락|직통)\\s*(?:[.!?~]|$|해\\s?주세요|하세요|하시면|하기|주시면|주세요|가능|환영|부탁|보세요|출고))`, 'u');
+      const rewrite = text => typeof text === 'string' ? text.replace(pattern, (_, lead) => lead + next) : text;
+      let changed = false;
+      const rewriteCuts = (script) => {
+        for (const field of ['cutCaptions', 'ttsLines']) {
+          if (!Array.isArray(script[field])) continue;
+          script[field].forEach((text, index) => {
+            const updated = rewrite(text);
+            if (updated === text) return;
+            script[field][index] = updated;
+            if (script !== campaign) return;
+            changed = true;
+            const input = document.getElementById(`${field === 'cutCaptions' ? 'cutSub' : 'cutTts'}${index}`);
+            if (input) input.value = field === 'cutCaptions' ? updated.replace(/\n/g, ' / ') : updated;
+          });
+        }
+      };
+      rewriteCuts(campaign);
+      cutElementOverrides.forEach((element) => {
+        const caption = element?.caption;
+        if (!caption) return;
+        const updated = rewrite(caption.text);
+        if (updated === caption.text) return;
+        caption.text = updated;
+        changed = true;
+      });
+      arScriptVariants.list.forEach(rewriteCuts);
+      return changed;
+    }
+
     // 대본 하나를 campaign 에 반영 (AI 생성 직후와 3안 전환에서 같이 사용)
     function applyAiScriptToCampaign(ai, d, stripExcludedLocal) {
         if (ai.vehicle) campaign.vehicle = stripExcludedLocal(ai.vehicle) || ai.vehicle;
@@ -48,6 +92,7 @@
         } else {
           proceduralRestyleCurrentScene();
         }
+        arSyncEndingContactCopy();
         arMatchPhotosToCaptions();
         if (typeof saveAiScriptPrefs === 'function') saveAiScriptPrefs();
     }
@@ -201,6 +246,7 @@
         const dnEl = document.getElementById('inputDiscountNum'); if (dnEl) dnEl.value = campaign.discountNum;
         const dEl = document.getElementById('inputDiscount'); if (dEl) dEl.value = campaign.discount;
         const pEl = document.getElementById('aiPromptInput'); if (pEl && s.rawPrompt) pEl.value = s.rawPrompt;
+        if (arSyncEndingContactCopy()) saveAiScriptPrefs();
         if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
         return true;
       } catch (e) { return false; }

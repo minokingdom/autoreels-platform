@@ -737,11 +737,10 @@ async function handler(req, res) {
   const currentVehicle = body.vehicle || '2026 쏘렌토 하이브리드';
   const currentDiscountNum = Number(body.discountNum) || 480;
   const currentDiscount = body.discount || '월 46만원대 · 3일 즉시출고';
-  // 자동차는 예전처럼 데모 카마스터 기본값, 다른 업종은 비워 둠
-  // (화면이 예시 매장 정보를 빼고 보내므로, 여기서 다른 가게 이름을 채우면 짬뽕집 대본에 "한옥 갈비" 같은 남의 가게가 나옴)
+  // 이름 없는 자동차 문의 문구에는 담당자로만 안내합니다.
   const isAutoReq = !body.industry || body.industry === 'auto';
-  const dealerName = body.dealerName || (isAutoReq ? '김민준' : '');
-  const dealerTitle = body.dealerTitle || (isAutoReq ? '수석 카마스터' : '');
+  const dealerName = (body.dealerName !== '사용자' && body.dealerName) || (isAutoReq ? '담당자' : '');
+  const dealerTitle = body.dealerTitle || '';
   // 소속도 사장님이 적은 것만 (견본 소속 "현대·기아 공식전시장"을 채우면 대본에 남의 전시장이 나옴)
   const dealerBranch = body.dealerBranch || '';
   // 혜택은 사장님이 직접 적은 것만 씀 (견본 혜택을 채우면 대본에 남의 혜택이 들어감)

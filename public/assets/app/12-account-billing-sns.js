@@ -244,6 +244,7 @@
       if (acc.promoTag) d.promoTag = acc.promoTag;
       d.licenseKey = acc.licenseKey || 'AR-000000 (미결제 체험판)';
       d.expiryYmd = acc.expiryYmd == null ? 20261231 : acc.expiryYmd;
+      loadSavedDealerProfile(d);
       try { localStorage.setItem('autoreels_logged_phone', acc.phone); } catch (e) {}
       selectDealer(d.id, true);
       // 가입할 때 고른 업종으로 고정 (예전 계정은 자동차)
@@ -528,6 +529,7 @@
 
     // 서버 회원 정보 → 스튜디오의 카마스터 프로필/라이선스에 반영
     function arApplyMe(me) {
+      const newAccount = AR_SERVER.me?.user?.id !== me.user.id;
       AR_SERVER.me = me;
       const u = me.user;
       arLoadAccountCustomStyles(u.id);
@@ -545,6 +547,7 @@
         expiryYmd: until
       });
       if (typeof arLockIndustry === 'function') arLockIndustry(u.industry || 'auto', u.specialty);
+      if (newAccount && restoreAiScriptPrefs()) syncPreviewPanel();
       if (typeof arSnsRefresh === 'function') arSnsRefresh();
       if(typeof arRestoreLastProject==='function') arRestoreLastProject();
       const btn = document.getElementById('headerAuthBtn');
@@ -1406,8 +1409,11 @@ async function arRestoreProject(p) {
   await arSetProjectCustomStyles(projectStyles.filter(style => designIds.has(style?.id)));
   isPlaying=false;pauseAllCutVideos();AudioEngine.stopBgmLoop();AudioEngine.stopTts();
   for(const k of AR_PROJECT_FIELDS) { if(s.campaign[k]!==undefined) campaign[k]=s.campaign[k];else delete campaign[k]; }
+  cutElementOverrides = Array.isArray(campaign.cutElementOverrides) ? campaign.cutElementOverrides : [];
+  window.cutElementOverrides = campaign.cutElementOverrides = cutElementOverrides;
   campaign.uploadedPhotos.forEach(arReleasePhoto);campaign.uploadedPhotos=photos;campaign.hasCustomVideo=false;campaign.cutVideos=[];campaign.cutVideoUrls=[];
   const d=getSelectedDealer();for(const k of ['name','title','branch','promoTag','cardHide','accentColor']) if(s.card?.[k]!==undefined)d[k]=s.card[k];d.logoImg=logo;
+  arSyncEndingContactCopy();
   AudioEngine.masterBuffer=null;AudioEngine.masterCutBounds=[];AudioEngine.masterWantKey='';AudioEngine.masterDuration=0;AudioEngine.ttsCache.clear();
   for(const [id,value] of [['bgmStyleSelect',s.audio?.bgm],['ttsVoiceSelect',s.audio?.voice],['ttsSpeedSelect',s.audio?.speed],['inputVehicle',campaign.vehicle],['inputDiscount',campaign.discount],['inputDiscountNum',campaign.discountNum],['aiPromptInput',s.prompt]]){
     const e=document.getElementById(id);if(e && value!=null)e.value=String(value);

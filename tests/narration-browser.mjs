@@ -113,11 +113,19 @@ try {
   await page.evaluate(()=>{
     switchStudioTab('card');
     AR_SERVER.me={user:{id:'test'},usage:{}};
+    const dealer=getSelectedDealer();
+    dealer.name='사용자';
+    dealer.title='수석 카마스터';
+    syncPreviewPanel();
+    campaign.cutCaptions=['사용자 문의 기능을 소개합니다.','중간 문구','차량 안내','사용자 수석 카마스터 문의'];
+    campaign.ttsLines=['문의 기능 안내','중간 멘트','차량 안내','사용자 수석카마스터에게 문의해 주세요.'];
+    getCutElementOverride(0).caption.text='직접 입력한 문구';
+    getCutElementOverride(3).caption.text='사용자 수석 카마스터 문의';
     AudioEngine.prefetchTtsBuffers=window.__originalNarrationPrefetch;
     AudioEngine.fetchLineBuffer=()=>Promise.resolve(null);
     window.__endingRecordings=[];
     AudioEngine.fetchScriptNarration=function(lines){
-      window.__endingRecordings.push(lines.at(-1));
+      window.__endingRecordings.push(lines.join('\n'));
       const key=this.scriptKeyFor(lines);
       return new Promise(resolve=>setTimeout(()=>{
         const ctx=this.ensureContext();
@@ -135,29 +143,101 @@ try {
   await page.locator('#dlrInputTitle').fill('Final title');
   await page.waitForTimeout(1050);
   assert.deepEqual(await page.evaluate(()=>window.__endingRecordings),[]);
+  assert.equal(await page.evaluate(()=>campaign.cutCaptions[3]),'사용자 수석 카마스터 문의');
   assert.equal(await page.evaluate(()=>window.__timelines.main.currentTime),2.5);
   await page.locator('#arApplyEndingBtn').click();
   await page.waitForFunction(()=>AudioEngine.masterDuration===9);
   const applied = await page.evaluate(()=>({
     records:window.__endingRecordings, position:window.__timelines.main.currentTime, playing:isPlaying,
-    name:getSelectedDealer().name
+    name:getSelectedDealer().name, caption:campaign.cutCaptions[3], unrelated:campaign.cutCaptions[0], spoken:AudioEngine.getCutNarration(3)
   }));
   assert.equal(applied.records.length,1);
   assert.match(applied.records[0],/Final name Final title/);
   assert.equal(applied.position,2.5);
   assert.equal(applied.playing,false);
   assert.equal(applied.name,'Final name');
+  assert.equal(applied.caption,'Final name Final title 문의');
+  assert.equal(applied.spoken,'Final name Final title에게 문의해 주세요.');
+  assert.equal(applied.unrelated,'사용자 문의 기능을 소개합니다.');
+  assert.deepEqual(await page.evaluate(()=>[campaign.cutElementOverrides[0].caption.text,campaign.cutElementOverrides[3].caption.text]),
+    ['직접 입력한 문구','Final name Final title 문의']);
   await page.locator('#dlrInputBranch').fill('Display only');
   await page.locator('#arApplyEndingBtn').click();
   assert.equal(await page.evaluate(()=>window.__endingRecordings.length),1);
   await page.locator('#dlrInputTitle').fill('Applied on leaving');
   await page.locator('#studioTabBtn_sound').click();
   assert.equal(await page.evaluate(()=>getSelectedDealer().title),'Applied on leaving');
+  assert.equal(await page.evaluate(()=>campaign.cutCaptions[3]),'Final name Applied on leaving 문의');
   await page.waitForFunction(()=>!AudioEngine.scriptPending);
   assert.equal(await page.evaluate(()=>window.__endingRecordings.length),2);
+  await page.evaluate(()=>{
+    campaign.cutCaptions[3]='사용자 수석 카마스터 문의';
+    campaign.ttsLines[3]='사용자 수석카마스터에게 문의해 주세요.';
+    switchStudioTab('card');
+  });
+  assert.equal(await page.evaluate(()=>campaign.cutCaptions[3]),'Final name Applied on leaving 문의');
+  await page.waitForFunction(()=>!AudioEngine.scriptPending);
+  await page.evaluate(()=>switchStudioTab('sound'));
   console.log('ending edits recorded only on apply or on leaving, position preserved');
   await page.click('#playPauseBtn');
   await page.waitForFunction(()=>isPlaying);
+  const settings = page.locator('#studioSettingsModal');
+  const settingsForm = settings.locator('#arEndingForm');
+  await page.locator('#headerSettingsBtn').click();
+  await page.waitForFunction(() => arEditSheetOpen && !isPlaying);
+  assert.equal(await settingsForm.isVisible(), true);
+  const priorRecordings = await page.evaluate(() => window.__endingRecordings.length);
+  const priorPosition = await page.evaluate(() => window.__timelines.main.currentTime);
+  const png = Buffer.from(await page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 8;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#017856';
+    ctx.fillRect(0, 0, 8, 8);
+    return canvas.toDataURL().split(',')[1];
+  }), 'base64');
+  await settingsForm.locator('#dlrInputName').fill('Settings name');
+  await settingsForm.locator('#dlrInputTitle').fill('Settings title');
+  await settingsForm.locator('#dlrInputBranch').fill('Test shop');
+  await settingsForm.locator('#dlrInputPromo').fill('Test greeting');
+  await settingsForm.locator('#dlrInputPhone').fill('');
+  for (const [input, preview] of [['dealerFaceQuickInput', 'dealerAvatarPreview'], ['dealerLogoInput', 'dealerLogoPreview']]) {
+    await settingsForm.locator('#' + input).setInputFiles({ name: 'test.png', mimeType: 'image/png', buffer: png });
+    await settingsForm.locator('#' + preview).waitFor();
+  }
+  await settingsForm.locator('[data-ending-field="promoTag"] + i').click();
+  await page.waitForTimeout(1050);
+  assert.deepEqual(await page.evaluate(() => ({
+    name: getSelectedDealer().name, logo: Boolean(getSelectedDealer().logoImg), tries: window.__endingRecordings.length,
+    position: window.__timelines.main.currentTime
+  })), { name: 'Final name', logo: false, tries: priorRecordings, position: priorPosition });
+  await settingsForm.getByRole('button', { name: '엔딩 저장' }).click();
+  await page.waitForFunction(() => !AudioEngine.scriptPending);
+  assert.equal(await settingsForm.locator('#arEndingSaveStatus').textContent(), '저장했습니다.');
+  assert.equal(await settings.isVisible(), true);
+  assert.equal(await page.locator('#studioTabBtn_sound').getAttribute('aria-selected'), 'true');
+  const fromSettings = await page.evaluate(() => {
+    const dealer = getSelectedDealer();
+    return {
+      name: dealer.name, title: dealer.title, branch: dealer.branch, phone: dealer.phone, promoHidden: dealer.cardHide.promoTag,
+      photo: dealer.avatarImg.naturalWidth, logo: dealer.logoImg.naturalWidth, caption: campaign.cutCaptions[3],
+      recordings: window.__endingRecordings.slice(), playing: isPlaying, position: window.__timelines.main.currentTime
+    };
+  });
+  assert.deepEqual({ ...fromSettings, recordings: fromSettings.recordings.length }, {
+    name: 'Settings name', title: 'Settings title', branch: 'Test shop', phone: '', promoHidden: true,
+    photo: 8, logo: 8, caption: 'Settings name Settings title 문의',
+    recordings: priorRecordings + 1, playing: false, position: priorPosition
+  });
+  assert.match(fromSettings.recordings.at(-1), /Settings name Settings title에게 문의해 주세요/);
+  await settingsForm.locator('#dlrInputName').fill('Discard this draft');
+  await settings.getByRole('button', { name: '닫기', exact: true }).click();
+  await page.waitForFunction(() => !arEditSheetOpen && isPlaying);
+  await page.locator('#studioTabBtn_card').click();
+  assert.equal(await page.locator('#studioPanel_card #dlrInputName').inputValue(), 'Settings name');
+  assert.equal(await page.locator('#studioPanel_card #dealerLogoPreview').isVisible(), true);
+  await page.locator('#studioTabBtn_sound').click();
+  console.log('settings shares ending fields, media and display choices and resumes after closing');
   await page.evaluate(()=>openPresetDrawer('right'));
   await page.waitForFunction(()=>arEditSheetOpen && !isPlaying);
   const drawerTime=await page.evaluate(()=>window.__timelines.main.currentTime);
@@ -258,6 +338,24 @@ try {
   console.log('opening or closing a sheet while paused does not start playback');
   assert.deepEqual(pageErrors,[]);
   assert.deepEqual(await page.evaluate(()=>window.__smokeAsyncErrors),[]);
+  await page.addInitScript(() => { window.__arUserMuted = true; });
+  await page.reload({ waitUntil: 'load', timeout: 90000 });
+  await page.locator('#headerSettingsBtn').click();
+  assert.equal(await settingsForm.locator('#dlrInputName').inputValue(), 'Settings name');
+  assert.equal(await settingsForm.locator('#dlrInputPhone').inputValue(), '');
+  assert.equal(await settingsForm.locator('#dlrInputBranch').inputValue(), 'Test shop');
+  assert.equal(await settingsForm.locator('[data-ending-field="promoTag"]').isChecked(), false);
+  await page.waitForFunction(() => getSelectedDealer().avatarImg?.naturalWidth === 8 && getSelectedDealer().logoImg?.naturalWidth === 8);
+  await settings.getByRole('button', { name: '닫기', exact: true }).click();
+  await page.waitForFunction(() => !arEditSheetOpen);
+  if (await page.evaluate(() => isPlaying)) await page.locator('#playPauseBtn').click();
+  await page.locator('#headerSettingsBtn').click();
+  await settingsForm.locator('#dealerLogoClearBtn').click();
+  await settingsForm.getByRole('button', { name: '엔딩 저장' }).click();
+  assert.equal(await page.evaluate(() => getSelectedDealer().logoImg), null);
+  assert.equal(await page.evaluate(() => isPlaying), false);
+  await settings.getByRole('button', { name: '닫기', exact: true }).click();
+  await page.waitForFunction(() => !arEditSheetOpen && isPlaying);
   const mobile = await browser.newPage({ viewport: { width: 634, height: 900 }, hasTouch: true });
   mobile.on('pageerror', error => pageErrors.push(error.message));
   await mobile.addInitScript(() => { window.__arUserMuted = true; });
@@ -284,6 +382,14 @@ try {
   await mobile.locator('#arSheetHandle').tap();
   assert.equal(await mobile.locator('#arSheetHandle').getAttribute('aria-expanded'), 'true');
   assert.equal(await mobile.evaluate(() => isPlaying), false);
+  await mobile.locator('#studioTabBtn_card').tap();
+  await mobile.locator('#dlrInputName').fill('Mobile test name');
+  assert.equal(await mobile.evaluate(() => isPlaying), false);
+  await mobile.locator('#arApplyEndingBtn').tap();
+  assert.equal(await mobile.evaluate(() => isPlaying), false);
+  await mobile.locator('#arSheetHandle').tap();
+  await mobile.waitForFunction(() => isPlaying);
+  assert.equal(await mobile.evaluate(() => getSelectedDealer().name), 'Mobile test name');
   assert.deepEqual(pageErrors, []);
   await mobile.close();
   console.log('mobile workflow sheet stays paused on open and reload, with manual preview playback');

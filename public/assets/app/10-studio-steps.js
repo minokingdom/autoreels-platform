@@ -609,11 +609,14 @@
           key = missing;
         }
       }
-      const leavingEnding = key !== 'card' && !document.getElementById('studioPanel_card').classList.contains('hidden');
+      const leavingEnding = key !== 'card' && arEndingTabActive();
       if (leavingEnding) updateCurrentDealerFromPreview();
       arStepsVisited.add(key);
       if (key === 'sound') AudioEngine.loadVoiceList();
-      if (key === 'card' && typeof arRenderCardShowToggles === 'function') arRenderCardShowToggles();
+      if (key === 'card' && arEndingForm.parentElement.id === 'arEndingFormHome') {
+        updateCurrentDealerFromPreview();
+        arRenderCardShowToggles();
+      }
       if (key === 'sound' && typeof renderBgmRecommendations === 'function') renderBgmRecommendations();
       setTimeout(() => arSyncIgSelects(document.getElementById('studioPanel_' + key)), 0);
       if (key === 'topic' || key === 'script') setTimeout(arSyncProductRows, 0);
@@ -694,10 +697,16 @@
     function arToggleSheet(force) {
       const wasMin = document.body.classList.contains('ar-sheet-min');
       const min = typeof force === 'boolean' ? force : !wasMin;
+      const closing = !wasMin && min && arUsesWorkflowSheet();
+      const savedEnding = closing && arEndingTabActive() && (updateCurrentDealerFromPreview() || arEndingSavedInSheet);
       document.body.classList.toggle('ar-sheet-min', min);
-      if (wasMin && arWorkflowSheetExpanded()) arPauseForStudioEdit();
+      if (wasMin && arWorkflowSheetExpanded()) {
+        arEndingSavedInSheet = false;
+        arPauseForStudioEdit();
+      }
       const h = document.getElementById('arSheetHandle');
       if (h) h.setAttribute('aria-expanded', min ? 'false' : 'true');
+      if (savedEnding && !arEditSheetOpen && !isPlaying) togglePlayPause();
     }
     function arSetupSheetMode() {
       const wasOn = document.body.classList.contains('ar-sheet');
@@ -771,6 +780,7 @@
     function arQuickRestart() {
       if (!window.__timelines || !window.__timelines.main) return;
       if (arEditSheetOpen) return;
+      if (arEndingTabActive()) updateCurrentDealerFromPreview();
       arPreviewPausedForEdit = false;
       arPendingPreviewPlay = null;
       if (typeof AudioEngine !== 'undefined') AudioEngine.stopTts();
@@ -1069,7 +1079,7 @@
             active
               ? 'bg-[#232325] text-[#ededed] border-[rgba(237,237,237,0.22)]'
               : 'bg-[#141415] text-[#85858b] border-[var(--border)] hover:text-[#ededed]'
-          }"><span class="w-1.5 h-1.5 rounded-full ${active ? 'bg-[#4cc38a]' : 'bg-[#85858b]'}"></span>${d.name} ${d.title} <span class="text-[#85858b] font-normal">${d.branch.split(' ')[0]}</span></button>`;
+          }"><span class="w-1.5 h-1.5 rounded-full ${active ? 'bg-[#4cc38a]' : 'bg-[#85858b]'}"></span>${escapeHtmlInd(d.name)} ${escapeHtmlInd(d.title)} <span class="text-[#85858b] font-normal">${escapeHtmlInd(d.branch.split(' ')[0])}</span></button>`;
         })
         .join('');
     }
@@ -1094,13 +1104,13 @@
               <div class="space-y-1">
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="w-2 h-2 rounded-full inline-block" style="background:${d.accentColor}"></span>
-                  <span class="text-[14px] font-medium text-[#ededed]">${d.name} ${d.title}</span>
-                  <span class="text-[12px] text-[#85858b]">${d.branch}</span>
+                  <span class="text-[14px] font-medium text-[#ededed]">${escapeHtmlInd(d.name)} ${escapeHtmlInd(d.title)}</span>
+                  <span class="text-[12px] text-[#85858b]">${escapeHtmlInd(d.branch)}</span>
                   ${badgeHtml}
                   <span class="font-mono text-[11px] text-[#85858b]">${vLabel}</span>
                 </div>
                 <div class="text-[12px] font-mono text-[#85858b]">
-                  ${d.phone} · ${d.igUsername} · ${d.licenseKey}
+                  ${escapeHtmlInd(d.phone)} · ${escapeHtmlInd(d.igUsername)} · ${escapeHtmlInd(d.licenseKey)}
                 </div>
               </div>
               <button onclick="selectDealer('${d.id}', true)" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">
@@ -1117,12 +1127,8 @@
       const v = d.variation || VARIATION_RECIPES[0];
       document.getElementById('stagingUrlText').textContent = `https://staging.autoreels.kr/v/${d.token}`;
       document.getElementById('previewDealerHeader').textContent = '오늘의 릴스 만들기';
-      document.getElementById('dlrInputName').value = d.name;
-      document.getElementById('dlrInputTitle').value = d.title;
-      document.getElementById('dlrInputPhone').value = d.phone;
-      document.getElementById('dlrInputBranch').value = d.branch;
-      document.getElementById('dlrInputPromo').value = d.promoTag;
-      arSyncEndingApplyButton();
+      arEndingTabDraft = null;
+      arFillEndingForm(d);
       document.getElementById('igAccountBadge').textContent = window.AR_SERVER && AR_SERVER.mode ? ((AR_SNS_STATE && AR_SNS_STATE.targets.instagram.name) || '') : `${d.igUsername}`;
       document.getElementById('dlrCaptionTextarea').value = buildCaption(d);
 
@@ -1237,6 +1243,16 @@
         arFillSettingsBusinessFields();
         document.getElementById('settingsBusinessStatus').textContent = '';
       }
+      const endingHome = document.getElementById('settingsEndingFormHome');
+      if (arEndingForm.parentElement !== endingHome) {
+        arEndingTabDraft = { fields: arReadEndingInputs(), draft: { ...arEndingDraft, importing: false } };
+        arEndingDraft = { ...arEndingTabDraft.draft };
+        if (arEndingDraft.cardHide) arEndingDraft.cardHide = { ...arEndingDraft.cardHide };
+        endingHome.append(arEndingForm);
+        document.getElementById('arApplyEndingBtn').textContent = '엔딩 저장';
+        arEndingStatus.textContent = '';
+        arSyncEndingApplyButton();
+      }
       modal.classList.remove('hidden');
       modal.firstElementChild.scrollTop = 0;
       document.getElementById('settingsBusinessDetails').open = false;
@@ -1248,6 +1264,14 @@
 
     function closeStudioSettingsModal() {
       const modal = document.getElementById('studioSettingsModal');
+      const endingHome = document.getElementById('arEndingFormHome');
+      if (arEndingForm.parentElement !== endingHome) {
+        endingHome.append(arEndingForm);
+        document.getElementById('arApplyEndingBtn').textContent = '엔딩 적용';
+        const savedDraft = arEndingTabDraft;
+        arEndingTabDraft = null;
+        arFillEndingForm(savedDraft?.fields || getSelectedDealer(), savedDraft?.draft);
+      }
       if (modal) modal.classList.add('hidden');
     }
     document.getElementById('settingsPlanActionBtn').addEventListener('click', () => {
@@ -1440,49 +1464,93 @@
             branch: d.branch,
             promoTag: d.promoTag,
             snsAccounts: d.snsAccounts,
-            cardHide: d.cardHide || {}
+            cardHide: d.cardHide || {},
+            endingFields: d._endingFields,
+            avatar: d._customAvatar?.src || '',
+            logo: d.logoImg?.src || ''
           })
         );
         const badge = document.getElementById('mobileSavedBadge');
         if (badge) {
           badge.textContent = `[${d.name} ${d.title}] 엔딩 정보가 이 기기에 자동 저장됨`;
         }
-      } catch (e) {}
+        return true;
+      } catch (e) { return false; }
     }
 
-    function loadSavedDealerProfiles() {
-      arLoadDealerLogos();
+    function loadSavedDealerProfile(d) {
       try {
-        dealers.forEach((d) => {
-          const raw = localStorage.getItem('autoreels_my_dealer_profile_' + d.id);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (parsed.name) d.name = parsed.name;
-            if (parsed.title) d.title = parsed.title;
-            if (parsed.phone) d.phone = parsed.phone;
-            if (parsed.branch) d.branch = parsed.branch;
-            if (parsed.promoTag) d.promoTag = parsed.promoTag;
-            if (parsed.snsAccounts) d.snsAccounts = parsed.snsAccounts;
-            if (parsed.cardHide && typeof parsed.cardHide === 'object') d.cardHide = parsed.cardHide;
+        const saved = JSON.parse(localStorage.getItem('autoreels_my_dealer_profile_' + d.id));
+        if (saved) {
+          const explicit = {};
+          for (const field of Object.values(AR_ENDING_INPUTS)) {
+            if (typeof saved[field] !== 'string') continue;
+            if (saved.endingFields ? Object.hasOwn(saved.endingFields, field) : saved[field] !== d[field]) {
+              explicit[field] = saved[field];
+            }
+            d[field] = saved[field];
           }
-        });
+          d._endingFields = explicit;
+          if (saved.snsAccounts) d.snsAccounts = saved.snsAccounts;
+          if (saved.cardHide && typeof saved.cardHide === 'object') d.cardHide = saved.cardHide;
+        }
+        // 예전 버전은 로고를 별도 키로 저장했습니다.
+        const logo = saved?.logo ?? localStorage.getItem('autoreels_dealer_logo_' + d.id);
+        if (logo?.startsWith('data:image/') && logo !== d.logoImg?.src) d.logoImg = arRestoreEndingImage(logo);
+        if (saved?.logo === '') d.logoImg = null;
+        const avatar = saved?.avatar;
+        if (avatar?.startsWith('data:image/') && avatar !== d._customAvatar?.src) {
+          d._customAvatar = d.avatarImg = arRestoreEndingImage(avatar);
+        }
       } catch (e) {}
+    }
+    function arRestoreEndingImage(src) {
+      const img = new Image();
+      img.onload = () => window.__timelines?.main?.seek(window.__timelines.main.currentTime);
+      img.src = src;
+      return img;
+    }
+    function loadSavedDealerProfiles() {
+      dealers.forEach(loadSavedDealerProfile);
     }
 
     const AR_ENDING_INPUTS = Object.freeze({
       dlrInputName: 'name', dlrInputTitle: 'title', dlrInputPhone: 'phone',
       dlrInputBranch: 'branch', dlrInputPromo: 'promoTag'
     });
+    const arEndingForm = document.getElementById('arEndingForm');
+    const arEndingStatus = document.getElementById('arEndingSaveStatus');
+    let arEndingDraft = {};
+    let arEndingTabDraft = null;
+    let arEndingSavedInSheet = false;
+
+    function arEndingTabActive() {
+      return arEndingForm.parentElement.id === 'arEndingFormHome' &&
+        !document.getElementById('studioPanel_card').classList.contains('hidden');
+    }
+    function arFillEndingForm(fields, draft = {}) {
+      arEndingDraft = draft;
+      for (const [id, key] of Object.entries(AR_ENDING_INPUTS)) document.getElementById(id).value = fields[key] ?? '';
+      arEndingStatus.textContent = '';
+      arSyncEndingApplyButton();
+      arRenderCardShowToggles();
+    }
     function arReadEndingInputs() {
       return Object.fromEntries(Object.entries(AR_ENDING_INPUTS).map(([id, key]) => [key, document.getElementById(id).value]));
     }
     function arSyncEndingApplyButton() {
       const dealer = getSelectedDealer();
-      const changed = Object.entries(arReadEndingInputs()).some(([key, value]) => value !== String(dealer[key] ?? ''));
-      document.getElementById('arApplyEndingBtn').disabled = !changed;
+      const fieldsChanged = Object.entries(arReadEndingInputs()).some(([key, value]) => value !== String(dealer[key] ?? ''));
+      const draft = arEndingDraft;
+      const visibilityChanged = draft.cardHide && AR_CARD_FIELDS.some(([key]) => arCardFieldShown(draft, key) !== arCardFieldShown(dealer, key));
+      const changed = fieldsChanged || visibilityChanged || Boolean(draft.avatarImg) ||
+        (Object.hasOwn(draft, 'logoImg') && Boolean(draft.logoImg || dealer.logoImg));
+      document.getElementById('arApplyEndingBtn').disabled = !changed || Boolean(draft.importing);
       return changed;
     }
-    function arEndingNarration() { return AudioEngine.getCutNarration(getTargetCutCount()); }
+    function arEndingNarration() {
+      return Array.from({ length: getTargetCutCount() + 1 }, (_, index) => AudioEngine.getCutNarration(index)).join('\n');
+    }
     function arPauseForStudioEdit() {
       arPreviewPausedForEdit = true;
       arPendingPreviewPlay = null;
@@ -1495,7 +1563,7 @@
         return true;
       }
       if (!arPreviewPausedForEdit) return false;
-      if (!document.getElementById('studioPanel_card').classList.contains('hidden')) updateCurrentDealerFromPreview();
+      if (arEndingTabActive()) updateCurrentDealerFromPreview();
       const pending = AudioEngine.scriptPending || (AudioEngine.ttsPrefetchTimer ? AudioEngine.prefetchTtsBuffers() : null);
       arPreviewPausedForEdit = false;
       if (!pending) return false;
@@ -1508,11 +1576,14 @@
       pending.then(resume, resume);
       return true;
     }
-    function arRefreshEnding(prevNarration) {
+    function arRefreshEnding(prevNarration, contactCopyChanged = false) {
       const d = getSelectedDealer();
       if (prevNarration !== arEndingNarration()) arResetAndRebuildNarration(true);
+      if (contactCopyChanged) {
+        saveAiScriptPrefs();
+        renderScriptVariantPicker();
+      }
       document.getElementById('dlrCaptionTextarea').value = buildCaption(d);
-      saveDealerProfileToLocal(d);
       syncDrmAndSnsUI();
       renderQuickSelector();
       renderAdminDealerList();
@@ -1521,111 +1592,117 @@
       window.__timelines['main'].seek(window.__timelines['main'].currentTime);
     }
     function updateCurrentDealerFromPreview() {
-      if (!arSyncEndingApplyButton()) return false;
+      if (arEndingDraft.importing) return false;
+      const dealer = getSelectedDealer();
+      const changed = arSyncEndingApplyButton();
+      const previousIdentity = arDealerContactIdentity(dealer);
       const prevNarration = arEndingNarration();
-      Object.assign(getSelectedDealer(), arReadEndingInputs());
-      arSyncEndingApplyButton();
-      arRefreshEnding(prevNarration);
-      return true;
+      if (changed) {
+        const fields = arReadEndingInputs();
+        const { avatarImg, logoImg, cardHide } = arEndingDraft;
+        const editedFields = Object.entries(fields).filter(([key, value]) => value !== String(dealer[key] ?? ''));
+        const updates = { ...fields, _endingFields: { ...dealer._endingFields, ...Object.fromEntries(editedFields) } };
+        if (cardHide) updates.cardHide = cardHide;
+        if (logoImg !== undefined) updates.logoImg = logoImg;
+        if (avatarImg) Object.assign(updates, { avatarImg, _customAvatar: avatarImg });
+        if (!saveDealerProfileToLocal({ ...dealer, ...updates })) {
+          arEndingStatus.textContent = '이 기기에 엔딩 정보를 저장하지 못했어요.';
+          return false;
+        }
+        if (avatarImg) arReleasePhoto(dealer._customAvatar);
+        Object.assign(dealer, updates);
+        arEndingTabDraft = null;
+        arFillEndingForm(dealer);
+        arEndingSavedInSheet = arEndingTabActive() && arWorkflowSheetExpanded();
+        if (arEndingForm.parentElement.id === 'settingsEndingFormHome') arResumeAfterEditSheets = true;
+        arEndingStatus.textContent = '저장했습니다.';
+      }
+      const copyChanged = arSyncEndingContactCopy(previousIdentity);
+      if (changed || copyChanged) arRefreshEnding(prevNarration, copyChanged);
+      return changed;
     }
     document.addEventListener('input', (event) => {
-      const editor = event.target.closest('#studioPanel_topic, #studioPanel_script, #studioPanel_photo, #studioPanel_sound, #studioPanel_card');
+      const editor = event.target.closest('#studioPanel_topic, #studioPanel_script, #studioPanel_photo, #studioPanel_sound, #arEndingForm');
       if (!editor || !event.target.matches('input, textarea, select')) return;
       arPauseForStudioEdit();
-      if (Object.hasOwn(AR_ENDING_INPUTS, event.target.id)) arSyncEndingApplyButton();
+      if (Object.hasOwn(AR_ENDING_INPUTS, event.target.id)) {
+        arEndingStatus.textContent = '';
+        arSyncEndingApplyButton();
+      }
     }, true);
-    document.getElementById('arApplyEndingBtn').addEventListener('click', () => {
-      if (updateCurrentDealerFromPreview()) arToast('엔딩을 적용했어요.', true);
+    arEndingForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      updateCurrentDealerFromPreview();
     });
 
-    // ★ 명함 단계: 보일 항목 고르기 + 로고
-    //   (설정창이 아니라 명함 단계에서 바로. 항목을 끄면 영상 끝 명함에서만 빠지고 적어 둔 내용은 그대로 남음)
     const AR_CARD_FIELDS = [
       ['name', '이름'], ['title', '직함'], ['phone', '연락처'], ['branch', '매장명'],
       ['promoTag', '혜택 문구'], ['avatar', '프로필 사진'], ['logo', '로고']
     ];
-    function arCardFieldShown(d, k) { return !(d && d.cardHide && d.cardHide[k]); }
+    function arCardFieldShown(d, k) { return !d?.cardHide?.[k]; }
     function arRenderCardShowToggles() {
-      const box = document.getElementById('cardShowToggles');
-      const d = typeof getSelectedDealer === 'function' ? getSelectedDealer() : null;
-      if (!box || !d) return;
-      const isAuto = typeof IND !== 'undefined' && IND.key === 'auto';
-      box.innerHTML = AR_CARD_FIELDS
-        .filter(([k]) => !(isAuto && k === 'phone')) // 자동차 판매는 영상에 전화번호를 넣지 않음
-        .map(([k, label]) => `<label class="ig-switch-row"><span>${label}</span><input type="checkbox" ${arCardFieldShown(d, k) ? 'checked' : ''} onchange="arToggleCardField('${k}', this.checked)" /><i></i></label>`).join('');
-      const has = !!d.logoImg;
-      const pv = document.getElementById('dealerLogoPreview');
-      const tx = document.getElementById('dealerLogoLabelText');
-      const clr = document.getElementById('dealerLogoClearBtn');
-      if (pv) { pv.classList.toggle('hidden', !has); if (has) pv.src = d.logoImg.src; }
-      if (tx) tx.textContent = has ? '다른 로고로 바꾸기' : '🏷️ 가게·회사 로고 올리기 (배경 없는 PNG가 좋아요)';
-      if (clr) clr.classList.toggle('hidden', !has);
-    }
-    function arToggleCardField(k, on) {
-      arPauseForStudioEdit();
       const d = getSelectedDealer();
-      const prevNarration = arEndingNarration();
-      d.cardHide = Object.assign({}, d.cardHide || {});
-      if (on) delete d.cardHide[k]; else d.cardHide[k] = true;
-      arRefreshEnding(prevNarration);
+      const visibility = arEndingDraft.cardHide ? arEndingDraft : d;
+      document.getElementById('cardShowToggles').innerHTML = AR_CARD_FIELDS
+        .filter(([key]) => !(IND.key === 'auto' && key === 'phone'))
+        .map(([key, label]) => `<label class="ig-switch-row"><span>${label}</span><input type="checkbox" data-ending-field="${key}" ${arCardFieldShown(visibility, key) ? 'checked' : ''} /><i></i></label>`).join('');
+      const logo = Object.hasOwn(arEndingDraft, 'logoImg') ? arEndingDraft.logoImg : d.logoImg;
+      const avatar = arEndingDraft.avatarImg || d._customAvatar;
+      for (const [id, img] of [['dealerLogoPreview', logo], ['dealerAvatarPreview', avatar]]) {
+        const preview = document.getElementById(id);
+        preview.classList.toggle('hidden', !img);
+        if (img) preview.src = img.src; else preview.removeAttribute('src');
+      }
+      document.getElementById('dealerLogoLabelText').textContent = logo ? '다른 로고로 바꾸기' : '가게·회사 로고 올리기';
+      document.getElementById('dealerLogoClearBtn').classList.toggle('hidden', !logo);
     }
-    function arSaveDealerLogo(d) {
+    function arSetEndingFieldVisibility(key, shown) {
+      const hide = arEndingDraft.cardHide ||= { ...getSelectedDealer().cardHide };
+      if (shown) delete hide[key]; else hide[key] = true;
+    }
+    async function arImportEndingImage(input, key) {
+      const file = input.files[0];
+      if (!file || arEndingDraft.importing) return;
+      const draft = arEndingDraft;
+      const options = { maxEdge: key === 'logo' ? 400 : 640, transparent: key === 'logo', dataUrl: true };
+      arPauseForStudioEdit();
+      draft.importing = true;
+      input.value = '';
+      arEndingStatus.textContent = '이미지를 불러오는 중…';
+      arSyncEndingApplyButton();
       try {
-        if (d.logoImg && d.logoImg.src && d.logoImg.src.startsWith('data:')) localStorage.setItem('autoreels_dealer_logo_' + d.id, d.logoImg.src);
-        else localStorage.removeItem('autoreels_dealer_logo_' + d.id);
-      } catch (e) {}
+        let image = await arImportPhoto(file, options);
+        if (image.src.length > 420000) image = await arImportPhoto(file, { ...options, maxEdge: 256 });
+        if (draft !== arEndingDraft) return;
+        draft[key + 'Img'] = image;
+        arSetEndingFieldVisibility(key, true);
+        arRenderCardShowToggles();
+        arEndingStatus.textContent = '';
+      } catch (error) {
+        if (draft === arEndingDraft) arEndingStatus.textContent = error.message;
+      } finally {
+        draft.importing = false;
+        arSyncEndingApplyButton();
+      }
     }
-    function arLoadDealerLogos() {
-      try {
-        dealers.forEach((d) => {
-          const src = localStorage.getItem('autoreels_dealer_logo_' + d.id);
-          if (src && !d.logoImg) { const img = new Image(); img.src = src; d.logoImg = img; }
-        });
-      } catch (e) {}
-    }
-    function handleDealerLogoUpload(event) {
-      const file = event.target.files && event.target.files[0];
-      if (!file) return;
+    arEndingForm.addEventListener('change', (event) => {
+      const input = event.target;
+      if (input.id === 'dealerFaceQuickInput') return arImportEndingImage(input, 'avatar');
+      if (input.id === 'dealerLogoInput') return arImportEndingImage(input, 'logo');
+      const key = input.dataset.endingField;
+      if (!key) return;
+      arSetEndingFieldVisibility(key, input.checked);
+      arEndingStatus.textContent = '';
+      arSyncEndingApplyButton();
+    });
+    document.getElementById('dealerLogoClearBtn').addEventListener('click', () => {
+      if (arEndingDraft.importing) return;
       arPauseForStudioEdit();
-      const d = getSelectedDealer();
-      const reader = new FileReader();
-      reader.onload = () => {
-        const raw = new Image();
-        raw.onload = () => {
-          // 저장 공간을 아끼려고 긴 변 400px로 줄임 (투명 배경 유지 위해 PNG)
-          const k = Math.min(1, 400 / Math.max(raw.width, raw.height));
-          const cv = document.createElement('canvas');
-          cv.width = Math.max(1, Math.round(raw.width * k));
-          cv.height = Math.max(1, Math.round(raw.height * k));
-          cv.getContext('2d').drawImage(raw, 0, 0, cv.width, cv.height);
-          const img = new Image();
-          img.onload = () => {
-            const selected = getSelectedDealer() === d;
-            const prevNarration = selected ? arEndingNarration() : '';
-            d.logoImg = img;
-            if (d.cardHide) delete d.cardHide.logo;
-            arSaveDealerLogo(d);
-            if (selected) {
-              arRefreshEnding(prevNarration);
-              arRenderCardShowToggles();
-            }
-          };
-          img.src = cv.toDataURL('image/png');
-        };
-        raw.src = reader.result;
-      };
-      reader.readAsDataURL(file);
-      event.target.value = '';
-    }
-    function clearDealerLogo() {
-      arPauseForStudioEdit();
-      const d = getSelectedDealer();
-      const prevNarration = arEndingNarration();
-      d.logoImg = null;
-      arSaveDealerLogo(d);
-      arRefreshEnding(prevNarration);
+      arEndingDraft.logoImg = null;
+      arEndingStatus.textContent = '';
+      arSyncEndingApplyButton();
       arRenderCardShowToggles();
-    }
+    });
 
     function copyDealerCaption() {
       const d = getSelectedDealer();
@@ -2002,7 +2079,8 @@
         }
       }
 
-      arFinishScriptApply(totalCuts);      if (aiUsedFallback && noticeEl) noticeEl.textContent = 'AI 대본을 만들지 못해 기본 대본을 표시합니다. 다시 시도해 주세요.';
+      arFinishScriptApply(totalCuts);
+      if (aiUsedFallback && noticeEl) noticeEl.textContent = 'AI 대본을 만들지 못해 기본 대본을 표시합니다. 다시 시도해 주세요.';
     }
 
     function arBuildThemeContextForImages() {

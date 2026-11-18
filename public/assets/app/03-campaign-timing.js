@@ -295,6 +295,10 @@
     }
     function arDealerForCopy(d) {
       const out = { name: (d && d.name) || '', title: (d && d.title) || '', branch: (d && d.branch) || '', promoTag: (d && d.promoTag) || '' };
+      if (out.name === '사용자') {
+        out.name = '';
+        if (out.title === IND.title) out.title = '';
+      }
       // 혜택 문구가 견본(자동차 견본 딜러·업종 예시) 그대로면 대본에 쓰지 않음 — 사장님이 직접 적은 혜택만 씀
       if (d && out.promoTag && AR_DEMO_PROMO_TAGS.includes(out.promoTag.trim())) out.promoTag = '';
       if (d && out.branch && AR_DEMO_BRANCHES.includes(out.branch.trim())) out.branch = '';

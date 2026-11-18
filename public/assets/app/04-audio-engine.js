@@ -440,7 +440,9 @@
           // 마지막 엔딩 카드(명함/매장) 클로징 멘트: 매장 중심 업종은 매장명으로, 인물 중심 업종은 호칭으로 안내
           // 명함을 아직 안 채웠으면 이름 없이 안내만
           if (arCardEmpty()) return ''; // 명함 화면이 없으면 마지막 멘트도 없음
-          const who = (IND.outroMode === 'store' ? [d.name] : [d.name, d.title]).filter(Boolean).join(' ');
+          const card = arDisplayDealer(d);
+          const name = card.name === '사용자' ? '' : card.name;
+          const who = name ? (IND.outroMode === 'store' ? name : [name, card.title].filter(Boolean).join(' ')) : arDealerForCopy(card).branch;
           const ask = `댓글에 ${IND.cta || (IND.outroMode === 'store' ? '예약' : '문의')} 남겨주세요!`;
           text = who ? `${who}입니다. ${ask}` : ask;
         }

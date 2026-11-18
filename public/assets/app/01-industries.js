@@ -708,7 +708,8 @@
           };
         }
         if (IND.key === 'auto') {
-          Object.assign(d, d._autoOrig);
+          Object.assign(d, d._autoOrig, d._endingFields);
+          if (d._customAvatar) d.avatarImg = d._customAvatar;
           return;
         }
         // 사장님이 올린 프로필 사진이 있으면 그것을, 없으면 업종 매장 사진을 씀
@@ -743,6 +744,7 @@
         ['name', 'title', 'branch', 'promoTag', 'phone'].forEach((k) => {
           if (arIsSampleDealerValue(d, k)) d[k] = '';
         });
+        Object.assign(d, d._endingFields);
       });
       const nameLabel = document.getElementById('dlrNameTitleLabel');
       if (nameLabel) nameLabel.textContent = IND.outroMode === 'store' ? `${IND.place} 이름 및 소개` : '이름 및 직함';
