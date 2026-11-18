@@ -15,8 +15,9 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
   c.save();
   c.fillStyle=r.background;c.fillRect(0,0,W,H);
   const inset=r.layout==='full'?0:W*.07;
-  const x=inset,y=r.layout==='full'?0:H*.08,pw=W-2*inset,ph=r.layout==='full'?H:H*.75;
-  if(r.layout==='polaroid') { c.fillStyle='#fffdf7';c.fillRect(x-W*.025,y-W*.025,pw+W*.05,ph+W*.09); }
+  const paperCaption=r.layout==='polaroid'&&r.captionPosition==='bottom';
+  const x=inset,y=r.layout==='full'?0:H*.08,pw=W-2*inset,ph=r.layout==='full'?H:paperCaption?H*.64:H*.75;
+  if(r.layout==='polaroid') { c.fillStyle='#fffdf7';c.fillRect(x-W*.025,y-W*.025,pw+W*.05,paperCaption?H*.88-y+W*.025:ph+W*.09); }
   c.save();c.beginPath();c.rect(x,y,pw,ph);c.clip();
   let zoom=1.02+(r.camera==='zoom-out'?(1-p)*r.zoom:r.camera==='zoom-in'?p*r.zoom:0);
   const shift=r.camera==='pan-left'?-1:r.camera==='pan-right'?1:0;
@@ -26,7 +27,7 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
   c.restore();
   c.fillStyle=`rgba(0,0,0,${r.shade})`;c.fillRect(x,y,pw,ph);
   if(r.grain) inGrain(c,W,H,t,r.grain);
-  const cy={top:H*.15,middle:H*.4,bottom:H*.65}[r.captionPosition],ch=H*.19;
+  const cy=paperCaption?H*.735:{top:H*.15,middle:H*.4,bottom:H*.65}[r.captionPosition],ch=paperCaption?H*.125:H*.19;
   c.save();
   if(r.textMotion==='mask') {c.beginPath();c.rect(W*.06,cy,W*.88,ch*entry);c.clip();}
   if(r.textMotion==='focus') {
@@ -34,10 +35,21 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
     c.translate(0,cy-H*.62);
     mPromptType(c,W,H,caption,idx,local,dur,'focus',{font:r.font,accent:r.accent});
   } else {
-    const a=r.textMotion==='fade'?entry:1;c.globalAlpha=a;
-    mCaption(c,caption,W/2,cy,W*.86,ch,W*r.captionSize,r.font,r.foreground,r.textMotion==='rise'?entry:1);
+    arReferenceCaption(c,caption,W,H,cy,ch,r,entry);
   }
   c.restore();
   inSign(c,d,W/2,H*.94,r.foreground,'center',W*.03);
+  c.restore();
+}
+// 공통 mCaption은 자체 alpha/이동을 설정하므로 분석 스타일의 페이드와 상승을 여기서 구분합니다.
+function arReferenceCaption(c,text,W,H,y,h,r,entry) {
+  const F=KIT_FONTS[r.font]||KIT_FONTS.sans,size=W*r.captionSize;
+  const maxLines=Math.max(1,Math.min(3,Math.floor(h/(size*F.k*1.28))));
+  const fit=mFit(c,text,W*.80,maxLines,size,Math.round(size*.55),r.font);
+  const top=y+Math.max(0,(h-fit.lines.length*fit.lh)/2);
+  c.save();c.textAlign='center';c.textBaseline='middle';c.font=gFont(F.w,fit.size,F.f);c.fillStyle=r.foreground;
+  if(r.textMotion==='fade')c.globalAlpha*=entry;
+  const dy=r.textMotion==='rise'?(1-entry)*H*.025:0;
+  fit.lines.forEach((line,i)=>c.fillText(line,W/2,top+(i+.5)*fit.lh+dy));
   c.restore();
 }

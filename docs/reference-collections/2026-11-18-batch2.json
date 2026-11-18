@@ -1,0 +1,60 @@
+{
+  "method": "rea-video + frame vision + Codex all-shot visual review + apply-review",
+  "categoriesAdded": 0,
+  "categoriesUsed": [
+    "감성",
+    "타이포"
+  ],
+  "candidates": [
+    {
+      "id": "ref_42513a61736617b0",
+      "url": "https://www.youtube.com/watch?v=hsI04vcYYl0",
+      "sourceTitle": "Minimal Slideshow - preview",
+      "creator": "NYSArt",
+      "status": "failed",
+      "error": "화면이 사선/대각선 형태의 복합 마스크 조각으로 분할 및 슬라이스 전환되는 3D 모션 그래픽 템플릿 효과로, 오토릴스 프리셋 설정(full/inset/polaroid 단일 레이아웃 및 컷/페이드 전환)으로 구현 불가합니다."
+    },
+    {
+      "id": "ref_4784a79252305baf",
+      "url": "https://www.youtube.com/watch?v=OXBsg8gioDI",
+      "sourceTitle": "After Effects Template-Minimal Zoom Slideshow",
+      "creator": "Hicham Arhazaz",
+      "status": "failed",
+      "error": "영상 전반에 걸쳐 텍스트 내부로 영상이 비치는 트랙 매트(마스크) 및 극적인 줌 블러 전환 효과가 사용되어 제공된 단일 템플릿 설정으로는 재현이 불가능합니다."
+    },
+    {
+      "id": "ref_6dc1e9d68eedcd61",
+      "url": "https://www.youtube.com/watch?v=vEoNcUQKyZQ",
+      "sourceTitle": "Minimalist Photo Slideshow",
+      "creator": "OLpicART",
+      "status": "failed",
+      "error": "python.exe 실행 실패: ERROR: unable to download video data: HTTP Error 403: Forbidden\n"
+    },
+    {
+      "id": "ref_9e41f8a500caa5bd",
+      "url": "https://www.youtube.com/watch?v=A0CKFb24MJ8",
+      "sourceTitle": "Kinetic Typography Video",
+      "creator": "Cinthya Studios",
+      "status": "visually_reviewed",
+      "reviewedShots": 19,
+      "adaptationLimits": "Adapted to a vertical photo frame. Source word rotations, footage-filled letterforms and changing strip heights are not reproduced."
+    },
+    {
+      "id": "ref_ac6c4eb334000fd4",
+      "url": "https://www.youtube.com/watch?v=2cYUS-C4HO4",
+      "sourceTitle": "Polaroid - FREE After Effects Template PREVIEW",
+      "creator": "YusKaz",
+      "status": "visually_reviewed",
+      "reviewedShots": 3,
+      "adaptationLimits": "Wood texture, card rotation and moving stage are not reproduced. Original photos/handwriting are not reused. Black paper-margin captions are implemented."
+    },
+    {
+      "id": "ref_c074b390b885100a",
+      "url": "https://www.youtube.com/watch?v=LEqYt_5p4HM",
+      "sourceTitle": "Minimal Slideshow",
+      "creator": "makcinema",
+      "status": "failed",
+      "error": "python.exe 실행 실패: ERROR: unable to download video data: HTTP Error 403: Forbidden\n"
+    }
+  ]
+}

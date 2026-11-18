@@ -19,6 +19,17 @@ try{
    if(c.getTransform().a!==1||c.globalAlpha!==1)throw Error('canvas state leaked');
   }
   if(before!==JSON.stringify(campaign.cutCaptions))throw Error('caption mutation');
+  // 폴라로이드의 하단 글은 사진 아래 인화지에, 명함 안전 영역 위에 들어가야 합니다.
+  const drawn=[], original=c.fillText.bind(c);
+  c.fillText=function(text,x,y,...rest){drawn.push({text,y,alpha:this.globalAlpha});return original(text,x,y,...rest);};
+  const paper={...base,layout:'polaroid',captionPosition:'bottom',textMotion:'fade',foreground:'#221b19'};
+  campaign.cutCaptions[0]='오늘의 사진을 오래 기억하는 따뜻한 손글씨 한 줄';
+  arRenderReferenceFrame(c,540,960,.02,24,8,{}, {referenceStyle:paper});
+  const early=drawn.filter(x=>x.text.trim());
+  if(!early.length||early.some(x=>x.y<=960*.72||x.y>=960*.88||x.alpha>=.5))throw Error('polaroid caption placement/fade failed');
+  drawn.length=0;arRenderReferenceFrame(c,540,960,1,24,8,{}, {referenceStyle:paper});
+  if(!drawn.some(x=>x.alpha>.99))throw Error('caption did not finish fading in');
+  c.fillText=original;
   const ref={...base,layout:'polaroid'};arRenderReferenceFrame(c,540,960,2,24,8,{name:'카페'}, {referenceStyle:ref});
   return {frames,png:canvas.toDataURL()};
  });
