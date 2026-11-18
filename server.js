@@ -209,7 +209,9 @@ const server = http.createServer(async (req, res) => {
     return fs.createReadStream(filePath).pipe(res);
   }
   // / 와 /intro 는 랜딩(index.html), 나머지 주소는 제작 화면(studio.html) — vercel.json 과 같게
-  const indexPath = path.join(publicDir, reqPath === '/' || reqPath === '/intro' ? 'index.html' : 'studio.html');
+  const pageFile = ['/admin', '/admin/'].includes(reqPath) ? 'admin.html'
+    : reqPath === '/' || reqPath === '/intro' ? 'index.html' : 'studio.html';
+  const indexPath = path.join(publicDir, pageFile);
   if (fs.existsSync(indexPath)) {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     return fs.createReadStream(indexPath).pipe(res);

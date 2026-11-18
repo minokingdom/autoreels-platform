@@ -28,7 +28,7 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
  await assert.rejects(()=>projects.handle(u,'project-save',{snapshot}),e=>e.code==='project_limit');
  assert.equal((await projects.handle(other,'project-list',{})).projects.length,0);
  await projects.handle(u,'project-delete',{id,revision:2});
- const env={AUTH_SECRET:'test-only-secret-'.repeat(4),SOLAPI_API_KEY:'test',SOLAPI_API_SECRET:'test',SOLAPI_FROM:'0200000000'};
+ const env={AUTH_SECRET:'test-only-secret-'.repeat(4),ADMIN_TOKEN:'local-test-admin-token-only',SOLAPI_API_KEY:'test',SOLAPI_API_SECRET:'test',SOLAPI_FROM:'0200000000'};
  let sentCode,sends=0;
  const session=load('lib/server/session.js',{},env);
  const security=load('lib/server/security.js',{'./db':db,'./session':session},env,{fetch:async(url,opt)=>{sends++;assert.equal(url,'https://api.solapi.com/messages/v4/send-many/detail');sentCode=JSON.parse(opt.body).messages[0].text.match(/\d{6}/)[0];return {ok:true,json:async()=>({groupInfo:{groupId:'test'}})};}});
@@ -56,7 +56,8 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
  const proof3=await security.requestCode(req,'010-0000-0003','signup');
  const specialtyRules=require('../lib/business-specialty.cjs');
  const specialtyTrends=load('lib/server/specialty-trends.js',{'./db':db,'../business-specialty.cjs':specialtyRules});
- const account=load('api/account.js',{'../lib/server/db':db,'../lib/server/config':{readiness:()=>({serverMode:true})},'../lib/server/security':security,'../lib/server/projects':projects,'../lib/server/scheduler':{available:async()=>false},'../lib/server/session':session,'../lib/server/billing':{getSubscription:async()=>null,publicSubscription:()=>null},'../lib/server/plans':{publicPlans:()=>[]},'../lib/server/usage':{usageFor:async()=>({}),isActive:()=>false},'../lib/business-specialty.cjs':specialtyRules,'../lib/server/specialty-trends':specialtyTrends},env);
+ const adminSession=load('lib/server/admin-session.js',{'./session':session},env);
+ const account=load('api/account.js',{'../lib/server/db':db,'../lib/server/config':{readiness:()=>({serverMode:true})},'../lib/server/security':security,'../lib/server/projects':projects,'../lib/server/scheduler':{available:async()=>false},'../lib/server/session':session,'../lib/server/billing':{getSubscription:async()=>null,publicSubscription:()=>null},'../lib/server/plans':{publicPlans:()=>[]},'../lib/server/usage':{usageFor:async()=>({}),isActive:()=>false},'../lib/business-specialty.cjs':specialtyRules,'../lib/server/specialty-trends':specialtyTrends,'../lib/server/admin-session':adminSession},env);
  const response=()=>({statusCode:200,headers:{},setHeader(k,v){this.headers[k]=v},status(s){this.statusCode=s;return this},json(b){this.body=b}});
  let reply=response();await account({headers:req.headers,query:{action:'signup'},method:'POST',body:{phone:'010-0000-0003',password:'strong-test-password',industry:'clinic',specialty:'  치과  ',challengeId:proof3.challengeId,code:sentCode}},reply);
  assert.equal(reply.statusCode,200);assert.ok(reply.headers['Set-Cookie']);
@@ -84,6 +85,27 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
  assert.equal((await specialtyTrends.refreshSpecialtyTrends(mockSearch)).attempted,0);
  assert.deepEqual((await member('specialty-trends')).body.keywords,['피부과 첫 방문 준비']);
  assert.deepEqual((await specialtyTrends.readSpecialtyTrends('clinic','치과')).keywords,['치과 검진 안내']);
+ const adminCall = async (action, {body, headers={}, query={}}={}) => {
+  const res = response();
+  await account({query:{action,...query},method:body ? 'POST' : 'GET',body,headers:{...req.headers,...headers}},res);
+  return res;
+ };
+ assert.equal((await adminCall('admin-specialties',{headers:{cookie}})).statusCode,401);
+ assert.equal((await adminCall('admin-console-login',{body:{token:'wrong'},headers:{'x-vercel-forwarded-for':'192.0.2.4'}})).statusCode,401);
+ const loggedAdmin = await adminCall('admin-console-login',{body:{token:env.ADMIN_TOKEN},headers:{'x-vercel-forwarded-for':'192.0.2.4','x-forwarded-proto':'https'}});
+ assert.equal(loggedAdmin.statusCode,200);
+ assert.match(loggedAdmin.headers['Set-Cookie'],/HttpOnly; SameSite=Strict; Max-Age=3600; Secure/);
+ const adminCookie = loggedAdmin.headers['Set-Cookie'].split(';')[0];
+ const overview = await adminCall('admin-specialties',{headers:{cookie:adminCookie},query:{industry:'clinic'}});
+ assert.equal(overview.statusCode,200);
+ assert.equal(overview.body.summary.configured,3);
+ assert.equal(overview.body.summary.specialties,2);
+ assert.equal(overview.body.rows[0].specialty,'치과');
+ assert.equal(overview.body.rows[0].accounts,2);
+ assert.equal(overview.body.rows[0].last_result,'collected');
+ assert.deepEqual(overview.body.rows[0].keywords,['치과 검진 안내']);
+ assert.equal(overview.body.rows[0].phone,undefined);
+ assert.match((await adminCall('admin-console-logout',{body:{},headers:{cookie:adminCookie}})).headers['Set-Cookie'],/Max-Age=0/);
  assert.equal((await member('profile',{industry:'restaurant'})).body.user.specialty,'');
  assert.equal((await member('profile',{specialty:'태국  음식점'})).body.user.specialty,'태국 음식점');
  assert.equal((await member('specialty-trends')).body.keywords.length,0);

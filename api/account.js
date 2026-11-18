@@ -12,7 +12,8 @@ const billing = require('../lib/server/billing');
 const { publicPlans } = require('../lib/server/plans');
 const { usageFor, isActive, consume } = require('../lib/server/usage');
 const { normalizeSpecialty } = require('../lib/business-specialty.cjs');
-const { readSpecialtyTrends } = require('../lib/server/specialty-trends');
+const { readSpecialtyTrends, readAdminSpecialties } = require('../lib/server/specialty-trends');
+const adminSession = require('../lib/server/admin-session');
 const kakao = require('../lib/server/kakao-login');
 
 const INDUSTRY_KEYS = ['auto', 'restaurant', 'cafe', 'beauty', 'realestate', 'academy', 'clinic', 'fitness', 'shop', 'interior'];
@@ -119,6 +120,26 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    if (action === 'admin-console-login' && req.method === 'POST') {
+      const key = adminSession.adminKey();
+      if (!key) return send(res, 503, { ok: false, message: '관리자 키가 설정되지 않았습니다.' });
+      const body = await readBody(req);
+      await security.loginLimit(req, 'admin-console');
+      const given = typeof body.token === 'string' && body.token.length <= 512 ? body.token.trim() : '';
+      if (!adminSession.equalSecret(given, key)) return send(res, 401, { ok: false, message: '관리자 키가 올바르지 않습니다.' });
+      adminSession.openSession(req, res, key);
+      return send(res, 200, { ok: true });
+    }
+    if (action === 'admin-console-logout' && req.method === 'POST') {
+      adminSession.closeSession(req, res);
+      return send(res, 200, { ok: true });
+    }
+    if (action === 'admin-specialties' && req.method === 'GET') {
+      if (!adminSession.isAdmin(req)) return send(res, 401, { ok: false, error: 'admin_session_required' });
+      const industry = INDUSTRY_KEYS.includes(req.query?.industry) ? req.query.industry : '';
+      const page = Math.min(10000, Math.max(1, Number.parseInt(req.query?.page, 10) || 1));
+      return send(res, 200, { ok: true, ...await readAdminSpecialties(industry, (page - 1) * 30) });
+    }
     if (action === 'kakao-unlink' && req.method === 'POST') {
       return await kakao.unlink(req, res, await readBody(req));
     }

@@ -6,7 +6,7 @@ const types={'.js':'text/javascript','.css':'text/css','.html':'text/html','.jso
 const srv=http.createServer((req,res)=>{
  let f=path.join(root,'public',decodeURIComponent(req.url.split('?')[0]));
  if(req.url.startsWith('/api/')){res.writeHead(503,{'content-type':'application/json'});return res.end('{"ok":false}');}
- if(!fs.existsSync(f)||fs.statSync(f).isDirectory())f=path.join(root,'public/studio.html');res.setHeader('Content-Type',types[path.extname(f)]||'application/octet-stream');fs.createReadStream(f).pipe(res);
+ if(!fs.existsSync(f)||fs.statSync(f).isDirectory())f=path.join(root,req.url.split('?')[0]==='/admin'?'public/admin.html':'public/studio.html');res.setHeader('Content-Type',types[path.extname(f)]||'application/octet-stream');fs.createReadStream(f).pipe(res);
 });await new Promise(r=>srv.listen(0,'127.0.0.1',r));
 const browser=await chromium.launch();const page=await browser.newPage({viewport:{width:1280,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
 const projects=new Map();
@@ -93,5 +93,35 @@ try{
  await page.locator('#authIndustryInput').selectOption('beauty');
  await page.locator('#authSpecialtyInput').fill('남성 전문 미용실');
  assert.equal(await page.locator('#authSpecialtyInput').inputValue(),'남성 전문 미용실');
- assert.deepEqual(errors,[]);console.log('project browser ok: project restore, password recovery, direct specialty editing on desktop and mobile');
+ let adminAuthenticated = false;
+ await page.route(/\/api\/account\?action=admin-/, async route => {
+  const params = new URL(route.request().url()).searchParams;
+  const action = params.get('action');
+  if (action === 'admin-console-login') {
+   adminAuthenticated = route.request().postDataJSON().token === 'local-admin';
+   return route.fulfill({status:adminAuthenticated ? 200 : 401,json:{ok:adminAuthenticated,message:'관리자 키가 올바르지 않습니다.'}});
+  }
+  if (action === 'admin-console-logout') {
+   adminAuthenticated = false;
+   return route.fulfill({json:{ok:true}});
+  }
+  if (!adminAuthenticated) return route.fulfill({status:401,json:{ok:false}});
+  const rows = [{industry:'clinic',specialty:'치과',accounts:2,attempted_day:'2026-11-18',last_result:'collected',keywords:['치과 검진 안내'],fresh:true}];
+  return route.fulfill({json:{ok:true,rows:params.get('industry')==='restaurant'?[]:rows,summary:{accounts:3,configured:2,specialties:1},hasNext:false}});
+ });
+ await page.goto(`http://127.0.0.1:${srv.address().port}/admin`);
+ await page.getByLabel('관리자 키').fill('wrong');
+ await page.getByRole('button',{name:'로그인',exact:true}).click();
+ await page.getByText('관리자 키가 올바르지 않습니다.',{exact:true}).waitFor();
+ await page.getByLabel('관리자 키').fill('local-admin');
+ await page.getByRole('button',{name:'로그인',exact:true}).click();
+ await page.getByText('치과 검진 안내',{exact:true}).waitFor();
+ await page.getByLabel('대분류',{exact:true}).selectOption('restaurant');
+ await page.getByText('이 페이지에 표시할 세부 업종이 없습니다.',{exact:true}).waitFor();
+ await page.reload();
+ await page.getByText('이 페이지에 표시할 세부 업종이 없습니다.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'로그아웃',exact:true}).click();
+ await page.getByText('로그아웃했습니다.',{exact:true}).waitFor();
+ assert.equal(await page.locator('#adminDashboard').isVisible(),false);
+ assert.deepEqual(errors,[]);console.log('project browser ok: project restore, password recovery, specialty editing, admin login/filter/reload/logout');
 }finally{await browser.close();await new Promise(r=>srv.close(r));}
