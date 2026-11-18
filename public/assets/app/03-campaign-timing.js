@@ -217,7 +217,13 @@
     let TOTAL_DURATION = 12.0; // 실제 영상 길이 (성우 음성이 길면 자동으로 늘어남)
     let OUTRO_DURATION = 4.0;
     const FPS = 60;
-    let isPlaying = true;
+    function arUsesWorkflowSheet() {
+      return window.innerWidth < 1024;
+    }
+    function arWorkflowSheetExpanded() {
+      return arUsesWorkflowSheet() && !document.body.classList.contains('ar-sheet-min');
+    }
+    let isPlaying = !arWorkflowSheetExpanded();
     let lastWallTime = performance.now();
 
     function getSelectedDealer() {

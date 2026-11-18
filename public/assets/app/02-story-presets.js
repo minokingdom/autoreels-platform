@@ -3888,7 +3888,8 @@
       renderDynamicCutCardsUI();
       renderVisualStoryboardTrack();
 
-      isPlaying = !arEditSheetOpen;
+      if (arEditSheetOpen || arWorkflowSheetExpanded()) arPauseForStudioEdit();
+      else isPlaying = true;
       if (isPlaying && audioEngineReady() && AudioEngine.enabled) {
         AudioEngine.lastSpokenCut = -1;
         AudioEngine.prefetchTtsBuffers();
@@ -3982,7 +3983,8 @@
       renderVisualStoryboardTrack();
       if (typeof renderDesignStylePicker === 'function') renderDesignStylePicker();
 
-      isPlaying = !arEditSheetOpen;
+      if (arEditSheetOpen || arWorkflowSheetExpanded()) arPauseForStudioEdit();
+      else isPlaying = true;
       if (isPlaying && audioEngineReady() && AudioEngine.enabled) {
         AudioEngine.lastSpokenCut = -1;
         AudioEngine.prefetchTtsBuffers();

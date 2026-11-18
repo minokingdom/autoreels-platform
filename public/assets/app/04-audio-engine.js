@@ -1380,7 +1380,7 @@
       },
 
       syncWithTimeline(t) {
-        if (!this.enabled || arEditSheetOpen) return;
+        if (!this.enabled || !isPlaying || arEditSheetOpen) return;
         try { this.handleSceneSfx(t); } catch (e) {}
         if (!arVoiceAllowed()) return;
         // 1. 본편 길이가 음성과 딱 맞을 때는 원테이크 마스터 음성을 끊김 없이 연속 재생
@@ -1476,7 +1476,7 @@
       const unlock = (ev) => {
         if (window.__arUserMuted || AudioEngine.enabled) return;
         const t = ev && ev.target;
-        if (t && typeof t.closest === 'function' && t.closest('#soundToggleBtn, #mobileDockSoundBtn, #arQuickBar [data-qb="sound"], #topicCards, #bgmRecommendRow, #arBgmSheet')) return;
+        if (t && typeof t.closest === 'function' && t.closest('#soundToggleBtn, #mobileDockSoundBtn, #arQuickBar [data-qb="sound"], #topicCards, #bgmRecommendRow, #arBgmSheet, #arSheetHandle')) return;
         toggleAudioMaster(true);
       };
       window.addEventListener('pointerdown', unlock, { once: true, passive: true });

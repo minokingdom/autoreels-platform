@@ -692,16 +692,24 @@
     //   body.ar-sheet 일 때 CSS 가 미리보기를 위에, 단계 칸을 아래 시트(화면 약 절반)로 고정
     // ==========================================================================
     function arToggleSheet(force) {
-      const min = typeof force === 'boolean' ? force : !document.body.classList.contains('ar-sheet-min');
+      const wasMin = document.body.classList.contains('ar-sheet-min');
+      const min = typeof force === 'boolean' ? force : !wasMin;
       document.body.classList.toggle('ar-sheet-min', min);
+      if (wasMin && arWorkflowSheetExpanded()) arPauseForStudioEdit();
       const h = document.getElementById('arSheetHandle');
       if (h) h.setAttribute('aria-expanded', min ? 'false' : 'true');
     }
     function arSetupSheetMode() {
-      const on = window.innerWidth < 1024;
+      const wasOn = document.body.classList.contains('ar-sheet');
+      const on = arUsesWorkflowSheet();
       document.body.classList.toggle('ar-sheet', on);
       arEnsureQuickBar();
       if (!on) return;
+      if (!wasOn && arWorkflowSheetExpanded()) {
+        arPauseForStudioEdit();
+        const play = document.getElementById('playPauseBtn');
+        if (play) play.textContent = '▶️ 재생';
+      }
       const bar = document.getElementById('mobileStepBar');
       if (bar && bar.offsetHeight) document.body.style.setProperty('--ar-msb', `${bar.offsetHeight}px`);
       const wf = document.getElementById('studioWorkflowColumn');

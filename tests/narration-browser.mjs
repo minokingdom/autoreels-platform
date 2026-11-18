@@ -258,4 +258,33 @@ try {
   console.log('opening or closing a sheet while paused does not start playback');
   assert.deepEqual(pageErrors,[]);
   assert.deepEqual(await page.evaluate(()=>window.__smokeAsyncErrors),[]);
+  const mobile = await browser.newPage({ viewport: { width: 634, height: 900 }, hasTouch: true });
+  mobile.on('pageerror', error => pageErrors.push(error.message));
+  await mobile.addInitScript(() => { window.__arUserMuted = true; });
+  const assertInitialPause = async () => {
+    await mobile.waitForFunction(() => document.body.classList.contains('ar-sheet'));
+    assert.equal(await mobile.locator('#arSheetHandle').getAttribute('aria-expanded'), 'true');
+    assert.deepEqual(await mobile.evaluate(async () => {
+      const before = window.__timelines.main.currentTime;
+      await new Promise(resolve => setTimeout(resolve, 350));
+      return { before, after: window.__timelines.main.currentTime, playing: isPlaying };
+    }), { before: 0, after: 0, playing: false });
+  };
+  await mobile.goto(url, { waitUntil: 'load', timeout: 90000 });
+  await assertInitialPause();
+  await mobile.locator('#reelCanvas').tap();
+  await mobile.waitForFunction(() => isPlaying && window.__timelines.main.currentTime > 0.15);
+  await mobile.reload({ waitUntil: 'load', timeout: 90000 });
+  await assertInitialPause();
+  await mobile.locator('#arSheetHandle').tap();
+  assert.equal(await mobile.locator('#arSheetHandle').getAttribute('aria-expanded'), 'false');
+  assert.equal(await mobile.evaluate(() => isPlaying), false);
+  await mobile.locator('#reelCanvas').tap();
+  await mobile.waitForFunction(() => isPlaying && window.__timelines.main.currentTime > 0.15);
+  await mobile.locator('#arSheetHandle').tap();
+  assert.equal(await mobile.locator('#arSheetHandle').getAttribute('aria-expanded'), 'true');
+  assert.equal(await mobile.evaluate(() => isPlaying), false);
+  assert.deepEqual(pageErrors, []);
+  await mobile.close();
+  console.log('mobile workflow sheet stays paused on open and reload, with manual preview playback');
 } finally { await browser.close(); if(srv)srv.close(); }
