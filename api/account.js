@@ -11,6 +11,8 @@ const { setSession, clearSession, readSession, hashPassword, checkPassword, same
 const billing = require('../lib/server/billing');
 const { publicPlans } = require('../lib/server/plans');
 const { usageFor, isActive, consume } = require('../lib/server/usage');
+const { normalizeSpecialty } = require('../lib/business-specialty.cjs');
+const { readSpecialtyTrends } = require('../lib/server/specialty-trends');
 
 const INDUSTRY_KEYS = ['auto', 'restaurant', 'cafe', 'beauty', 'realestate', 'academy', 'clinic', 'fitness', 'shop', 'interior'];
 
@@ -52,7 +54,13 @@ async function currentUser(req) {
 }
 
 function publicUser(u) {
-  return { id: String(u.id), phone: u.phone, name: u.name, title: u.title, branch: u.branch, email: u.email, industry: u.industry, promo: u.promo };
+  return { id: String(u.id), phone: u.phone, name: u.name, title: u.title, branch: u.branch, email: u.email, industry: u.industry, specialty: u.specialty || '', promo: u.promo };
+}
+
+function profileSpecialty(value, fallback = '') {
+  const specialty = value === undefined ? fallback : normalizeSpecialty(value);
+  if (specialty !== null) return specialty;
+  throw Object.assign(new Error('세부 업종을 36자 이내로 입력해 주세요. 업종 이름에 쓸 수 있는 글자와 숫자만 사용해 주세요.'), { status: 400, code: 'invalid_specialty' });
 }
 
 async function mePayload(u) {
@@ -128,12 +136,13 @@ module.exports = async function handler(req, res) {
       const proof = await security.verifyCode(phone,'signup',b.challengeId,b.code);
       if (!proof) return send(res,400,{ok:false,error:'invalid_code',message:'인증번호가 만료되었거나 맞지 않습니다.'});
       const industry = INDUSTRY_KEYS.includes(b.industry) ? b.industry : 'auto';
+      const specialty = profileSpecialty(b.specialty);
       const ins = await db.tx(async c => {
         await security.consumeCode(c,proof);
         return c.query(
-        `INSERT INTO ar_users (phone, password_hash, name, title, branch, email, industry, promo, phone_verified_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now()) ON CONFLICT (phone) DO NOTHING RETURNING *`,
-        [phone, hashPassword(pw), cut(b.name, 40) || '대표', cut(b.title, 40), cut(b.branch, 80), cut(b.email, 120), industry, cut(b.promo, 120)]
+        `INSERT INTO ar_users (phone, password_hash, name, title, branch, email, industry, promo, specialty, phone_verified_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now()) ON CONFLICT (phone) DO NOTHING RETURNING *`,
+        [phone, hashPassword(pw), cut(b.name, 40) || '대표', cut(b.title, 40), cut(b.branch, 80), cut(b.email, 120), industry, cut(b.promo, 120), specialty]
       );
       });
       if (!ins.rows.length) return send(res, 409, { ok: false, error: 'phone_taken', message: '이미 가입된 번호입니다. 로그인해 주세요.' });
@@ -168,6 +177,10 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'me') return send(res, 200, await mePayload(user));
+    if (action === 'specialty-trends' && req.method === 'GET') {
+      const row = user.specialty ? await readSpecialtyTrends(user.industry, user.specialty) : null;
+      return send(res, 200, { ok: true, industry: user.industry, specialty: user.specialty || '', keywords: row?.keywords || [], updatedAt: row?.updated_at || null });
+    }
     if (action.startsWith('project-')) {
       if (req.method !== 'POST') return send(res,405,{ok:false,error:'method'});
       return send(res,200,{ok:true,...await projects.handle(user,action,await readBody(req))});
@@ -184,10 +197,12 @@ module.exports = async function handler(req, res) {
     if (action === 'profile' && req.method === 'POST') {
       const b = await readBody(req);
       const industry = INDUSTRY_KEYS.includes(b.industry) ? b.industry : user.industry;
+      const currentSpecialty = industry === user.industry ? user.specialty || '' : '';
+      const specialty = profileSpecialty(b.specialty, currentSpecialty);
       const r = await db.query(
-        `UPDATE ar_users SET name = $2, title = $3, branch = $4, email = $5, industry = $6, promo = $7, updated_at = now()
+        `UPDATE ar_users SET name = $2, title = $3, branch = $4, email = $5, industry = $6, promo = $7, specialty = $8, updated_at = now()
           WHERE id = $1 RETURNING *`,
-        [user.id, cut(b.name, 40) || user.name, cut(b.title, 40), cut(b.branch, 80), cut(b.email, 120), industry, cut(b.promo, 120)]
+        [user.id, cut(b.name, 40) || user.name, cut(b.title ?? user.title, 40), cut(b.branch ?? user.branch, 80), cut(b.email ?? user.email, 120), industry, cut(b.promo ?? user.promo, 120), specialty]
       );
       return send(res, 200, await mePayload(r.rows[0]));
     }

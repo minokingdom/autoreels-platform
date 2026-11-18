@@ -1635,8 +1635,13 @@
         <!-- 신규 가입 시 추가 입력 필드 -->
         <div id="authSignupFields" class="hidden space-y-3 pt-2 border-t border-[var(--border)]">
           <div>
-            <label class="block text-[12px] text-[#a1a1a6] mb-1">업종 <span class="text-[#6e6e73]">(가입 후에는 이 업종으로 고정됩니다)</span></label>
+            <label for="authIndustryInput" class="block text-[12px] text-[#a1a1a6] mb-1">업종</label>
             <select id="authIndustryInput" onchange="arSignupIndustryChanged(this.value)" class="studio-input w-full h-10 px-2 text-[14px]"></select>
+          </div>
+          <div data-noind>
+            <label for="authSpecialtyInput" class="block text-[12px] text-[#a1a1a6] mb-1">세부 업종 (선택)</label>
+            <input type="text" id="authSpecialtyInput" maxlength="36" class="studio-input w-full h-10 px-2 text-[14px]" aria-describedby="authSpecialtyHelp">
+            <p id="authSpecialtyHelp" class="mt-1 text-[11px] text-[#a1a1a6]">추천 주제에 쓸 업종 이름을 적어 주세요. 상호나 연락처는 빼 주세요.</p>
           </div>
           <div class="grid grid-cols-2 gap-2.5">
             <div>
@@ -2127,7 +2132,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117r" title="AutoReels 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261118-stylepack5"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261118-specialty"><\/script>');
     }
   </script>
   <!--

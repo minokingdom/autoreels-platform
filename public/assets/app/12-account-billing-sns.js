@@ -214,7 +214,7 @@
       try { localStorage.setItem('autoreels_logged_phone', acc.phone); } catch (e) {}
       selectDealer(d.id, true);
       // 가입할 때 고른 업종으로 고정 (예전 계정은 자동차)
-      if (typeof arLockIndustry === 'function') arLockIndustry(acc.industry || 'auto');
+      if (typeof arLockIndustry === 'function') arLockIndustry(acc.industry || 'auto', acc.specialty);
     }
 
     async function submitDealerAuthForm() {
@@ -255,6 +255,7 @@
           branch: document.getElementById('authBranchInput').value.trim(),
           promoTag: document.getElementById('authPromoInput').value.trim(),
           industry: (document.getElementById('authIndustryInput') || {}).value || 'auto',
+          specialty: document.getElementById('authSpecialtyInput').value.trim(),
           licenseKey: 'AR-000000 (미결제 체험판)',
           expiryYmd: 20261231
         };
@@ -498,7 +499,7 @@
         licenseKey: comp ? '무상 PRO (서버 인증)' : (pro ? formatWasmLicenseKey(u.phone, until) : 'AR-000000 (무료 회원)'),
         expiryYmd: until
       });
-      if (typeof arLockIndustry === 'function') arLockIndustry(u.industry || 'auto');
+      if (typeof arLockIndustry === 'function') arLockIndustry(u.industry || 'auto', u.specialty);
       if (typeof arSnsRefresh === 'function') arSnsRefresh();
       if(typeof arRestoreLastProject==='function') arRestoreLastProject();
       const btn = document.getElementById('headerAuthBtn');
@@ -568,7 +569,8 @@
           ? await arApi('signup', {
               phone: val('authPhoneInput'), password: val('authPasswordInput'), name: val('authNameInput'),
               title: val('authTitleInput'), branch: val('authBranchInput'), promo: val('authPromoInput'),
-              email: val('authEmailInput'), industry: val('authIndustryInput') || 'auto', challengeId: arPhoneChallenge?.id, code: val('arPhoneCode')
+              email: val('authEmailInput'), industry: val('authIndustryInput') || 'auto', specialty: val('authSpecialtyInput'),
+              challengeId: arPhoneChallenge?.id, code: val('arPhoneCode')
             })
           : await arApi('login', { phone: val('authPhoneInput'), password: val('authPasswordInput') });
         if (!r.ok) {

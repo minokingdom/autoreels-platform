@@ -55,6 +55,10 @@
   ],
   "crons": [
     {
+      "path": "/api/trends?specialtyCron=1",
+      "schedule": "0 19 * * *"
+    },
+    {
       "path": "/api/cron-billing",
       "schedule": "0 1 * * *"
     },

@@ -54,11 +54,39 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
  // 계정 API 자체도 실제 DB에 연결해 가입/세션/미인증 저장을 확인합니다.
  await pg.exec("SELECT setval('ar_users_id_seq',2)");
  const proof3=await security.requestCode(req,'010-0000-0003','signup');
- const account=load('api/account.js',{'../lib/server/db':db,'../lib/server/config':{readiness:()=>({serverMode:true})},'../lib/server/security':security,'../lib/server/projects':projects,'../lib/server/scheduler':{available:async()=>false},'../lib/server/session':session,'../lib/server/billing':{getSubscription:async()=>null,publicSubscription:()=>null},'../lib/server/plans':{publicPlans:()=>[]},'../lib/server/usage':{usageFor:async()=>({}),isActive:()=>false}},env);
+ const specialtyRules=require('../lib/business-specialty.cjs');
+ const specialtyTrends=load('lib/server/specialty-trends.js',{'./db':db,'../business-specialty.cjs':specialtyRules});
+ const account=load('api/account.js',{'../lib/server/db':db,'../lib/server/config':{readiness:()=>({serverMode:true})},'../lib/server/security':security,'../lib/server/projects':projects,'../lib/server/scheduler':{available:async()=>false},'../lib/server/session':session,'../lib/server/billing':{getSubscription:async()=>null,publicSubscription:()=>null},'../lib/server/plans':{publicPlans:()=>[]},'../lib/server/usage':{usageFor:async()=>({}),isActive:()=>false},'../lib/business-specialty.cjs':specialtyRules,'../lib/server/specialty-trends':specialtyTrends},env);
  const response=()=>({statusCode:200,headers:{},setHeader(k,v){this.headers[k]=v},status(s){this.statusCode=s;return this},json(b){this.body=b}});
- let reply=response();await account({headers:req.headers,query:{action:'signup'},method:'POST',body:{phone:'010-0000-0003',password:'strong-test-password',challengeId:proof3.challengeId,code:sentCode}},reply);
+ let reply=response();await account({headers:req.headers,query:{action:'signup'},method:'POST',body:{phone:'010-0000-0003',password:'strong-test-password',industry:'clinic',specialty:'  치과  ',challengeId:proof3.challengeId,code:sentCode}},reply);
  assert.equal(reply.statusCode,200);assert.ok(reply.headers['Set-Cookie']);
  const cookie=reply.headers['Set-Cookie'].split(';')[0];
+ assert.equal(reply.body.user.specialty,'치과');
+ const member = async (action, body) => {
+  const res = response();
+  await account({ headers: {...req.headers,cookie}, query: { action }, method: body ? 'POST' : 'GET', body }, res);
+  return res;
+ };
+ assert.equal((await member('profile',{specialty:'010-5555-2222'})).statusCode,400);
+ assert.equal((await member('profile',{specialty:'피부과',branch:'테스트 지점'})).body.user.specialty,'피부과');
+ assert.equal((await member('profile',{industry:'clinic'})).body.user.branch,'테스트 지점');
+ assert.equal((await member('me')).body.user.specialty,'피부과');
+ await pg.exec("UPDATE ar_users SET industry='clinic', specialty='치과' WHERE id IN (1,2)");
+ const searches = [];
+ const mockSearch = async query => {
+  searches.push(query);
+  return [{title:'피부과 첫 방문 준비'}, {title:'치과 검진 안내'}, {title:'중식당 메뉴'}];
+ };
+ const nightly = await specialtyTrends.refreshSpecialtyTrends(mockSearch);
+ assert.equal(nightly.attempted,2);
+ assert.equal(nightly.collected,2);
+ assert.equal(searches.filter(query=>query.startsWith('치과 ')).length,1);
+ assert.equal((await specialtyTrends.refreshSpecialtyTrends(mockSearch)).attempted,0);
+ assert.deepEqual((await member('specialty-trends')).body.keywords,['피부과 첫 방문 준비']);
+ assert.deepEqual((await specialtyTrends.readSpecialtyTrends('clinic','치과')).keywords,['치과 검진 안내']);
+ assert.equal((await member('profile',{industry:'restaurant'})).body.user.specialty,'');
+ assert.equal((await member('profile',{specialty:'태국  음식점'})).body.user.specialty,'태국 음식점');
+ assert.equal((await member('specialty-trends')).body.keywords.length,0);
  reply=response();await account({headers:{...req.headers,cookie},query:{action:'project-list'},method:'POST',body:{}},reply);assert.equal(reply.statusCode,200);
  reply=response();await account({headers:req.headers,query:{action:'project-list'},method:'POST',body:{}},reply);assert.equal(reply.statusCode,401);
  reply=response();await account({headers:req.headers,query:{action:'signup'},method:'POST',body:{phone:'010-0000-0004',password:'strong-test-password',challengeId:proof3.challengeId,code:sentCode}},reply);assert.equal(reply.statusCode,400);

@@ -502,7 +502,7 @@
         btn.title = arIndustryLocked ? '내 계정 업종 — 눌러서 바꿀 수 있습니다' : '회원가입할 때 업종을 고르면 내 계정 업종으로 저장됩니다';
       }
       const setInd = document.getElementById('settingsIndustrySummary');
-      if (setInd) setInd.textContent = `${IND.icon} ${IND.name}`;
+      if (setInd) setInd.textContent = arIndustrySummary();
       const auth = document.getElementById('authIndustryInput');
       if (auth) {
         if (!auth.options.length) {
@@ -514,6 +514,20 @@
     }
     // 업종은 회원가입 때 고르고, 로그인하면 그 업종으로 고정
     let arIndustryLocked = false;
+    let arBusinessSpecialty = '';
+    let arSpecialtyIndustry = '';
+    const arSpecialtyExamples = {
+      auto: '수입 중고차 매매', restaurant: '태국 음식점 또는 중식당', cafe: '구움과자 카페',
+      beauty: '남성 전문 미용실 또는 네일숍', realestate: '상가 임대 중개', academy: '초등 영어 학원',
+      clinic: '치과 또는 피부과', fitness: '기구 필라테스', shop: '아동복 쇼핑몰', interior: '욕실 리모델링'
+    };
+    function arIndustrySpecialty() {
+      return arSpecialtyIndustry === IND.key ? arBusinessSpecialty : '';
+    }
+    function arIndustrySummary() {
+      const specialty = arIndustrySpecialty();
+      return `${IND.icon} ${IND.name}${specialty ? ' · ' + specialty : ''}`;
+    }
     function arIndustryChipClick() {
       return openIndustryPicker();
     }
@@ -537,6 +551,12 @@
     }
     function arFillSignupFieldsForIndustry(key = IND.key) {
       const ind = AR_INDUSTRIES[key] || IND;
+      const specialty = document.getElementById('authSpecialtyInput');
+      if (specialty) {
+        if (specialty.dataset.industry && specialty.dataset.industry !== ind.key) specialty.value = '';
+        specialty.dataset.industry = ind.key;
+        specialty.placeholder = '예: ' + arSpecialtyExamples[ind.key];
+      }
       arIndustryFieldHint('authNameInput', `${ind.role.replace(/님$/, '')} 성함`, '홍길동');
       arIndustryFieldHint('authTitleInput', '직함 · 소개', ind.title || ind.role);
       arIndustryFieldHint('authBranchInput', ind.branchLabel, ind.branchPlaceholder);
@@ -548,32 +568,55 @@
       arIndustryFieldHint('modalBranch', IND.branchLabel, IND.branchPlaceholder);
       arIndustryFieldHint('modalPromo', IND.promoLabel, IND.promoPlaceholder);
     }
-    // 로그인한 회원이 업종 바꾸기: 화면을 바꾸고 계정에도 저장
+    // 계정 저장이 성공한 뒤 추천을 갱신합니다.
     async function arChangeAccountIndustry(key) {
       const m = document.getElementById('industryPickerModal');
-      if (m) m.remove();
-      if (!AR_INDUSTRIES[key] || key === IND.key) return;
-      const next = AR_INDUSTRIES[key];
-      arLockIndustry(key);
+      const save = m?.querySelector('#industryPickerSave');
+      const input = m?.querySelector('#industrySpecialtyInput');
+      if (!save || !input || !AR_INDUSTRIES[key] || save.disabled) return;
+      const specialty = input.value.normalize('NFKC').replace(/\s+/gu, ' ').trim();
+      save.disabled = true;
       try {
         if (window.AR_SERVER && AR_SERVER.mode) {
-          const u = (AR_SERVER.me && AR_SERVER.me.user) || {};
-          const r = await arApi('profile', { name: u.name, title: u.title, branch: u.branch, email: u.email, promo: u.promo, industry: key });
-          if (r.ok) { AR_SERVER.me = r.body; arToast(`업종을 ${next.name}(으)로 바꿨습니다.`, true); }
-          else arToast(r.body.message || '업종을 저장하지 못했습니다. 다시 시도해 주세요.');
+          if (!AR_SERVER.me?.user) {
+            m.remove();
+            openDealerAuthModal();
+            const industryInput = document.getElementById('authIndustryInput');
+            industryInput.value = key;
+            switchAuthModalTab('signup');
+            document.getElementById('authSpecialtyInput').value = specialty;
+            return;
+          }
+          const r = await arApi('profile', { industry: key, specialty });
+          if (!r.ok) {
+            arToast(r.body.message || '업종을 저장하지 못했습니다. 다시 시도해 주세요.');
+            return;
+          }
+          AR_SERVER.me = r.body;
+          arLockIndustry(r.body.user.industry, r.body.user.specialty);
         } else {
           const phone = localStorage.getItem('autoreels_logged_phone');
           const accs = loadDealerAccounts();
-          if (phone && accs[phone]) { accs[phone].industry = key; saveDealerAccounts(accs); }
-          if (typeof arToast === 'function') arToast(`업종을 ${next.name}(으)로 바꿨습니다.`, true);
+          if (phone && accs[phone]) {
+            Object.assign(accs[phone], { industry: key, specialty });
+            saveDealerAccounts(accs);
+          }
+          arLockIndustry(key, specialty);
         }
-      } catch (e) {}
+        arToast('업종을 저장했습니다.', true);
+      } catch (e) {
+        arToast('업종을 저장하지 못했습니다. 다시 시도해 주세요.');
+      } finally {
+        save.disabled = false;
+      }
     }
 
     // 로그인한 계정의 업종으로 고정
-    function arLockIndustry(key) {
+    function arLockIndustry(key, specialty = '') {
       arIndustryLocked = false;
-      setIndustry(AR_INDUSTRIES[key] ? key : 'auto', { silent: true });
+      arSpecialtyIndustry = AR_INDUSTRIES[key] ? key : 'auto';
+      arBusinessSpecialty = String(specialty || '');
+      setIndustry(arSpecialtyIndustry, { silent: true });
       arIndustryLocked = true;
       arRenderIndustryChip();
       const m = document.getElementById('industryPickerModal');
@@ -596,7 +639,7 @@
           <div class="ar-modal-head">
             <div>
               <h3>업종 바꾸기</h3>
-              <p class="text-[#85858b]">고른 뒤 [저장]을 누르면 화면 문구·상품 프리셋·대본 템플릿이 그 업종으로 바뀌고 내 계정에도 저장됩니다.</p>
+              <p class="text-[#85858b]">업종을 고르고 세부 업종을 적으면 추천 주제가 달라집니다.</p>
             </div>
             <button type="button" onclick="document.getElementById('industryPickerModal').remove()" class="ar-modal-x" aria-label="닫기">×</button>
           </div>
@@ -607,18 +650,35 @@
                 <span class="text-[18px]">${x.icon}</span><span>${x.name}</span>${x.key === IND.key ? '<span class="ml-auto text-[10px] text-[#85858b]">지금</span>' : ''}
               </button>`).join('')}
           </div>
-          <p class="text-[11px] text-[#85858b]">고르신 업종에 맞는 전용 디자인·사진·대본·엔딩이 바로 적용됩니다.</p>
+          <div>
+            <label for="industrySpecialtyInput" class="block text-[12px] text-[#a1a1a6] mb-1">세부 업종 (선택)</label>
+            <input type="text" id="industrySpecialtyInput" maxlength="36" class="studio-input w-full h-10 px-2 text-[14px]" aria-describedby="industrySpecialtyHelp">
+            <p id="industrySpecialtyHelp" class="mt-1 text-[11px] text-[#a1a1a6]">업종 이름만 적어 주세요. 상호나 연락처는 빼 주세요.</p>
+          </div>
           <div class="ar-modal-foot">
             <button type="button" onclick="document.getElementById('industryPickerModal').remove()" class="btn-secondary h-9 px-4 text-[12px] cursor-pointer">취소</button>
-            <button type="button" id="industryPickerSave" onclick="arChangeAccountIndustry(arPickerChoice)" class="btn-primary h-9 px-5 text-[12px] cursor-pointer" disabled style="opacity:.45">저장</button>
+            <button type="button" id="industryPickerSave" class="btn-primary h-9 px-5 text-[12px] cursor-pointer" disabled>저장</button>
           </div>
         </div>`;
+      const input = m.querySelector('#industrySpecialtyInput');
+      input.value = arIndustrySpecialty();
+      input.placeholder = '예: ' + arSpecialtyExamples[IND.key];
+      input.addEventListener('input', arIndustryPickerSaveState);
+      m.querySelector('#industryPickerSave').addEventListener('click', () => arChangeAccountIndustry(arPickerChoice));
     }
     function arPickIndustry(key) {
+      if (key === arPickerChoice || !AR_INDUSTRIES[key]) return;
       arPickerChoice = key;
       document.querySelectorAll('#industryPickerGrid [data-ind]').forEach((b) => b.classList.toggle('on', b.dataset.ind === key));
+      const input = document.getElementById('industrySpecialtyInput');
+      input.value = key === IND.key ? arIndustrySpecialty() : '';
+      input.placeholder = '예: ' + arSpecialtyExamples[key];
+      arIndustryPickerSaveState();
+    }
+    function arIndustryPickerSaveState() {
       const save = document.getElementById('industryPickerSave');
-      if (save) { const same = key === IND.key; save.disabled = same; save.style.opacity = same ? '.45' : '1'; save.textContent = same ? '저장' : `${AR_INDUSTRIES[key].name}(으)로 저장`; }
+      const input = document.getElementById('industrySpecialtyInput');
+      if (save && input) save.disabled = arPickerChoice === IND.key && input.value.trim() === arIndustrySpecialty();
     }
 
     // 체험용 견본 카마스터(김민준 등)는 업종에 맞는 직함·가게 이름·혜택 문구로 바꿔 보여 줌

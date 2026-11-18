@@ -392,8 +392,28 @@ async function fetchTrendsForIndustry(indKey, customQ = '') {
 }
 
 const { isSameSiteRequest, consume, refundUsage } = require('../lib/server/usage');
+const { timingSafeEqual } = require('node:crypto');
+const { refreshSpecialtyTrends } = require('../lib/server/specialty-trends');
 
 async function handler(req, res) {
+  if (req.query?.specialtyCron === '1' && req.method === 'GET') {
+    res.setHeader('Cache-Control', 'no-store');
+    const secret = process.env.CRON_SECRET;
+    if (!secret) return res.status(503).json({ ok: false, error: 'cron_not_configured' });
+    const expected = Buffer.from('Bearer ' + secret);
+    const actual = Buffer.from(String(req.headers?.authorization || ''));
+    if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
+      return res.status(401).json({ ok: false, error: 'unauthorized' });
+    }
+    try {
+      const summary = await refreshSpecialtyTrends();
+      console.log('[specialty-trends]', summary);
+      return res.status(200).json({ ok: true, ...summary });
+    } catch (e) {
+      console.error('[specialty-trends]', e.code || e.name);
+      return res.status(500).json({ ok: false, error: 'specialty_refresh_failed' });
+    }
+  }
   if (!isSameSiteRequest(req)) {
     return res.status(403).json({ ok: false, error: 'forbidden_origin' });
   }

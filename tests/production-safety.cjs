@@ -13,7 +13,7 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  res=response();await meter.withMeter(async(q,r)=>r.json({ok:false}),'ai',()=>1)({method:'POST'},res);assert.equal(refunds,1);
  await assert.rejects(()=>meter.withMeter(async()=>{throw Error('provider')},'ai',()=>1)({method:'POST'},response()));assert.equal(refunds,2);
  await meter.withMeter(async(q,r)=>r.json({ok:true}),'ai',()=>1)({method:'POST'},response());assert.equal(refunds,2);
- const unitOf=load('api/generate-script.js',{'../lib/server/usage':{isSameSiteRequest:()=>true},'../lib/server/meter':{withMeter:(h,k,u)=>u}});
+ const unitOf=load('api/generate-script.js',{'../lib/server/usage':{isSameSiteRequest:()=>true},'../lib/server/meter':{withMeter:(h,k,u)=>u},'../lib/business-specialty.cjs':require('../lib/business-specialty.cjs')});
  for(const mode of ['topics','scene-prompts','scene-image','script'])assert.equal(unitOf({method:'POST',body:{mode}}),1);
  assert.equal(unitOf({method:'POST',body:{mode:'scene-images',count:4}}),5);
  assert.equal(unitOf({method:'POST',body:{mode:'scene-images',count:999}}),11);
