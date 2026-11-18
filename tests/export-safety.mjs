@@ -197,6 +197,18 @@ try {
   assert.equal(chirp.group,'Chirp 3 HD · 경쾌한 릴스');
   assert.equal(chirp.provider,'chirp');
   assert.ok(chirp.exportSize>1000);
+  const legacyVoice=await page.evaluate(async()=>{
+    const savedVoice='8cf5ee4cb0224c109852a206f185a05f';
+    AudioEngine.restoreVoice(savedVoice);
+    AudioEngine.voiceListLoaded=false;
+    await AudioEngine.loadVoiceList();
+    const select=document.getElementById('ttsVoiceSelect');
+    return {voice:AudioEngine.ttsVoice,selected:select.value,hidden:select.selectedOptions[0]?.hidden,
+      visible:[...select.options].filter(option=>!option.hidden).map(option=>option.value)};
+  });
+  assert.equal(legacyVoice.selected,legacyVoice.voice);
+  assert.equal(legacyVoice.hidden,true);
+  assert.ok(!legacyVoice.visible.includes(legacyVoice.voice));
 
 
   assert.deepEqual(pageErrors,[]);assert.deepEqual(await page.evaluate(()=>window.__smokeAsyncErrors),[]);

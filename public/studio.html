@@ -1187,9 +1187,9 @@
               <div>
                 <label for="ttsVoiceSelect" class="block text-[12px] text-[#a1a1a6] mb-1">성우 목소리</label>
                 <select id="ttsVoiceSelect" onchange="onAudioConfigChange()" class="studio-input w-full h-9 px-2.5 text-[12px] cursor-pointer">
-                  <option value="4e118bfbb83e401c84699c09b5f08257" selected>성우 1</option>
-                  <option value="8cf5ee4cb0224c109852a206f185a05f">성우 2</option>
-                  <option value="9a50287ddd26414690b538539ad52d61">성우 3</option>
+                  <option value="4e118bfbb83e401c84699c09b5f08257" selected hidden>성우 불러오는 중</option>
+                  <option value="8cf5ee4cb0224c109852a206f185a05f" hidden>저장된 성우</option>
+                  <option value="9a50287ddd26414690b538539ad52d61" hidden>저장된 성우</option>
                   <option value="off">성우 끄기</option>
                 </select>
               </div>
@@ -2141,7 +2141,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117r" title="AutoReels 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261119-chirp-voices"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261119-google-voices"><\/script>');
     }
   </script>
   <!--

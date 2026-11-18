@@ -208,10 +208,9 @@ module.exports = async function handler(req, res) {
   const googleVoices = listGoogleVoices(version);
   if (usesAiry()) {
     res.setHeader('Cache-Control', 'no-store');
-    const airyVoices = listAiryVoices();
-    const voices = version >= 3
-      ? [...googleVoices, ...airyVoices.map((voice) => ({ ...voice, group: 'Airy' }))]
-      : [...airyVoices, ...googleVoices];
+    const voices = version >= 3 && googleVoices.length
+      ? googleVoices
+      : [...listAiryVoices(), ...googleVoices];
     return res.status(200).json({ ok: true, voices });
   }
   const apiKey = (process.env.FISH_API_KEY || '').trim();

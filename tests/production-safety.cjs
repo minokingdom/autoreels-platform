@@ -194,6 +194,14 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  assert.equal(new Set(chirpVoices.map(voice=>voice.id)).size,30);
  assert.equal(catalog.filter(voice=>voice.preferred).length,1);
  assert.equal(catalog[0].id,'ko-KR-Chirp3-HD-Puck');
+ const currentVoiceApi=load('api/tts-voices.js',{...deps,'../lib/airy-tts':airy,'../lib/google-tts':google},airyEnv);
+ const currentList=response();
+ await currentVoiceApi({method:'GET',query:{v:'3'}},currentList);
+ assert.equal(currentList.body.voices.length,34);
+ assert.ok(currentList.body.voices.every(voice=>google.isGoogleVoice(voice.id)));
+ const oldList=response();
+ await currentVoiceApi({method:'GET',query:{v:'2'}},oldList);
+ assert.equal(oldList.body.voices.length,7);
  assert.ok(chirpVoices.every(voice=>google.isGoogleVoice(voice.id) && voice.title && voice.group));
  const chirpRequest = {method:'POST',headers:{host:'app.test'},body:{ref:catalog[0].id,speed:1.1,lines:['4대','1:1 시승','4대']}};
  const chirpResult = response();

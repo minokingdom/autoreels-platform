@@ -525,9 +525,17 @@
         this.ttsVoice = voice;
         const sel = document.getElementById('ttsVoiceSelect');
         if (!sel) return;
-        if (this.isGoogleVoice(voice) && !Array.from(sel.options).some((option) => option.value === voice)) {
-          const label = voice.includes('Chirp3-HD') ? 'Google Chirp 3 HD' : 'Google WaveNet';
-          sel.insertBefore(new Option(label, voice), sel.querySelector('[value="off"]'));
+        if (!Array.from(sel.options).some((option) => option.value === voice)) {
+          if (this.isGoogleVoice(voice)) {
+            const label = voice.includes('Chirp3-HD') ? 'Google Chirp 3 HD' : 'Google WaveNet';
+            sel.add(new Option(label, voice), sel.querySelector('[value="off"]'));
+          } else if (/^[a-f0-9]{16,64}$/i.test(voice)) {
+            // 목록에서 숨긴 성우라도 기존 프로젝트의 선택값은 복원합니다.
+            const saved = new Option('저장된 성우', voice);
+            saved.hidden = true;
+            saved.disabled = true;
+            sel.add(saved, sel.querySelector('[value="off"]'));
+          }
         }
         sel.value = voice;
       },
