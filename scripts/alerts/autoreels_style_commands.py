@@ -7,7 +7,9 @@ from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode
 ROOT=Path(__file__).resolve().parent/'autoreels-style'
 ROOM='380705904900190'
 OWNER='88899591'
-HOSTS={'youtube.com','www.youtube.com','m.youtube.com','youtu.be','www.instagram.com','instagram.com','www.tiktok.com','tiktok.com','vm.tiktok.com','vt.tiktok.com','vimeo.com','www.vimeo.com','www.pinterest.com','pinterest.com','pin.it'}
+CAPCUT_HOSTS={'capcut.com','www.capcut.com'}
+CAPCUT_DETAIL=r'/template-detail/(?:[A-Za-z0-9%_~-]+/)?([0-9]{10,24})/?'
+HOSTS=CAPCUT_HOSTS | {'youtube.com','www.youtube.com','m.youtube.com','youtu.be','www.instagram.com','instagram.com','www.tiktok.com','tiktok.com','vm.tiktok.com','vt.tiktok.com','vimeo.com','www.vimeo.com','www.pinterest.com','pinterest.com','pin.it'}
 
 def extract_url(text):
     if not isinstance(text,str) or len(text)>5000 or not re.match(r'^!분석(?:\s|$)',text.strip()):
@@ -16,7 +18,15 @@ def extract_url(text):
     if len(urls)!=1: raise ValueError('분석할 영상 URL 하나만 붙여 주세요.')
     u=urlsplit(urls[0].rstrip('.,!?)]}〉》”’'))
     if u.scheme!='https' or u.hostname not in HOSTS or u.username or u.password or u.port not in (None,443):
-        raise ValueError('YouTube·Instagram·TikTok·Vimeo·Pinterest의 공개 영상 HTTPS 주소를 보내 주세요.')
+        raise ValueError('공개 YouTube·Instagram·TikTok·Vimeo·Pinterest 영상 또는 CapCut 템플릿 URL을 보내 주세요.')
+    if u.hostname in CAPCUT_HOSTS:
+        detail=re.fullmatch(CAPCUT_DETAIL,u.path)
+        if detail:
+            return 'https://www.capcut.com/template-detail/'+detail[1]
+        share=re.fullmatch(r'/tv2/([A-Za-z0-9]{5,40})/?',u.path)
+        if share:
+            return 'https://www.capcut.com/tv2/'+share[1]+'/'
+        raise ValueError('CapCut 템플릿의 공유 또는 상세 링크를 보내 주세요.')
     if u.hostname in {'youtube.com','www.youtube.com','m.youtube.com','youtu.be'}:
         vid=u.path.strip('/') if u.hostname=='youtu.be' else (u.path.split('/')[2] if u.path.startswith(('/shorts/','/embed/')) else parse_qs(u.query).get('v',[''])[0])
         if not re.fullmatch(r'[A-Za-z0-9_-]{11}',vid): raise ValueError('채널·목록 주소 대신 영상 하나의 주소를 보내 주세요.')
@@ -98,7 +108,8 @@ class Commands:
             row=self.verifier.message(eid)
             if not row or str(row.get('user_id'))!=OWNER or row.get('message')!=msg or str(row.get('type')) not in ('1','26') or row.get('deleted_at') not in (None,'',0,'0') or not -5<=self.clock()-float(row['created_at'])<=120 or not self.verifier.private_room():return True
             try:url=extract_url(msg);error=''
-            except (ValueError,IndexError):url='';error='영상 URL 하나를 !분석 뒤에 붙여 주세요. 공개 YouTube·Instagram·TikTok·Vimeo·Pinterest 영상을 지원합니다.'
+            except ValueError as exc:
+                url='';error=str(exc)
             self.queue.enqueue(eid,url,error)
         except Exception as exc:print('[autoreels-style] receive:',type(exc).__name__,flush=True)
         return True

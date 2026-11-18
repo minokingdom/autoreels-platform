@@ -355,5 +355,26 @@
     "layout": "brush-frame",
     "summary": "종이 질감과 붓선 강조, 거친 가장자리의 작은 사진, 세리프 문장을 조합한 차분한 프레임 구성.",
     "addedAt": "2026-11-18T04:27:37Z"
+  },
+  {
+    "id": "ref_c21df78c2bf98b39",
+    "category": "브이로그",
+    "layout": "stacked",
+    "font": "pretM",
+    "captionPosition": "middle",
+    "textMotion": "fade",
+    "camera": "zoom-in",
+    "transition": "cut",
+    "name": "푸드 클로즈업 콜라주",
+    "summary": "음식 클로즈업과 겹친 흰 테두리 사진에서 착안했습니다. 컷마다 사진 카드가 가볍게 올라오고 메뉴 사진이 천천히 확대됩니다.",
+    "background": "#30271e",
+    "foreground": "#fffdf7",
+    "accent": "#d9a46d",
+    "captionSize": 0.052,
+    "zoom": 0.06,
+    "shade": 0.15,
+    "grain": 0.015,
+    "entrySeconds": 0.28,
+    "addedAt": "2026-11-18T12:09:20.238Z"
   }
 ]
