@@ -1153,10 +1153,10 @@
                 <p id="lyriaBgmStatusText" class="hidden text-[11px] text-[#4cc38a] mt-1"></p>
               </div>
 
-              <div data-advanced>
-                <label for="sfxModeSelect" class="block text-[12px] text-[#a1a1a6] mb-1">효과음 (plinkfx CC0)</label>
+              <div>
+                <label for="sfxModeSelect" class="block text-[12px] text-[#a1a1a6] mb-1">효과음</label>
                 <select id="sfxModeSelect" onchange="setSfxMode(this.value)" class="studio-input w-full h-9 px-2.5 text-[12px] cursor-pointer">
-                  <option value="scene">장면 맞춤 · 자동 믹스 (가격·전환·엔딩)</option>
+                  <option value="scene">장면에 맞게 자동 선택</option>
                   <option value="whoosh">바람 스윕 (Whoosh)</option>
                   <option value="ka-ching">가격 · 혜택 차임 (Ka-ching)</option>
                   <option value="impact">펀치 임팩트 (Impact)</option>
@@ -1168,6 +1168,7 @@
                   <option value="drop">물방울 (Drop)</option>
                   <option value="off">효과음 끄기</option>
                 </select>
+                <p class="text-[11px] text-[#85858b] mt-1">자동 선택은 컷의 문구와 영상 분위기에 맞춰 효과음을 바꿉니다.</p>
               </div>
 
               <div>
@@ -2016,7 +2017,7 @@
       <div class="studio-sub p-4 flex items-center justify-between gap-3">
         <div>
           <div class="text-[13px] font-medium text-[#ededed]">세부 편집 모드</div>
-          <p class="text-[12px] text-[#a1a1a6] mt-0.5">문구 템플릿, 효과음, 컷별 구도</p>
+          <p class="text-[12px] text-[#a1a1a6] mt-0.5">문구 템플릿, 컷별 구도</p>
         </div>
         <button type="button" id="editModeSwitch" role="switch" aria-checked="false" aria-label="세부 편집 모드" onclick="arSetUiMode(document.body.classList.contains('ar-easy') ? 'full' : 'easy', true)" class="edit-mode-switch shrink-0">
           <span class="ems-track"><span class="ems-knob"></span></span>
@@ -2132,7 +2133,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117r" title="AutoReels 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261118-auth-settings"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261118-audio1"><\/script>');
     }
   </script>
   <!--

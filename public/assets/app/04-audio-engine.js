@@ -2,6 +2,28 @@
     // ============================================================================
     // 릴스·숏츠 음원(MP3 불러오기 + 내장 비트) & 한국어 AI 성우(TTS) 엔진
     // ============================================================================
+    const AR_LIBRARY_MUSIC = new Map(AR_AUDIO_LIBRARY.music.map(track => [track.id, track]));
+    const AR_LIBRARY_EFFECTS = new Map(AR_AUDIO_LIBRARY.effects.map(effect => [effect.id, effect]));
+    const AR_EFFECT_FAMILIES = new Map();
+    for (const effect of AR_LIBRARY_EFFECTS.values()) {
+      if (!AR_EFFECT_FAMILIES.has(effect.family)) AR_EFFECT_FAMILIES.set(effect.family, []);
+      AR_EFFECT_FAMILIES.get(effect.family).push(effect.id);
+    }
+
+    function arAutomaticSfx(slot, total, category, caption, mood) {
+      let families;
+      if (slot >= total) families = ['outro'];
+      else if (/만\s?원|\d+\s?%|할인|특가|혜택|\d+원|1\+1|무료|증정/.test(caption)) families = ['deal'];
+      else if (/긴급|필독|주의|놓치면|마감|단\s?\d+일|충격|비교/.test(caption)) families = ['impact'];
+      else if (['타이포', '스포츠', '특가', '테크'].includes(category)) families = ['impact', 'transition', 'click'];
+      else if (['브이로그', '감성', '손글씨', '고급', '매거진'].includes(category)) families = ['texture', 'sparkle', 'camera', 'click'];
+      else if (mood === '신나는') families = ['transition', 'impact', 'click'];
+      else if (['잔잔', '감성', '고급'].includes(mood)) families = ['texture', 'sparkle', 'click'];
+      else families = ['transition', 'click', 'camera', 'sparkle'];
+      const variants = AR_EFFECT_FAMILIES.get(families[slot % families.length]);
+      return variants[Math.floor(slot / families.length) % variants.length];
+    }
+
     const AudioEngine = {
       ctx: null,
       masterGain: null,
@@ -1064,6 +1086,62 @@
       // ---------- 장면 효과음: plinkfx (CC0 274종) + 내장 WebAudio 폴백 ----------
       sfxMode: (() => { try { return localStorage.getItem('autoreels_sfx') || 'scene'; } catch (e) { return 'scene'; } })(),
       lastSfxSlot: -2,
+      lastSfxTime: -1,
+      librarySfx: new Map(),
+      librarySfxLoads: new Map(),
+
+      loadLibrarySfx(id) {
+        if (!this.ctx) return Promise.resolve(null);
+        if (this.librarySfx.has(id)) return Promise.resolve(this.librarySfx.get(id));
+        if (this.librarySfxLoads.has(id)) return this.librarySfxLoads.get(id);
+        const abort = new AbortController();
+        const timeout = setTimeout(() => abort.abort(), 5000);
+        const request = fetch('/assets/sfx/' + id + '.wav', { signal: abort.signal })
+          .then(response => {
+            if (!response.ok) throw new Error('Effect unavailable');
+            return response.arrayBuffer();
+          })
+          .then(data => this.ctx.decodeAudioData(data))
+          .then(buffer => {
+            this.librarySfx.set(id, buffer);
+            return buffer;
+          })
+          .catch(() => null)
+          .finally(() => {
+            clearTimeout(timeout);
+            this.librarySfxLoads.delete(id);
+          });
+        this.librarySfxLoads.set(id, request);
+        return request;
+      },
+
+      selectedSceneSfx(slot, total) {
+        if (AR_LIBRARY_EFFECTS.has(this.sfxMode)) return this.sfxMode;
+        if (this.sfxMode !== 'scene') return null;
+        const caption = (campaign.cutCaptions || [])[slot] || '';
+        const bgm = document.getElementById('bgmStyleSelect')?.value;
+        return arAutomaticSfx(slot, total, getActiveDesign()?.cat, caption, AR_BGM_META[bgm]?.[0]);
+      },
+
+      prepareSceneSfx() {
+        const total = getTargetCutCount();
+        const count = total + (OUTRO_DURATION > 0 ? 1 : 0);
+        const ids = new Set(Array.from({ length: count }, (_, slot) => this.selectedSceneSfx(slot, total)).filter(Boolean));
+        return Promise.all([...ids].map(id => this.loadLibrarySfx(id)));
+      },
+
+      playLibrarySfx(id, when) {
+        const buffer = this.librarySfx.get(id);
+        if (!buffer) return false;
+        const source = this.ctx.createBufferSource();
+        const gain = this.ctx.createGain();
+        source.buffer = buffer;
+        gain.gain.value = 0.38;
+        source.connect(gain);
+        gain.connect(this.sfxOut());
+        source.start(when);
+        return true;
+      },
       plinkfx: null,
       _plinkPromise: null,
       _plinkCache: {},
@@ -1115,7 +1193,19 @@
         if (!mode || mode === 'off') return;
         const ctx = this.ensureContext();
         if (!ctx) return;
+        const total = getTargetCutCount();
+        const time = window.__timelines.main.currentTime;
+        const slot = time < getMainDuration() ? getCutIndexAt(time) : OUTRO_DURATION > 0 ? total : total - 1;
+        const id = this.selectedSceneSfx(slot, total);
+        if (id) {
+          this.prepareSceneSfx();
+          this.loadLibrarySfx(id).then(() => {
+            if (this.sfxMode === mode) this.playSceneSfx(slot, total);
+          });
+          return;
+        }
         const run = () => {
+          if (this.sfxMode !== mode) return;
           const map = {
             'scene': 'pop',
             'whoosh': 'whoosh',
@@ -1250,11 +1340,17 @@
       sfxSparkle(when, gain = 0.08) {
         [1046.5, 1318.5, 1568, 2093].forEach((hz, i) => this.sfxTone(when + i * 0.055, hz, hz, 0.3, gain, 'sine', 0.01));
       },
-      playSceneSfx(t, slot, totalCuts) {
+      playSceneSfx(slot, totalCuts) {
         const when = this.ctx.currentTime + 0.01;
-        if (slot >= totalCuts) {
-          if (this.playPlink('sparkle', { when, gain: 0.34 })) return;
-          return this.sfxSparkle(when);
+        const id = this.selectedSceneSfx(slot, totalCuts);
+        if (id) {
+          if (this.playLibrarySfx(id, when)) return;
+          this.loadLibrarySfx(id);
+          const fallbacks = {
+            transition: 'sfxWhoosh', impact: 'sfxImpact', click: 'sfxTick', sparkle: 'sfxSparkle',
+            camera: 'sfxShutter', deal: 'sfxChime', outro: 'sfxSparkle', texture: 'sfxSwipe'
+          };
+          return this[fallbacks[AR_LIBRARY_EFFECTS.get(id).family]](when);
         }
         if (this.sfxMode === 'whoosh') return this.playPlink('whoosh', { when, gain: 0.36 }) || this.sfxWhoosh(when);
         if (this.sfxMode === 'ka-ching') return this.playPlink('ka-ching', { when, gain: 0.36 }) || this.sfxChime(when);
@@ -1266,47 +1362,23 @@
         if (this.sfxMode === 'tick') return this.playPlink('tick', { when, gain: 0.38 }) || this.sfxTick(when);
         if (this.sfxMode === 'drop') return this.playPlink('water-drop', { when, gain: 0.38 }) || this.sfxDrop(when);
 
-        const ds = typeof getActiveDesign === 'function' ? getActiveDesign() : null;
-        const cat = ds ? (ds.cat || '') : '';
-        const cap = String((campaign.cutCaptions || [])[slot] || '');
-        const ind = typeof getIndustryId === 'function' ? getIndustryId() : (campaign && campaign.industry) || '';
-        if (/만\s?원|\d+\s?%|할인|특가|혜택|\d+원|1\+1|무료|증정/.test(cap)) {
-          if (this.playPlink('ka-ching', { when, gain: 0.36 })) return;
-          this.sfxImpact(when, 0.18);
-          return this.sfxChime(when + 0.1);
-        }
-        if (/긴급|필독|주의|놓치면|마감|단\s?\d+일|충격|비교/.test(cap)) {
-          if (this.playPlink('hit-heavy', { when, gain: 0.34 })) return;
-          return this.sfxImpact(when);
-        }
-        if (ind === 'car' && slot === 0) {
-          if (this.playPlink('engine-rev', { when, gain: 0.28 })) return;
-        }
-        if (['타이포', '스포츠', '특가', '테크'].includes(cat)) {
-          const pool = ['whoosh', 'hit-punch', 'glitch', 'click-hard'];
-          if (this.playPlink(pool[slot % pool.length], { when, gain: 0.34 })) return;
-          return [() => this.sfxImpact(when), () => this.sfxWhoosh(when), () => this.sfxTick(when)][slot % 3]();
-        }
-        if (['브이로그', '감성', '신규', '손글씨', '고급'].includes(cat)) {
-          const pool = ['swipe', 'page-turn', 'pop', 'harp'];
-          if (this.playPlink(pool[slot % pool.length], { when, gain: 0.34 })) return;
-          return [() => this.sfxShutter(when), () => this.sfxWhoosh(when), () => this.sfxSwipe(when)][slot % 3]();
-        }
-        const defPool = ['whoosh', 'pop', 'card-flip', 'plink'];
-        if (this.playPlink(defPool[slot % defPool.length], { when, gain: 0.34 })) return;
-        return [() => this.sfxWhoosh(when), () => this.sfxTick(when), () => this.sfxShutter(when), () => this.sfxPop(when)][slot % 4]();
       },
       handleSceneSfx(t) {
         if (this.sfxMode === 'off' || !this.ctx) return;
         const mainDur = getMainDuration();
         const totalCuts = getTargetCutCount();
-        const slot = t < mainDur ? getCutIndexAt(t) : totalCuts;
-        const dt = t - this.lastTimelineT;
+        const slot = t < mainDur ? getCutIndexAt(t) : OUTRO_DURATION > 0 ? totalCuts : totalCuts - 1;
+        const dt = t - this.lastSfxTime;
+        this.lastSfxTime = t;
         const moving = dt > 0 && dt < 0.6;
         if (slot === this.lastSfxSlot) return;
         this.lastSfxSlot = slot;
         if (!moving && !(t < 0.2 && slot === 0)) return; // 이리저리 넘겨 볼 때는 소리 없이
-        this.playSceneSfx(t, slot, totalCuts);
+        this.playSceneSfx(slot, totalCuts);
+        if (slot + 1 < totalCuts || (slot < totalCuts && OUTRO_DURATION > 0)) {
+          const nextId = this.selectedSceneSfx(slot + 1, totalCuts);
+          if (nextId) this.loadLibrarySfx(nextId);
+        }
       },
 
       syncWithTimeline(t) {
@@ -1417,6 +1489,7 @@
       if (AudioEngine.enabled) {
         const ctx = AudioEngine.ensureContext();
         if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+        AudioEngine.prepareSceneSfx();
         AudioEngine.lastSpokenCut = -1;
         AudioEngine.startBgmLoop();
         AudioEngine.loadVoiceList();
@@ -1553,8 +1626,8 @@
         try { localStorage.setItem('autoreels_bgm_style', pickedBgm); } catch (e) {}
       }
       if (typeof renderBgmRecommendations === 'function') renderBgmRecommendations();
-      if (String(pickedBgm).startsWith('ace_') || AR_BGM_COVER_IDS.has(String(pickedBgm))) {
-        const trackId = String(pickedBgm).replace(/^ace_/, '').replace(/[^a-z0-9_-]/gi, '');
+      const trackId = arBgmPackId(pickedBgm);
+      if (trackId) {
         const optLabel = bgmEl && bgmEl.selectedOptions && bgmEl.selectedOptions[0] ? bgmEl.selectedOptions[0].textContent : trackId;
         AudioEngine.loadRemoteBgmUrl(`/assets/bgm/pack/${trackId}.mp3`, optLabel);
         if (voiceChanged && AudioEngine.enabled) arResetAndRebuildNarration();
@@ -1695,7 +1768,14 @@
       return Array.from(scores.values())
         .sort((a, b) => b.pts - a.pts)
         .slice(0, limit)
-        .map((x) => ({ ...x, label: LABELS[x.id] || x.id }));
+        .flatMap((item, i) => {
+          const result = { ...item, label: LABELS[item.id] || item.id };
+          const variants = AR_BGM_GENRE_TRACKS.get(AR_BGM_RECOMMEND_GENRES[item.id]);
+          if (!variants) return [result];
+          const track = variants[(arBgmRecommendationIndex(text + ind + cat) + i) % variants.length];
+          return [result, { ...item, id: track.id, label: track.name }];
+        })
+        .slice(0, limit);
     }
 
     function applyRecommendedBgm(id) {
@@ -1745,6 +1825,47 @@
       'urban', 'bright', 'luxury', 'lofi', 'vlog',
       'cinema', 'drive', 'edm', 'funk', 'ballad', 'news', 'jazz'
     ]);
+    const AR_BGM_RECOMMEND_GENRES = {
+      ace_showroom: '신스웨이브', showroom: '시티팝', urban: '트랩', bright: '시티팝', luxury: '재즈·보사노바',
+      lofi: '로파이', vlog: '어쿠스틱', cinema: '시네마틱', drive: '신스웨이브', edm: '신스웨이브',
+      funk: '펑크', ballad: '피아노', news: '트랩', jazz: '재즈·보사노바',
+      ace_cafe: '재즈·보사노바', ace_restaurant: '어쿠스틱', ace_beauty: '시티팝',
+      ace_fitness: '트랩', ace_realestate: '시네마틱', ace_academy: '로파이',
+      ace_clinic: '앰비언트', ace_shop: '시티팝', ace_interior: '앰비언트'
+    };
+    const AR_BGM_GENRE_TRACKS = new Map();
+    for (const track of AR_LIBRARY_MUSIC.values()) {
+      AR_BGM_META[track.id] = [track.mood, track.genre, ...track.colors];
+      if (!AR_BGM_GENRE_TRACKS.has(track.genre)) AR_BGM_GENRE_TRACKS.set(track.genre, []);
+      AR_BGM_GENRE_TRACKS.get(track.genre).push(track);
+    }
+
+    function arBgmRecommendationIndex(text) {
+      let hash = 0;
+      for (let i = 0; i < text.length; i++) hash = (Math.imul(hash, 31) + text.charCodeAt(i)) >>> 0;
+      return hash;
+    }
+
+    function arBgmPackId(id) {
+      const packId = String(id || '').replace(/^ace_/, '');
+      return AR_BGM_COVER_IDS.has(packId) || AR_LIBRARY_MUSIC.has(packId) ? packId : '';
+    }
+
+    function arAppendAudioOptions(select, entries, groupKey) {
+      if (!select) return;
+      const groups = new Map();
+      for (const entry of entries) {
+        const label = entry[groupKey];
+        if (!groups.has(label)) {
+          const group = document.createElement('optgroup');
+          group.label = label;
+          select.append(group);
+          groups.set(label, group);
+        }
+        groups.get(label).append(new Option(entry.name, entry.id));
+      }
+    }
+
     function arBgmCover(id, size) {
       const m = AR_BGM_META[id] || ['', '', '#3f3f46', '#18181b'];
       const packId = String(id || '').replace(/^(ace|lyria)_/, '');
@@ -1845,7 +1966,7 @@
       if (!sel) return;
       const same = sel.value === id;
       sel.value = id;
-      const needsLoad = !same || (id !== 'off' && AudioEngine.bgmStyle !== 'custom_mp3' && AR_BGM_COVER_IDS.has(id.replace(/^(ace|lyria)_/, '')));
+      const needsLoad = !same || (id !== 'off' && AudioEngine.bgmStyle !== 'custom_mp3' && arBgmPackId(id));
       if (needsLoad) onAudioConfigChange();
       else if (id !== 'off' && !AudioEngine.enabled) toggleAudioMaster(true);
       else if (id !== 'off' && AudioEngine.bgmStyle === 'custom_mp3' && AudioEngine.customBgmAudioEl && AudioEngine.customBgmAudioEl.paused) {
@@ -1864,6 +1985,13 @@
       window.applyRecommendedBgm = applyRecommendedBgm;
       window.generateKeywordLyriaBgm = generateKeywordLyriaBgm;
       window.addEventListener('DOMContentLoaded', () => {
+        arAppendAudioOptions(document.getElementById('bgmStyleSelect'), AR_LIBRARY_MUSIC.values(), 'genre');
+        const sfx = document.getElementById('sfxModeSelect');
+        arAppendAudioOptions(sfx, AR_LIBRARY_EFFECTS.values(), 'group');
+        if (sfx) {
+          if (![...sfx.options].some(option => option.value === AudioEngine.sfxMode)) AudioEngine.sfxMode = 'scene';
+          sfx.value = AudioEngine.sfxMode;
+        }
         try {
           const savedBgm = localStorage.getItem('autoreels_bgm_style');
           const sel = document.getElementById('bgmStyleSelect');
@@ -1871,8 +1999,8 @@
             sel.value = savedBgm;
             AudioEngine.bgmStyle = savedBgm;
             AudioEngine.userPickedBgm = true;
-            if (savedBgm.startsWith('ace_') || AR_BGM_COVER_IDS.has(savedBgm)) {
-              const trackId = savedBgm.replace(/^ace_/, '').replace(/[^a-z0-9_-]/gi, '');
+            const trackId = arBgmPackId(savedBgm);
+            if (trackId) {
               const optLabel = sel.selectedOptions && sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : trackId;
               AudioEngine.loadRemoteBgmUrl(`/assets/bgm/pack/${trackId}.mp3`, optLabel, false);
             }

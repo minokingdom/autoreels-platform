@@ -16,7 +16,26 @@ export function buildApp(repoRoot) {
   const body = parts.map((f) => `// ===== ${f} =====\n` + fs.readFileSync(path.join(dir, f), 'utf8').replace(/\s+$/, '') + '\n').join('\n');
   const catalog = referenceStyles.validateCatalog(JSON.parse(fs.readFileSync(path.join(repoRoot, 'public/assets/reference-styles.json'), 'utf8')));
   const referenceData = 'const AR_REFERENCE_STYLES = ' + JSON.stringify(catalog) + ';\n';
-  const out = referenceData + `// 자동 생성 파일 — 고치지 마세요. 원본: public/assets/app/NN-*.js (scripts/build-app.mjs)\n` + body;
+  const assets = path.join(repoRoot, 'public/assets');
+  const audio = JSON.parse(fs.readFileSync(path.join(assets, 'audio-library.json'), 'utf8'));
+  const groups = [
+    [audio.music, /^original-[a-z]+-[0-9]{2}$/, 'bgm/pack', '.mp3'],
+    [audio.effects, /^sfx-[a-z]+-[0-9]{2}$/, 'sfx', '.wav']
+  ];
+  for (const [entries, pattern, folder, extension] of groups) {
+    const ids = new Set();
+    for (const { id, name } of entries) {
+      if (!pattern.test(id) || ids.has(id) || typeof name !== 'string' || !name.trim()) {
+        throw new Error('Invalid audio library entry: ' + id);
+      }
+      if (!fs.existsSync(path.join(assets, folder, id + extension))) {
+        throw new Error('Missing audio library asset: ' + id);
+      }
+      ids.add(id);
+    }
+  }
+  const audioData = 'const AR_AUDIO_LIBRARY = ' + JSON.stringify(audio) + ';\n';
+  const out = referenceData + audioData + `// 자동 생성 파일 — 고치지 마세요. 원본: public/assets/app/NN-*.js (scripts/build-app.mjs)\n` + body;
   fs.writeFileSync(path.join(dir, 'app.js'), out);
   const lp = buildLandingIndustries(repoRoot);
   return { parts: parts.length, bytes: Buffer.byteLength(out), landingIndustries: lp };

@@ -375,11 +375,10 @@
     }
     function setSfxMode(v) {
       const allowed = ['scene', 'whoosh', 'ka-ching', 'impact', 'sparkle', 'pop', 'shutter', 'boost', 'tick', 'drop', 'off'];
-      AudioEngine.sfxMode = allowed.includes(v) ? v : 'scene';
+      AudioEngine.sfxMode = allowed.includes(v) || AR_LIBRARY_EFFECTS.has(v) ? v : 'scene';
       try { localStorage.setItem('autoreels_sfx', AudioEngine.sfxMode); } catch (e) {}
       if (AudioEngine.sfxMode !== 'off') AudioEngine.previewSfxMode(AudioEngine.sfxMode);
     }
-    try { const sel = document.getElementById('sfxModeSelect'); if (sel) sel.value = AudioEngine.sfxMode; } catch (e) {}
 
     // 🎲 랜덤 테마: 지금 분류 안에서 다른 디자인 + 다른 색을 무작위로
     function pickRandomTheme(fromDrawer) {
@@ -613,7 +612,7 @@
       if (!mimeType) { arToast('이 브라우저에서 지원하는 영상 저장 형식이 없습니다.'); return; }
       const btn = document.getElementById('exportVideoBtn'), text = document.getElementById('exportBtnText');
       const width = canvas.width, height = canvas.height;
-      const fingerprint = JSON.stringify([campaign.vehicle, campaign.cutCaptions, campaign.ttsLines, campaign.designStyle, campaign.scenePlan, (campaign.uploadedPhotos || []).map(p => p && p.src), AudioEngine.ttsVoice, AudioEngine.bgmStyle, arCardEmpty(), d.name, d.phone, d.branch]);
+      const fingerprint = JSON.stringify([campaign.vehicle, campaign.cutCaptions, campaign.ttsLines, campaign.designStyle, campaign.scenePlan, (campaign.uploadedPhotos || []).map(p => p && p.src), AudioEngine.ttsVoice, AudioEngine.bgmStyle, AudioEngine.bgmStyle === "custom_mp3" ? AudioEngine.customBgmAudioEl?.src : "", AudioEngine.sfxMode, arCardEmpty(), d.name, d.phone, d.branch]);
       let canvasStream, recorder, progressTimer, stopTimer, onVisibility;
       arExportBusy = true;
       if (btn) btn.disabled = true;
@@ -626,6 +625,7 @@
           if (!AudioEngine.enabled) toggleAudioMaster(true);
           const audioContext = AudioEngine.ensureContext();
           await audioContext.resume();
+          const effectsReady = AudioEngine.prepareSceneSfx();
           if (AudioEngine.ttsVoice !== 'off') {
             if (text) text.textContent = '성우 음성 준비 중…';
             let timeout;
@@ -635,6 +635,7 @@
             if (!AudioEngine.masterBuffer || (AudioEngine.masterWantKey && AudioEngine.masterKey !== AudioEngine.masterWantKey)) throw new Error('성우 음성을 만들지 못했습니다. 음성을 다시 준비한 뒤 저장해 주세요.');
           }
           refitDurationToNarration();
+          await effectsReady;
           canvas.width = 1080; canvas.height = 1920;
           window.__exportingVideo = true;
           window.__timelines.main.seek(0);
@@ -657,7 +658,10 @@
             recorder.onstop = () => { if (!stopped) { stopped = true; resolve(new Blob(chunks, { type: cleanMime })); } };
             const started = performance.now();
             recorder.start(200);
+            AudioEngine.lastSfxSlot = -2;
+            AudioEngine.lastSfxTime = -1;
             isPlaying = true;
+            AudioEngine.handleSceneSfx(0);
             if (AudioEngine.ttsVoice !== 'off') AudioEngine.playMasterAt(0);
             AudioEngine.startBgmLoop();
             if (AudioEngine.bgmStyle === 'custom_mp3' && AudioEngine.customBgmAudioEl) {

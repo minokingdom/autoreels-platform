@@ -1,0 +1,1246 @@
+{
+  "music": [
+    {
+      "id": "original-city-01",
+      "name": "네온 골목",
+      "genre": "시티팝",
+      "mood": "신나는",
+      "colors": [
+        "#9d3560",
+        "#391323"
+      ]
+    },
+    {
+      "id": "original-city-02",
+      "name": "야간 버스",
+      "genre": "시티팝",
+      "mood": "신나는",
+      "colors": [
+        "#a43864",
+        "#3d1526"
+      ]
+    },
+    {
+      "id": "original-city-03",
+      "name": "청록 불빛",
+      "genre": "시티팝",
+      "mood": "신나는",
+      "colors": [
+        "#ab3a69",
+        "#411628"
+      ]
+    },
+    {
+      "id": "original-city-04",
+      "name": "바닷가 도로",
+      "genre": "시티팝",
+      "mood": "신나는",
+      "colors": [
+        "#b23d6d",
+        "#46182b"
+      ]
+    },
+    {
+      "id": "original-city-05",
+      "name": "보랏빛 저녁",
+      "genre": "시티팝",
+      "mood": "신나는",
+      "colors": [
+        "#b93f71",
+        "#4a192d"
+      ]
+    },
+    {
+      "id": "original-city-06",
+      "name": "새벽 상점",
+      "genre": "시티팝",
+      "mood": "신나는",
+      "colors": [
+        "#c04176",
+        "#4e1b30"
+      ]
+    },
+    {
+      "id": "original-city-07",
+      "name": "라디오 산책",
+      "genre": "시티팝",
+      "mood": "신나는",
+      "colors": [
+        "#c7447a",
+        "#521c32"
+      ]
+    },
+    {
+      "id": "original-city-08",
+      "name": "창가의 불빛",
+      "genre": "시티팝",
+      "mood": "신나는",
+      "colors": [
+        "#ce467e",
+        "#561d35"
+      ]
+    },
+    {
+      "id": "original-city-09",
+      "name": "주말 드라이브",
+      "genre": "시티팝",
+      "mood": "신나는",
+      "colors": [
+        "#d54983",
+        "#5a1f37"
+      ]
+    },
+    {
+      "id": "original-city-10",
+      "name": "도시의 물결",
+      "genre": "시티팝",
+      "mood": "신나는",
+      "colors": [
+        "#dc4b87",
+        "#5f203a"
+      ]
+    },
+    {
+      "id": "original-groove-01",
+      "name": "노란 신호",
+      "genre": "펑크",
+      "mood": "신나는",
+      "colors": [
+        "#a76326",
+        "#3d240e"
+      ]
+    },
+    {
+      "id": "original-groove-02",
+      "name": "새 운동화",
+      "genre": "펑크",
+      "mood": "신나는",
+      "colors": [
+        "#ae6727",
+        "#41270f"
+      ]
+    },
+    {
+      "id": "original-groove-03",
+      "name": "골목의 리듬",
+      "genre": "펑크",
+      "mood": "신나는",
+      "colors": [
+        "#b66c29",
+        "#452910"
+      ]
+    },
+    {
+      "id": "original-groove-04",
+      "name": "한낮의 스텝",
+      "genre": "펑크",
+      "mood": "신나는",
+      "colors": [
+        "#bd702b",
+        "#4a2c11"
+      ]
+    },
+    {
+      "id": "original-groove-05",
+      "name": "청바지 주머니",
+      "genre": "펑크",
+      "mood": "신나는",
+      "colors": [
+        "#c5752d",
+        "#4e2f12"
+      ]
+    },
+    {
+      "id": "original-groove-06",
+      "name": "두 번째 신호",
+      "genre": "펑크",
+      "mood": "신나는",
+      "colors": [
+        "#cc792e",
+        "#533113"
+      ]
+    },
+    {
+      "id": "original-groove-07",
+      "name": "구름 한 스푼",
+      "genre": "펑크",
+      "mood": "신나는",
+      "colors": [
+        "#d47e30",
+        "#573414"
+      ]
+    },
+    {
+      "id": "original-groove-08",
+      "name": "출근길 베이스",
+      "genre": "펑크",
+      "mood": "신나는",
+      "colors": [
+        "#db8232",
+        "#5c3615"
+      ]
+    },
+    {
+      "id": "original-groove-09",
+      "name": "오렌지 소다",
+      "genre": "펑크",
+      "mood": "신나는",
+      "colors": [
+        "#e38733",
+        "#603916"
+      ]
+    },
+    {
+      "id": "original-groove-10",
+      "name": "작은 축제",
+      "genre": "펑크",
+      "mood": "신나는",
+      "colors": [
+        "#ea8b35",
+        "#653c17"
+      ]
+    },
+    {
+      "id": "original-drive-01",
+      "name": "자정의 하이웨이",
+      "genre": "신스웨이브",
+      "mood": "신나는",
+      "colors": [
+        "#472ba3",
+        "#1a103b"
+      ]
+    },
+    {
+      "id": "original-drive-02",
+      "name": "앞 유리 너머",
+      "genre": "신스웨이브",
+      "mood": "신나는",
+      "colors": [
+        "#4a2daa",
+        "#1c1140"
+      ]
+    },
+    {
+      "id": "original-drive-03",
+      "name": "청록 회로",
+      "genre": "신스웨이브",
+      "mood": "신나는",
+      "colors": [
+        "#4e2fb2",
+        "#1e1244"
+      ]
+    },
+    {
+      "id": "original-drive-04",
+      "name": "붉은 수평선",
+      "genre": "신스웨이브",
+      "mood": "신나는",
+      "colors": [
+        "#5130b9",
+        "#201348"
+      ]
+    },
+    {
+      "id": "original-drive-05",
+      "name": "형광 터널",
+      "genre": "신스웨이브",
+      "mood": "신나는",
+      "colors": [
+        "#5432c0",
+        "#22144d"
+      ]
+    },
+    {
+      "id": "original-drive-06",
+      "name": "멀리서 온 신호",
+      "genre": "신스웨이브",
+      "mood": "신나는",
+      "colors": [
+        "#5734c8",
+        "#231551"
+      ]
+    },
+    {
+      "id": "original-drive-07",
+      "name": "푸른 가속",
+      "genre": "신스웨이브",
+      "mood": "신나는",
+      "colors": [
+        "#5a36cf",
+        "#251655"
+      ]
+    },
+    {
+      "id": "original-drive-08",
+      "name": "열린 도로",
+      "genre": "신스웨이브",
+      "mood": "신나는",
+      "colors": [
+        "#5e38d6",
+        "#27185a"
+      ]
+    },
+    {
+      "id": "original-drive-09",
+      "name": "한밤중 전파",
+      "genre": "신스웨이브",
+      "mood": "신나는",
+      "colors": [
+        "#613ade",
+        "#29195e"
+      ]
+    },
+    {
+      "id": "original-drive-10",
+      "name": "은빛 도심",
+      "genre": "신스웨이브",
+      "mood": "신나는",
+      "colors": [
+        "#643ce5",
+        "#2b1a62"
+      ]
+    },
+    {
+      "id": "original-power-01",
+      "name": "검은 스텝",
+      "genre": "트랩",
+      "mood": "신나는",
+      "colors": [
+        "#9f3730",
+        "#3a1411"
+      ]
+    },
+    {
+      "id": "original-power-02",
+      "name": "철제 계단",
+      "genre": "트랩",
+      "mood": "신나는",
+      "colors": [
+        "#a63932",
+        "#3e1513"
+      ]
+    },
+    {
+      "id": "original-power-03",
+      "name": "낮은 진동",
+      "genre": "트랩",
+      "mood": "신나는",
+      "colors": [
+        "#ad3c34",
+        "#421714"
+      ]
+    },
+    {
+      "id": "original-power-04",
+      "name": "블루 코너",
+      "genre": "트랩",
+      "mood": "신나는",
+      "colors": [
+        "#b43e36",
+        "#461815"
+      ]
+    },
+    {
+      "id": "original-power-05",
+      "name": "빠른 결정",
+      "genre": "트랩",
+      "mood": "신나는",
+      "colors": [
+        "#bb4138",
+        "#4b1a16"
+      ]
+    },
+    {
+      "id": "original-power-06",
+      "name": "회색 거리",
+      "genre": "트랩",
+      "mood": "신나는",
+      "colors": [
+        "#c2433a",
+        "#4f1b18"
+      ]
+    },
+    {
+      "id": "original-power-07",
+      "name": "수직 상승",
+      "genre": "트랩",
+      "mood": "신나는",
+      "colors": [
+        "#ca463d",
+        "#531d19"
+      ]
+    },
+    {
+      "id": "original-power-08",
+      "name": "빛의 교차로",
+      "genre": "트랩",
+      "mood": "신나는",
+      "colors": [
+        "#d1483f",
+        "#571e1a"
+      ]
+    },
+    {
+      "id": "original-power-09",
+      "name": "도시의 압력",
+      "genre": "트랩",
+      "mood": "신나는",
+      "colors": [
+        "#d84b41",
+        "#5c201c"
+      ]
+    },
+    {
+      "id": "original-power-10",
+      "name": "검정과 주황",
+      "genre": "트랩",
+      "mood": "신나는",
+      "colors": [
+        "#df4d43",
+        "#60211d"
+      ]
+    },
+    {
+      "id": "original-lofi-01",
+      "name": "저녁 메모",
+      "genre": "로파이",
+      "mood": "잔잔",
+      "colors": [
+        "#48695f",
+        "#1a2623"
+      ]
+    },
+    {
+      "id": "original-lofi-02",
+      "name": "비 온 뒤 창틀",
+      "genre": "로파이",
+      "mood": "잔잔",
+      "colors": [
+        "#4b6d64",
+        "#1c2925"
+      ]
+    },
+    {
+      "id": "original-lofi-03",
+      "name": "접어 둔 편지",
+      "genre": "로파이",
+      "mood": "잔잔",
+      "colors": [
+        "#4e7268",
+        "#1e2c28"
+      ]
+    },
+    {
+      "id": "original-lofi-04",
+      "name": "첫 페이지",
+      "genre": "로파이",
+      "mood": "잔잔",
+      "colors": [
+        "#52776c",
+        "#202e2a"
+      ]
+    },
+    {
+      "id": "original-lofi-05",
+      "name": "낡은 스피커",
+      "genre": "로파이",
+      "mood": "잔잔",
+      "colors": [
+        "#557b71",
+        "#22312d"
+      ]
+    },
+    {
+      "id": "original-lofi-06",
+      "name": "오늘의 여백",
+      "genre": "로파이",
+      "mood": "잔잔",
+      "colors": [
+        "#588075",
+        "#24342f"
+      ]
+    },
+    {
+      "id": "original-lofi-07",
+      "name": "네모난 구름",
+      "genre": "로파이",
+      "mood": "잔잔",
+      "colors": [
+        "#5b8579",
+        "#263732"
+      ]
+    },
+    {
+      "id": "original-lofi-08",
+      "name": "빈 정류장",
+      "genre": "로파이",
+      "mood": "잔잔",
+      "colors": [
+        "#5f8a7d",
+        "#283a35"
+      ]
+    },
+    {
+      "id": "original-lofi-09",
+      "name": "커튼의 무늬",
+      "genre": "로파이",
+      "mood": "잔잔",
+      "colors": [
+        "#628e82",
+        "#2a3c37"
+      ]
+    },
+    {
+      "id": "original-lofi-10",
+      "name": "책장 사이",
+      "genre": "로파이",
+      "mood": "잔잔",
+      "colors": [
+        "#659386",
+        "#2b3f3a"
+      ]
+    },
+    {
+      "id": "original-acoustic-01",
+      "name": "햇살에 말린 셔츠",
+      "genre": "어쿠스틱",
+      "mood": "감성",
+      "colors": [
+        "#936842",
+        "#352618"
+      ]
+    },
+    {
+      "id": "original-acoustic-02",
+      "name": "흰 찻잔",
+      "genre": "어쿠스틱",
+      "mood": "감성",
+      "colors": [
+        "#996d44",
+        "#39291a"
+      ]
+    },
+    {
+      "id": "original-acoustic-03",
+      "name": "봄 골목",
+      "genre": "어쿠스틱",
+      "mood": "감성",
+      "colors": [
+        "#a07147",
+        "#3d2b1b"
+      ]
+    },
+    {
+      "id": "original-acoustic-04",
+      "name": "작은 화분",
+      "genre": "어쿠스틱",
+      "mood": "감성",
+      "colors": [
+        "#a6764a",
+        "#412e1d"
+      ]
+    },
+    {
+      "id": "original-acoustic-05",
+      "name": "나무 의자",
+      "genre": "어쿠스틱",
+      "mood": "감성",
+      "colors": [
+        "#ad7b4d",
+        "#45311f"
+      ]
+    },
+    {
+      "id": "original-acoustic-06",
+      "name": "느린 자전거",
+      "genre": "어쿠스틱",
+      "mood": "감성",
+      "colors": [
+        "#b47f50",
+        "#493421"
+      ]
+    },
+    {
+      "id": "original-acoustic-07",
+      "name": "창가 식탁",
+      "genre": "어쿠스틱",
+      "mood": "감성",
+      "colors": [
+        "#ba8453",
+        "#4d3622"
+      ]
+    },
+    {
+      "id": "original-acoustic-08",
+      "name": "일요일 아침",
+      "genre": "어쿠스틱",
+      "mood": "감성",
+      "colors": [
+        "#c18956",
+        "#513924"
+      ]
+    },
+    {
+      "id": "original-acoustic-09",
+      "name": "푸른 벤치",
+      "genre": "어쿠스틱",
+      "mood": "감성",
+      "colors": [
+        "#c78d59",
+        "#553c26"
+      ]
+    },
+    {
+      "id": "original-acoustic-10",
+      "name": "돌아오는 길",
+      "genre": "어쿠스틱",
+      "mood": "감성",
+      "colors": [
+        "#ce925c",
+        "#593f28"
+      ]
+    },
+    {
+      "id": "original-piano-01",
+      "name": "늦은 오후",
+      "genre": "피아노",
+      "mood": "감성",
+      "colors": [
+        "#5e4f7a",
+        "#221d2d"
+      ]
+    },
+    {
+      "id": "original-piano-02",
+      "name": "비의 뒷모습",
+      "genre": "피아노",
+      "mood": "감성",
+      "colors": [
+        "#625380",
+        "#251f30"
+      ]
+    },
+    {
+      "id": "original-piano-03",
+      "name": "노란 우산",
+      "genre": "피아노",
+      "mood": "감성",
+      "colors": [
+        "#665685",
+        "#272133"
+      ]
+    },
+    {
+      "id": "original-piano-04",
+      "name": "오래된 앨범",
+      "genre": "피아노",
+      "mood": "감성",
+      "colors": [
+        "#6b5a8b",
+        "#2a2336"
+      ]
+    },
+    {
+      "id": "original-piano-05",
+      "name": "마지막 손편지",
+      "genre": "피아노",
+      "mood": "감성",
+      "colors": [
+        "#6f5d90",
+        "#2c253a"
+      ]
+    },
+    {
+      "id": "original-piano-06",
+      "name": "새벽 첫차",
+      "genre": "피아노",
+      "mood": "감성",
+      "colors": [
+        "#736196",
+        "#2f273d"
+      ]
+    },
+    {
+      "id": "original-piano-07",
+      "name": "천천히 봄",
+      "genre": "피아노",
+      "mood": "감성",
+      "colors": [
+        "#77649b",
+        "#312940"
+      ]
+    },
+    {
+      "id": "original-piano-08",
+      "name": "강가의 약속",
+      "genre": "피아노",
+      "mood": "감성",
+      "colors": [
+        "#7c68a1",
+        "#342c43"
+      ]
+    },
+    {
+      "id": "original-piano-09",
+      "name": "조용한 발자국",
+      "genre": "피아노",
+      "mood": "감성",
+      "colors": [
+        "#806ba6",
+        "#362e47"
+      ]
+    },
+    {
+      "id": "original-piano-10",
+      "name": "구름 뒤 달빛",
+      "genre": "피아노",
+      "mood": "감성",
+      "colors": [
+        "#846fac",
+        "#39304a"
+      ]
+    },
+    {
+      "id": "original-ambient-01",
+      "name": "흰 안개",
+      "genre": "앰비언트",
+      "mood": "잔잔",
+      "colors": [
+        "#2e6973",
+        "#11262a"
+      ]
+    },
+    {
+      "id": "original-ambient-02",
+      "name": "푸른 숨",
+      "genre": "앰비언트",
+      "mood": "잔잔",
+      "colors": [
+        "#306e79",
+        "#12292d"
+      ]
+    },
+    {
+      "id": "original-ambient-03",
+      "name": "창으로 드는 바람",
+      "genre": "앰비언트",
+      "mood": "잔잔",
+      "colors": [
+        "#32737e",
+        "#132c30"
+      ]
+    },
+    {
+      "id": "original-ambient-04",
+      "name": "작은 파도",
+      "genre": "앰비언트",
+      "mood": "잔잔",
+      "colors": [
+        "#357883",
+        "#152f33"
+      ]
+    },
+    {
+      "id": "original-ambient-05",
+      "name": "묽은 새벽",
+      "genre": "앰비언트",
+      "mood": "잔잔",
+      "colors": [
+        "#377c88",
+        "#163236"
+      ]
+    },
+    {
+      "id": "original-ambient-06",
+      "name": "먼 섬",
+      "genre": "앰비언트",
+      "mood": "잔잔",
+      "colors": [
+        "#39818d",
+        "#173439"
+      ]
+    },
+    {
+      "id": "original-ambient-07",
+      "name": "수면 아래",
+      "genre": "앰비언트",
+      "mood": "잔잔",
+      "colors": [
+        "#3b8692",
+        "#18373c"
+      ]
+    },
+    {
+      "id": "original-ambient-08",
+      "name": "맑은 공기",
+      "genre": "앰비언트",
+      "mood": "잔잔",
+      "colors": [
+        "#3d8b98",
+        "#193a40"
+      ]
+    },
+    {
+      "id": "original-ambient-09",
+      "name": "은은한 정원",
+      "genre": "앰비언트",
+      "mood": "잔잔",
+      "colors": [
+        "#3f8f9d",
+        "#1b3d43"
+      ]
+    },
+    {
+      "id": "original-ambient-10",
+      "name": "고요한 빛",
+      "genre": "앰비언트",
+      "mood": "잔잔",
+      "colors": [
+        "#4194a2",
+        "#1c4046"
+      ]
+    },
+    {
+      "id": "original-jazz-01",
+      "name": "커피 한 모금",
+      "genre": "재즈·보사노바",
+      "mood": "고급",
+      "colors": [
+        "#724c2f",
+        "#291c11"
+      ]
+    },
+    {
+      "id": "original-jazz-02",
+      "name": "플랫 화이트",
+      "genre": "재즈·보사노바",
+      "mood": "고급",
+      "colors": [
+        "#775031",
+        "#2c1e12"
+      ]
+    },
+    {
+      "id": "original-jazz-03",
+      "name": "잔잔한 테라스",
+      "genre": "재즈·보사노바",
+      "mood": "고급",
+      "colors": [
+        "#7c5333",
+        "#302014"
+      ]
+    },
+    {
+      "id": "original-jazz-04",
+      "name": "브라운 가죽",
+      "genre": "재즈·보사노바",
+      "mood": "고급",
+      "colors": [
+        "#815635",
+        "#332215"
+      ]
+    },
+    {
+      "id": "original-jazz-05",
+      "name": "창가 자리",
+      "genre": "재즈·보사노바",
+      "mood": "고급",
+      "colors": [
+        "#865a37",
+        "#362416"
+      ]
+    },
+    {
+      "id": "original-jazz-06",
+      "name": "찬 유리잔",
+      "genre": "재즈·보사노바",
+      "mood": "고급",
+      "colors": [
+        "#8c5d3a",
+        "#392617"
+      ]
+    },
+    {
+      "id": "original-jazz-07",
+      "name": "바닐라 오후",
+      "genre": "재즈·보사노바",
+      "mood": "고급",
+      "colors": [
+        "#91613c",
+        "#3c2819"
+      ]
+    },
+    {
+      "id": "original-jazz-08",
+      "name": "골목의 테이블",
+      "genre": "재즈·보사노바",
+      "mood": "고급",
+      "colors": [
+        "#96643e",
+        "#3f2a1a"
+      ]
+    },
+    {
+      "id": "original-jazz-09",
+      "name": "한낮의 보사",
+      "genre": "재즈·보사노바",
+      "mood": "고급",
+      "colors": [
+        "#9b6840",
+        "#422c1b"
+      ]
+    },
+    {
+      "id": "original-jazz-10",
+      "name": "밤의 카운터",
+      "genre": "재즈·보사노바",
+      "mood": "고급",
+      "colors": [
+        "#a06b42",
+        "#452e1c"
+      ]
+    },
+    {
+      "id": "original-cinema-01",
+      "name": "비행 전야",
+      "genre": "시네마틱",
+      "mood": "고급",
+      "colors": [
+        "#495786",
+        "#1a2031"
+      ]
+    },
+    {
+      "id": "original-cinema-02",
+      "name": "해가 뜨는 방향",
+      "genre": "시네마틱",
+      "mood": "고급",
+      "colors": [
+        "#4c5b8c",
+        "#1c2234"
+      ]
+    },
+    {
+      "id": "original-cinema-03",
+      "name": "먼 불빛",
+      "genre": "시네마틱",
+      "mood": "고급",
+      "colors": [
+        "#4f5f92",
+        "#1e2438"
+      ]
+    },
+    {
+      "id": "original-cinema-04",
+      "name": "새로운 길",
+      "genre": "시네마틱",
+      "mood": "고급",
+      "colors": [
+        "#526398",
+        "#20273b"
+      ]
+    },
+    {
+      "id": "original-cinema-05",
+      "name": "커다란 문",
+      "genre": "시네마틱",
+      "mood": "고급",
+      "colors": [
+        "#56669e",
+        "#22293f"
+      ]
+    },
+    {
+      "id": "original-cinema-06",
+      "name": "황금 시간",
+      "genre": "시네마틱",
+      "mood": "고급",
+      "colors": [
+        "#596aa4",
+        "#242b43"
+      ]
+    },
+    {
+      "id": "original-cinema-07",
+      "name": "하늘의 끝",
+      "genre": "시네마틱",
+      "mood": "고급",
+      "colors": [
+        "#5c6eaa",
+        "#262e46"
+      ]
+    },
+    {
+      "id": "original-cinema-08",
+      "name": "낮은 현",
+      "genre": "시네마틱",
+      "mood": "고급",
+      "colors": [
+        "#5f72b0",
+        "#28304a"
+      ]
+    },
+    {
+      "id": "original-cinema-09",
+      "name": "마지막 프레임",
+      "genre": "시네마틱",
+      "mood": "고급",
+      "colors": [
+        "#6376b6",
+        "#2a324d"
+      ]
+    },
+    {
+      "id": "original-cinema-10",
+      "name": "제자리의 별",
+      "genre": "시네마틱",
+      "mood": "고급",
+      "colors": [
+        "#667abc",
+        "#2c3451"
+      ]
+    }
+  ],
+  "effects": [
+    {
+      "id": "sfx-transition-01",
+      "name": "공기 스윕",
+      "family": "transition",
+      "group": "전환"
+    },
+    {
+      "id": "sfx-transition-02",
+      "name": "가벼운 휙",
+      "family": "transition",
+      "group": "전환"
+    },
+    {
+      "id": "sfx-transition-03",
+      "name": "유리 슬라이드",
+      "family": "transition",
+      "group": "전환"
+    },
+    {
+      "id": "sfx-transition-04",
+      "name": "빠른 리버스",
+      "family": "transition",
+      "group": "전환"
+    },
+    {
+      "id": "sfx-transition-05",
+      "name": "섬세한 웨이브",
+      "family": "transition",
+      "group": "전환"
+    },
+    {
+      "id": "sfx-impact-01",
+      "name": "딥 펀치",
+      "family": "impact",
+      "group": "강조"
+    },
+    {
+      "id": "sfx-impact-02",
+      "name": "빠른 팝",
+      "family": "impact",
+      "group": "강조"
+    },
+    {
+      "id": "sfx-impact-03",
+      "name": "소프트 임팩트",
+      "family": "impact",
+      "group": "강조"
+    },
+    {
+      "id": "sfx-impact-04",
+      "name": "낮은 스탬프",
+      "family": "impact",
+      "group": "강조"
+    },
+    {
+      "id": "sfx-impact-05",
+      "name": "스냅 히트",
+      "family": "impact",
+      "group": "강조"
+    },
+    {
+      "id": "sfx-click-01",
+      "name": "소프트 탭",
+      "family": "click",
+      "group": "클릭"
+    },
+    {
+      "id": "sfx-click-02",
+      "name": "마른 틱",
+      "family": "click",
+      "group": "클릭"
+    },
+    {
+      "id": "sfx-click-03",
+      "name": "버튼 팝",
+      "family": "click",
+      "group": "클릭"
+    },
+    {
+      "id": "sfx-click-04",
+      "name": "나무 톡",
+      "family": "click",
+      "group": "클릭"
+    },
+    {
+      "id": "sfx-click-05",
+      "name": "더블 클릭",
+      "family": "click",
+      "group": "클릭"
+    },
+    {
+      "id": "sfx-sparkle-01",
+      "name": "작은 벨",
+      "family": "sparkle",
+      "group": "반짝임"
+    },
+    {
+      "id": "sfx-sparkle-02",
+      "name": "유리 반짝임",
+      "family": "sparkle",
+      "group": "반짝임"
+    },
+    {
+      "id": "sfx-sparkle-03",
+      "name": "실버 차임",
+      "family": "sparkle",
+      "group": "반짝임"
+    },
+    {
+      "id": "sfx-sparkle-04",
+      "name": "일렁이는 별",
+      "family": "sparkle",
+      "group": "반짝임"
+    },
+    {
+      "id": "sfx-sparkle-05",
+      "name": "골드 차임",
+      "family": "sparkle",
+      "group": "반짝임"
+    },
+    {
+      "id": "sfx-camera-01",
+      "name": "클래식 셔터",
+      "family": "camera",
+      "group": "카메라"
+    },
+    {
+      "id": "sfx-camera-02",
+      "name": "포커스 틱",
+      "family": "camera",
+      "group": "카메라"
+    },
+    {
+      "id": "sfx-camera-03",
+      "name": "스냅 셔터",
+      "family": "camera",
+      "group": "카메라"
+    },
+    {
+      "id": "sfx-camera-04",
+      "name": "필름 넘김",
+      "family": "camera",
+      "group": "카메라"
+    },
+    {
+      "id": "sfx-camera-05",
+      "name": "폴라로이드 셔터",
+      "family": "camera",
+      "group": "카메라"
+    },
+    {
+      "id": "sfx-deal-01",
+      "name": "코인 한 닢",
+      "family": "deal",
+      "group": "혜택"
+    },
+    {
+      "id": "sfx-deal-02",
+      "name": "가격 팝",
+      "family": "deal",
+      "group": "혜택"
+    },
+    {
+      "id": "sfx-deal-03",
+      "name": "두 음 알림",
+      "family": "deal",
+      "group": "혜택"
+    },
+    {
+      "id": "sfx-deal-04",
+      "name": "카운터 코인",
+      "family": "deal",
+      "group": "혜택"
+    },
+    {
+      "id": "sfx-deal-05",
+      "name": "할인 벨",
+      "family": "deal",
+      "group": "혜택"
+    },
+    {
+      "id": "sfx-outro-01",
+      "name": "마무리 차임",
+      "family": "outro",
+      "group": "엔딩"
+    },
+    {
+      "id": "sfx-outro-02",
+      "name": "부드러운 종지",
+      "family": "outro",
+      "group": "엔딩"
+    },
+    {
+      "id": "sfx-outro-03",
+      "name": "아웃트로 스윕",
+      "family": "outro",
+      "group": "엔딩"
+    },
+    {
+      "id": "sfx-outro-04",
+      "name": "여운 벨",
+      "family": "outro",
+      "group": "엔딩"
+    },
+    {
+      "id": "sfx-outro-05",
+      "name": "따뜻한 종지",
+      "family": "outro",
+      "group": "엔딩"
+    },
+    {
+      "id": "sfx-texture-01",
+      "name": "종이 스침",
+      "family": "texture",
+      "group": "질감"
+    },
+    {
+      "id": "sfx-texture-02",
+      "name": "천 스윕",
+      "family": "texture",
+      "group": "질감"
+    },
+    {
+      "id": "sfx-texture-03",
+      "name": "연필 탭",
+      "family": "texture",
+      "group": "질감"
+    },
+    {
+      "id": "sfx-texture-04",
+      "name": "브러시",
+      "family": "texture",
+      "group": "질감"
+    },
+    {
+      "id": "sfx-texture-05",
+      "name": "작은 물방울",
+      "family": "texture",
+      "group": "질감"
+    }
+  ]
+}
