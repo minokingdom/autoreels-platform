@@ -17,12 +17,35 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  for(const mode of ['topics','scene-prompts','scene-image','script'])assert.equal(unitOf({method:'POST',body:{mode}}),1);
  assert.equal(unitOf({method:'POST',body:{mode:'scene-images',count:4}}),5);
  assert.equal(unitOf({method:'POST',body:{mode:'scene-images',count:999}}),11);
+ const compConfig={COMP_PRO_USER_IDS:'41, 42',COMP_PRO_PHONES:'010-0000-0023, 010-0000-0024'};
+ const config={readiness:()=>({serverMode:true})};
+ const comp=load('lib/server/comp-pro.js',{'./config':config},compConfig);
+ assert.equal(comp.hasCompProConfig({COMP_PRO_USER_IDS:'42'}),true);
+ assert.equal(comp.isCompPro({id:42,phone:null}),true);
+ assert.equal(comp.isCompPro({id:'420',phone:null}),false);
+ assert.equal(comp.isCompPro({id:'23',phone:'01000000023'}),true);
+ assert.equal(comp.isCompPro({id:'24',phone:'010-0000-0024'}),true);
+ assert.equal(comp.isCompPro({id:'25',phone:'010-0000-0025'}),false);
+ assert.equal(load('lib/server/comp-pro.js',{'./config':{readiness:()=>({serverMode:false})}},compConfig)
+  .isCompPro({id:42,phone:null}),false);
+ const testBilling=load('lib/server/billing.js',{
+  './config':config,'./comp-pro':comp,'./veyon':{},'./plans':{PLANS:{}},
+  './db':{query:async(sql)=>({rows:sql.includes('FROM ar_users')?[{id:42,phone:null}]:[]})}
+ },{COMP_PRO_USER_IDS:'42'});
+ const testSubscription=testBilling.publicSubscription(await testBilling.getSubscription(42));
+ assert.equal(testSubscription.comp,true);
+ assert.equal(testSubscription.plan,'pro');
+ assert.equal(testSubscription.amount,0);
+ await assert.rejects(()=>testBilling.prepareCard({id:42,phone:null},'pro'),{code:'COMP_PRO_ACTIVE'});
  let balances=new Map(),receipts=new Map();
  const key=(s,p)=>s+'|'+p;
  const query=async(sql,p=[])=>{
-  if(sql.includes('FROM ar_users'))return {rows:p[0]==='2'
-   ? [{id:2,session_version:1,created_at:new Date(Date.now()-8*86400000)}]
-   : [{id:1,session_version:1,plan:'standard',status:'active',current_period_end:new Date(Date.now()+86400000)}]};
+  if(sql.includes('FROM ar_users')) {
+   if (p[0]==='42') return {rows:[{id:42,phone:null,session_version:1,created_at:new Date(Date.now()-8*86400000)}]};
+   return {rows:p[0]==='2'
+    ? [{id:2,session_version:1,created_at:new Date(Date.now()-8*86400000)}]
+    : [{id:1,session_version:1,plan:'standard',status:'active',current_period_end:new Date(Date.now()+86400000)}]};
+  }
   if(sql.includes('pg_advisory'))return {rows:[]};
   if(sql.startsWith('SELECT kind, result'))return {rows:receipts.has(key(p[0],p[1]))?[receipts.get(key(p[0],p[1]))]:[]};
   if(sql.startsWith('INSERT INTO ar_usage_requests')){receipts.set(key(p[0],p[1]),{kind:p[2],result:JSON.parse(p[3])});return {rows:[]};}
@@ -35,7 +58,9 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
   throw Error(sql);
  };
  const db={query,tx:async fn=>{const before=new Map(balances),prior=structuredClone(receipts);try{return await fn({query})}catch(e){balances=before;receipts=prior;throw e}}};
- const usage=load('lib/server/usage.js',{'./db':db,'./config':{readiness:()=>({serverMode:true})},'./session':{readSession:req=>req.testSession},'./plans':{FREE_TRIAL_DAYS:7,limits:()=>({standard:{aiScripts:5,ttsChars:10,exportPublishLimit:2}})},'./comp-pro':{effectiveSubscription:(_,s)=>s}},{AI_DAILY_UNIT_CAP:'3',AI_MONTHLY_UNIT_CAP:'3'});
+ const usage=load('lib/server/usage.js',{'./db':db,'./config':{readiness:()=>({serverMode:true})},'./session':{readSession:req=>req.testSession},'./plans':{FREE_TRIAL_DAYS:7,limits:()=>({standard:{aiScripts:5,ttsChars:10,exportPublishLimit:2}})},'./comp-pro':comp},{AI_DAILY_UNIT_CAP:'3',AI_MONTHLY_UNIT_CAP:'3'});
+ assert.equal((await usage.resolveSubject({testSession:{uid:'42',v:1}})).tier,'pro');
+ assert.equal((await usage.resolveSubject({testSession:{uid:'42',v:2}})).kind,'anonymous');
  const guardedMeter = load('lib/server/meter.js', {'./usage':usage});
  const deps = {
    '../lib/server/usage':usage,
