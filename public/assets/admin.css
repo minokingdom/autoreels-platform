@@ -1,8 +1,7 @@
 :root {
-  color-scheme: dark;
-  color: #ededed;
-  background: #0f0f10;
-  font: 15px/1.5 Pretendard, "Apple SD Gothic Neo", system-ui, sans-serif;
+  color: var(--foreground);
+  background: var(--bg-deep);
+  font: var(--astryx-font-size-base)/1.5 var(--brand-font);
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -13,31 +12,32 @@ h1 { font-size: clamp(21px, 4vw, 28px); font-weight: 700; }
 h2 { font-size: 17px; }
 .page-head, .section-head, .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .page-head, .section-head { justify-content: space-between; margin-bottom: 16px; }
-.panel { padding: clamp(12px, 2.5vw, 20px); background: #18181b; border: 1px solid #303034; border-radius: 12px; }
+.panel { padding: clamp(var(--astryx-spacing-3), 2.5vw, var(--astryx-spacing-5)); background: var(--card); border: 1px solid var(--border); border-radius: var(--astryx-radius-container); }
 #adminLogin { display: grid; gap: 10px; max-width: 400px; }
 input, select, button, a {
-  min-height: 40px; padding: 8px 12px; border: 1px solid #3b3b41; border-radius: 8px;
-  background: #232325; color: inherit; font: inherit;
+  min-height: 40px; padding: var(--astryx-spacing-2) var(--astryx-spacing-3); border: 1px solid var(--border); border-radius: var(--astryx-radius-element);
+  background: var(--raised); color: inherit; font: inherit;
 }
 button, a { cursor: pointer; }
 a { text-decoration: none; display: inline-flex; align-items: center; }
 button:disabled { opacity: .45; cursor: default; }
-button:not(:disabled):hover, a:hover { border-color: #92929b; }
-:focus-visible { outline: 2px solid #88b9ff; outline-offset: 2px; }
-.primary { background: #2259a7; border-color: #6799df; }
-#adminMessage { margin-block: 12px; color: #c4c4ca; }
-#adminMessage[data-error] { color: #f9a7a7; }
+button:not(:disabled):hover, a:hover { border-color: var(--border-strong); }
+:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.primary { background: var(--primary); color: var(--primary-foreground); border-color: transparent; font-weight: var(--astryx-font-weight-semibold); }
+#adminMessage { margin-block: var(--astryx-spacing-3); color: var(--secondary-foreground); }
+#adminMessage[data-error] { color: var(--semantic-negative); }
 .summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
-dt, .section-head p { color: #b0b0b8; font-size: 13px; }
+dt, .section-head p { color: var(--secondary-foreground); font-size: 13px; }
 dd { font-size: 24px; font-weight: 700; }
 .table-scroll { overflow-x: auto; }
 table { width: 100%; min-width: 690px; border-collapse: collapse; }
-th, td { text-align: left; vertical-align: top; padding: 10px; border-bottom: 1px solid #303034; }
-th { color: #c4c4ca; font-size: 13px; white-space: nowrap; }
+th, td { text-align: left; vertical-align: top; padding: 10px; border-bottom: 1px solid var(--border); }
+th { color: var(--secondary-foreground); font-size: 13px; white-space: nowrap; }
 td:nth-child(3), td:nth-child(4), td:nth-child(5) { white-space: nowrap; }
 td:last-child { overflow-wrap: anywhere; font-size: 13px; }
-td[data-result="collected"] { color: #6cdda2; }
-td[data-result="failed"], td[data-result="started"] { color: #ffca84; }
+td[data-result="collected"] { color: var(--semantic-positive); }
+td[data-result="failed"] { color: var(--semantic-negative); }
+td[data-result="started"] { color: var(--semantic-warning); }
 .pagination { justify-content: flex-end; margin-top: 14px; }
 .section-navigation, .monitor-panel { margin-bottom: 16px; }
 .monitor-panel { scroll-margin-top: 12px; }
@@ -46,7 +46,7 @@ td[data-result="failed"], td[data-result="started"] { color: #ffca84; }
 .monitor-panel details { margin-top: 12px; }
 .monitor-panel summary { cursor: pointer; font-weight: 600; width: fit-content; }
 .monitor-list { padding: 0; margin: 6px 0 0; list-style: none; }
-.monitor-list > * { padding: 7px 0; border-bottom: 1px solid #303034; overflow-wrap: anywhere; }
+.monitor-list > * { padding: 7px 0; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
 .monitor-list dd { font-size: 14px; font-weight: 400; }
-.muted { color: #c4c4ca; }
+.muted { color: var(--secondary-foreground); }
 @media (max-width: 480px) { .summary dt { min-height: 2lh; } }

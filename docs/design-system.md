@@ -4,11 +4,14 @@
 
 ---
 
-## 1. 스튜디오 UI 디자인 토큰 (`public/assets/app/app.css`)
-- **배경/서피스**: `#0f0f10` (기본 배경), `#141415` / `#18181b` (카드), `#232325` (선택/활성 컨트롤)
-- **텍스트**: `#ededed` (기본), `#a1a1a6` (보조), `#85858b` (캡션·힌트)
-- **포인트 컬러**: `#ededed` (주요 CTA), `#4cc38a` (상태/배지/추천), `#3b82f6` (영상/타임라인 강조)
-- **타이포그래피**: UI `Pretendard`, 수치/코드 `JetBrains Mono`
+## 1. 제품 UI 디자인 토큰
+
+랜딩, 스튜디오, 운영 관리 화면은 `public/assets/design-system.css`의 공통 테마를 사용합니다. Astryx Core/Neutral에서 가져온 색상·글자 크기·여백·모서리 값을 `public/assets/app/astryx-tokens.css`로 제공하고, AutoReels의 배경과 한국어 UI 글꼴은 공통 테마에서 정합니다.
+
+- 기본 배경은 `--background`, 카드와 시트는 `--card`, 입력·보조 조작은 `--raised`를 사용합니다. 일반 텍스트와 보조 텍스트는 각각 `--foreground`, `--secondary-foreground`입니다.
+- 파란색 `--primary`는 주요 조작, `--focus-ring`은 키보드 초점에 사용합니다. 상태 문구에는 `--semantic-positive`, `--semantic-warning`, `--semantic-negative`를 사용합니다.
+- 스튜디오 공통 컴포넌트는 `.studio-card`, `.studio-input`, `.btn-primary`, `.btn-secondary`, `.ar-modal`을 재사용합니다. 단계 탭은 `aria-selected`를 기준으로 표시합니다.
+- Astryx 값을 갱신할 때는 `npm run design:tokens`를 실행하고 `npm run design:tokens -- --check`로 확인합니다. 구성요소 사양은 Node.js 22.13 이상에서 `npm run astryx -- component Button`처럼 조회할 수 있습니다. 페이지는 생성된 CSS를 HTML에서 읽습니다.
 - **경로 규칙**: `/` 첫 방문은 랜딩페이지(`#arLandingView`), 재방문·`/studio`는 제작 화면(`#arStudioShell`).
 
 ---

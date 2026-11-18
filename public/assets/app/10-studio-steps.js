@@ -641,6 +641,7 @@
           key = missing;
         }
       }
+      const changed = document.getElementById(`studioTabBtn_${key}`)?.getAttribute('aria-selected') !== 'true';
       const leavingEnding = key !== 'card' && arEndingTabActive();
       if (leavingEnding) updateCurrentDealerFromPreview();
       arStepsVisited.add(key);
@@ -659,12 +660,7 @@
         const btn = document.getElementById(`studioTabBtn_${k}`);
         const active = k === key;
         if (panel) panel.classList.toggle('hidden', !active);
-        if (btn) {
-          btn.setAttribute('aria-selected', active ? 'true' : 'false');
-          btn.className = active
-            ? 'studio-tab bg-[#232325] text-[#ededed] font-medium'
-            : 'studio-tab text-[#85858b] hover:text-[#ededed] font-normal';
-        }
+        if (btn) btn.setAttribute('aria-selected', String(active));
       });
       // ★ 2026-11-17: 미리보기는 첫 단계(주제)부터 항상 보임 (예전: 사진 탭부터)
       const showPreview = true;
@@ -687,6 +683,7 @@
       arUpdateEasyGuide(key);
       arUpdateMobileStepBar(key);
       arSetupSheetMode();
+      if (changed && arUsesWorkflowSheet() && wfCol) wfCol.scrollTop = 0;
       if (key === 'publish' && !arFinalAudioUnlocked) {
         if (arPreviewPausedForEdit) {
           arFinalAudioUnlocked = true;

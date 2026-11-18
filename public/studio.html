@@ -15,7 +15,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>AutoReels — 누구나 쉽게 만드는 릴스·쇼츠</title>
   <meta name="description" content="사진과 아이디어만 준비하세요. 주제 추천부터 대본, 성우, 영상 제작까지 한 번에." />
-  <meta name="theme-color" content="#0f0f10" />
+  <meta name="theme-color" content="#0e1015" />
   <link rel="canonical" href="https://autoreels-studio.vercel.app/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="website" />
@@ -39,7 +39,9 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Black+Han+Sans&family=Noto+Serif+KR:wght@700;900&family=Do+Hyeon&family=Jua&family=Nanum+Pen+Script&family=Gugi&family=Gaegu:wght@700&family=Hi+Melody&family=East+Sea+Dokdo&family=Single+Day&family=Yeon+Sung&family=Poor+Story&family=Gamja+Flower&family=Nanum+Brush+Script&family=Gasoek+One&family=Bagel+Fat+One&family=Song+Myung&family=Black+And+White+Picture&family=Dongle:wght@700&family=Great+Vibes&family=Pinyon+Script&display=swap" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261118-auth-settings" />
+  <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
+  <link rel="stylesheet" href="/assets/design-system.css?v=1" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-astryx" />
   <link rel="stylesheet" href="/assets/app/splash.css" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -279,14 +281,14 @@
     </div>
 
     <!-- 상단 헤더 (카마스터 로그인 상태 · 정기구독 결제 · 카마스터/관리자 모드 스위치 탑재) -->
-    <header class="studio-card px-5 py-3.5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+    <header class="studio-card studio-topbar px-5 py-3.5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
       <div class="flex items-center justify-between gap-3 w-full xl:w-auto">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-[8px] bg-[#232325] border border-[var(--border-strong)] flex items-center justify-center font-mono text-xs font-medium text-[#ededed] shrink-0">
+          <div class="studio-brand-mark w-8 h-8 flex items-center justify-center text-xs shrink-0">
             AR
           </div>
           <div class="flex items-baseline gap-2.5 flex-wrap">
-            <h1 class="text-[16px] font-medium text-[#ededed] leading-none">
+            <h1 class="studio-brand-name leading-none">
               AutoReels
             </h1>
             <button type="button" onclick="openLandingView()" class="text-[11px] text-[#85858b] hover:text-[#ededed] underline underline-offset-2 cursor-pointer">소개</button>
@@ -686,31 +688,31 @@
           <!-- 단계 탭 바 (스크롤해도 상단에 고정) -->
           <div class="sticky top-0 z-20 bg-[var(--card)] px-5 sm:px-6 pt-4 pb-3 border-b border-[var(--border)] rounded-t-[16px]">
             <div role="tablist" aria-label="영상 제작 단계" class="studio-tablist">
-            <button type="button" role="tab" id="studioTabBtn_topic" aria-controls="studioPanel_topic" aria-selected="true" onclick="switchStudioTab('topic')" class="studio-tab bg-[#232325] text-[#ededed] font-medium">
-              <span class="font-mono text-[11px] text-[#85858b]">1</span> 주제
+            <button type="button" role="tab" id="studioTabBtn_topic" aria-controls="studioPanel_topic" aria-selected="true" onclick="switchStudioTab('topic')" class="studio-tab">
+              <span class="font-mono" aria-hidden="true">1</span> 주제
             </button>
-            <button type="button" role="tab" id="studioTabBtn_script" aria-controls="studioPanel_script" aria-selected="false" onclick="switchStudioTab('script')" class="studio-tab text-[#85858b] hover:text-[#ededed] font-normal">
-              <span class="font-mono text-[11px] text-[#85858b]">2</span> 대본
+            <button type="button" role="tab" id="studioTabBtn_script" aria-controls="studioPanel_script" aria-selected="false" onclick="switchStudioTab('script')" class="studio-tab">
+              <span class="font-mono" aria-hidden="true">2</span> 대본
             </button>
-            <button type="button" role="tab" id="studioTabBtn_photo" aria-controls="studioPanel_photo" aria-selected="false" onclick="switchStudioTab('photo')" class="studio-tab text-[#85858b] hover:text-[#ededed] font-normal">
-              <span class="font-mono text-[11px] text-[#85858b]">3</span> 사진
+            <button type="button" role="tab" id="studioTabBtn_photo" aria-controls="studioPanel_photo" aria-selected="false" onclick="switchStudioTab('photo')" class="studio-tab">
+              <span class="font-mono" aria-hidden="true">3</span> 사진
             </button>
-            <button type="button" role="tab" id="studioTabBtn_sound" aria-controls="studioPanel_sound" aria-selected="false" onclick="switchStudioTab('sound')" class="studio-tab text-[#85858b] hover:text-[#ededed] font-normal">
-              <span class="font-mono text-[11px] text-[#85858b]">4</span> 사운드
+            <button type="button" role="tab" id="studioTabBtn_sound" aria-controls="studioPanel_sound" aria-selected="false" onclick="switchStudioTab('sound')" class="studio-tab">
+              <span class="font-mono" aria-hidden="true">4</span> 사운드
             </button>
-            <button type="button" role="tab" id="studioTabBtn_card" aria-controls="studioPanel_card" aria-selected="false" onclick="switchStudioTab('card')" class="studio-tab text-[#85858b] hover:text-[#ededed] font-normal">
-              <span class="font-mono text-[11px] text-[#85858b]">5</span> 엔딩
+            <button type="button" role="tab" id="studioTabBtn_card" aria-controls="studioPanel_card" aria-selected="false" onclick="switchStudioTab('card')" class="studio-tab">
+              <span class="font-mono" aria-hidden="true">5</span> 엔딩
             </button>
-            <button type="button" role="tab" id="studioTabBtn_publish" aria-controls="studioPanel_publish" aria-selected="false" onclick="switchStudioTab('publish')" class="studio-tab text-[#85858b] hover:text-[#ededed] font-normal">
-              <span class="font-mono text-[11px] text-[#85858b]">6</span> 발행
+            <button type="button" role="tab" id="studioTabBtn_publish" aria-controls="studioPanel_publish" aria-selected="false" onclick="switchStudioTab('publish')" class="studio-tab">
+              <span class="font-mono" aria-hidden="true">6</span> 발행
             </button>
             </div>
           </div>
 
         <!-- 단계 안내: 탭을 바꾸면 문구가 바뀜 -->
-        <div id="easyStepGuide" class="mx-5 sm:mx-6 mt-4 px-4 py-3 rounded-[10px] bg-[#12201a] border border-[#4cc38a]/30" aria-live="polite">
-          <div class="text-[12px] text-[#4cc38a] font-semibold"><span id="easyStepCount">1 / 6</span> · <span id="easyStepTitle">오늘의 주제</span></div>
-          <p id="easyStepText" class="text-[14px] text-[#ededed] mt-1 leading-relaxed"></p>
+        <div id="easyStepGuide" class="mx-5 sm:mx-6 mt-4 studio-step-guide" aria-live="polite">
+          <div class="studio-step-label"><span id="easyStepCount">1 / 6</span> · <span id="easyStepTitle">오늘의 주제</span></div>
+          <p id="easyStepText" class="studio-step-text"></p>
         </div>
         <!-- ★ 1단계 · 오늘의 주제: 요일·계절·다가오는 날·인기 키워드로 오늘 올릴 주제 후보를 보여 주고, 고르면 AI 대본을 바로 만듦 -->
         <div id="studioPanel_topic" role="tabpanel" aria-labelledby="studioTabBtn_topic" class="studio-panel p-5 sm:p-6 space-y-4">

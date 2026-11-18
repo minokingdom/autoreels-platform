@@ -1,0 +1,20 @@
+/* Astryx Neutral 토큰에 연결한 AutoReels 공통 테마. */
+:root {
+  color-scheme: dark;
+  --bg-deep: #0e1015;
+  --background: color-mix(in srgb, var(--astryx-color-background-body) 48%, var(--bg-deep));
+  --card: color-mix(in srgb, var(--astryx-color-background-card) 94%, var(--astryx-color-info));
+  --raised: color-mix(in srgb, var(--astryx-color-background-surface) 92%, var(--astryx-color-info));
+  --border: var(--astryx-color-border);
+  --border-strong: var(--astryx-color-border-emphasized);
+  --foreground: var(--astryx-color-text-primary);
+  --secondary-foreground: var(--astryx-color-text-secondary);
+  --muted-foreground: color-mix(in srgb, var(--secondary-foreground) 94%, var(--foreground));
+  --primary: var(--astryx-color-text-info);
+  --primary-foreground: var(--astryx-color-on-info);
+  --semantic-positive: var(--astryx-color-text-success);
+  --semantic-warning: var(--astryx-color-text-warning);
+  --semantic-negative: var(--astryx-color-text-error);
+  --focus-ring: var(--astryx-color-info);
+  --brand-font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}

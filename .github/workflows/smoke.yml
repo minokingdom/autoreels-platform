@@ -4,9 +4,9 @@ name: smoke
 on:
   push:
     branches: [main]
-    paths: ['public/**', 'tests/**', 'scripts/build-app.mjs', 'scripts/refresh-trends.mjs', 'scripts/trend-youtube.mjs', 'scripts/alerts/**', 'api/**', 'lib/**', '.github/workflows/smoke.yml']
+    paths: ['public/**', 'tests/**', 'scripts/build-app.mjs', 'scripts/build-studio-tokens.mjs', 'scripts/refresh-trends.mjs', 'scripts/trend-youtube.mjs', 'scripts/alerts/**', 'api/**', 'lib/**', 'package*.json', '.github/workflows/smoke.yml']
   pull_request:
-    paths: ['public/**', 'tests/**', 'scripts/build-app.mjs', 'scripts/refresh-trends.mjs', 'scripts/trend-youtube.mjs', 'scripts/alerts/**', 'api/**', 'lib/**', '.github/workflows/smoke.yml']
+    paths: ['public/**', 'tests/**', 'scripts/build-app.mjs', 'scripts/build-studio-tokens.mjs', 'scripts/refresh-trends.mjs', 'scripts/trend-youtube.mjs', 'scripts/alerts/**', 'api/**', 'lib/**', 'package*.json', '.github/workflows/smoke.yml']
   workflow_dispatch:
 
 jobs:
@@ -32,6 +32,8 @@ jobs:
         run: |
           npm i --no-save playwright@1.48.2 @electric-sql/pglite@0.3.14
           npx playwright install --with-deps chromium
+      - name: Verify Astryx design tokens
+        run: npm run design:tokens -- --check
       - name: Narration follows voice timing
         run: |
           node tests/narration-continuity.mjs

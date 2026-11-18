@@ -3,21 +3,20 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #141415;
-  --card: #19191b;
-  --raised: #232325;
-  --border: rgba(237, 237, 237, 0.08);
-  --border-strong: rgba(237, 237, 237, 0.14);
-  --foreground: #ededed;
-}
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: var(--brand-font);
   word-break: keep-all;
   font-variant-numeric: tabular-nums;
 }
 .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-.studio-card { background-color: var(--card); border: 1px solid var(--border); border-radius: 16px; }
+.studio-card { background-color: var(--card); border: 1px solid var(--border); border-radius: var(--astryx-radius-container); }
+.landing-mark, .landing-primary, .landing-secondary { border: 1px solid transparent; border-radius: var(--astryx-radius-element); font-weight: var(--astryx-font-weight-semibold); }
+.landing-mark { background: var(--raised); color: var(--primary); border-color: var(--border-strong); }
+.landing-primary { background: var(--primary); color: var(--primary-foreground); cursor: pointer; }
+.landing-primary:hover { background: color-mix(in srgb, var(--primary) 82%, var(--foreground)); }
+.landing-secondary { background: var(--raised); color: var(--foreground); border-color: var(--border); }
+.landing-secondary:hover { border-color: var(--border-strong); }
+:where(a, button):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 html { scroll-behavior: smooth; }

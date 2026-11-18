@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AutoReels — 누구나 쉽게 만드는 릴스·쇼츠</title>
   <meta name="description" content="사진과 아이디어만 준비하세요. 주제 추천부터 대본, 성우, 영상 제작까지 한 번에." />
-  <meta name="theme-color" content="#141415" />
+  <meta name="theme-color" content="#0e1015" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="AutoReels" />
@@ -33,7 +33,9 @@
   </script>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
-  <link rel="stylesheet" href="/assets/landing/landing.css" />
+  <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
+  <link rel="stylesheet" href="/assets/design-system.css?v=1" />
+  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261119-astryx" />
 </head>
 <body class="antialiased px-4 py-6 md:px-8 md:py-8">
   <!-- 랜딩 페이지 (/) — 제작 화면 코드·글꼴을 받지 않아 바로 뜸. 스타일: tailwind 로 미리 만든 landing.css (npm run build:landing-css) -->
@@ -41,7 +43,7 @@
     <!-- 랜딩 상단 네비게이션 -->
     <nav class="flex items-center justify-between gap-4 py-2 border-b border-[var(--border)]">
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-[8px] bg-[#232325] border border-[var(--border-strong)] flex items-center justify-center font-mono text-xs font-semibold text-[#ededed]">AR</div>
+        <div class="w-8 h-8 landing-mark flex items-center justify-center text-xs">AR</div>
         <span class="text-[16px] font-semibold text-[#ededed] tracking-tight">AutoReels</span>
         <span class="hidden sm:inline-block px-2 py-0.5 rounded-full bg-[#18181b] border border-[var(--border)] text-[11px] text-[#a1a1a6]">10개 업종 릴스·쇼츠 스튜디오</span>
       </div>
@@ -49,7 +51,7 @@
         <a href="#arLandingIndustries" class="hidden sm:inline-block px-2.5 py-1.5 text-[#a1a1a6] hover:text-[#ededed] transition-colors">업종별 예시</a>
         <a href="#arLandingFeatures" class="hidden sm:inline-block px-2.5 py-1.5 text-[#a1a1a6] hover:text-[#ededed] transition-colors">주요 기능</a>
         <a href="#arLandingPricing" class="px-2.5 py-1.5 text-[#a1a1a6] hover:text-[#ededed] transition-colors">요금제</a>
-        <button type="button" data-go="/studio" class="h-9 px-4 rounded-[8px] bg-[#ededed] hover:bg-white text-[#0f0f10] text-[13px] font-semibold cursor-pointer transition-colors">스튜디오 열기</button>
+        <button type="button" data-go="/studio" class="landing-primary h-9 px-4 text-[13px]">스튜디오 열기</button>
       </div>
     </nav>
 
@@ -67,10 +69,10 @@
           오늘의 인기 주제 추천부터 구어체 AI 대본, 감성 모션 디자인, 자연스러운 AI 성우, 매장 정보·로고 엔딩까지 한 화면에서 바로 만들고 9:16 MP4로 저장하세요.
         </p>
         <div class="flex flex-wrap items-center gap-3 pt-1">
-          <button type="button" data-go="/studio" class="h-11 px-6 rounded-[10px] bg-[#ededed] hover:bg-white text-[#0f0f10] text-[14px] font-semibold cursor-pointer transition-colors">
+          <button type="button" data-go="/studio" class="landing-primary h-11 px-6 text-[14px]">
             무료로 릴스 만들기 →
           </button>
-          <a href="#arLandingPricing" class="h-11 px-5 rounded-[10px] bg-[#18181b] hover:bg-[#232325] border border-[var(--border-strong)] text-[#ededed] text-[14px] font-medium flex items-center transition-colors">
+          <a href="#arLandingPricing" class="landing-secondary h-11 px-5 text-[14px] flex items-center">
             요금제 보기
           </a>
         </div>
@@ -181,7 +183,7 @@
               <li>• 워터마크 포함 영상 미리보기</li>
             </ul>
           </div>
-          <button type="button" data-go="/studio" class="w-full h-9 rounded-[8px] bg-[#232325] hover:bg-[#2e2e32] border border-[var(--border-strong)] text-[12px] font-medium text-[#ededed] cursor-pointer">무료로 시작하기</button>
+          <button type="button" data-go="/studio" class="landing-secondary w-full h-9 text-[12px] cursor-pointer">무료로 시작하기</button>
         </div>
         <div class="studio-card p-5 flex flex-col justify-between space-y-4">
           <div class="space-y-2.5">
@@ -193,7 +195,7 @@
               <li>• 워터마크 제거 · 9:16 고화질 MP4</li>
             </ul>
           </div>
-          <button type="button" data-go="/studio?plan=standard_29900" class="w-full h-9 rounded-[8px] bg-[#232325] hover:bg-[#2e2e32] border border-[var(--border-strong)] text-[12px] font-medium text-[#ededed] cursor-pointer">스탠다드 시작하기</button>
+          <button type="button" data-go="/studio?plan=standard_29900" class="landing-secondary w-full h-9 text-[12px] cursor-pointer">스탠다드 시작하기</button>
         </div>
         <div class="studio-card p-5 flex flex-col justify-between space-y-4 border-[#ededed]/40 bg-[#18181b]">
           <div class="space-y-2.5">
@@ -208,7 +210,7 @@
               <li>• 연결한 SNS에 영상 업로드</li>
             </ul>
           </div>
-          <button type="button" data-go="/studio?plan=pro_59000" class="w-full h-9 rounded-[8px] bg-[#ededed] hover:bg-white text-[#0f0f10] text-[12px] font-semibold cursor-pointer">프로 무제한 시작하기</button>
+          <button type="button" data-go="/studio?plan=pro_59000" class="landing-primary w-full h-9 text-[12px]">프로 무제한 시작하기</button>
         </div>
       </div>
     </div>

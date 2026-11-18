@@ -5,6 +5,8 @@
   "main": "server.js",
   "scripts": {
     "build": "node scripts/build-app.mjs",
+    "astryx": "node node_modules/@astryxdesign/cli/clients/cli/bin/astryx.mjs",
+    "design:tokens": "node scripts/build-studio-tokens.mjs",
     "start": "node scripts/build-app.mjs && node server.js",
     "build:landing-css": "npx -y tailwindcss@3.4.17 -c tailwind.landing.config.cjs -i public/assets/landing/tailwind.input.css -o public/assets/landing/landing.css --minify"
   },
@@ -19,5 +21,10 @@
   "dependencies": {
     "@vercel/blob": "^2.9.0",
     "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@astryxdesign/cli": "0.7.16",
+    "@astryxdesign/core": "0.7.16",
+    "@astryxdesign/theme-neutral": "0.7.16"
   }
 }
