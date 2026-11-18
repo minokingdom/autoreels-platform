@@ -484,6 +484,18 @@
       if (IND.key !== 'auto') return applyIndustryPreset(key);
       const p = presets[key];
       if (!p) return;
+      if (p.modelOnly) {
+        if (p.vehicle === campaign.vehicle) return;
+        // 다른 차량에 이전 차량의 할인이나 출고 조건이 붙지 않게 합니다.
+        campaign.presetKey = key;
+        delete campaign.priceTag;
+        delete campaign.priceLine;
+        document.getElementById('inputVehicle').value = p.vehicle;
+        document.getElementById('inputDiscountNum').value = 0;
+        document.getElementById('inputDiscount').value = '';
+        updateCampaignFromInputs();
+        return;
+      }
       const d = getSelectedDealer();
       delete campaign.priceTag;
       delete campaign.priceLine;

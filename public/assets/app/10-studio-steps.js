@@ -341,6 +341,7 @@
     // 주제 선택 → 대본 탭으로 이동해 그 주제로 AI 대본을 바로 만듦
     // ★ 내 상품 시트 (주제·대본 탭의 '내 상품' 한 줄) — 상품을 먼저 정해 두면 대본이 처음부터 맞게 나옴
     let arProductSnap = '';
+    let arProductOriginalVehicle = '';
     function arProductKey() {
       return ['inputVehicle', 'inputDiscountNum', 'inputDiscount'].map((id) => (document.getElementById(id) || {}).value || '').join('|');
     }
@@ -361,9 +362,9 @@
     }
     function arSyncProductPreset() {
       const select = document.getElementById('presetSelect');
-      // 차종과 혜택이 모두 일치할 때만 해당 예시를 선택된 상태로 표시합니다.
       const match = Object.entries(arPresetsForIndustry()).find(([, item]) =>
-        item.vehicle === campaign.vehicle && (item.discountNum || 0) === campaign.discountNum && item.discount === campaign.discount
+        item.vehicle === campaign.vehicle &&
+        (item.modelOnly || ((item.discountNum || 0) === campaign.discountNum && item.discount === campaign.discount))
       );
       const key = match?.[0] || '';
       if (select.value !== key) {
@@ -394,6 +395,7 @@
       if (!el) return;
       arWatchEditSheet(el);
       arProductSnap = arProductKey();
+      arProductOriginalVehicle = campaign.vehicle;
       el.classList.remove('hidden');
       el.style.display = 'flex';
       arSyncProductPreset();
@@ -405,8 +407,10 @@
       el.classList.add('hidden');
       el.style.display = 'none';
       arSyncProductRows();
-      // 주제를 고른 뒤 상품을 바꿨으면, 바뀐 상품으로 대본을 다시 씀 (상품과 대본이 어긋나지 않게)
-      if (arCanUseAi() && arProductKey() !== arProductSnap && window.arTodayTopic && typeof generateStoryboardFromPrompt === 'function') {
+      // 차종만 고르는 예시는 이전 주제의 차종·혜택으로 다시 생성하지 않습니다.
+      const example = IND.key === 'auto' ? presets[campaign.presetKey] : null;
+      const pickedModel = example?.modelOnly && example.vehicle === campaign.vehicle && arProductOriginalVehicle !== campaign.vehicle;
+      if (!pickedModel && arCanUseAi() && arProductKey() !== arProductSnap && window.arTodayTopic && typeof generateStoryboardFromPrompt === 'function') {
         if (typeof arToast === 'function') arToast('바뀐 상품으로 대본을 다시 써요.');
         generateStoryboardFromPrompt();
       }

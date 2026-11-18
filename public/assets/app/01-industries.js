@@ -442,6 +442,9 @@
       if (AR_AUTO_PRESET_OPTIONS == null) AR_AUTO_PRESET_OPTIONS = sel.innerHTML;
       if (IND.key === 'auto') {
         sel.innerHTML = AR_AUTO_PRESET_OPTIONS;
+        for (const [key, preset] of Object.entries(presets)) {
+          if (preset.modelOnly) sel.add(new Option(preset.vehicle, key));
+        }
       } else {
         const list = AR_INDUSTRY_PRESETS[IND.key] || {};
         sel.innerHTML = Object.keys(list).map((k) => `<option value="${k}">${escapeHtmlInd(list[k].vehicle)} (${escapeHtmlInd(list[k].priceTag || '')})</option>`).join('');
@@ -1175,20 +1178,37 @@
         bgGradient: ['#060b19', '#1e293b'],
         neonColor: '#38bdf8'
       },
-      bmw5: {
-        make: 'BMW',
-        hook: 'BMW 5시리즈 할인 실화? 재고 딱 3대!',
-        vehicle: 'BMW 520i M Sport 패키지',
-        discountNum: 1150,
-        discount: '월 59만원대 · 즉시출고 가능',
-        bullets: [
-          '✔ 11월 입항 물량 한정 추가 프로모션 적용',
-          '✔ 운용리스·장기렌트 최저 금리 비교 견적',
-          '✔ 공식 전시장 출고 + 평생 소모품 케어 안내'
-        ],
-        bgGradient: ['#050811', '#0f172a'],
-        neonColor: '#60a5fa'
-      },
+      // BMW 코리아 2026년 11월 가격표에서 확인한 대표 모델. 실제 판매 조건은 별도로 입력합니다.
+      ...Object.fromEntries(Object.entries({
+        bmw_i4_edrive40: 'BMW i4 eDrive40',
+        bmw_i4_m60: 'BMW i4 M60 xDrive',
+        bmw_i5_edrive40: 'BMW i5 eDrive40',
+        bmw_i7_50: 'BMW i7 50 xDrive',
+        bmw_ix1_edrive20: 'BMW iX1 eDrive20',
+        bmw_ix2_edrive20: 'BMW iX2 eDrive20',
+        bmw_ix3_50: 'BMW iX3 50 xDrive',
+        bmw_ix45: 'BMW iX xDrive45',
+        bmw_220: 'BMW 220 그란 쿠페',
+        bmw_320i: 'BMW 320i',
+        bmw_420i: 'BMW 420i 그란 쿠페',
+        bmw_520i: 'BMW 520i',
+        bmw5: 'BMW 520i M Sport 패키지',
+        bmw_530i: 'BMW 530i xDrive',
+        bmw_530e: 'BMW 530e',
+        bmw_740: 'BMW 740 xDrive',
+        bmw_x1_20i: 'BMW X1 xDrive20i',
+        bmw_x2_20i: 'BMW X2 xDrive20i',
+        bmw_x3_20: 'BMW X3 20 xDrive',
+        bmw_x4_20i: 'BMW X4 xDrive20i',
+        bmw_x5_40i: 'BMW X5 xDrive40i',
+        bmw_x5_50e: 'BMW X5 xDrive50e',
+        bmw_x6_40i: 'BMW X6 xDrive40i',
+        bmw_x7_40i: 'BMW X7 xDrive40i',
+        bmw_m3: 'BMW M3 컴페티션 M xDrive',
+        bmw_m4: 'BMW M4 컴페티션 M xDrive',
+        bmw_m5: 'BMW M5',
+        bmw_z4_m40i: 'BMW Z4 M40i'
+      }).map(([key, vehicle]) => [key, { vehicle, make: 'BMW', modelOnly: true }])),
       gv80: {
         make: '제네시스',
         hook: '대표님들이 가장 많이 찾는 GV80 비밀 조건',
