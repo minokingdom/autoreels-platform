@@ -185,13 +185,19 @@
       const curTopic = window.arTodayTopic && window.arTodayTopic.title;
       const indKey = typeof IND !== 'undefined' && IND.key ? IND.key : 'auto';
       box.innerHTML = topics.slice(from, from + AR_TOPICS_PER_PAGE).map((t, k) => ({ t, i: from + k })).map(({ t, i }) => {
-        const imgSrc = t.iconUrl || (arIndustrySpecialty() ? '' : arPickFallbackTopicPhoto(indKey, i));
+        const fallback = `/assets/topics/${indKey}/${(i % 10) + 1}.jpg`;
+        const imgSrc = t.iconUrl || fallback;
         return `
         <button type="button" data-topic-idx="${i}" class="bgm-row topic-row ${curTopic === t.title ? 'on' : ''}">
-          <span class="bgm-cover overflow-hidden" style="width:52px;height:52px;background:#1c1c1e">${imgSrc ? `<img src="${esc(imgSrc)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit" />` : `<span aria-hidden="true">${esc(IND.icon)}</span>`}</span>
+          <span class="bgm-cover overflow-hidden" style="width:52px;height:52px;background:#1c1c1e"><img src="${esc(imgSrc)}" data-fallback="${esc(fallback)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit" /></span>
           <span class="bgm-row-txt"><strong>${esc(t.title)}</strong><small><b>${esc(t.why)}</b>${t.prompt ? ' · ' + esc(t.prompt) : ''}</small></span>
           <span class="bgm-row-state">${curTopic === t.title ? '✓' : '›'}</span>        </button>`;
       }).join('') + pager;
+      box.querySelectorAll('img[data-fallback]').forEach(img => {
+        img.addEventListener('error', () => {
+          if (img.getAttribute('src') !== img.dataset.fallback) img.src = img.dataset.fallback;
+        }, { once: true });
+      });
       arSyncProductRows();
       const st = document.getElementById('topicStatus');
       if (st && statusText !== null) st.textContent = statusText || '';
@@ -341,7 +347,6 @@
     // 주제 선택 → 대본 탭으로 이동해 그 주제로 AI 대본을 바로 만듦
     // ★ 내 상품 시트 (주제·대본 탭의 '내 상품' 한 줄) — 상품을 먼저 정해 두면 대본이 처음부터 맞게 나옴
     let arProductSnap = '';
-    let arProductOriginalVehicle = '';
     function arProductKey() {
       return ['inputVehicle', 'inputDiscountNum', 'inputDiscount'].map((id) => (document.getElementById(id) || {}).value || '').join('|');
     }
@@ -361,10 +366,10 @@
       return (best && best.iconUrl) || (photo && photo.src) || arPickFallbackTopicPhoto(IND.key, 0);
     }
     function arSyncProductPreset() {
+      if (IND.key === 'auto') return;
       const select = document.getElementById('presetSelect');
       const match = Object.entries(arPresetsForIndustry()).find(([, item]) =>
-        item.vehicle === campaign.vehicle &&
-        (item.modelOnly || ((item.discountNum || 0) === campaign.discountNum && item.discount === campaign.discount))
+        item.vehicle === campaign.vehicle && (item.discountNum || 0) === campaign.discountNum && item.discount === campaign.discount
       );
       const key = match?.[0] || '';
       if (select.value !== key) {
@@ -395,7 +400,6 @@
       if (!el) return;
       arWatchEditSheet(el);
       arProductSnap = arProductKey();
-      arProductOriginalVehicle = campaign.vehicle;
       el.classList.remove('hidden');
       el.style.display = 'flex';
       arSyncProductPreset();
@@ -407,10 +411,9 @@
       el.classList.add('hidden');
       el.style.display = 'none';
       arSyncProductRows();
-      // 차종만 고르는 예시는 이전 주제의 차종·혜택으로 다시 생성하지 않습니다.
-      const example = IND.key === 'auto' ? presets[campaign.presetKey] : null;
-      const pickedModel = example?.modelOnly && example.vehicle === campaign.vehicle && arProductOriginalVehicle !== campaign.vehicle;
-      if (!pickedModel && arCanUseAi() && arProductKey() !== arProductSnap && window.arTodayTopic && typeof generateStoryboardFromPrompt === 'function') {
+      const changed = arProductKey() !== arProductSnap;
+      if (changed && arHasEnteredVehicle()) saveAiScriptPrefs();
+      if (changed && arCanUseAi() && window.arTodayTopic && typeof generateStoryboardFromPrompt === 'function') {
         if (typeof arToast === 'function') arToast('바뀐 상품으로 대본을 다시 써요.');
         generateStoryboardFromPrompt();
       }
@@ -935,17 +938,6 @@
       const el = document.getElementById('arOptionSheet');
       if (el) { el.classList.add('hidden'); el.style.display = 'none'; el.innerHTML = ''; }
     }
-    function arAutoExampleMake(vehicle) {
-      // 제조사 표기를 먼저 확인하고, 차종명만 입력했다면 알려진 모델명으로 확인합니다.
-      if (/\bbmw\b|비엠\s*더블유|비엠더블류/i.test(vehicle)) return 'BMW';
-      if (/\bgenesis\b|제네시스/i.test(vehicle)) return '제네시스';
-      if (/\bhyundai\b|현대/i.test(vehicle)) return '현대';
-      if (/\bkia\b|기아/i.test(vehicle)) return '기아';
-      if (/\b(?:gv|g)(?:60|70|80|90)\b/i.test(vehicle)) return '제네시스';
-      if (/그랜[저져]|[싼산]타페|아반떼|쏘나타|소나타|아이오닉|투싼|팰리세이드|코나|스타리아/i.test(vehicle)) return '현대';
-      if (/[쏘소]렌토|카니발|스포티지|셀토스|모닝|니로|\bev[3-9]\b|\bk[3589]\b/i.test(vehicle)) return '기아';
-      return '';
-    }
     function arOpenOptionSheet(sel) {
       let el = document.getElementById('arOptionSheet');
       if (!el) {
@@ -959,14 +951,7 @@
       const esc = (v) => String(v || '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
       const isPhoto = sel.getAttribute('data-sheet-kind') === 'photo';
       const photos = (typeof campaign !== 'undefined' && campaign.uploadedPhotos) || [];
-      const vehicle = sel.id === 'presetSelect' && IND.key === 'auto' ? String(campaign.vehicle || '').trim() : '';
-      const make = arAutoExampleMake(vehicle);
-      const opts = [...sel.options].filter((o) => {
-        if (o.disabled || o.hidden || o.classList.contains('hidden')) return false;
-        if (!vehicle) return true;
-        const example = presets[o.value];
-        return make ? example?.make === make : example?.vehicle === vehicle;
-      });
+      const opts = [...sel.options].filter((o) => !o.disabled && !o.hidden && !o.classList.contains('hidden'));
       const items = opts.map((o) => {
         const on = o.value === sel.value;
         const label = esc(o.textContent.trim().replace(/^\d+\.\s*/, isPhoto ? '' : '$&'));
@@ -977,13 +962,9 @@
         }
         return `<button type="button" class="aos-item${on ? ' on' : ''}" data-v="${esc(o.value)}"><span>${label}</span>${on ? '<b>✓</b>' : ''}</button>`;
       }).join('');
-      const heading = make ? `${make} 차종 예시` : arSelectLabel(sel);
-      const empty = vehicle && !items
-        ? '<p class="px-4 py-3 text-[13px] text-[#a1a1a6]">입력한 차종에 맞는 예시가 없어요. 차종 타이틀과 혜택을 직접 입력할 수 있어요.</p>'
-        : '';
       el.innerHTML = `<div class="aos-card">
-          <div class="aos-head"><strong>${esc(heading)}</strong><button type="button" class="ar-modal-x" aria-label="닫기">✕</button></div>
-          <div class="${isPhoto ? 'aos-grid' : 'aos-list'}">${items || empty}</div>
+          <div class="aos-head"><strong>${esc(arSelectLabel(sel))}</strong><button type="button" class="ar-modal-x" aria-label="닫기">✕</button></div>
+          <div class="${isPhoto ? 'aos-grid' : 'aos-list'}">${items}</div>
         </div>`;
       el.querySelector('.ar-modal-x').onclick = arCloseOptionSheet;
       el.querySelectorAll('[data-v]').forEach((b) => {
@@ -1989,8 +1970,12 @@
         AudioEngine.ensureContext();
       }
 
-      // 1) 클라이언트에서 먼저 차종('그랜저' 등)을 즉시 인식하여 반영
-      const parsedLocal = IND.key === 'auto' ? parsePromptVehicleAndTargetClient(raw) : {};
+      const vehicleLocked = arHasEnteredVehicle();
+      const productAtRequest = arProductKey();
+      const staleProduct = () => productAtRequest !== arProductKey() && (vehicleLocked || arHasEnteredVehicle());
+      // 직접 입력한 차종이 없을 때 주제에서 차종을 찾습니다.
+      const parsedLocal = IND.key === 'auto' && !vehicleLocked ? parsePromptVehicleAndTargetClient(raw) : {};
+      if (!vehicleLocked) campaign.vehicleEntered = false;
       if (parsedLocal.matchedCar) {
         campaign.vehicle = parsedLocal.matchedCar.vehicle;
         campaign.discountNum = parsedLocal.matchedCar.discountNum;
@@ -2025,6 +2010,7 @@
             prompt: raw,
             exclude: excludeRaw,
             vehicle: campaign.vehicle,
+            vehicleLocked,
             discountNum: campaign.discountNum,
             discount: campaign.discount,
             // 아직 바꾸지 않은 예시 매장 정보는 빼고 보냄 (자동차는 그대로)
@@ -2045,7 +2031,7 @@
         });
 
         const result = await response.json();
-        if (generationId !== arScriptGenerationId) return;
+        if (generationId !== arScriptGenerationId || staleProduct()) return;
         if (response.status === 401 && result.error === 'login_required') {
           noticeEl?.classList.add('hidden');
           openDealerAuthModal('generation');
@@ -2069,7 +2055,7 @@
         aiUsedFallback = Boolean(result.aiFallback);
         triggerTopicImages(variants[0]?.cutCaptions);
       } catch (err) {
-        if (generationId !== arScriptGenerationId) return;
+        if (generationId !== arScriptGenerationId || staleProduct()) return;
         arScriptVariants.list = [];
         renderScriptVariantPicker();
         if (IND.key !== 'auto') {
@@ -2237,7 +2223,7 @@
       const rawPrompt = (promptEl && promptEl.value || '').trim();
       const selectedTopic = window.arTodayTopic;
       const tp = !rawPrompt || selectedTopic?.prompt === rawPrompt ? selectedTopic : null;
-      const matchedBmw = IND.key === 'auto' ? arExplicitBmwName(rawPrompt) : '';
+      const matchedBmw = IND.key === 'auto' && !arHasEnteredVehicle() ? arExplicitBmwName(rawPrompt) : '';
       const vehicle = matchedBmw || campaign.vehicle;
       const topicText = matchedBmw || tp?.title || rawPrompt || vehicle || IND.name;
       const imageContext = arSceneImageContextKey();

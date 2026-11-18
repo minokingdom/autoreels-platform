@@ -435,20 +435,12 @@
     }
 
     // 상품 프리셋 선택 목록
-    let AR_AUTO_PRESET_OPTIONS = null;
     function arRenderPresetSelect() {
       const sel = document.getElementById('presetSelect');
       if (!sel) return;
-      if (AR_AUTO_PRESET_OPTIONS == null) AR_AUTO_PRESET_OPTIONS = sel.innerHTML;
-      if (IND.key === 'auto') {
-        sel.innerHTML = AR_AUTO_PRESET_OPTIONS;
-        for (const [key, preset] of Object.entries(presets)) {
-          if (preset.modelOnly) sel.add(new Option(preset.vehicle, key));
-        }
-      } else {
-        const list = AR_INDUSTRY_PRESETS[IND.key] || {};
-        sel.innerHTML = Object.keys(list).map((k) => `<option value="${k}">${escapeHtmlInd(list[k].vehicle)} (${escapeHtmlInd(list[k].priceTag || '')})</option>`).join('');
-      }
+      document.getElementById('productExamples').classList.toggle('hidden', IND.key === 'auto');
+      const list = IND.key === 'auto' ? {} : AR_INDUSTRY_PRESETS[IND.key] || {};
+      sel.innerHTML = Object.keys(list).map((k) => `<option value="${k}">${escapeHtmlInd(list[k].vehicle)} (${escapeHtmlInd(list[k].priceTag || '')})</option>`).join('');
       const prompt = new Option(`${IND.product} 예시 고르기`, '');
       prompt.disabled = true;
       sel.prepend(prompt);
@@ -462,7 +454,7 @@
         if (l && l.tagName === 'LABEL') { l.setAttribute('data-noind', ''); l.textContent = txt; }
       };
       if (IND.key === 'auto') {
-        setLab('inputVehicle', '차종 타이틀');
+        setLab('inputVehicle', '차종명');
         setLab('inputDiscountNum', '최대 할인 금액 (만원)');
         setLab('inputDiscount', '월 납입금 · 출고 조건');
       } else {
@@ -1059,6 +1051,7 @@
         if (typeof renderDesignStylePicker === 'function') { try { renderDesignStylePicker(); } catch (e) {} }
       }
       if (changed || opts.force) {
+        campaign.vehicleEntered = false;
         const list = arPresetsForIndustry();
         const first = Object.keys(list)[0];
         if (first && typeof applyPreset === 'function') {
@@ -1123,7 +1116,6 @@
     // 프리셋 데이터
     const presets = {
       sorento: {
-        make: '기아',
         hook: '이번 달 계약 안 하면 손해! 11월 비밀 조건',
         vehicle: '2026 쏘렌토 하이브리드',
         discountNum: 480,
@@ -1137,7 +1129,6 @@
         neonColor: '#38bdf8'
       },
       santafe: {
-        make: '현대',
         hook: '패밀리 SUV 원탑! 싼타페 하브 즉시출고 특판',
         vehicle: '디 올 뉴 싼타페 하이브리드',
         discountNum: 420,
@@ -1151,7 +1142,6 @@
         neonColor: '#38bdf8'
       },
       grandeur: {
-        make: '현대',
         hook: '성공의 상징! 디 올 뉴 그랜저 하브 즉시출고 특판',
         vehicle: '디 올 뉴 그랜저 하이브리드',
         discountNum: 450,
@@ -1165,7 +1155,6 @@
         neonColor: '#facc15'
       },
       carnival: {
-        make: '기아',
         hook: '법인·다자녀 압도적 1위! 카니발 하브 긴급물량',
         vehicle: '더 뉴 카니발 하이브리드 9인승',
         discountNum: 390,
@@ -1178,39 +1167,7 @@
         bgGradient: ['#060b19', '#1e293b'],
         neonColor: '#38bdf8'
       },
-      // BMW 코리아 2026년 11월 가격표에서 확인한 대표 모델. 실제 판매 조건은 별도로 입력합니다.
-      ...Object.fromEntries(Object.entries({
-        bmw_i4_edrive40: 'BMW i4 eDrive40',
-        bmw_i4_m60: 'BMW i4 M60 xDrive',
-        bmw_i5_edrive40: 'BMW i5 eDrive40',
-        bmw_i7_50: 'BMW i7 50 xDrive',
-        bmw_ix1_edrive20: 'BMW iX1 eDrive20',
-        bmw_ix2_edrive20: 'BMW iX2 eDrive20',
-        bmw_ix3_50: 'BMW iX3 50 xDrive',
-        bmw_ix45: 'BMW iX xDrive45',
-        bmw_220: 'BMW 220 그란 쿠페',
-        bmw_320i: 'BMW 320i',
-        bmw_420i: 'BMW 420i 그란 쿠페',
-        bmw_520i: 'BMW 520i',
-        bmw5: 'BMW 520i M Sport 패키지',
-        bmw_530i: 'BMW 530i xDrive',
-        bmw_530e: 'BMW 530e',
-        bmw_740: 'BMW 740 xDrive',
-        bmw_x1_20i: 'BMW X1 xDrive20i',
-        bmw_x2_20i: 'BMW X2 xDrive20i',
-        bmw_x3_20: 'BMW X3 20 xDrive',
-        bmw_x4_20i: 'BMW X4 xDrive20i',
-        bmw_x5_40i: 'BMW X5 xDrive40i',
-        bmw_x5_50e: 'BMW X5 xDrive50e',
-        bmw_x6_40i: 'BMW X6 xDrive40i',
-        bmw_x7_40i: 'BMW X7 xDrive40i',
-        bmw_m3: 'BMW M3 컴페티션 M xDrive',
-        bmw_m4: 'BMW M4 컴페티션 M xDrive',
-        bmw_m5: 'BMW M5',
-        bmw_z4_m40i: 'BMW Z4 M40i'
-      }).map(([key, vehicle]) => [key, { vehicle, make: 'BMW', modelOnly: true }])),
       gv80: {
-        make: '제네시스',
         hook: '대표님들이 가장 많이 찾는 GV80 비밀 조건',
         vehicle: '제네시스 GV80 페이스리프트',
         discountNum: 620,

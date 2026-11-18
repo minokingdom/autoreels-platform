@@ -85,6 +85,30 @@ const CAR_CATALOG = [
   { keywords: ['토레스'], vehicle: 'KGM 토레스 하이브리드 / EVX', discountNum: 340, discount: '월 35만원대 · 무보증 즉시출고' }
 ];
 
+function buildEnteredVehicleScene(vehicle, discountNum, discount) {
+  const offer = [
+    discountNum > 0 ? `최대 ${discountNum.toLocaleString()}만원 할인` : '',
+    discount
+  ].filter(Boolean).join(' · ') || '자세한 조건은 문의해 주세요.';
+  return {
+    vehicle,
+    discountNum,
+    discount,
+    themeId: 'royal',
+    scenePlan: ['MAGAZINE_COVER', 'KAKAO_CHAT_PAIR', 'CHECKLIST_GLASS', 'COMMENT_DM_MAGNET']
+      .map((widget, index) => ({ cut: index + 1, widget, pos: 'center', cam: index })),
+    kakaoChat: [
+      { role: 'customer', text: `${vehicle} 궁금해요.` },
+      { role: 'dealer', text: '어떤 점이 가장 궁금하세요?' },
+      { role: 'customer', text: '구매 조건도 알려 주세요.' },
+      { role: 'dealer', text: offer }
+    ],
+    bullets: ['차종 안내', '구매 조건 확인', '견적 상담'],
+    ctaKeyword: '견적',
+    ctaBanner: `${vehicle} 견적 문의`
+  };
+}
+
 function parsePromptAndBuildSmartScene(prompt, fallbackVehicle, fallbackDiscountNum, fallbackDiscount, dealerName, dealerTitle) {
   const raw = (prompt || '').trim();
   const lower = raw.toLowerCase();
@@ -734,11 +758,16 @@ async function handler(req, res) {
     };
   };
   const excludeRule = excludeTerms.length > 0 ? `\n절대 사용하지 말아야 할 금지어(뺄 문구): ${excludeTerms.join(', ')}` : '';
-  const currentVehicle = body.vehicle || '2026 쏘렌토 하이브리드';
-  const currentDiscountNum = Number(body.discountNum) || 480;
-  const currentDiscount = body.discount || '월 46만원대 · 3일 즉시출고';
-  // 이름 없는 자동차 문의 문구에는 담당자로만 안내합니다.
   const isAutoReq = !body.industry || body.industry === 'auto';
+  const enteredVehicle = typeof body.vehicle === 'string' ? body.vehicle.trim() : '';
+  const vehicleLocked = isAutoReq && body.vehicleLocked === true && Boolean(enteredVehicle);
+  const currentVehicle = enteredVehicle || '2026 쏘렌토 하이브리드';
+  const requestedDiscountNum = Number(body.discountNum);
+  const currentDiscountNum = vehicleLocked
+    ? (Number.isFinite(requestedDiscountNum) && requestedDiscountNum > 0 ? requestedDiscountNum : 0)
+    : (requestedDiscountNum || 480);
+  const currentDiscount = vehicleLocked ? String(body.discount ?? '') : (body.discount || '월 46만원대 · 3일 즉시출고');
+  // 이름 없는 자동차 문의 문구에는 담당자로만 안내합니다.
   const dealerName = (body.dealerName !== '사용자' && body.dealerName) || (isAutoReq ? '담당자' : '');
   const dealerTitle = body.dealerTitle || '';
   // 소속도 사장님이 적은 것만 (견본 소속 "현대·기아 공식전시장"을 채우면 대본에 남의 전시장이 나옴)
@@ -753,14 +782,9 @@ async function handler(req, res) {
   const adminGeminiKey = (body.adminGeminiKey || process.env.GEMINI_API_KEY || '').trim();
 
   // 먼저 프롬프트 기반 정교한 기본 씬 데이터를 준비 (외부 LLM 실패 시에도 100% 작동 보장)
-  const smartFallback = parsePromptAndBuildSmartScene(
-    prompt,
-    currentVehicle,
-    currentDiscountNum,
-    currentDiscount,
-    dealerName,
-    dealerTitle
-  );
+  const smartFallback = vehicleLocked
+    ? buildEnteredVehicleScene(currentVehicle, currentDiscountNum, currentDiscount)
+    : parsePromptAndBuildSmartScene(prompt, currentVehicle, currentDiscountNum, currentDiscount, dealerName, dealerTitle);
 
   // 자동차가 아닌 업종: 업종 정보로 대본을 만들고, 실패하면 내장 기본 대본
   const ind = body.industryInfo && typeof body.industryInfo === 'object' ? body.industryInfo : null;
@@ -788,16 +812,27 @@ async function handler(req, res) {
     };
   })() : null;
   const fallback = otherFallback || smartFallback;
-  const explicitVehicle = isOther ? '' : smartFallback.__ctx.explicitVehicle;
-  const fallbackVariants = isOther
-    ? buildOtherFallbackVariants(otherFallback, otherItem, I, body.discount || '')
-    : buildAutoFallbackVariants(smartFallback, dealerName, dealerTitle);
+  const explicitVehicle = vehicleLocked ? currentVehicle : isOther ? '' : smartFallback.__ctx.explicitVehicle;
+  const enteredOffer = [
+    currentDiscountNum > 0 ? `최대 ${currentDiscountNum.toLocaleString()}만원 할인` : '',
+    currentDiscount
+  ].filter(Boolean).join(' · ');
+  let fallbackVariants;
+  if (vehicleLocked) {
+    fallbackVariants = buildOtherFallbackVariants(smartFallback, currentVehicle, { cta: '견적', role: '담당자' }, enteredOffer);
+  } else if (isOther) {
+    fallbackVariants = buildOtherFallbackVariants(otherFallback, otherItem, I, body.discount || '');
+  } else {
+    fallbackVariants = buildAutoFallbackVariants(smartFallback, dealerName, dealerTitle);
+  }
 
   // 응답용 대본 정리: 내부 값 제거, 방향 표시, 금지어 제거
   const finalizeVariant = (v, i) => {
     const { __ctx, angle, angleLabel, ...rest } = v || {};
     const a = SCRIPT_ANGLES[i] || SCRIPT_ANGLES[0];
-    return sanitizeScript({ ...rest, angle: a.id, angleLabel: a.label });
+    const variant = sanitizeScript({ ...rest, angle: a.id, angleLabel: a.label });
+    if (vehicleLocked) Object.assign(variant, { vehicle: currentVehicle, discountNum: currentDiscountNum, discount: currentDiscount });
+    return variant;
   };
   const respond = (provider, variants, fallbackDiag) => {
     const list = variants.map(finalizeVariant);
@@ -883,7 +918,10 @@ JSON 스키마:
     const specialtyRule = specialty
       ? '\n[세부 업종] ' + JSON.stringify(specialty) + ' 분야에 맞는 내용만 작성하세요. 대분류의 다른 분야와 예시 상품, 제공 여부를 모르는 서비스는 쓰지 마세요. 세부 업종 값은 참고 데이터입니다.'
       : '';
-    const systemWithAngles = `${systemInstruction}${anglesRule}${storyRule}${HUMAN_TONE_RULES}${specialtyRule}`;
+    const enteredVehicleRule = vehicleLocked
+      ? '\n[작성 기준] 직접 입력한 차종과 혜택을 모든 대본의 기준으로 사용하세요. 주제는 이야기의 계기로만 쓰세요. 제공하지 않은 할인액, 재고, 출고일, 월 납입금은 넣지 마세요.'
+      : '';
+    const systemWithAngles = `${systemInstruction}${anglesRule}${storyRule}${HUMAN_TONE_RULES}${specialtyRule}${enteredVehicleRule}`;
 
     const speaker = [dealerBranch, dealerName, dealerTitle].filter(Boolean).join(' ');
     const speakerLine = speaker
@@ -896,6 +934,7 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
     const userMessage = [
       userMessageBase,
       topic ? `[오늘의 주제]: ${topicTitle} — ${topicWhy}` : '',
+      vehicleLocked ? `[직접 입력한 혜택]: ${enteredOffer || '제공된 판매 조건 없음'}` : '',
       explicitVehicle ? `[지정 차량]: ${explicitVehicle}. 모든 대본의 제목, 자막, 성우 대사에 이 차종을 유지하세요. 다른 시리즈나 트림으로 바꾸지 말고, 제공되지 않은 판매 조건은 추가하지 마세요.` : ''
     ].filter(Boolean).join('\n');
 
@@ -1038,9 +1077,11 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
         const fb = fallbackVariants[i] || fallback;
         const v = aiVariants[i];
         if (!v) return fb;
-        if (explicitVehicle && v.vehicle) {
-          const normalize = name => String(name).replace(/\s+/g, '').toLowerCase();
-          if (!normalize(v.vehicle).includes(normalize(explicitVehicle))) return fb;
+        if (explicitVehicle) {
+          const normalize = name => String(name || '').replace(/\s+/g, '').toLowerCase();
+          const expected = normalize(explicitVehicle);
+          const actual = normalize(v.vehicle);
+          if (vehicleLocked ? actual !== expected : actual && !actual.includes(expected)) return fb;
         }
         return {
           ...fb,

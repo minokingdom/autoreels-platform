@@ -2092,30 +2092,23 @@
       <div class="aos-card studio-panel product-sheet-card">
         <div class="aos-head"><strong>내 상품 · 혜택</strong><button type="button" class="bgm-done" onclick="arCloseProductSheet()">완료</button></div>
         <div class="space-y-3 overflow-y-auto">
-          <div>
-            <label for="presetSelect" class="block text-[12px] text-[#a1a1a6] mb-1.5">차종 예시</label>
-            <select id="presetSelect" onchange="applyPreset(this.value)" class="studio-input w-full h-9 px-3 text-[13px] cursor-pointer">
-              <option value="sorento">2026 쏘렌토 하이브리드 (할인 480만원)</option>
-              <option value="grandeur">2026 디 올 뉴 그랜저 하이브리드 (할인 450만원)</option>
-              <option value="santafe">디 올 뉴 싼타페 하이브리드 (할인 420만원)</option>
-              <option value="carnival">더 뉴 카니발 하이브리드 9인승 (할인 390만원)</option>
-              <option value="gv80">제네시스 GV80 페이스리프트 (할인 620만원)</option>
-              <option value="used">무사고 인증 중고차 특가 (할인 350만원)</option>
-            </select>
+          <div id="productExamples" class="hidden">
+            <label for="presetSelect" class="block text-[12px] text-[#a1a1a6] mb-1.5">상품 예시</label>
+            <select id="presetSelect" onchange="applyIndustryPreset(this.value)" class="studio-input w-full h-9 px-3 text-[13px] cursor-pointer"></select>
           </div>
 
           <div class="grid grid-cols-1 gap-3">
             <div>
-              <label class="block text-[12px] text-[#a1a1a6] mb-1.5">차종 타이틀</label>
-              <input id="inputVehicle" type="text" value="2026 쏘렌토 하이브리드" oninput="updateCampaignFromInputs()" class="studio-input w-full h-9 px-3 text-[13px]" />
+              <label class="block text-[12px] text-[#a1a1a6] mb-1.5">차종명</label>
+              <input id="inputVehicle" type="text" value="2026 쏘렌토 하이브리드" oninput="updateCampaignFromInputs(event)" class="studio-input w-full h-9 px-3 text-[13px]" />
             </div>
             <div>
               <label class="block text-[12px] text-[#a1a1a6] mb-1.5">최대 할인 금액 (만원)</label>
-              <input id="inputDiscountNum" type="number" value="480" oninput="updateCampaignFromInputs()" class="studio-input w-full h-9 px-3 text-[13px] font-mono" />
+              <input id="inputDiscountNum" type="number" value="480" oninput="updateCampaignFromInputs(event)" class="studio-input w-full h-9 px-3 text-[13px] font-mono" />
             </div>
             <div>
               <label class="block text-[12px] text-[#a1a1a6] mb-1.5">월 납입금 · 출고 조건</label>
-              <input id="inputDiscount" type="text" value="월 46만원대 · 3일 즉시출고" oninput="updateCampaignFromInputs()" class="studio-input w-full h-9 px-3 text-[13px]" />
+              <input id="inputDiscount" type="text" value="월 46만원대 · 3일 즉시출고" oninput="updateCampaignFromInputs(event)" class="studio-input w-full h-9 px-3 text-[13px]" />
             </div>
           </div>
 

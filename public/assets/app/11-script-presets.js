@@ -50,11 +50,13 @@
 
     // 대본 하나를 campaign 에 반영 (AI 생성 직후와 3안 전환에서 같이 사용)
     function applyAiScriptToCampaign(ai, d, stripExcludedLocal) {
-        if (ai.vehicle) campaign.vehicle = stripExcludedLocal(ai.vehicle) || ai.vehicle;
-        if (ai.discountNum !== undefined && !isNaN(Number(ai.discountNum))) {
-          campaign.discountNum = Number(ai.discountNum);
+        if (!arHasEnteredVehicle()) {
+          if (ai.vehicle) campaign.vehicle = stripExcludedLocal(ai.vehicle) || ai.vehicle;
+          if (ai.discountNum !== undefined && !isNaN(Number(ai.discountNum))) {
+            campaign.discountNum = Number(ai.discountNum);
+          }
+          if (ai.discount) campaign.discount = stripExcludedLocal(ai.discount) || ai.discount;
         }
-        if (ai.discount) campaign.discount = stripExcludedLocal(ai.discount) || ai.discount;
         if (ai.hook) {
           campaign.hook = stripExcludedLocal(ai.hook);
           if (d.variation) d.variation.hook = campaign.hook;
@@ -181,6 +183,27 @@
 
     // 자동차: 서버에 연결하지 못했을 때 화면에서 바로 채우는 기본 대본
     function arFillAutoScriptOffline(parsedLocal, d) {
+        if (arHasEnteredVehicle()) {
+          const vehicle = campaign.vehicle;
+          const offer = [
+            campaign.discountNum > 0 ? `최대 ${campaign.discountNum.toLocaleString()}만원 할인` : '',
+            campaign.discount
+          ].filter(Boolean).join(' · ') || '자세한 조건은 문의해 주세요.';
+          const contact = arDealerContactIdentity(d);
+          applyAiScriptToCampaign({
+            hook: `${vehicle} 살펴보기`,
+            cutCaptions: [vehicle, '차량 선택 체크 포인트', offer, `${contact}에게 문의해 주세요.`],
+            ttsLines: [`${vehicle} 소개해 드릴게요.`, '차량을 고를 때 확인할 점을 살펴봐요.', offer, `${contact}에게 문의해 주세요.`],
+            kakaoChat: [
+              { role: 'customer', text: `${vehicle} 궁금해요.` },
+              { role: 'dealer', text: '어떤 점이 가장 궁금하세요?' },
+              { role: 'customer', text: '구매 조건도 알려 주세요.' },
+              { role: 'dealer', text: offer }
+            ],
+            bullets: ['차종 안내', '구매 조건 확인', '견적 상담']
+          }, d, text => text);
+          return;
+        }
         const personaPrefix = parsedLocal.targetPersona ? `${parsedLocal.targetPersona} 인기 1위! ` : '';
         const newHook = `${personaPrefix}${campaign.vehicle} 당월 즉시출고 특판`;
         campaign.hook = newHook;
@@ -213,6 +236,7 @@
         const payload = {
           industry: typeof IND !== 'undefined' ? IND.key : 'auto',
           vehicle: campaign.vehicle || '',
+          vehicleEntered: arHasEnteredVehicle(),
           discountNum: campaign.discountNum,
           discount: campaign.discount || '',
           hook: campaign.hook || '',
@@ -233,9 +257,10 @@
         const s = JSON.parse(raw);
         if (!s || s.industry !== (typeof IND !== 'undefined' ? IND.key : 'auto')) return false;
         if (!Array.isArray(s.cutCaptions) || s.cutCaptions.length < 4) return false;
-        if (s.vehicle) campaign.vehicle = s.vehicle;
+        if (typeof s.vehicle === 'string') campaign.vehicle = s.vehicle;
+        campaign.vehicleEntered = s.vehicleEntered ?? (IND.key === 'auto' && Boolean(s.vehicle));
         if (s.discountNum !== undefined) campaign.discountNum = s.discountNum;
-        if (s.discount) campaign.discount = s.discount;
+        if (typeof s.discount === 'string') campaign.discount = s.discount;
         if (s.hook) campaign.hook = s.hook;
         campaign.cutCaptions = [...s.cutCaptions];
         campaign.ttsLines = Array.isArray(s.ttsLines) && s.ttsLines.length ? [...s.ttsLines] : [...s.cutCaptions];
@@ -484,18 +509,6 @@
       if (IND.key !== 'auto') return applyIndustryPreset(key);
       const p = presets[key];
       if (!p) return;
-      if (p.modelOnly) {
-        if (p.vehicle === campaign.vehicle) return;
-        // 다른 차량에 이전 차량의 할인이나 출고 조건이 붙지 않게 합니다.
-        campaign.presetKey = key;
-        delete campaign.priceTag;
-        delete campaign.priceLine;
-        document.getElementById('inputVehicle').value = p.vehicle;
-        document.getElementById('inputDiscountNum').value = 0;
-        document.getElementById('inputDiscount').value = '';
-        updateCampaignFromInputs();
-        return;
-      }
       const d = getSelectedDealer();
       delete campaign.priceTag;
       delete campaign.priceLine;
@@ -587,8 +600,25 @@
       if (window.__timelines && window.__timelines['main']) window.__timelines['main'].seek(0.2);
     }
 
-    function updateCampaignFromInputs() {
+    function arHasEnteredVehicle() {
+      return IND.key === 'auto' && campaign.vehicleEntered === true && Boolean(campaign.vehicle?.trim());
+    }
+
+    function updateCampaignFromInputs(event) {
       setTimeout(() => { if (typeof arSyncProductRows === 'function') arSyncProductRows(); }, 0);
+      const field = event?.target?.id;
+      if (IND.key === 'auto' && ['inputVehicle', 'inputDiscountNum', 'inputDiscount'].includes(field)) {
+        if (!campaign.vehicleEntered) {
+          // 처음 직접 입력할 때 기본 차량 예시의 혜택이 따라가지 않게 합니다.
+          if (field !== 'inputDiscountNum') document.getElementById('inputDiscountNum').value = 0;
+          if (field !== 'inputDiscount') document.getElementById('inputDiscount').value = '';
+          delete campaign.priceTag;
+          delete campaign.priceLine;
+        }
+        campaign.vehicleEntered = true;
+        arScriptVariants.list = [];
+        renderScriptVariantPicker();
+      }
       const d = getSelectedDealer();
       const hookEl = document.getElementById('inputHook');
       if (hookEl) campaign.hook = hookEl.value;

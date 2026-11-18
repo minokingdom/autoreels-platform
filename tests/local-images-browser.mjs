@@ -121,6 +121,46 @@ try {
   assert.deepEqual(requests.slice(beforeQuota).map(r=>r.mode),['scene-prompts']);
   assert.deepEqual(await cloud.evaluate(()=>campaign.uploadedPhotos.map(img=>img.src)),final.photos);
   console.log('cloud images preserve the current BMW subject and report replaced cuts or the original photos remaining');
+  await cloud.evaluate(()=>{
+   arTopicsLoading++;
+   arBusinessSpecialty='전기차';
+   arSpecialtyIndustry='auto';
+   window.arTodayTopic=null;
+   arRenderTopics([
+    {title:'충전 전 체크',why:'전기차'},
+    {title:'겨울철 주행',why:'전기차',iconUrl:'/assets/topics/auto/missing.jpg'}
+   ]);
+   switchStudioTab('topic');
+  });
+  const topicCards=cloud.locator('#topicCards');
+  await topicCards.locator('img').last().scrollIntoViewIfNeeded();
+  await cloud.waitForFunction(()=>[...document.querySelectorAll('#topicCards img')].every(img=>img.naturalWidth>0));
+  assert.deepEqual(await topicCards.locator('img').evaluateAll(imgs=>imgs.map(img=>img.getAttribute('src'))),[
+   '/assets/topics/auto/1.jpg','/assets/topics/auto/2.jpg'
+  ]);
+
+  await cloud.locator('#studioPanel_topic .ar-product-cover').click();
+  const product=cloud.locator('#productSheet');
+  assert.equal(await product.locator('#productExamples').isVisible(),false);
+  await product.locator('#inputVehicle').fill('현대 아이오닉 6');
+  await product.locator('#inputDiscount').fill('전기차 케어 지원');
+  await product.getByRole('button',{name:'완료'}).click();
+  await cloud.evaluate(async()=>{
+   document.getElementById('aiPromptInput').value='BMW X5 하이브리드 소개';
+   switchStudioTab('script');
+   await generateStoryboardFromPrompt();
+  });
+  const enteredRequest=requests.find(r=>r.prompt==='BMW X5 하이브리드 소개');
+  assert.deepEqual([enteredRequest.vehicle,enteredRequest.vehicleLocked,enteredRequest.discountNum,enteredRequest.discount],[
+   '현대 아이오닉 6',true,0,'전기차 케어 지원'
+  ]);
+  const direct=await cloud.evaluate(()=>({
+   vehicle:campaign.vehicle, captions:campaign.cutCaptions.join(' '), tts:campaign.ttsLines.join(' ')
+  }));
+  assert.equal(direct.vehicle,'현대 아이오닉 6');
+  assert.match(direct.captions,/현대 아이오닉 6.*전기차 케어 지원/);
+  assert.doesNotMatch(direct.tts,/BMW|480|3대|즉시출고/);
+  console.log('specialty topic thumbnails and direct vehicle generation verified');
  }
  assert.deepEqual(errors,[]);console.log('local image browser OK');
 } finally {await browser.close();await new Promise(r=>server.close(r));}
