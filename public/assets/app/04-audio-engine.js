@@ -459,8 +459,8 @@
         this.ttsLastError = errorCode || '';
         const badge = document.getElementById('ttsProviderBadge');
         if (!badge) return;
-        if (provider === 'airy') {
-          badge.textContent = '성우: Airy';
+        if (provider === 'airy' || provider === 'google') {
+          badge.textContent = provider === 'google' ? '성우: Google WaveNet' : '성우: Airy';
           badge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#4cc38a]';
         } else if (provider === 'fish' && this.ttsFreeModel) {
           badge.textContent = '성우: Fish Audio 무료 모델 (크레딧 부족 · 음질 낮음)';
@@ -475,10 +475,10 @@
             errorCode === 'http_402' ? '크레딧 부족' :
             errorCode === 'offline' ? '서버 없이 실행 중' :
             errorCode === 'quota' ? '이번 사용량 한도 도달' : '연결 실패';
-          const airyError = String(errorCode || '').startsWith('airy_');
-          const source = airyError ? 'Airy' : 'Fish Audio';
-          const cause = errorCode === 'airy_credit_exhausted' ? '크레딧 부족' :
-            errorCode === 'airy_rate_limited' ? '음성 요청이 많음' : reason;
+          const code = String(errorCode || '');
+          const source = code.startsWith('google_') ? 'Google WaveNet' : code.startsWith('airy_') ? 'Airy' : 'Fish Audio';
+          const cause = code === 'airy_credit_exhausted' ? '크레딧 부족' :
+            code.endsWith('_rate_limited') ? '음성 요청이 많음' : reason;
           badge.textContent = `성우: 브라우저 음성 (${source} ${cause} · 추출 영상에는 녹음 안 됨)`;
           badge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#f5a524]';
         } else {
@@ -511,19 +511,34 @@
         return `${this.ttsVoice}@${this.ttsSpeed}|${text}`;
       },
 
-      // Fish Audio 한국어 성우 목록을 받아 선택 상자에 채움 (한 번만)
+      isGoogleVoice(voice) {
+        return /^ko-KR-Wavenet-[A-D]$/.test(voice);
+      },
+      isTtsServiceError(code) {
+        return /^(airy|google)_/.test(code);
+      },
+      restoreVoice(voice) {
+        this.ttsVoice = voice;
+        const sel = document.getElementById('ttsVoiceSelect');
+        if (!sel) return;
+        if (this.isGoogleVoice(voice) && !Array.from(sel.options).some((option) => option.value === voice)) {
+          sel.insertBefore(new Option('Google WaveNet ' + voice.slice(-1), voice), sel.querySelector('[value="off"]'));
+        }
+        sel.value = voice;
+      },
+      // 한국어 성우 목록을 받아 선택 상자에 채움 (한 번만)
       async loadVoiceList() {
         if (this.voiceListLoaded || !arCanUseAi()) return;
         this.voiceListLoaded = true;
         try {
-          const res = await fetch('/api/tts-voices?v=1');
+          const res = await fetch('/api/tts-voices?v=2');
           if (!res.ok) throw new Error(`http_${res.status}`);
           const body = await res.json();
           const sel = document.getElementById('ttsVoiceSelect');
           if (!sel || !Array.isArray(body.voices) || body.voices.length === 0) return;
           const offOpt = sel.querySelector('option[value="off"]');
           body.voices.forEach((v) => {
-            let opt = sel.querySelector(`option[value="${v.id}"]`);
+            let opt = Array.from(sel.options).find((option) => option.value === v.id);
             if (!opt) {
               opt = document.createElement('option');
               opt.value = v.id;
@@ -588,7 +603,7 @@
       decodeNarration(ctx, encoded) {
         return ctx.decodeAudioData(Uint8Array.from(atob(encoded), (char) => char.charCodeAt(0)).buffer);
       },
-      async renderAiryClips(ctx, clips, speed) {
+      async renderNarrationClips(ctx, clips, speed) {
         const sampleRate = ctx.sampleRate;
         const rate = speed >= 0.8 && speed <= 1.5 ? Number(speed) : 1.1;
         const offsets = [0];
@@ -607,6 +622,25 @@
         });
         return { full: await output.startRendering(), bounds: offsets.map((frame) => frame / sampleRate) };
       },
+      async decodeGoogleNarration(ctx, parts, lineCount) {
+        if (!Array.isArray(parts) || parts.length === 0) throw new Error('google_tts_invalid_timing');
+        const clips = await Promise.all(parts.map((part) => this.decodeNarration(ctx, part.audio_base64)));
+        const bounds = [];
+        let elapsed = 0;
+        for (let i = 0; i < parts.length; i++) {
+          const starts = parts[i].starts;
+          if (!Array.isArray(starts) || starts[0] !== 0 || starts.some((start, j) =>
+            !Number.isFinite(start) || start >= clips[i].duration || (j > 0 && start <= starts[j - 1]))) {
+            throw new Error('google_tts_invalid_timing');
+          }
+          bounds.push(...starts.map((start) => elapsed + start));
+          elapsed += clips[i].duration;
+        }
+        if (bounds.length !== lineCount) throw new Error('google_tts_invalid_timing');
+        const full = clips.length === 1 ? clips[0] : (await this.renderNarrationClips(ctx, clips, 1)).full;
+        bounds.push(full.duration);
+        return { full, bounds };
+      },
       fetchScriptNarration(lines) {
         if (!arCanUseAi()) return Promise.reject(new Error('ai_access_required'));
         const voice = this.ttsVoice;
@@ -620,12 +654,16 @@
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
           const url = `/api/tts-script?v=10&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
-          const res = await this.runTtsRequest(() => fetch(url));
+          const res = await this.runTtsRequest(() => this.isGoogleVoice(voice) ? fetch('/api/tts-script', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ref: voice, speed, lines })
+          }) : fetch(url));
           if (!res.ok) {
             let code = `http_${res.status}`;
             try {
               const errBody = await res.json();
-              if (errBody && (errBody.error === 'fish_api_key_missing' || String(errBody.error).startsWith('airy_'))) code = errBody.error;
+              if (errBody && (errBody.error === 'fish_api_key_missing' || this.isTtsServiceError(errBody.error))) code = errBody.error;
               if (errBody && (errBody.error === 'quota_exceeded' || errBody.error === 'service_tts_cap')) {
                 code = 'quota';
                 if (window.arNotifyQuota) window.arNotifyQuota(errBody.message);
@@ -635,14 +673,21 @@
           }
           const body = await res.json();
           let full, exactBounds;
-          if (body?.model === 'airy-tts-v1') {
+          if (body?.model === 'google-wavenet') {
+            provider = 'google';
+            try {
+              ({ full, bounds: exactBounds } = await this.decodeGoogleNarration(ctx, body.parts, lines.length));
+            } catch (error) {
+              throw new Error(this.isTtsServiceError(error.message) ? error.message : 'google_tts_invalid_audio');
+            }
+          } else if (body?.model === 'airy-tts-v1') {
             provider = 'airy';
             if (!Array.isArray(body.clips_base64) || body.clips_base64.length !== lines.length) {
               throw new Error('airy_invalid_audio');
             }
             try {
               const clips = await Promise.all(body.clips_base64.map((clip) => this.decodeNarration(ctx, clip)));
-              ({ full, bounds: exactBounds } = await this.renderAiryClips(ctx, clips, speed));
+              ({ full, bounds: exactBounds } = await this.renderNarrationClips(ctx, clips, speed));
             } catch (error) { throw new Error('airy_invalid_audio'); }
           } else {
             this.noteTtsModel(body && body.model);
@@ -730,7 +775,7 @@
           (err) => {
             this.scriptCache.delete(scriptKey);
             const code = String(err && err.message);
-            if (code.startsWith('airy_')) {
+            if (this.isTtsServiceError(code)) {
               this.ttsBlockedUntil = Date.now() + (code === 'airy_credit_exhausted' ? 60000 : 2000);
               this.setTtsProvider('browser', code);
               return;
@@ -770,7 +815,7 @@
             let code = `http_${res.status}`;
             try {
               const body = await res.json();
-              if (body && (body.error === 'fish_api_key_missing' || String(body.error).startsWith('airy_'))) code = body.error;
+              if (body && (body.error === 'fish_api_key_missing' || this.isTtsServiceError(body.error))) code = body.error;
               if (body && (body.error === 'quota_exceeded' || body.error === 'service_tts_cap')) {
                 code = 'quota';
                 if (window.arNotifyQuota) window.arNotifyQuota(body.message);
@@ -781,9 +826,10 @@
           const model = res.headers.get('X-TTS-Model');
           const bytes = await res.arrayBuffer();
           let buffer = await ctx.decodeAudioData(bytes);
-          if (model === 'airy-tts-v1') {
+          if (model === 'google-wavenet') provider = 'google';
+          else if (model === 'airy-tts-v1') {
             provider = 'airy';
-            buffer = (await this.renderAiryClips(ctx, [buffer], speed)).full;
+            buffer = (await this.renderNarrationClips(ctx, [buffer], speed)).full;
           } else this.noteTtsModel(model);
           // 앞뒤 무음 구간을 잘라 실제 말하는 구간만 사용 (컷 길이를 불필요하게 늘리지 않도록)
           const data = buffer.getChannelData(0);
@@ -817,7 +863,7 @@
             if (['fish_api_key_missing', 'http_401', 'http_402', 'offline', 'quota'].includes(code)) {
               this.ttsBlockedUntil = Date.now() + (code === 'quota' ? 600000 : 60000);
             }
-            if (code.startsWith('airy_') || Date.now() < this.ttsBlockedUntil || !['fish', 'airy'].includes(this.ttsProvider)) {
+            if (this.isTtsServiceError(code) || Date.now() < this.ttsBlockedUntil || !['fish', 'airy', 'google'].includes(this.ttsProvider)) {
               this.setTtsProvider('browser', code);
             }
           }
@@ -876,7 +922,7 @@
         if (this.ttsPrefetchTimer) { clearTimeout(this.ttsPrefetchTimer); this.ttsPrefetchTimer = null; }
 
         // 1순위: 대본 전체를 한 번에 녹음. 실패하면 문장별 녹음으로 대체
-        const perLine = (error) => (String(error?.message || this.ttsLastError).startsWith('airy_') || !arVoiceAllowed() || this.masterWantKey !== wantKey)
+        const perLine = (error) => (this.isTtsServiceError(error?.message || this.ttsLastError) || !arVoiceAllowed() || this.masterWantKey !== wantKey)
           ? Promise.resolve([])
           : Promise.all(lines.map((t) => this.fetchLineBuffer(t).catch(() => null)));
         const job = (Date.now() < this.ttsBlockedUntil ? perLine() : this.fetchScriptNarration(lines).catch(perLine)).then(
@@ -1461,9 +1507,8 @@
     try {
       const savedVoice = localStorage.getItem('autoreels_tts_voice');
       const voiceSel = document.getElementById('ttsVoiceSelect');
-      if (savedVoice && voiceSel && [...voiceSel.options].some((o) => o.value === savedVoice)) {
-        voiceSel.value = savedVoice;
-        AudioEngine.ttsVoice = savedVoice;
+      if (savedVoice && (AudioEngine.isGoogleVoice(savedVoice) || Array.from(voiceSel?.options || []).some((o) => o.value === savedVoice))) {
+        AudioEngine.restoreVoice(savedVoice);
       }
     } catch (e) {}
 

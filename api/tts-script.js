@@ -11,6 +11,9 @@
 const { isValidVoiceId, CURATED_VOICE_IDS } = require('../lib/fish-voices');
 const { normalizeKoreanNumbers } = require('../lib/korean-numbers');
 const { MODEL: AIRY_MODEL, usesAiry, synthesizeAiryScript, sendAiryError } = require('../lib/airy-tts');
+const {
+  MODEL: GOOGLE_MODEL, isGoogleVoice, googleScriptSections, synthesizeGoogleScript, sendGoogleTtsError
+} = require('../lib/google-tts');
 // 유료 크레딧이 없을 때 쓰는 Fish Audio 무료 모델
 const FREE_MODEL = (process.env.FISH_TTS_FREE_MODEL || 's2.1-pro-free').trim();
 
@@ -35,8 +38,27 @@ function isSameSiteRequest(req) {
   }
 }
 
+function scriptInput(req) {
+  return req.method === 'POST' ? (req.body || {}) : (req.query || {});
+}
+
+function readScriptLines(input) {
+  try {
+    const lines = Array.isArray(input.lines) ? input.lines : JSON.parse(String(input.lines || '[]'));
+    return Array.isArray(lines) && lines.length > 0 && lines.length <= MAX_LINES ? lines : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function cleanScriptLines(lines) {
+  return lines.map((line) => String(line || '').replace(/\s+/g, ' ').trim().slice(0, MAX_LINE_LENGTH));
+}
+
 async function handler(req, res) {
-  if (req.method !== 'GET') {
+  const input = scriptInput(req);
+  const google = isGoogleVoice(input.ref);
+  if (req.method !== 'GET' && !(req.method === 'POST' && google)) {
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
   }
   if (!isSameSiteRequest(req)) {
@@ -44,31 +66,37 @@ async function handler(req, res) {
   }
   const apiKey = (process.env.FISH_API_KEY || '').trim();
   const airy = usesAiry(req, 10);
-  if (!airy && !apiKey) {
+  if (!google && !airy && !apiKey) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(503).json({ ok: false, error: 'fish_api_key_missing' });
   }
 
-  let lines;
-  try {
-    lines = JSON.parse(String(req.query.lines || '[]'));
-  } catch (e) {
-    lines = null;
-  }
-  if (!Array.isArray(lines) || lines.length === 0 || lines.length > MAX_LINES) {
+  const rawLines = readScriptLines(input);
+  if (!rawLines) {
     return res.status(400).json({ ok: false, error: 'lines_required' });
   }
-  lines = lines.map((l) => String(l || '').replace(/\s+/g, ' ').trim().slice(0, MAX_LINE_LENGTH));
+  const lines = cleanScriptLines(rawLines);
   if (lines.some((l) => !countable(l))) {
     return res.status(400).json({ ok: false, error: 'empty_line' });
   }
 
-  const ref = String(req.query.ref || '');
+  const ref = String(input.ref || '');
   const referenceId = isValidVoiceId(ref) ? ref : (process.env.FISH_VOICE_FEMALE || '').trim() || CURATED_VOICE_IDS[0];
-  const requestedSpeed = Number(req.query.speed);
+  const requestedSpeed = Number(input.speed);
   const speed = requestedSpeed >= 0.8 && requestedSpeed <= 1.5 ? requestedSpeed : 1.1;
-  const toneKey = Object.prototype.hasOwnProperty.call(TONE_TAGS, String(req.query.tone)) ? String(req.query.tone) : 'bright';
+  const toneKey = Object.prototype.hasOwnProperty.call(TONE_TAGS, String(input.tone)) ? String(input.tone) : 'bright';
   const toneTag = TONE_TAGS[toneKey];
+
+  if (google) {
+    res.setHeader('X-TTS-Model', GOOGLE_MODEL);
+    try {
+      const parts = await synthesizeGoogleScript(lines, ref, speed);
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).json({ ok: true, model: GOOGLE_MODEL, parts });
+    } catch (error) {
+      return sendGoogleTtsError(res, error);
+    }
+  }
 
   if (airy) {
     res.setHeader('X-TTS-Model', AIRY_MODEL);
@@ -189,7 +217,7 @@ async function handler(req, res) {
 
     // model: 실제로 쓴 Fish Audio 모델 (유료 크레딧이 떨어지면 무료 모델 이름이 나옴)
     const body = { ok: true, model: modelUsed, duration: segments[segments.length - 1].end, lines: out, audio_base64: audio.toString('base64') };
-    if (req.query.debug === '1') {
+    if (input.debug === '1') {
       body.debug = { eventCount, segments, spoken, fullText };
       res.setHeader('Cache-Control', 'no-store');
     } else {
@@ -205,4 +233,13 @@ async function handler(req, res) {
 
 // 사용량 계산·한도 (회원 서버가 켜져 있을 때만 동작)
 const { withMeter } = require('../lib/server/meter');
-module.exports = withMeter(handler, 'tts', (req) => { try { return JSON.parse(String((req.query || {}).lines || '[]')).join('').replace(/\s+/g, ' ').length; } catch (e) { return 0; } });
+module.exports = withMeter(handler, 'tts', (req) => {
+  const input = scriptInput(req);
+  const rawLines = readScriptLines(input);
+  if (!rawLines) return 0;
+  if (isGoogleVoice(input.ref)) {
+    const lines = cleanScriptLines(rawLines);
+    return googleScriptSections(lines).reduce((total, section) => total + section.units, 0);
+  }
+  return req.method === 'GET' ? rawLines.join('').replace(/\s+/g, ' ').length : 0;
+});

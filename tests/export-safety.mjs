@@ -129,6 +129,38 @@ try {
   assert.match(airy.badge,/Airy/);
   assert.equal(airy.audioTracks,1);
   assert.ok(airy.exportSize>1000);
+  await page.route('**/api/tts-voices?v=2',route=>route.fulfill({json:{ok:true,voices:[
+    {id:'ko-KR-Wavenet-C',title:'Google WaveNet C · 남성'}
+  ]}}));
+  await page.route('**/api/tts-script',async route=>{
+    assert.equal(route.request().method(),'POST');
+    assert.deepEqual(route.request().postDataJSON(),{ref:'ko-KR-Wavenet-C',speed:1.2,lines:['첫 컷','둘째 컷','셋째 컷','마지막 컷']});
+    await route.fulfill({json:{ok:true,model:'google-wavenet',parts:[
+      {audio_base64:audioClip(24000,220),starts:[0,.25]},
+      {audio_base64:audioClip(24000,260),starts:[0,.6]}
+    ]}});
+  });
+  const google=await page.evaluate(async()=>{
+    AudioEngine.voiceListLoaded=false;
+    await AudioEngine.loadVoiceList();
+    const select=document.getElementById('ttsVoiceSelect');
+    const option=Array.from(select.options).find(candidate=>candidate.value==='ko-KR-Wavenet-C');
+    AudioEngine.restoreVoice(option.value);
+    const lines=['첫 컷','둘째 컷','셋째 컷','마지막 컷'];
+    AudioEngine.masterWantKey=AudioEngine.scriptKeyFor(lines);
+    await AudioEngine.fetchScriptNarration(lines);
+    refitDurationToNarration();
+    const bounds=AudioEngine.masterCutBounds.slice();
+    isPlaying=false; AudioEngine.stopTts();
+    window.lastRecordedVideoBlob=null;
+    await exportSynthesizedVideo();
+    return {bounds,provider:AudioEngine.ttsProvider,selected:select.value,exportSize:window.lastRecordedVideoBlob?.size||0};
+  });
+  [0,.25,1,1.6,2].forEach((bound,index)=>assert.ok(Math.abs(google.bounds[index]-bound)<.003));
+  assert.equal(google.provider,'google');
+  assert.equal(google.selected,'ko-KR-Wavenet-C');
+  assert.ok(google.exportSize>1000);
+
   assert.deepEqual(pageErrors,[]);assert.deepEqual(await page.evaluate(()=>window.__smokeAsyncErrors),[]);
   console.log('export safety ok',JSON.stringify(result));
 } finally {await browser.close();if(srv)srv.close();}

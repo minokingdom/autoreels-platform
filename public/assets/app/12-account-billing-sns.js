@@ -1422,10 +1422,10 @@ async function arRestoreProject(p) {
   const d=getSelectedDealer();for(const k of ['name','title','branch','promoTag','cardHide','accentColor']) if(s.card?.[k]!==undefined)d[k]=s.card[k];d.logoImg=logo;
   arSyncEndingContactCopy();
   AudioEngine.masterBuffer=null;AudioEngine.masterCutBounds=[];AudioEngine.masterWantKey='';AudioEngine.masterDuration=0;AudioEngine.ttsCache.clear();
-  for(const [id,value] of [['bgmStyleSelect',s.audio?.bgm],['ttsVoiceSelect',s.audio?.voice],['ttsSpeedSelect',s.audio?.speed],['inputVehicle',campaign.vehicle],['inputDiscount',campaign.discount],['inputDiscountNum',campaign.discountNum],['aiPromptInput',s.prompt]]){
+  for(const [id,value] of [['bgmStyleSelect',s.audio?.bgm],['ttsSpeedSelect',s.audio?.speed],['inputVehicle',campaign.vehicle],['inputDiscount',campaign.discount],['inputDiscountNum',campaign.discountNum],['aiPromptInput',s.prompt]]){
     const e=document.getElementById(id);if(e && value!=null)e.value=String(value);
   }
-  AudioEngine.ttsVoice=s.audio?.voice||'off';AudioEngine.ttsSpeed=Number(s.audio?.speed)||1.1;
+  AudioEngine.restoreVoice(s.audio?.voice||'off');AudioEngine.ttsSpeed=Number(s.audio?.speed)||1.1;
   AudioEngine.bgmStyle=s.audio?.bgm||'off';
   if(/^\/assets\/bgm\/pack\/[a-zA-Z0-9_-]+\.mp3$/.test(s.audio?.packPath||''))AudioEngine.loadRemoteBgmUrl(s.audio.packPath,'저장한 배경음악',false);
   BASE_DURATION=Math.max(6,Math.min(90,Number(s.duration)||12));

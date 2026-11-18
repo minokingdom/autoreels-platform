@@ -85,7 +85,8 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
    '../lib/reference-analysis.cjs':{handleReferenceAnalysis:()=>assert.fail('비로그인 영상 분석 실행')},
    '../lib/fish-voices':require('../lib/fish-voices'),
    '../lib/korean-numbers':require('../lib/korean-numbers'),
-   '../lib/airy-tts':require('../lib/airy-tts')
+   '../lib/airy-tts':require('../lib/airy-tts'),
+   '../lib/google-tts':require('../lib/google-tts')
  };
  let providerCalls = 0;
  const guardedApi = file => load('api/'+file+'.js', deps, {
@@ -145,6 +146,33 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  assert.equal(rateLimited.statusCode,429);
  assert.equal(rateLimited.body.error,'airy_rate_limited');
  assert.equal(refunds,priorRefunds+1);
+ const googleEnv={GOOGLE_TTS_API_KEY:'google-test-key'};
+ const googleCalls=[];
+ const google = load('lib/google-tts.js',{'./korean-numbers':require('../lib/korean-numbers')},googleEnv,{AbortSignal,fetch:async(url,options)=>{
+   googleCalls.push({url,body:JSON.parse(options.body),headers:options.headers});
+   return new Response(JSON.stringify({audioContent:'YXVkaW8=',timepoints:[{markName:'cut_1',timeSeconds:1.25}]}));
+ }});
+ const googleScript = load('api/tts-script.js', {...deps,'../lib/google-tts':google,'../lib/server/meter':airyMeter},googleEnv);
+ const googleRequest = {method:'POST',headers:{host:'app.test'},body:{ref:'ko-KR-Wavenet-C',speed:1.2,lines:['BMW 7시리즈 & 4대','1:1 혜택 -20%']}};
+ const googleResult=response();
+ await googleScript(googleRequest,googleResult);
+ assert.equal(googleResult.statusCode,200);
+ assert.equal(googleResult.body.model,'google-wavenet');
+ assert.deepEqual(Array.from(googleResult.body.parts[0].starts),[0,1.25]);
+ assert.equal(googleCalls.length,1);
+ const googleRequestBody=googleCalls[0].body;
+ assert.equal(googleRequestBody.voice.name,'ko-KR-Wavenet-C');
+ assert.equal(googleRequestBody.audioConfig.speakingRate,1.2);
+ assert.deepEqual(googleRequestBody.enableTimePointing,['SSML_MARK']);
+ assert.match(googleRequestBody.input.ssml,/칠시리즈 &amp; 네 대/);
+ assert.match(googleRequestBody.input.ssml,/<mark name="cut_1"\/>일대일 혜택 20프로 할인/);
+ assert.equal(googleCalls[0].headers['X-Goog-Api-Key'],'google-test-key');
+ assert.equal(googleCalls[0].url,'https://texttospeech.googleapis.com/v1beta1/text:synthesize');
+ const sections=google.googleScriptSections(Array(12).fill('한'.repeat(200)));
+ assert.ok(sections.length>1 && sections.every(part=>Buffer.byteLength(part.ssml)<=5000));
+ assert.equal(sections.reduce((count,part)=>count+part.count,0),12);
+ assert.ok(sections.every(part=>part.units===part.ssml.replace(/<mark[^>]+\/>/g,'').length));
+
  assert.equal(balances.size,0);
  const publicUrls=[];
  const trends = load('api/trends.js',{

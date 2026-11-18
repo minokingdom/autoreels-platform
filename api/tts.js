@@ -20,6 +20,7 @@
 const { isValidVoiceId, CURATED_VOICE_IDS } = require('../lib/fish-voices');
 const { normalizeKoreanNumbers } = require('../lib/korean-numbers');
 const { MODEL: AIRY_MODEL, usesAiry, synthesizeAiry, sendAiryError } = require('../lib/airy-tts');
+const { MODEL: GOOGLE_MODEL, isGoogleVoice, synthesizeGoogleLine, sendGoogleTtsError } = require('../lib/google-tts');
 // 유료 크레딧이 없을 때 쓰는 Fish Audio 무료 모델
 const FREE_MODEL = (process.env.FISH_TTS_FREE_MODEL || 's2.1-pro-free').trim();
 
@@ -79,9 +80,11 @@ async function handler(req, res) {
     return res.status(403).json({ ok: false, error: 'forbidden_origin' });
   }
 
+  const input = ttsInput(req);
   const apiKey = (process.env.FISH_API_KEY || '').trim();
+  const google = isGoogleVoice(input.ref);
   const airy = usesAiry(req, 9);
-  if (!airy && !apiKey) {
+  if (!google && !airy && !apiKey) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(503).json({
       ok: false,
@@ -90,7 +93,6 @@ async function handler(req, res) {
     });
   }
 
-  const input = ttsInput(req);
   const text = ttsText(input);
   if (!text) {
     return res.status(400).json({ ok: false, error: 'text_required' });
@@ -104,6 +106,18 @@ async function handler(req, res) {
   const toneTag = TONE_TAGS[toneKey];
   const requestedSpeed = Number(input.speed);
   const speed = requestedSpeed >= 0.8 && requestedSpeed <= 1.5 ? requestedSpeed : preset.speed;
+
+  if (google) {
+    res.setHeader('X-TTS-Model', GOOGLE_MODEL);
+    try {
+      const audio = await synthesizeGoogleLine(text, input.ref, speed);
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Cache-Control', 'private, max-age=86400');
+      return res.status(200).send(audio);
+    } catch (error) {
+      return sendGoogleTtsError(res, error);
+    }
+  }
 
   if (airy) {
     res.setHeader('X-TTS-Model', AIRY_MODEL);
@@ -181,4 +195,9 @@ async function handler(req, res) {
 
 // 사용량 계산·한도 (회원 서버가 켜져 있을 때만 동작)
 const { withMeter } = require('../lib/server/meter');
-module.exports = withMeter(handler, 'tts', (req) => ['GET', 'POST'].includes(req.method) ? ttsText(ttsInput(req)).length : 0);
+module.exports = withMeter(handler, 'tts', (req) => {
+  if (!['GET', 'POST'].includes(req.method)) return 0;
+  const input = ttsInput(req);
+  const text = ttsText(input);
+  return isGoogleVoice(input.ref) ? normalizeKoreanNumbers(text).length : text.length;
+});

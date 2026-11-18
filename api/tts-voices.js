@@ -6,6 +6,7 @@
  */
 const { listCuratedVoices } = require('../lib/fish-voices');
 const { usesAiry, listAiryVoices } = require('../lib/airy-tts');
+const { listGoogleVoices } = require('../lib/google-tts');
 const { isSameSiteRequest, consume, refundUsage } = require('../lib/server/usage');
 
 const LYRIA_BGM_PACK = [
@@ -203,20 +204,22 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
   }
+  const googleVoices = Number(req.query?.v) >= 2 ? listGoogleVoices() : [];
   if (usesAiry(req, 1)) {
     res.setHeader('Cache-Control', 'no-store');
-    return res.status(200).json({ ok: true, voices: listAiryVoices() });
+    return res.status(200).json({ ok: true, voices: [...listAiryVoices(), ...googleVoices] });
   }
   const apiKey = (process.env.FISH_API_KEY || '').trim();
   if (!apiKey) {
     res.setHeader('Cache-Control', 'no-store');
+    if (googleVoices.length) return res.status(200).json({ ok: true, voices: googleVoices });
     return res.status(503).json({ ok: false, error: 'fish_api_key_missing' });
   }
   try {
     const voices = await listCuratedVoices(apiKey);
     const allNamed = voices.every((v) => v.named);
     res.setHeader('Cache-Control', allNamed ? 'public, max-age=600, s-maxage=3600' : 'no-store');
-    return res.status(200).json({ ok: true, voices });
+    return res.status(200).json({ ok: true, voices: [...voices, ...googleVoices] });
   } catch (err) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(502).json({ ok: false, error: 'fish_voice_list_failed', detail: String(err && err.message) });
