@@ -11,9 +11,25 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
  const wrap=c=>({query:(q,p=[])=>q.includes('pg_advisory_xact_lock')?Promise.resolve({rows:[]}):c.query(q,p)});
  const db={...wrap(pg),tx:fn=>pg.transaction(c=>fn(wrap(c)))};
  await pg.query("INSERT INTO ar_users(id,phone,password_hash) VALUES(1,'010-0000-0001','test'),(2,'010-0000-0002','test')");
- const projects=load('lib/server/projects.js',{'./db':db});
+ const userStyles=load('lib/server/user-styles.js',{'./db':db});
+ const projects=load('lib/server/projects.js',{'./db':db,'./user-styles':userStyles});
  const snapshot={version:1,industry:'auto',campaign:{vehicle:'검증',cutCaptions:['한 컷'],ttsLines:['음성'],scenePlan:[]},photos:[{src:'/assets/scenes/auto/1.jpg'}]};
  const u={id:1},other={id:2};
+ const personalStyle = { id: 'custom:test-style-1', name: '나만의 테마', baseStyleId: 'in_x_cover', fontKey: 'pretM',
+  colors: { primary: '#f6f1e7', accent: '#756452' }, caption: { position: 'bottom', sizeRatio: 0.06 }, logo: { corner: 'top-left' } };
+ assert.equal((await userStyles.list(u)).revision, 0);
+ const styleSave = {accountId: '1', revision: 0, styles: [personalStyle]};
+ assert.equal((await userStyles.save(u,styleSave)).revision,1);
+ await assert.rejects(()=>userStyles.save(u,styleSave),e=>e.code==='style_conflict');
+ await assert.rejects(()=>userStyles.save(other,styleSave),e=>e.code==='style_account_changed');
+ assert.equal((await userStyles.list(other)).styles.length,0);
+ await assert.rejects(()=>userStyles.save(u,{...styleSave,revision:1,styles:[{...personalStyle,logo:{corner:'top-left',dataUrl:'data:image/svg+xml;base64,aaaa'}}]}),e=>e.status===400);
+ await assert.rejects(()=>projects.handle(u,'project-save',{snapshot:{...snapshot,customStyles:[personalStyle]}}),e=>e.status===400);
+ const styled = await projects.handle(u,'project-save',{snapshot:{...snapshot,campaign:{...snapshot.campaign,designStyle:personalStyle.id},customStyles:[personalStyle]}});
+ await userStyles.save(u,{...styleSave,revision:1,styles:[]});
+ const restoredStyle=(await projects.handle(u,'project-load',{id:styled.project.id})).project.snapshot.customStyles[0];
+ assert.equal(restoredStyle.name,personalStyle.name);
+ await projects.handle(u,'project-delete',{id:styled.project.id,revision:1});
  const saved=await projects.handle(u,'project-save',{name:'사진 프로젝트',snapshot});assert.equal(saved.project.revision,1);
  const id=saved.project.id;
  assert.equal((await projects.handle(u,'project-load',{id})).project.snapshot.campaign.vehicle,'검증');

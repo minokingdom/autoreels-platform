@@ -488,6 +488,7 @@
     function arApplyMe(me) {
       AR_SERVER.me = me;
       const u = me.user;
+      arLoadAccountCustomStyles(u.id);
       const pro = Boolean(me.entitlement && me.entitlement.pro);
       const comp = pro && me.subscription && me.subscription.comp === true;
       const until = comp ? 0 : (pro ? arYmd(me.entitlement.until) : 20000101);
@@ -1319,13 +1320,15 @@ async function arCaptureProject() {
   if(AudioEngine.bgmStyle==='custom_mp3' && AudioEngine.customBgmAudioEl?.src){const u=new URL(AudioEngine.customBgmAudioEl.src,location.href);if(u.origin===location.origin && /^\/assets\/bgm\/pack\/[a-zA-Z0-9_-]+\.mp3$/.test(u.pathname))packPath=u.pathname;}
   if(campaign.hasCustomVideo || campaign.cutVideos?.some(Boolean) || (AudioEngine.bgmStyle==='custom_mp3'&&!packPath)) throw new Error('직접 올린 동영상·MP3는 아직 프로젝트 저장을 지원하지 않습니다. 사진과 기본 음악으로 저장해 주세요.');
   const data={};for(const k of AR_PROJECT_FIELDS) if(campaign[k]!==undefined) data[k]=JSON.parse(JSON.stringify(campaign[k]));
+  const designIds = new Set([data.designStyle, ...[].concat(data.cutDesigns || [])]);
+  const customStyles = [...designIds].map(id => arFindDesign(id)?.custom).filter(Boolean);
   const photos=[];
   for(const img of campaign.uploadedPhotos) photos.push({src:await arProjectImage(img._dataUrl||img.src),label:img._label||'',title:img._sceneTitle||''});
   for(const row of data.cutOverlays||[]) for(const overlay of row||[]) if(overlay.photoSrc) overlay.photoSrc=await arProjectImage(overlay.photoSrc,480);
   const d=getSelectedDealer(),card={};
   for(const k of ['name','title','branch','promoTag','cardHide','accentColor']) if(d[k]!==undefined) card[k]=JSON.parse(JSON.stringify(d[k]));
   if(d.logoImg) card.logo=await arProjectImage(d.logoImg.src,480);
-  return {version:1,industry:IND.key,campaign:data,photos,card,duration:BASE_DURATION,prompt:document.getElementById('aiPromptInput')?.value||'',audio:{voice:AudioEngine.ttsVoice,speed:AudioEngine.ttsSpeed,bgm:document.getElementById('bgmStyleSelect')?.value||AudioEngine.bgmStyle,packPath}};
+  return {version:1,industry:IND.key,campaign:data,photos,card,customStyles,duration:BASE_DURATION,prompt:document.getElementById('aiPromptInput')?.value||'',audio:{voice:AudioEngine.ttsVoice,speed:AudioEngine.ttsSpeed,bgm:document.getElementById('bgmStyleSelect')?.value||AudioEngine.bgmStyle,packPath}};
 }
 async function arRestoreProject(p) {
   const s=p.snapshot;
@@ -1336,6 +1339,10 @@ async function arRestoreProject(p) {
     await Promise.race([img.decode(),new Promise((_,reject)=>setTimeout(()=>reject(new Error('저장된 사진을 읽지 못했습니다.')),10000))]);return img;
   }));
   let logo=null;if(s.card?.logo){logo=new Image();logo.src=s.card.logo;await logo.decode();}
+  if (arCustomLoadRequest) await arCustomLoadRequest;
+  const designIds = new Set([s.campaign.designStyle, ...[].concat(s.campaign.cutDesigns || [])]);
+  const projectStyles = Array.isArray(s.customStyles) ? s.customStyles : arReadBrowserStyles();
+  await arSetProjectCustomStyles(projectStyles.filter(style => designIds.has(style?.id)));
   isPlaying=false;pauseAllCutVideos();AudioEngine.stopBgmLoop();AudioEngine.stopTts();
   for(const k of AR_PROJECT_FIELDS) { if(s.campaign[k]!==undefined) campaign[k]=s.campaign[k];else delete campaign[k]; }
   campaign.uploadedPhotos.forEach(arReleasePhoto);campaign.uploadedPhotos=photos;campaign.hasCustomVideo=false;campaign.cutVideos=[];campaign.cutVideoUrls=[];

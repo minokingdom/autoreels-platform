@@ -987,7 +987,6 @@
                 <div class="ar-custom-cutnav"><span>미리보기</span><div id="arCustomCutTabs" role="tablist" aria-label="미리볼 컷"></div></div>
                 <canvas id="arCustomPreview" width="540" height="960" aria-label="내 스타일 영상 미리보기"></canvas>
                 <div><strong id="arCustomPreviewName">내 스타일</strong><p>저장하면 ‘전체’ 맨 위에 고정돼요.</p></div>
-                <div id="arCustomSavedList" class="ar-custom-saved" aria-label="저장한 내 스타일"></div>
               </aside>
               <form id="arCustomStyleForm" class="ar-custom-form">
                 <label for="arCustomName">스타일 이름</label>
@@ -1017,8 +1016,9 @@
                   <label><input type="radio" name="position" value="bottom"><span>아래쪽</span></label>
                 </div><label class="ar-custom-inline">글자 크기<input type="range" name="sizeRatio" min="0.045" max="0.085" step="0.005" value="0.06"><output id="arCustomSize">보통</output></label></fieldset>
                 <p id="arCustomStatus" role="status" aria-live="polite"></p>
-                <div class="ar-custom-save"><p>이 브라우저에 최대 5개 저장해요.</p><button type="submit">내 스타일 저장</button></div>
-                <p>브라우저 데이터를 지우면 사라져요. 계정·다른 기기 동기화는 추후 지원 예정이에요.</p>
+                <div class="ar-custom-save"><p id="arCustomStorageScope">이 브라우저에 최대 5개 저장해요.</p><button type="submit">내 스타일 저장</button></div>
+                <button id="arCustomImport" type="button" data-custom-action="import" hidden>이 브라우저 스타일 가져오기</button>
+                <div id="arCustomSavedList" class="ar-custom-saved" aria-label="저장한 내 스타일"></div>
               </form>
             </div>
           </dialog>

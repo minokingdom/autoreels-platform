@@ -5,6 +5,7 @@
 const db = require('../lib/server/db');
 const security = require('../lib/server/security');
 const projects = require('../lib/server/projects');
+const userStyles = require('../lib/server/user-styles');
 const scheduler = require('../lib/server/scheduler');
 const { readiness } = require('../lib/server/config');
 const { setSession, clearSession, readSession, hashPassword, checkPassword, sameOrigin } = require('../lib/server/session');
@@ -220,6 +221,12 @@ module.exports = async function handler(req, res) {
     if (action === 'specialty-trends' && req.method === 'GET') {
       const row = user.specialty ? await readSpecialtyTrends(user.industry, user.specialty) : null;
       return send(res, 200, { ok: true, industry: user.industry, specialty: user.specialty || '', keywords: row?.keywords || [], updatedAt: row?.updated_at || null });
+    }
+    if (action === 'styles-list' && req.method === 'GET') {
+      return send(res, 200, { ok: true, accountId: String(user.id), ...await userStyles.list(user) });
+    }
+    if (action === 'styles-save' && req.method === 'POST') {
+      return send(res, 200, { ok: true, ...await userStyles.save(user, await readBody(req)) });
     }
     if (action.startsWith('project-')) {
       if (req.method !== 'POST') return send(res,405,{ok:false,error:'method'});

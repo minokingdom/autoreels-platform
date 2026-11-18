@@ -10,6 +10,38 @@ const srv=http.createServer((req,res)=>{
 });await new Promise(r=>srv.listen(0,'127.0.0.1',r));
 const browser=await chromium.launch();const page=await browser.newPage({viewport:{width:1280,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
 const projects=new Map();
+const pixelLogo='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==';
+const styleFixture={id:'custom:browser-test',name:'우리 매장 테마',baseStyleId:'in_x_cover',fontKey:'maru',colors:{primary:'#f6f1e7',accent:'#756452'},caption:{position:'top',sizeRatio:0.06},logo:{dataUrl:pixelLogo,corner:'top-left',widthRatio:0.12},pinned:true};
+const sharedStyles={styles:[],revision:0};
+const sharedProjects=new Map();
+async function openStyleDevice(legacy, width) {
+ const device=await browser.newPage({viewport:{width,height:844}});
+ device.on('pageerror',error=>errors.push(error.stack || error.message));
+ if(legacy) await device.addInitScript(style=>localStorage.setItem('autoreels:user-styles:v1:browser',JSON.stringify({version:1,styles:[style]})),styleFixture);
+ await device.route('**/api/account?action=*',async route=>{
+  const action=new URL(route.request().url()).searchParams.get('action');
+  const body=route.request().method()==='POST'?route.request().postDataJSON():null;
+  if(action==='config') return route.fulfill({json:{ok:true,serverMode:true,plans:[]}});
+  if(action==='me') return route.fulfill({json:{ok:true,user:{id:'71',name:'매장',phone:null,industry:'auto',title:'',branch:'',promo:''},entitlement:{pro:false}}});
+  if(action==='styles-list') return route.fulfill({json:{ok:true,accountId:'71',...sharedStyles}});
+  if(action==='styles-save') {
+   assert.equal(body.accountId,'71'); assert.equal(body.revision,sharedStyles.revision);
+   sharedStyles.styles=body.styles; sharedStyles.revision++;
+   return route.fulfill({json:{ok:true,...sharedStyles}});
+  }
+  if(action==='project-save') {
+   const project={...body,revision:1,updated_at:new Date().toISOString()};
+   sharedProjects.set(project.id,project);
+   return route.fulfill({json:{ok:true,project}});
+  }
+  if(action==='project-load') return route.fulfill({json:{ok:true,project:sharedProjects.get(body.id)}});
+  return route.fulfill({json:{ok:true,projects:[...sharedProjects.values()]}});
+ });
+ await device.goto(`http://127.0.0.1:${srv.address().port}/studio`);
+ await device.waitForFunction(()=>arCustomRevision!==null);
+ await device.evaluate(()=>{isPlaying=false;AudioEngine.enabled=false;AudioEngine.ttsVoice='off';});
+ return device;
+}
 await page.route('**/api/account?action=project-*',async route=>{
  const a=new URL(route.request().url()).searchParams.get('action'),b=route.request().postDataJSON();let body={ok:true};
  if(a==='project-save'){const p={...b,revision:(projects.get(b.id)?.revision||0)+1,updated_at:new Date().toISOString()};console.log('snapshot bytes',Buffer.byteLength(JSON.stringify(b.snapshot)));projects.set(b.id,p);body.project=p;}
@@ -19,6 +51,38 @@ await page.route('**/api/account?action=project-*',async route=>{
  await route.fulfill({json:body});
 });
 try{
+ const original=await openStyleDevice(true,1280);
+ await original.evaluate(()=>arOpenCustomStyle());
+ assert.equal(await original.locator('#arCustomSavedList').getByText(styleFixture.name).count(),0);
+ await original.locator('#arCustomImport').click();
+ await original.locator('#arCustomSavedList').getByText(styleFixture.name,{exact:true}).waitFor();
+ await original.locator('#arCustomSavedList').getByRole('button',{name:'편집'}).click();
+ await original.locator('#arCustomStyleForm [type=submit]').click();
+ await original.waitForFunction(id=>campaign.designStyle===id,styleFixture.id);
+ await original.evaluate(()=>document.getElementById('arCustomStylePanel').close());
+ await original.evaluate(()=>arOpenProjects());
+ await original.waitForFunction(()=>!arProjectBusy);
+ await original.locator('#arProjectName').fill('테마 보관 검증');
+ await original.locator('#arProjectSave').click();
+ await original.waitForFunction(()=>!arProjectBusy);
+ const saved= [...sharedProjects.values()][0];
+ assert.equal(saved.snapshot.customStyles[0].name,styleFixture.name);
+ assert.equal(saved.snapshot.customStyles[0].logo.dataUrl,pixelLogo);
+
+ const newDevice=await openStyleDevice(false,390);
+ await newDevice.evaluate(()=>arOpenCustomStyle());
+ await newDevice.locator('#arCustomSavedList').getByText(styleFixture.name,{exact:true}).waitFor();
+ assert.equal(await newDevice.locator('#arCustomImport').isVisible(),false);
+ await newDevice.locator('#arCustomSavedList').getByRole('button',{name:`${styleFixture.name} 삭제`}).click();
+ await newDevice.waitForFunction(()=>!arCustomSaving && arCustomStyles.length===0);
+ await newDevice.evaluate(()=>document.getElementById('arCustomStylePanel').close());
+ newDevice.on('dialog',dialog=>dialog.accept());
+ await newDevice.evaluate(()=>arOpenProjects());
+ await newDevice.locator('#arProjectList').getByRole('button',{name:'불러오기'}).click();
+ await newDevice.waitForFunction(id=>getActiveDesign().id===id,styleFixture.id);
+ assert.equal(await newDevice.evaluate(()=>getActiveDesign().custom.colors.primary),styleFixture.colors.primary);
+ assert.equal(await newDevice.evaluate(()=>getActiveDesign().custom.logo.dataUrl),pixelLogo);
+ await original.close(); await newDevice.close();
  await page.goto(`http://127.0.0.1:${srv.address().port}/studio`);await page.waitForTimeout(1000);
  await page.evaluate(()=>{isPlaying=false;AudioEngine.enabled=false;AudioEngine.ttsVoice='off';AudioEngine.bgmStyle='off';AR_SERVER.mode=true;AR_SERVER.me={user:{id:'1'}};});
  await page.evaluate(()=>arOpenProjects());await page.waitForFunction(()=>!arProjectBusy);
