@@ -623,7 +623,7 @@
           <p id="narrationFitNotice" class="hidden text-[11px] leading-relaxed text-[#f5a524]"></p>
 
           <!-- 구간 점프 -->
-          <div data-advanced class="grid grid-cols-3 gap-1 bg-[#141415] p-1 rounded-[8px] border border-[var(--border)]">
+          <div class="grid grid-cols-3 gap-1 bg-[#141415] p-1 rounded-[8px] border border-[var(--border)]">
             <button id="jumpBtn0" onclick="seekToTime(0.0)" class="h-7 px-2 rounded-[6px] text-[12px] text-[#a1a1a6] hover:bg-[#232325] hover:text-[#ededed] transition-colors">
               처음
             </button>
@@ -707,8 +707,8 @@
             </div>
           </div>
 
-        <!-- 쉬운 모드 단계 안내: 탭을 바꾸면 문구가 바뀜 -->
-        <div id="easyStepGuide" class="ar-easy-only mx-5 sm:mx-6 mt-4 px-4 py-3 rounded-[10px] bg-[#12201a] border border-[#4cc38a]/30" aria-live="polite">
+        <!-- 단계 안내: 탭을 바꾸면 문구가 바뀜 -->
+        <div id="easyStepGuide" class="mx-5 sm:mx-6 mt-4 px-4 py-3 rounded-[10px] bg-[#12201a] border border-[#4cc38a]/30" aria-live="polite">
           <div class="text-[12px] text-[#4cc38a] font-semibold"><span id="easyStepCount">1 / 6</span> · <span id="easyStepTitle">오늘의 주제</span></div>
           <p id="easyStepText" class="text-[14px] text-[#ededed] mt-1 leading-relaxed"></p>
         </div>
@@ -763,7 +763,7 @@
             <div class="flex items-center justify-between flex-wrap gap-2">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-[15px] font-semibold text-[#ededed]">대본 고르기</span>
-                <span data-advanced id="aiEngineStatusBadge" class="tag-chip px-2 py-0.5 text-[12px] flex items-center gap-1.5">
+                <span id="aiEngineStatusBadge" class="tag-chip px-2 py-0.5 text-[12px] flex items-center gap-1.5">
                   <span class="w-1.5 h-1.5 rounded-full bg-[#4cc38a]"></span>중앙 AI 엔진 활성
                 </span>
                 <span id="activeSceneRecipeBadge" class="hidden tag-chip px-2 py-0.5 font-mono text-[12px]">테마: 로얄 골드 · 4컷 AI 위젯</span>
@@ -790,12 +790,12 @@
                 다시 쓰기
               </button>
             </div>
-            <div data-advanced class="flex items-center gap-2">
+            <div class="flex items-center gap-2">
               <label for="aiExcludeInput" class="text-[11px] font-mono text-[#85858b] shrink-0">뺄 문구</label>
               <input id="aiExcludeInput" type="text" placeholder="예: 견적, 최저가, 무료, 1등 (쉼표로 구분 · AI 대본에서 자동 제외)" class="studio-input flex-1 h-8 px-2.5 text-[12px] text-[#d4d4d8]" />
             </div>
             <!-- AI 대본으로 영상이 만들어지는 원리 안내 -->
-            <details data-advanced class="fold rounded-[8px] bg-[#141415] border border-[var(--border)] text-[12px] text-[#a1a1a6] leading-relaxed">
+            <details class="fold rounded-[8px] bg-[#141415] border border-[var(--border)] text-[12px] text-[#a1a1a6] leading-relaxed">
               <summary class="px-3 py-2 text-[12px] text-[#a1a1a6]">AI 대본으로 영상이 만들어지는 과정 보기</summary>
               <!-- 업종을 바꾸면 arRenderAiPromptHints() 가 예시 문구를 바꿈 -->
               <div class="px-3 pb-3"> 아래에 <code id="aiHowtoExample" class="text-[#ededed] font-mono">"30대 여성, 그랜저"</code>처럼 상황을 적고 [AI로 만들기]를 누르면 ① 대본 3안이 만들어지고, ② 설정된 영상 길이(4컷~10컷)에 맞춰 <strong class="text-[#ededed]">사진 컷 + 모션 그래픽 + 한국어 성우 음성 + 배경음악</strong>이 합성되어 바로 재생됩니다.</div>
@@ -807,7 +807,7 @@
             <div id="dynamicCutCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 lg:max-h-[600px] overflow-y-auto pr-1"></div>
           </div>
 
-          <details data-advanced id="scriptTemplateFold" class="fold rounded-[12px] border border-[var(--border)] bg-[#111113]">
+          <details id="scriptTemplateFold" class="fold rounded-[12px] border border-[var(--border)] bg-[#111113]">
             <summary class="px-4 py-3 text-[13px] font-medium text-[#ededed]">📝 대본 템플릿 더 보기 <span class="text-[12px] text-[#85858b] font-normal">상황별 문구 모음 · 고르면 문구만 바뀌어요</span></summary>
             <div class="px-2 pb-2">
           <!-- ================================================================= -->
@@ -890,7 +890,7 @@
             </div>
           </details>
 
-          <details data-advanced id="storyboardFold" class="fold rounded-[12px] border border-[var(--border)] bg-[#111113]">
+          <details id="storyboardFold" class="fold rounded-[12px] border border-[var(--border)] bg-[#111113]">
             <summary class="px-4 py-3 text-[13px] font-medium text-[#ededed]">🎬 컷 구성 · 추천 문구 칩 <span class="text-[12px] text-[#85858b] font-normal">컷별 시간 확인, 문구 한 번에 넣기</span></summary>
             <div class="px-2 pb-2">
           <!-- ================================================================= -->
@@ -951,7 +951,7 @@
                 <button type="button" id="regenTopicImgBtn" onclick="arRegenerateThemeImages()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer text-[#4cc38a] border-[#4cc38a]/40">
                   ✨ 주제·테마 맞춤 이미지
                 </button>
-                <button data-advanced type="button" onclick="randomizeCurrentDealerVariation()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">
+                <button type="button" onclick="randomizeCurrentDealerVariation()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">
                   구도 섞기
                 </button>
                 <button type="button" onclick="arApplySinglePhotoAllCuts()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer" title="한 장의 사진으로 모든 컷을 통일합니다">
@@ -962,7 +962,7 @@
                 </button>
               </div>
             </div>
-            <div data-advanced id="dealerVariationSummary" class="text-[12px] text-[#a1a1a6] bg-[#141415] px-3.5 py-2.5 rounded-[8px] border border-[var(--border)]">
+            <div id="dealerVariationSummary" class="text-[12px] text-[#a1a1a6] bg-[#141415] px-3.5 py-2.5 rounded-[8px] border border-[var(--border)]">
               변주 레시피 로딩 중
             </div>
             <!-- 사진 썸네일 목록은 아래 컷별 카드(썸네일 포함)와 겹쳐 숨김 -->
@@ -1046,8 +1046,8 @@
               </label>
               <button type="button" id="cutMixAgain" class="hidden ig-text-btn" onclick="arSetCutDesignMix(true)">↻ 다시 섞기</button>
             </div>
-            <p data-advanced class="text-[11px] text-[#6e6e73]">미리보기 화면을 옆으로 밀어도 디자인 목록이 열립니다.</p>
-            <details data-advanced class="fold pt-2 border-t border-[var(--border)]">
+            <p class="text-[11px] text-[#6e6e73]">미리보기 화면을 옆으로 밀어도 디자인 목록이 열립니다.</p>
+            <details class="fold pt-2 border-t border-[var(--border)]">
               <summary class="py-1.5 text-[12px] text-[#a1a1a6]">🔥 인기 릴스 스타일 가져오기 · 키워드로 찾기</summary>
             <div class="pt-2 space-y-2">
               <div class="flex items-center justify-between gap-2">
@@ -1087,11 +1087,11 @@
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-[13px] font-medium text-[#ededed]">배경음악 · 성우</span>
-                <span data-advanced id="audioEngineBadge" class="tag-chip px-2 py-0.5 font-mono text-[11px] text-[#4cc38a]">클릭 시 사운드 자동 활성</span>
-                <span data-advanced id="ttsProviderBadge" class="tag-chip px-2 py-0.5 font-mono text-[11px] text-[#85858b]">성우: 준비 중</span>
+                <span id="audioEngineBadge" class="tag-chip px-2 py-0.5 font-mono text-[11px] text-[#4cc38a]">클릭 시 사운드 자동 활성</span>
+                <span id="ttsProviderBadge" class="tag-chip px-2 py-0.5 font-mono text-[11px] text-[#85858b]">성우: 준비 중</span>
               </div>
               <div class="flex items-center gap-1.5 flex-wrap">
-                <button data-advanced type="button" onclick="testCurrentCutTtsNow()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">
+                <button type="button" onclick="testCurrentCutTtsNow()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">
                   현재 컷 듣기
                 </button>
                 <button type="button" onclick="triggerFullAudioPreview()" class="btn-primary h-8 px-3 text-[12px] cursor-pointer">
@@ -1182,7 +1182,7 @@
                 </select>
               </div>
 
-              <div data-advanced>
+              <div>
                 <label for="ttsSpeedSelect" class="block text-[12px] text-[#a1a1a6] mb-1">말하는 속도</label>
                 <select id="ttsSpeedSelect" onchange="onAudioConfigChange()" class="studio-input w-full h-9 px-2.5 text-[12px] cursor-pointer">
                   <option value="1">보통</option>
@@ -1346,7 +1346,7 @@
             <div class="flex items-center justify-between flex-wrap gap-2">
               <label class="text-[15px] font-semibold text-[#ededed]">문구 · 해시태그</label>
               <div class="flex items-center gap-2">
-                <span data-advanced id="igAccountBadge" class="hidden sm:inline text-[12px] font-mono text-[#85858b]"></span>
+                <span id="igAccountBadge" class="hidden sm:inline text-[12px] font-mono text-[#85858b]"></span>
                 <button type="button" onclick="copyDealerCaption()" id="copyCaptionBtn" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">
                   본문 복사
                 </button>
@@ -2022,17 +2022,6 @@
         <h4 id="settingsCardTitle" class="text-[13px] font-medium text-[#ededed]">엔딩 · 매장 정보</h4>
         <div id="settingsEndingFormHome"></div>
       </section>
-
-      <div class="studio-sub p-4 flex items-center justify-between gap-3">
-        <div>
-          <div class="text-[13px] font-medium text-[#ededed]">세부 편집 모드</div>
-          <p class="text-[12px] text-[#a1a1a6] mt-0.5">문구 템플릿, 컷별 구도</p>
-        </div>
-        <button type="button" id="editModeSwitch" role="switch" aria-checked="false" aria-label="세부 편집 모드" onclick="arSetUiMode(document.body.classList.contains('ar-easy') ? 'full' : 'easy', true)" class="edit-mode-switch shrink-0">
-          <span class="ems-track"><span class="ems-knob"></span></span>
-          <span class="ems-label">편집 모드</span>
-        </button>
-      </div>
 
       <details class="studio-sub fold">
         <summary class="p-4 text-[13px] font-medium text-[#a1a1a6] cursor-pointer">운영 관리</summary>

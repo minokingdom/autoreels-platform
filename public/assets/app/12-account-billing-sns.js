@@ -1164,7 +1164,6 @@
     if (typeof renderPreviewCutPinBar === 'function') renderPreviewCutPinBar();
     syncTechPanel();
     applyRoleViewModeUI();
-    arSetUiMode(arLoadUiMode(), false);
     try {
       const curTab = STUDIO_TABS.find((k) => { const el = document.getElementById(`studioPanel_${k}`); return el && !el.classList.contains('hidden'); }) || 'topic';
       arUpdateMobileStepBar(curTab);

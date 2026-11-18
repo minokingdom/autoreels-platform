@@ -896,8 +896,7 @@
     }
 
     // ==========================================================================
-    // ★ 쉬운 모드: 단계마다 꼭 필요한 것만 보이고 고급 기능([data-advanced])은 숨김
-    //   body.ar-easy 클래스로 전환, 선택은 localStorage 'ar_ui_mode' 에 기억 (기본: 쉬운 모드)
+    // 단계별 제작 안내
     // ==========================================================================
     function arUpdateEasyGuide(key) {
       const steps = {
@@ -1033,30 +1032,6 @@
       sel.blur();
     });
 
-    function arSetUiMode(mode, remember) {
-      const easy = mode !== 'full';
-      document.body.classList.toggle('ar-easy', easy);
-      document.querySelectorAll('[data-ui-mode]').forEach((b) => {
-        b.setAttribute('aria-pressed', String((b.getAttribute('data-ui-mode') === 'easy') === easy));
-      });
-      const sw = document.getElementById('editModeSwitch');
-      if (sw) sw.setAttribute('aria-checked', String(!easy));
-      if (remember && typeof arToast === 'function') arToast(easy ? '편집 모드를 껐어요. 기본 단계만 보여요.' : '편집 모드: 문구·효과음·속도 같은 세부 설정이 보여요.');
-      if (remember) {
-        try { localStorage.setItem('ar_ui_mode', easy ? 'easy' : 'full'); } catch (e) {}
-      }
-    }
-
-    function arLoadUiMode() {
-      try { return localStorage.getItem('ar_ui_mode') === 'full' ? 'full' : 'easy'; } catch (e) { return 'easy'; }
-    }
-
-    document.addEventListener('click', (e) => {
-      const b = e.target.closest && e.target.closest('[data-ui-mode]');
-      if (!b) return;
-      arSetUiMode(b.getAttribute('data-ui-mode'), true);
-    });
-
     function switchMainTab(tab) {
       document.getElementById('viewPreview').classList.toggle('hidden', tab !== 'preview');
       document.getElementById('viewAdmin').classList.toggle('hidden', tab !== 'admin');
@@ -1184,7 +1159,7 @@
       } else if (d.status === 'REVISION') {
         statusContainer.innerHTML = `<span class="tag-chip px-2.5 py-1 text-[12px] text-[#d97706]">수정 요청됨</span>`;
       } else {
-        statusContainer.innerHTML = ''; // '편집 중' 표시는 편집 모드 스위치와 헷갈려서 뺌
+        statusContainer.innerHTML = '';
       }
     }
 

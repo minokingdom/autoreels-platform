@@ -40,14 +40,8 @@
     .ar-swipe.fade-l.fade-r { -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 18px, #000 calc(100% - 18px), transparent 100%); }
     .scrollbar-none::-webkit-scrollbar { display: none; }
 
-    /* 5) 쉬운 모드 (C단계) */
-    body.ar-easy [data-advanced] { display: none !important; }
-    body:not(.ar-easy) .ar-easy-only { display: none !important; }
-    .ui-mode-btn { color: #a1a1a6; background: transparent; }
-    .ui-mode-btn:hover { color: #ededed; }
-    .ui-mode-btn[aria-pressed="true"] { background: #ededed; color: #141415; font-weight: 600; }
     /* 단계 이동 버튼을 크게 */
-    body.ar-easy .studio-panel button[onclick^="switchStudioTab"] { height: 44px !important; padding: 0 20px !important; font-size: 15px !important; }
+    .studio-panel button[onclick^="switchStudioTab"] { height: 44px !important; padding: 0 20px !important; font-size: 15px !important; }
 
 /* Mobile design picker */
 .pd-section-help { margin: 5px 10px 0; color: #a1a1a6; font-size: 11px; line-height: 1.4; }

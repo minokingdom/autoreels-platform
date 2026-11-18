@@ -1115,14 +1115,6 @@ body.ar-cut-editing #igSelectedBar { bottom: auto !important; top: calc(100% + 8
 #arOptionSheet .aos-photo img { position: absolute; inset: 0; }
 #arOptionSheet .aos-photo em { z-index: 1; }
 
-/* 편집 모드 스위치 (쉬운 모드 / 전체 기능 버튼을 대신함) */
-.edit-mode-switch { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 8px; border-radius: 999px; border: 1px solid var(--border); background: #141415; color: #a1a1a6; font-size: 13px; font-weight: 600; cursor: pointer; }
-.edit-mode-switch .ems-track { position: relative; width: 34px; height: 20px; border-radius: 999px; background: #2a2a2e; transition: background .15s ease; }
-.edit-mode-switch .ems-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #85858b; transition: transform .15s ease, background .15s ease; }
-.edit-mode-switch[aria-checked="true"] { color: #ededed; border-color: #4cc38a66; }
-.edit-mode-switch[aria-checked="true"] .ems-track { background: #1f6f4c; }
-.edit-mode-switch[aria-checked="true"] .ems-knob { transform: translateX(14px); background: #fff; }
-
 /* ===== 컷 편집창 (인스타 스토리 편집 느낌): 영상 아래에 붙는 깔끔한 시트 ===== */
 #cutEditorPanel.ar-preview-sheet-backdrop { position: static; background: transparent; border: 0; padding: 0; box-shadow: none; margin-top: 10px; }
 #cutEditorPanel .ig-sheet { display: flex; flex-direction: column; gap: 12px; padding: 12px; border-radius: 18px; background: #141416; border: 1px solid rgba(255,255,255,.08); color: #ededed; }
@@ -1296,7 +1288,7 @@ select.ig-select-src { display: none !important; }
 .studio-panel .btn-secondary { border-radius: 999px !important; border-color: transparent !important; background: #232327 !important; }
 .studio-panel .btn-secondary:hover { background: #2c2c31 !important; }
 /* 단계 안내 상자 */
-.studio-panel .ar-easy-only, #easyGuideBox { border-radius: 16px !important; }
+.studio-panel #easyStepGuide, #easyGuideBox { border-radius: 16px !important; }
 .cut-ctl > select { background: #1f1f22 !important; border: 0 !important; border-radius: 10px !important; height: 40px !important; }
 .cut-upload { border: 0 !important; background: #1f1f22 !important; border-radius: 999px !important; }
 /* 발행: 인스타 '공유 대상'처럼 */
