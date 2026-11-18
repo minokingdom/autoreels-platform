@@ -930,6 +930,10 @@
       max-height: 88vh;
       overflow-y: auto;
     }
+.ar-kakao-login{display:flex;justify-content:center;align-items:center;min-height:46px;background:#fee500;border-radius:8px}
+.ar-kakao-login img{display:block;height:46px;width:224px;max-width:100%;object-fit:contain}
+.ar-kakao-login:focus-visible,#arPhoneLoginOptions summary:focus-visible,#studioSettingsModal summary:focus-visible{outline:2px solid #ededed;outline-offset:3px}
+
 /* 내 스타일 만들기: 스튜디오 공통 색과 키보드/모바일 조작 영역 */
 .ar-custom-entry{min-height:44px;padding:10px 14px;border:1px solid #424246;border-radius:8px;background:#232325;color:#ededed;font-weight:600;cursor:pointer}
 .ar-custom-panel{box-sizing:border-box;width:min(1000px,calc(100vw - 32px));max-height:calc(100dvh - 32px);margin:auto;padding:28px;border:1px solid #303033;border-radius:16px;background:#0f0f10;color:#ededed;font:14px/1.5 'Pretendard Variable',Pretendard,sans-serif;overflow:auto;color-scheme:dark}

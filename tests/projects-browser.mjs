@@ -139,6 +139,7 @@ try{
  await page.getByText('치과 확인 주제',{exact:true}).waitFor();
  await page.locator('#headerSettingsBtn').click();
  const settings = page.locator('#studioSettingsModal');
+ await settings.locator('#settingsBusinessDetails summary').click();
  const detail = settings.getByLabel('세부 업종 (직접 입력)',{exact:true});
  const industry = settings.getByLabel('업종 대분류',{exact:true});
  assert.equal(await detail.inputValue(),'치과');
@@ -152,6 +153,7 @@ try{
  await page.reload();
  await page.getByText('교정 전문 치과 확인 주제',{exact:true}).waitFor();
  await page.locator('#arQuickBar [data-qb="settings"]').click();
+ await settings.locator('#settingsBusinessDetails summary').click();
  assert.equal(await detail.inputValue(),'교정 전문 치과');
  assert.ok(await detail.evaluate(el=>el.getBoundingClientRect().bottom < innerHeight));
  await industry.selectOption('restaurant');
@@ -165,6 +167,7 @@ try{
  assert.equal(await page.getByText('교정 전문 치과 확인 주제',{exact:true}).count(),0);
  await settings.getByRole('button',{name:'닫기',exact:true}).click();
  await page.evaluate(()=>{openDealerAuthModal();switchAuthModalTab('signup');});
+ await page.locator('#arPhoneLoginOptions').evaluate(el=>{el.open=true;});
  await page.locator('#authIndustryInput').selectOption('beauty');
  await page.locator('#authSpecialtyInput').fill('남성 전문 미용실');
  assert.equal(await page.locator('#authSpecialtyInput').inputValue(),'남성 전문 미용실');

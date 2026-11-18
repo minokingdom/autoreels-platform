@@ -1088,22 +1088,16 @@
     }
 
     function syncStudioSettingsModal() {
-      const d = typeof getSelectedDealer === 'function' ? getSelectedDealer() : null;
       const accEl = document.getElementById('settingsAccountSummary');
       const authBtn = document.getElementById('settingsAuthActionBtn');
-      const cardSumEl = document.getElementById('cardTabSummaryText');
       const serverMe = window.AR_SERVER && AR_SERVER.mode ? AR_SERVER.me : null;
       if (accEl) {
-        if (serverMe && serverMe.user) {
-          const comp = serverMe.subscription && serverMe.subscription.comp === true;
-          accEl.textContent = `${serverMe.user.name || ''} (${serverMe.user.phone || ''})${comp ? ' · 무상 PRO' : ''}`;
-        } else if (d) {
-          accEl.textContent = `${d.name || '게스트'} · ${d.phone || '미로그인'}`;
-        }
+        const plan = serverMe?.subscription?.comp ? '무상 PRO' : serverMe?.entitlement?.pro ? 'PRO' : '무료 회원';
+        accEl.textContent = serverMe?.user ? `${serverMe.user.name || '회원'} · ${plan}` : '체험 중';
       }
-      if (authBtn) {
-        authBtn.textContent = serverMe && serverMe.user ? '계정 · 로그아웃' : '로그인 · 회원가입';
-      }
+      if (authBtn) authBtn.textContent = serverMe?.user ? '계정 · 요금제' : '로그인 · 가입';
+      document.getElementById('settingsPlanActionBtn').classList.toggle('hidden', Boolean(serverMe?.user));
+      document.getElementById('settingsLegacyLicense')?.classList.toggle('hidden', Boolean(window.AR_SERVER?.mode && !isAdminMode));
       if (typeof arRenderCardShowToggles === 'function') arRenderCardShowToggles();
     }
 
@@ -1125,6 +1119,7 @@
       }
       select.value = IND.key;
       input.value = arIndustrySpecialty();
+      document.getElementById('settingsIndustrySummary').textContent = input.value || IND.name;
       input.placeholder = '예: ' + arSpecialtyExamples[IND.key];
       arSettingsBusinessChanged();
     }
@@ -1169,6 +1164,7 @@
       }
       modal.classList.remove('hidden');
       modal.firstElementChild.scrollTop = 0;
+      document.getElementById('settingsBusinessDetails').open = false;
       if (focusSection === 'card') {
         const sec = document.getElementById('settingsCardSection');
         if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1179,6 +1175,10 @@
       const modal = document.getElementById('studioSettingsModal');
       if (modal) modal.classList.add('hidden');
     }
+    document.getElementById('settingsPlanActionBtn').addEventListener('click', () => {
+      closeStudioSettingsModal();
+      openBillingCheckoutModal();
+    });
 
     function evaluateDealerDrmStatus(d) {
       // 서버 모드에서는 로그인 세션과 서버 구독/무상 PRO 권한으로만 판정합니다.

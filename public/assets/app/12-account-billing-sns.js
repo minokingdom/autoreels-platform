@@ -140,30 +140,57 @@
     // ============================================================================
     let authModalTab = 'login';
 
+    function arIsProductionHost() {
+      return ['autoreelsmaker.kr', 'autoreels-studio.vercel.app', 'dealer-reels-platform.vercel.app'].includes(location.hostname);
+    }
+
+    function arSyncAuthMethods(resetDisclosure = false) {
+      const production = arIsProductionHost();
+      const available = AR_SERVER.cfg?.kakaoLogin ?? production;
+      const kakao = document.getElementById('arKakaoLoginArea');
+      const phone = document.getElementById('arPhoneLoginOptions');
+      const wasHidden = kakao.classList.contains('hidden');
+      kakao.classList.toggle('hidden', !available);
+      if (resetDisclosure || !available || (wasHidden && !document.getElementById('authPhoneInput').value && authModalTab === 'login')) {
+        phone.open = !available;
+      }
+      const link = document.getElementById('arKakaoLoginBtn');
+      link.href = (production ? 'https://autoreelsmaker.kr' : '') + '/api/account?action=kakao-start';
+      document.getElementById('authDemoSection').classList.toggle('hidden', production || Boolean(AR_SERVER.cfg?.serverMode));
+    }
+
     function openDealerAuthModal() {
       arRenderIndustryChip();
       arFillSignupFieldsForIndustry();
       const m = document.getElementById('dealerAuthModal');
-      const notice = document.getElementById('authModalNotice');
-      if (notice) notice.classList.add('hidden');
+      switchAuthModalTab('login');
+      arSyncAuthMethods(true);
       if (m) m.classList.remove('hidden');
     }
     function closeDealerAuthModal() {
       const m = document.getElementById('dealerAuthModal');
       if (m) m.classList.add('hidden');
+      document.getElementById('authPasswordInput').value = '';
+      document.getElementById('arPhoneCode').value = '';
+      arPhoneChallenge = null;
     }
 
     function switchAuthModalTab(tab) {
-      setTimeout(() => { if(typeof arAuthVerificationUI==='function')arAuthVerificationUI(); },0);
+      if (authModalTab !== tab) {
+        arPhoneChallenge = null;
+        document.getElementById('arPhoneCode').value = '';
+        document.getElementById('authPasswordInput').value = '';
+        arPanelNotice('arPhoneNotice', '');
+      }
       authModalTab = tab;
+      document.getElementById('authModalNotice').classList.add('hidden');
       arFillSignupFieldsForIndustry(document.getElementById('authIndustryInput').value || IND.key);
       const on = 'h-8 rounded-[6px] text-[12px] font-medium bg-[#232325] text-[#ededed] cursor-pointer';
       const off = 'h-8 rounded-[6px] text-[12px] font-normal text-[#85858b] hover:text-[#ededed] cursor-pointer';
       document.getElementById('authTabLogin').className = tab === 'login' ? on : off;
       document.getElementById('authTabSignup').className = tab === 'signup' ? on : off;
       document.getElementById('authSignupFields').classList.toggle('hidden', tab !== 'signup');
-      document.getElementById('authSubmitBtn').textContent =
-        tab === 'signup' ? '가입하고 무료 체험 시작하기' : '내 번호로 스튜디오 시작하기';
+      arAuthVerificationUI();
     }
 
     function normalizePhone(raw) {
@@ -220,6 +247,12 @@
 
     async function submitDealerAuthForm() {
       if (window.AR_SERVER && AR_SERVER.mode) return arServerAuthSubmit();
+      if (arIsProductionHost()) {
+        const notice = document.getElementById('authModalNotice');
+        notice.textContent = '휴대폰 로그인 서버를 확인하는 중입니다. 잠시 후 다시 시도해 주세요.';
+        notice.classList.remove('hidden');
+        return;
+      }
       const phone = normalizePhone(document.getElementById('authPhoneInput').value);
       const pw = document.getElementById('authPasswordInput').value || '';
       const notice = document.getElementById('authModalNotice');
@@ -328,6 +361,10 @@
     }
     function closeBillingCheckoutModal() {
       document.getElementById('billingCheckoutModal').classList.add('hidden');
+      document.getElementById('arPasswordSecurity').open = false;
+      document.getElementById('arSecurityCurrent').value = '';
+      document.getElementById('arSecurityNext').value = '';
+      arPanelNotice('arSecurityNotice', '');
     }
 
     function selectBillingPlan(planKey) {
@@ -529,30 +566,19 @@
       let cfg;
       try {
         const r = await fetch('/api/account?action=config', { credentials: 'same-origin' });
+        if (!r.ok) return;
         cfg = await r.json();
       } catch (e) {
         return;
       }
       AR_SERVER.cfg = cfg;
-      const kakaoArea = document.getElementById('arKakaoLoginArea');
-      if (kakaoArea) kakaoArea.classList.toggle('hidden', !cfg.kakaoLogin);
-      const kakaoButton = document.getElementById('arKakaoLoginBtn');
-      if (kakaoButton && cfg.kakaoLogin) kakaoButton.onclick = () => { window.location.href = '/api/account?action=kakao-start'; };
-      const kakaoTerms = document.getElementById('arKakaoTerms');
-      const kakaoPrivacy = document.getElementById('arKakaoPrivacy');
-      if (kakaoTerms) kakaoTerms.onclick = () => openArLegalModal('terms');
-      if (kakaoPrivacy) kakaoPrivacy.onclick = () => openArLegalModal('privacy');
+      arSyncAuthMethods();
+      arAuthVerificationUI();
       const schedule=document.getElementById('snsScheduleEnabled');if(schedule){schedule.disabled=!cfg.snsScheduling;document.getElementById('arScheduleLabel').textContent=cfg.snsScheduling?'예약 발행 · 지정 시각부터 순서대로 게시':'예약 실행 서비스 연결 준비 중';}
       if (!cfg || !cfg.serverMode) return; // 시연 모드 유지
       AR_SERVER.mode = true;
       const demo = document.getElementById('authDemoSection');
       if (demo) demo.classList.add('hidden');
-      const pwLabel = document.getElementById('authPwLabel');
-      if (pwLabel) pwLabel.textContent = '비밀번호 (8자 이상)';
-      ['authPhoneInput', 'authPasswordInput', 'authNameInput', 'authTitleInput', 'authBranchInput', 'authPromoInput'].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
       const me = await arApi('me');
       if (me.ok) arApplyMe(me.body);
       else arLockDemoDealers();
@@ -577,6 +603,7 @@
       };
       const val = (id) => (document.getElementById(id) || {}).value || '';
       const btn = document.getElementById('authSubmitBtn');
+      btn.dataset.submitting = 'true';
       btn.disabled = true;
       try {
         if(authModalTab==='reset'){
@@ -601,7 +628,8 @@
         show(authModalTab === 'signup' ? '가입 완료! 무료 회원으로 바로 만들어 보세요.' : `${r.body.user.name}님 환영합니다!`, true);
         setTimeout(closeDealerAuthModal, 800);
       } finally {
-        btn.disabled = false;
+        delete btn.dataset.submitting;
+        arAuthVerificationUI();
       }
     }
 
@@ -643,6 +671,7 @@
       if (err) err.classList.add('hidden');
       const box = document.getElementById('billingAccountBox');
       const me = AR_SERVER.me;
+      document.getElementById('arPasswordSecurity').classList.toggle('hidden', !me?.user?.phone);
       box.classList.remove('hidden');
       if (!me) {
         box.innerHTML = `<div class="text-[#a1a1a6]">결제하려면 먼저 로그인해 주세요.</div>
@@ -1402,18 +1431,40 @@ async function arSaveProject(asNew) {
   });
 }
 async function arSendPhoneCode() {
-  const btn=document.getElementById('arSendCode');btn.disabled=true;
+  const btn = document.getElementById('arSendCode');
+  const input = document.getElementById('authPhoneInput');
+  const phone = input.value;
+  const tab = authModalTab;
+  if (!['signup', 'reset'].includes(tab) || btn.disabled) return;
+  btn.dataset.sending = 'true';
+  btn.disabled = true;
   try{
-    const phone=document.getElementById('authPhoneInput').value,purpose=authModalTab==='reset'?'reset':'signup';
-    const r=await arProjectCall('phone-code',{phone,purpose});arPhoneChallenge={id:r.challengeId,phone,purpose};
-    arPanelNotice('arPhoneNotice','인증번호를 발송했습니다. 5분 안에 입력해 주세요.');
-  }catch(e){arPanelNotice('arPhoneNotice',e.message);}finally{btn.disabled=false;}
+    const r = await arProjectCall('phone-code', { phone, purpose: tab });
+    if (authModalTab !== tab || input.value !== phone) return;
+    arPhoneChallenge = { id: r.challengeId, phone, purpose: tab };
+    arPanelNotice('arPhoneNotice', '인증번호를 보냈습니다. 5분 안에 입력해 주세요.');
+  } catch (error) {
+    if (authModalTab === tab && input.value === phone) arPanelNotice('arPhoneNotice', error.message);
+  } finally {
+    delete btn.dataset.sending;
+    arAuthVerificationUI();
+  }
 }
 function arAuthVerificationUI() {
-  const reset=authModalTab==='reset',needed=authModalTab==='signup'||reset;
-  document.getElementById('arPhoneVerification').classList.toggle('hidden',!needed);
-  if(reset)document.getElementById('authSubmitBtn').textContent='인증하고 비밀번호 재설정';
-  if(needed && !AR_SERVER.cfg?.phoneVerification) arPanelNotice('arPhoneNotice','문자 인증 연결 준비 중입니다. 기존 계정 로그인은 가능합니다.');
+  const reset = authModalTab === 'reset';
+  const login = authModalTab === 'login';
+  const unavailable = AR_SERVER.cfg?.serverMode === true && AR_SERVER.cfg.phoneVerification === false;
+  const send = document.getElementById('arSendCode');
+  const submit = document.getElementById('authSubmitBtn');
+  document.getElementById('arPhoneVerification').classList.toggle('hidden', login);
+  document.getElementById('arPhoneCodeFields').classList.toggle('hidden', login || !arPhoneChallenge);
+  document.getElementById('arForgotPassword').classList.toggle('hidden', !login);
+  document.getElementById('authPasswordInput').autocomplete = login ? 'current-password' : 'new-password';
+  document.getElementById('authPwLabel').textContent = reset ? '새 비밀번호 (8자 이상)' : login ? '비밀번호' : '비밀번호 (8자 이상)';
+  send.disabled = unavailable || send.dataset.sending === 'true';
+  submit.disabled = submit.dataset.submitting === 'true' || (!login && unavailable);
+  submit.textContent = reset ? '인증하고 비밀번호 재설정' : login ? '로그인' : '회원가입';
+  if (!login && unavailable) arPanelNotice('arPhoneNotice', '지금은 문자 인증을 사용할 수 없습니다. 카카오 로그인 또는 기존 휴대폰 로그인을 이용해 주세요.');
 }
 async function arSecurityAction(action) {
   try{
@@ -1444,11 +1495,22 @@ document.getElementById('arProjectsClose').addEventListener('click',()=>document
 document.getElementById('arProjectSave').addEventListener('click',()=>arSaveProject(false));
 document.getElementById('arProjectSaveNew').addEventListener('click',()=>arSaveProject(true));
 document.getElementById('arSendCode').addEventListener('click',arSendPhoneCode);
-document.getElementById('arForgotPassword').addEventListener('click',()=>{switchAuthModalTab('reset');arAuthVerificationUI();});
+document.getElementById('arPhoneAuthForm').addEventListener('submit', event => {
+  event.preventDefault();
+  if (!document.getElementById('authSubmitBtn').disabled) submitDealerAuthForm();
+});
+document.getElementById('arForgotPassword').addEventListener('click', () => switchAuthModalTab('reset'));
+document.getElementById('arKakaoTerms').addEventListener('click', () => openArLegalModal('terms'));
+document.getElementById('arKakaoPrivacy').addEventListener('click', () => openArLegalModal('privacy'));
 document.getElementById('arPasswordChange').addEventListener('click',()=>arSecurityAction('password'));
 document.getElementById('arSessionsRevoke').addEventListener('click',()=>arSecurityAction('sessions-revoke'));
 document.getElementById('arHistoryRefresh').addEventListener('click',arShowSnsHistory);
-document.getElementById('authPhoneInput').addEventListener('input',()=>{arPhoneChallenge=null;});
+document.getElementById('authPhoneInput').addEventListener('input', () => {
+  arPhoneChallenge = null;
+  document.getElementById('arPhoneCode').value = '';
+  arPanelNotice('arPhoneNotice', '');
+  arAuthVerificationUI();
+});
 
 let arProjectInteracted=false,arProjectRestoredUser=null;
 document.addEventListener('pointerdown',()=>{arProjectInteracted=true;},{once:true,capture:true});

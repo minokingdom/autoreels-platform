@@ -40,6 +40,7 @@ jobs:
         run: |
           node tests/account-projects.cjs
           node tests/projects-browser.mjs
+          node tests/kakao-browser.mjs
           node tests/production-safety.cjs
           node tests/export-safety.mjs
       - name: Kinetic typography editing and seeking
