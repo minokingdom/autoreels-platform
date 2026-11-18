@@ -868,6 +868,9 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
 
     let aiResult = null;
     let providerUsed = '';
+    // Bound all AI attempts inside the server function deadline.
+    const scriptDeadline = Date.now() + 42000;
+    const remainingScriptMs = (cap) => Math.max(0, Math.min(cap, scriptDeadline - Date.now()));
 
     // 1순위: Google Gemini 무료 등급 (GEMINI_API_KEY: gemini-2.5-flash → gemini-2.5-flash-lite)
     if (adminGeminiKey) {
@@ -876,6 +879,8 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
       aiDiag.geminiTries = [];
       for (const gModel of geminiModels) {
         if (aiResult) break;
+        const budgetMs = remainingScriptMs(14000);
+        if (budgetMs < 1500) break;
         const gTry = { model: gModel };
         aiDiag.geminiTries.push(gTry);
         const started = Date.now();
@@ -884,7 +889,7 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
           const resp = await fetch(geminiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            signal: AbortSignal.timeout(35000),
+            signal: AbortSignal.timeout(budgetMs),
             body: JSON.stringify({
               contents: [{ parts: [{ text: `${systemWithAngles}\n\n${userMessage}` }] }],
               generationConfig: {
@@ -917,11 +922,11 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
     // 2순위(백업): kie.ai (OpenAI 호환 chat.completions)
     if (!aiResult && kieKey) {
       aiDiag.kieTries = [];
-      const deadline = Date.now() + 50000;
+      const deadline = scriptDeadline;
       for (const model of kieModels) {
         if (aiResult) break;
-        const left = deadline - Date.now();
-        if (left < 15000) break;
+        const left = Math.min(12000, deadline - Date.now());
+        if (left < 1500) break;
         const tryInfo = { model };
         aiDiag.kieTries.push(tryInfo);
         const started = Date.now();
@@ -963,7 +968,7 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
       }
     }
 
-    if (!aiResult && adminOpenAiKey) {
+    if (!aiResult && adminOpenAiKey && remainingScriptMs(12000) >= 1500) {
       aiDiag.openaiModel = openaiModel;
       const resp = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -971,7 +976,7 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
           'Content-Type': 'application/json',
           Authorization: `Bearer ${adminOpenAiKey}`
         },
-        signal: AbortSignal.timeout(45000),
+        signal: AbortSignal.timeout(remainingScriptMs(12000)),
         body: JSON.stringify({
           model: openaiModel,
           temperature: 0.85,

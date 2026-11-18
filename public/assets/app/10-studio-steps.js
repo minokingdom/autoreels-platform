@@ -1621,6 +1621,7 @@
       };
       const d = getSelectedDealer();
       const totalCuts = getTargetCutCount();
+      let aiUsedFallback = false;
 
       // 사용자 클릭 제스처 시점에 오디오/TTS 엔진을 즉시 활성화하여 음성이 100% 나오도록 보장
       if (!AudioEngine.enabled) {
@@ -1696,6 +1697,7 @@
         arScriptVariants.strip = stripExcludedLocal;
         applyAiScriptToCampaign(variants[0], d, stripExcludedLocal);
         renderScriptVariantPicker();
+        aiUsedFallback = Boolean(result.aiFallback);
         triggerTopicImages(variants[0]?.cutCaptions);
       } catch (err) {
         if (generationId !== arScriptGenerationId) return;
@@ -1748,7 +1750,7 @@
         }
       }
 
-      arFinishScriptApply(totalCuts);
+      arFinishScriptApply(totalCuts);      if (aiUsedFallback && noticeEl) noticeEl.textContent = 'AI 대본을 만들지 못해 기본 대본을 표시합니다. 다시 시도해 주세요.';
     }
 
     function arBuildThemeContextForImages() {
