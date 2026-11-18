@@ -54,6 +54,11 @@ try{
  const original=await openStyleDevice(true,1280);
  await original.evaluate(()=>arOpenCustomStyle());
  assert.equal(await original.locator('#arCustomSavedList').getByText(styleFixture.name).count(),0);
+ const downloadStarted=original.waitForEvent('download');
+ await original.locator('#arCustomExport').click();
+ const styleDownload=await downloadStarted;
+ const styleFile=fs.readFileSync(await styleDownload.path());
+ assert.equal(JSON.parse(styleFile.toString('utf8')).styles[0].logo.dataUrl,pixelLogo);
  await original.locator('#arCustomImport').click();
  await original.locator('#arCustomSavedList').getByText(styleFixture.name,{exact:true}).waitFor();
  await original.locator('#arCustomSavedList').getByRole('button',{name:'편집'}).click();
@@ -82,6 +87,12 @@ try{
  await newDevice.waitForFunction(id=>getActiveDesign().id===id,styleFixture.id);
  assert.equal(await newDevice.evaluate(()=>getActiveDesign().custom.colors.primary),styleFixture.colors.primary);
  assert.equal(await newDevice.evaluate(()=>getActiveDesign().custom.logo.dataUrl),pixelLogo);
+ await newDevice.locator('#arProjectsClose').click();
+ await newDevice.evaluate(()=>arOpenCustomStyle());
+ const chooserPromise=newDevice.waitForEvent('filechooser');
+ await newDevice.locator('#arCustomImportFileButton').click();
+ await (await chooserPromise).setFiles({name:styleDownload.suggestedFilename(),mimeType:'application/json',buffer:styleFile});
+ await newDevice.locator('#arCustomSavedList').getByText(styleFixture.name,{exact:true}).waitFor();
  await original.close(); await newDevice.close();
  await page.goto(`http://127.0.0.1:${srv.address().port}/studio`);await page.waitForTimeout(1000);
  await page.evaluate(()=>{isPlaying=false;AudioEngine.enabled=false;AudioEngine.ttsVoice='off';AudioEngine.bgmStyle='off';AR_SERVER.mode=true;AR_SERVER.me={user:{id:'1'}};});

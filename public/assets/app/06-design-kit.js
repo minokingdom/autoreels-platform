@@ -3983,11 +3983,14 @@
       try {
         const raw = localStorage.getItem(AR_CUSTOM_STYLE_KEY);
         if (!raw) return [];
-        const data = JSON.parse(raw);
-        if (data.version !== 1 || !Array.isArray(data.styles)) throw new Error('형식');
-        const seen = new Set();
-        return data.styles.slice(0, 5).map(arValidateCustomStyle).filter(s => s && !seen.has(s.id) && seen.add(s.id));
+        return arParseStyleFile(raw);
       } catch (e) { return []; }
+    }
+    function arParseStyleFile(raw) {
+      const data = JSON.parse(raw);
+      if (data?.version !== 1 || !Array.isArray(data.styles)) throw new Error('스타일 파일 형식을 확인해 주세요.');
+      const seen = new Set();
+      return data.styles.slice(0, 5).map(arValidateCustomStyle).filter(s => s && !seen.has(s.id) && seen.add(s.id));
     }
     function arLoadCustomStyles() {
       if (arCustomLoaded) return;
@@ -4001,9 +4004,9 @@
       arRefreshCustomDesigns();
       await Promise.all([...arProjectCustomDesigns.values()].flatMap(d => [kitEnsureFont(d.custom.fontKey), arPrepareCustomLogo(d.custom.logo.dataUrl)]));
     }
-    function arBrowserStylesToImport() {
+    function arNewStylesToImport(styles) {
       const savedIds = new Set(arCustomStyles.map(s => s.id));
-      return arReadBrowserStyles().filter(s => !savedIds.has(s.id));
+      return styles.filter(s => !savedIds.has(s.id));
     }
     function arLoadAccountCustomStyles(userId, force = false) {
       if (arCustomAccount === userId && !force && arCustomRevision !== null) return Promise.resolve();
@@ -4050,9 +4053,14 @@
       box.innerHTML = `<p>저장한 스타일 ${arCustomStyles.length} / 5</p>` + arCustomStyles.map(s => `<div><span>${arCustomEscape(s.name)}</span><button type="button" data-custom-action="edit" data-custom-id="${s.id}">편집</button><button type="button" data-custom-action="delete" data-custom-id="${s.id}" aria-label="${arCustomEscape(s.name)} 삭제">삭제</button></div>`).join('');
       const account = Boolean(arCustomAccount);
       document.getElementById('arCustomStorageScope').textContent = account ? '내 계정에 최대 5개 저장해요.' : '이 브라우저에 최대 5개 저장해요.';
+      const browserStyles = arReadBrowserStyles();
       const button = document.getElementById('arCustomImport');
-      button.hidden = !account || arCustomRevision === null || !arBrowserStylesToImport().length;
+      button.hidden = !account || arCustomRevision === null || !arNewStylesToImport(browserStyles).length;
       button.disabled = arCustomSaving;
+      document.getElementById('arCustomExport').hidden = !browserStyles.length;
+      const fileButton = document.getElementById('arCustomImportFileButton');
+      fileButton.hidden = !account || arCustomRevision === null;
+      fileButton.disabled = arCustomSaving;
     }
     function arOpenCustomStyle(id) {
       arLoadCustomStyles();
@@ -4148,6 +4156,26 @@
         arRenderCustomSavedList();
       }
     }
+    async function arImportCustomStyles(styles) {
+      if (!arCustomAccount || arCustomRevision === null) return;
+      const available = arNewStylesToImport(styles);
+      if (!available.length) { arCustomStatus('새로 가져올 스타일이 없어요.'); return; }
+      const imported = available.slice(0, 5 - arCustomStyles.length);
+      if (!imported.length) { arCustomStatus('계정에 최대 5개까지 저장할 수 있어요. 빈자리를 만든 뒤 다시 시도해 주세요.'); return; }
+      if (!await arWriteCustomStyles(arCustomStyles.concat(imported))) return;
+      renderDesignStylePicker();
+      arCustomStatus(`${imported.length}개 스타일을 내 계정으로 가져왔어요.${available.length > imported.length ? ' 나머지는 계정에 빈자리를 만든 뒤 가져올 수 있어요.' : ''}`);
+    }
+    function arExportBrowserStyles() {
+      const styles = arReadBrowserStyles();
+      if (!styles.length) return;
+      const url = URL.createObjectURL(new Blob([JSON.stringify({version: 1, styles})], {type: 'application/json'}));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'autoreelsmaker-styles.json';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
     async function arUploadCustomLogo(file) {
       if (!file || !arCustomDraft) return;
       const token = ++arCustomUploadToken, button = document.querySelector('#arCustomStyleForm [type="submit"]');
@@ -4178,12 +4206,11 @@
         document.querySelector('#arCustomStyleForm [type="submit"]').disabled = false;
         arUpdateCustomPreview();
       } else if (action === 'import') {
-        const available = arBrowserStylesToImport();
-        const imported = available.slice(0, 5 - arCustomStyles.length);
-        if (!imported.length) { arCustomStatus('계정에 최대 5개까지 저장할 수 있어요. 빈자리를 만든 뒤 다시 시도해 주세요.'); return; }
-        if (!await arWriteCustomStyles(arCustomStyles.concat(imported))) return;
-        renderDesignStylePicker();
-        arCustomStatus(`${imported.length}개 스타일을 내 계정으로 가져왔어요.${available.length > imported.length ? ' 나머지는 계정에 빈자리를 만든 뒤 가져올 수 있어요.' : ''}`);
+        await arImportCustomStyles(arReadBrowserStyles());
+      } else if (action === 'export') {
+        arExportBrowserStyles();
+      } else if (action === 'select-file') {
+        document.getElementById('arCustomImportFile').click();
       } else if (action === 'delete') {
         if (!await arWriteCustomStyles(arCustomStyles.filter(s => s.id !== id))) return;
         if (campaign.designStyle === id && !arProjectCustomDesigns.has(id)) selectDesignStyle('in_x_cover');
@@ -4194,6 +4221,20 @@
     });
     document.getElementById('arCustomStyleForm').addEventListener('input', event => { if (event.target.type !== 'file') arUpdateCustomPreview(); });
     document.getElementById('arCustomLogoFile').addEventListener('change', event => arUploadCustomLogo(event.target.files[0]));
+    document.getElementById('arCustomImportFile').addEventListener('change', async event => {
+      const file = event.target.files[0];
+      const account = arCustomAccount;
+      event.target.value = '';
+      if (!file) return;
+      try {
+        if (file.size > 1000000) throw new Error('스타일 파일은 1MB 이하만 가져올 수 있어요.');
+        const styles = arParseStyleFile(await file.text());
+        if (!styles.length) throw new Error('가져올 수 있는 스타일이 없어요.');
+        if (account && account === arCustomAccount) await arImportCustomStyles(styles);
+      } catch (error) {
+        arCustomStatus(error instanceof SyntaxError ? '스타일 파일 형식을 확인해 주세요.' : error.message);
+      }
+    });
     document.getElementById('arCustomStyleForm').addEventListener('submit', async event => {
       event.preventDefault();
       const draft = arCustomDraft;
