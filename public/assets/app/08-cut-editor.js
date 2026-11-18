@@ -5519,7 +5519,8 @@
       window.__arMixCut = campaign.cutDesigns ? activeCutIdx : -1;
       const baseDesign = getActiveDesign();
       const localSec = activeCutIdx >= 0 ? (t - activeCutIdx * cutDur) : 0;
-      const transId = (activeCutIdx >= 0 && campaign.cutTransitions && campaign.cutTransitions[activeCutIdx]) || 'default';
+      const isStillLookbook = baseDesign?.mstyle === 'in_lookbook_still';
+      const transId = isStillLookbook ? 'none' : campaign.cutTransitions?.[activeCutIdx] || 'default';
       window.__arActiveRenderCutIdx = activeCutIdx;
       window.__arActiveRenderLocalSec = localSec;
       window.__arInsideMotionCaptionCard = false;
@@ -5568,7 +5569,7 @@
           hadTransPre = applyCutTransitionPre(c, W, H, transId, localSec);
         }
         // 사진 탭 또는 요소 편집 모달에서 이 컷의 화면 배치(customLayout)를 변경했으면, 모션·장르 디자인이어도 그 컷은 고른 배치로 그림
-        if (t < mainDuration && design.engine !== 'kit') {
+        if (t < mainDuration && design.engine !== 'kit' && !isStillLookbook) {
           const cIdx = activeCutIdx;
           const cPlan = (campaign.scenePlan && campaign.scenePlan[cIdx]) || {};
           if (cPlan.customLayout) {
@@ -5592,19 +5593,21 @@
           }
         }
         if (design.engine === 'motion') {
+          const keepFinishedCard = isStillLookbook && campaign.lookbookFinishedCards;
           renderMotionFrame(c, W, H, t, mainDuration, totalCuts, d, design, V);
           if (suppressBaseCaption) {
             if (Array.isArray(campaign.cutCaptions)) campaign.cutCaptions[activeCutIdx] = savedCutCap;
             campaign.hook = savedHook;
           }
-          if (t < mainDuration) {
+          if (t < mainDuration && !keepFinishedCard) {
             const cutIdx = activeCutIdx;
             const plan = (campaign.scenePlan && campaign.scenePlan[cutIdx]) || {};
+            const overlayTime = isStillLookbook ? (cutIdx + 0.5) * cutDur : t;
             if (plan._customWidget && plan.widget) {
-              const frac = Math.min(1, Math.max(0, (t - cutIdx * cutDur) / cutDur));
-              drawCustomCutWidget(c, W, H, t, cutIdx, frac, plan.widget, d, V);
+              const frac = Math.min(1, Math.max(0, (overlayTime - cutIdx * cutDur) / cutDur));
+              drawCustomCutWidget(c, W, H, overlayTime, cutIdx, frac, plan.widget, d, V);
             }
-            drawCustomCutDecoOverlay(c, W, H, t, mainDuration, totalCuts, cutDur, design, V);
+            drawCustomCutDecoOverlay(c, W, H, overlayTime, mainDuration, totalCuts, cutDur, design, V);
             applyCutTransitionPost(c, W, H, transId, localSec, hadTransPre);
             hadTransPre = false;
           }

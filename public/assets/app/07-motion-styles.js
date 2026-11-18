@@ -104,6 +104,7 @@
       ['ty_mask', '마스크 리빌', 'ty_mask', 'sans', '#111214', '#1d1d20', '#e9e1d3', '#ffffff', false],
       ['ty_focus', '워드 포커스', 'ty_focus', 'sans', '#111214', '#1d1d20', '#d5f185', '#ffffff', false],
       ['ty_spring', '스프링 스택', 'ty_spring', 'dohyeon', '#111214', '#1d1d20', '#f3d4bd', '#ffffff', false],
+      ['in_lookbook_still', '룩북 · 고정 카드', 'in_lookbook_still', 'maru', '#eeeae2', '#e9e2d7', '#354e63', '#232722', true],
     ];
     // 모션 디자인도 별도 분류를 만들지 않고 기존 분류에 넣음
     const MOTION_CAT = {
@@ -117,7 +118,7 @@
       in_g_sub: '브이로그', in_g_arch: '감성', in_g_strip: '브이로그', in_g_postcard: '감성', in_g_cam: '브이로그', in_g_bookmark: '감성',
       in_h_plaque: '감성', in_h_panes: '감성', in_h_double: '감성', in_h_vinyl: '감성',
       in_music: '감성', in_memo: '브이로그', in_lock: '감성', in_dump: '브이로그', in_cal: '감성',
-      in_x_contact: '브이로그', in_x_linen: '감성', in_x_cover: '감성', in_card_news: '카드뉴스',
+      in_x_contact: '브이로그', in_x_linen: '감성', in_x_cover: '감성', in_card_news: '카드뉴스', in_lookbook_still: '카드뉴스',
       in_x_tabs: '브이로그', in_x_walk: '브이로그', in_x_window: '감성',
       in_y_chat: '브이로그', 
       in_y_torn: '감성', in_y_mosaic: '브이로그',
@@ -128,12 +129,14 @@
       stm_split: '카드뉴스', stm_ticket: '카드뉴스', stm_glassbar: '브이로그',
       ba_slider: '비포·애프터', ba_diagonal: '비포·애프터', ba_collage: '비포·애프터', ba_flash: '비포·애프터', ba_polaroid: '비포·애프터'
     };
-    const AR_MOTION_ADDED_AT = {"ed_vogue": "2026-11-14T06:25:59Z", "ed_glasspill": "2026-11-14T06:25:59Z", "ed_kinetic": "2026-11-14T06:25:59Z", "ed_arch": "2026-11-14T06:25:59Z", "ed_duotone": "2026-11-14T06:25:59Z", "stm_kinetic": "2026-11-14T17:02:21Z", "stm_cinema": "2026-11-14T17:02:21Z", "stm_sonar": "2026-11-14T17:02:21Z", "stm_glint": "2026-11-14T17:02:21Z", "stm_split": "2026-11-17T05:14:07Z", "stm_ticket": "2026-11-17T05:14:07Z", "stm_glassbar": "2026-11-17T05:14:07Z"};
+    const AR_MOTION_ADDED_AT = {"ed_vogue": "2026-11-14T06:25:59Z", "ed_glasspill": "2026-11-14T06:25:59Z", "ed_kinetic": "2026-11-14T06:25:59Z", "ed_arch": "2026-11-14T06:25:59Z", "ed_duotone": "2026-11-14T06:25:59Z", "stm_kinetic": "2026-11-14T17:02:21Z", "stm_cinema": "2026-11-14T17:02:21Z", "stm_sonar": "2026-11-14T17:02:21Z", "stm_glint": "2026-11-14T17:02:21Z", "stm_split": "2026-11-17T05:14:07Z", "stm_ticket": "2026-11-17T05:14:07Z", "stm_glassbar": "2026-11-17T05:14:07Z",
+      in_lookbook_still: "2026-11-18T15:53:11Z"
+    };
     const MOTION_DESIGNS = MOTION_ROWS.map((r, i) => ({
       id: r[0], name: r[1], addedAt: AR_MOTION_ADDED_AT[r[0]], cat: MOTION_CAT[r[0]] || '재미', engine: 'motion', mstyle: r[2], font: r[3],
       bg1: r[4], bg2: r[5], accent: r[6], accent2: r[7], light: r[8], seed: 900 + i, genre: 'motion', grade: 'none', label: r[1],
       insta: String(r[0]).startsWith('in_'), // 인스타 감성: 배경색을 업종 색으로 바꾸지 않고, 엔딩도 크림 카드로
-      desc: `모션그래픽 · ${r[1]}`
+      desc: r[2] === 'in_lookbook_still' ? '한 컷 동안 사진과 문구 고정 · 컷 경계에서 바로 전환' : `모션그래픽 · ${r[1]}`
     }));
     DESIGN_STYLES.push(...MOTION_DESIGNS);
 
@@ -513,12 +516,131 @@
       const y = custom.logo.corner.startsWith('bottom') ? H * 0.90 - h : H * 0.095;
       c.save(); c.globalAlpha = 1; c.shadowBlur = 0; c.drawImage(img, x, y, w, h); c.restore();
     }
+    // 영상도 고정 카드에 들어가면 준비된 프레임 한 장을 인화 사진처럼 사용합니다.
+    const arLookbookVideoStills = new WeakMap();
+    const arLookbookItemCache = new WeakMap();
+    function arLookbookItemImages(plan) {
+      const sources = plan?.lookbookItems;
+      if (!Array.isArray(sources) || !sources.length) return [];
+      let cached = arLookbookItemCache.get(plan);
+      if (cached?.sources !== sources) {
+        const images = sources.slice(0, 4).filter((src) =>
+          typeof src === 'string' && /^data:image\/(?:png|jpeg|webp);base64,/.test(src)
+        ).map((src) => { const img = new Image(); img.src = src; return img; });
+        cached = { sources, images };
+        arLookbookItemCache.set(plan, cached);
+        Promise.allSettled(images.map((img) => img.decode())).then(() => {
+          const timeline = window.__timelines?.main;
+          if (timeline && arLookbookItemCache.get(plan) === cached) timeline.seek(timeline.currentTime);
+        });
+      }
+      return cached.images.filter((img) => !img.complete || img.naturalWidth);
+    }
+
+    function arLookbookPicture(c, media, x, y, w, h) {
+      let image = media;
+      if (media && media._isVideo) {
+        image = arLookbookVideoStills.get(media);
+        if (!image && media.readyState >= 2 && media.videoWidth && media.videoHeight) {
+          image = document.createElement('canvas');
+          const ratio = Math.min(1, 1080 / Math.max(media.videoWidth, media.videoHeight));
+          image.width = Math.max(1, Math.round(media.videoWidth * ratio));
+          image.height = Math.max(1, Math.round(media.videoHeight * ratio));
+          image.getContext('2d').drawImage(media, 0, 0, image.width, image.height);
+          arLookbookVideoStills.set(media, image);
+        }
+      }
+      c.save();
+      c.beginPath(); c.rect(x, y, w, h); c.clip();
+      const iw = image && (image.naturalWidth || image.width);
+      const ih = image && (image.naturalHeight || image.height);
+      if (!iw || !ih) {
+        c.fillStyle = '#e7e2d9'; c.fillRect(x, y, w, h);
+      } else {
+        // 표지와 메인 착용컷은 옷 전체가 보이게 원본 비율로 맞춥니다.
+        const fit = Math.min(w / iw, h / ih);
+        const fw = iw * fit, fh = ih * fit;
+        c.drawImage(image, Math.round(x + (w - fw) / 2), Math.round(y + (h - fh) / 2), fw, fh);
+      }
+      c.restore();
+    }
+
+    function renderLookbookStill(c, W, H, cutIdx, totalCuts, sp) {
+      const photos = arScenePhotos();
+      const photoAt = (idx) => kitImg({
+        photos, n: photos.length, cuts: totalCuts, cutIdx: idx,
+        idx: Math.floor(idx * photos.length / totalCuts)
+      }, 0);
+      const cover = cutIdx === 0 && totalCuts > 1;
+      const closing = cutIdx > 0 && cutIdx === totalCuts - 1;
+      // 표지는 비교 대상이 한 프레임에 담긴 첫 컷의 사진을 그대로 씁니다.
+      const photo = photoAt(cutIdx);
+      if (campaign.lookbookFinishedCards) {
+        c.fillStyle = sp.bg1;
+        c.fillRect(0, 0, W, H);
+        arLookbookPicture(c, photo, 0, 0, W, H);
+        return;
+      }
+      const previous = closing ? photoAt(cutIdx - 1) : null;
+      const items = cover || closing ? [] : arLookbookItemImages(campaign.scenePlan?.[cutIdx]);
+      const x = W * 0.11, width = W * 0.78, gap = W * 0.018;
+      const mediaY = H * 0.31, mediaH = H * 0.516;
+      const accent = sp.accent;
+
+      c.save();
+      mBg(c, W, H, sp, 0);
+      c.fillStyle = '#fcfaf5';
+      c.fillRect(W * 0.055, H * 0.066, W * 0.89, H * 0.822);
+      c.fillStyle = accent;
+      c.fillRect(x, H * 0.131, W * 0.092, Math.max(1, W * 0.002));
+
+      if (photo && previous && photo !== previous) {
+        const cellW = (width - gap) / 2;
+        arLookbookPicture(c, previous, x, mediaY, cellW, mediaH);
+        arLookbookPicture(c, photo, x + cellW + gap, mediaY, cellW, mediaH);
+      } else if (items.length) {
+        const itemW = width * 0.38;
+        const rowH = (mediaH - (items.length - 1) * gap) / items.length;
+        items.forEach((item, i) => arLookbookPicture(c, item, x, mediaY + i * (rowH + gap), itemW, rowH));
+        arLookbookPicture(c, photo, x + itemW + gap, mediaY, width - itemW - gap, mediaH);
+      } else {
+        arLookbookPicture(c, photo, x, mediaY, width, mediaH);
+      }
+
+      const caption = gCleanCaption(campaign.cutCaptions?.[cutIdx] || campaign.hook || '');
+      if (caption) {
+        const fontKey = mCapFont(cutIdx, sp.font);
+        const font = KIT_FONTS[fontKey] || KIT_FONTS.maru;
+        const layout = mFit(c, caption, width, 3, W * (cover ? 0.075 : 0.064), W * 0.043, fontKey);
+        const y = H * 0.224 - (layout.lines.length - 1) * layout.lh * 0.5;
+        c.textBaseline = 'middle'; c.textAlign = 'left';
+        c.font = gFont(font.w, layout.size, font.f);
+        if (mCapBegin(c, W, H, cutIdx, 1.2, layout.lines, x, y, layout.lh, 'left')) {
+          c.fillStyle = mCapColor(cutIdx, sp.accent2);
+          layout.lines.forEach((line, i) => c.fillText(line, x, y + i * layout.lh));
+          mCapEnd(c);
+        }
+      }
+      c.restore();
+    }
+
     function renderMotionFrame(c, W, H, t, mainDuration, totalCuts, d, spec, V) {
       const custom = spec.custom;
       const userColor = campaign.colorKey && campaign.colorKey !== 'default';
       const pal = typeof IND !== 'undefined' && IND.key !== 'auto' ? AR_IND_PALETTE[IND.key] : null;
       const accent = custom ? custom.colors.accent : userColor ? ((V && V.accent) || spec.accent) : pal ? pal[0] : spec.accent;
       const sp = Object.assign({}, spec, { accent }, pal && !spec.light && !spec.insta && !userColor ? { bg1: pal[1], bg2: pal[2] } : {});
+      if (spec.mstyle === 'in_lookbook_still') {
+        pauseAllCutVideos();
+        const lookbook = userColor ? sp : spec;
+        if (t >= mainDuration) {
+          renderInstaOutro(c, W, H, mainDuration + 1.2, mainDuration, d, lookbook, true);
+        } else {
+          const pageIdx = Math.min(totalCuts - 1, Math.floor(t / (mainDuration / totalCuts)));
+          renderLookbookStill(c, W, H, pageIdx, totalCuts, lookbook);
+        }
+        return;
+      }
       if (spec.referenceStyle && t >= mainDuration) {
         const r = spec.referenceStyle;
         renderInstaOutro(c, W, H, t, mainDuration, d, { ...spec, accent2: r.foreground, custom: { colors: { primary: r.background } } });
@@ -3064,7 +3186,7 @@
     }
 
     // 인스타 감성 엔딩: 크림 카드에 작은 사진, 명조 가게 이름, 얇은 선, 주소·연락처, 담백한 댓글 안내
-    function renderInstaOutro(c, W, H, t, mainDuration, d, sp) {
+    function renderInstaOutro(c, W, H, t, mainDuration, d, sp, still = false) {
       const lt = t - mainDuration;
       const customFont = sp.custom ? KIT_FONTS[sp.font] : null;
       c.fillStyle = sp.custom ? sp.custom.colors.primary : '#f3ece1';
@@ -3078,7 +3200,8 @@
       c.fillStyle = '#fffdf9';
       c.fillRect(px - 10, py - 10, pw + 20, ph + 20);
       c.shadowColor = 'transparent';
-      mPhoto(c, S, 0, px, py, pw, ph, 1.04);
+      if (still) arLookbookPicture(c, kitImg(S, 0), px, py, pw, ph);
+      else mPhoto(c, S, 0, px, py, pw, ph, 1.04);
       inWarm(c, px, py, pw, ph, 0.9);
       c.restore();
       const ny = py + ph + 76;

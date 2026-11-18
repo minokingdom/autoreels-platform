@@ -1187,6 +1187,83 @@ POST https://graph.facebook.com/v19.0/${d.igUsername.replace('@', '')}/media
         const sceneCount = (campaign.uploadedPhotos || []).length;
         statusEl.textContent = `${campaign.isUserCustomPhotos ? '내가 올린' : '기본'} 사진·영상 ${sceneCount}개 · 대본 ${targetCuts}컷`;
       }
+      arRenderLookbookPhotoTools();
+    }
+
+    const arLookbookUploadJobs = new WeakMap();
+    document.getElementById('arLookbookFinishedCards')?.addEventListener('change', (event) => {
+      campaign.lookbookFinishedCards = event.target.checked;
+      arRenderLookbookPhotoTools();
+      const timeline = window.__timelines?.main;
+      if (timeline) timeline.seek(timeline.currentTime);
+    });
+    function arRenderLookbookPhotoTools() {
+      const section = document.getElementById('arLookbookPhotoTools');
+      if (!section) return;
+      const cuts = getTargetCutCount();
+      const show = arFindDesign(campaign.designStyle)?.mstyle === 'in_lookbook_still';
+      section.classList.toggle('hidden', !show);
+      if (!show) return;
+      const finished = Boolean(campaign.lookbookFinishedCards);
+      document.getElementById('arLookbookFinishedCards').checked = finished;
+      document.getElementById('arLookbookPhotoHelp').textContent = finished
+        ? '위의 사진 올리기에서 완성된 카드를 순서대로 선택해 주세요. 사진과 글자가 포함된 카드가 그대로 표시돼요.'
+        : '왼쪽에 놓을 상품컷을 상세 컷마다 최대 4장 골라 주세요. 오른쪽에는 해당 컷의 착용 사진이 보여요.';
+      const rows = document.getElementById('arLookbookPhotoRows');
+      rows.replaceChildren();
+      if (finished) return;
+      for (let cut = 1; cut < cuts - 1; cut++) {
+        const row = document.createElement('div');
+        const count = campaign.scenePlan?.[cut]?.lookbookItems?.length || 0;
+        row.className = 'flex items-center justify-between gap-2';
+        row.innerHTML = `
+          <span class="text-[12px] text-[#a1a1a6]">${cut + 1}컷 · ${count}장</span>
+          <div class="flex items-center gap-1.5">
+            <label class="btn-secondary min-h-9 px-2.5 text-[12px] inline-flex items-center cursor-pointer">
+              ${count ? '사진 바꾸기' : '사진 선택'}
+              <input class="sr-only" type="file" accept="image/*" multiple data-lookbook-cut="${cut}" aria-label="${cut + 1}컷 상품 사진 선택">
+            </label>
+            ${count ? `<button type="button" class="btn-secondary min-h-9 px-2.5 text-[12px]" aria-label="${cut + 1}컷 상품 사진 지우기">지우기</button>` : ''}
+          </div>`;
+        row.querySelector('input').addEventListener('change', (event) => arLoadLookbookPhotos(event.target, cut));
+        row.querySelector('button')?.addEventListener('click', () => {
+          const plan = campaign.scenePlan?.[cut];
+          if (!plan) return;
+          arLookbookUploadJobs.delete(plan);
+          delete plan.lookbookItems;
+          arLookbookItemCache.delete(plan);
+          arRefreshLookbookPhotoCut(cut);
+        });
+        rows.appendChild(row);
+      }
+    }
+
+    function arRefreshLookbookPhotoCut(cut) {
+      arRenderLookbookPhotoTools();
+      seekToTime(getCutStart(cut) + 0.03);
+    }
+
+    async function arLoadLookbookPhotos(input, cut) {
+      const files = Array.from(input.files || []);
+      if (!files.length) return;
+      if (files.length > 4) {
+        input.value = '';
+        arToast('한 컷에 상품 사진을 4장까지 고를 수 있어요.');
+        return;
+      }
+      if (!Array.isArray(campaign.scenePlan)) campaign.scenePlan = [];
+      const plan = campaign.scenePlan[cut] ||= {};
+      const job = {};
+      arLookbookUploadJobs.set(plan, job);
+      await arWithPhotoImport(input, async () => {
+        const images = [];
+        for (const file of files) images.push(await arImportPhoto(file, { dataUrl: true, transparent: true, webp: true, maxEdge: 280 }));
+        if (campaign.scenePlan?.[cut] !== plan || arLookbookUploadJobs.get(plan) !== job) return;
+        const sources = images.map((img) => img._dataUrl);
+        plan.lookbookItems = sources;
+        arLookbookItemCache.set(plan, { sources, images });
+        arRefreshLookbookPhotoCut(cut);
+      });
     }
 
     function pickCutDefaultPhoto(cutIdx, photoIdx) {

@@ -4720,13 +4720,20 @@
         arProjectCustomDesigns.delete(id);
         arRefreshCustomDesigns();
       }
-      if (!arFindDesign(id)) return;
+      const dsel = arFindDesign(id);
+      if (!dsel) return;
       campaign.designStyle = id;
       // 섞기를 켜 둔 상태면 새 대표 디자인을 기준으로 다시 섞음
-      if (campaign.cutDesigns) { campaign.cutDesigns = arBuildCutDesignMix(); setTimeout(arRenderCutMixRow, 0); }
+      if (campaign.cutDesigns) {
+        const still = dsel.mstyle === 'in_lookbook_still';
+        campaign.cutDesigns = still ? null : arBuildCutDesignMix();
+        if (still) {
+          try { localStorage.setItem('autoreels_cut_mix', '0'); } catch (e) {}
+        }
+        setTimeout(arRenderCutMixRow, 0);
+      }
       try { localStorage.setItem('autoreels_design_style', id); } catch (e) {}
       if (typeof recordDesignUse === 'function') recordDesignUse(id);
-      const dsel = arFindDesign(id);
       applyDesignBgm(dsel, true);
       if (dsel && (dsel.engine === 'kit' || dsel.engine === 'motion')) {
         Promise.all([dsel.font, dsel.sfont, dsel.engine === 'kit' ? 'brush' : null, dsel.insta ? 'maruL' : null, dsel.insta ? 'pretL' : null, dsel.insta ? 'maru' : null, dsel.insta ? 'pretM' : null].filter(Boolean).map(kitEnsureFont)).then(() => {
@@ -4735,6 +4742,7 @@
       }
       renderDesignStylePicker();
       renderColorPalettePicker();
+      arRenderLookbookPhotoTools();
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
     }
     function selectColorPalette(id) {

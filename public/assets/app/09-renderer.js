@@ -3679,9 +3679,10 @@
           const ctx = canvas.getContext('2d');
           if (!options.transparent) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
           ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+          const mime = options.webp ? 'image/webp' : options.transparent ? 'image/png' : 'image/jpeg';
           const blob = await new Promise((resolve, reject) => canvas.toBlob(
             value => value ? resolve(value) : reject(new Error('이미지 변환')),
-            options.transparent ? 'image/png' : 'image/jpeg', 0.85
+            mime, 0.85
           ));
           let src;
           if (options.dataUrl) {
@@ -3730,8 +3731,8 @@
       }
     }
 
-    async function loadCutPhoto(file, order) {
-      const img = await arImportPhoto(file);
+    async function loadCutPhoto(file, order, options) {
+      const img = await arImportPhoto(file, options);
       img._label = `${order}. 내 사진`;
       return img;
     }
@@ -3775,7 +3776,9 @@
 
     // 사진·영상 여러 개 올리기: 올린 순서대로 한 컷씩 배치 (최대 10개)
     async function handleMultiPhotoUpload(event) {
-      const picked = Array.from(event.target.files || []).filter((f) => /^(image|video)\//.test(f.type) || /\.(jpe?g|png|webp|hei[cf])$/i.test(f.name));
+      const finished = campaign.lookbookFinishedCards && arFindDesign(campaign.designStyle)?.mstyle === 'in_lookbook_still';
+      const picked = Array.from(event.target.files || []).filter((f) => /^image\//.test(f.type) ||
+        (!finished && /^video\//.test(f.type)) || /\.(jpe?g|png|webp|hei[cf])$/i.test(f.name));
       if (picked.length === 0) return;
       const files = picked.slice(0, 10);
       const statusEl = document.getElementById('photoUploadStatus');
@@ -3785,8 +3788,16 @@
       const loaded = [];
       await arWithPhotoImport(event.target, async () => {
         for (const [idx, file] of files.entries()) {
-          try { loaded.push(await (file.type.startsWith('video/') ? loadCutVideo(file, idx + 1) : loadCutPhoto(file, idx + 1))); }
+          try {
+            loaded.push(await (file.type.startsWith('video/') ? loadCutVideo(file, idx + 1) :
+              loadCutPhoto(file, idx + 1, finished ? { transparent: true, maxEdge: 1920 } : undefined)));
+          }
           catch (e) { photoError = e.message; loaded.push(null); }
+        }
+        if (finished && loaded.some((photo) => !photo)) {
+          loaded.forEach(arReleasePhoto);
+          loaded.length = 0;
+          throw new Error(photoError || '완성 카드 중 열리지 않는 이미지가 있어요.');
         }
         if (!loaded.some(Boolean)) throw new Error(photoError || '불러올 수 있는 사진·영상이 없습니다.');
       });
@@ -3803,6 +3814,15 @@
       campaign.uploadedPhotos.forEach(arReleasePhoto);
       campaign.uploadedPhotos = items;
       if (Array.isArray(campaign.scenePlan)) campaign.scenePlan.forEach((p) => { if (p) { delete p.photoIdx; delete p.photoManual; } });
+      if (finished && items.length > 1) {
+        campaign.cutCountOverride = items.length;
+        if (!Array.isArray(campaign.scenePlan)) campaign.scenePlan = [];
+        for (let i = 0; i < items.length; i++) {
+          const plan = campaign.scenePlan[i] ||= {};
+          plan.photoIdx = i;
+          plan.photoManual = true;
+        }
+      }
 
       applyVideoDurations(); // 장면이 바뀌었으므로 길이·썸네일을 다시 계산
       if (AudioEngine.enabled) AudioEngine.prefetchTtsBuffers();

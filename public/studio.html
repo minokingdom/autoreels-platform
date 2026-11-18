@@ -967,6 +967,18 @@
             </div>
             <!-- 사진 썸네일 목록은 아래 컷별 카드(썸네일 포함)와 겹쳐 숨김 -->
             <div id="aiPhotoThumbnails" class="hidden"></div>
+            <section id="arLookbookPhotoTools" class="hidden studio-sub p-3.5 space-y-2" aria-labelledby="arLookbookPhotoTitle">
+              <div class="flex items-center justify-between gap-2">
+                <h3 id="arLookbookPhotoTitle" class="text-[13px] font-semibold text-[#ededed]">룩북 사진</h3>
+                <a href="/assets/lookbook/approved-example.mp4" target="_blank" rel="noopener" class="text-[12px] text-[#a1a1a6] underline underline-offset-2">6장 예시 영상</a>
+              </div>
+              <label class="flex items-center gap-2 text-[13px] text-[#ededed]">
+                <input id="arLookbookFinishedCards" type="checkbox">
+                <span>완성 카드 그대로</span>
+              </label>
+              <p id="arLookbookPhotoHelp" class="text-[12px] text-[#a1a1a6]"></p>
+              <div id="arLookbookPhotoRows" class="space-y-1.5"></div>
+            </section>
             <!-- 컷별 사진/영상 · 화면 구도 · 카메라 모션 (사진 칸과 구도 칸을 하나로 합침) -->
             <div id="cutMediaCardsContainer" class="grid grid-cols-1 gap-3"></div>
             <p id="photoUploadStatus" class="text-[12px] text-[#85858b]">기본 실사 화보가 적용되어 있습니다</p>
