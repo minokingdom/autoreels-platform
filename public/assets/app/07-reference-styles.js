@@ -14,7 +14,7 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
   const caption=gCleanCaption((campaign.cutCaptions||[])[idx]||campaign.hook||'');
   c.save();
   c.fillStyle=r.background;c.fillRect(0,0,W,H);
-  if(['diagonal','type-cutout','stacked','type-echo','type-flow','editorial','news-marker','floating-type'].includes(r.layout)) {
+  if(['diagonal','type-cutout','stacked','type-echo','type-flow','editorial','news-marker','floating-type','type-rail','repeat-poster','chevron-type','brush-frame'].includes(r.layout)) {
     arReferenceComposition(c,W,H,S,caption,r,idx,p,entry);
     if(r.grain)inGrain(c,W,H,t,r.grain);
     inSign(c,d,W/2,H*.94,r.layout==='type-echo'&&idx%2?r.background:r.foreground,'center',W*.03);
@@ -51,7 +51,61 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
 let arReferenceMaskCanvas;
 function arReferenceComposition(c,W,H,S,caption,r,idx,p,entry) {
   const zoom=1.02+(r.camera==='zoom-out'?(1-p)*r.zoom:p*r.zoom);
-  if(r.layout==='editorial') {
+  if(r.layout==='brush-frame') {
+    c.save();c.globalAlpha*=entry;c.translate(0,(1-entry)*H*.025);
+    c.fillStyle=r.accent;c.fillRect(W*.28,H*.22,W*.58,H*.36);
+    const x=W*.15,y=H*.26,pw=W*.64,ph=H*.37;
+    c.save();c.beginPath();c.moveTo(x,y);
+    c.lineTo(x+pw,y);c.lineTo(x+pw,y+ph*.81);
+    for(let i=0;i<=64;i++)c.lineTo(x+pw*(1-i/64),y+ph*(.94+.012*Math.sin(i*3.7)+.009*Math.sin(i*1.3)));
+    c.closePath();c.clip();mPhoto(c,S,0,x,y,pw,ph,zoom);c.restore();
+    c.strokeStyle=r.accent;c.lineWidth=W*.012;c.lineCap='round';
+    c.beginPath();c.moveTo(W*.12,H*.72);c.quadraticCurveTo(W*.35,H*.69,W*.70,H*.72);c.stroke();
+    c.strokeStyle=r.foreground;c.lineWidth=W*.004;
+    for(const [xx,yy,sx,sy] of [[x-W*.02,y-H*.012,1,1],[x+pw+W*.02,y+ph,-1,-1]]){
+      c.beginPath();c.moveTo(xx,yy+sy*H*.025);c.lineTo(xx,yy);c.lineTo(xx+sx*W*.055,yy);c.stroke();
+    }
+    c.restore();
+    const words=caption.trim().split(/\s+/);arReferenceCaption(c,words.slice(0,2).join(' '),W,H,H*.12,H*.09,{...r,captionSize:.075,textMotion:'fade'},entry);
+    arReferenceCaption(c,caption,W,H,H*.73,H*.15,{...r,textMotion:'fade'},entry);
+  } else if(r.layout==='type-rail') {
+    const words=caption.split(/\s+/).filter(Boolean),key=words.slice(0,2).join(' '),F=KIT_FONTS[r.font];
+    const fit=arReferenceFit(c,key,W*.85,H*.18,W*.19,r.font,2);
+    c.save();c.fillStyle=r.foreground;c.textBaseline='middle';c.font=gFont(F.w,fit.size,F.f);
+    for(let row=0;row<3;row++) {
+      c.textAlign=row%2?'right':'left';
+      fit.lines.forEach((line,i)=>c.fillText(line,W*(row%2?.92:.08)+(1-entry)*(row%2?1:-1)*W*.15,H*(.18+row*.24)+(i-(fit.lines.length-1)/2)*fit.lh));
+    }
+    c.restore();
+    const x=W*(.19+.10*Math.sin(p*Math.PI)),y=H*.32;
+    mPhoto(c,S,0,x,y,W*.62,H*.30,zoom);
+    mPhoto(c,S,0,W*(.64-.08*p),H*.14,W*.25,H*.12,zoom+.10);
+    // 큰 글자 일부가 사진에 가려져도 전체 문장은 별도로 끝까지 읽을 수 있습니다.
+    arReferenceCaption(c,caption,W,H,H*.77,H*.12,{...r,textMotion:'fade'},entry);
+  } else if(r.layout==='repeat-poster') {
+    c.fillStyle=r.foreground;
+    const key=caption.trim().split(/\s+/).slice(0,2).join(' '),F=KIT_FONTS[r.font];
+    const fit=arReferenceFit(c,key,W*.86,H*.18,W*.23,r.font,1);
+    c.save();c.globalAlpha*=entry;c.font=gFont(F.w,fit.size,F.f);c.textAlign='center';c.textBaseline='middle';
+    for(let row=0;row<3;row++) c.fillText(fit.lines[0]||'',W/2,H*(.18+row*.24));
+    c.fillStyle=r.foreground;c.fillRect(W*.20,H*.30,W*.60,H*.34);
+    mPhoto(c,S,0,W*.215,H*.308,W*.57,H*.324,zoom);c.restore();
+    arReferenceCaption(c,caption,W,H,H*.77,H*.12,{...r,textMotion:'fade'},entry);
+  } else if(r.layout==='chevron-type') {
+    const F=KIT_FONTS[r.font],fit=arReferenceFit(c,caption,W*.70,H*.40,W*.10,r.font,4);
+    const rows=Math.max(3,fit.lines.length+1),photoRow=Math.floor(rows/2),step=H*.70/rows;
+    for(let row=0;row<rows;row++) {
+      const y=H*.14+row*step,h=step*.90,left=W*.05,right=W*.95,tip=W*.075,reverse=row%2;
+      c.save();c.translate((1-entry)*(reverse?1:-1)*W*.25,0);c.globalAlpha*=entry;
+      c.beginPath();
+      if(reverse){c.moveTo(left+tip,y);c.lineTo(right,y);c.lineTo(right,y+h);c.lineTo(left+tip,y+h);c.lineTo(left,y+h/2);}
+      else{c.moveTo(left,y);c.lineTo(right-tip,y);c.lineTo(right,y+h/2);c.lineTo(right-tip,y+h);c.lineTo(left,y+h);}
+      c.closePath();c.clip();c.fillStyle=reverse?r.foreground:r.accent;c.fillRect(0,y,W,h);
+      if(row===photoRow)mPhoto(c,S,0,left,y,right-left,h,zoom);
+      else{const line=fit.lines[(row<photoRow?row:row-1)%fit.lines.length]||'';c.fillStyle=r.background;c.font=gFont(F.w,fit.size,F.f);c.textAlign='center';c.textBaseline='middle';c.fillText(line,W/2,y+h/2);}
+      c.restore();
+    }
+  } else if(r.layout==='editorial') {
     mPhoto(c,S,0,0,0,W,H,zoom);
     const shade=c.createLinearGradient(0,0,W,H);shade.addColorStop(0,'rgba(0,0,0,.16)');shade.addColorStop(1,`rgba(0,0,0,${r.shade})`);
     c.fillStyle=shade;c.fillRect(0,0,W,H);
@@ -138,11 +192,39 @@ function arReferenceComposition(c,W,H,S,caption,r,idx,p,entry) {
     });c.restore();
   }
 }
+// 참조 스타일의 고정 상자 안에 원문 전체를 맞춥니다. 사용자가 넣은 줄바꿈은 유지합니다.
+function arReferenceFit(c,text,maxW,maxH,size,fontKey,maxLines=4) {
+  const F=KIT_FONTS[fontKey]||KIT_FONTS.sans,source=String(text||'').trim();
+  const compact=s=>s.replace(/\s+/g,'');
+  const initial=mFit(c,source,maxW,maxLines,size,size*.55,fontKey);
+  if(compact(initial.lines.join(''))===compact(source)&&initial.lines.length*initial.lh<=maxH) return initial;
+  const paragraphs=source.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+  const limit=Math.max(maxLines,paragraphs.length);
+  let actual=size*F.k;
+  for(let attempt=0;attempt<128;attempt++) {
+    c.font=gFont(F.w,actual,F.f);
+    const lines=[];
+    for(const paragraph of paragraphs) {
+      let line='';
+      for(const word of paragraph.split(/\s+/).filter(Boolean)) {
+        const joined=line?line+' '+word:word;
+        if(line&&c.measureText(joined).width>maxW){lines.push(line);line=word;}else line=joined;
+      }
+      if(line)lines.push(line);
+    }
+    const width=Math.max(0,...lines.map(s=>c.measureText(s).width)),height=lines.length*actual*1.28;
+    if(lines.length<=limit&&width<=maxW&&height<=maxH) return {lines,size:actual,lh:actual*1.28};
+    actual*=Math.min(.93,width>0?maxW/width:1,height>0?maxH/height:1);
+  }
+  return {lines:[],size:actual,lh:actual*1.28};
+}
+
+
 // 공통 mCaption은 자체 alpha/이동을 설정하므로 분석 스타일의 페이드와 상승을 여기서 구분합니다.
 function arReferenceCaption(c,text,W,H,y,h,r,entry) {
   const F=KIT_FONTS[r.font]||KIT_FONTS.sans,size=W*r.captionSize;
   const maxLines=Math.max(1,Math.min(3,Math.floor(h/(size*F.k*1.28))));
-  const fit=mFit(c,text,W*.80,maxLines,size,Math.round(size*.55),r.font);
+  const fit=arReferenceFit(c,text,W*.80,h,size,r.font,maxLines);
   const top=y+Math.max(0,(h-fit.lines.length*fit.lh)/2);
   c.save();c.textAlign='center';c.textBaseline='middle';c.font=gFont(F.w,fit.size,F.f);c.fillStyle=r.foreground;
   if(r.textMotion==='fade')c.globalAlpha*=entry;

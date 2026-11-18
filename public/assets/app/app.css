@@ -1496,3 +1496,9 @@ body.ar-cut-editing #arQuickBar { display: none; }
 @keyframes ar-script-float { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-5px) rotate(-3deg); } }
 @keyframes ar-script-spark { 0%,100% { opacity: .5; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.1); } }
 @media (prefers-reduced-motion: reduce) { .ar-script-loading-card, .ar-script-loading-spark, .ar-script-loading-track span { animation: none; } .ar-script-loading-track span { transform: translateX(70%); } }
+
+/* 추천 카드가 길어도 분류 버튼과 목록을 눌러 볼 수 있도록 패널 전체를 스크롤합니다. */
+.preset-drawer { overflow-y: auto; overscroll-behavior: contain; }
+.preset-drawer > * { flex-shrink: 0; }
+.preset-drawer .pd-cats { min-height: 44px; align-items: center; overflow-y: hidden; }
+.preset-drawer .pd-list { flex: 0 0 auto; overflow-y: visible; }

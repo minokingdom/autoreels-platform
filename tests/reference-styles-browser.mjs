@@ -13,7 +13,7 @@ try{
   campaign.cutCaptions=Array.from({length:8},(_,i)=>`서로 다른 사진과 자막 ${i+1}`);
   const canvas=document.createElement('canvas');canvas.width=540;canvas.height=960;const c=canvas.getContext('2d');let frames=0;
   const before=JSON.stringify(campaign.cutCaptions);
-  for(const layout of ['full','inset','polaroid','diagonal','type-cutout','stacked','type-echo','type-flow','editorial','news-marker','floating-type'])for(const textMotion of ['fade','rise','mask','focus'])for(const camera of ['still','zoom-in','zoom-out','pan-left','pan-right'])for(const transition of ['cut','fade']){
+  for(const layout of ['full','inset','polaroid','diagonal','type-cutout','stacked','type-echo','type-flow','editorial','news-marker','floating-type','type-rail','repeat-poster','chevron-type','brush-frame'])for(const textMotion of ['fade','rise','mask','focus'])for(const camera of ['still','zoom-in','zoom-out','pan-left','pan-right'])for(const transition of ['cut','fade']){
    const r={...base,layout,textMotion,camera,transition};
    for(const t of [.1,2.99,3.01,23.9]){arRenderReferenceFrame(c,540,960,t,24,8,{name:'카페'}, {referenceStyle:r});frames++;}
    if(c.getTransform().a!==1||c.globalAlpha!==1)throw Error('canvas state leaked');
@@ -44,14 +44,43 @@ try{
   const ref={...base,layout:'polaroid'};arRenderReferenceFrame(c,540,960,2,24,8,{name:'카페'}, {referenceStyle:ref});
   return {frames,png:canvas.toDataURL()};
  });
+ await page.evaluate(()=>{
+  const layouts=['type-rail','repeat-poster','chevron-type','brush-frame'];
+  const cases=[
+   '오늘 카페에서 직접 구운 따뜻한 크루아상과 깊고 진한 풍미의 커피를 함께 즐기며 바쁜 하루 속에서 잠시 쉬어 가세요.',
+   '오늘 카페에서 직접 구운 따뜻한 크루아상과 깊고 진한 풍미의 커피를 함께 즐기며 바쁜 하루 속에서 잠시 쉬어 가세요. 내일도 소중한 사람과 함께 편안하게 머무를 수 있도록 좋은 재료와 정성으로 매일 새로운 디저트와 향긋한 커피를 준비하겠습니다.',
+   Array.from({length:8},(_,i)=>'문장 '+(i+1)).join('\n'),
+   '가나다라마바사아자차카타파하'.repeat(3),'행복',''
+  ];
+  const c=document.createElement('canvas').getContext('2d');c.canvas.width=540;c.canvas.height=960;
+  const image=document.createElement('canvas');image.width=100;image.height=100;
+  const S={photos:[image],n:1,idx:0,cutIdx:0,cuts:1};
+  const original=c.fillText.bind(c),drawn=[];
+  c.fillText=function(text,x,y,...rest){
+   const m=this.measureText(text),matrix=this.getTransform();
+   drawn.push({text,top:matrix.d*y+matrix.f-m.actualBoundingBoxAscent,bottom:matrix.d*y+matrix.f+m.actualBoundingBoxDescent});
+   return original(text,x,y,...rest);
+  };
+  for(const layout of layouts)for(const caption of cases){
+   drawn.length=0;const style=AR_REFERENCE_STYLES.find(s=>s.layout===layout);
+   arReferenceComposition(c,540,960,S,caption,style,0,.5,1);
+   const compact=s=>s.replace(/\s+/g,'');
+   if(caption&&!compact(drawn.map(x=>x.text).join('')).includes(compact(caption)))throw Error(layout+' lost caption ending');
+   if(drawn.some(x=>x.top<0||x.bottom>960*.91))throw Error(layout+' caption outside safe area');
+  }
+ });
+ console.log('reference caption multiline, long and unspaced full text + safe area ok');
+
+
  const ids=await page.evaluate(()=>AR_REFERENCE_STYLES.map(x=>x.id));
- for(const viewport of [{width:1280,height:900},{width:390,height:844}]){
+ for(const viewport of [{width:1920,height:910},{width:1280,height:900},{width:390,height:844}]){
   await page.setViewportSize(viewport);
   await page.reload({waitUntil:'load'});
   await page.evaluate(()=>{setIndustry('cafe');Date.now=()=>Math.max(...AR_REFERENCE_STYLES.map(x=>Date.parse(x.addedAt)))+1000;});
   await page.waitForTimeout(500);
   await page.evaluate(()=>{pdMood='';openPresetDrawer('right');});
   console.log('clicking new tab',viewport.width);
+  assert.ok(await page.locator('#pdCats').evaluate(e=>e.clientHeight>=44),'category row compressed');
   await page.locator('#pdCats button').filter({hasText:/^신규$/}).click();
   for(const id of ids)assert.equal(await page.locator('#pdthumb_'+id).count(),1,'new tab missing '+id);
   const first=ids.at(-1);

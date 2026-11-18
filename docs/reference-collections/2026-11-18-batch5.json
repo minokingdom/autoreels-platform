@@ -1,0 +1,76 @@
+{
+  "method": "Ego logged-in Pinterest DOM/media + local rea-video + all-shot visual review; one static poster visually reviewed",
+  "added": 4,
+  "total": 17,
+  "reviewedVideoSegments": 32,
+  "staticPosters": 1,
+  "categoriesAdded": 0,
+  "paidAnalysisCalls": 0,
+  "candidates": [
+    {
+      "id": "ref_5c18dfd05b63a13f",
+      "url": "https://kr.pinterest.com/pin/458522805837319943/",
+      "platform": "Pinterest",
+      "name": "모노 타이포 포토 레일",
+      "category": "고급",
+      "status": "registered",
+      "reviewedShots": 1,
+      "sourceKind": "video",
+      "adaptationLimits": "반복 타이포와 작은 사진 이동만 적용. 동일 컷 사진을 두 크기로 사용하며 원본 건축 사진·문구·드로잉은 제외한다.",
+      "paidAnalysisCalls": 0
+    },
+    {
+      "id": "ref_76eaed78e1eabbfa",
+      "url": "https://kr.pinterest.com/pin/123919427245242692/",
+      "platform": "Pinterest",
+      "name": "애로우 타이포 보드",
+      "category": "타이포",
+      "status": "registered",
+      "reviewedShots": 15,
+      "sourceKind": "video",
+      "adaptationLimits": "영상 30.7~33.7초의 사진·화살표 띠 구성에서 착안. 전체 브랜드 쇼릴이나 인물 동작을 재현하지 않는다.",
+      "paidAnalysisCalls": 0
+    },
+    {
+      "id": "ref_75f6661420374b4c",
+      "url": "https://kr.pinterest.com/pin/1102537552560887579/",
+      "platform": "Pinterest",
+      "name": "리핏 포토 포스터",
+      "category": "스포츠",
+      "status": "registered",
+      "reviewedShots": 0,
+      "sourceKind": "static_poster",
+      "adaptationLimits": "검색 결과의 정적 RUN 포스터를 직접 확인했다. 영상 움직임을 분석한 것으로 기록하지 않으며 페이드는 서비스용으로 추가했다.",
+      "paidAnalysisCalls": 0
+    },
+    {
+      "id": "ref_6cde6f78ca37c4bf",
+      "url": "https://kr.pinterest.com/pin/686728643236095301/",
+      "platform": "Pinterest",
+      "name": "페이퍼 브러시 프레임",
+      "category": "감성",
+      "status": "registered",
+      "reviewedShots": 16,
+      "sourceKind": "video",
+      "adaptationLimits": "종이·붓선·사진 오브젝트의 구성만 적용. 원본의 빠른 전환·다중 사진·인물·로고는 사용하지 않는다.",
+      "paidAnalysisCalls": 0
+    }
+  ],
+  "independentReview": {
+    "reviewer": "separate Codex agent",
+    "verdict": "approved after fixes",
+    "foundAndFixed": [
+      "multiline caption overflow",
+      "long caption truncation",
+      "title and caption overlap"
+    ],
+    "captionCases": 28,
+    "photoCases": 16,
+    "viewports": [
+      1920,
+      1280,
+      390
+    ],
+    "limitation": "Very long captions shrink; no human or audio listening review"
+  }
+}

@@ -34,4 +34,4 @@
 
 공개 캡컷 상세 페이지의 video src를 로컬로 확인할 수 있었으며 D:/Avicx/eatspay/.local/autoreels-style-dev/discover_capcut.py 와 collect_capcut_batch4.py가 이번 배치의 예다. 과거 고정 후보를 그대로 무한 반복하지 말고 새로운 후보를 발견한다.
 
-사용자는 핀터레스트를 반드시 참조하라고 추가 지시했다. 2026-11-18 Chrome DevTools 브라우저의 Pinterest 검색 페이지(https://kr.pinterest.com/search/pins/?q=editorial%20typography%20motion%20design)를 열었으나 로그인 모달로 상세 접근이 막혀 사용자 로그인 대기 중이다. 핀을 확인한 것처럼 기록하지 않는다.
+사용자는 핀터레스트를 반드시 참조하고 Ego 스킬을 사용하도록 지정했다. 로그인된 Ego에서 5차 영상 3개와 정적 포스터 1개를 확인했으며 4개를 추가해 누적 참조 스타일 17개다. 자료는 collections/20261118-batch5/에 있다. 자동 예약은 만들지 않는다.
