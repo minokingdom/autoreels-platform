@@ -1120,6 +1120,7 @@
     // 프리셋 데이터
     const presets = {
       sorento: {
+        make: '기아',
         hook: '이번 달 계약 안 하면 손해! 11월 비밀 조건',
         vehicle: '2026 쏘렌토 하이브리드',
         discountNum: 480,
@@ -1133,6 +1134,7 @@
         neonColor: '#38bdf8'
       },
       santafe: {
+        make: '현대',
         hook: '패밀리 SUV 원탑! 싼타페 하브 즉시출고 특판',
         vehicle: '디 올 뉴 싼타페 하이브리드',
         discountNum: 420,
@@ -1146,6 +1148,7 @@
         neonColor: '#38bdf8'
       },
       grandeur: {
+        make: '현대',
         hook: '성공의 상징! 디 올 뉴 그랜저 하브 즉시출고 특판',
         vehicle: '디 올 뉴 그랜저 하이브리드',
         discountNum: 450,
@@ -1159,6 +1162,7 @@
         neonColor: '#facc15'
       },
       carnival: {
+        make: '기아',
         hook: '법인·다자녀 압도적 1위! 카니발 하브 긴급물량',
         vehicle: '더 뉴 카니발 하이브리드 9인승',
         discountNum: 390,
@@ -1172,6 +1176,7 @@
         neonColor: '#38bdf8'
       },
       bmw5: {
+        make: 'BMW',
         hook: 'BMW 5시리즈 할인 실화? 재고 딱 3대!',
         vehicle: 'BMW 520i M Sport 패키지',
         discountNum: 1150,
@@ -1185,6 +1190,7 @@
         neonColor: '#60a5fa'
       },
       gv80: {
+        make: '제네시스',
         hook: '대표님들이 가장 많이 찾는 GV80 비밀 조건',
         vehicle: '제네시스 GV80 페이스리프트',
         discountNum: 620,

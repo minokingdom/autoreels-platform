@@ -278,7 +278,10 @@ try {
   assert.match(await examples.textContent(), /차종 예시 고르기/);
   await examples.click();
   const options = page.locator('#arOptionSheet');
+  assert.equal(await options.locator('.aos-head strong').textContent(), 'BMW 차종 예시');
+  assert.deepEqual(await options.locator('[data-v]').evaluateAll(items => items.map(item => item.dataset.v)), ['bmw5']);
   assert.equal(await options.locator('.aos-item.on').count(), 0);
+  assert.equal(await product.locator('#inputVehicle').inputValue(), 'BMW i4 eDrive40');
   assert.equal(await product.locator('#inputDiscount').inputValue(), '전기차 케어 패키지 지원');
   await options.locator('[data-v="bmw5"]').click();
   assert.equal(await product.locator('#inputVehicle').inputValue(), 'BMW 520i M Sport 패키지');
@@ -286,6 +289,16 @@ try {
   assert.match(await examples.textContent(), /BMW 520i/);
   await product.locator('#inputDiscountNum').fill('0');
   await examples.getByText('차종 예시 고르기').waitFor();
+  await product.locator('#inputVehicle').fill('그랜저');
+  await examples.click();
+  assert.deepEqual(await options.locator('[data-v]').evaluateAll(items => items.map(item => item.dataset.v)), ['grandeur', 'santafe']);
+  await options.getByRole('button', { name: '닫기' }).click();
+  await product.locator('#inputVehicle').fill('테슬라 모델 3');
+  await examples.click();
+  assert.equal(await options.locator('[data-v]').count(), 0);
+  assert.match(await options.textContent(), /입력한 차종에 맞는 예시가 없어요/);
+  await options.getByRole('button', { name: '닫기' }).click();
+  assert.equal(await product.locator('#inputVehicle').inputValue(), '테슬라 모델 3');
   await product.getByRole('button', { name: '완료' }).click();
   assert.equal(await product.isVisible(), false);
   console.log('product photo, custom vehicle and example selection ok');

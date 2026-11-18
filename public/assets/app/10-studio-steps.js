@@ -931,6 +931,17 @@
       const el = document.getElementById('arOptionSheet');
       if (el) { el.classList.add('hidden'); el.style.display = 'none'; el.innerHTML = ''; }
     }
+    function arAutoExampleMake(vehicle) {
+      // 제조사 표기를 먼저 확인하고, 차종명만 입력했다면 알려진 모델명으로 확인합니다.
+      if (/\bbmw\b|비엠\s*더블유|비엠더블류/i.test(vehicle)) return 'BMW';
+      if (/\bgenesis\b|제네시스/i.test(vehicle)) return '제네시스';
+      if (/\bhyundai\b|현대/i.test(vehicle)) return '현대';
+      if (/\bkia\b|기아/i.test(vehicle)) return '기아';
+      if (/\b(?:gv|g)(?:60|70|80|90)\b/i.test(vehicle)) return '제네시스';
+      if (/그랜[저져]|[싼산]타페|아반떼|쏘나타|소나타|아이오닉|투싼|팰리세이드|코나|스타리아/i.test(vehicle)) return '현대';
+      if (/[쏘소]렌토|카니발|스포티지|셀토스|모닝|니로|\bev[3-9]\b|\bk[3589]\b/i.test(vehicle)) return '기아';
+      return '';
+    }
     function arOpenOptionSheet(sel) {
       let el = document.getElementById('arOptionSheet');
       if (!el) {
@@ -944,7 +955,14 @@
       const esc = (v) => String(v || '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
       const isPhoto = sel.getAttribute('data-sheet-kind') === 'photo';
       const photos = (typeof campaign !== 'undefined' && campaign.uploadedPhotos) || [];
-      const opts = [...sel.options].filter((o) => !o.disabled && !o.hidden && !o.classList.contains('hidden'));
+      const vehicle = sel.id === 'presetSelect' && IND.key === 'auto' ? String(campaign.vehicle || '').trim() : '';
+      const make = arAutoExampleMake(vehicle);
+      const opts = [...sel.options].filter((o) => {
+        if (o.disabled || o.hidden || o.classList.contains('hidden')) return false;
+        if (!vehicle) return true;
+        const example = presets[o.value];
+        return make ? example?.make === make : example?.vehicle === vehicle;
+      });
       const items = opts.map((o) => {
         const on = o.value === sel.value;
         const label = esc(o.textContent.trim().replace(/^\d+\.\s*/, isPhoto ? '' : '$&'));
@@ -955,9 +973,13 @@
         }
         return `<button type="button" class="aos-item${on ? ' on' : ''}" data-v="${esc(o.value)}"><span>${label}</span>${on ? '<b>✓</b>' : ''}</button>`;
       }).join('');
+      const heading = make ? `${make} 차종 예시` : arSelectLabel(sel);
+      const empty = vehicle && !items
+        ? '<p class="px-4 py-3 text-[13px] text-[#a1a1a6]">입력한 차종에 맞는 예시가 없어요. 차종 타이틀과 혜택을 직접 입력할 수 있어요.</p>'
+        : '';
       el.innerHTML = `<div class="aos-card">
-          <div class="aos-head"><strong>${esc(arSelectLabel(sel))}</strong><button type="button" class="ar-modal-x" aria-label="닫기">✕</button></div>
-          <div class="${isPhoto ? 'aos-grid' : 'aos-list'}">${items}</div>
+          <div class="aos-head"><strong>${esc(heading)}</strong><button type="button" class="ar-modal-x" aria-label="닫기">✕</button></div>
+          <div class="${isPhoto ? 'aos-grid' : 'aos-list'}">${items || empty}</div>
         </div>`;
       el.querySelector('.ar-modal-x').onclick = arCloseOptionSheet;
       el.querySelectorAll('[data-v]').forEach((b) => {
