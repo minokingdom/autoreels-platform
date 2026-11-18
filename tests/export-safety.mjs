@@ -93,6 +93,42 @@ try {
   await page.evaluate(()=>exportSynthesizedVideo());
   const keys=await page.evaluate(()=>window.__retryKeys);assert.equal(keys.length,2);assert.equal(keys[0],keys[1]); assert.equal(await page.evaluate(()=>window.lastRecordedMime),'video/webm'); assert.ok((await page.evaluate(()=>window.lastRecordedFilename)).endsWith('.webm'));
   assert.equal(await page.evaluate(()=>arPendingExport),null);
+  const audioClip = (frames, frequency) => {
+    const wav = Buffer.alloc(44 + frames * 2);
+    wav.write('RIFF',0); wav.writeUInt32LE(wav.length-8,4); wav.write('WAVEfmt ',8);
+    wav.writeUInt32LE(16,16); wav.writeUInt16LE(1,20); wav.writeUInt16LE(1,22);
+    wav.writeUInt32LE(24000,24); wav.writeUInt32LE(48000,28);
+    wav.writeUInt16LE(2,32); wav.writeUInt16LE(16,34); wav.write('data',36); wav.writeUInt32LE(frames*2,40);
+    for (let i=0;i<frames;i++) wav.writeInt16LE(Math.round(9000*Math.sin(2*Math.PI*frequency*i/24000)),44+i*2);
+    return wav.toString('base64');
+  };
+  await page.route('**/api/tts-script?**',async route=>{
+    const url = new URL(route.request().url());
+    assert.equal(url.searchParams.get('v'),'10');
+    assert.deepEqual(JSON.parse(url.searchParams.get('lines')),['첫 컷','둘째 컷','셋째 컷','마지막 컷']);
+    await route.fulfill({json:{ok:true,model:'airy-tts-v1',clips_base64:[audioClip(4800,220),audioClip(9600,240),audioClip(14400,260),audioClip(19200,280)]}});
+  });
+  const airy = await page.evaluate(async()=>{
+    AR_SERVER.me={user:{id:'331'},entitlement:{pro:true,tier:'pro'},usage:{aiLimit:null}};
+    AudioEngine.ttsVoice='audit'; AudioEngine.ttsSpeed=1.2;
+    const lines=['첫 컷','둘째 컷','셋째 컷','마지막 컷'];
+    AudioEngine.masterWantKey=AudioEngine.scriptKeyFor(lines);
+    await AudioEngine.fetchScriptNarration(lines);
+    refitDurationToNarration();
+    const bounds=AudioEngine.masterCutBounds.slice();
+    const duration=AudioEngine.masterBuffer.duration;
+    isPlaying=false; AudioEngine.stopTts();
+    window.lastRecordedVideoBlob=null;
+    await exportSynthesizedVideo();
+    return {bounds,duration,provider:AudioEngine.ttsProvider,exportSize:window.lastRecordedVideoBlob?.size||0,
+      badge:document.getElementById('ttsProviderBadge').textContent, audioTracks:AudioEngine.streamDest.stream.getAudioTracks().length};
+  });
+  [0,1/6,.5,1,5/3].forEach((bound,index)=>assert.ok(Math.abs(airy.bounds[index]-bound)<.003));
+  assert.ok(Math.abs(airy.duration-5/3)<.003);
+  assert.equal(airy.provider,'airy');
+  assert.match(airy.badge,/Airy/);
+  assert.equal(airy.audioTracks,1);
+  assert.ok(airy.exportSize>1000);
   assert.deepEqual(pageErrors,[]);assert.deepEqual(await page.evaluate(()=>window.__smokeAsyncErrors),[]);
   console.log('export safety ok',JSON.stringify(result));
 } finally {await browser.close();if(srv)srv.close();}

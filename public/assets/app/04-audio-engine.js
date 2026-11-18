@@ -459,7 +459,10 @@
         this.ttsLastError = errorCode || '';
         const badge = document.getElementById('ttsProviderBadge');
         if (!badge) return;
-        if (provider === 'fish' && this.ttsFreeModel) {
+        if (provider === 'airy') {
+          badge.textContent = '성우: Airy';
+          badge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#4cc38a]';
+        } else if (provider === 'fish' && this.ttsFreeModel) {
           badge.textContent = '성우: Fish Audio 무료 모델 (크레딧 부족 · 음질 낮음)';
           badge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#f5a524]';
         } else if (provider === 'fish') {
@@ -472,7 +475,11 @@
             errorCode === 'http_402' ? '크레딧 부족' :
             errorCode === 'offline' ? '서버 없이 실행 중' :
             errorCode === 'quota' ? '이번 사용량 한도 도달' : '연결 실패';
-          badge.textContent = `성우: 브라우저 음성 (Fish Audio ${reason} · 추출 영상에는 녹음 안 됨)`;
+          const airyError = String(errorCode || '').startsWith('airy_');
+          const source = airyError ? 'Airy' : 'Fish Audio';
+          const cause = errorCode === 'airy_credit_exhausted' ? '크레딧 부족' :
+            errorCode === 'airy_rate_limited' ? '음성 요청이 많음' : reason;
+          badge.textContent = `성우: 브라우저 음성 (${source} ${cause} · 추출 영상에는 녹음 안 됨)`;
           badge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#f5a524]';
         } else {
           badge.textContent = '성우: 준비 중';
@@ -509,7 +516,7 @@
         if (this.voiceListLoaded || !arCanUseAi()) return;
         this.voiceListLoaded = true;
         try {
-          const res = await fetch('/api/tts-voices');
+          const res = await fetch('/api/tts-voices?v=1');
           if (!res.ok) throw new Error(`http_${res.status}`);
           const body = await res.json();
           const sel = document.getElementById('ttsVoiceSelect');
@@ -578,6 +585,28 @@
         this.masterKey = key;
         return true;
       },
+      decodeNarration(ctx, encoded) {
+        return ctx.decodeAudioData(Uint8Array.from(atob(encoded), (char) => char.charCodeAt(0)).buffer);
+      },
+      async renderAiryClips(ctx, clips, speed) {
+        const sampleRate = ctx.sampleRate;
+        const rate = speed >= 0.8 && speed <= 1.5 ? Number(speed) : 1.1;
+        const offsets = [0];
+        for (const clip of clips) {
+          offsets.push(offsets[offsets.length - 1] + Math.max(1, Math.round(clip.length / rate)));
+        }
+        const channels = Math.max(...clips.map((clip) => clip.numberOfChannels));
+        const output = new OfflineAudioContext(channels, offsets[offsets.length - 1], sampleRate);
+        clips.forEach((clip, i) => {
+          const source = output.createBufferSource();
+          source.buffer = clip;
+          source.playbackRate.value = rate;
+          source.connect(output.destination);
+          const duration = (offsets[i + 1] - offsets[i]) / sampleRate;
+          source.start(offsets[i] / sampleRate, 0, duration * rate);
+        });
+        return { full: await output.startRendering(), bounds: offsets.map((frame) => frame / sampleRate) };
+      },
       fetchScriptNarration(lines) {
         if (!arCanUseAi()) return Promise.reject(new Error('ai_access_required'));
         const voice = this.ttsVoice;
@@ -586,16 +615,17 @@
         if (this.scriptCache.has(scriptKey)) return this.scriptCache.get(scriptKey);
 
         const ctx = this.ensureContext();
+        let provider = 'fish';
         const job = (async () => {
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
-          const url = `/api/tts-script?v=9&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
+          const url = `/api/tts-script?v=10&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
           const res = await this.runTtsRequest(() => fetch(url));
           if (!res.ok) {
             let code = `http_${res.status}`;
             try {
               const errBody = await res.json();
-              if (errBody && errBody.error === 'fish_api_key_missing') code = errBody.error;
+              if (errBody && (errBody.error === 'fish_api_key_missing' || String(errBody.error).startsWith('airy_'))) code = errBody.error;
               if (errBody && (errBody.error === 'quota_exceeded' || errBody.error === 'service_tts_cap')) {
                 code = 'quota';
                 if (window.arNotifyQuota) window.arNotifyQuota(errBody.message);
@@ -604,14 +634,23 @@
             throw new Error(code);
           }
           const body = await res.json();
-          this.noteTtsModel(body && body.model);
-          if (!body || !body.audio_base64 || !Array.isArray(body.lines) || body.lines.length !== lines.length) {
-            throw new Error('bad_script_response');
+          let full, exactBounds;
+          if (body?.model === 'airy-tts-v1') {
+            provider = 'airy';
+            if (!Array.isArray(body.clips_base64) || body.clips_base64.length !== lines.length) {
+              throw new Error('airy_invalid_audio');
+            }
+            try {
+              const clips = await Promise.all(body.clips_base64.map((clip) => this.decodeNarration(ctx, clip)));
+              ({ full, bounds: exactBounds } = await this.renderAiryClips(ctx, clips, speed));
+            } catch (error) { throw new Error('airy_invalid_audio'); }
+          } else {
+            this.noteTtsModel(body && body.model);
+            if (!body || !body.audio_base64 || !Array.isArray(body.lines) || body.lines.length !== lines.length) {
+              throw new Error('bad_script_response');
+            }
+            full = await this.decodeNarration(ctx, body.audio_base64);
           }
-          const bin = atob(body.audio_base64);
-          const bytes = new Uint8Array(bin.length);
-          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-          const full = await ctx.decodeAudioData(bytes.buffer);
 
           // 전체 녹음의 최대 음량 (모든 문장을 같은 배율로 키워 문장 사이 크기를 일정하게 유지)
           const mono = full.getChannelData(0);
@@ -645,8 +684,8 @@
             }
             return best;
           };
-          const bounds = [Math.max(0, body.lines[0].start - 0.08)];
-          for (let i = 0; i < lines.length - 1; i++) {
+          const bounds = exactBounds || [Math.max(0, body.lines[0].start - 0.08)];
+          for (let i = 0; !exactBounds && i < lines.length - 1; i++) {
             // Fish 시각 정보는 문장 마지막 낱말을 짧게 잡는 경향이 있어 (예: 실제보다 0.5초 일찍 끝남)
             // 추정 경계보다 뒤쪽을 더 넓게(최대 1초) 살펴 실제 숨 쉬는 자리를 찾음
             const mid = (body.lines[i].end + body.lines[i + 1].start) / 2;
@@ -655,7 +694,7 @@
             bounds.push(lo < hi ? quietest(mid, lo, hi) : mid);
           }
           // 마지막 문장은 녹음 끝까지 (말끝 여운이 잘리지 않게)
-          bounds.push(full.duration);
+          if (!exactBounds) bounds.push(full.duration);
           // ★ 원테이크 마스터 오디오: 대본별로 보관하고, 지금 대본의 녹음일 때만 재생용으로 씀
           //   (예전에는 나중에 끝난 녹음이 무조건 재생용이 되어, 업종이 정해지기 전 자동차 대본 녹음이
           //    늦게 도착하면 미용실 영상 첫머리에 "쏘렌토…"가 나왔음)
@@ -687,10 +726,15 @@
 
         this.scriptCache.set(scriptKey, job);
         job.then(
-          () => this.setTtsProvider('fish'),
+          () => this.setTtsProvider(provider),
           (err) => {
             this.scriptCache.delete(scriptKey);
             const code = String(err && err.message);
+            if (code.startsWith('airy_')) {
+              this.ttsBlockedUntil = Date.now() + (code === 'airy_credit_exhausted' ? 60000 : 2000);
+              this.setTtsProvider('browser', code);
+              return;
+            }
             if (['fish_api_key_missing', 'http_401', 'http_402', 'offline', 'quota'].includes(code)) {
               this.ttsBlockedUntil = Date.now() + (code === 'quota' ? 600000 : 60000);
               this.setTtsProvider('browser', code);
@@ -711,11 +755,12 @@
         if (Date.now() < this.ttsBlockedUntil) return Promise.reject(new Error(this.ttsLastError || 'blocked'));
 
         const ctx = this.ensureContext();
+        let provider = 'fish';
         const job = (async () => {
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
           // v: 서버의 읽기 규칙이 바뀌면 올려서, 예전에 저장된 음성 대신 새 음성을 받게 함
-          const url = `/api/tts?v=8&speed=${speed}` + (voice !== 'auto' ? `&ref=${encodeURIComponent(voice)}` : '') + `&text=${encodeURIComponent(text)}`;
+          const url = `/api/tts?v=9&speed=${speed}` + (voice !== 'auto' ? `&ref=${encodeURIComponent(voice)}` : '') + `&text=${encodeURIComponent(text)}`;
           let res = await this.runTtsRequest(() => fetch(url));
           if (!res.ok && (res.status === 429 || res.status >= 500) && res.status !== 503) {
             await new Promise((r) => setTimeout(r, 900));
@@ -725,7 +770,7 @@
             let code = `http_${res.status}`;
             try {
               const body = await res.json();
-              if (body && body.error === 'fish_api_key_missing') code = body.error;
+              if (body && (body.error === 'fish_api_key_missing' || String(body.error).startsWith('airy_'))) code = body.error;
               if (body && (body.error === 'quota_exceeded' || body.error === 'service_tts_cap')) {
                 code = 'quota';
                 if (window.arNotifyQuota) window.arNotifyQuota(body.message);
@@ -733,9 +778,13 @@
             } catch (e) {}
             throw new Error(code);
           }
-          this.noteTtsModel(res.headers.get('X-TTS-Model'));
+          const model = res.headers.get('X-TTS-Model');
           const bytes = await res.arrayBuffer();
-          const buffer = await ctx.decodeAudioData(bytes);
+          let buffer = await ctx.decodeAudioData(bytes);
+          if (model === 'airy-tts-v1') {
+            provider = 'airy';
+            buffer = (await this.renderAiryClips(ctx, [buffer], speed)).full;
+          } else this.noteTtsModel(model);
           // 앞뒤 무음 구간을 잘라 실제 말하는 구간만 사용 (컷 길이를 불필요하게 늘리지 않도록)
           const data = buffer.getChannelData(0);
           let peak = 0;
@@ -761,14 +810,16 @@
 
         this.ttsCache.set(key, job);
         job.then(
-          () => this.setTtsProvider('fish'),
+          () => this.setTtsProvider(provider),
           (err) => {
             this.ttsCache.delete(key); // 실패는 캐시하지 않아 다음 재생 때 다시 시도
             const code = String(err && err.message);
             if (['fish_api_key_missing', 'http_401', 'http_402', 'offline', 'quota'].includes(code)) {
               this.ttsBlockedUntil = Date.now() + (code === 'quota' ? 600000 : 60000);
             }
-            if (Date.now() < this.ttsBlockedUntil || this.ttsProvider !== 'fish') this.setTtsProvider('browser', code);
+            if (code.startsWith('airy_') || Date.now() < this.ttsBlockedUntil || !['fish', 'airy'].includes(this.ttsProvider)) {
+              this.setTtsProvider('browser', code);
+            }
           }
         );
         return job;
@@ -825,7 +876,7 @@
         if (this.ttsPrefetchTimer) { clearTimeout(this.ttsPrefetchTimer); this.ttsPrefetchTimer = null; }
 
         // 1순위: 대본 전체를 한 번에 녹음. 실패하면 문장별 녹음으로 대체
-        const perLine = () => (!arVoiceAllowed() || this.masterWantKey !== wantKey)
+        const perLine = (error) => (String(error?.message || this.ttsLastError).startsWith('airy_') || !arVoiceAllowed() || this.masterWantKey !== wantKey)
           ? Promise.resolve([])
           : Promise.all(lines.map((t) => this.fetchLineBuffer(t).catch(() => null)));
         const job = (Date.now() < this.ttsBlockedUntil ? perLine() : this.fetchScriptNarration(lines).catch(perLine)).then(

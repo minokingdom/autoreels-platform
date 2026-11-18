@@ -19,6 +19,7 @@
 
 const { isValidVoiceId, CURATED_VOICE_IDS } = require('../lib/fish-voices');
 const { normalizeKoreanNumbers } = require('../lib/korean-numbers');
+const { MODEL: AIRY_MODEL, usesAiry, synthesizeAiry, sendAiryError } = require('../lib/airy-tts');
 // 유료 크레딧이 없을 때 쓰는 Fish Audio 무료 모델
 const FREE_MODEL = (process.env.FISH_TTS_FREE_MODEL || 's2.1-pro-free').trim();
 
@@ -79,7 +80,8 @@ async function handler(req, res) {
   }
 
   const apiKey = (process.env.FISH_API_KEY || '').trim();
-  if (!apiKey) {
+  const airy = usesAiry(req, 9);
+  if (!airy && !apiKey) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(503).json({
       ok: false,
@@ -102,6 +104,18 @@ async function handler(req, res) {
   const toneTag = TONE_TAGS[toneKey];
   const requestedSpeed = Number(input.speed);
   const speed = requestedSpeed >= 0.8 && requestedSpeed <= 1.5 ? requestedSpeed : preset.speed;
+
+  if (airy) {
+    res.setHeader('X-TTS-Model', AIRY_MODEL);
+    try {
+      const audio = await synthesizeAiry(text, input.ref, toneKey, Date.now() + 12000);
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Cache-Control', 'private, max-age=86400');
+      return res.status(200).send(audio);
+    } catch (error) {
+      return sendAiryError(res, error);
+    }
+  }
 
   const payload = {
     // "4대"를 "네 대"로 읽도록 숫자 읽기를 보정한 뒤 말투 지시어를 붙임

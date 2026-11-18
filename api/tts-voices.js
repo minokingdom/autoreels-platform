@@ -5,6 +5,7 @@
  *  - POST ?action=generate-bgm: 구글 Lyria(lyria-3-clip-preview)로 30초 BGM 생성 후 Blob 캐시
  */
 const { listCuratedVoices } = require('../lib/fish-voices');
+const { usesAiry, listAiryVoices } = require('../lib/airy-tts');
 const { isSameSiteRequest, consume, refundUsage } = require('../lib/server/usage');
 
 const LYRIA_BGM_PACK = [
@@ -201,6 +202,10 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== 'GET') {
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
+  }
+  if (usesAiry(req, 1)) {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(200).json({ ok: true, voices: listAiryVoices() });
   }
   const apiKey = (process.env.FISH_API_KEY || '').trim();
   if (!apiKey) {

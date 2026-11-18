@@ -84,7 +84,8 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
    '../lib/business-specialty.cjs':require('../lib/business-specialty.cjs'),
    '../lib/reference-analysis.cjs':{handleReferenceAnalysis:()=>assert.fail('비로그인 영상 분석 실행')},
    '../lib/fish-voices':require('../lib/fish-voices'),
-   '../lib/korean-numbers':require('../lib/korean-numbers')
+   '../lib/korean-numbers':require('../lib/korean-numbers'),
+   '../lib/airy-tts':require('../lib/airy-tts')
  };
  let providerCalls = 0;
  const guardedApi = file => load('api/'+file+'.js', deps, {
@@ -114,6 +115,36 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
    assert.equal(expired.body.error,'trial_expired');
  }
  assert.equal(providerCalls,0);
+ const airyEnv = {TTS_PROVIDER:'airy', AIRY_API_KEY:'test-key'};
+ const airyDeps = {
+   './fish-voices':require('../lib/fish-voices'),
+   './korean-numbers':require('../lib/korean-numbers')
+ };
+ const airyCalls = [];
+ let airyStatus = 200;
+ const airy = load('lib/airy-tts.js',airyDeps,airyEnv,{AbortSignal,fetch:async(url,options)=>{
+   airyCalls.push({url,...JSON.parse(options.body),authorization:options.headers.Authorization});
+   return new Response(airyStatus===200 ? Buffer.from('audio') : null,{status:airyStatus,headers:{'content-type':'audio/mpeg'}});
+ }});
+ const airyMeter = load('lib/server/meter.js',{'./usage':dependencies});
+ const airyScript = load('api/tts-script.js', {...deps,'../lib/airy-tts':airy,'../lib/server/meter':airyMeter},airyEnv);
+ const airyRequest = {method:'GET',headers:{host:'app.test'},query:{v:'10',lines:JSON.stringify(['첫 컷','다음 컷','첫 컷']),ref:airyDeps['./fish-voices'].CURATED_VOICE_IDS[1]}};
+ assert.equal(airy.usesAiry({query:{v:'9'}},10),false);
+ assert.equal(airy.usesAiry(airyRequest,10),true);
+ const airyResult = response();
+ await airyScript(airyRequest,airyResult);
+ assert.equal(airyResult.statusCode,200);
+ assert.equal(airyResult.body.clips_base64.length,3);
+ assert.equal(airyCalls.length,2);
+ assert.deepEqual(airyCalls.map(call=>call.input),['첫 컷','다음 컷']);
+ assert.ok(airyCalls.every(call=>call.language==='ko' && call.voice==='bdb7de5e2cdd3324' && call.authorization==='Bearer test-key'));
+ airyStatus=429;
+ const priorRefunds=refunds;
+ const rateLimited=response();
+ await airyScript(airyRequest,rateLimited);
+ assert.equal(rateLimited.statusCode,429);
+ assert.equal(rateLimited.body.error,'airy_rate_limited');
+ assert.equal(refunds,priorRefunds+1);
  assert.equal(balances.size,0);
  const publicUrls=[];
  const trends = load('api/trends.js',{
