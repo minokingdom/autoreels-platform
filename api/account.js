@@ -13,6 +13,7 @@ const { publicPlans } = require('../lib/server/plans');
 const { usageFor, isActive, consume } = require('../lib/server/usage');
 const { normalizeSpecialty } = require('../lib/business-specialty.cjs');
 const { readSpecialtyTrends } = require('../lib/server/specialty-trends');
+const kakao = require('../lib/server/kakao-login');
 
 const INDUSTRY_KEYS = ['auto', 'restaurant', 'cafe', 'beauty', 'realestate', 'academy', 'clinic', 'fitness', 'shop', 'interior'];
 
@@ -24,6 +25,7 @@ function send(res, status, body) {
 async function readBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
   if (typeof req.body === 'string') {
+    if (String(req.headers['content-type'] || '').includes('application/x-www-form-urlencoded')) return Object.fromEntries(new URLSearchParams(req.body));
     try { return JSON.parse(req.body || '{}'); } catch (e) { return {}; }
   }
   return await new Promise((resolve) => {
@@ -90,6 +92,7 @@ module.exports = async function handler(req, res) {
       sns: ready.sns,
       snsScheduling: await scheduler.available().catch(() => false),
       phoneVerification: security.smsReady(),
+      kakaoLogin: ready.serverMode && kakao.configured(),
       plans: publicPlans()
     });
   }
@@ -116,6 +119,22 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    if (action === 'kakao-unlink' && req.method === 'POST') {
+      return await kakao.unlink(req, res, await readBody(req));
+    }
+    if (action === 'kakao-start' && req.method === 'GET') {
+      if (kakao.configured()) await security.loginLimit(req, 'kakao');
+      return kakao.begin(req, res, null);
+    }
+    if (action === 'kakao-link' && req.method === 'POST') {
+      const user = await currentUser(req);
+      if (!user) return send(res, 401, { ok: false, error: 'login_required' });
+      if (kakao.configured()) await security.loginLimit(req, 'kakao');
+      return kakao.begin(req, res, user);
+    }
+    if (action === 'kakao-callback' && req.method === 'GET') {
+      return await kakao.complete(req, res, await currentUser(req));
+    }
     if (['phone-code', 'password-reset'].includes(action) && req.method === 'POST') {
       const b = await readBody(req);
       const phone = normPhone(b.phone);

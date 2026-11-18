@@ -182,10 +182,11 @@
 
     // 로그인된 카마스터 계정을 스튜디오 카마스터 목록에 반영하고 선택
     function applyLoggedInDealer(acc) {
-      let d = dealers.find((x) => extractPhoneLast8(x.licensedPhone || x.phone) === extractPhoneLast8(acc.phone));
+      const serverId = acc.accountId ? 'account_' + String(acc.accountId) : '';
+      let d = serverId && !acc.phone ? dealers.find((x) => x.id === serverId) : dealers.find((x) => extractPhoneLast8(x.licensedPhone || x.phone) === extractPhoneLast8(acc.phone));
       if (!d) {
         d = {
-          id: 'dlr_' + extractPhoneLast8(acc.phone),
+          id: serverId && !acc.phone ? serverId : 'dlr_' + extractPhoneLast8(acc.phone),
           name: acc.name,
           title: acc.title,
           branch: acc.branch,
@@ -491,6 +492,7 @@
       const comp = pro && me.subscription && me.subscription.comp === true;
       const until = comp ? 0 : (pro ? arYmd(me.entitlement.until) : 20000101);
       applyLoggedInDealer({
+        accountId: u.id,
         phone: u.phone,
         name: u.name,
         title: u.title,
@@ -531,6 +533,14 @@
         return;
       }
       AR_SERVER.cfg = cfg;
+      const kakaoArea = document.getElementById('arKakaoLoginArea');
+      if (kakaoArea) kakaoArea.classList.toggle('hidden', !cfg.kakaoLogin);
+      const kakaoButton = document.getElementById('arKakaoLoginBtn');
+      if (kakaoButton && cfg.kakaoLogin) kakaoButton.onclick = () => { window.location.href = '/api/account?action=kakao-start'; };
+      const kakaoTerms = document.getElementById('arKakaoTerms');
+      const kakaoPrivacy = document.getElementById('arKakaoPrivacy');
+      if (kakaoTerms) kakaoTerms.onclick = () => openArLegalModal('terms');
+      if (kakaoPrivacy) kakaoPrivacy.onclick = () => openArLegalModal('privacy');
       const schedule=document.getElementById('snsScheduleEnabled');if(schedule){schedule.disabled=!cfg.snsScheduling;document.getElementById('arScheduleLabel').textContent=cfg.snsScheduling?'예약 발행 · 지정 시각부터 순서대로 게시':'예약 실행 서비스 연결 준비 중';}
       if (!cfg || !cfg.serverMode) return; // 시연 모드 유지
       AR_SERVER.mode = true;
@@ -545,6 +555,14 @@
       const me = await arApi('me');
       if (me.ok) arApplyMe(me.body);
       else arLockDemoDealers();
+      const callbackParams = new URLSearchParams(location.search);
+      const kakaoResult = callbackParams.get('kakao');
+      if (kakaoResult) {
+        callbackParams.delete('kakao');
+        history.replaceState(null, '', location.pathname + (callbackParams.toString() ? '?' + callbackParams : '') + location.hash);
+        const messages = { success: '카카오 계정으로 연결했습니다.', conflict: '이미 다른 회원 계정에 연결된 카카오 계정입니다.', cancel: '카카오 로그인을 취소했습니다.', invalid: '로그인 요청이 만료됐습니다. 다시 시도해 주세요.', canonical: '대표 주소에서 기존 계정으로 로그인한 후 카카오 계정을 연결해 주세요.', unavailable: '카카오 로그인 준비 중입니다.', failed: '카카오 로그인에 실패했습니다. 다시 시도해 주세요.' };
+        arToast(messages[kakaoResult] || messages.failed, kakaoResult === 'success');
+      }
       arSnsRender();
       arSnsHandleReturn();
     }
@@ -635,9 +653,10 @@
         const fmt = (iso) => (iso ? new Date(iso).toLocaleDateString('ko-KR') : '-');
         box.innerHTML = `
           <div class="flex items-center justify-between gap-2">
-            <div><div class="text-[#85858b]">내 계정</div><div class="text-[13px] text-[#ededed] font-medium">${me.user.name} · ${me.user.phone}</div></div>
+            <div><div class="text-[#85858b]">내 계정</div><div class="text-[13px] text-[#ededed] font-medium">${me.user.name} · ${me.user.phone || '카카오 계정'}</div></div>
             <button type="button" onclick="arLogout()" class="btn-secondary h-7 px-2.5 text-[11px]">로그아웃</button>
           </div>
+          ${AR_SERVER.cfg && AR_SERVER.cfg.kakaoLogin ? '<form method="post" action="/api/account?action=kakao-link"><button type="submit" class="btn-secondary h-8 px-3 text-[12px]">카카오 계정 연결하기</button></form>' : ''}
           <div class="flex items-center justify-between gap-2 pt-2 border-t border-[var(--border)]">
             <div>
               <div class="text-[#85858b]">구독</div>
@@ -1234,7 +1253,7 @@
       if (!m || !t || !b) return;
       const docs = {
         terms: ['이용약관', '<p>1. 본 서비스(AutoReels)는 업종별 릴스·쇼츠 영상 제작 및 SNS 발행 도구를 제공합니다.</p><p>2. 회원이 업로드한 사진·영상·문구에 대한 권리와 책임은 회원 본인에게 있습니다.</p><p>3. 유료 요금제(스탠다드 월 29,900원 / 프로 무제한 월 59,000원)는 매월 자동 결제되며 언제든 해지 예약이 가능합니다.</p>'],
-        privacy: ['개인정보처리방침', '<p>1. 수집 항목: 이름, 휴대폰 번호, 매장·지점 정보, 결제 및 서비스 이용 기록(다운로드·SNS 게시 횟수).</p><p>2. 이용 목적: 회원 식별, 정기구독 결제 처리, SNS 연동 발행, 고객 문의 응대.</p><p>3. 보유 기간: 회원 탈퇴 시까지(관계 법령에 따른 결제 기록 5년 보관).</p>'],
+        privacy: ['개인정보처리방침', '<p>1. 수집 항목: 이름, 휴대폰 번호, 매장·지점 정보, 카카오 로그인 이용 시 카카오 회원 식별자, 결제 및 서비스 이용 기록(다운로드·SNS 게시 횟수).</p><p>2. 이용 목적: 회원 식별, 정기구독 결제 처리, SNS 연동 발행, 고객 문의 응대.</p><p>3. 보유 기간: 회원 탈퇴 시까지(관계 법령에 따른 결제 기록 5년 보관).</p>'],
         refund: ['환불·해지 규정', '<p>1. 정기구독 해지는 결제 관리창에서 언제든 예약할 수 있으며, 남은 기간까지 계속 이용 가능합니다.</p><p>2. 결제 후 7일 이내에 유료 내보내기(워터마크 제거 다운로드 및 SNS 게시)를 1회도 사용하지 않은 경우 전액 환불이 가능합니다.</p>'],
         support: ['고객센터 안내', '<p>이메일: ektjtthsrk@gmail.com</p><p>연락처: 010-5872-7179</p><p>운영시간: 평일 10:00 ~ 18:00 (주말·공휴일 휴무)</p>']
       };
