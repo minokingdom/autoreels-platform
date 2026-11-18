@@ -204,11 +204,20 @@ try {
   await page.locator('#bgmRecommendRow .bgm-now').click();
   await page.waitForFunction(() => arEditSheetOpen && !isPlaying);
   const musicTime = await page.evaluate(() => window.__timelines.main.currentTime);
+  await page.evaluate(() => {
+    triggerFullAudioPreview();
+    arQuickRestart();
+    AudioEngine.syncWithTimeline(window.__timelines.main.currentTime);
+  });
+  assert.equal(await page.evaluate(() => isPlaying || Boolean(AudioEngine.masterSource)), false);
   const sheet = page.locator('#arBgmSheet');
   const search = sheet.locator('#arBgmSearch');
   const pick = async (name, id) => {
+    const panel = await sheet.locator('.bgm-sheet').elementHandle();
     await search.fill(name);
-    await sheet.locator('.bgm-row').filter({ hasText: name }).click();
+    const row = sheet.locator('.bgm-row').filter({ hasText: name });
+    const originalRow = await row.elementHandle();
+    await row.click();
     await page.waitForFunction(track => {
       const audio = AudioEngine.customBgmAudioEl;
       const analyser = window.__auditionAnalyser;
@@ -236,6 +245,17 @@ try {
   await sheet.locator('.bgm-done').click();
   assert.equal(await page.evaluate(() => AudioEngine.customBgmAudioEl.paused), true);
   console.log('music sheet plays the selected track alone, preserves edit position and stops audition on close');
+  await page.waitForFunction(() => !arEditSheetOpen && isPlaying);
+  await page.click('#playPauseBtn');
+  const stoppedTime = await page.evaluate(() => window.__timelines.main.currentTime);
+  await page.locator('#bgmRecommendRow .bgm-now').click();
+  await page.waitForFunction(() => arEditSheetOpen && !isPlaying);
+  assert.equal(await page.evaluate(() => AudioEngine.customBgmAudioEl.paused), true);
+  await sheet.locator('.bgm-done').click();
+  await page.waitForFunction(() => !arEditSheetOpen);
+  assert.equal(await page.evaluate(() => isPlaying), false);
+  assert.equal(await page.evaluate(() => window.__timelines.main.currentTime), stoppedTime);
+  console.log('opening or closing a sheet while paused does not start playback');
   assert.deepEqual(pageErrors,[]);
   assert.deepEqual(await page.evaluate(()=>window.__smokeAsyncErrors),[]);
 } finally { await browser.close(); if(srv)srv.close(); }

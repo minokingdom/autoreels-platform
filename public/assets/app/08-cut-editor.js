@@ -3143,9 +3143,9 @@
         window.__arActiveCutElKey = '';
         window.__arCutEditorOpen = false;
         window.__arInlineEditActive = false;
-        isPlaying = true;
+        isPlaying = !arEditSheetOpen;
         const ppBtn = document.getElementById('playPauseBtn');
-        if (ppBtn) ppBtn.textContent = '⏸ 일시정지';
+        if (ppBtn) ppBtn.textContent = isPlaying ? '⏸ 일시정지' : '▶️ 재생';
         if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
       } else {
         window.__arPinnedCut = idx;

@@ -3888,8 +3888,8 @@
       renderDynamicCutCardsUI();
       renderVisualStoryboardTrack();
 
-      isPlaying = true;
-      if (audioEngineReady() && AudioEngine.enabled) {
+      isPlaying = !arEditSheetOpen;
+      if (isPlaying && audioEngineReady() && AudioEngine.enabled) {
         AudioEngine.lastSpokenCut = -1;
         AudioEngine.prefetchTtsBuffers();
       }
@@ -3982,8 +3982,8 @@
       renderVisualStoryboardTrack();
       if (typeof renderDesignStylePicker === 'function') renderDesignStylePicker();
 
-      isPlaying = true;
-      if (audioEngineReady() && AudioEngine.enabled) {
+      isPlaying = !arEditSheetOpen;
+      if (isPlaying && audioEngineReady() && AudioEngine.enabled) {
         AudioEngine.lastSpokenCut = -1;
         AudioEngine.prefetchTtsBuffers();
       }

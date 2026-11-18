@@ -518,6 +518,7 @@
     let arPreviewPausedForEdit = false;
     let arPendingPreviewPlay = null;
     let arEditSheetOpen = false;
+    let arResumeAfterEditSheets = false;
     const arWatchedEditSheets = new Map();
     const arEditSheetObserver = new MutationObserver(arSyncEditSheetPlayback);
     function arSyncEditSheetPlayback() {
@@ -525,8 +526,15 @@
         sheet.isConnected && (openClass ? sheet.classList.contains(openClass) : !sheet.classList.contains('hidden')));
       if (open === arEditSheetOpen) return;
       arEditSheetOpen = open;
-      if (open) arPauseForStudioEdit();
-      else if (!isPlaying) togglePlayPause();
+      if (open) {
+        arResumeAfterEditSheets = isPlaying;
+        if (!isPlaying) AudioEngine.onPlayStateChange(false);
+        arPauseForStudioEdit();
+      } else {
+        const resume = arResumeAfterEditSheets;
+        arResumeAfterEditSheets = false;
+        if (resume && !isPlaying) togglePlayPause();
+      }
     }
     function arWatchEditSheet(sheet, openClass = '') {
       if (!sheet || arWatchedEditSheets.has(sheet)) return;
