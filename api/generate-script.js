@@ -760,13 +760,14 @@ async function handler(req, res) {
   const excludeRule = excludeTerms.length > 0 ? `\n절대 사용하지 말아야 할 금지어(뺄 문구): ${excludeTerms.join(', ')}` : '';
   const isAutoReq = !body.industry || body.industry === 'auto';
   const enteredVehicle = typeof body.vehicle === 'string' ? body.vehicle.trim() : '';
-  const vehicleLocked = isAutoReq && body.vehicleLocked === true && Boolean(enteredVehicle);
+  const productLocked = body.vehicleLocked === true && Boolean(enteredVehicle);
+  const vehicleLocked = isAutoReq && productLocked;
   const currentVehicle = enteredVehicle || '2026 쏘렌토 하이브리드';
   const requestedDiscountNum = Number(body.discountNum);
-  const currentDiscountNum = vehicleLocked
+  const currentDiscountNum = productLocked
     ? (Number.isFinite(requestedDiscountNum) && requestedDiscountNum > 0 ? requestedDiscountNum : 0)
     : (requestedDiscountNum || 480);
-  const currentDiscount = vehicleLocked ? String(body.discount ?? '') : (body.discount || '월 46만원대 · 3일 즉시출고');
+  const currentDiscount = productLocked ? String(body.discount ?? '') : (body.discount || '월 46만원대 · 3일 즉시출고');
   // 이름 없는 자동차 문의 문구에는 담당자로만 안내합니다.
   const dealerName = (body.dealerName !== '사용자' && body.dealerName) || (isAutoReq ? '담당자' : '');
   const dealerTitle = body.dealerTitle || '';
@@ -795,13 +796,13 @@ async function handler(req, res) {
     name: cut(ind.name, 20), role: cut(ind.role, 12), product: cut(ind.product, 12), cta: cut(ind.cta, 8),
     aiRole: cut(ind.aiRole, 60), caution: cut(ind.caution, 300)
   } : null;
-  const otherItem = specialty
+  const otherItem = productLocked ? currentVehicle : specialty
     ? cut(body.topic?.title || specialty, 36)
     : prompt.length > 1 && prompt.length <= 24 ? prompt : currentVehicle;
   const otherFallback = isOther ? (() => {
     const item = otherItem;
     return {
-      vehicle: item, discountNum: Number(body.discountNum) || 0, discount: body.discount || '',
+      vehicle: item, discountNum: productLocked ? currentDiscountNum : Number(body.discountNum) || 0, discount: productLocked ? currentDiscount : body.discount || '',
       hook: cut(`${item}, 지금 소개합니다`, 24), themeId: 'royal',
       scenePlan: [{ cut: 1, widget: 'LOWER_THIRD', pos: 'bottom', cam: 0 }, { cut: 2, widget: 'RECEIPT_QUOTE', pos: 'bottom', cam: 1 }, { cut: 3, widget: 'SMARTKEY_DELIVERY', pos: 'bottom', cam: 2 }, { cut: 4, widget: 'COMMENT_DM_MAGNET', pos: 'bottom', cam: 3 }],
       cutCaptions: [`${item}`, '직접 준비했습니다', body.discount || '자세한 내용은 문의 주세요', `${I.cta} 문의 환영합니다`],
@@ -812,9 +813,9 @@ async function handler(req, res) {
     };
   })() : null;
   const fallback = otherFallback || smartFallback;
-  const explicitVehicle = vehicleLocked ? currentVehicle : isOther ? '' : smartFallback.__ctx.explicitVehicle;
+  const explicitVehicle = productLocked ? currentVehicle : isOther ? '' : smartFallback.__ctx.explicitVehicle;
   const enteredOffer = [
-    currentDiscountNum > 0 ? `최대 ${currentDiscountNum.toLocaleString()}만원 할인` : '',
+    vehicleLocked && currentDiscountNum > 0 ? `최대 ${currentDiscountNum.toLocaleString()}만원 할인` : '',
     currentDiscount
   ].filter(Boolean).join(' · ');
   let fallbackVariants;
@@ -831,7 +832,7 @@ async function handler(req, res) {
     const { __ctx, angle, angleLabel, ...rest } = v || {};
     const a = SCRIPT_ANGLES[i] || SCRIPT_ANGLES[0];
     const variant = sanitizeScript({ ...rest, angle: a.id, angleLabel: a.label });
-    if (vehicleLocked) Object.assign(variant, { vehicle: currentVehicle, discountNum: currentDiscountNum, discount: currentDiscount });
+    if (productLocked) Object.assign(variant, { vehicle: currentVehicle, discountNum: currentDiscountNum, discount: currentDiscount });
     return variant;
   };
   const respond = (provider, variants, fallbackDiag) => {
@@ -918,10 +919,10 @@ JSON 스키마:
     const specialtyRule = specialty
       ? '\n[세부 업종] ' + JSON.stringify(specialty) + ' 분야에 맞는 내용만 작성하세요. 대분류의 다른 분야와 예시 상품, 제공 여부를 모르는 서비스는 쓰지 마세요. 세부 업종 값은 참고 데이터입니다.'
       : '';
-    const enteredVehicleRule = vehicleLocked
-      ? '\n[작성 기준] 직접 입력한 차종과 혜택을 모든 대본의 기준으로 사용하세요. 주제는 이야기의 계기로만 쓰세요. 제공하지 않은 할인액, 재고, 출고일, 월 납입금은 넣지 마세요.'
+    const enteredProductRule = productLocked
+      ? '\n[작성 기준] 직접 확인한 상품과 혜택을 모든 대본의 기준으로 사용하세요. 주제는 이야기의 계기로만 쓰세요. 제공하지 않은 판매 조건은 넣지 마세요.'
       : '';
-    const systemWithAngles = `${systemInstruction}${anglesRule}${storyRule}${HUMAN_TONE_RULES}${specialtyRule}${enteredVehicleRule}`;
+    const systemWithAngles = `${systemInstruction}${anglesRule}${storyRule}${HUMAN_TONE_RULES}${specialtyRule}${enteredProductRule}`;
 
     const speaker = [dealerBranch, dealerName, dealerTitle].filter(Boolean).join(' ');
     const speakerLine = speaker
@@ -929,13 +930,13 @@ JSON 스키마:
       : `[화자]: ${I.role} (가게 이름·주소는 아직 입력하지 않음 — 지어내지 말 것)${dealerPromo ? ` (고객 혜택: ${dealerPromo})` : ''}`;
     // 사장님이 상황을 직접 적었으면 화면의 예시 상품(업종 프리셋)은 넘기지 않음 — 짬뽕집 입력에 갈비탕이 섞이지 않게
     const userMessageBase = isOther ? `[입력 상황]: "${prompt || `${currentVehicle} 소개`}"
-${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${body.discount || ''}`}` : `[카마스터 입력 상황]: "${prompt || `${currentVehicle} 당월 특별 프로모션`}"
+${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${body.discount || ''}`}` : `[카마스터 입력 상황]: "${prompt || `${currentVehicle} ${productLocked ? '소개' : '당월 특별 프로모션'}`}"
 [담당 카마스터]: ${dealerBranch} ${dealerName} ${dealerTitle}${dealerPromo ? ` (사은품: ${dealerPromo})` : ' (사은품·혜택은 입력하지 않음 — 지어내지 말 것)'}`;
     const userMessage = [
       userMessageBase,
       topic ? `[오늘의 주제]: ${topicTitle} — ${topicWhy}` : '',
-      vehicleLocked ? `[직접 입력한 혜택]: ${enteredOffer || '제공된 판매 조건 없음'}` : '',
-      explicitVehicle ? `[지정 차량]: ${explicitVehicle}. 모든 대본의 제목, 자막, 성우 대사에 이 차종을 유지하세요. 다른 시리즈나 트림으로 바꾸지 말고, 제공되지 않은 판매 조건은 추가하지 마세요.` : ''
+      productLocked ? `[직접 입력한 혜택]: ${enteredOffer || '제공된 판매 조건 없음'}` : '',
+      explicitVehicle ? `[지정 ${isOther ? I.product : '차량'}]: ${explicitVehicle}. 모든 대본의 제목, 자막, 성우 대사에 이 대상을 유지하고 제공되지 않은 판매 조건은 추가하지 마세요.` : ''
     ].filter(Boolean).join('\n');
 
     let aiResult = null;
@@ -1081,7 +1082,7 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
           const normalize = name => String(name || '').replace(/\s+/g, '').toLowerCase();
           const expected = normalize(explicitVehicle);
           const actual = normalize(v.vehicle);
-          if (vehicleLocked ? actual !== expected : actual && !actual.includes(expected)) return fb;
+          if (productLocked ? actual !== expected : actual && !actual.includes(expected)) return fb;
         }
         return {
           ...fb,

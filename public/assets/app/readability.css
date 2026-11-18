@@ -41,7 +41,7 @@
     .scrollbar-none::-webkit-scrollbar { display: none; }
 
     /* 단계 이동 버튼을 크게 */
-    .studio-panel button[onclick^="switchStudioTab"] { height: 44px !important; padding: 0 20px !important; font-size: 15px !important; }
+    .studio-panel button[onclick^="switchStudioTab"]:not(.ig-ctx-chip) { height: 44px !important; padding: 0 20px !important; font-size: 15px !important; }
 
 /* Mobile design picker */
 .pd-section-help { margin: 5px 10px 0; color: #a1a1a6; font-size: 11px; line-height: 1.4; }

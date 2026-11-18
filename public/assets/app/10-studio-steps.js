@@ -411,13 +411,24 @@
       el.classList.add('hidden');
       el.style.display = 'none';
       arSyncProductRows();
-      const changed = arProductKey() !== arProductSnap;
-      if (changed && arHasEnteredVehicle()) saveAiScriptPrefs();
-      if (changed && arCanUseAi() && window.arTodayTopic && typeof generateStoryboardFromPrompt === 'function') {
-        if (typeof arToast === 'function') arToast('바뀐 상품으로 대본을 다시 써요.');
-        generateStoryboardFromPrompt();
-      }
+      if (arProductKey() !== arProductSnap && arHasEnteredVehicle()) saveAiScriptPrefs();
     }
+    document.getElementById('arProductCloseBtn').addEventListener('click', arCloseProductSheet);
+    document.getElementById('arProductScriptBtn').addEventListener('click', () => {
+      if (window.__arScriptGenerating) return;
+      const input = document.getElementById('inputVehicle');
+      if (!input.value.trim()) {
+        input.focus();
+        arToast(`${IND.product} 이름을 입력해 주세요.`);
+        return;
+      }
+      if (IND.key === 'auto') campaign.vehicleEntered = true;
+      arCloseProductSheet();
+      if (!arRequireAiAccess()) return;
+      arResumeAfterEditSheets = false;
+      switchStudioTab('script', false, { replaceClosedOverlay: true });
+      generateStoryboardFromPrompt({ useCurrentProduct: true });
+    });
 
     function arPickTopic(topic) {
       if (!topic || !topic.prompt) return;
@@ -1911,7 +1922,7 @@
       });
     }
 
-    async function generateStoryboardFromPrompt() {
+    async function generateStoryboardFromPrompt({ useCurrentProduct = false } = {}) {
       if (!arRequireAiAccess()) return;
       arPauseForStudioEdit();
       const generationId = ++arScriptGenerationId;
@@ -1945,7 +1956,7 @@
         AudioEngine.ensureContext();
       }
 
-      const vehicleLocked = arHasEnteredVehicle();
+      const vehicleLocked = useCurrentProduct || arHasEnteredVehicle();
       const productAtRequest = arProductKey();
       const staleProduct = () => productAtRequest !== arProductKey() && (vehicleLocked || arHasEnteredVehicle());
       // 직접 입력한 차종이 없을 때 주제에서 차종을 찾습니다.
@@ -2025,7 +2036,8 @@
         arScriptVariants.list = variants;
         arScriptVariants.index = 0;
         arScriptVariants.strip = stripExcludedLocal;
-        applyAiScriptToCampaign(variants[0], d, stripExcludedLocal);
+        arScriptVariants.keepProduct = vehicleLocked;
+        applyAiScriptToCampaign(variants[0], d, stripExcludedLocal, vehicleLocked);
         renderScriptVariantPicker();
         aiUsedFallback = Boolean(result.aiFallback);
         triggerTopicImages(variants[0]?.cutCaptions);
@@ -2035,19 +2047,19 @@
         renderScriptVariantPicker();
         if (IND.key !== 'auto') {
           const tp = window.arTodayTopic;
-          const topicTitle = (tp && tp.title) ? String(tp.title).trim() : (raw ? raw.slice(0, 24) : '');
+          const topicTitle = vehicleLocked ? campaign.vehicle : (tp && tp.title) ? String(tp.title).trim() : (raw ? raw.slice(0, 24) : '');
           if (topicTitle) {
             const topicWhy = (tp && tp.why) ? String(tp.why).trim() : '';
             const shortRaw = (raw || topicTitle).replace(/[.!?]+$/, '').trim();
             const c1 = topicTitle;
             const c2 = topicWhy ? topicWhy.slice(0, 26) : `${shortRaw.slice(0, 22)} 포인트`;
-            const c3 = `${IND.name} 1:1 진행으로 깔끔하게`;
+            const c3 = vehicleLocked ? (campaign.discount || '자세한 조건은 문의해 주세요.') : `${IND.name} 1:1 진행으로 깔끔하게`;
             const c4 = `${IND.cta || '상담 문의'} 바로 받아보세요`;
             const baseCaps = [c1, c2, c3, c4];
             const baseTts = [
               `${topicTitle}, 고민되시죠?`,
               topicWhy ? `${topicWhy}.` : `${shortRaw}, 핵심만 짚어드릴게요.`,
-              `${IND.name}에서 딱 맞게 정리해 드립니다.`,
+              vehicleLocked ? c3 : `${IND.name}에서 딱 맞게 정리해 드립니다.`,
               `지금 편하게 ${IND.cta || '문의'} 남겨보세요.`
             ];
             const offlineAi = {
@@ -2057,7 +2069,7 @@
               cutCaptions: Array.from({ length: totalCuts }, (_, i) => baseCaps[i % baseCaps.length]),
               ttsLines: Array.from({ length: totalCuts }, (_, i) => baseTts[i % baseTts.length])
             };
-            applyAiScriptToCampaign(offlineAi, d, stripExcludedLocal);
+            applyAiScriptToCampaign(offlineAi, d, stripExcludedLocal, vehicleLocked);
             arSetScriptGenerating(false);
             arFinishScriptApply(totalCuts);
             if (noticeEl) noticeEl.textContent = `AI 대본을 만들지 못해 주제 [${topicTitle}]의 기본 대본을 표시합니다. 다시 쓰기로 재시도할 수 있어요.`;

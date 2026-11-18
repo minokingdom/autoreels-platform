@@ -55,4 +55,13 @@ const res={statusCode:200,status(n){this.statusCode=n;return this},json(b){this.
  assert.match(input,/직접 입력한 혜택.*전기차 케어 지원/);
  assert.equal(res.body.aiFallback,undefined);
  console.log('entered model and offer survive conflicting topics, provider results and timeouts');
+ await moduleObj.exports({
+  ...request,
+  body:{prompt:'딸기 라떼 출시',vehicle:'바닐라 라떼',vehicleLocked:true,discountNum:0,discount:'테이크아웃 안내',industry:'cafe',
+   specialty:'디저트',industryInfo:{name:'카페',product:'메뉴',role:'바리스타',aiRole:'바리스타',cta:'문의'}}
+ },res);
+ assert(res.body.variants.every(v=>v.vehicle==='바닐라 라떼' && v.discount==='테이크아웃 안내'));
+ assert.match(input,/지정 메뉴.*바닐라 라떼/);
+ assert.doesNotMatch(JSON.stringify(res.body.variants),/딸기 라떼|현대 아이오닉 6/);
+ console.log('confirmed product kept for a non-automotive script');
 })().catch(e=>{console.error(e);process.exitCode=1});

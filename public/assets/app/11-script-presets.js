@@ -2,7 +2,7 @@
     // ==========================================================================
     // ★ AI 대본 3안 (혜택 강조형 · 고객 공감형 · 신뢰·전문성형)
     // ==========================================================================
-    const arScriptVariants = { list: [], index: 0, strip: null };
+    const arScriptVariants = { list: [], index: 0, strip: null, keepProduct: false };
 
     function arDealerContactIdentity(d) {
       const view = arDisplayDealer(d);
@@ -49,8 +49,8 @@
     }
 
     // 대본 하나를 campaign 에 반영 (AI 생성 직후와 3안 전환에서 같이 사용)
-    function applyAiScriptToCampaign(ai, d, stripExcludedLocal) {
-        if (!arHasEnteredVehicle()) {
+    function applyAiScriptToCampaign(ai, d, stripExcludedLocal, keepProduct = arHasEnteredVehicle()) {
+        if (!keepProduct) {
           if (ai.vehicle) campaign.vehicle = stripExcludedLocal(ai.vehicle) || ai.vehicle;
           if (ai.discountNum !== undefined && !isNaN(Number(ai.discountNum))) {
             campaign.discountNum = Number(ai.discountNum);
@@ -332,7 +332,7 @@
       if (!AudioEngine.enabled) toggleAudioMaster(true);
       else AudioEngine.ensureContext();
       const strip = arScriptVariants.strip || ((t) => (typeof indWord === 'function' ? indWord(String(t || '')) : String(t || '')));
-      applyAiScriptToCampaign(list[index], getSelectedDealer(), strip);
+      applyAiScriptToCampaign(list[index], getSelectedDealer(), strip, arScriptVariants.keepProduct || arHasEnteredVehicle());
       renderScriptVariantPicker();
       arFinishScriptApply(getTargetCutCount());
     }

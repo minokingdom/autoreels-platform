@@ -271,13 +271,13 @@ try {
   assert.equal(await product.locator('#productExamples').isVisible(), false);
   await product.locator('#inputVehicle').fill('BMW i4 eDrive40');
   await product.locator('#inputDiscount').fill('전기차 케어 패키지 지원');
-  await product.getByRole('button', { name: '완료' }).click();
+  await product.getByRole('button', { name: '닫기' }).click();
   await page.locator('.ar-product-cover').click();
   assert.equal(await product.locator('#inputVehicle').inputValue(), 'BMW i4 eDrive40');
   assert.equal(await product.locator('#inputDiscountNum').inputValue(), '0');
   assert.equal(await product.locator('#inputDiscount').inputValue(), '전기차 케어 패키지 지원');
   assert.equal(await page.evaluate(() => arHasEnteredVehicle()), true);
-  await product.getByRole('button', { name: '완료' }).click();
+  await product.getByRole('button', { name: '닫기' }).click();
   assert.equal(await product.isVisible(), false);
   console.log('product photo and direct vehicle entry without examples ok');
   await page.evaluate(() => {
@@ -349,6 +349,8 @@ try {
   assert.deepEqual(pageErrors,[]);
   assert.deepEqual(await page.evaluate(()=>window.__smokeAsyncErrors),[]);
   await page.addInitScript(() => { window.__arUserMuted = true; });
+  // 시트의 같은 문서 뒤로가기가 새로고침과 겹치지 않게 마무리할 시간을 둡니다.
+  await page.waitForTimeout(120);
   await page.reload({ waitUntil: 'load', timeout: 90000 });
   await page.locator('#headerSettingsBtn').click();
   assert.equal(await settingsForm.locator('#dlrInputName').inputValue(), 'Settings name');

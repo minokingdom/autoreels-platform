@@ -724,7 +724,7 @@
           <button type="button" class="bgm-now" onclick="arOpenProductSheet()">
             <span class="bgm-cover ar-product-cover"><img class="ar-product-photo" alt="" /></span>
             <span class="bgm-now-txt"><strong class="ar-product-name">내 상품</strong><small class="ar-product-sub">무엇을 알릴지 정해 두면 대본에 들어가요</small></span>
-            <span class="bgm-now-go">바꾸기 ›</span>
+            <span class="bgm-now-go">확인 ›</span>
           </button>
           <div class="ig-search-row">
             <input id="topicCustomInput" type="text" placeholder="오늘 올릴 내용 적기 (예: 신메뉴 출시, 오늘만 할인)" onkeydown="if(event.key==='Enter'){event.preventDefault();arPickCustomTopic();}" class="studio-input" />
@@ -754,7 +754,7 @@
               <div class="ar-script-loading-card"><span></span><span></span><span></span></div>
               <span class="ar-script-loading-spark">✦</span>
             </div>
-            <p class="ar-script-loading-title">선택한 주제로 대본을 만들고 있어요</p>
+            <p class="ar-script-loading-title">대본을 만들고 있어요</p>
             <p class="ar-script-loading-copy">잠시만 기다려 주세요</p>
             <div class="ar-script-loading-track" role="progressbar" aria-label="대본 생성 중"><span></span></div>
           </div>
@@ -2078,8 +2078,14 @@
   <!-- 앱 스크립트: 원본은 public/assets/app/NN-*.js, 배포 때 scripts/build-app.mjs 가 app.js 하나로 합침 (한 번에 실행되어야 함) -->
     <!-- 내 상품 시트: 주제·대본 탭의 '내 상품' 줄을 누르면 열림 (한 번 정하면 기억) -->
     <div id="productSheet" class="ar-modal hidden fixed inset-0 z-[95]" onclick="if(event.target===this)arCloseProductSheet()">
-      <div class="aos-card studio-panel product-sheet-card">
-        <div class="aos-head"><strong>내 상품 · 혜택</strong><button type="button" class="bgm-done" onclick="arCloseProductSheet()">완료</button></div>
+      <div class="aos-card studio-panel product-sheet-card" role="dialog" aria-modal="true" aria-labelledby="productSheetTitle">
+        <div class="aos-head">
+          <strong id="productSheetTitle">내 상품 · 혜택</strong>
+          <div class="flex items-center gap-2">
+            <button type="button" id="arProductScriptBtn" class="bgm-done">대본 만들기</button>
+            <button type="button" id="arProductCloseBtn" class="ar-modal-x" aria-label="닫기">×</button>
+          </div>
+        </div>
         <div class="space-y-3 overflow-y-auto">
           <div id="productExamples" class="hidden">
             <label for="presetSelect" class="block text-[12px] text-[#a1a1a6] mb-1.5">상품 예시</label>
@@ -2089,7 +2095,7 @@
           <div class="grid grid-cols-1 gap-3">
             <div>
               <label class="block text-[12px] text-[#a1a1a6] mb-1.5">차종명</label>
-              <input id="inputVehicle" type="text" value="2026 쏘렌토 하이브리드" oninput="updateCampaignFromInputs(event)" class="studio-input w-full h-9 px-3 text-[13px]" />
+              <input id="inputVehicle" type="text" required value="2026 쏘렌토 하이브리드" oninput="updateCampaignFromInputs(event)" class="studio-input w-full h-9 px-3 text-[13px]" />
             </div>
             <div>
               <label class="block text-[12px] text-[#a1a1a6] mb-1.5">최대 할인 금액 (만원)</label>

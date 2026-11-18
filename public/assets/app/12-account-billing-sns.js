@@ -1095,12 +1095,19 @@
 
       // 탭을 옮길 때마다 기록을 남겨서, 뒤로 가기로 이전 탭으로 돌아감
       const baseSwitch = switchStudioTab;
-      switchStudioTab = function (key, fromHistory) {
+      switchStudioTab = function (key, fromHistory, { replaceClosedOverlay = false } = {}) {
         const prev = curTab;
         baseSwitch(key);
         if (!STUDIO_TABS.includes(key)) return;
         curTab = key;
-        if (!fromHistory && key !== prev) history.pushState({ arTab: key }, '');
+        if (fromHistory || key === prev) return;
+        // 상품 창에서 바로 대본으로 넘어가면 창 기록을 대본 탭 기록으로 바꿉니다.
+        if (replaceClosedOverlay && depth === 1 && history.state?.arOverlay === 1 && !openOverlays().length) {
+          depth = 0;
+          history.replaceState({ arTab: key }, '');
+        } else {
+          history.pushState({ arTab: key }, '');
+        }
       };
       try { history.replaceState({ arTab: 'topic' }, ''); } catch (e) {}
 
