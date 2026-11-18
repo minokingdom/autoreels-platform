@@ -161,6 +161,13 @@ try {
   await page.evaluate(()=>openPresetDrawer('right'));
   await page.waitForFunction(()=>arEditSheetOpen && !isPlaying);
   const drawerTime=await page.evaluate(()=>window.__timelines.main.currentTime);
+  await page.evaluate(()=>{
+    const ctx=AudioEngine.ensureContext();
+    AudioEngine.masterBuffer=ctx.createBuffer(1,ctx.sampleRate*10,ctx.sampleRate);
+    AudioEngine.masterDuration=10;
+    AudioEngine.masterCutBounds=[0,2,4,6,8,10];
+    refitDurationToNarration();
+  });
   await page.waitForTimeout(180);
   assert.equal(await page.evaluate(()=>window.__timelines.main.currentTime),drawerTime);
   await page.evaluate(()=>{openCutEditor(0);openCutPhotoReplaceModal(0);});

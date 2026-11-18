@@ -1480,7 +1480,7 @@
       }
       if (!arPreviewPausedForEdit) return false;
       if (!document.getElementById('studioPanel_card').classList.contains('hidden')) updateCurrentDealerFromPreview();
-      const pending = AudioEngine.scriptPending || (AudioEngine.ttsPrefetchTimer ? AudioEngine.prefetchTtsBuffers(false, true) : null);
+      const pending = AudioEngine.scriptPending || (AudioEngine.ttsPrefetchTimer ? AudioEngine.prefetchTtsBuffers() : null);
       arPreviewPausedForEdit = false;
       if (!pending) return false;
       arPendingPreviewPlay = pending;

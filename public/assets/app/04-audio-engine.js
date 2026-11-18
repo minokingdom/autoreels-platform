@@ -789,15 +789,15 @@
       },
 
       // 모든 컷 + 마지막 명함 멘트 음성을 미리 받아 두고, 받은 길이에 맞춰 영상 길이를 조정
-      prefetchTtsBuffers(force, preservePosition = false) {
+      prefetchTtsBuffers(force) {
         if (!arCanUseAi()) {
           this.setTtsProvider('browser');
-          refitDurationToNarration(preservePosition);
+          refitDurationToNarration();
           return Promise.resolve([]);
         }
         // 소리를 켠 사람에게만 성우 녹음을 받음 (소리 꺼 둔 방문자마다 녹음하면 크레딧 낭비). 영상 내보내기는 force
         if (this.ttsVoice === 'off' || !arVoiceAllowed() || (!this.enabled && !force)) {
-          refitDurationToNarration(preservePosition);
+          refitDurationToNarration();
           return Promise.resolve([]);
         }
         const totalCuts = getTargetCutCount();
@@ -830,7 +830,7 @@
           (result) => {
             if (this.scriptPending === job) this.scriptPending = null;
             if (!arVoiceAllowed() || this.masterWantKey !== wantKey) return result;
-            refitDurationToNarration(preservePosition);
+            refitDurationToNarration();
             // 재생 중에 마스터 음성이 도착하면 즉시 타임라인 현재 시간에 맞춰 재생
             if (isPlaying && this.enabled && this.masterBuffer) {
               const curT = (window.__timelines && window.__timelines['main']) ? (window.__timelines['main'].currentTime || 0) : 0;
@@ -849,7 +849,7 @@
         this.ttsPrefetchTimer = setTimeout(() => {
           this.ttsPrefetchTimer = null;
           if (!this.enabled) return;
-          this.prefetchTtsBuffers(false, true);
+          this.prefetchTtsBuffers();
         }, delayMs);
       },
 
@@ -1464,7 +1464,7 @@
       if (immediate) {
         if (AudioEngine.ttsPrefetchTimer) clearTimeout(AudioEngine.ttsPrefetchTimer);
         AudioEngine.ttsPrefetchTimer = null;
-        return AudioEngine.prefetchTtsBuffers(false, true);
+        return AudioEngine.prefetchTtsBuffers();
       }
       if (AudioEngine.enabled) {
         AudioEngine.schedulePrefetch(900);

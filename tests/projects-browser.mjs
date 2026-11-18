@@ -135,7 +135,7 @@ try{
   aiRequests.push(body);
   return route.fulfill({json:{ok:true,topics:[{title:body.specialty + ' 확인 주제',why:'업종 맞춤',prompt:body.specialty + ' 첫 방문 안내'}]}});
  });
- await page.reload();
+ await page.reload({waitUntil:'domcontentloaded'});
  await page.getByText('치과 확인 주제',{exact:true}).waitFor();
  await page.locator('#headerSettingsBtn').click();
  const settings = page.locator('#studioSettingsModal');
@@ -150,7 +150,7 @@ try{
  await page.getByText('교정 전문 치과 확인 주제',{exact:true}).waitFor();
  assert.deepEqual(aiRequests.at(-1).trends,['교정 전문 치과 첫 방문']);
  await page.setViewportSize({width:390,height:844});
- await page.reload();
+ await page.reload({waitUntil:'domcontentloaded'});
  await page.getByText('교정 전문 치과 확인 주제',{exact:true}).waitFor();
  await page.locator('#arQuickBar [data-qb="settings"]').click();
  await settings.locator('#settingsBusinessDetails summary').click();
