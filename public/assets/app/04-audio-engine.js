@@ -1832,7 +1832,8 @@
       'showroom', 'cafe', 'restaurant', 'beauty', 'fitness',
       'realestate', 'academy', 'clinic', 'shop', 'interior',
       'urban', 'bright', 'luxury', 'lofi', 'vlog',
-      'cinema', 'drive', 'edm', 'funk', 'ballad', 'news', 'jazz'
+      'cinema', 'drive', 'edm', 'funk', 'ballad', 'news', 'jazz',
+      ...AR_LIBRARY_MUSIC.keys()
     ]);
     const AR_BGM_RECOMMEND_GENRES = {
       ace_showroom: '신스웨이브', showroom: '시티팝', urban: '트랩', bright: '시티팝', luxury: '재즈·보사노바',
@@ -1857,7 +1858,7 @@
 
     function arBgmPackId(id) {
       const packId = String(id || '').replace(/^ace_/, '');
-      return AR_BGM_COVER_IDS.has(packId) || AR_LIBRARY_MUSIC.has(packId) ? packId : '';
+      return AR_BGM_COVER_IDS.has(packId) ? packId : '';
     }
 
     function arAppendAudioOptions(select, entries, groupKey) {
@@ -1879,7 +1880,7 @@
       const m = AR_BGM_META[id] || ['', '', '#3f3f46', '#18181b'];
       const packId = String(id || '').replace(/^(ace|lyria)_/, '');
       if (AR_BGM_COVER_IDS.has(packId)) {
-        return `<span class="bgm-cover overflow-hidden" style="width:${size}px;height:${size}px;background:linear-gradient(135deg, ${m[2]}, ${m[3]})"><img src="/assets/bgm/pack/${packId}.jpg" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit" onerror="this.remove()" /></span>`;
+        return `<span class="bgm-cover overflow-hidden" style="width:${size}px;height:${size}px;background:linear-gradient(135deg, ${m[2]}, ${m[3]})"><img src="/assets/bgm/pack/${packId}.jpg" alt="" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit" onerror="this.remove()" /></span>`;
       }
       return `<span class="bgm-cover" style="width:${size}px;height:${size}px;background:linear-gradient(135deg, ${m[2]}, ${m[3]})">${id === 'off' ? '✕' : '♪'}</span>`;
     }

@@ -19,17 +19,20 @@ export function buildApp(repoRoot) {
   const assets = path.join(repoRoot, 'public/assets');
   const audio = JSON.parse(fs.readFileSync(path.join(assets, 'audio-library.json'), 'utf8'));
   const groups = [
-    [audio.music, /^original-[a-z]+-[0-9]{2}$/, 'bgm/pack', '.mp3'],
-    [audio.effects, /^sfx-[a-z]+-[0-9]{2}$/, 'sfx', '.wav']
+    [audio.music, /^original-[a-z]+-[0-9]{2}$/, 'bgm/pack', ['.mp3', '.jpg']],
+    [audio.effects, /^sfx-[a-z]+-[0-9]{2}$/, 'sfx', ['.wav']]
   ];
-  for (const [entries, pattern, folder, extension] of groups) {
+  for (const [entries, pattern, folder, extensions] of groups) {
     const ids = new Set();
     for (const { id, name } of entries) {
       if (!pattern.test(id) || ids.has(id) || typeof name !== 'string' || !name.trim()) {
         throw new Error('Invalid audio library entry: ' + id);
       }
-      if (!fs.existsSync(path.join(assets, folder, id + extension))) {
-        throw new Error('Missing audio library asset: ' + id);
+      for (const extension of extensions) {
+        const file = id + extension;
+        if (!fs.existsSync(path.join(assets, folder, file))) {
+          throw new Error('Missing audio library asset: ' + file);
+        }
       }
       ids.add(id);
     }
