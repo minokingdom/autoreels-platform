@@ -1967,6 +1967,24 @@
         <button type="button" onclick="closeStudioSettingsModal()" class="ar-modal-x" aria-label="닫기">×</button>
       </div>
 
+      <form id="settingsBusinessProfile" class="studio-sub p-4 space-y-3" data-noind>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="settingsIndustryInput" class="block text-[12px] text-[#a1a1a6] mb-1">업종 대분류</label>
+            <select id="settingsIndustryInput" class="studio-input w-full h-10 px-2 text-[14px]"></select>
+          </div>
+          <div>
+            <label for="settingsSpecialtyInput" class="block text-[12px] text-[#a1a1a6] mb-1">세부 업종 (직접 입력)</label>
+            <input type="text" id="settingsSpecialtyInput" maxlength="36" class="studio-input w-full h-10 px-2 text-[14px]" aria-describedby="settingsSpecialtyHelp">
+          </div>
+        </div>
+        <p id="settingsSpecialtyHelp" class="text-[11px] text-[#a1a1a6]">세부 업종을 적으면 추천 주제가 달라집니다. 상호나 연락처는 빼 주세요.</p>
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="submit" id="settingsBusinessSave" class="btn-primary h-9 px-4 text-[12px] cursor-pointer disabled:opacity-50" disabled>업종 저장</button>
+          <p id="settingsBusinessStatus" class="text-[12px] text-[#a1a1a6]" role="status"></p>
+        </div>
+      </form>
+
       <!-- 1. 계정 및 구독 상태 -->
       <div class="studio-sub p-4 space-y-3">
         <div class="flex items-center justify-between gap-2 flex-wrap">
@@ -1986,17 +2004,6 @@
             PRO 구독 · 요금제 관리
           </button>
         </div>
-      </div>
-
-      <!-- 2. 업종 선택 -->
-      <div class="studio-sub p-4 flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <div class="text-[12px] text-[#85858b]">현재 업종</div>
-          <div id="settingsIndustrySummary" class="text-[14px] font-medium text-[#ededed] mt-0.5">🚘 자동차 영업</div>
-        </div>
-        <button type="button" onclick="closeStudioSettingsModal(); openIndustryPicker();" class="btn-secondary h-9 px-3.5 text-[12px] cursor-pointer">
-          업종 바꾸기
-        </button>
       </div>
 
       <!-- 3. 내 명함 / 매장 정보 -->
@@ -2137,7 +2144,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117r" title="AutoReels 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261118-specialty"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261118-settings2"><\/script>');
     }
   </script>
   <!--

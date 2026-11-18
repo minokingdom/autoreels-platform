@@ -501,8 +501,6 @@
         btn.textContent = arIndustryLocked ? `${IND.icon} ${IND.name} ▾` : `${IND.icon} ${IND.name} · 업종 선택`;
         btn.title = arIndustryLocked ? '내 계정 업종 — 눌러서 바꿀 수 있습니다' : '회원가입할 때 업종을 고르면 내 계정 업종으로 저장됩니다';
       }
-      const setInd = document.getElementById('settingsIndustrySummary');
-      if (setInd) setInd.textContent = arIndustrySummary();
       const auth = document.getElementById('authIndustryInput');
       if (auth) {
         if (!auth.options.length) {
@@ -523,10 +521,6 @@
     };
     function arIndustrySpecialty() {
       return arSpecialtyIndustry === IND.key ? arBusinessSpecialty : '';
-    }
-    function arIndustrySummary() {
-      const specialty = arIndustrySpecialty();
-      return `${IND.icon} ${IND.name}${specialty ? ' · ' + specialty : ''}`;
     }
     function arIndustryChipClick() {
       return openIndustryPicker();
@@ -568,30 +562,25 @@
       arIndustryFieldHint('modalBranch', IND.branchLabel, IND.branchPlaceholder);
       arIndustryFieldHint('modalPromo', IND.promoLabel, IND.promoPlaceholder);
     }
-    // 계정 저장이 성공한 뒤 추천을 갱신합니다.
-    async function arChangeAccountIndustry(key) {
-      const m = document.getElementById('industryPickerModal');
-      const save = m?.querySelector('#industryPickerSave');
-      const input = m?.querySelector('#industrySpecialtyInput');
-      if (!save || !input || !AR_INDUSTRIES[key] || save.disabled) return;
-      const specialty = input.value.normalize('NFKC').replace(/\s+/gu, ' ').trim();
-      save.disabled = true;
+    function arNormalizeSpecialtyInput(value) {
+      return value.normalize('NFKC').replace(/\s+/gu, ' ').trim();
+    }
+    // 설정과 헤더의 업종 선택 화면에서 같은 계정 저장 흐름을 사용합니다.
+    async function arSaveBusinessProfile(key, value, close) {
+      const specialty = arNormalizeSpecialtyInput(value);
+      const error = '업종을 저장하지 못했습니다. 다시 시도해 주세요.';
       try {
         if (window.AR_SERVER && AR_SERVER.mode) {
           if (!AR_SERVER.me?.user) {
-            m.remove();
+            close();
             openDealerAuthModal();
-            const industryInput = document.getElementById('authIndustryInput');
-            industryInput.value = key;
+            document.getElementById('authIndustryInput').value = key;
             switchAuthModalTab('signup');
             document.getElementById('authSpecialtyInput').value = specialty;
-            return;
+            return { redirected: true };
           }
           const r = await arApi('profile', { industry: key, specialty });
-          if (!r.ok) {
-            arToast(r.body.message || '업종을 저장하지 못했습니다. 다시 시도해 주세요.');
-            return;
-          }
+          if (!r.ok) return { error: r.body.message || error };
           AR_SERVER.me = r.body;
           arLockIndustry(r.body.user.industry, r.body.user.specialty);
         } else {
@@ -603,11 +592,23 @@
           }
           arLockIndustry(key, specialty);
         }
-        arToast('업종을 저장했습니다.', true);
+        return { ok: true };
       } catch (e) {
-        arToast('업종을 저장하지 못했습니다. 다시 시도해 주세요.');
+        return { error };
+      }
+    }
+    async function arChangeAccountIndustry(key) {
+      const m = document.getElementById('industryPickerModal');
+      const save = m?.querySelector('#industryPickerSave');
+      const input = m?.querySelector('#industrySpecialtyInput');
+      if (!save || !input || !AR_INDUSTRIES[key] || save.disabled) return;
+      save.disabled = true;
+      try {
+        const result = await arSaveBusinessProfile(key, input.value, () => m.remove());
+        if (result.ok) arToast('업종을 저장했습니다.', true);
+        else if (result.error) arToast(result.error);
       } finally {
-        save.disabled = false;
+        arIndustryPickerSaveState();
       }
     }
 

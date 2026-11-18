@@ -1091,7 +1091,6 @@
       const d = typeof getSelectedDealer === 'function' ? getSelectedDealer() : null;
       const accEl = document.getElementById('settingsAccountSummary');
       const authBtn = document.getElementById('settingsAuthActionBtn');
-      const indEl = document.getElementById('settingsIndustrySummary');
       const cardSumEl = document.getElementById('cardTabSummaryText');
       const serverMe = window.AR_SERVER && AR_SERVER.mode ? AR_SERVER.me : null;
       if (accEl) {
@@ -1105,17 +1104,71 @@
       if (authBtn) {
         authBtn.textContent = serverMe && serverMe.user ? '계정 · 로그아웃' : '로그인 · 회원가입';
       }
-      if (indEl && typeof IND !== 'undefined') {
-        indEl.textContent = arIndustrySummary();
-      }
       if (typeof arRenderCardShowToggles === 'function') arRenderCardShowToggles();
+    }
+
+    const arSettingsBusinessForm = document.getElementById('settingsBusinessProfile');
+    function arSettingsBusinessChanged() {
+      const select = document.getElementById('settingsIndustryInput');
+      const input = document.getElementById('settingsSpecialtyInput');
+      const save = document.getElementById('settingsBusinessSave');
+      const pending = arSettingsBusinessForm.dataset.saving === 'true';
+      save.disabled = pending || (select.value === IND.key && arNormalizeSpecialtyInput(input.value) === arIndustrySpecialty());
+      select.disabled = pending;
+      input.disabled = pending;
+    }
+    function arFillSettingsBusinessFields() {
+      const select = document.getElementById('settingsIndustryInput');
+      const input = document.getElementById('settingsSpecialtyInput');
+      if (!select.options.length) {
+        for (const ind of Object.values(AR_INDUSTRIES)) select.add(new Option(ind.icon + ' ' + ind.name, ind.key));
+      }
+      select.value = IND.key;
+      input.value = arIndustrySpecialty();
+      input.placeholder = '예: ' + arSpecialtyExamples[IND.key];
+      arSettingsBusinessChanged();
+    }
+    if (arSettingsBusinessForm) {
+      const select = document.getElementById('settingsIndustryInput');
+      const input = document.getElementById('settingsSpecialtyInput');
+      const status = document.getElementById('settingsBusinessStatus');
+      select.addEventListener('change', () => {
+        input.value = select.value === IND.key ? arIndustrySpecialty() : '';
+        input.placeholder = '예: ' + arSpecialtyExamples[select.value];
+        status.textContent = '';
+        arSettingsBusinessChanged();
+      });
+      input.addEventListener('input', () => {
+        status.textContent = '';
+        arSettingsBusinessChanged();
+      });
+      arSettingsBusinessForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (document.getElementById('settingsBusinessSave').disabled) return;
+        arSettingsBusinessForm.dataset.saving = 'true';
+        arSettingsBusinessChanged();
+        status.textContent = '저장 중…';
+        try {
+          const result = await arSaveBusinessProfile(select.value, input.value, closeStudioSettingsModal);
+          if (result.ok) arFillSettingsBusinessFields();
+          status.textContent = result.ok ? '저장했습니다.' : (result.error || '');
+        } finally {
+          delete arSettingsBusinessForm.dataset.saving;
+          arSettingsBusinessChanged();
+        }
+      });
     }
 
     function openStudioSettingsModal(focusSection) {
       syncStudioSettingsModal();
       const modal = document.getElementById('studioSettingsModal');
       if (!modal) return;
+      if (arSettingsBusinessForm && arSettingsBusinessForm.dataset.saving !== 'true') {
+        arFillSettingsBusinessFields();
+        document.getElementById('settingsBusinessStatus').textContent = '';
+      }
       modal.classList.remove('hidden');
+      modal.firstElementChild.scrollTop = 0;
       if (focusSection === 'card') {
         const sec = document.getElementById('settingsCardSection');
         if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
