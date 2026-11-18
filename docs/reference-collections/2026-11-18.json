@@ -1,0 +1,60 @@
+{
+  "reviewer": "Codex with rea-video 0.1.0",
+  "method": "rea-video decompose + 12-frame vision analysis + all-shot contact-sheet review + apply-review",
+  "limitations": [
+    "Audio attribution and exact caption timing were not verified.",
+    "Visual production categories are uncertain where pixel statistics disagree with contact sheets.",
+    "Only declarative layout, typography and photo motion are registered; source footage is not redistributed."
+  ],
+  "candidates": [
+    {
+      "id": "ref_4000964127d73639",
+      "url": "https://www.youtube.com/watch?v=NHRurTO3NJY",
+      "sourceTitle": "제주 감성 공간",
+      "status": "failed",
+      "error": "python.exe 실행 실패: ERROR: [youtube] NHRurTO3NJY: Private video. If the owner of this video has granted you access, please sign in. Use --cookies-from-browser or --cookies for the authentication. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies. Also see  https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies  for tips on effectively exporting YouTube cookies\n"
+    },
+    {
+      "id": "ref_50f117dbebf69fd4",
+      "url": "https://www.youtube.com/watch?v=wDq5n_AO9Bo",
+      "sourceTitle": "제주 웰니스 홍보",
+      "status": "visually_reviewed",
+      "reviewedShots": 16
+    },
+    {
+      "id": "ref_997a9ce8260fc693",
+      "url": "https://prompt-motion.com/amitsingha89-150378",
+      "sourceTitle": "Handwoven textiles brand explainer",
+      "status": "failed",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    {
+      "id": "ref_9dcc35f1182a0f88",
+      "url": "https://www.youtube.com/watch?v=KfbxbXhMCRg",
+      "sourceTitle": "제주 사찰 풍경 일러스트 영상",
+      "status": "visually_reviewed",
+      "reviewedShots": 28
+    },
+    {
+      "id": "ref_a9447b0f90c3718d",
+      "url": "https://prompt-motion.com/lexnlin-038035",
+      "sourceTitle": "Engraving-style Claude ad",
+      "status": "failed",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    {
+      "id": "ref_b77bd1019628b66b",
+      "url": "https://www.youtube.com/watch?v=Tp_GgPEeIJg",
+      "sourceTitle": "가을 패션 에디토리얼",
+      "status": "visually_reviewed",
+      "reviewedShots": 14
+    },
+    {
+      "id": "ref_d20b9d77d678cde9",
+      "url": "https://vimeo.com/147081391",
+      "sourceTitle": "미니멀 회사 소개",
+      "status": "failed",
+      "error": "python.exe 실행 실패: ERROR: [vimeo] 147081391: The web client only works when logged-in. Use --cookies, --cookies-from-browser, --username and --password, --netrc-cmd, or --netrc (vimeo) to provide account credentials. See  https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp  for how to manually pass cookies\n"
+    }
+  ]
+}
