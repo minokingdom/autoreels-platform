@@ -1,0 +1,79 @@
+{
+  "method": "rea-video local decompose + Codex all-shot visual review + apply-review; no paid analysis endpoint",
+  "paidAnalysisCalls": 0,
+  "categoriesAdded": 0,
+  "added": 5,
+  "total": 10,
+  "candidates": [
+    {
+      "id": "ref_110b9ef76743a339",
+      "url": "https://www.youtube.com/watch?v=Ess_QJfCfIE",
+      "sourceTitle": "Polaroid Stop Motion",
+      "creator": "FluxVFX Motion Design Templates",
+      "status": "deferred_visual_review",
+      "paidAnalysisCalls": 0,
+      "reason": "Full shot review has not been completed; not registered."
+    },
+    {
+      "id": "ref_2abc322b9976bffe",
+      "url": "https://www.youtube.com/watch?v=eH8t7ZQQaNg",
+      "sourceTitle": "Spotify motion graphics ad",
+      "creator": "Matheus De Angelis",
+      "status": "visually_reviewed",
+      "paidAnalysisCalls": 0,
+      "reviewedShots": 2,
+      "adaptationLimits": "줄별 등장과 단색 색감만 적용한다. 로고, 문구, 오디오, 마지막 축소 화면은 제외한다."
+    },
+    {
+      "id": "ref_42513a61736617b0",
+      "url": "https://www.youtube.com/watch?v=hsI04vcYYl0",
+      "sourceTitle": "Minimal Slideshow - preview",
+      "creator": "NYSArt",
+      "status": "visually_reviewed",
+      "paidAnalysisCalls": 0,
+      "reviewedShots": 10,
+      "error": "화면이 사선/대각선 형태의 복합 마스크 조각으로 분할 및 슬라이스 전환되는 3D 모션 그래픽 템플릿 효과로, 오토릴스 프리셋 설정(full/inset/polaroid 단일 레이아웃 및 컷/페이드 전환)으로 구현 불가합니다.",
+      "adaptationLimits": "원본의 서로 다른 사진이 섞인 전환을 현재 컷 사진 한 장의 사선 마스크로 단순화했다. 원본의 복잡한 다중 사진 전환과 그림자는 재현하지 않는다."
+    },
+    {
+      "id": "ref_4784a79252305baf",
+      "url": "https://www.youtube.com/watch?v=OXBsg8gioDI",
+      "sourceTitle": "After Effects Template-Minimal Zoom Slideshow",
+      "creator": "Hicham Arhazaz",
+      "status": "visually_reviewed",
+      "paidAnalysisCalls": 0,
+      "reviewedShots": 13,
+      "error": "영상 전반에 걸쳐 텍스트 내부로 영상이 비치는 트랙 매트(마스크) 및 극적인 줌 블러 전환 효과가 사용되어 제공된 단일 템플릿 설정으로는 재현이 불가능합니다.",
+      "adaptationLimits": "인트로의 글자 속 사진 효과만 독립 스타일로 채택했다. 본편의 줌 블러, 원본 로고와 원본 문구는 재현하지 않는다."
+    },
+    {
+      "id": "ref_9e5d5b7790d19b41",
+      "url": "https://www.youtube.com/watch?v=eB2lagODyWE",
+      "sourceTitle": "Kinetic Typography iPhone SE Commercial",
+      "creator": "Sujanhariharan",
+      "status": "visually_reviewed",
+      "paidAnalysisCalls": 0,
+      "reviewedShots": 7,
+      "adaptationLimits": "글자 잔상, 크기 변화, 흑백 반전만 적용한다. 테두리 글자, 로고, 원본 단어, 음원 박자 동기화는 제외한다."
+    },
+    {
+      "id": "ref_d2dc9a872d399183",
+      "url": "https://www.youtube.com/watch?v=fMNJ-2_0_Gs",
+      "sourceTitle": "Parallax Polaroid Photo Slideshow",
+      "creator": "Indra Ibrahim",
+      "status": "visually_reviewed",
+      "paidAnalysisCalls": 0,
+      "reviewedShots": 3,
+      "adaptationLimits": "사진은 현재 컷 한 장만 쓰며 뒤쪽 겹침은 빈 인화지로 표현한다. 여러 원본 사진, 배경 블러와 3D 카메라를 복제하지 않는다."
+    },
+    {
+      "id": "ref_f1ec83d130af27db",
+      "url": "https://www.youtube.com/watch?v=jywAMOoM_BQ",
+      "sourceTitle": "Kinetic Type Railway Commercial",
+      "creator": "Frantic",
+      "status": "failed",
+      "paidAnalysisCalls": 0,
+      "error": "python.exe 실행 실패: ERROR: unable to download video data: HTTP Error 403: Forbidden\n"
+    }
+  ]
+}

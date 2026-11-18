@@ -121,15 +121,16 @@
       in_x_tabs: '브이로그', in_x_walk: '브이로그', in_x_window: '감성',
       in_y_chat: '브이로그', 
       in_y_torn: '감성', in_y_mosaic: '브이로그',
-      ed_vogue: '신규', ed_glasspill: '신규', ed_kinetic: '신규', ed_arch: '신규', ed_duotone: '신규',
-      stm_kinetic: '신규', stm_cinema: '신규', stm_sonar: '신규', stm_glint: '신규',
+      ed_vogue: '고급', ed_glasspill: '브이로그', ed_kinetic: '타이포', ed_arch: '감성', ed_duotone: '타이포',
+      stm_kinetic: '타이포', stm_cinema: '고급', stm_sonar: '테크', stm_glint: '고급',
       cn_deck: '카드뉴스', cn_summary: '카드뉴스', cn_boldquote: '카드뉴스', cn_splitbar: '카드뉴스',
       cn_timeline: '카드뉴스', cn_qna: '카드뉴스', cn_compare: '카드뉴스', cn_receipt: '카드뉴스', cn_polaroid_duo: '카드뉴스',
-      stm_split: '신규', stm_ticket: '신규', stm_glassbar: '신규',
+      stm_split: '카드뉴스', stm_ticket: '카드뉴스', stm_glassbar: '브이로그',
       ba_slider: '비포·애프터', ba_diagonal: '비포·애프터', ba_collage: '비포·애프터', ba_flash: '비포·애프터', ba_polaroid: '비포·애프터'
     };
+    const AR_MOTION_ADDED_AT = {"ed_vogue": "2026-11-14T06:25:59Z", "ed_glasspill": "2026-11-14T06:25:59Z", "ed_kinetic": "2026-11-14T06:25:59Z", "ed_arch": "2026-11-14T06:25:59Z", "ed_duotone": "2026-11-14T06:25:59Z", "stm_kinetic": "2026-11-14T17:02:21Z", "stm_cinema": "2026-11-14T17:02:21Z", "stm_sonar": "2026-11-14T17:02:21Z", "stm_glint": "2026-11-14T17:02:21Z", "stm_split": "2026-11-17T05:14:07Z", "stm_ticket": "2026-11-17T05:14:07Z", "stm_glassbar": "2026-11-17T05:14:07Z"};
     const MOTION_DESIGNS = MOTION_ROWS.map((r, i) => ({
-      id: r[0], name: r[1], cat: MOTION_CAT[r[0]] || '재미', engine: 'motion', mstyle: r[2], font: r[3],
+      id: r[0], name: r[1], addedAt: AR_MOTION_ADDED_AT[r[0]], cat: MOTION_CAT[r[0]] || '재미', engine: 'motion', mstyle: r[2], font: r[3],
       bg1: r[4], bg2: r[5], accent: r[6], accent2: r[7], light: r[8], seed: 900 + i, genre: 'motion', grade: 'none', label: r[1],
       insta: String(r[0]).startsWith('in_'), // 인스타 감성: 배경색을 업종 색으로 바꾸지 않고, 엔딩도 크림 카드로
       desc: `모션그래픽 · ${r[1]}`

@@ -17,7 +17,8 @@
     "zoom": 0.03,
     "shade": 0.2,
     "grain": 0.02,
-    "entrySeconds": 0.3
+    "entrySeconds": 0.3,
+    "addedAt": "2026-11-18T02:56:57Z"
   },
   {
     "id": "ref_9dcc35f1182a0f88",
@@ -37,7 +38,8 @@
     "zoom": 0.05,
     "shade": 0.25,
     "grain": 0.02,
-    "entrySeconds": 0.35
+    "entrySeconds": 0.35,
+    "addedAt": "2026-11-18T02:56:57Z"
   },
   {
     "id": "ref_b77bd1019628b66b",
@@ -57,7 +59,8 @@
     "zoom": 0.02,
     "shade": 0.1,
     "grain": 0.03,
-    "entrySeconds": 0.3
+    "entrySeconds": 0.3,
+    "addedAt": "2026-11-18T02:56:57Z"
   },
   {
     "id": "ref_9e41f8a500caa5bd",
@@ -77,7 +80,8 @@
     "zoom": 0.02,
     "shade": 0.3,
     "grain": 0.02,
-    "entrySeconds": 0.4
+    "entrySeconds": 0.4,
+    "addedAt": "2026-11-18T03:15:19Z"
   },
   {
     "id": "ref_ac6c4eb334000fd4",
@@ -97,6 +101,112 @@
     "zoom": 0.04,
     "shade": 0.05,
     "grain": 0.025,
-    "entrySeconds": 0.4
+    "entrySeconds": 0.4,
+    "addedAt": "2026-11-18T03:15:19Z"
+  },
+  {
+    "id": "ref_42513a61736617b0",
+    "font": "dohyeon",
+    "captionPosition": "middle",
+    "textMotion": "fade",
+    "camera": "zoom-in",
+    "transition": "cut",
+    "background": "#242322",
+    "foreground": "#ffffff",
+    "accent": "#c8bca8",
+    "captionSize": 0.065,
+    "zoom": 0.045,
+    "shade": 0.38,
+    "grain": 0,
+    "entrySeconds": 0.5,
+    "name": "사선 슬라이스 에디토리얼",
+    "category": "고급",
+    "layout": "diagonal",
+    "summary": "사진 한 장을 세 개의 사선 띠로 펼치고, 중앙 문구와 가는 선으로 마무리하는 에디토리얼 구성.",
+    "addedAt": "2026-11-18T03:50:56Z"
+  },
+  {
+    "id": "ref_4784a79252305baf",
+    "font": "dohyeon",
+    "captionPosition": "middle",
+    "textMotion": "fade",
+    "camera": "zoom-in",
+    "transition": "cut",
+    "background": "#fffdf7",
+    "foreground": "#252525",
+    "accent": "#c8bca8",
+    "captionSize": 0.065,
+    "zoom": 0.045,
+    "shade": 0,
+    "grain": 0,
+    "entrySeconds": 0.5,
+    "name": "포토 레터 컷아웃",
+    "category": "타이포",
+    "layout": "type-cutout",
+    "summary": "큼직한 글자 안에 사진을 담고 아래에 원문 자막을 한 번 더 표시하는 포토 타이포그래피.",
+    "addedAt": "2026-11-18T03:50:56Z"
+  },
+  {
+    "id": "ref_d2dc9a872d399183",
+    "font": "pen",
+    "captionPosition": "middle",
+    "textMotion": "fade",
+    "camera": "zoom-in",
+    "transition": "cut",
+    "background": "#302a26",
+    "foreground": "#eee7dc",
+    "accent": "#c8bca8",
+    "captionSize": 0.065,
+    "zoom": 0.045,
+    "shade": 0,
+    "grain": 0.02,
+    "entrySeconds": 0.5,
+    "name": "레이어드 폴라로이드",
+    "category": "감성",
+    "layout": "stacked",
+    "summary": "겹친 인화지 위에 사진 한 장을 기울여 놓고, 흰 여백의 손글씨와 느린 확대를 더한 구성.",
+    "addedAt": "2026-11-18T03:50:56Z"
+  },
+  {
+    "id": "ref_9e5d5b7790d19b41",
+    "font": "dohyeon",
+    "captionPosition": "middle",
+    "textMotion": "fade",
+    "camera": "still",
+    "transition": "cut",
+    "background": "#111111",
+    "foreground": "#ffffff",
+    "accent": "#111111",
+    "captionSize": 0.065,
+    "zoom": 0,
+    "shade": 0,
+    "grain": 0,
+    "entrySeconds": 0.5,
+    "name": "모노 에코 키네틱",
+    "category": "타이포",
+    "layout": "type-echo",
+    "summary": "컷마다 흑백 바탕이 반전되고 짧은 글자 잔상과 확대가 정리되며 문장이 선명하게 나타나는 타이포 구성. 사진은 표시하지 않습니다.",
+    "addedAt": "2026-11-18T03:50:56Z"
+  },
+  {
+    "id": "ref_2abc322b9976bffe",
+    "font": "pretM",
+    "captionPosition": "middle",
+    "textMotion": "fade",
+    "camera": "still",
+    "transition": "cut",
+    "background": "#052e25",
+    "foreground": "#ffffff",
+    "accent": "#134d3c",
+    "captionSize": 0.065,
+    "zoom": 0,
+    "shade": 0,
+    "grain": 0,
+    "entrySeconds": 0.5,
+    "name": "딥그린 플로 타이포",
+    "category": "테크",
+    "layout": "type-flow",
+    "summary": "딥그린 단색 바탕에서 문장 줄이 좌우로 모이며 나타나는 간결한 타이포 구성. 사진은 표시하지 않습니다.",
+    "addedAt": "2026-11-18T03:50:56Z"
   }
 ]

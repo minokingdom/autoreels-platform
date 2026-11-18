@@ -329,7 +329,7 @@
       if (!arDesignCats().includes(pdCat)) pdCat = '전체';
       renderPresetRecommend(urls, blank);
       const vis = pdMood && typeof arDesignsForMood === 'function' ? arDesignsForMood(pdMood) : arVisibleDesigns();
-      const items = pdCat === '전체' ? vis : vis.filter((d) => d.cat === pdCat);
+      const items = pdCat === '전체' ? vis : vis.filter((d) => arDesignMatchesCat(d, pdCat));
       list.innerHTML = (pdCat === '전체' ? arCustomPickerCards('pdthumb_') : '') + `<button type="button" class="pd-card pd-random" onclick="pickRandomTheme(true)" title="디자인과 색을 무작위로 바꿔 봅니다">
           <span class="pd-dice">🎲</span>
           <div>랜덤 테마</div>
@@ -384,7 +384,7 @@
     // 🎲 랜덤 테마: 지금 분류 안에서 다른 디자인 + 다른 색을 무작위로
     function pickRandomTheme(fromDrawer) {
       const vis = arVisibleDesigns();
-      const pool = (typeof pdCat !== 'undefined' && fromDrawer && pdCat !== '전체' ? vis.filter((d) => d.cat === pdCat) : vis)
+      const pool = (typeof pdCat !== 'undefined' && fromDrawer && pdCat !== '전체' ? vis.filter((d) => arDesignMatchesCat(d, pdCat)) : vis)
         .filter((d) => d.id !== getActiveDesign().id);
       if (!pool.length) return;
       const ds = pool[Math.floor(Math.random() * pool.length)];

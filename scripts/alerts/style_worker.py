@@ -80,7 +80,7 @@ def publish(style,url,directory):
     sid='ref_'+hashlib.sha256(url.encode()).hexdigest()[:16]
     checkpoint=directory/'published.json'
     if checkpoint.exists():return json.loads(checkpoint.read_text(encoding='utf-8'))
-    entry={'id':sid,**style}
+    entry={**style,'id':sid,'addedAt':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())}
     # 매번 최신 원격 카탈로그를 읽고 해당 파일 하나만 CAS 갱신합니다. 작업 중인 소스는 건드리지 않습니다.
     current=json.loads(run(['gh','api',f'repos/{REMOTE}/contents/{CATALOG}?ref=main']))
     catalog=json.loads(base64.b64decode(current['content']))

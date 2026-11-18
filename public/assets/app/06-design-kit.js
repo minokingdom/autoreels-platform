@@ -3888,6 +3888,28 @@
       const list = DESIGN_STYLES.filter(arDesignVisible);
       return list.filter((d) => d.industry).concat(list.filter((d) => !d.industry));
     }
+    // 신규는 대표 분류와 함께 표시하는 모음입니다. 카테고리를 옮기거나 복제하지 않습니다.
+    const AR_NEW_STYLE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+    function arDesignIsNew(d, now = Date.now()) {
+      const added = Date.parse(d.addedAt || '');
+      return Number.isFinite(added) && now >= added && now - added < AR_NEW_STYLE_WINDOW_MS;
+    }
+    function arDesignMatchesCat(d, cat, now = Date.now()) {
+      if (cat === '신규') return arDesignIsNew(d, now);
+      return cat === '전체' || d.cat === cat;
+    }
+    // 열린 화면에서도 일주일 만료를 반영하며, 재빌드나 예약 서버가 필요하지 않습니다.
+    let arNewStyleMembership = '';
+    function arRefreshNewStyleMembership() {
+      const current = arVisibleDesigns().filter(d => arDesignIsNew(d)).map(d => d.id).join(',');
+      if (current === arNewStyleMembership) return;
+      arNewStyleMembership = current;
+      window.__arStyleBag = [];
+      renderDesignStylePicker();
+      if (document.getElementById('presetDrawer')?.classList.contains('open')) renderPresetDrawer();
+    }
+    setInterval(arRefreshNewStyleMembership, 60000);
+    window.addEventListener('focus', arRefreshNewStyleMembership);
     function arDesignCats() {
       const key = typeof IND !== 'undefined' ? IND.key : 'auto';
       const vis = arVisibleDesigns();
@@ -3897,7 +3919,7 @@
         '전체',
         ...(hasWeekly ? ['이번 주 인기'] : []),
         '내 업종',
-        ...DESIGN_CATS.filter((c) => c !== '전체' && vis.some((d) => !d.industry && d.cat === c))
+        ...DESIGN_CATS.filter((c) => c !== '전체' && vis.some((d) => !d.industry && arDesignMatchesCat(d, c)))
       ];
     }
 
@@ -4212,7 +4234,7 @@
     function getDesignPickerList() {
       const cat = campaign.designCat || '전체';
       const vis = arVisibleDesigns();
-      return cat === '전체' ? arCustomDesigns.concat(vis) : vis.filter((ds) => ds.cat === cat);
+      return cat === '전체' ? arCustomDesigns.concat(vis) : vis.filter((ds) => arDesignMatchesCat(ds, cat));
     }
     function renderDesignThumbBatch(list) {
       const saved = campaign.designStyle;
@@ -4313,7 +4335,7 @@
       if (tabs) {
         const vis = arVisibleDesigns();
         tabs.innerHTML = arDesignCats().map((c) => {
-          const n = c === '전체' ? vis.length + arCustomDesigns.length : vis.filter((ds) => ds.cat === c).length;
+          const n = c === '전체' ? vis.length + arCustomDesigns.length : vis.filter((ds) => arDesignMatchesCat(ds, c)).length;
           const on = c === cat;
           return `<button type="button" onclick="selectDesignCat('${c}')" class="shrink-0 px-2.5 py-1 rounded-[6px] text-[11px] font-medium border cursor-pointer ${on ? 'border-[#ededed] bg-[#232325] text-white' : 'border-[var(--border)] text-[#a1a1a6] hover:text-[#ededed]'}">${c} <span class="text-[#6e6e73]">${n}</span></button>`;
         }).join('');
@@ -4499,7 +4521,7 @@
         return;
       }
       const catFiltered = includeCats.length
-        ? allDesigns.filter((d) => includeCats.includes(d.industry ? '내 업종' : (d.cat || '')))
+        ? allDesigns.filter((d) => includeCats.some(cat => d.industry ? cat === '내 업종' : arDesignMatchesCat(d, cat)))
         : allDesigns;
       const basePool = catFiltered.length ? catFiltered : allDesigns;
       const excluded = new Set(getShuffleExcludedIds());
