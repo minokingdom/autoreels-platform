@@ -53,7 +53,7 @@ try {
   const cloud=await browser.newPage({viewport:{width:390,height:844}});
   cloud.on('pageerror',e=>errors.push(e.message));
   const requests=[];
-  let imageFailure=true;
+  let imageFailure=true, quotaExceeded=false;
   await cloud.route('**/api/generate-script',async route=>{
    const body=route.request().postDataJSON();
    requests.push(body);
@@ -61,7 +61,9 @@ try {
     const draft={vehicle:body.vehicle,hook:body.vehicle+' 출시',cutCaptions:[body.vehicle,'외관','실내','주행']};
     return route.fulfill({json:{ok:true,data:draft,variants:[draft,{...draft,hook:'7시리즈 안내'},{...draft,hook:'7시리즈 소개'}],aiFallback:{reason:'timeout'}}});
    }
-   if(body.mode==='scene-prompts')return route.fulfill({json:{ok:true,prompts:['Front','Rear','Interior','On the road']}});
+   if(body.mode==='scene-prompts')return quotaExceeded
+    ? route.fulfill({status:429,json:{ok:false,error:'quota_exceeded'}})
+    : route.fulfill({json:{ok:true,prompts:['Front','Rear','Interior','On the road']}});
    if(body.mode==='scene-image')return route.fulfill({json:imageFailure
     ? {ok:false,error:'kie_insufficient_credits'}
     : {ok:true,image:{dataUrl:fixtures[body.index]}}});
@@ -111,6 +113,13 @@ try {
   assert.equal(promptRequests.length,2);
   assert(promptRequests.every(r=>r.prompt==='bmw 7시리즈 하이브리드'&&r.vehicle==='BMW 7시리즈 하이브리드'&&r.topic===null));
   assert.equal(requests.filter(r=>r.mode==='scene-image'&&r.imagePrompt.startsWith('Main subject and vehicle identity: BMW 7시리즈 하이브리드.')).length,8);
+  quotaExceeded=true;
+  const beforeQuota=requests.length;
+  await photoButton.click();
+  await cloud.waitForFunction(()=>!document.getElementById('regenTopicImgBtn').disabled);
+  assert.match(await notice.textContent(),/0\/4컷 교체.*기존 사진을 유지.*AI 생성 한도/);
+  assert.deepEqual(requests.slice(beforeQuota).map(r=>r.mode),['scene-prompts']);
+  assert.deepEqual(await cloud.evaluate(()=>campaign.uploadedPhotos.map(img=>img.src)),final.photos);
   console.log('cloud images preserve the current BMW subject and report replaced cuts or the original photos remaining');
  }
  assert.deepEqual(errors,[]);console.log('local image browser OK');

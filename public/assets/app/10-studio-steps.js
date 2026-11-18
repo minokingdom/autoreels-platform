@@ -359,7 +359,20 @@
       }
       return (best && best.iconUrl) || (photo && photo.src) || arPickFallbackTopicPhoto(IND.key, 0);
     }
+    function arSyncProductPreset() {
+      const select = document.getElementById('presetSelect');
+      // 차종과 혜택이 모두 일치할 때만 해당 예시를 선택된 상태로 표시합니다.
+      const match = Object.entries(arPresetsForIndustry()).find(([, item]) =>
+        item.vehicle === campaign.vehicle && (item.discountNum || 0) === campaign.discountNum && item.discount === campaign.discount
+      );
+      const key = match?.[0] || '';
+      if (select.value !== key) {
+        select.value = key;
+        if (select.__igRow) arSyncIgSelects(select.parentElement);
+      }
+    }
     function arSyncProductRows() {
+      arSyncProductPreset();
       const name = String((typeof campaign !== 'undefined' && campaign.vehicle) || (document.getElementById('inputVehicle') || {}).value || '').trim() || '내 상품';
       const sub = String((document.getElementById('inputDiscount') || {}).value || '').trim();
       const num = Number((document.getElementById('inputDiscountNum') || {}).value || 0);
@@ -383,7 +396,8 @@
       arProductSnap = arProductKey();
       el.classList.remove('hidden');
       el.style.display = 'flex';
-      setTimeout(() => arSyncIgSelects(el), 0);
+      arSyncProductPreset();
+      arSyncIgSelects(el);
     }
     function arCloseProductSheet() {
       const el = document.getElementById('productSheet');
@@ -2295,7 +2309,12 @@
         if (!stillCurrent()) return;
         const prompts = Array.isArray(pj.prompts) ? pj.prompts : [];
         if (!promptRes.ok || !pj.ok || !prompts.length) {
-          if (noticeEl) noticeEl.textContent = pj.message || `[${label}]의 이미지 설명을 만들지 못했어요. 기존 사진을 유지했어요.`;
+          if (noticeEl) {
+            const reason = pj.error === 'quota_exceeded'
+              ? '계정의 AI 생성 한도에 도달했어요. 내 계정에서 사용량을 확인해 주세요.'
+              : pj.message || `[${label}]의 이미지 설명을 만들지 못했어요.`;
+            noticeEl.textContent = `0/${payload.totalCuts}컷 교체 · 기존 사진을 유지했어요. ${reason}`;
+          }
           return;
         }
 

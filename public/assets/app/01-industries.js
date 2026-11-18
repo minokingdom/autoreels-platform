@@ -446,8 +446,12 @@
         const list = AR_INDUSTRY_PRESETS[IND.key] || {};
         sel.innerHTML = Object.keys(list).map((k) => `<option value="${k}">${escapeHtmlInd(list[k].vehicle)} (${escapeHtmlInd(list[k].priceTag || '')})</option>`).join('');
       }
+      const prompt = new Option(`${IND.product} 예시 고르기`, '');
+      prompt.disabled = true;
+      sel.prepend(prompt);
+      sel.value = '';
       const lab = sel.previousElementSibling;
-      if (lab && lab.tagName === 'LABEL') lab.textContent = `${IND.product} 프리셋`;
+      if (lab && lab.tagName === 'LABEL') lab.textContent = `${IND.product} 예시`;
       // 할인·조건 칸 이름도 업종 말로 (자동차가 아니면 '월 납입금'·'만원'이 어색함)
       const setLab = (id, txt) => {
         const el = document.getElementById(id);
