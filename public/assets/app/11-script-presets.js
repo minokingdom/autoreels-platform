@@ -144,20 +144,20 @@
         campaign.cutCaptions = [
           `🚨 ${newHook}`,
           `✨ 인기 색상 선점 ${parsedLocal.stockNum}대 대기 없이 즉시 배정!`,
-          `💰 최대 -${campaign.discountNum.toLocaleString()}만원 혜택 · ${campaign.discount}`,
+          campaign.discountNum ? `💰 최대 -${campaign.discountNum.toLocaleString()}만원 혜택 · ${campaign.discount}` : campaign.discount,
           `🔑 ${d.name} ${d.title} 책임출고!`
         ];
         campaign.ttsLines = [
           `${campaign.vehicle}, 이번 달 특별 조건!`,
           `선점 재고 ${parsedLocal.stockNum}대, 이번 주 바로 출고.`,
-          `최대 ${campaign.discountNum}만 원 할인 받으세요.`,
+          campaign.discountNum ? `최대 ${campaign.discountNum}만 원 할인 받으세요.` : '자세한 조건은 상담해 드릴게요.',
           `계약하면 바로 출고해 드립니다.`
         ];
         campaign.kakaoChat = [
           { role: 'customer', text: `팀장님! ${parsedLocal.targetPersona ? parsedLocal.targetPersona + '이 타기 좋은 ' : ''}${campaign.vehicle} 즉시출고 되나요? 😭` },
           { role: 'dealer', text: `네 고객님! 인기 트림 선점 물량 ${parsedLocal.stockNum}대 확보해둬서 이번 주 바로 출고 가능합니다 🚗` },
           { role: 'customer', text: '오 대박!! 이번 달 할인이랑 월 납입 조건은 어떻게 되나요?' },
-          { role: 'dealer', text: `최대 -${campaign.discountNum.toLocaleString()}만원 혜택으로 ${campaign.discount}입니다! 👇` }
+          { role: 'dealer', text: campaign.discountNum ? `최대 -${campaign.discountNum.toLocaleString()}만원 혜택으로 ${campaign.discount}입니다! 👇` : '현재 조건을 확인해 알려 드릴게요.' }
         ];
         proceduralRestyleCurrentScene();
     }
@@ -206,7 +206,7 @@
       } catch (e) { return false; }
     }
 
-    // 대본 반영 후 공통 마무리: 컷 수 맞추기 → 입력칸·패널 갱신 → 처음부터 재생
+    // 대본 반영 후 컷과 미리보기를 갱신하고, 정지한 위치에서 재생할 때 음성을 준비합니다.
     function arFinishScriptApply(totalCuts) {
       saveAiScriptPrefs();
       const noticeEl = document.getElementById('aiGenNotice');
@@ -216,7 +216,7 @@
       if (noticeEl) {
         const themeObj = DIRECTOR_THEMES[campaign.themeId] || DIRECTOR_THEMES.royal;
         const themeName = themeObj.name || themeObj.label || '로얄 골드';
-        noticeEl.textContent = `✅ [${campaign.vehicle}] 맞춤 ${totalCuts}컷 사진·모션 자막·한국어 성우 음성·[${themeName}] 영상이 완성되어 재생 중입니다!`;
+        noticeEl.textContent = `[${campaign.vehicle}] ${totalCuts}컷 대본을 적용했어요. 디자인: ${themeName}`;
       }
 
       document.getElementById('inputVehicle').value = campaign.vehicle;
@@ -225,13 +225,8 @@
       syncPreviewPanel();
       syncTechPanel();
 
-      // 영상 처음으로 이동 후 즉시 재생 & 한국어 성우(TTS) + BGM 즉시 발화
-      isPlaying = true;
-      AudioEngine.lastSpokenCut = -1;
-      // 대본 전체를 한 번에 녹음해 도착하면 처음부터 한 호흡으로 재생 (컷마다 끊어 읽지 않음)
-      AudioEngine.stopTts();
-      AudioEngine.prefetchTtsBuffers();
-      window.__timelines['main'].seek(0.12);
+      arResetAndRebuildNarration();
+      window.__timelines.main.seek(window.__timelines.main.currentTime);
     }
 
     function renderScriptVariantPicker() {
@@ -343,6 +338,7 @@
     function openPresetDrawer(side) {
       const dr = document.getElementById('presetDrawer');
       if (!dr) return;
+      arWatchEditSheet(dr, 'open');
       if (typeof closeCanvasDirectTextEdit === 'function') closeCanvasDirectTextEdit(true);
       if (typeof closeInlineQuickEdit === 'function') closeInlineQuickEdit();
       if (typeof closeCutEditor === 'function') closeCutEditor();

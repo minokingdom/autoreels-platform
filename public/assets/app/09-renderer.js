@@ -3587,6 +3587,8 @@
     }
 
     function togglePlayPause() {
+      if (!isPlaying && arEditSheetOpen) return;
+      if (!isPlaying && arWaitForEditedPreview()) return;
       isPlaying = !isPlaying;
       if (isPlaying && window.__arPinnedCut >= 0) {
         window.__arPinnedCut = -1;
@@ -3822,13 +3824,14 @@
       const file = event.target.files && event.target.files[0];
       if (!file) return;
       const d = getSelectedDealer();
+      if (event.target.id === 'dealerFaceQuickInput') arPauseForStudioEdit();
       await arWithPhotoImport(event.target, async () => {
         const img = await arImportPhoto(file, { maxEdge: 800 });
         if (d.avatarImg && d.avatarImg === d._customAvatar) arReleasePhoto(d.avatarImg);
         d.avatarImg = img;
         d._customAvatar = img;
         if (d.cardHide) delete d.cardHide.avatar;
-        window.__timelines['main'].seek(8.5);
+        if (getSelectedDealer() === d) window.__timelines.main.seek(window.__timelines.main.currentTime);
       });
     }
 

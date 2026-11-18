@@ -183,7 +183,10 @@
       }
 
       function normalizeKoreanNumbers(text) {
-        text = softenSymbols(text).replace(/(?<![0-9])1\s*(?:대|:)\s*1(?![0-9])/g, '일대일');
+        text = softenSymbols(text)
+          .replace(/(?<![0-9])1\s*(?:대|:)\s*1(?![0-9])/g, '일대일')
+          .replace(/(?<![0-9])7\s*시리즈/g, '칠시리즈')
+          .replace(/(\bBMW\s*|비엠더블유\s*)일곱\s*시리즈/gi, '$1칠시리즈');
         const pattern = new RegExp(`(^|[^0-9.,])([0-9]{1,2})\\s?(${COUNTERS.join('|')})`, 'g');
         return String(text).replace(pattern, (match, before, digits, counter, offset, whole) => {
           const n = Number(digits);

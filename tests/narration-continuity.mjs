@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import koreanNumbers from '../lib/korean-numbers.js';
+assert.equal(koreanNumbers.normalizeKoreanNumbers('BMW 7시리즈, BMW 일곱 시리즈, 재고 7대'), 'BMW 칠시리즈, BMW 칠시리즈, 재고 일곱 대');
 import fs from 'node:fs';
 import vm from 'node:vm';
 const timing=fs.readFileSync('public/assets/app/03-campaign-timing.js','utf8');

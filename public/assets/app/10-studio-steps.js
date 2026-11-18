@@ -379,6 +379,7 @@
     function arOpenProductSheet() {
       const el = document.getElementById('productSheet');
       if (!el) return;
+      arWatchEditSheet(el);
       arProductSnap = arProductKey();
       el.classList.remove('hidden');
       el.style.display = 'flex';
@@ -514,6 +515,25 @@
     //   발행 단계에 들어오면 고른 배경음악 + 성우 목소리를 섞은 완성본을 처음부터 재생
     const arStepsVisited = new Set(['topic']);
     let arFinalAudioUnlocked = false;
+    let arPreviewPausedForEdit = false;
+    let arPendingPreviewPlay = null;
+    let arEditSheetOpen = false;
+    const arWatchedEditSheets = new Map();
+    const arEditSheetObserver = new MutationObserver(arSyncEditSheetPlayback);
+    function arSyncEditSheetPlayback() {
+      const open = [...arWatchedEditSheets].some(([sheet, openClass]) =>
+        sheet.isConnected && (openClass ? sheet.classList.contains(openClass) : !sheet.classList.contains('hidden')));
+      if (open === arEditSheetOpen) return;
+      arEditSheetOpen = open;
+      if (open) arPauseForStudioEdit();
+      else if (!isPlaying) togglePlayPause();
+    }
+    function arWatchEditSheet(sheet, openClass = '') {
+      if (!sheet || arWatchedEditSheets.has(sheet)) return;
+      arWatchedEditSheets.set(sheet, openClass);
+      arEditSheetObserver.observe(sheet, { attributes: true, attributeFilter: ['class'] });
+      queueMicrotask(arSyncEditSheetPlayback);
+    }
     // ★ 2026-11-17 사장님 요청: 성우 목소리를 첫 화면부터 바로 들려줌 (발행 단계까지 기다리지 않음)
     //   크레딧 절약은 '소리를 켰을 때만 녹음'(prefetchTtsBuffers)으로, 이전 대본 목소리 섞임은 대본별 녹음(masterWantKey)으로 막음
     function arVoiceAllowed() { return !window.__arScriptGenerating; }
@@ -555,6 +575,7 @@
       AudioEngine.stopTts();
       // 녹음이 끝나면 처음부터 배경음악과 함께 재생
       Promise.resolve(AudioEngine.scriptPending || AudioEngine.prefetchTtsBuffers()).then(() => {
+        if (arPreviewPausedForEdit || arPendingPreviewPlay || document.getElementById('studioPanel_publish').classList.contains('hidden')) return;
         triggerFullAudioPreview();
         arSetFinalPreviewStatus(AudioEngine.masterBuffer
           ? '완성본 재생 중 — 고른 배경음악과 성우 목소리가 함께 들어갑니다.'
@@ -562,6 +583,9 @@
       });
     }
     function arReplayFinalPreview() {
+      if (arEditSheetOpen) return;
+      arPreviewPausedForEdit = false;
+      arPendingPreviewPlay = null;
       if (!arFinalAudioUnlocked) return arStartFinalPreview();
       if (window.innerWidth < 1024) scrollToMainMonitor();
       triggerFullAudioPreview();
@@ -577,6 +601,8 @@
           key = missing;
         }
       }
+      const leavingEnding = key !== 'card' && !document.getElementById('studioPanel_card').classList.contains('hidden');
+      if (leavingEnding) updateCurrentDealerFromPreview();
       arStepsVisited.add(key);
       if (key === 'sound') AudioEngine.loadVoiceList();
       if (key === 'card' && typeof arRenderCardShowToggles === 'function') arRenderCardShowToggles();
@@ -618,7 +644,12 @@
       arUpdateEasyGuide(key);
       arUpdateMobileStepBar(key);
       arSetupSheetMode();
-      if (key === 'publish' && !arFinalAudioUnlocked) arStartFinalPreview();
+      if (key === 'publish' && !arFinalAudioUnlocked) {
+        if (arPreviewPausedForEdit) {
+          arFinalAudioUnlocked = true;
+          arSetFinalPreviewStatus('엔딩을 적용했어요. 재생을 누르면 멈춘 위치에서 이어집니다.');
+        } else arStartFinalPreview();
+      }
     }
 
     // ==========================================================================
@@ -723,6 +754,9 @@
     }
     function arQuickRestart() {
       if (!window.__timelines || !window.__timelines.main) return;
+      if (arEditSheetOpen) return;
+      arPreviewPausedForEdit = false;
+      arPendingPreviewPlay = null;
       if (typeof AudioEngine !== 'undefined') AudioEngine.stopTts();
       isPlaying = true;
       const pp = document.getElementById('playPauseBtn');
@@ -866,6 +900,7 @@
         el.addEventListener('click', (e) => { if (e.target === el) arCloseOptionSheet(); });
         document.body.appendChild(el);
       }
+      arWatchEditSheet(el);
       const esc = (v) => String(v || '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
       const isPhoto = sel.getAttribute('data-sheet-kind') === 'photo';
       const photos = (typeof campaign !== 'undefined' && campaign.uploadedPhotos) || [];
@@ -1071,6 +1106,7 @@
       document.getElementById('dlrInputPhone').value = d.phone;
       document.getElementById('dlrInputBranch').value = d.branch;
       document.getElementById('dlrInputPromo').value = d.promoTag;
+      arSyncEndingApplyButton();
       document.getElementById('igAccountBadge').textContent = window.AR_SERVER && AR_SERVER.mode ? ((AR_SNS_STATE && AR_SNS_STATE.targets.instagram.name) || '') : `${d.igUsername}`;
       document.getElementById('dlrCaptionTextarea').value = buildCaption(d);
 
@@ -1180,6 +1216,7 @@
       syncStudioSettingsModal();
       const modal = document.getElementById('studioSettingsModal');
       if (!modal) return;
+      arWatchEditSheet(modal);
       if (arSettingsBusinessForm && arSettingsBusinessForm.dataset.saving !== 'true') {
         arFillSettingsBusinessFields();
         document.getElementById('settingsBusinessStatus').textContent = '';
@@ -1416,26 +1453,48 @@
       } catch (e) {}
     }
 
-    function updateCurrentDealerFromPreview() {
+    const AR_ENDING_INPUTS = Object.freeze({
+      dlrInputName: 'name', dlrInputTitle: 'title', dlrInputPhone: 'phone',
+      dlrInputBranch: 'branch', dlrInputPromo: 'promoTag'
+    });
+    function arReadEndingInputs() {
+      return Object.fromEntries(Object.entries(AR_ENDING_INPUTS).map(([id, key]) => [key, document.getElementById(id).value]));
+    }
+    function arSyncEndingApplyButton() {
+      const dealer = getSelectedDealer();
+      const changed = Object.entries(arReadEndingInputs()).some(([key, value]) => value !== String(dealer[key] ?? ''));
+      document.getElementById('arApplyEndingBtn').disabled = !changed;
+      return changed;
+    }
+    function arEndingNarration() { return AudioEngine.getCutNarration(getTargetCutCount()); }
+    function arPauseForStudioEdit() {
+      arPreviewPausedForEdit = true;
+      arPendingPreviewPlay = null;
+      if (isPlaying) togglePlayPause();
+    }
+    function arWaitForEditedPreview() {
+      if (arPendingPreviewPlay) {
+        arPendingPreviewPlay = null;
+        arPreviewPausedForEdit = true;
+        return true;
+      }
+      if (!arPreviewPausedForEdit) return false;
+      if (!document.getElementById('studioPanel_card').classList.contains('hidden')) updateCurrentDealerFromPreview();
+      const pending = AudioEngine.scriptPending || (AudioEngine.ttsPrefetchTimer ? AudioEngine.prefetchTtsBuffers(false, true) : null);
+      arPreviewPausedForEdit = false;
+      if (!pending) return false;
+      arPendingPreviewPlay = pending;
+      const resume = () => {
+        if (arPendingPreviewPlay !== pending) return;
+        arPendingPreviewPlay = null;
+        if (!isPlaying) togglePlayPause();
+      };
+      pending.then(resume, resume);
+      return true;
+    }
+    function arRefreshEnding(prevNarration) {
       const d = getSelectedDealer();
-      d.name = document.getElementById('dlrInputName').value;
-      d.title = document.getElementById('dlrInputTitle').value;
-      d.phone = document.getElementById('dlrInputPhone').value;
-      d.branch = document.getElementById('dlrInputBranch').value;
-      d.promoTag = document.getElementById('dlrInputPromo').value;
-      // 명함을 비우거나 채우면 명함 화면 유무·마지막 멘트가 바뀌므로 길이와 성우 녹음을 다시 맞춤
-      const cardEmptyNow = arCardEmpty();
-      if (cardEmptyNow !== d._cardEmptyLast) {
-        d._cardEmptyLast = cardEmptyNow;
-        applyVideoDurations();
-      }
-      if (typeof arResetAndRebuildNarration === 'function') {
-        arResetAndRebuildNarration();
-      } else if (typeof AudioEngine !== 'undefined' && AudioEngine.enabled && arVoiceAllowed()) {
-        AudioEngine.masterBuffer = null;
-        AudioEngine.masterDuration = 0;
-        AudioEngine.schedulePrefetch();
-      }
+      if (prevNarration !== arEndingNarration()) arResetAndRebuildNarration(true);
       document.getElementById('dlrCaptionTextarea').value = buildCaption(d);
       saveDealerProfileToLocal(d);
       syncDrmAndSnsUI();
@@ -1445,6 +1504,23 @@
       syncTechPanel();
       window.__timelines['main'].seek(window.__timelines['main'].currentTime);
     }
+    function updateCurrentDealerFromPreview() {
+      if (!arSyncEndingApplyButton()) return false;
+      const prevNarration = arEndingNarration();
+      Object.assign(getSelectedDealer(), arReadEndingInputs());
+      arSyncEndingApplyButton();
+      arRefreshEnding(prevNarration);
+      return true;
+    }
+    document.addEventListener('input', (event) => {
+      const editor = event.target.closest('#studioPanel_topic, #studioPanel_script, #studioPanel_photo, #studioPanel_sound, #studioPanel_card');
+      if (!editor || !event.target.matches('input, textarea, select')) return;
+      arPauseForStudioEdit();
+      if (Object.hasOwn(AR_ENDING_INPUTS, event.target.id)) arSyncEndingApplyButton();
+    }, true);
+    document.getElementById('arApplyEndingBtn').addEventListener('click', () => {
+      if (updateCurrentDealerFromPreview()) arToast('엔딩을 적용했어요.', true);
+    });
 
     // ★ 명함 단계: 보일 항목 고르기 + 로고
     //   (설정창이 아니라 명함 단계에서 바로. 항목을 끄면 영상 끝 명함에서만 빠지고 적어 둔 내용은 그대로 남음)
@@ -1470,11 +1546,12 @@
       if (clr) clr.classList.toggle('hidden', !has);
     }
     function arToggleCardField(k, on) {
+      arPauseForStudioEdit();
       const d = getSelectedDealer();
+      const prevNarration = arEndingNarration();
       d.cardHide = Object.assign({}, d.cardHide || {});
       if (on) delete d.cardHide[k]; else d.cardHide[k] = true;
-      updateCurrentDealerFromPreview();
-      if (typeof seekToTime === 'function') seekToTime(Math.max(0, TOTAL_DURATION - 1.2)); // 명함 화면으로 이동해 바로 확인
+      arRefreshEnding(prevNarration);
     }
     function arSaveDealerLogo(d) {
       try {
@@ -1493,6 +1570,7 @@
     function handleDealerLogoUpload(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
+      arPauseForStudioEdit();
       const d = getSelectedDealer();
       const reader = new FileReader();
       reader.onload = () => {
@@ -1506,12 +1584,15 @@
           cv.getContext('2d').drawImage(raw, 0, 0, cv.width, cv.height);
           const img = new Image();
           img.onload = () => {
+            const selected = getSelectedDealer() === d;
+            const prevNarration = selected ? arEndingNarration() : '';
             d.logoImg = img;
             if (d.cardHide) delete d.cardHide.logo;
             arSaveDealerLogo(d);
-            updateCurrentDealerFromPreview();
-            arRenderCardShowToggles();
-            if (typeof seekToTime === 'function') seekToTime(Math.max(0, TOTAL_DURATION - 1.2));
+            if (selected) {
+              arRefreshEnding(prevNarration);
+              arRenderCardShowToggles();
+            }
           };
           img.src = cv.toDataURL('image/png');
         };
@@ -1521,10 +1602,12 @@
       event.target.value = '';
     }
     function clearDealerLogo() {
+      arPauseForStudioEdit();
       const d = getSelectedDealer();
+      const prevNarration = arEndingNarration();
       d.logoImg = null;
       arSaveDealerLogo(d);
-      updateCurrentDealerFromPreview();
+      arRefreshEnding(prevNarration);
       arRenderCardShowToggles();
     }
 
@@ -1627,7 +1710,7 @@
         if (AudioEngine.enabled) AudioEngine.schedulePrefetch();
       }
       if (typeof renderVisualStoryboardTrack === 'function') renderVisualStoryboardTrack();
-      window.__timelines['main'].seek(0);
+      window.__timelines.main.seek(window.__timelines.main.currentTime);
     }
 
     function saveAdminAiKeys() {
@@ -1664,6 +1747,15 @@
     }
 
     // 클라이언트 측 차종/타겟 정밀 파서 (예: "30대 여성 , 그랜저" 입력 시 차종 즉시 변경 & 30대 연령 오인 방지)
+    function arExplicitBmwName(text) {
+      if (!/\bbmw\b|비엠더블유/i.test(text)) return '';
+      const series = /(?<!\d)7\s*시리즈/.test(text) ? '7시리즈' : '';
+      const model = text.match(/\b(?:x[135]\s*(?:xdrive\s*)?\d{2}e|[357]\d{2}e|xm)\b/i)?.[0];
+      const hybrid = /하이브리드|플러그인|\bhybrid\b|\bphev\b/i.test(text);
+      if (!series && !hybrid) return '';
+      return ['BMW', model || series, hybrid ? '하이브리드' : ''].filter(Boolean).join(' ');
+    }
+
     function parsePromptVehicleAndTargetClient(rawPrompt) {
       const text = String(rawPrompt || '').trim();
       const carMap = [
@@ -1692,6 +1784,8 @@
           break;
         }
       }
+      const explicitBmw = arExplicitBmwName(text);
+      if (explicitBmw) matchedCar = { vehicle: explicitBmw, discountNum: 0, discount: '상담 시 조건 안내' };
       const ageMatch = text.match(/(20대|30대|40대|50대|60대)\s*(여성|여자|남성|남자|주부|직장인| 워킹맘|대표님|사장님|부부)?/);
       const targetPersona = ageMatch ? ageMatch[0].trim() : text.includes('여성') ? '여성 오너 맞춤' : '';
       const cleanedForStock = text.replace(/(20|30|40|50|60)\s*대\s*(여성|여자|남성|남자|주부|직장인|워킹맘|초반|중반|후반)?/g, '');
@@ -1714,7 +1808,6 @@
       AudioEngine.scriptPending = null;
       if (AudioEngine.ttsPrefetchTimer) clearTimeout(AudioEngine.ttsPrefetchTimer);
       AudioEngine.ttsPrefetchTimer = null;
-      AudioEngine._restartOnReady = false;
     }
     function arSetScriptGenerating(loading) {
       if (loading) arSuspendScriptNarration();
@@ -1731,6 +1824,7 @@
 
     async function generateStoryboardFromPrompt() {
       if (!arRequireAiAccess()) return;
+      arPauseForStudioEdit();
       const generationId = ++arScriptGenerationId;
       arSetScriptGenerating(true);
       const promptEl = document.getElementById('aiPromptInput');
@@ -1923,8 +2017,14 @@
     arUseLocalSceneImages();
 
     function arSceneImageContextKey() {
-      return JSON.stringify([IND.key, window.arTodayTopic?.title || '', campaign.vehicle, campaign.cutCaptions,
+      return JSON.stringify([IND.key, window.arTodayTopic?.title || '', document.getElementById('aiPromptInput')?.value, campaign.vehicle, campaign.cutCaptions,
         campaign.designStyle, campaign.themeId, typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4]);
+    }
+
+    function arScenePromptWithVehicle(prompt, payload) {
+      return payload.industry === 'auto' && payload.vehicle
+        ? `Main subject and vehicle identity: ${payload.vehicle}. Depict this vehicle, no substitute makes or models. ${prompt}`
+        : prompt;
     }
 
     async function arLocalSceneRequest(path, payload, timeoutMs) {
@@ -1970,7 +2070,7 @@
         for (let index = 0; index < prompts.length; index++) {
           if (!stillCurrent()) return;
           update(`✨ 맞춤 이미지 ${index + 1}/${prompts.length} 생성 중...`);
-          const result = await arLocalSceneRequest('/scene', { mode: 'scene-image', imagePrompt: prompts[index], index }, 250000);
+          const result = await arLocalSceneRequest('/scene', { mode: 'scene-image', imagePrompt: arScenePromptWithVehicle(prompts[index], payload), index }, 250000);
           if (!stillCurrent()) return;
           if (!result.image?.dataUrl?.startsWith('data:image/')) throw new Error('이미지를 받지 못했어요.');
           const compact = await arDownscaleSceneDataUrl(result.image.dataUrl);
@@ -1997,19 +2097,25 @@
 
     function arRegenerateThemeImages() {
       if (!arUseLocalSceneImages() && !arRequireAiAccess()) return;
+      arPauseForStudioEdit();
       const totalCuts = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
-      const tp = window.arTodayTopic;
       const promptEl = document.getElementById('aiPromptInput');
       const rawPrompt = (promptEl && promptEl.value || '').trim();
-      const topicText = (tp && tp.title) || rawPrompt || campaign.vehicle || IND.name;
+      const selectedTopic = window.arTodayTopic;
+      const tp = !rawPrompt || selectedTopic?.prompt === rawPrompt ? selectedTopic : null;
+      const matchedBmw = IND.key === 'auto' ? arExplicitBmwName(rawPrompt) : '';
+      const vehicle = matchedBmw || campaign.vehicle;
+      const topicText = matchedBmw || tp?.title || rawPrompt || vehicle || IND.name;
+      const imageContext = arSceneImageContextKey();
       campaign.isUserCustomPhotos = false;
       const btn = document.getElementById('regenTopicImgBtn');
       const th = arBuildThemeContextForImages();
       if (btn) { btn.disabled = true; btn.textContent = '✨ 이미지 생성 중...'; }
       if (typeof arToast === 'function') arToast(`[${topicText}] · [${th.designName || '기본'} / ${th.themeName || '테마'}] 맞춤 이미지를 만들고 있어요`);
       return Promise.resolve(arApplyTopicSceneImages({
-        prompt: topicText,
-        vehicle: campaign.vehicle,
+        prompt: rawPrompt || topicText,
+        subjectLabel: topicText,
+        vehicle,
         topic: tp || null,
         industry: IND.key,
         industryInfo: IND.key === 'auto' ? null : { name: IND.name },
@@ -2020,6 +2126,10 @@
         adminGeminiKey: localStorage.getItem('autoreels_admin_gemini_key') || ''
       })).finally(() => {
         if (btn) { btn.disabled = false; btn.textContent = '✨ 주제·테마 맞춤 이미지'; }
+        if (imageContext !== arSceneImageContextKey()) {
+          const notice = document.getElementById('sceneImageNotice');
+          notice.textContent = '주제나 대본이 바뀌어 이전 이미지 생성 결과의 적용을 중단했어요.';
+        }
       });
     }
     if (typeof window !== 'undefined') window.arRegenerateThemeImages = arRegenerateThemeImages;
@@ -2047,18 +2157,20 @@
 
     async function arApplyTopicSceneImages(payload) {
       const genId = (arApplyTopicSceneImages._seq = (arApplyTopicSceneImages._seq || 0) + 1);
-      const noticeEl = document.getElementById('aiGenNotice');
+      const noticeEl = document.getElementById('sceneImageNotice');
+      const label = payload.subjectLabel || payload.prompt;
       const localContext = arSceneImageContextKey();
       const stillCurrent = () => genId === arApplyTopicSceneImages._seq && !campaign.isUserCustomPhotos && localContext === arSceneImageContextKey();
       const applySlotImage = (slot, dataUrl, doneCb) => {
         const img = new Image();
         img._dataUrl = dataUrl;
-        img._label = `${slot + 1}. ${payload.prompt}`;
-        img._sceneTitle = payload.prompt;
+        img._label = `${slot + 1}. ${label}`;
+        img._sceneTitle = label;
         img.onload = () => {
           if (!stillCurrent()) { if (doneCb) doneCb(false); return; }
           if (!Array.isArray(campaign.uploadedPhotos)) campaign.uploadedPhotos = [];
           if (!Array.isArray(campaign.scenePlan)) campaign.scenePlan = [];
+          arReleasePhoto(campaign.uploadedPhotos[slot]);
           campaign.uploadedPhotos[slot] = img;
           if (!campaign.scenePlan[slot]) campaign.scenePlan[slot] = {};
           campaign.scenePlan[slot].photoIdx = slot;
@@ -2078,7 +2190,7 @@
       try {
         if (noticeEl) {
           noticeEl.classList.remove('hidden');
-          noticeEl.textContent = `주제 [${payload.prompt}]에 맞는 씬 이미지를 생성 중입니다...`;
+          noticeEl.textContent = `[${label}]에 맞는 이미지를 만드는 중이에요.`;
         }
         const promptRes = await fetch('/api/generate-script', {
           method: 'POST',
@@ -2086,10 +2198,10 @@
           body: JSON.stringify({ mode: 'scene-prompts', ...payload })
         });
         const pj = await promptRes.json().catch(() => ({}));
-        if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
+        if (!stillCurrent()) return;
         const prompts = Array.isArray(pj.prompts) ? pj.prompts : [];
         if (!promptRes.ok || !pj.ok || !prompts.length) {
-          if (noticeEl) noticeEl.textContent = pj.message || `주제 [${payload.prompt}]의 이미지 설명을 만들지 못했어요.`;
+          if (noticeEl) noticeEl.textContent = pj.message || `[${label}]의 이미지 설명을 만들지 못했어요. 기존 사진을 유지했어요.`;
           return;
         }
 
@@ -2097,38 +2209,40 @@
         let readyCount = 0;
         let failedCount = 0;
         let firstError = '';
-        const firstReady = new Array(prompts.length).fill(null);
-
         await Promise.all(prompts.map(async (imagePrompt, idx) => {
+          if (!stillCurrent()) return;
           try {
             const imgRes = await fetch('/api/generate-script', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ mode: 'scene-image', imagePrompt, index: idx, adminGeminiKey: payload.adminGeminiKey || '' })
+              body: JSON.stringify({ mode: 'scene-image', imagePrompt: arScenePromptWithVehicle(imagePrompt, payload), index: idx })
             });
             const ij = await imgRes.json().catch(() => ({}));
-            if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
+            if (!stillCurrent()) return;
             if (!imgRes.ok || !ij.ok || !ij.image || !ij.image.dataUrl) { failedCount += 1; firstError = firstError || ij.message || ij.error || 'kie_image_failed'; return; }
             const compactUrl = await arDownscaleSceneDataUrl(ij.image.dataUrl);
-            if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
-            firstReady[idx] = compactUrl;
+            if (!stillCurrent()) return;
+            const applied = [];
             for (let slot = idx; slot < totalCutsTarget; slot += prompts.length) {
-              applySlotImage(slot, compactUrl, (applied) => {
-                if (!applied) return;
-                readyCount += 1;
-                if (readyCount === totalCutsTarget) {
-                  if (noticeEl) noticeEl.textContent = `주제 [${payload.prompt}] · 디자인 테마 맞춤 대본·이미지(${prompts.length}컷)가 적용되었습니다.`;
-                  if (typeof arToast === 'function') arToast('주제와 디자인 테마에 맞춘 이미지가 적용되었어요');
-                }
-              });
+              applied.push(new Promise(resolve => applySlotImage(slot, compactUrl, resolve)));
             }
+            const results = await Promise.all(applied);
+            readyCount += results.filter(Boolean).length;
+            if (results.includes(false)) { failedCount += 1; firstError ||= 'kie_image_download_failed'; }
           } catch (e) { failedCount += 1; firstError = firstError || 'kie_image_failed'; }
         }));
-        if (failedCount && noticeEl && stillCurrent()) {
+        if (!stillCurrent()) return;
+        if (readyCount === totalCutsTarget) {
+          const replaced = campaign.uploadedPhotos.splice(totalCutsTarget);
+          replaced.forEach(arReleasePhoto);
+          renderPhotoThumbnailsGrid();
+          renderDynamicCutCardsUI();
+          if (noticeEl) noticeEl.textContent = `[${label}] 이미지 ${prompts.length}장으로 ${readyCount}컷을 교체했어요.`;
+        } else if (failedCount && noticeEl) {
           const messages = { missing_kie_key: 'KIE API 키가 설정되지 않았습니다.', kie_insufficient_credits: 'KIE 크레딧이 부족합니다.', kie_invalid_key: 'KIE API 키를 확인해 주세요.', kie_rate_limited: '요청이 많습니다. 잠시 후 다시 시도해 주세요.', kie_image_timeout: '이미지 생성이 지연되고 있습니다. 잠시 후 확인해 주세요.', kie_image_download_failed: '생성된 이미지를 받지 못했습니다.', kie_image_failed: 'KIE 이미지 생성에 실패했습니다.' };
-          noticeEl.textContent = '이미지 생성 실패: ' + (messages[firstError] || firstError) + ' (' + failedCount + '/' + prompts.length + ')';
+          noticeEl.textContent = `${readyCount}/${totalCutsTarget}컷 교체 · 나머지 컷은 기존 사진을 유지했어요. ${messages[firstError] || firstError}`;
         }
       } catch (e) {
-        if (noticeEl) noticeEl.textContent = `이미지 생성 중 일시적 지연이 발생했습니다. (${e.message || '네트워크 오류'})`;
+        if (noticeEl && stillCurrent()) noticeEl.textContent = '이미지 생성기에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.';
       }
     }

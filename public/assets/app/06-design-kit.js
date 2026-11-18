@@ -4622,6 +4622,7 @@
       if (!panel) return;
       if (panel.parentElement !== document.body) document.body.appendChild(panel);
       const show = typeof force === 'boolean' ? force : panel.classList.contains('hidden');
+      arWatchEditSheet(panel);
       panel.classList.toggle('hidden', !show);
       if (show) renderShuffleFilterPanel();
     }
@@ -4635,15 +4636,6 @@
         if (typeof arToast === 'function') {
           const shuffleBtn = [document.getElementById('previewRandomDesignBtnMain'), document.getElementById('previewRandomDesignBtn')].find((b) => b && b.offsetParent !== null);
           arToast('🔒 현재 테마 유지 중 (스타일 변경 없음)', false, shuffleBtn || null);
-        }
-        if (window.__timelines?.main) {
-          if (typeof AudioEngine !== 'undefined') AudioEngine.stopTts();
-          window.__timelines.main.seek(0);
-          if (!isPlaying) {
-            isPlaying = true;
-            const ppBtn = document.getElementById('playPauseBtn');
-            if (ppBtn) ppBtn.textContent = '⏸ 일시정지';
-          }
         }
         return;
       }
@@ -4719,20 +4711,8 @@
       campaign.motionSeed = Math.floor(Math.random() * 9973);
       if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
       if (typeof renderDesignStylePicker === 'function') { try { renderDesignStylePicker(); } catch (e) {} }
-      // 새 스타일은 처음(0초)부터 다시 재생해서 보여 줌
-      if (window.__timelines?.main) {
-        if (typeof AudioEngine !== 'undefined') AudioEngine.stopTts();
-        window.__timelines.main.seek(0);
-        if (!isPlaying) {
-          isPlaying = true;
-          const ppBtn = document.getElementById('playPauseBtn');
-          if (ppBtn) ppBtn.textContent = '⏸ 일시정지';
-        }
-        if (typeof AudioEngine !== 'undefined' && AudioEngine.enabled) {
-          AudioEngine.lastSpokenCut = -1;
-          if (AudioEngine.masterBuffer) AudioEngine.playMasterAt(0);
-        }
-      }
+      arPauseForStudioEdit();
+      if (window.__timelines?.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
     }
 
     function selectDesignStyle(id) {

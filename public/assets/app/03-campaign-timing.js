@@ -771,7 +771,7 @@
     }
 
     // 성우 음성을 새로 받았을 때 호출: 길이가 달라졌으면 영상 길이를 다시 맞춤
-    function refitDurationToNarration() {
+    function refitDurationToNarration(preservePosition = false) {
       const fit = computeFittedDurations();
       const sameLengths =
         fit.lengths.length === CUT_LENGTHS.length && fit.lengths.every((x, i) => Math.abs(x - CUT_LENGTHS[i]) < 0.03);
@@ -781,7 +781,8 @@
         AudioEngine.stopTts();
         AudioEngine.lastSpokenCut = -1;
       }
-      if (window.__timelines && window.__timelines['main']) window.__timelines['main'].seek(0);
+      const timeline = window.__timelines?.main;
+      if (timeline) timeline.seek(preservePosition ? timeline.currentTime : 0);
       return true;
     }
 

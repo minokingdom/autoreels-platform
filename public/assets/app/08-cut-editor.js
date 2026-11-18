@@ -606,6 +606,7 @@
       const pad = document.getElementById('igDrawPad');
       const colorBar = document.getElementById('igDrawColorBar');
       if (!overlay || !pad || !colorBar) return;
+      arWatchEditSheet(overlay);
       overlay.classList.remove('hidden');
       overlay.classList.add('flex');
       const brushBtn = document.getElementById('igDrawBrushBtn');
@@ -2422,6 +2423,7 @@
       const body = document.getElementById('igSheetContent');
       const applyAll = document.getElementById('igSheetApplyAllBtn');
       if (!back || !body) return;
+      arWatchEditSheet(back);
       if (window.__arInlineEditActive) closeInlineQuickEdit();
       window.__arIgSheetMode = mode;
       back.classList.remove('hidden');
@@ -2478,6 +2480,7 @@
       const ov = document.getElementById('igTextComposeOverlay');
       const ta = document.getElementById('igComposeTextarea');
       if (!ov || !ta) return;
+      arWatchEditSheet(ov);
       window.__arEditingOverlayIdx = typeof editIdx === 'number' ? editIdx : -1;
       if (window.__arEditingOverlayIdx >= 0) {
         const it = getCutOverlayList(cutIdx)[window.__arEditingOverlayIdx];
@@ -3329,6 +3332,7 @@
       }
       window.__arPinnedCut = targetIdx;
       window.__arInlineEditActive = true;
+      arPauseForStudioEdit();
       window.__arDirectCanvasMode = true;
       if (elKey) {
         window.__arActiveCutElKey = elKey;
@@ -3356,6 +3360,7 @@
         window.__timelines.main.seek(curT);
       }
       renderPreviewCutPinBar();
+      arWatchEditSheet(document.getElementById('arInlineEditBar'));
     }
 
     function closeInlineQuickEdit() {
@@ -3736,10 +3741,12 @@
       panel.addEventListener('mousedown', (ev) => ev.stopPropagation());
       panel.addEventListener('touchstart', (ev) => ev.stopPropagation(), { passive: true });
       place(panel);
+      arWatchEditSheet(panel);
       return panel;
     }
 
     function openCutEditor(cutIdx, elKey) {
+      arPauseForStudioEdit();
       if (typeof closePresetDrawer === 'function') closePresetDrawer();
       const n = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
       const targetIdx = typeof cutIdx === 'number' && cutIdx >= 0 ? Math.min(n - 1, cutIdx) : (window.__arPinnedCut >= 0 ? window.__arPinnedCut : 0);
@@ -4034,6 +4041,7 @@
       } else if (modal.parentElement !== container) {
         container.appendChild(modal);
       }
+      arWatchEditSheet(modal);
       const scenes = typeof getIndScenes === 'function' ? getIndScenes() : [];
       const curSceneIdx = (campaign && Array.isArray(campaign.cutSceneIndices) && typeof campaign.cutSceneIndices[targetIdx] === 'number')
         ? campaign.cutSceneIndices[targetIdx]

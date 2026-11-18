@@ -48,6 +48,7 @@ try {
     isPlaying=false;
     AudioEngine.enabled=false;
     AudioEngine.stopTts();
+    window.__originalNarrationPrefetch = AudioEngine.prefetchTtsBuffers;
     AudioEngine.prefetchTtsBuffers=()=>Promise.resolve([]);
     AudioEngine.schedulePrefetch=()=>{};
     arCardEmpty=()=>true;
@@ -108,6 +109,68 @@ try {
   assert.ok(Math.abs(ending.main-5.8775)<.001);
   assert.ok(Math.abs(ending.outro-1.5225)<.001);
   console.log('browser ending timing ok',JSON.stringify(ending));
+  assert.equal(await page.evaluate(()=>window.__koSpeech('BMW 7시리즈, BMW 일곱 시리즈, 재고 7대')), 'BMW 칠시리즈, BMW 칠시리즈, 재고 일곱 대');
+  await page.evaluate(()=>{
+    switchStudioTab('card');
+    AR_SERVER.me={user:{id:'test'},usage:{}};
+    AudioEngine.prefetchTtsBuffers=window.__originalNarrationPrefetch;
+    AudioEngine.fetchLineBuffer=()=>Promise.resolve(null);
+    window.__endingRecordings=[];
+    AudioEngine.fetchScriptNarration=function(lines){
+      window.__endingRecordings.push(lines.at(-1));
+      const key=this.scriptKeyFor(lines);
+      return new Promise(resolve=>setTimeout(()=>{
+        const ctx=this.ensureContext();
+        const full=ctx.createBuffer(1,ctx.sampleRate*9,ctx.sampleRate);
+        this.scriptMasters.set(key,{full,peak:.01,bounds:[0,2,3.5,5,7,9]});
+        if(this.masterWantKey===key)this.useScriptMaster(key);
+        resolve(true);
+      },250));
+    };
+    window.__timelines.main.seek(2.5);
+  });
+  await page.locator('#dlrInputName').fill('Draft');
+  await page.waitForTimeout(1050);
+  await page.locator('#dlrInputName').fill('Final name');
+  await page.locator('#dlrInputTitle').fill('Final title');
+  await page.waitForTimeout(1050);
+  assert.deepEqual(await page.evaluate(()=>window.__endingRecordings),[]);
+  assert.equal(await page.evaluate(()=>window.__timelines.main.currentTime),2.5);
+  await page.locator('#arApplyEndingBtn').click();
+  await page.waitForFunction(()=>AudioEngine.masterDuration===9);
+  const applied = await page.evaluate(()=>({
+    records:window.__endingRecordings, position:window.__timelines.main.currentTime, playing:isPlaying,
+    name:getSelectedDealer().name
+  }));
+  assert.equal(applied.records.length,1);
+  assert.match(applied.records[0],/Final name Final title/);
+  assert.equal(applied.position,2.5);
+  assert.equal(applied.playing,false);
+  assert.equal(applied.name,'Final name');
+  await page.locator('#dlrInputBranch').fill('Display only');
+  await page.locator('#arApplyEndingBtn').click();
+  assert.equal(await page.evaluate(()=>window.__endingRecordings.length),1);
+  await page.locator('#dlrInputTitle').fill('Applied on leaving');
+  await page.locator('#studioTabBtn_sound').click();
+  assert.equal(await page.evaluate(()=>getSelectedDealer().title),'Applied on leaving');
+  await page.waitForFunction(()=>!AudioEngine.scriptPending);
+  assert.equal(await page.evaluate(()=>window.__endingRecordings.length),2);
+  console.log('ending edits recorded only on apply or on leaving, position preserved');
+  await page.click('#playPauseBtn');
+  await page.waitForFunction(()=>isPlaying);
+  await page.evaluate(()=>openPresetDrawer('right'));
+  await page.waitForFunction(()=>arEditSheetOpen && !isPlaying);
+  const drawerTime=await page.evaluate(()=>window.__timelines.main.currentTime);
+  await page.waitForTimeout(180);
+  assert.equal(await page.evaluate(()=>window.__timelines.main.currentTime),drawerTime);
+  await page.evaluate(()=>{openCutEditor(0);openCutPhotoReplaceModal(0);});
+  await page.waitForFunction(()=>arEditSheetOpen && !isPlaying);
+  await page.evaluate(()=>closeCutPhotoReplaceModal());
+  assert.equal(await page.evaluate(()=>isPlaying),false);
+  await page.evaluate(()=>closeCutEditor());
+  await page.waitForFunction(()=>!arEditSheetOpen && isPlaying);
+  assert.ok(await page.evaluate(()=>window.__timelines.main.currentTime>0));
+  console.log('editor sheets pause on open and resume after the last close');
   await page.evaluate(() => {
     campaign.vehicle='가을 컬러 네일'; campaign.isUserCustomPhotos=false;
     window.__arTopics=[{title:'요즘 유행하는 3D 네일',iconUrl:'/assets/topics/beauty/2.jpg'},{title:'가을 찰떡 네일 추천',iconUrl:'/assets/topics/beauty/1.jpg'}];

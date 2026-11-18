@@ -45,6 +45,11 @@ jobs:
           node tests/export-safety.mjs
       - name: Kinetic typography editing and seeking
         run: node tests/motion-typography.mjs
+      - name: Topic images and cut replacement
+        run: |
+          node tests/script-timeout.cjs
+          node tests/z-image.cjs
+          node tests/local-images-browser.mjs
       - name: Free trend fallback
         run: node tests/trend-youtube.mjs
       - name: Reference style ingestion

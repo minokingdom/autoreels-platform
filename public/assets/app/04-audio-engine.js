@@ -357,13 +357,15 @@
 
         // 내가 불러온 릴스·숏츠 MP3: 사용자 클릭 제스처 안에서 동기 play() 먼저 시도 후 컨텍스트 재개 폴백
         if (this.bgmStyle === 'custom_mp3' && this.customBgmAudioEl) {
+          if (!isPlaying) return;
+          const audio = this.customBgmAudioEl;
+          const retry = () => resumed.then(() => {
+            if (isPlaying && this.enabled && this.customBgmAudioEl === audio) return audio.play().catch(() => {});
+          });
           try {
-            const p = this.customBgmAudioEl.play();
-            if (p && typeof p.catch === 'function') {
-              p.catch(() => resumed.then(() => this.customBgmAudioEl.play().catch(() => {})));
-            }
+            audio.play()?.catch(retry);
           } catch (e) {
-            resumed.then(() => this.customBgmAudioEl.play().catch(() => {}));
+            retry();
           }
           return;
         }
@@ -585,7 +587,7 @@
         const job = (async () => {
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
-          const url = `/api/tts-script?v=8&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
+          const url = `/api/tts-script?v=9&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
           const res = await this.runTtsRequest(() => fetch(url));
           if (!res.ok) {
             let code = `http_${res.status}`;
@@ -711,7 +713,7 @@
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
           // v: 서버의 읽기 규칙이 바뀌면 올려서, 예전에 저장된 음성 대신 새 음성을 받게 함
-          const url = `/api/tts?v=7&speed=${speed}` + (voice !== 'auto' ? `&ref=${encodeURIComponent(voice)}` : '') + `&text=${encodeURIComponent(text)}`;
+          const url = `/api/tts?v=8&speed=${speed}` + (voice !== 'auto' ? `&ref=${encodeURIComponent(voice)}` : '') + `&text=${encodeURIComponent(text)}`;
           let res = await this.runTtsRequest(() => fetch(url));
           if (!res.ok && (res.status === 429 || res.status >= 500) && res.status !== 503) {
             await new Promise((r) => setTimeout(r, 900));
@@ -787,15 +789,15 @@
       },
 
       // 모든 컷 + 마지막 명함 멘트 음성을 미리 받아 두고, 받은 길이에 맞춰 영상 길이를 조정
-      prefetchTtsBuffers(force) {
+      prefetchTtsBuffers(force, preservePosition = false) {
         if (!arCanUseAi()) {
           this.setTtsProvider('browser');
-          refitDurationToNarration();
+          refitDurationToNarration(preservePosition);
           return Promise.resolve([]);
         }
         // 소리를 켠 사람에게만 성우 녹음을 받음 (소리 꺼 둔 방문자마다 녹음하면 크레딧 낭비). 영상 내보내기는 force
         if (this.ttsVoice === 'off' || !arVoiceAllowed() || (!this.enabled && !force)) {
-          refitDurationToNarration();
+          refitDurationToNarration(preservePosition);
           return Promise.resolve([]);
         }
         const totalCuts = getTargetCutCount();
@@ -808,6 +810,7 @@
         if (lines.length === 0) return Promise.resolve([]);
         // 지금 대본과 다른 녹음은 바로 내려놓음 (이전 대본 목소리가 새 영상에 섞이지 않게)
         const wantKey = this.scriptKeyFor(lines);
+        if (this.scriptPending && this.masterWantKey === wantKey) return this.scriptPending;
         this.masterWantKey = wantKey;
         if ((this.masterKey !== wantKey || !this.masterBuffer) && !this.useScriptMaster(wantKey)) {
           if (this.masterBuffer) this.stopTts && this.stopTts();
@@ -827,9 +830,9 @@
           (result) => {
             if (this.scriptPending === job) this.scriptPending = null;
             if (!arVoiceAllowed() || this.masterWantKey !== wantKey) return result;
-            refitDurationToNarration();
+            refitDurationToNarration(preservePosition);
             // 재생 중에 마스터 음성이 도착하면 즉시 타임라인 현재 시간에 맞춰 재생
-            if (isPlaying && this.enabled && this.masterBuffer && !this._restartOnReady) {
+            if (isPlaying && this.enabled && this.masterBuffer) {
               const curT = (window.__timelines && window.__timelines['main']) ? (window.__timelines['main'].currentTime || 0) : 0;
               this.playMasterAt(curT);
             }
@@ -846,19 +849,7 @@
         this.ttsPrefetchTimer = setTimeout(() => {
           this.ttsPrefetchTimer = null;
           if (!this.enabled) return;
-          const job = this.prefetchTtsBuffers();
-          if (this._restartOnReady) {
-            Promise.resolve(job).then(() => {
-              if (!this._restartOnReady || !this.enabled) return;
-              this._restartOnReady = false;
-              isPlaying = true;
-              const ppBtn = document.getElementById('playPauseBtn');
-              if (ppBtn) ppBtn.textContent = '⏸ 일시정지';
-              if (window.__timelines && window.__timelines['main']) window.__timelines['main'].seek(0);
-              if (this.masterBuffer) this.playMasterAt(0);
-              else this.syncWithTimeline(0);
-            });
-          }
+          this.prefetchTtsBuffers(false, true);
         }, delayMs);
       },
 
@@ -1459,14 +1450,22 @@
       testCutTts(slot);
     }
 
-    function arResetAndRebuildNarration() {
+    function arResetAndRebuildNarration(immediate = false) {
       if (typeof AudioEngine === 'undefined') return;
+      arPauseForStudioEdit();
       AudioEngine.stopTts();
+      AudioEngine.masterWantKey = '';
+      AudioEngine.masterKey = '';
       AudioEngine.masterBuffer = null;
       AudioEngine.masterCutBounds = null;
       AudioEngine.masterDuration = 0;
       AudioEngine.lastSpokenCut = -1;
-      AudioEngine._restartOnReady = true;
+      AudioEngine.scriptPending = null;
+      if (immediate) {
+        if (AudioEngine.ttsPrefetchTimer) clearTimeout(AudioEngine.ttsPrefetchTimer);
+        AudioEngine.ttsPrefetchTimer = null;
+        return AudioEngine.prefetchTtsBuffers(false, true);
+      }
       if (AudioEngine.enabled) {
         AudioEngine.schedulePrefetch(900);
       }
@@ -1912,6 +1911,7 @@
         el.addEventListener('click', (e) => { if (e.target === el) arCloseBgmSheet(); });
         document.body.appendChild(el);
       }
+      arWatchEditSheet(el);
       arBgmMood = '추천';
       arRenderBgmSheet();
       el.classList.remove('hidden');
@@ -1970,7 +1970,7 @@
         </div>`;
       if (hadFocus) { const s2 = el.querySelector('#arBgmSearch'); if (s2) { s2.focus(); s2.setSelectionRange(s2.value.length, s2.value.length); } }
     }
-    // 목록에서 누르면 바로 그 음악으로 바꾸고 처음부터 들려줌 (인스타처럼 눌러서 들어 보기)
+    // 목록에서 음악을 선택하고 시트가 닫히면 현재 위치에서 미리보기와 함께 재생합니다.
     function arPickBgm(id) {
       const sel = document.getElementById('bgmStyleSelect');
       if (!sel) return;
@@ -1981,10 +1981,6 @@
       else if (id !== 'off' && !AudioEngine.enabled) toggleAudioMaster(true);
       else if (id !== 'off' && AudioEngine.bgmStyle === 'custom_mp3' && AudioEngine.customBgmAudioEl && AudioEngine.customBgmAudioEl.paused) {
         AudioEngine.startBgmLoop();
-      }
-      if (id !== 'off' && typeof seekToTime === 'function') {
-        seekToTime(0);
-        if (typeof isPlaying !== 'undefined' && !isPlaying && typeof togglePlayPause === 'function') togglePlayPause();
       }
       renderBgmRecommendations();
       arRenderBgmSheet();

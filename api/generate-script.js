@@ -91,6 +91,7 @@ function parsePromptAndBuildSmartScene(prompt, fallbackVehicle, fallbackDiscount
 
   // 1. 프롬프트에서 차종 감지
   let matchedCar = null;
+  let explicitVehicle = '';
   for (const item of CAR_CATALOG) {
     if (item.keywords.some((kw) => lower.includes(kw))) {
       matchedCar = item;
@@ -98,6 +99,15 @@ function parsePromptAndBuildSmartScene(prompt, fallbackVehicle, fallbackDiscount
     }
   }
 
+  if (/\bbmw\b|비엠더블유/i.test(raw)) {
+    const series = /(?<!\d)7\s*시리즈/.test(raw) ? '7시리즈' : '';
+    const model = raw.match(/\b(?:x[135]\s*(?:xdrive\s*)?\d{2}e|[357]\d{2}e|xm)\b/i)?.[0];
+    const hybrid = /하이브리드|플러그인|\bhybrid\b|\bphev\b/i.test(raw);
+    if (series || hybrid) {
+      explicitVehicle = ['BMW', model || series, hybrid ? '하이브리드' : ''].filter(Boolean).join(' ');
+      matchedCar = { vehicle: explicitVehicle, discountNum: 0, discount: '상담 시 조건 안내' };
+    }
+  }
   const vehicle = matchedCar ? matchedCar.vehicle : (raw.length > 1 && raw.length <= 14 ? `${raw} 특별 프로모션` : fallbackVehicle);
   const discountNum = matchedCar ? matchedCar.discountNum : fallbackDiscountNum;
   const discount = matchedCar ? matchedCar.discount : fallbackDiscount;
@@ -128,18 +138,18 @@ function parsePromptAndBuildSmartScene(prompt, fallbackVehicle, fallbackDiscount
 
   const shortCarName = vehicle.replace(/^2026\s+/, '').replace(/^디 올 뉴\s+/, '').replace(/^더 뉴\s+/, '');
 
-  const hook = `${persona} 인기 1위! ${shortCarName} 특판`;
+  const hook = discountNum ? `${persona} 인기 1위! ${shortCarName} 특판` : `${shortCarName} 알아보고 계세요?`;
   const cutCaptions = [
     `${persona} 강력 추천 · ${shortCarName}`,
     `인기 컬러 선점 물량 ${stockCount}대 대기 없이 즉시 배정`,
-    `최대 -${discountNum.toLocaleString()}만원 특판 혜택 · ${discount}`,
+    discountNum ? `최대 -${discountNum.toLocaleString()}만원 특판 혜택 · ${discount}` : discount,
     `${dealerName} ${dealerTitle} 직통 출고`
   ];
 
   const ttsLines = [
     `${shortCarName}, 아직도 기다리세요?`,
     `선점 물량 ${stockCount}대, 이번 주 바로 출고.`,
-    `최대 ${discountNum}만 원 할인 받으세요.`,
+    discountNum ? `최대 ${discountNum}만 원 할인 받으세요.` : '자세한 조건은 상담해 드릴게요.',
     `계약하면 바로 출고해 드립니다.`
   ];
 
@@ -147,12 +157,12 @@ function parsePromptAndBuildSmartScene(prompt, fallbackVehicle, fallbackDiscount
     { role: 'customer', text: `팀장님! ${persona}인데 ${shortCarName} 지금 바로 출고 가능한가요?` },
     { role: 'dealer', text: `네 고객님! 인기 화이트·블랙 선점 재고 ${stockCount}대 확보해 둬서 이번 주 즉시 출고됩니다` },
     { role: 'customer', text: `우와 다행이네요! 이번 달 할인 혜택이랑 월 납입금은 어느 정도인가요?` },
-    { role: 'dealer', text: `최대 -${discountNum.toLocaleString()}만원 혜택 적용해서 ${discount}로 맞춰드렸습니다` }
+    { role: 'dealer', text: discountNum ? `최대 -${discountNum.toLocaleString()}만원 혜택 적용해서 ${discount}로 맞춰드렸습니다` : '현재 조건을 확인해 알려 드릴게요.' }
   ];
 
   const bullets = [
     `✔ ${persona} 맞춤 ${shortCarName} 선점 재고 ${stockCount}대 즉시출고`,
-    `✔ 최대 -${discountNum.toLocaleString()}만원 할인 + 최저금리 비교 설계`,
+    discountNum ? `✔ 최대 -${discountNum.toLocaleString()}만원 할인 + 최저금리 비교 설계` : '✔ 세부 모델과 견적 상담',
     `✔ 견적부터 출고·사후 관리까지 한 사람이 책임 상담` // 지어낸 사은품(썬팅 등)은 넣지 않음
   ];
 
@@ -170,7 +180,7 @@ function parsePromptAndBuildSmartScene(prompt, fallbackVehicle, fallbackDiscount
     ctaKeyword: '견적',
     ctaBanner: `댓글에 [견적] 남기시면 ${shortCarName} 비밀 조건표 즉시 발송`,
     // 대본 3안 기본값을 만들 때만 쓰고 응답에서는 지웁니다.
-    __ctx: { persona, shortCarName, stockCount }
+    __ctx: { persona, shortCarName, stockCount, explicitVehicle }
   };
 }
 
@@ -178,6 +188,7 @@ function parsePromptAndBuildSmartScene(prompt, fallbackVehicle, fallbackDiscount
 function buildAutoFallbackVariants(base, dealerName, dealerTitle) {
   const { persona, shortCarName, stockCount } = base.__ctx;
   const n = base.discountNum;
+  if (!n) return buildOtherFallbackVariants(base, shortCarName, { cta: '견적', role: '담당자' }, base.discount);
   const won = Number(n).toLocaleString();
   const who = `${dealerName} ${dealerTitle}`;
   const offer = `최대 -${won}만원 · ${base.discount}`;
@@ -497,7 +508,9 @@ JSON으로만 출력: {"topics":[{"title":"","why":"","prompt":""}]}`;
 
 // 주제 맞춤 9:16 씬 이미지 생성 ({ mode: 'scene-prompts' | 'scene-image' | 'scene-images' })
 async function buildTopicScenePrompts(body, apiKey, count) {
-  const topicText = String((body.topic && body.topic.title) || body.prompt || body.vehicle || '').trim();
+  const topicText = String(body.prompt || body.topic?.title || body.vehicle || '').trim();
+  const vehicle = body.industry === 'auto' ? String(body.vehicle || '').trim().slice(0, 100) : '';
+  const vehicleRule = vehicle ? `Main vehicle: ${vehicle}. Keep that make and model in every scene, with no substitute vehicle.` : '';
   const captions = Array.isArray(body.captions) ? body.captions.slice(0, count).map((c) => String(c || '').trim()) : [];
   const topicsList = Array.isArray(body.topicsList) ? body.topicsList.slice(0, count) : [];
   const isIcon = Boolean(body.isIcon);
@@ -521,6 +534,7 @@ Return ONLY a JSON array of ${topicsList.length} concise English square 1:1 thum
 Each icon must feature a clear, unmistakable central visual subject depicting THAT specific topic in "${indName}" context, harmonized with the design mood (${themeDesc || 'clean modern editorial'}), readable even at 52x52px thumbnail size.
 Rules: clean centered studio photography or 3D editorial object, shallow depth of field, NO text, NO typography, NO letters, NO numbers, NO watermarks, NO logos.`
       : `Topic / Product: ${topicText}
+${vehicleRule}
 Cut captions (${count}): ${captions.join(' | ') || topicText}
 
 Return ONLY a JSON array of ${count} concise English photography prompts (one per cut) for vertical 9:16 Reels backgrounds that:
@@ -569,7 +583,7 @@ ${instruction}`
               type: 'text',
               text: isIcon && topicsList.length
                 ? `Industry: ${indName}\nTopics:\n${topicsList.map((t, i) => `${i + 1}. ${t.title || ''} (${t.why || ''})`).join('\n')}\nOutput ONLY a JSON array of ${topicsList.length} vivid English 1:1 visual object/scene photography prompts (no Korean text, no portrait headshots unless necessary, no text/letters/watermarks).`
-                : `Industry: ${indName}, Topic: ${topicText}, Captions: ${captions.join(' | ')}\nOutput ONLY a JSON array of ${count} English 9:16 photography prompts (no Korean text, no text/watermarks).`
+                : `Industry: ${indName}, Topic: ${topicText}, Captions: ${captions.join(' | ')}\n${vehicleRule}\nOutput ONLY a JSON array of ${count} English 9:16 photography prompts (no Korean text, no text/watermarks).`
             }]
           }]
         })
@@ -589,7 +603,7 @@ ${instruction}`
       ));
     } else {
       prompts = Array.from({ length: count }, (_, i) => (
-        `Vertical 9:16 editorial commercial photography for "${topicText}" (${indName})${toneHint}, scene ${i + 1}, crisp lighting, clean space for typography, photorealistic, no text, no watermark, no logos`
+        `${vehicleRule ? vehicleRule + ' ' : ''}Vertical 9:16 editorial commercial photography for "${topicText}" (${indName})${toneHint}, scene ${i + 1}, crisp lighting, clean space for typography, photorealistic, no text, no watermark, no logos`
       ));
     }
   }
@@ -646,7 +660,7 @@ async function handleSceneImages(body, res) {
     return res.status(200).json({ ok: Boolean(result.image), image: result.image || null, error: result.error });
   }
   const hasTopics = Array.isArray(body.topicsList) && body.topicsList.length > 0;
-  const topicText = String((body.topic && body.topic.title) || body.prompt || body.vehicle || '').trim();
+  const topicText = String(body.prompt || body.topic?.title || body.vehicle || '').trim();
   if (!topicText && !hasTopics) return res.status(200).json({ ok: false, error: 'missing_topic', images: [], prompts: [] });
   if (body.mode !== 'scene-prompts' && !kieKey) return res.status(200).json({ ok: false, error: 'missing_kie_key', images: [] });
   const count = sceneImageCount(body);
@@ -775,6 +789,7 @@ async function handler(req, res) {
     };
   })() : null;
   const fallback = otherFallback || smartFallback;
+  const explicitVehicle = isOther ? '' : smartFallback.__ctx.explicitVehicle;
   const fallbackVariants = isOther
     ? buildOtherFallbackVariants(otherFallback, otherItem, I, body.discount || '')
     : buildAutoFallbackVariants(smartFallback, dealerName, dealerTitle);
@@ -879,7 +894,11 @@ JSON 스키마:
     const userMessageBase = isOther ? `[입력 상황]: "${prompt || `${currentVehicle} 소개`}"
 ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${body.discount || ''}`}` : `[카마스터 입력 상황]: "${prompt || `${currentVehicle} 당월 특별 프로모션`}"
 [담당 카마스터]: ${dealerBranch} ${dealerName} ${dealerTitle}${dealerPromo ? ` (사은품: ${dealerPromo})` : ' (사은품·혜택은 입력하지 않음 — 지어내지 말 것)'}`;
-    const userMessage = topic ? `${userMessageBase}\n[오늘의 주제]: ${topicTitle} — ${topicWhy}` : userMessageBase;
+    const userMessage = [
+      userMessageBase,
+      topic ? `[오늘의 주제]: ${topicTitle} — ${topicWhy}` : '',
+      explicitVehicle ? `[지정 차량]: ${explicitVehicle}. 모든 대본의 제목, 자막, 성우 대사에 이 차종을 유지하세요. 다른 시리즈나 트림으로 바꾸지 말고, 제공되지 않은 판매 조건은 추가하지 마세요.` : ''
+    ].filter(Boolean).join('\n');
 
     let aiResult = null;
     let providerUsed = '';
@@ -1020,9 +1039,14 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
         const fb = fallbackVariants[i] || fallback;
         const v = aiVariants[i];
         if (!v) return fb;
+        if (explicitVehicle && v.vehicle) {
+          const normalize = name => String(name).replace(/\s+/g, '').toLowerCase();
+          if (!normalize(v.vehicle).includes(normalize(explicitVehicle))) return fb;
+        }
         return {
           ...fb,
           ...v,
+          ...(explicitVehicle ? { vehicle: explicitVehicle } : {}),
           ...(isOther ? { scenePlan: fb.scenePlan } : {}),
           ...(v.themeId && !VALID_THEMES.includes(v.themeId) ? { themeId: fb.themeId } : {}),
           ttsLines: Array.isArray(v.ttsLines) && v.ttsLines.length >= 4 ? v.ttsLines : fb.ttsLines
