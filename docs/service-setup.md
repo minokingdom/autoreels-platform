@@ -10,23 +10,24 @@
 - 내 계정 → 계정 보안에서 비밀번호 변경, 다른 기기 로그아웃.
 - 발행 단계 → 예약·발행 내역에서 최근 50개 상태와 실패 이유 확인, 시작 전 예약 취소. 해당 요청의 모든 대상이 실패/취소된 경우에만 이용 횟수를 한 번 복구합니다.
 
-## 문자 인증 (SOLAPI)
+## 문자 인증 (알리고)
 
-1. SOLAPI 계정에서 발신번호를 사전 등록하고 사용할 API Key/Secret을 만듭니다. 문자 발송은 해당 서비스 비용이 발생합니다.
-2. Vercel의 AutoReels 프로젝트 → Settings → Environment Variables에 아래 값을 Production 환경으로 등록합니다. 비밀값은 채팅·GitHub·프런트 코드에 넣지 않습니다.
+1. 알리고 문자에서 발신번호 인증을 완료하고 **문자 API** 메뉴에서 API 키를 발급합니다. 알리고의 발송 서버 IP 목록에 서버가 외부로 요청할 때 사용하는 고정 IP를 등록합니다. 서비스 도메인의 DNS IP와는 별개입니다.
+2. Vercel에서 직접 발송하려면 이 프로젝트의 **Connectivity → Static IPs**로 지정된 송신 IP를 알리고에 등록합니다. Vercel의 기본 송신 IP는 고정되어 있지 않습니다. Static IPs를 사용할 수 없는 환경에서는 알리고에 등록된 고정 IP 서버에서 발송하는 연동이 필요합니다.
+3. Vercel의 AutoReels 프로젝트 → Settings → Environment Variables에서 Production 환경에 아래 값을 등록합니다. API 키를 채팅·GitHub·프런트 코드에 넣지 않습니다.
 
 | 이름 | 값 |
 | --- | --- |
-| `SOLAPI_API_KEY` | 발급받은 API Key |
-| `SOLAPI_API_SECRET` | 발급받은 API Secret |
-| `SOLAPI_FROM` | 등록 완료된 발신번호, 숫자만 |
+| `ALIGO_USER_ID` | 알리고 문자 계정 ID |
+| `ALIGO_API_KEY` | 알리고 문자 API 키 |
+| `ALIGO_SENDER` | 알리고에서 인증 완료한 발신번호 |
 
-3. 재배포한 뒤 `/api/account?action=config`의 `phoneVerification:true`를 확인합니다.
-4. 본인 번호로 가입 인증과 비밀번호 찾기를 각각 실제로 검사합니다. 가입 시 문자를 받기 전에는 계정을 만들지 않습니다. 인증번호는 5분·최대 5회 입력·한 번 사용, 재발송 1분 간격입니다. 번호당 하루 5회, IP당 시간당 10회, 전체 하루 200회로 제한합니다. 발송 실패·타임아웃도 발송 예산을 돌려주지 않아 반복 과금을 막습니다.
+4. 재배포 후 `/api/account?action=config`의 `phoneVerification:true`를 확인합니다. 이 값은 서버 설정 입력 여부만 표시합니다. 테스트용 본인 번호에서 가입 인증과 비밀번호 재설정 문자를 각각 실제로 받아 확인합니다.
+5. 인증번호는 5분간 유효하며, 최대 5회 입력과 한 번 사용을 허용합니다. 번호당 1분에 한 번·하루 5회, IP당 시간당 10회, 전체 하루 200회로 제한합니다. 알리고의 발송 접수가 확인된 코드만 검증에 사용합니다. 발송 실패나 타임아웃에도 발송 한도는 복원하지 않습니다.
 
-서비스 연결 전에는 기존 계정 로그인·비밀번호 변경이 가능하며 **신규 가입·문자 복구는 준비 중**으로 표시됩니다. DB의 `phone_verified_at`가 비어 있는 기존 회원을 인증 완료로 간주하지 않습니다. 회원 탈퇴·기존 회원의 별도 번호 인증 화면은 후속 작업입니다.
+문자 발송 비용은 알리고 포인트에서 차감됩니다. 문자 연결 전에는 기존 휴대폰 계정 로그인과 비밀번호 변경이 가능하며, 휴대폰 신규 가입과 문자 복구는 준비 중으로 표시됩니다. 기존 휴대폰 회원의 별도 번호 인증과 회원 탈퇴는 후속 기능입니다.
 
-공식 자료: [발신번호 및 발송 API](https://solapi.com/developers/api/messages), [API Key 서명](https://solapi.com/developers/api/authentication-api-key).
+공식 안내 [알리고 문자 API](https://smartsms.aligo.in/smsapi.html) · [Vercel 고정 IP](https://vercel.com/docs/connectivity/static-ips)
 
 ## 1분 예약 실행
 

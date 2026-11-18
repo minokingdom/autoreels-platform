@@ -44,10 +44,23 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
  await assert.rejects(()=>projects.handle(u,'project-save',{snapshot}),e=>e.code==='project_limit');
  assert.equal((await projects.handle(other,'project-list',{})).projects.length,0);
  await projects.handle(u,'project-delete',{id,revision:2});
- const env={AUTH_SECRET:'test-only-secret-'.repeat(4),ADMIN_TOKEN:'local-test-admin-token-only',SOLAPI_API_KEY:'test',SOLAPI_API_SECRET:'test',SOLAPI_FROM:'0200000000'};
+ const env={AUTH_SECRET:'test-only-secret-'.repeat(4),ADMIN_TOKEN:'local-test-admin-token-only',ALIGO_API_KEY:'test-key',ALIGO_USER_ID:'test-user',ALIGO_SENDER:'02-0000-0000'};
  let sentCode,sends=0;
+ let smsReply={result_code:1,success_cnt:1,error_cnt:0,msg_id:12345};
  const session=load('lib/server/session.js',{},env);
- const security=load('lib/server/security.js',{'./db':db,'./session':session},env,{fetch:async(url,opt)=>{sends++;assert.equal(url,'https://api.solapi.com/messages/v4/send-many/detail');sentCode=JSON.parse(opt.body).messages[0].text.match(/\d{6}/)[0];return {ok:true,json:async()=>({groupInfo:{groupId:'test'}})};}});
+ const security=load('lib/server/security.js',{'./db':db,'./session':session},env,{fetch:async(url,opt)=>{
+  sends++;
+  assert.equal(url,'https://apis.aligo.in/send/');
+  assert.equal(opt.method,'POST');
+  assert.equal(opt.redirect,'error');
+  assert.equal(opt.headers['Content-Type'],'application/x-www-form-urlencoded; charset=UTF-8');
+  const body=new URLSearchParams(opt.body);
+  for(const [key,value] of Object.entries({key:env.ALIGO_API_KEY,user_id:env.ALIGO_USER_ID,sender:'0200000000',msg_type:'SMS',testmode_yn:'N'})) assert.equal(body.get(key),value);
+  assert.match(body.get('receiver'),/^0100000000[1-3]$/);
+  assert.match(body.get('msg'),/^\[오토릴스\] (비밀번호 재설정|회원가입) 인증번호 \d{6} \(5분\)$/);
+  sentCode=body.get('msg').match(/\d{6}/)[0];
+  return {ok:true,json:async()=>smsReply};
+ }});
  const req={headers:{'x-vercel-forwarded-for':'192.0.2.1'}};
  let code=await security.requestCode(req,'010-0000-0001','reset');
  await assert.rejects(()=>security.requestCode(req,'010-0000-0001','reset'),e=>e.status===429);assert.equal(sends,1);
@@ -67,6 +80,24 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
  await assert.rejects(()=>security.loginLimit(req,'010-0000-0001'),e=>e.status===429);
  await security.loginLimit({headers:{'x-vercel-forwarded-for':'192.0.2.2'}},'010-0000-0001');
  const noSms=load('lib/server/security.js',{'./db':db,'./session':session},{AUTH_SECRET:env.AUTH_SECRET});await assert.rejects(()=>noSms.requestCode(req,'010-0000-0001','signup'),e=>e.status===503);
+ const malformedSms=load('lib/server/security.js',{'./db':db,'./session':session},{...env,ALIGO_SENDER:'sender'});
+ assert.equal(malformedSms.smsReady(),false);
+ assert.equal(security.smsReady(),true);
+ for(const rejection of [{result_code:-101},{result_code:1,success_cnt:0,error_cnt:1,msg_id:12346}]){
+  smsReply=rejection;
+  await pg.exec('DELETE FROM ar_auth_limits');
+  const previousSends=sends;
+  await assert.rejects(()=>security.requestCode(req,'010-0000-0002','signup'),e=>e.code==='sms_failed');
+  await assert.rejects(()=>security.requestCode(req,'010-0000-0002','signup'),e=>e.status===429);
+  assert.equal(sends,previousSends+1);
+  const failed=await pg.query("SELECT id,sent FROM ar_phone_codes WHERE phone='010-0000-0002'");
+  assert.ok(failed.rows.length>0);
+  for(const challenge of failed.rows){
+   assert.equal(challenge.sent,false);
+   assert.equal(await security.verifyCode('010-0000-0002','signup',challenge.id,sentCode),null);
+  }
+ }
+ smsReply={result_code:'1',success_cnt:'1',error_cnt:'0',msg_id:'12347'};
  // 계정 API 자체도 실제 DB에 연결해 가입/세션/미인증 저장을 확인합니다.
  await pg.exec("SELECT setval('ar_users_id_seq',2)");
  const proof3=await security.requestCode(req,'010-0000-0003','signup');
