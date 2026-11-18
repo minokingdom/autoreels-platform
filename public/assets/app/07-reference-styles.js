@@ -14,7 +14,7 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
   const caption=gCleanCaption((campaign.cutCaptions||[])[idx]||campaign.hook||'');
   c.save();
   c.fillStyle=r.background;c.fillRect(0,0,W,H);
-  if(['diagonal','type-cutout','stacked','type-echo','type-flow'].includes(r.layout)) {
+  if(['diagonal','type-cutout','stacked','type-echo','type-flow','editorial','news-marker','floating-type'].includes(r.layout)) {
     arReferenceComposition(c,W,H,S,caption,r,idx,p,entry);
     if(r.grain)inGrain(c,W,H,t,r.grain);
     inSign(c,d,W/2,H*.94,r.layout==='type-echo'&&idx%2?r.background:r.foreground,'center',W*.03);
@@ -51,7 +51,39 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
 let arReferenceMaskCanvas;
 function arReferenceComposition(c,W,H,S,caption,r,idx,p,entry) {
   const zoom=1.02+(r.camera==='zoom-out'?(1-p)*r.zoom:p*r.zoom);
-  if(r.layout==='diagonal') {
+  if(r.layout==='editorial') {
+    mPhoto(c,S,0,0,0,W,H,zoom);
+    const shade=c.createLinearGradient(0,0,W,H);shade.addColorStop(0,'rgba(0,0,0,.16)');shade.addColorStop(1,`rgba(0,0,0,${r.shade})`);
+    c.fillStyle=shade;c.fillRect(0,0,W,H);
+    const fit=mFit(c,caption,W*.76,4,W*.085,W*.045,r.font);
+    c.save();c.globalAlpha*=entry;c.textAlign='left';c.textBaseline='middle';c.fillStyle=r.foreground;
+    fit.lines.forEach((line,i)=>{const F=KIT_FONTS[i===0?'pen':r.font];c.font=gFont(F.w,fit.size,F.f);c.fillText(line,W*.10,H*.43+i*fit.lh+(1-entry)*H*.015);});c.restore();
+  } else if(r.layout==='news-marker') {
+    c.fillStyle=r.background;c.fillRect(0,0,W,H);
+    // 허구의 기사 문장 대신 활자 단의 리듬을 추상적인 선으로 표현합니다.
+    c.save();c.globalAlpha=.12;c.fillStyle=r.foreground;
+    for(let col=0;col<2;col++)for(let line=0;line<23;line++) {
+      const yy=H*.09+line*H*.033;
+      c.fillRect(W*(.07+col*.46),yy,W*(line%5===4?.25:.38),W*.0025);
+    }
+    c.restore();
+    const F=KIT_FONTS[r.font],fit=mFit(c,caption,W*.74,4,W*.085,W*.045,r.font);
+    c.save();c.translate(W/2,H*.47);c.rotate(-.018);c.globalAlpha*=entry;c.textAlign='center';c.textBaseline='middle';c.font=gFont(F.w,fit.size,F.f);
+    fit.lines.forEach((line,i)=>{const y=(i-(fit.lines.length-1)/2)*fit.lh,w=c.measureText(line).width;
+      c.fillStyle=r.accent;c.fillRect(-w/2-W*.025,y-fit.lh*.43,(w+W*.05)*entry,fit.lh*.86);
+      c.fillStyle=r.foreground;c.fillText(line,0,y);
+    });c.restore();
+  } else if(r.layout==='floating-type') {
+    mPhoto(c,S,0,0,0,W,H,zoom);c.fillStyle=`rgba(0,0,0,${r.shade})`;c.fillRect(0,0,W,H);
+    const words=caption.trim().split(/\s+/).filter(Boolean),parts=[words.slice(0,2).join(' '),words.slice(-2).join(' ')];
+    c.save();c.fillStyle=r.foreground;c.textBaseline='middle';
+    parts.forEach((text,i)=>{
+      const F=KIT_FONTS[r.font],fit=mFit(c,text,W*.32,2,W*.044,W*.024,r.font);
+      c.font=gFont(F.w,fit.size,F.f);c.textAlign=i?'right':'left';c.globalAlpha=entry*.4;
+      fit.lines.forEach((line,j)=>c.fillText(line,W*(i?.92:.08),H*(i?.43:.2)+j*fit.lh+Math.sin(p*Math.PI)*H*(i?-.025:.025)));
+    });c.restore();
+    arReferenceCaption(c,caption,W,H,H*.67,H*.17,r,entry);
+  } else if(r.layout==='diagonal') {
     for(let i=0;i<3;i++) {
       const left=(i/3-.22)*W+(1-entry)*(i%2?1:-1)*W*.45;
       c.save();c.beginPath();c.moveTo(left,0);c.lineTo(left+W*.32,0);

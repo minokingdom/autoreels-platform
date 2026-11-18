@@ -1,0 +1,68 @@
+{
+  "method": "CapCut public preview + local rea-video + all-shot visual review + apply-review",
+  "categoriesAdded": 0,
+  "paidAnalysisCalls": 0,
+  "added": 3,
+  "total": 13,
+  "candidates": [
+    {
+      "id": "ref_5741418f400f54fc",
+      "url": "https://www.capcut.com/template-detail/newspaper-edit/7508389402293357877",
+      "sourceTitle": "newspaper-edit",
+      "platform": "CapCut",
+      "status": "visually_reviewed",
+      "reviewedShots": 4,
+      "adaptationLimits": "기사 원문과 빠른 페이지 교체 대신 추상적인 활자 단 선과 사용자 대본 강조를 사용한다. 기사나 의미 없는 배경 문장을 생성하지 않는다.",
+      "paidAnalysisCalls": 0
+    },
+    {
+      "id": "ref_61c804809923228b",
+      "url": "https://www.capcut.com/template-detail/typography/7512956258341653813",
+      "sourceTitle": "typography",
+      "platform": "CapCut",
+      "status": "visually_reviewed",
+      "reviewedShots": 1,
+      "adaptationLimits": "세리프·손글씨 대비와 좌측 배치만 채택. 원본 실내 사진과 외국어 문구는 사용하지 않는다.",
+      "paidAnalysisCalls": 0
+    },
+    {
+      "id": "ref_201079c51e627108",
+      "url": "https://www.capcut.com/template-detail/OPENING-TEXT-MOTION/7533956155312229685",
+      "sourceTitle": "OPENING-TEXT-MOTION",
+      "platform": "CapCut",
+      "status": "not_registered",
+      "reviewedShots": 1,
+      "reason": "기존 타이포 구성과 중복",
+      "paidAnalysisCalls": 0
+    },
+    {
+      "id": "ref_9d1860e7ee6201fe",
+      "url": "https://www.capcut.com/template-detail/typography-3/7629059250773347585",
+      "sourceTitle": "typography-3",
+      "platform": "CapCut",
+      "status": "not_registered",
+      "reviewedShots": 1,
+      "reason": "다중 사진·과도한 이모지 장식으로 서비스 방향과 맞지 않음",
+      "paidAnalysisCalls": 0
+    },
+    {
+      "id": "ref_f032f0f33f1fa212",
+      "url": "https://www.capcut.com/template-detail/caleb-loveanddeepspace-foryou-viral-fyp-typograph/7641910715401440533",
+      "sourceTitle": "caleb-loveanddeepspace-foryou-viral-fyp-typograph",
+      "platform": "CapCut",
+      "status": "visually_reviewed",
+      "reviewedShots": 23,
+      "adaptationLimits": "현재 컷 사진 한 장과 사용자 대본만 사용한다. 원본 CG 인물·분할 화면·섬광·가사·음악 동기화는 재현하지 않는다.",
+      "paidAnalysisCalls": 0
+    },
+    {
+      "id": "ref_025e04524e49dd47",
+      "url": "https://www.capcut.com/template-detail/Personalized-3D-typography-ImageMission-CapCutAI-aitemplate-fyp-trend/7700914225090153746",
+      "sourceTitle": "Personalized-3D-typography-ImageMission-CapCutAI-aitemplate-fyp-trend",
+      "platform": "CapCut",
+      "status": "failed",
+      "paidAnalysisCalls": 0,
+      "error": "list index out of range"
+    }
+  ]
+}
