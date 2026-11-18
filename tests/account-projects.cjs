@@ -11,6 +11,52 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
  const wrap=c=>({query:(q,p=[])=>q.includes('pg_advisory_xact_lock')?Promise.resolve({rows:[]}):c.query(q,p)});
  const db={...wrap(pg),tx:fn=>pg.transaction(c=>fn(wrap(c)))};
  await pg.query("INSERT INTO ar_users(id,phone,password_hash) VALUES(1,'010-0000-0001','test'),(2,'010-0000-0002','test')");
+ const planRules = require('../lib/server/plans');
+ const trialStart = new Date('2026-10-28T06:00:00Z');
+ const trialEnd = new Date('2026-11-04T06:00:00Z');
+ let clock = Date.parse('2026-10-31T14:59:59Z');
+ class TrialClock extends Date {
+  constructor(...args){super(...(args.length ? args : [clock]));}
+  static now(){return clock;}
+ }
+ const usage = load('lib/server/usage.js',{
+  './db':db, './config':{readiness:()=>({serverMode:true})},
+  './session':{readSession:req=>({uid:String(req.userId),v:1})},
+  './plans':{...planRules,limits:()=>planRules.limits({})},
+  './comp-pro':{effectiveSubscription:(_,sub)=>sub}
+ },{}, {Date:TrialClock});
+ await pg.query("INSERT INTO ar_users(id,password_hash,created_at) VALUES (901,'test',$1),(902,'test',$1),(903,'test','2025-11-01')",[trialStart.toISOString()]);
+ await pg.query("INSERT INTO ar_usage(subject,period,ai_scripts,tts_chars) VALUES ('u:901','2026-10',4,1000),('u:902','2026-10',3,40),('u:902','2026-11',2,60)");
+ await pg.query("INSERT INTO ar_subscriptions(user_id,plan,status,current_period_end) VALUES (903,'standard','active','2026-11-25')");
+ const firstTrial = {id:901,created_at:trialStart};
+ let receipt = await usage.consume({userId:901},'ai',2);
+ assert.equal(receipt.ok,true);assert.equal(receipt.used,6);
+ clock += 2000;
+ let free = await usage.usageFor(firstTrial,'free');
+ assert.equal(free.aiScripts,6);assert.equal(free.ttsChars,1000);
+ assert.equal(free.trial.endsAt,trialEnd.toISOString());assert.equal(free.trial.active,true);
+ assert.equal((await usage.consume({userId:901},'ai',25)).body.error,'quota_exceeded');
+ assert.equal((await usage.consume({userId:901},'ai',24)).used,30);
+ const newTrial = {id:902,created_at:trialStart};
+ free = await usage.usageFor(newTrial,'free');
+ assert.equal(free.aiScripts,5);assert.equal(free.ttsChars,100);
+ receipt = await usage.consume({userId:902},'tts',20);
+ assert.equal(receipt.used,120);
+ await usage.refundUsage({userId:902},'tts',20,receipt);
+ assert.equal((await usage.usageFor(newTrial,'free')).ttsChars,100);
+ clock = trialEnd.getTime()-1;
+ assert.equal((await usage.consume({userId:902},'ai',1)).ok,true);
+ clock++;
+ assert.equal((await usage.usageFor(newTrial,'free')).trial.active,false);
+ for(const kind of ['ai','tts']){
+  const blocked = await usage.consume({userId:902},kind,1);
+  assert.equal(blocked.status,403);assert.equal(blocked.body.error,'trial_expired');
+ }
+ assert.equal((await usage.consume({userId:903},'ai',1)).used,1);
+ const paid = await usage.usageFor({id:903},'standard');
+ assert.equal(paid.trial,null);assert.equal(paid.period,'2026-11');assert.equal(paid.aiScripts,1);
+ clock = Date.parse('2026-12-01T00:00:00Z');
+ assert.equal((await usage.consume({userId:902},'ai',1)).body.error,'trial_expired');
  const userStyles=load('lib/server/user-styles.js',{'./db':db});
  const projects=load('lib/server/projects.js',{'./db':db,'./user-styles':userStyles});
  const snapshot={version:1,industry:'auto',campaign:{vehicle:'검증',cutCaptions:['한 컷'],ttsLines:['음성'],scenePlan:[]},photos:[{src:'/assets/scenes/auto/1.jpg'}]};
@@ -104,7 +150,7 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
  const specialtyRules=require('../lib/business-specialty.cjs');
  const specialtyTrends=load('lib/server/specialty-trends.js',{'./db':db,'../business-specialty.cjs':specialtyRules});
  const adminSession=load('lib/server/admin-session.js',{'./session':session},env);
- const account=load('api/account.js',{'../lib/server/db':db,'../lib/server/config':{readiness:()=>({serverMode:true})},'../lib/server/security':security,'../lib/server/projects':projects,'../lib/server/scheduler':{available:async()=>false},'../lib/server/session':session,'../lib/server/billing':{getSubscription:async()=>null,publicSubscription:()=>null},'../lib/server/plans':{publicPlans:()=>[]},'../lib/server/usage':{usageFor:async()=>({}),isActive:()=>false},'../lib/business-specialty.cjs':specialtyRules,'../lib/server/specialty-trends':specialtyTrends,'../lib/server/admin-session':adminSession},env);
+ const account=load('api/account.js',{'../lib/server/db':db,'../lib/server/config':{readiness:()=>({serverMode:true})},'../lib/server/security':security,'../lib/server/projects':projects,'../lib/server/scheduler':{available:async()=>false},'../lib/server/session':session,'../lib/server/billing':{getSubscription:async()=>null,publicSubscription:()=>null},'../lib/server/plans':planRules,'../lib/server/usage':{usageFor:async()=>({}),isActive:()=>false},'../lib/business-specialty.cjs':specialtyRules,'../lib/server/specialty-trends':specialtyTrends,'../lib/server/admin-session':adminSession},env);
  const response=()=>({statusCode:200,headers:{},setHeader(k,v){this.headers[k]=v},status(s){this.statusCode=s;return this},json(b){this.body=b}});
  let reply=response();await account({headers:req.headers,query:{action:'signup'},method:'POST',body:{phone:'010-0000-0003',password:'strong-test-password',industry:'clinic',specialty:'  치과  ',challengeId:proof3.challengeId,code:sentCode}},reply);
  assert.equal(reply.statusCode,200);assert.ok(reply.headers['Set-Cookie']);

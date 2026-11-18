@@ -163,7 +163,9 @@
       arRenderIndustryChip();
       arFillSignupFieldsForIndustry();
       const m = document.getElementById('dealerAuthModal');
-      document.getElementById('authGenerationNotice').classList.toggle('hidden', reason === '');
+      const generationNotice = document.getElementById('authGenerationNotice');
+      generationNotice.classList.toggle('hidden', reason === '');
+      generationNotice.textContent = reason === 'welcome' ? '가입 후 7일 동안 무료로 AI를 체험할 수 있어요.' : 'AI 생성 기능을 쓰려면 로그인해 주세요.';
       document.getElementById('arBrowseAsGuest').classList.toggle('hidden', reason !== 'welcome');
       switchAuthModalTab('login');
       arSyncAuthMethods(true);
@@ -651,6 +653,13 @@
 
     function arOpenAccount() {
       openBillingCheckoutModal();
+      const userId = AR_SERVER.me?.user?.id;
+      if (!userId) return;
+      arApi('me').then(r => {
+        if (!r.ok || r.body.user?.id !== userId || AR_SERVER.me?.user?.id !== userId) return;
+        AR_SERVER.me.usage = r.body.usage;
+        if (!document.getElementById('billingCheckoutModal').classList.contains('hidden')) arServerPrepareBillingModal();
+      }).catch(() => {});
     }
 
     function arServerPayButtonLabel() {
@@ -690,6 +699,13 @@
         const u = me.usage || {};
         const pct = u.ttsLimit ? Math.min(100, Math.round((u.ttsChars / u.ttsLimit) * 100)) : 0;
         const fmt = (iso) => (iso ? new Date(iso).toLocaleDateString('ko-KR') : '-');
+        const trial = u.trial;
+        const trialActive = trial && arTrialIsActive(trial);
+        const trialEnds = trial?.endsAt ? new Intl.DateTimeFormat('ko-KR', {
+          timeZone: 'Asia/Seoul', dateStyle: 'medium', timeStyle: 'short'
+        }).format(new Date(trial.endsAt)) : '';
+        const remainingAi = trialActive ? Math.max(0, u.aiLimit - u.aiScripts) : 0;
+        const remainingTts = trialActive ? Math.max(0, u.ttsLimit - u.ttsChars) : 0;
         box.innerHTML = `
           <div class="flex items-center justify-between gap-2">
             <div><div class="text-[#85858b]">내 계정</div><div class="text-[13px] text-[#ededed] font-medium">${me.user.name} · ${me.user.phone || '카카오 계정'}</div></div>
@@ -709,9 +725,16 @@
               : ''}
           </div>
           <div class="pt-2 border-t border-[var(--border)]">
-            <div class="flex justify-between text-[11px] text-[#85858b]"><span>이번 달 AI 성우 사용량</span><span class="font-mono">${(u.ttsChars || 0).toLocaleString()} / ${(u.ttsLimit || 0).toLocaleString()}자</span></div>
-            <div class="h-1.5 rounded bg-[#232325] mt-1 overflow-hidden"><div style="width:${pct}%" class="h-full bg-[#4cc38a]"></div></div>
-            <div class="flex justify-between text-[11px] text-[#85858b] mt-1.5"><span>AI 대본·주제·이미지 생성</span><span class="font-mono">${u.aiScripts || 0} / ${u.aiLimit || 0}회</span></div>
+            ${trial ? `
+              <div class="text-[13px] font-medium text-[#ededed]">7일 무료 AI 체험 · ${trialActive ? '이용 중' : '종료'}</div>
+              ${trialEnds ? `<div class="text-[11px] text-[#85858b]">종료 시각 ${trialEnds} (한국 시간)</div>` : ''}
+              <div class="flex justify-between text-[11px] text-[#85858b] mt-1.5"><span>남은 AI 생성 한도</span><span class="font-mono">${remainingAi.toLocaleString('ko-KR')}회</span></div>
+              <div class="flex justify-between text-[11px] text-[#85858b] mt-1"><span>남은 성우 글자 수</span><span class="font-mono">${remainingTts.toLocaleString('ko-KR')}자</span></div>
+            ` : `
+              <div class="flex justify-between text-[11px] text-[#85858b]"><span>이번 달 AI 성우 사용량</span><span class="font-mono">${(u.ttsChars || 0).toLocaleString()} / ${(u.ttsLimit || 0).toLocaleString()}자</span></div>
+              <div class="h-1.5 rounded bg-[#232325] mt-1 overflow-hidden"><div style="width:${pct}%" class="h-full bg-[#4cc38a]"></div></div>
+              <div class="flex justify-between text-[11px] text-[#85858b] mt-1.5"><span>AI 대본·주제·이미지·음악 생성</span><span class="font-mono">${u.aiScripts || 0} / ${u.aiLimit || 0}회</span></div>
+            `}
             <div class="flex justify-between text-[11px] text-[#85858b] mt-1"><span>다운로드 · SNS 게시</span><span class="font-mono">${u.exports || 0} / ${u.exportLimit == null ? '무제한' : `${u.exportLimit}회`}</span></div>
           </div>`;
       }

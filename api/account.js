@@ -10,7 +10,7 @@ const scheduler = require('../lib/server/scheduler');
 const { readiness } = require('../lib/server/config');
 const { setSession, clearSession, readSession, hashPassword, checkPassword, sameOrigin } = require('../lib/server/session');
 const billing = require('../lib/server/billing');
-const { publicPlans } = require('../lib/server/plans');
+const { FREE_TRIAL_DAYS, limits, publicPlans } = require('../lib/server/plans');
 const { usageFor, isActive, consume } = require('../lib/server/usage');
 const { normalizeSpecialty } = require('../lib/business-specialty.cjs');
 const { readSpecialtyTrends, readAdminSpecialties } = require('../lib/server/specialty-trends');
@@ -76,7 +76,7 @@ async function mePayload(u) {
     user: publicUser(u),
     subscription: billing.publicSubscription(sub),
     entitlement: { pro: active, tier, until: active ? sub.current_period_end : null },
-    usage: await usageFor(u.id, tier)
+    usage: await usageFor(u, tier)
   };
 }
 
@@ -86,6 +86,7 @@ module.exports = async function handler(req, res) {
 
   // 설정 상태(키 값 아님)와 요금제 — 화면이 시연 모드/실서비스 모드를 고를 때 사용
   if (action === 'config') {
+    const free = limits().free;
     return send(res, 200, {
       ok: true,
       serverMode: ready.serverMode,
@@ -95,6 +96,7 @@ module.exports = async function handler(req, res) {
       snsScheduling: await scheduler.available().catch(() => false),
       phoneVerification: security.smsReady(),
       kakaoLogin: ready.serverMode && kakao.configured(),
+      freeTrial: { days: FREE_TRIAL_DAYS, aiLimit: free.aiScripts, ttsLimit: free.ttsChars },
       plans: publicPlans()
     });
   }

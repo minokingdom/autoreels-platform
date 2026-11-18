@@ -20,7 +20,9 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  let balances=new Map(),receipts=new Map();
  const key=(s,p)=>s+'|'+p;
  const query=async(sql,p=[])=>{
-  if(sql.includes('FROM ar_users'))return {rows:[{id:1,session_version:1,plan:'standard',status:'active',current_period_end:new Date(Date.now()+86400000)}]};
+  if(sql.includes('FROM ar_users'))return {rows:p[0]==='2'
+   ? [{id:2,session_version:1,created_at:new Date(Date.now()-8*86400000)}]
+   : [{id:1,session_version:1,plan:'standard',status:'active',current_period_end:new Date(Date.now()+86400000)}]};
   if(sql.includes('pg_advisory'))return {rows:[]};
   if(sql.startsWith('SELECT kind, result'))return {rows:receipts.has(key(p[0],p[1]))?[receipts.get(key(p[0],p[1]))]:[]};
   if(sql.startsWith('INSERT INTO ar_usage_requests')){receipts.set(key(p[0],p[1]),{kind:p[2],result:JSON.parse(p[3])});return {rows:[]};}
@@ -33,7 +35,7 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
   throw Error(sql);
  };
  const db={query,tx:async fn=>{const before=new Map(balances),prior=structuredClone(receipts);try{return await fn({query})}catch(e){balances=before;receipts=prior;throw e}}};
- const usage=load('lib/server/usage.js',{'./db':db,'./config':{readiness:()=>({serverMode:true})},'./session':{readSession:req=>req.testSession},'./plans':{limits:()=>({standard:{aiScripts:5,ttsChars:10,exportPublishLimit:2}})},'./comp-pro':{effectiveSubscription:(_,s)=>s}},{AI_DAILY_UNIT_CAP:'3',AI_MONTHLY_UNIT_CAP:'3'});
+ const usage=load('lib/server/usage.js',{'./db':db,'./config':{readiness:()=>({serverMode:true})},'./session':{readSession:req=>req.testSession},'./plans':{FREE_TRIAL_DAYS:7,limits:()=>({standard:{aiScripts:5,ttsChars:10,exportPublishLimit:2}})},'./comp-pro':{effectiveSubscription:(_,s)=>s}},{AI_DAILY_UNIT_CAP:'3',AI_MONTHLY_UNIT_CAP:'3'});
  const guardedMeter = load('lib/server/meter.js', {'./usage':usage});
  const deps = {
    '../lib/server/usage':usage,
@@ -58,12 +60,17 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
    [guardedApi('tts-voices'),{method:'POST',query:{action:'generate-bgm'},body:{prompt:'sample'}}]
  ];
  for(const [api,request] of cases){
+   const headers={host:'app.test',origin:'https://app.test'};
    for(const testSession of [undefined,{uid:'1',v:2}]){
      const denied=response();
-     await api({...request,testSession,headers:{host:'app.test',origin:'https://app.test'}},denied);
+     await api({...request,testSession,headers},denied);
      assert.equal(denied.statusCode,401,JSON.stringify(request));
      assert.equal(denied.body.error,'login_required');
    }
+   const expired=response();
+   await api({...request,headers,testSession:{uid:'2',v:1}},expired);
+   assert.equal(expired.statusCode,403,JSON.stringify(request));
+   assert.equal(expired.body.error,'trial_expired');
  }
  assert.equal(providerCalls,0);
  assert.equal(balances.size,0);

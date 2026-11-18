@@ -114,7 +114,7 @@
     }
     let arTopicIconJob = 0;
     async function arHydrateTopicIcons(topics, cacheKey, serverUpdatedAt) {
-      if (!arHasGenerationAccount()) return;
+      if (!arCanUseAi()) return;
       if (!Array.isArray(topics) || !topics.length || !window.location.protocol.startsWith('http')) return;
       const missing = topics.map((t, i) => ({ t, i })).filter(({ t }) => t && !t.iconUrl);
       if (!missing.length) return;
@@ -213,7 +213,7 @@
         prompt: specialty + ' 손님을 위한 ' + idea + ' 안내. 확인된 내용만 소개하기.'
       }));
       arRenderTopics(fallback, specialty + ' 추천 주제예요.');
-      if (!accountId) return;
+      if (!accountId || !arCanUseAi()) return;
       let batch = null;
       try {
         const r = await fetch('/api/account?action=specialty-trends', { cache: 'no-store', signal: AbortSignal.timeout(5000) });
@@ -284,13 +284,13 @@
           : null;
         if (serverTopics && serverTopics.length) {
           try { localStorage.setItem(cacheKey, JSON.stringify({ topics: serverTopics, at: Date.now(), trendsAt: serverUpdatedAt })); } catch (e) {}
-          const status = arHasGenerationAccount() ? '하나를 누르면 대본을 바로 만들어요.' : 'AI 대본을 만들려면 로그인해 주세요.';
+          const status = arCanUseAi() ? '하나를 누르면 대본을 바로 만들어요.' : arAiAccessNotice();
           arRenderTopics(serverTopics, '오늘 날짜와 요즘 인기 키워드로 준비한 주제예요. ' + status, false);
           return;
         }
       }
-      if (!arHasGenerationAccount()) {
-        arRenderTopics(arFallbackTopics(dc), '기본 추천 주제예요. AI 대본을 만들려면 로그인해 주세요.');
+      if (!arCanUseAi()) {
+        arRenderTopics(arFallbackTopics(dc), '기본 추천 주제예요. ' + arAiAccessNotice());
         return;
       }
       // 먼저 기본 주제를 바로 보여 주고, AI 추천이 오면 바꿈
@@ -391,7 +391,7 @@
       el.style.display = 'none';
       arSyncProductRows();
       // 주제를 고른 뒤 상품을 바꿨으면, 바뀐 상품으로 대본을 다시 씀 (상품과 대본이 어긋나지 않게)
-      if (arHasGenerationAccount() && arProductKey() !== arProductSnap && window.arTodayTopic && typeof generateStoryboardFromPrompt === 'function') {
+      if (arCanUseAi() && arProductKey() !== arProductSnap && window.arTodayTopic && typeof generateStoryboardFromPrompt === 'function') {
         if (typeof arToast === 'function') arToast('바뀐 상품으로 대본을 다시 써요.');
         generateStoryboardFromPrompt();
       }
@@ -401,7 +401,7 @@
       if (!topic || !topic.prompt) return;
       const promptEl = document.getElementById('aiPromptInput');
       if (promptEl) promptEl.value = topic.prompt;
-      if (!arAskForGenerationLogin()) return;
+      if (!arRequireAiAccess()) return;
       arSuspendScriptNarration();
       window.arTodayTopic = topic;
       setTimeout(arSyncProductRows, 0);
@@ -518,9 +518,20 @@
     //   크레딧 절약은 '소리를 켰을 때만 녹음'(prefetchTtsBuffers)으로, 이전 대본 목소리 섞임은 대본별 녹음(masterWantKey)으로 막음
     function arVoiceAllowed() { return !window.__arScriptGenerating; }
     function arHasGenerationAccount() { return Boolean(window.AR_SERVER?.me?.user); }
-    function arAskForGenerationLogin() {
-      if (arHasGenerationAccount()) return true;
-      openDealerAuthModal('generation');
+    function arTrialIsActive(trial) {
+      return trial.active && Date.parse(trial.endsAt) > Date.now();
+    }
+    function arCanUseAi() {
+      const trial = window.AR_SERVER?.me?.usage?.trial;
+      return arHasGenerationAccount() && (!trial || arTrialIsActive(trial));
+    }
+    function arAiAccessNotice() {
+      return arHasGenerationAccount() ? '가입 후 7일 무료 AI 체험이 끝났어요.' : 'AI 대본을 만들려면 로그인해 주세요.';
+    }
+    function arRequireAiAccess() {
+      if (arCanUseAi()) return true;
+      if (arHasGenerationAccount()) arToast(arAiAccessNotice());
+      else openDealerAuthModal('generation');
       return false;
     }
     function arFirstMissingStep() {
@@ -1719,7 +1730,7 @@
     }
 
     async function generateStoryboardFromPrompt() {
-      if (!arAskForGenerationLogin()) return;
+      if (!arRequireAiAccess()) return;
       const generationId = ++arScriptGenerationId;
       arSetScriptGenerating(true);
       const promptEl = document.getElementById('aiPromptInput');
@@ -1811,6 +1822,10 @@
         if (response.status === 401 && result.error === 'login_required') {
           noticeEl?.classList.add('hidden');
           openDealerAuthModal('generation');
+          return;
+        }
+        if (['trial_expired', 'quota_exceeded', 'service_budget_exceeded'].includes(result.error)) {
+          if (noticeEl) noticeEl.textContent = result.message;
           return;
         }
         if (!response.ok || !result.ok || !result.data) {
@@ -1981,7 +1996,7 @@
     }
 
     function arRegenerateThemeImages() {
-      if (!arUseLocalSceneImages() && !arAskForGenerationLogin()) return;
+      if (!arUseLocalSceneImages() && !arRequireAiAccess()) return;
       const totalCuts = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
       const tp = window.arTodayTopic;
       const promptEl = document.getElementById('aiPromptInput');
@@ -2074,7 +2089,7 @@
         if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
         const prompts = Array.isArray(pj.prompts) ? pj.prompts : [];
         if (!promptRes.ok || !pj.ok || !prompts.length) {
-          if (noticeEl) noticeEl.textContent = `주제 [${payload.prompt}] 대본이 적용되었습니다. (이미지 생성 대기)`;
+          if (noticeEl) noticeEl.textContent = pj.message || `주제 [${payload.prompt}]의 이미지 설명을 만들지 못했어요.`;
           return;
         }
 
@@ -2093,7 +2108,7 @@
             });
             const ij = await imgRes.json().catch(() => ({}));
             if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
-            if (!imgRes.ok || !ij.ok || !ij.image || !ij.image.dataUrl) { failedCount += 1; firstError = firstError || ij.error || 'kie_image_failed'; return; }
+            if (!imgRes.ok || !ij.ok || !ij.image || !ij.image.dataUrl) { failedCount += 1; firstError = firstError || ij.message || ij.error || 'kie_image_failed'; return; }
             const compactUrl = await arDownscaleSceneDataUrl(ij.image.dataUrl);
             if (genId !== arApplyTopicSceneImages._seq || campaign.isUserCustomPhotos) return;
             firstReady[idx] = compactUrl;
@@ -2111,7 +2126,7 @@
         }));
         if (failedCount && noticeEl && stillCurrent()) {
           const messages = { missing_kie_key: 'KIE API 키가 설정되지 않았습니다.', kie_insufficient_credits: 'KIE 크레딧이 부족합니다.', kie_invalid_key: 'KIE API 키를 확인해 주세요.', kie_rate_limited: '요청이 많습니다. 잠시 후 다시 시도해 주세요.', kie_image_timeout: '이미지 생성이 지연되고 있습니다. 잠시 후 확인해 주세요.', kie_image_download_failed: '생성된 이미지를 받지 못했습니다.', kie_image_failed: 'KIE 이미지 생성에 실패했습니다.' };
-          noticeEl.textContent = '이미지 생성 실패: ' + (messages[firstError] || messages.kie_image_failed) + ' (' + failedCount + '/' + prompts.length + ')';
+          noticeEl.textContent = '이미지 생성 실패: ' + (messages[firstError] || firstError) + ' (' + failedCount + '/' + prompts.length + ')';
         }
       } catch (e) {
         if (noticeEl) noticeEl.textContent = `이미지 생성 중 일시적 지연이 발생했습니다. (${e.message || '네트워크 오류'})`;

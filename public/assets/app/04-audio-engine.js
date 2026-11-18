@@ -502,7 +502,7 @@
 
       // Fish Audio 한국어 성우 목록을 받아 선택 상자에 채움 (한 번만)
       async loadVoiceList() {
-        if (this.voiceListLoaded || !arHasGenerationAccount()) return;
+        if (this.voiceListLoaded || !arCanUseAi()) return;
         this.voiceListLoaded = true;
         try {
           const res = await fetch('/api/tts-voices');
@@ -575,7 +575,7 @@
         return true;
       },
       fetchScriptNarration(lines) {
-        if (!arHasGenerationAccount()) return Promise.reject(new Error('login_required'));
+        if (!arCanUseAi()) return Promise.reject(new Error('ai_access_required'));
         const voice = this.ttsVoice;
         const speed = this.ttsSpeed;
         const scriptKey = `${voice}@${speed}|${lines.join('\n')}`;
@@ -698,7 +698,7 @@
 
       // 문장 하나만 따로 녹음 (전체 녹음을 쓸 수 없을 때의 대체 경로)
       fetchLineBuffer(text) {
-        if (!arHasGenerationAccount()) return Promise.reject(new Error('login_required'));
+        if (!arCanUseAi()) return Promise.reject(new Error('ai_access_required'));
         const voice = this.ttsVoice;
         const speed = this.ttsSpeed;
         const key = this.ttsKey(text);
@@ -788,7 +788,7 @@
 
       // 모든 컷 + 마지막 명함 멘트 음성을 미리 받아 두고, 받은 길이에 맞춰 영상 길이를 조정
       prefetchTtsBuffers(force) {
-        if (!arHasGenerationAccount()) {
+        if (!arCanUseAi()) {
           this.setTtsProvider('browser');
           refitDurationToNarration();
           return Promise.resolve([]);
@@ -1530,6 +1530,7 @@
     // 서버의 영어 오류 문구(요금 한도 등)를 손님에게 그대로 보여 주지 않음
     function arFriendlyBgmError(err, fellBack) {
       const m = String((err && err.message) || '');
+      if (m === '가입 후 7일 무료 AI 체험이 끝났어요.') return m;
       const why = /rate|quota|limit|429|exceeded/i.test(m) ? '지금 AI 음악을 만드는 사람이 많아요. 잠시 뒤 다시 눌러 주세요.'
         : /key|auth|403|401/i.test(m) ? 'AI 음악 만들기를 지금 쓸 수 없어요.'
         : 'AI 음악을 만들지 못했어요. 잠시 뒤 다시 눌러 주세요.';
@@ -1553,6 +1554,7 @@
           AudioEngine.loadRemoteBgmUrl(cached.url, cached.label);
           return;
         }
+        if (!arCanUseAi()) throw new Error('ai_access_required');
         const res = await fetch('/api/tts-voices?action=generate-bgm', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1591,7 +1593,7 @@
         if (inp) inp.focus();
         return;
       }
-      if (!arAskForGenerationLogin()) return;
+      if (!arRequireAiAccess()) return;
       if (btn) { btn.disabled = true; btn.textContent = '✨ 생성 중...'; }
       if (st) { st.classList.remove('hidden'); st.textContent = '✨ AI가 30초짜리 맞춤 음악을 만들고 있어요…'; }
       try {

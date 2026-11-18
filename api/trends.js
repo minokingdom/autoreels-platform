@@ -391,7 +391,7 @@ async function fetchTrendsForIndustry(indKey, customQ = '', { publicOnly = false
   return { source, query: source.startsWith('instagram') ? igLabel : ytQuery, items, diag };
 }
 
-const { isSameSiteRequest, resolveSubject, consume, refundUsage } = require('../lib/server/usage');
+const { isSameSiteRequest, resolveSubject, trialFor, consume, refundUsage } = require('../lib/server/usage');
 const { timingSafeEqual } = require('node:crypto');
 const { runScheduledSpecialtyTrends } = require('../lib/server/specialty-trends');
 
@@ -464,7 +464,8 @@ async function handler(req, res) {
     }
 
     const hasProvider = Boolean(process.env.APIFY_TOKEN || process.env.IG_ACCESS_TOKEN || process.env.YOUTUBE_API_KEY);
-    const publicOnly = hasProvider && (await resolveSubject(req)).kind !== 'user';
+    const subject = hasProvider ? await resolveSubject(req) : null;
+    const publicOnly = Boolean(subject && (subject.kind !== 'user' || (subject.tier === 'free' && !trialFor(subject.createdAt).active)));
     const { source, query, items, diag } = await fetchTrendsForIndustry(indKey, customQ, { publicOnly });
     if (!items.length) await refundUsage(req, 'trends', 1);
     if (!customQ && items.length && !publicOnly) {

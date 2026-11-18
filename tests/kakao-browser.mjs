@@ -55,11 +55,24 @@ try{
  assert.equal(await page.evaluate(()=>AudioEngine.ttsProvider),'browser');
  assert.deepEqual(guestGenerationRequests,[]);
  const user={id:'733',phone:null,name:'사용자',title:'',branch:'',promo:'',industry:'auto'};
- await page.evaluate(user=>arApplyMe({user,entitlement:{pro:false},usage:{}}),user);
+ const activeUsage={aiScripts:5,aiLimit:30,ttsChars:40,ttsLimit:10000,trial:{active:true,endsAt:new Date(Date.now()+86400000).toISOString()}};
+ await page.evaluate(({user,usage})=>arApplyMe({user,entitlement:{pro:false},usage}),{user,usage:activeUsage});
  assert.equal(await page.evaluate(()=>selectedDealerId),'account_733');
  await page.locator('#arQuickBar [data-qb="settings"]').click();
  await settings.getByRole('button',{name:'계정 · 요금제'}).click();
  assert.equal(await page.locator('#arPasswordSecurity').isVisible(),false);
+ await page.getByText('7일 무료 AI 체험 · 이용 중',{exact:true}).waitFor();
+ assert.match(await page.locator('#billingAccountBox').textContent(),/남은 AI 생성 한도25회/);
+ assert.match(await page.locator('#billingAccountBox').textContent(),/남은 성우 글자 수9,960자/);
+ await page.evaluate(()=>{
+  AR_SERVER.me.usage.trial.active=false;
+  arServerPrepareBillingModal();
+ });
+ await page.getByText('7일 무료 AI 체험 · 종료',{exact:true}).waitFor();
+ const beforeExpired = guestGenerationRequests.length;
+ await page.evaluate(()=>generateStoryboardFromPrompt());
+ assert.equal(guestGenerationRequests.length,beforeExpired);
+ await page.getByText('가입 후 7일 무료 AI 체험이 끝났어요.',{exact:true}).waitFor();
  const oldAddress=await browser.newPage({viewport:{width:390,height:844}});
  oldAddress.on('pageerror',error=>errors.push(error.message));
  let sendConfig;
