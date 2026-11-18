@@ -20,7 +20,7 @@
 const { isValidVoiceId, CURATED_VOICE_IDS } = require('../lib/fish-voices');
 const { normalizeKoreanNumbers } = require('../lib/korean-numbers');
 const { MODEL: AIRY_MODEL, usesAiry, synthesizeAiry, sendAiryError } = require('../lib/airy-tts');
-const { MODEL: GOOGLE_MODEL, isGoogleVoice, synthesizeGoogleLine, sendGoogleTtsError } = require('../lib/google-tts');
+const { googleVoiceModel, isGoogleVoice, synthesizeGoogleLine, sendGoogleTtsError } = require('../lib/google-tts');
 // 유료 크레딧이 없을 때 쓰는 Fish Audio 무료 모델
 const FREE_MODEL = (process.env.FISH_TTS_FREE_MODEL || 's2.1-pro-free').trim();
 
@@ -82,7 +82,7 @@ async function handler(req, res) {
 
   const input = ttsInput(req);
   const apiKey = (process.env.FISH_API_KEY || '').trim();
-  const google = isGoogleVoice(input.ref);
+  const google = googleVoiceModel(input.ref);
   const airy = usesAiry();
   if (!google && !airy && !apiKey) {
     res.setHeader('Cache-Control', 'no-store');
@@ -108,7 +108,7 @@ async function handler(req, res) {
   const speed = requestedSpeed >= 0.8 && requestedSpeed <= 1.5 ? requestedSpeed : preset.speed;
 
   if (google) {
-    res.setHeader('X-TTS-Model', GOOGLE_MODEL);
+    res.setHeader('X-TTS-Model', google);
     try {
       const audio = await synthesizeGoogleLine(text, input.ref, speed);
       res.setHeader('Content-Type', 'audio/mpeg');

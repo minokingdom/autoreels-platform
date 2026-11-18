@@ -187,6 +187,26 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  assert.ok(sections.length>1 && sections.every(part=>Buffer.byteLength(part.ssml)<=5000));
  assert.equal(sections.reduce((count,part)=>count+part.count,0),12);
  assert.ok(sections.every(part=>part.units===part.ssml.replace(/<mark[^>]+\/>/g,'').length));
+ const catalog = google.listGoogleVoices(3);
+ const chirpVoices = catalog.filter(voice=>voice.id.startsWith('ko-KR-Chirp3-HD-'));
+ assert.equal(google.listGoogleVoices(2).length,4);
+ assert.equal(chirpVoices.length,30);
+ assert.equal(new Set(chirpVoices.map(voice=>voice.id)).size,30);
+ assert.equal(catalog.filter(voice=>voice.preferred).length,1);
+ assert.equal(catalog[0].id,'ko-KR-Chirp3-HD-Puck');
+ assert.ok(chirpVoices.every(voice=>google.isGoogleVoice(voice.id) && voice.title && voice.group));
+ const chirpRequest = {method:'POST',headers:{host:'app.test'},body:{ref:catalog[0].id,speed:1.1,lines:['4대','1:1 시승','4대']}};
+ const chirpResult = response();
+ const priorGoogleCalls = googleCalls.length;
+ await googleScript(chirpRequest,chirpResult);
+ assert.equal(chirpResult.statusCode,200);
+ assert.equal(chirpResult.body.model,'google-chirp3-hd');
+ assert.equal(chirpResult.body.clips_base64.length,3);
+ const chirpCalls=googleCalls.slice(priorGoogleCalls);
+ assert.deepEqual(chirpCalls.map(call=>call.body.input.text),['네 대','일대일 시승']);
+ assert.ok(chirpCalls.every(call=>call.url.endsWith('/v1/text:synthesize') && !call.body.enableTimePointing &&
+   call.body.audioConfig.speakingRate===1.1 && call.body.voice.name===catalog[0].id));
+
 
  assert.equal(balances.size,0);
  const publicUrls=[];

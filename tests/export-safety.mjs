@@ -129,12 +129,21 @@ try {
   assert.match(airy.badge,/Airy/);
   assert.equal(airy.audioTracks,1);
   assert.ok(airy.exportSize>1000);
-  await page.route('**/api/tts-voices?v=2',route=>route.fulfill({json:{ok:true,voices:[
-    {id:'ko-KR-Wavenet-C',title:'Google WaveNet C · 남성'}
+  await page.route('**/api/tts-voices?v=3',route=>route.fulfill({json:{ok:true,voices:[
+    {id:'ko-KR-Chirp3-HD-Puck',title:'경쾌한 오프닝 · 남성',group:'Chirp 3 HD · 경쾌한 릴스',preferred:true},
+    {id:'ko-KR-Wavenet-C',title:'또렷한 정보 전달 · 남성',group:'Google WaveNet'}
   ]}}));
   await page.route('**/api/tts-script',async route=>{
     assert.equal(route.request().method(),'POST');
-    assert.deepEqual(route.request().postDataJSON(),{ref:'ko-KR-Wavenet-C',speed:1.2,lines:['첫 컷','둘째 컷','셋째 컷','마지막 컷']});
+    const request=route.request().postDataJSON();
+    assert.equal(request.speed,1.2);
+    assert.deepEqual(request.lines,['첫 컷','둘째 컷','셋째 컷','마지막 컷']);
+    if (request.ref==='ko-KR-Chirp3-HD-Puck') {
+      return route.fulfill({json:{ok:true,model:'google-chirp3-hd',clips_base64:[
+        audioClip(4800,220),audioClip(9600,240),audioClip(14400,260),audioClip(19200,280)
+      ]}});
+    }
+    assert.equal(request.ref,'ko-KR-Wavenet-C');
     await route.fulfill({json:{ok:true,model:'google-wavenet',parts:[
       {audio_base64:audioClip(24000,220),starts:[0,.25]},
       {audio_base64:audioClip(24000,260),starts:[0,.6]}
@@ -160,6 +169,35 @@ try {
   assert.equal(google.provider,'google');
   assert.equal(google.selected,'ko-KR-Wavenet-C');
   assert.ok(google.exportSize>1000);
+  const chirp = await page.evaluate(async()=>{
+    const select=document.getElementById('ttsVoiceSelect');
+    AudioEngine.restoreVoice('ko-KR-Wavenet-C');
+    AudioEngine.voiceListLoaded=false;
+    await AudioEngine.loadVoiceList();
+    const savedChoice=select.value;
+    AudioEngine.voiceListLoaded=false;
+    AudioEngine.defaultVoicePending=true;
+    await AudioEngine.loadVoiceList();
+    const lines=['첫 컷','둘째 컷','셋째 컷','마지막 컷'];
+    AudioEngine.masterWantKey=AudioEngine.scriptKeyFor(lines);
+    await AudioEngine.fetchScriptNarration(lines);
+    refitDurationToNarration();
+    const bounds=AudioEngine.masterCutBounds.slice();
+    isPlaying=false; AudioEngine.stopTts();
+    window.lastRecordedVideoBlob=null;
+    await exportSynthesizedVideo();
+    return {bounds,savedChoice,selected:select.value,title:select.selectedOptions[0]?.textContent,
+      group:select.selectedOptions[0]?.parentElement.label,provider:AudioEngine.ttsProvider,
+      exportSize:window.lastRecordedVideoBlob?.size||0};
+  });
+  [0,.2,.6,1.2,2].forEach((bound,index)=>assert.ok(Math.abs(chirp.bounds[index]-bound)<.003));
+  assert.equal(chirp.savedChoice,'ko-KR-Wavenet-C');
+  assert.equal(chirp.selected,'ko-KR-Chirp3-HD-Puck');
+  assert.equal(chirp.title,'경쾌한 오프닝 · 남성');
+  assert.equal(chirp.group,'Chirp 3 HD · 경쾌한 릴스');
+  assert.equal(chirp.provider,'chirp');
+  assert.ok(chirp.exportSize>1000);
+
 
   assert.deepEqual(pageErrors,[]);assert.deepEqual(await page.evaluate(()=>window.__smokeAsyncErrors),[]);
   console.log('export safety ok',JSON.stringify(result));

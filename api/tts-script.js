@@ -12,7 +12,7 @@ const { isValidVoiceId, CURATED_VOICE_IDS } = require('../lib/fish-voices');
 const { normalizeKoreanNumbers } = require('../lib/korean-numbers');
 const { MODEL: AIRY_MODEL, usesAiry, synthesizeAiryScript, sendAiryError } = require('../lib/airy-tts');
 const {
-  MODEL: GOOGLE_MODEL, isGoogleVoice, googleScriptSections, synthesizeGoogleScript, sendGoogleTtsError
+  CHIRP_MODEL, googleVoiceModel, googleScriptSections, synthesizeGoogleScript, synthesizeChirpScript, sendGoogleTtsError
 } = require('../lib/google-tts');
 // 유료 크레딧이 없을 때 쓰는 Fish Audio 무료 모델
 const FREE_MODEL = (process.env.FISH_TTS_FREE_MODEL || 's2.1-pro-free').trim();
@@ -57,7 +57,7 @@ function cleanScriptLines(lines) {
 
 async function handler(req, res) {
   const input = scriptInput(req);
-  const google = isGoogleVoice(input.ref);
+  const google = googleVoiceModel(input.ref);
   if (req.method !== 'GET' && !(req.method === 'POST' && google)) {
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
   }
@@ -96,11 +96,13 @@ async function handler(req, res) {
   const toneTag = TONE_TAGS[toneKey];
 
   if (google) {
-    res.setHeader('X-TTS-Model', GOOGLE_MODEL);
+    res.setHeader('X-TTS-Model', google);
     try {
-      const parts = await synthesizeGoogleScript(lines, ref, speed);
+      const audio = google === CHIRP_MODEL
+        ? { clips_base64: await synthesizeChirpScript(lines, ref, speed) }
+        : { parts: await synthesizeGoogleScript(lines, ref, speed) };
       res.setHeader('Cache-Control', 'no-store');
-      return res.status(200).json({ ok: true, model: GOOGLE_MODEL, parts });
+      return res.status(200).json({ ok: true, model: google, ...audio });
     } catch (error) {
       return sendGoogleTtsError(res, error);
     }
@@ -245,8 +247,13 @@ module.exports = withMeter(handler, 'tts', (req) => {
   const input = scriptInput(req);
   const rawLines = readScriptLines(input);
   if (!rawLines) return 0;
-  if (isGoogleVoice(input.ref)) {
+  const google = googleVoiceModel(input.ref);
+  if (google) {
     const lines = cleanScriptLines(rawLines);
+    if (google === CHIRP_MODEL) {
+      const text = new Set(lines.map(normalizeKoreanNumbers));
+      return Array.from(text).reduce((total, line) => total + line.length, 0);
+    }
     return googleScriptSections(lines).reduce((total, section) => total + section.units, 0);
   }
   return req.method === 'GET' ? rawLines.join('').replace(/\s+/g, ' ').length : 0;

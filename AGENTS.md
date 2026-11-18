@@ -45,7 +45,7 @@
 - SNS 예약은 `SNS_SCHEDULING_ENABLED=true`와 최근 연속 3회 워커 성공(20~150초 간격)이 확인될 때만 접수합니다. 1분 외부 실행 설정은 `docs/service-setup.md`를 따릅니다. 기존 작업은 상태 선점 후 처리하고 응답이 불명확한 게시를 자동 재시도하지 않습니다.
 - 긴급 운영 회귀: node tests/production-safety.cjs 및 node tests/export-safety.mjs.
 - 전체 녹음이 있으면 컷 전환은 실제 음성 경계를 따릅니다. 선택한 영상 길이나 수동 컷 배율로 문장 사이를 벌리지 않으며, 긴 음성은 영상을 늘려 끝까지 재생합니다. 전체 녹음이 있으면 영상 종료는 음성 종료와 일치하며 선택한 영상 길이만큼 꼬리를 남기지 않습니다. 엔딩 없음은 본문 종료, 엔딩 있음은 명함 마무리 멘트 종료가 기준입니다. 회귀 검사: `node tests/narration-continuity.mjs` 및 `node tests/narration-browser.mjs`.
-- **성우는 대본 전체를 하나의 오디오로 재생·내보냅니다.** Fish Audio는 대본 전체를 한 번에 합성합니다. Airy는 합성 시각을 반환하지 않아 컷별로 같은 목소리의 오디오를 받아 실제 음성 길이로 이어 붙입니다. Google WaveNet은 SSML 표시가 반환한 실제 시각으로 컷을 맞춥니다. 컷 사이에 별도 대기 시간을 넣지 않습니다.
+- **성우는 대본 전체를 하나의 오디오로 재생·내보냅니다.** Fish Audio는 대본 전체를 한 번에 합성합니다. Airy는 합성 시각을 반환하지 않아 컷별로 같은 목소리의 오디오를 받아 실제 음성 길이로 이어 붙입니다. Google WaveNet은 SSML 표시가 반환한 실제 시각으로 컷을 맞추고, Chirp 3 HD는 컷별 실음성 길이로 싱크를 맞춥니다. 컷 사이에 별도 대기 시간을 넣지 않습니다.
 - 성우 목소리는 **첫 화면부터 바로** 들려줍니다(2026-11-17 사장님 요청, `arVoiceAllowed()`는 항상 true). 대신 소리를 켠 사람에게만 녹음하고(`prefetchTtsBuffers`, 내보내기는 `force`), 대본이 바뀌면 이전 대본 녹음은 버립니다(`masterWantKey`).
 - 명함을 비우면 엔딩(명함·마무리 멘트) 없이 출력합니다(`arCardEmpty()`).
 - 명함의 **견본 값**(예시 혜택·예시 지점명)은 대본·화면 장식에 절대 섞이지 않게 합니다(`arDealerForCopy`, `arDisplayDealer`).
@@ -61,7 +61,7 @@
 - `COMP_PRO_USER_IDS`: 전화번호가 없는 카카오 테스트 계정은 서버에 로그인한 계정 ID를 이 환경변수에 등록해 무상 PRO로 지정할 수 있습니다. 쉼표 또는 공백으로 구분한 정확한 계정 ID만 적용되며, 전화번호 목록과 함께 사용할 수 있습니다. ID와 목록은 클라이언트·코드·커밋·로그에 공개하지 않습니다.
 - `COMP_PRO_UNLIMITED_AI_USER_IDS`: 무상 PRO 계정 중 별도로 승인된 계정의 개인 AI 생성 횟수 한도를 없앱니다. 서비스 전체 예산, 성우 글자 수, 다른 계정의 이용 한도는 적용합니다.
 - Airy 성우는 Vercel 환경변수 `AIRY_API_KEY`와 `TTS_PROVIDER=airy`를 설정하면 Airy가 기본 성우가 되고 구버전 요청에도 Fish Audio를 호출하지 않습니다. 기존 성우 글자 수 한도와 영상 내보내기 흐름을 공유합니다.
-- Google WaveNet은 Cloud Text-to-Speech API에 제한한 서버 키를 `GOOGLE_TTS_API_KEY`에 넣으면 성우 선택에 표시됩니다. 기존 성우 글자 수 한도에 SSML 요금 산정 글자 수를 포함합니다.
+- Google WaveNet과 Chirp 3 HD는 Cloud Text-to-Speech API에 제한한 서버 키를 `GOOGLE_TTS_API_KEY`에 넣으면 성우 선택에 표시됩니다. 기존 성우 글자 수 한도에 SSML 요금 산정 글자 수를 포함합니다.
 - kie.ai, Fish Audio, Airy, Google TTS, Apify, 결제·DB 키는 Vercel 환경변수에만 둡니다. 코드·커밋·로그에 넣지 않습니다.
 - 사용자 개인정보(이메일·전화)를 외부 요청이나 커밋 메시지에 넣지 않습니다.
 

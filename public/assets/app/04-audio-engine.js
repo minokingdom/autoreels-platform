@@ -35,6 +35,8 @@
       ttsVoice: '4e118bfbb83e401c84699c09b5f08257', // Fish Audio 보이스 ID | 'off'
       ttsSpeed: 1.1,
       voiceListLoaded: false,
+      voiceListRequest: null,
+      defaultVoicePending: true,
       bgmTimer: null,
       stepIndex: 0,
       lastSpokenCut: -1,
@@ -459,8 +461,9 @@
         this.ttsLastError = errorCode || '';
         const badge = document.getElementById('ttsProviderBadge');
         if (!badge) return;
-        if (provider === 'airy' || provider === 'google') {
-          badge.textContent = provider === 'google' ? '성우: Google WaveNet' : '성우: Airy';
+        if (provider === 'airy' || provider === 'google' || provider === 'chirp') {
+          const providerNames = { airy: 'Airy', google: 'Google WaveNet', chirp: 'Google Chirp 3 HD' };
+          badge.textContent = '성우: ' + providerNames[provider];
           badge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#4cc38a]';
         } else if (provider === 'fish' && this.ttsFreeModel) {
           badge.textContent = '성우: Fish Audio 무료 모델 (크레딧 부족 · 음질 낮음)';
@@ -476,7 +479,7 @@
             errorCode === 'offline' ? '서버 없이 실행 중' :
             errorCode === 'quota' ? '이번 사용량 한도 도달' : '연결 실패';
           const code = String(errorCode || '');
-          const source = code.startsWith('google_') ? 'Google WaveNet ' : code.startsWith('airy_') ? 'Airy ' : '';
+          const source = code.startsWith('google_') ? 'Google ' : code.startsWith('airy_') ? 'Airy ' : '';
           const cause = code === 'airy_credit_exhausted' ? '크레딧 부족' :
             code.endsWith('_rate_limited') ? '음성 요청이 많음' : reason;
           badge.textContent = `성우: 브라우저 음성 (${source}${cause} · 추출 영상에는 녹음 안 됨)`;
@@ -512,43 +515,57 @@
       },
 
       isGoogleVoice(voice) {
-        return /^ko-KR-Wavenet-[A-D]$/.test(voice);
+        return /^ko-KR-(?:Wavenet-[A-D]|Chirp3-HD-[A-Za-z]+)$/.test(voice);
       },
       isTtsServiceError(code) {
         return /^(airy|google)_/.test(code);
       },
       restoreVoice(voice) {
+        this.defaultVoicePending = false;
         this.ttsVoice = voice;
         const sel = document.getElementById('ttsVoiceSelect');
         if (!sel) return;
         if (this.isGoogleVoice(voice) && !Array.from(sel.options).some((option) => option.value === voice)) {
-          sel.insertBefore(new Option('Google WaveNet ' + voice.slice(-1), voice), sel.querySelector('[value="off"]'));
+          const label = voice.includes('Chirp3-HD') ? 'Google Chirp 3 HD' : 'Google WaveNet';
+          sel.insertBefore(new Option(label, voice), sel.querySelector('[value="off"]'));
         }
         sel.value = voice;
       },
       // 한국어 성우 목록을 받아 선택 상자에 채움 (한 번만)
-      async loadVoiceList() {
-        if (this.voiceListLoaded || !arCanUseAi()) return;
-        this.voiceListLoaded = true;
-        try {
-          const res = await fetch('/api/tts-voices?v=2');
-          if (!res.ok) throw new Error(`http_${res.status}`);
-          const body = await res.json();
-          const sel = document.getElementById('ttsVoiceSelect');
-          if (!sel || !Array.isArray(body.voices) || body.voices.length === 0) return;
-          const offOpt = sel.querySelector('option[value="off"]');
-          body.voices.forEach((v) => {
-            let opt = Array.from(sel.options).find((option) => option.value === v.id);
-            if (!opt) {
-              opt = document.createElement('option');
-              opt.value = v.id;
-              sel.insertBefore(opt, offOpt);
+      loadVoiceList() {
+        if (this.voiceListLoaded || !arCanUseAi()) return Promise.resolve();
+        if (this.voiceListRequest) return this.voiceListRequest;
+        this.voiceListRequest = (async () => {
+          try {
+            const response = await fetch('/api/tts-voices?v=3', { signal: AbortSignal.timeout(5000) });
+            if (!response.ok) return;
+            const { voices } = await response.json();
+            const select = document.getElementById('ttsVoiceSelect');
+            if (!select || !Array.isArray(voices) || voices.length === 0) return;
+            const options = document.createDocumentFragment();
+            const groups = new Map();
+            for (const { id, title, group } of voices) {
+              if (group && !groups.has(group)) {
+                const parent = document.createElement('optgroup');
+                parent.label = group;
+                groups.set(group, parent);
+                options.append(parent);
+              }
+              (groups.get(group) || options).append(new Option(title, id));
             }
-            opt.textContent = v.title;
-          });
-        } catch (e) {
-          this.voiceListLoaded = false; // 다음에 다시 시도
-        }
+            const off = select.querySelector('option[value="off"]');
+            select.replaceChildren(options, off);
+            const preferred = this.defaultVoicePending && voices.find((voice) => voice.preferred);
+            this.restoreVoice(preferred?.id || this.ttsVoice);
+            this.voiceListLoaded = true;
+          } catch (error) {
+            // 목록을 받지 못했으면 현재 성우를 사용하고, 다음에 목록을 다시 조회합니다.
+          } finally {
+            this.defaultVoicePending = false;
+            this.voiceListRequest = null;
+          }
+        })();
+        return this.voiceListRequest;
       },
 
       // Fish Audio 요청은 한 번에 2개까지만 보냄 (한꺼번에 몰리면 일부가 거절되어 음성이 빠짐)
@@ -567,8 +584,9 @@
       },
 
       // 문장 하나의 Fish Audio 음성을 받아 AudioBuffer로 디코딩 (성우·문장별 캐시)
-      fetchTtsBuffer(text) {
-        if (!arVoiceAllowed()) return Promise.reject(new Error('voice_locked'));
+      async fetchTtsBuffer(text) {
+        if (!arVoiceAllowed()) throw new Error('voice_locked');
+        if (this.defaultVoicePending && arCanUseAi()) await this.loadVoiceList();
         const key = this.ttsKey(text);
         if (this.ttsCache.has(key)) return this.ttsCache.get(key);
         // 대본 전체 녹음이 아직 시작 전이면(대본을 고친 직후 등) 문장별로 따로 녹음하지 않고 전체 녹음을 먼저 시작함
@@ -680,15 +698,18 @@
             } catch (error) {
               throw new Error(this.isTtsServiceError(error.message) ? error.message : 'google_tts_invalid_audio');
             }
-          } else if (body?.model === 'airy-tts-v1') {
-            provider = 'airy';
+          } else if (body?.model === 'airy-tts-v1' || body?.model === 'google-chirp3-hd') {
+            const chirp = body.model === 'google-chirp3-hd';
+            provider = chirp ? 'chirp' : 'airy';
+            const audioError = chirp ? 'google_tts_invalid_audio' : 'airy_invalid_audio';
             if (!Array.isArray(body.clips_base64) || body.clips_base64.length !== lines.length) {
-              throw new Error('airy_invalid_audio');
+              throw new Error(audioError);
             }
             try {
               const clips = await Promise.all(body.clips_base64.map((clip) => this.decodeNarration(ctx, clip)));
-              ({ full, bounds: exactBounds } = await this.renderNarrationClips(ctx, clips, speed));
-            } catch (error) { throw new Error('airy_invalid_audio'); }
+              // Chirp는 서버에서 말하기 속도를 적용해 오디오를 반환합니다.
+              ({ full, bounds: exactBounds } = await this.renderNarrationClips(ctx, clips, chirp ? 1 : speed));
+            } catch (error) { throw new Error(audioError); }
           } else {
             this.noteTtsModel(body && body.model);
             if (!body || !body.audio_base64 || !Array.isArray(body.lines) || body.lines.length !== lines.length) {
@@ -827,6 +848,7 @@
           const bytes = await res.arrayBuffer();
           let buffer = await ctx.decodeAudioData(bytes);
           if (model === 'google-wavenet') provider = 'google';
+          else if (model === 'google-chirp3-hd') provider = 'chirp';
           else if (model === 'airy-tts-v1') {
             provider = 'airy';
             buffer = (await this.renderNarrationClips(ctx, [buffer], speed)).full;
@@ -863,7 +885,7 @@
             if (['fish_api_key_missing', 'http_401', 'http_402', 'offline', 'quota'].includes(code)) {
               this.ttsBlockedUntil = Date.now() + (code === 'quota' ? 600000 : 60000);
             }
-            if (this.isTtsServiceError(code) || Date.now() < this.ttsBlockedUntil || !['fish', 'airy', 'google'].includes(this.ttsProvider)) {
+            if (this.isTtsServiceError(code) || Date.now() < this.ttsBlockedUntil || !['fish', 'airy', 'google', 'chirp'].includes(this.ttsProvider)) {
               this.setTtsProvider('browser', code);
             }
           }
@@ -899,6 +921,7 @@
           refitDurationToNarration();
           return Promise.resolve([]);
         }
+        if (this.defaultVoicePending) return this.loadVoiceList().then(() => this.prefetchTtsBuffers(force));
         const totalCuts = getTargetCutCount();
         const lines = [];
         // 본편 컷들(0..totalCuts-1) + 마지막 엔딩 명함 멘트(totalCuts)
@@ -1725,11 +1748,14 @@
       const bgmEl = document.getElementById('bgmStyleSelect');
       const ttsEl = document.getElementById('ttsVoiceSelect');
       const pickedBgm = bgmEl ? bgmEl.value : AudioEngine.bgmStyle;
-      if (ttsEl) AudioEngine.ttsVoice = ttsEl.value;
+      if (ttsEl && ttsEl.value !== prevVoice) {
+        AudioEngine.defaultVoicePending = false;
+        AudioEngine.ttsVoice = ttsEl.value;
+      }
       const speedEl = document.getElementById('ttsSpeedSelect');
       if (speedEl) AudioEngine.ttsSpeed = Number(speedEl.value) || 1.1;
       try {
-        if (ttsEl && ttsEl.value !== 'off') localStorage.setItem('autoreels_tts_voice', ttsEl.value);
+        if (ttsEl && ttsEl.value !== 'off' && !AudioEngine.defaultVoicePending) localStorage.setItem('autoreels_tts_voice', ttsEl.value);
       } catch (e) {}
 
       const voiceChanged = (AudioEngine.ttsVoice !== prevVoice) || (AudioEngine.ttsSpeed !== prevSpeed);

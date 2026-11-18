@@ -204,10 +204,15 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
   }
-  const googleVoices = Number(req.query?.v) >= 2 ? listGoogleVoices() : [];
+  const version = Number(req.query?.v);
+  const googleVoices = listGoogleVoices(version);
   if (usesAiry()) {
     res.setHeader('Cache-Control', 'no-store');
-    return res.status(200).json({ ok: true, voices: [...listAiryVoices(), ...googleVoices] });
+    const airyVoices = listAiryVoices();
+    const voices = version >= 3
+      ? [...googleVoices, ...airyVoices.map((voice) => ({ ...voice, group: 'Airy' }))]
+      : [...airyVoices, ...googleVoices];
+    return res.status(200).json({ ok: true, voices });
   }
   const apiKey = (process.env.FISH_API_KEY || '').trim();
   if (!apiKey) {
