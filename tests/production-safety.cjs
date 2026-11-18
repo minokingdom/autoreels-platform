@@ -1,7 +1,7 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..');
 function load(file,deps={},env={},globals={}){const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(root,file),'utf8'),{module,exports:module.exports,require:n=>{if(Object.hasOwn(deps,n))return deps[n];if(n.startsWith('node:')||n==='crypto')return require(n);throw Error(n)},process:{env},Buffer,URL,URLSearchParams,console:{error(){}},setTimeout,clearTimeout,...globals});return module.exports;}
-function response(){return {statusCode:200,body:null,setHeader(){},status(n){this.statusCode=n;return this},json(b){this.body=b;return this}};}
+function response(){return {statusCode:200,body:null,setHeader(){},status(n){this.statusCode=n;return this},json(b){this.body=b;return this},send(b){this.body=b;return this}};}
 (async()=>{
  let called=0,refunds=0;
  let unavailable=true;
@@ -130,8 +130,13 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  const airyMeter = load('lib/server/meter.js',{'./usage':dependencies});
  const airyScript = load('api/tts-script.js', {...deps,'../lib/airy-tts':airy,'../lib/server/meter':airyMeter},airyEnv);
  const airyRequest = {method:'GET',headers:{host:'app.test'},query:{v:'10',lines:JSON.stringify(['첫 컷','다음 컷','첫 컷']),ref:airyDeps['./fish-voices'].CURATED_VOICE_IDS[1]}};
- assert.equal(airy.usesAiry({query:{v:'9'}},10),false);
- assert.equal(airy.usesAiry(airyRequest,10),true);
+ assert.equal(airy.usesAiry(),true);
+ const oldAiryScript=response();
+ await airyScript({...airyRequest,query:{...airyRequest.query,v:'9'}},oldAiryScript);
+ assert.equal(oldAiryScript.statusCode,409);
+ assert.equal(oldAiryScript.body.error,'studio_refresh_required');
+ assert.equal(airyCalls.length,0);
+ assert.equal(providerCalls,0);
  const airyResult = response();
  await airyScript(airyRequest,airyResult);
  assert.equal(airyResult.statusCode,200);
@@ -139,6 +144,16 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  assert.equal(airyCalls.length,2);
  assert.deepEqual(airyCalls.map(call=>call.input),['첫 컷','다음 컷']);
  assert.ok(airyCalls.every(call=>call.language==='ko' && call.voice==='bdb7de5e2cdd3324' && call.authorization==='Bearer test-key'));
+ const airyApi=load('api/tts.js',{...deps,'../lib/airy-tts':airy,'../lib/server/meter':airyMeter},airyEnv);
+ const oldAiryLine=response();
+ await airyApi({method:'GET',headers:{host:'app.test'},query:{v:'8',text:'네 대'}},oldAiryLine);
+ assert.equal(oldAiryLine.statusCode,200);
+ assert.equal(airyCalls.at(-1).url,'https://api.airy.so/v1/audio/speech');
+ const airyVoiceApi=load('api/tts-voices.js',{...deps,'../lib/airy-tts':airy},airyEnv);
+ const oldVoiceList=response();
+ await airyVoiceApi({method:'GET',query:{}},oldVoiceList);
+ assert.equal(oldVoiceList.statusCode,200);
+ assert.deepEqual(Array.from(oldVoiceList.body.voices,voice=>voice.title),['Silvia','Rowan','Sori']);
  airyStatus=429;
  const priorRefunds=refunds;
  const rateLimited=response();

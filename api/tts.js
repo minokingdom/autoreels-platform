@@ -83,7 +83,7 @@ async function handler(req, res) {
   const input = ttsInput(req);
   const apiKey = (process.env.FISH_API_KEY || '').trim();
   const google = isGoogleVoice(input.ref);
-  const airy = usesAiry(req, 9);
+  const airy = usesAiry();
   if (!google && !airy && !apiKey) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(503).json({

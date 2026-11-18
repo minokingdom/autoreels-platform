@@ -205,7 +205,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
   }
   const googleVoices = Number(req.query?.v) >= 2 ? listGoogleVoices() : [];
-  if (usesAiry(req, 1)) {
+  if (usesAiry()) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({ ok: true, voices: [...listAiryVoices(), ...googleVoices] });
   }

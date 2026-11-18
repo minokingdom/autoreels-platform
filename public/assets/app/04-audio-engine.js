@@ -405,7 +405,7 @@
       },
 
       // ------------------------------------------------------------------------
-      // ★ 한국어 AI 성우(TTS): Fish Audio (/api/tts 서버 프록시)
+      // ★ 한국어 AI 성우(TTS)는 서버 프록시를 통해 가져옵니다.
       //   - MP3를 받아 AudioBuffer로 디코딩한 뒤 ttsGain에 연결하므로
       //     스피커 재생과 영상 추출 오디오 트랙에 같은 음성이 들어갑니다.
       //   - Fish Audio를 쓸 수 없을 때(키 미설정, 오프라인)만 브라우저 음성으로 대체합니다.
@@ -423,7 +423,7 @@
       ttsSource: null,
       ttsSourceGain: null,
       ttsSpeakToken: 0,
-      ttsProvider: 'unknown', // 'fish' | 'browser' | 'unknown'
+      ttsProvider: 'unknown', // 'airy' | 'google' | 'fish' | 'browser' | 'unknown'
       ttsLastError: '',
       ttsBlockedUntil: 0,
 
@@ -476,10 +476,10 @@
             errorCode === 'offline' ? '서버 없이 실행 중' :
             errorCode === 'quota' ? '이번 사용량 한도 도달' : '연결 실패';
           const code = String(errorCode || '');
-          const source = code.startsWith('google_') ? 'Google WaveNet' : code.startsWith('airy_') ? 'Airy' : 'Fish Audio';
+          const source = code.startsWith('google_') ? 'Google WaveNet ' : code.startsWith('airy_') ? 'Airy ' : '';
           const cause = code === 'airy_credit_exhausted' ? '크레딧 부족' :
             code.endsWith('_rate_limited') ? '음성 요청이 많음' : reason;
-          badge.textContent = `성우: 브라우저 음성 (${source} ${cause} · 추출 영상에는 녹음 안 됨)`;
+          badge.textContent = `성우: 브라우저 음성 (${source}${cause} · 추출 영상에는 녹음 안 됨)`;
           badge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#f5a524]';
         } else {
           badge.textContent = '성우: 준비 중';

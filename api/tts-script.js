@@ -65,7 +65,15 @@ async function handler(req, res) {
     return res.status(403).json({ ok: false, error: 'forbidden_origin' });
   }
   const apiKey = (process.env.FISH_API_KEY || '').trim();
-  const airy = usesAiry(req, 10);
+  const airy = usesAiry();
+  if (!google && airy && !(Number(req.query?.v) >= 10)) {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(409).json({
+      ok: false,
+      error: 'studio_refresh_required',
+      message: '스튜디오를 새로고침한 뒤 성우 음성을 다시 만들어 주세요.'
+    });
+  }
   if (!google && !airy && !apiKey) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(503).json({ ok: false, error: 'fish_api_key_missing' });
