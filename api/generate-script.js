@@ -1040,9 +1040,10 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
   return respond(isOther ? 'AutoReels 기본 대본' : 'AutoReels AI Automotive Director', fallbackVariants, aiDiag);
 };
 
-// 사용량 계산·한도 (회원 서버가 켜져 있을 때만 동작; 주제 추천 및 씬 이미지 동반 생성은 추가 과금 없음)
+// 외부 API를 호출하는 생성과 진단은 모두 로그인 상태와 사용량을 먼저 확인합니다.
 const { withMeter } = require('../lib/server/meter');
 module.exports = withMeter(handler, 'ai', (req) => {
+  if (req.method === 'GET' && ['kie', 'gemini'].includes(req.query?.diag)) return 1;
   if (req.method !== 'POST') return 0;
   try {
     const b = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});

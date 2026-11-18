@@ -114,6 +114,7 @@
     }
     let arTopicIconJob = 0;
     async function arHydrateTopicIcons(topics, cacheKey, serverUpdatedAt) {
+      if (!arHasGenerationAccount()) return;
       if (!Array.isArray(topics) || !topics.length || !window.location.protocol.startsWith('http')) return;
       const missing = topics.map((t, i) => ({ t, i })).filter(({ t }) => t && !t.iconUrl);
       if (!missing.length) return;
@@ -212,17 +213,15 @@
         prompt: specialty + ' 손님을 위한 ' + idea + ' 안내. 확인된 내용만 소개하기.'
       }));
       arRenderTopics(fallback, specialty + ' 추천 주제예요.');
-      if (!window.location.protocol.startsWith('http')) return;
+      if (!accountId) return;
       let batch = null;
-      if (accountId) {
-        try {
-          const r = await fetch('/api/account?action=specialty-trends', { cache: 'no-store', signal: AbortSignal.timeout(5000) });
-          if (r.ok) {
-            const data = await r.json();
-            if (data.industry === industry && data.specialty === specialty) batch = data;
-          }
-        } catch (_) {}
-      }
+      try {
+        const r = await fetch('/api/account?action=specialty-trends', { cache: 'no-store', signal: AbortSignal.timeout(5000) });
+        if (r.ok) {
+          const data = await r.json();
+          if (data.industry === industry && data.specialty === specialty) batch = data;
+        }
+      } catch (_) {}
       if (!stillCurrent()) return;
       const trendsAt = batch?.updatedAt || '';
       if (!force) {
@@ -285,9 +284,14 @@
           : null;
         if (serverTopics && serverTopics.length) {
           try { localStorage.setItem(cacheKey, JSON.stringify({ topics: serverTopics, at: Date.now(), trendsAt: serverUpdatedAt })); } catch (e) {}
-          arRenderTopics(serverTopics, '오늘 날짜와 요즘 인기 키워드로 준비한 주제예요. 하나를 누르면 대본을 바로 만들어요.', false);
+          const status = arHasGenerationAccount() ? '하나를 누르면 대본을 바로 만들어요.' : 'AI 대본을 만들려면 로그인해 주세요.';
+          arRenderTopics(serverTopics, '오늘 날짜와 요즘 인기 키워드로 준비한 주제예요. ' + status, false);
           return;
         }
+      }
+      if (!arHasGenerationAccount()) {
+        arRenderTopics(arFallbackTopics(dc), '기본 추천 주제예요. AI 대본을 만들려면 로그인해 주세요.');
+        return;
       }
       // 먼저 기본 주제를 바로 보여 주고, AI 추천이 오면 바꿈
       arRenderTopics(arFallbackTopics(dc), '오늘 요일·계절·인기 키워드로 주제를 고르는 중… (10초 정도)');
@@ -387,7 +391,7 @@
       el.style.display = 'none';
       arSyncProductRows();
       // 주제를 고른 뒤 상품을 바꿨으면, 바뀐 상품으로 대본을 다시 씀 (상품과 대본이 어긋나지 않게)
-      if (arProductKey() !== arProductSnap && window.arTodayTopic && typeof generateStoryboardFromPrompt === 'function') {
+      if (arHasGenerationAccount() && arProductKey() !== arProductSnap && window.arTodayTopic && typeof generateStoryboardFromPrompt === 'function') {
         if (typeof arToast === 'function') arToast('바뀐 상품으로 대본을 다시 써요.');
         generateStoryboardFromPrompt();
       }
@@ -395,12 +399,13 @@
 
     function arPickTopic(topic) {
       if (!topic || !topic.prompt) return;
+      const promptEl = document.getElementById('aiPromptInput');
+      if (promptEl) promptEl.value = topic.prompt;
+      if (!arAskForGenerationLogin()) return;
       arSuspendScriptNarration();
       window.arTodayTopic = topic;
       setTimeout(arSyncProductRows, 0);
       setTimeout(() => window.scrollTo({ top: Math.max(0, (document.getElementById('studioTabBtn_script') || document.body).getBoundingClientRect().top + window.scrollY - 160), behavior: 'smooth' }), 60);
-      const promptEl = document.getElementById('aiPromptInput');
-      if (promptEl) promptEl.value = topic.prompt;
       const badge = document.getElementById('todayTopicBadge');
       if (badge) { badge.textContent = `오늘 주제: ${topic.title} — 이 주제로 대본을 만들고 있어요`; badge.classList.remove('hidden'); }
       // 주제(키워드)와 같은 분위기의 디자인으로 맞춤 — 대본·디자인이 한 흐름이 되게
@@ -512,6 +517,12 @@
     // ★ 2026-11-17 사장님 요청: 성우 목소리를 첫 화면부터 바로 들려줌 (발행 단계까지 기다리지 않음)
     //   크레딧 절약은 '소리를 켰을 때만 녹음'(prefetchTtsBuffers)으로, 이전 대본 목소리 섞임은 대본별 녹음(masterWantKey)으로 막음
     function arVoiceAllowed() { return !window.__arScriptGenerating; }
+    function arHasGenerationAccount() { return Boolean(window.AR_SERVER?.me?.user); }
+    function arAskForGenerationLogin() {
+      if (arHasGenerationAccount()) return true;
+      openDealerAuthModal('generation');
+      return false;
+    }
     function arFirstMissingStep() {
       return ['topic', 'script', 'photo', 'sound', 'card'].find((k) => !arStepsVisited.has(k)) || null;
     }
@@ -1708,6 +1719,7 @@
     }
 
     async function generateStoryboardFromPrompt() {
+      if (!arAskForGenerationLogin()) return;
       const generationId = ++arScriptGenerationId;
       arSetScriptGenerating(true);
       const promptEl = document.getElementById('aiPromptInput');
@@ -1796,6 +1808,11 @@
 
         const result = await response.json();
         if (generationId !== arScriptGenerationId) return;
+        if (response.status === 401 && result.error === 'login_required') {
+          noticeEl?.classList.add('hidden');
+          openDealerAuthModal('generation');
+          return;
+        }
         if (!response.ok || !result.ok || !result.data) {
           throw new Error(result.error || 'AI 서버 응답 오류');
         }
@@ -1964,6 +1981,7 @@
     }
 
     function arRegenerateThemeImages() {
+      if (!arUseLocalSceneImages() && !arAskForGenerationLogin()) return;
       const totalCuts = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
       const tp = window.arTodayTopic;
       const promptEl = document.getElementById('aiPromptInput');

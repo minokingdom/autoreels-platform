@@ -8,8 +8,18 @@ await new Promise(r=>srv.listen(0,'127.0.0.1',r));const browser=await chromium.l
 await page.route('**/api/account?action=config',route=>route.fulfill({json:{ok:true,serverMode:true,kakaoLogin:true,phoneVerification:true,snsScheduling:false,sns:{}}}));
 await page.route('**/api/account?action=me',route=>route.fulfill({json:{ok:false,guest:true}}));
 await page.route('**/api/account?action=phone-code',route=>route.fulfill({json:{ok:true,challengeId:'browser-otp-test'}}));
+const guestGenerationRequests=[];
+page.on('request',request=>{
+ const url=new URL(request.url());
+ if(['/api/generate-script','/api/tts','/api/tts-script'].includes(url.pathname)||url.searchParams.get('action')==='generate-bgm') {
+  guestGenerationRequests.push(url.pathname);
+ }
+});
 try{
  await page.goto(`http://127.0.0.1:${srv.address().port}/studio`);await page.waitForFunction(()=>window.AR_SERVER?.mode===true);
+ await page.locator('#dealerAuthModal').waitFor({state:'visible'});
+ await page.locator('#arKakaoLoginBtn').waitFor({state:'visible'});
+ await page.getByRole('button',{name:'로그인 없이 둘러보기'}).click();
  await page.locator('#arQuickBar [data-qb="settings"]').click();
  const settings=page.getByRole('dialog',{name:'스튜디오 설정'});
  assert.equal(await settings.locator('#settingsBusinessProfile').isVisible(),false);
@@ -36,6 +46,14 @@ try{
  await auth.getByLabel('휴대폰 번호',{exact:true}).fill('01012345679');
  assert.equal(await auth.getByLabel('인증번호 6자리').isVisible(),false);
  await auth.getByRole('button',{name:'닫기'}).click();
+ await page.locator('#topicCards [data-topic-idx]').first().click();
+ await page.locator('#authGenerationNotice').waitFor({state:'visible'});
+ assert.equal(await kakao.isVisible(),true);
+ assert.equal(await page.locator('#scriptGeneratingStatus').isVisible(),false);
+ await auth.getByRole('button',{name:'닫기'}).click();
+ await page.evaluate(()=>toggleAudioMaster(true));
+ assert.equal(await page.evaluate(()=>AudioEngine.ttsProvider),'browser');
+ assert.deepEqual(guestGenerationRequests,[]);
  const user={id:'733',phone:null,name:'사용자',title:'',branch:'',promo:'',industry:'auto'};
  await page.evaluate(user=>arApplyMe({user,entitlement:{pro:false},usage:{}}),user);
  assert.equal(await page.evaluate(()=>selectedDealerId),'account_733');

@@ -1,6 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'..');
-function load(file,deps={},env={}){const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(root,file),'utf8'),{module,exports:module.exports,require:n=>{if(Object.hasOwn(deps,n))return deps[n];if(n.startsWith('node:')||n==='crypto')return require(n);throw Error(n)},process:{env},Buffer,URL,URLSearchParams,console:{error(){}},setTimeout,clearTimeout});return module.exports;}
+function load(file,deps={},env={},globals={}){const module={exports:{}};vm.runInNewContext(fs.readFileSync(path.join(root,file),'utf8'),{module,exports:module.exports,require:n=>{if(Object.hasOwn(deps,n))return deps[n];if(n.startsWith('node:')||n==='crypto')return require(n);throw Error(n)},process:{env},Buffer,URL,URLSearchParams,console:{error(){}},setTimeout,clearTimeout,...globals});return module.exports;}
 function response(){return {statusCode:200,body:null,setHeader(){},status(n){this.statusCode=n;return this},json(b){this.body=b;return this}};}
 (async()=>{
  let called=0,refunds=0;
@@ -33,8 +33,55 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
   throw Error(sql);
  };
  const db={query,tx:async fn=>{const before=new Map(balances),prior=structuredClone(receipts);try{return await fn({query})}catch(e){balances=before;receipts=prior;throw e}}};
- const usage=load('lib/server/usage.js',{'./db':db,'./config':{readiness:()=>({serverMode:true})},'./session':{readSession:()=>({uid:'1',v:1})},'./plans':{limits:()=>({standard:{aiScripts:5,ttsChars:10,exportPublishLimit:2}})},'./comp-pro':{effectiveSubscription:(_,s)=>s}},{AI_DAILY_UNIT_CAP:'3',AI_MONTHLY_UNIT_CAP:'3'});
- const req={headers:{}};
+ const usage=load('lib/server/usage.js',{'./db':db,'./config':{readiness:()=>({serverMode:true})},'./session':{readSession:req=>req.testSession},'./plans':{limits:()=>({standard:{aiScripts:5,ttsChars:10,exportPublishLimit:2}})},'./comp-pro':{effectiveSubscription:(_,s)=>s}},{AI_DAILY_UNIT_CAP:'3',AI_MONTHLY_UNIT_CAP:'3'});
+ const guardedMeter = load('lib/server/meter.js', {'./usage':usage});
+ const deps = {
+   '../lib/server/usage':usage,
+   '../lib/server/meter':guardedMeter,
+   '../lib/business-specialty.cjs':require('../lib/business-specialty.cjs'),
+   '../lib/reference-analysis.cjs':{handleReferenceAnalysis:()=>assert.fail('비로그인 영상 분석 실행')},
+   '../lib/fish-voices':require('../lib/fish-voices'),
+   '../lib/korean-numbers':require('../lib/korean-numbers')
+ };
+ let providerCalls = 0;
+ const guardedApi = file => load('api/'+file+'.js', deps, {
+   GEMINI_API_KEY:'test', KIE_API_KEY:'test', FISH_API_KEY:'test', BLOB_READ_WRITE_TOKEN:'test'
+ }, {fetch:()=>{providerCalls++; throw Error('unexpected_provider_request')}});
+ const scriptApi = guardedApi('generate-script');
+ const cases = [
+   ...['script','topics','scene-prompts','scene-image','scene-images','reference-style']
+     .map(mode=>[scriptApi,{method:'POST',body:{mode,prompt:'sample',count:4}}]),
+   ...['kie','gemini'].map(diag=>[scriptApi,{method:'GET',query:{diag}}]),
+   [guardedApi('tts'),{method:'GET',query:{text:'sample'}}],
+   [guardedApi('tts'),{method:'POST',body:'{}',query:{text:'sample'}}],
+   [guardedApi('tts-script'),{method:'GET',query:{lines:JSON.stringify(['sample'])}}],
+   [guardedApi('tts-voices'),{method:'POST',query:{action:'generate-bgm'},body:{prompt:'sample'}}]
+ ];
+ for(const [api,request] of cases){
+   for(const testSession of [undefined,{uid:'1',v:2}]){
+     const denied=response();
+     await api({...request,testSession,headers:{host:'app.test',origin:'https://app.test'}},denied);
+     assert.equal(denied.statusCode,401,JSON.stringify(request));
+     assert.equal(denied.body.error,'login_required');
+   }
+ }
+ assert.equal(providerCalls,0);
+ assert.equal(balances.size,0);
+ const publicUrls=[];
+ const trends = load('api/trends.js',{
+   pg:{Pool:class {}}, '../lib/server/usage':usage,
+   '../lib/server/specialty-trends':{runScheduledSpecialtyTrends:()=>assert.fail('비로그인 배치 실행')}
+ },{APIFY_TOKEN:'test',IG_ACCESS_TOKEN:'test',IG_USER_ID:'test',YOUTUBE_API_KEY:'test'},{
+   AbortSignal, fetch:async url=>{publicUrls.push(new URL(url).hostname);return {ok:true,text:async()=>''}}
+ });
+ const publicTrends=response();
+ await trends({method:'GET',query:{industry:'auto',refresh:'1'},headers:{}},publicTrends);
+ assert.equal(publicTrends.statusCode,200);
+ assert.deepEqual(publicUrls,['www.youtube.com']);
+ const cronDenied=response();
+ await trends({method:'GET',query:{cron:'1'},headers:{}},cronDenied);
+ assert.equal(cronDenied.statusCode,403);
+ const req={headers:{},testSession:{uid:'1',v:1}};
  const first=await usage.consume(req,'ai',2);assert.equal(first.ok,true);
  const before=[...balances];assert.equal((await usage.consume(req,'ai',2)).ok,false);assert.deepEqual([...balances],before);
  await usage.refundUsage(req,'ai',2,first);assert.ok([...balances.values()].every(x=>x===0));

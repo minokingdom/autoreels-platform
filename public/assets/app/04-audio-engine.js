@@ -502,7 +502,7 @@
 
       // Fish Audio 한국어 성우 목록을 받아 선택 상자에 채움 (한 번만)
       async loadVoiceList() {
-        if (this.voiceListLoaded || !window.location.protocol.startsWith('http')) return;
+        if (this.voiceListLoaded || !arHasGenerationAccount()) return;
         this.voiceListLoaded = true;
         try {
           const res = await fetch('/api/tts-voices');
@@ -575,6 +575,7 @@
         return true;
       },
       fetchScriptNarration(lines) {
+        if (!arHasGenerationAccount()) return Promise.reject(new Error('login_required'));
         const voice = this.ttsVoice;
         const speed = this.ttsSpeed;
         const scriptKey = `${voice}@${speed}|${lines.join('\n')}`;
@@ -584,7 +585,7 @@
         const job = (async () => {
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
-          const url = `/api/tts-script?v=7&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
+          const url = `/api/tts-script?v=8&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
           const res = await this.runTtsRequest(() => fetch(url));
           if (!res.ok) {
             let code = `http_${res.status}`;
@@ -697,6 +698,7 @@
 
       // 문장 하나만 따로 녹음 (전체 녹음을 쓸 수 없을 때의 대체 경로)
       fetchLineBuffer(text) {
+        if (!arHasGenerationAccount()) return Promise.reject(new Error('login_required'));
         const voice = this.ttsVoice;
         const speed = this.ttsSpeed;
         const key = this.ttsKey(text);
@@ -709,7 +711,7 @@
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
           // v: 서버의 읽기 규칙이 바뀌면 올려서, 예전에 저장된 음성 대신 새 음성을 받게 함
-          const url = `/api/tts?v=6&speed=${speed}` + (voice !== 'auto' ? `&ref=${encodeURIComponent(voice)}` : '') + `&text=${encodeURIComponent(text)}`;
+          const url = `/api/tts?v=7&speed=${speed}` + (voice !== 'auto' ? `&ref=${encodeURIComponent(voice)}` : '') + `&text=${encodeURIComponent(text)}`;
           let res = await this.runTtsRequest(() => fetch(url));
           if (!res.ok && (res.status === 429 || res.status >= 500) && res.status !== 503) {
             await new Promise((r) => setTimeout(r, 900));
@@ -786,6 +788,11 @@
 
       // 모든 컷 + 마지막 명함 멘트 음성을 미리 받아 두고, 받은 길이에 맞춰 영상 길이를 조정
       prefetchTtsBuffers(force) {
+        if (!arHasGenerationAccount()) {
+          this.setTtsProvider('browser');
+          refitDurationToNarration();
+          return Promise.resolve([]);
+        }
         // 소리를 켠 사람에게만 성우 녹음을 받음 (소리 꺼 둔 방문자마다 녹음하면 크레딧 낭비). 영상 내보내기는 force
         if (this.ttsVoice === 'off' || !arVoiceAllowed() || (!this.enabled && !force)) {
           refitDurationToNarration();
@@ -1584,6 +1591,7 @@
         if (inp) inp.focus();
         return;
       }
+      if (!arAskForGenerationLogin()) return;
       if (btn) { btn.disabled = true; btn.textContent = '✨ 생성 중...'; }
       if (st) { st.classList.remove('hidden'); st.textContent = '✨ AI가 30초짜리 맞춤 음악을 만들고 있어요…'; }
       try {

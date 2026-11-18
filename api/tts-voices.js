@@ -125,6 +125,7 @@ module.exports = async function handler(req, res) {
   if (action === 'generate-bgm') {
     if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'method_not_allowed' });
     if (!isSameSiteRequest(req)) return res.status(403).json({ ok: false, error: 'forbidden_origin' });
+    res.setHeader('Cache-Control', 'no-store');
     let body = req.body;
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
     body = body || {};
@@ -137,9 +138,24 @@ module.exports = async function handler(req, res) {
       : '';
 
     const cacheId = preset ? preset.id : kwHash;
-    if (cacheId) {
-      const cachedMap = await listCachedBgmUrls();
+
+    const prompt = preset
+      ? preset.prompt
+      : (customPrompt ? `Instrumental background music for short-form reels video, no vocals unless requested: ${customPrompt}` : '');
+    if (!prompt) return res.status(400).json({ ok: false, error: 'missing_prompt', message: '음악 분위기나 프롬프트를 입력해 주세요.' });
+
+    let gate;
+    try {
+      gate = await consume(req, 'ai', 2);
+    } catch (_) {
+      return res.status(503).json({ ok: false, error: 'usage_unavailable', message: '사용량을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.' });
+    }
+    if (!gate.ok) return res.status(gate.status).json(gate.body);
+
+    try {
+      const cachedMap = cacheId ? await listCachedBgmUrls() : {};
       if (cachedMap[cacheId]) {
+        await refundUsage(req, 'ai', 2, gate);
         return res.status(200).json({
           ok: true,
           id: cacheId,
@@ -148,22 +164,11 @@ module.exports = async function handler(req, res) {
           cached: true
         });
       }
-    }
-
-    const geminiKey = String(process.env.GEMINI_API_KEY || '').trim();
-    if (!geminiKey) {
-      return res.status(503).json({ ok: false, error: 'gemini_api_key_missing', message: 'GEMINI_API_KEY 환경변수가 설정되지 않았습니다.' });
-    }
-
-    const prompt = preset
-      ? preset.prompt
-      : (customPrompt ? `Instrumental background music for short-form reels video, no vocals unless requested: ${customPrompt}` : '');
-    if (!prompt) return res.status(400).json({ ok: false, error: 'missing_prompt', message: '음악 분위기나 프롬프트를 입력해 주세요.' });
-
-    const gate = await consume(req, 'ai', 2);
-    if (!gate.ok) return res.status(gate.status).json(gate.body);
-
-    try {
+      const geminiKey = String(process.env.GEMINI_API_KEY || '').trim();
+      if (!geminiKey) {
+        await refundUsage(req, 'ai', 2, gate);
+        return res.status(503).json({ ok: false, error: 'gemini_api_key_missing', message: 'GEMINI_API_KEY 환경변수가 설정되지 않았습니다.' });
+      }
       const audio = await callGeminiLyria(prompt, geminiKey);
       const buf = Buffer.from(audio.base64, 'base64');
       const ext = audio.mimeType.includes('wav') ? 'wav' : audio.mimeType.includes('ogg') ? 'ogg' : 'mp3';
@@ -189,7 +194,7 @@ module.exports = async function handler(req, res) {
         cached: false
       });
     } catch (err) {
-      await refundUsage(req, 'ai', 2);
+      await refundUsage(req, 'ai', 2, gate);
       return res.status(502).json({ ok: false, error: 'lyria_failed', message: String(err && err.message || 'Lyria 생성 실패') });
     }
   }

@@ -59,6 +59,14 @@ function isSameSiteRequest(req) {
   }
 }
 
+function ttsInput(req) {
+  return req.method === 'POST' && req.body && typeof req.body === 'object' ? req.body : req.query || {};
+}
+
+function ttsText(input) {
+  return String(input.text || '').replace(/\s+/g, ' ').trim().slice(0, MAX_TEXT_LENGTH);
+}
+
 async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
@@ -80,8 +88,8 @@ async function handler(req, res) {
     });
   }
 
-  const input = req.method === 'POST' && req.body && typeof req.body === 'object' ? req.body : req.query || {};
-  const text = String(input.text || '').replace(/\s+/g, ' ').trim().slice(0, MAX_TEXT_LENGTH);
+  const input = ttsInput(req);
+  const text = ttsText(input);
   if (!text) {
     return res.status(400).json({ ok: false, error: 'text_required' });
   }
@@ -149,7 +157,7 @@ async function handler(req, res) {
     res.setHeader('Content-Type', 'audio/mpeg');
     // 같은 문장·같은 성우는 CDN에서 7일간 재사용해 크레딧 소모를 줄입니다.
     // 단, 무료 모델(크레딧 부족) 음성은 저장하지 않음 — 충전 후에도 저음질 음성이 7일간 남지 않도록
-    res.setHeader('Cache-Control', modelUsed === FREE_MODEL ? 'no-store' : 'public, max-age=86400, s-maxage=604800');
+    res.setHeader('Cache-Control', modelUsed === FREE_MODEL ? 'no-store' : 'private, max-age=86400');
     return res.status(200).send(buffer);
   } catch (err) {
     res.setHeader('Cache-Control', 'no-store');
@@ -159,4 +167,4 @@ async function handler(req, res) {
 
 // 사용량 계산·한도 (회원 서버가 켜져 있을 때만 동작)
 const { withMeter } = require('../lib/server/meter');
-module.exports = withMeter(handler, 'tts', (req) => String(((req.method === 'POST' && req.body) || req.query || {}).text || '').replace(/\s+/g, ' ').trim().slice(0, 200).length);
+module.exports = withMeter(handler, 'tts', (req) => ['GET', 'POST'].includes(req.method) ? ttsText(ttsInput(req)).length : 0);

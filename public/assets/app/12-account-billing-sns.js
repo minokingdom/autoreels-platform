@@ -159,10 +159,12 @@
       document.getElementById('authDemoSection').classList.toggle('hidden', production || Boolean(AR_SERVER.cfg?.serverMode));
     }
 
-    function openDealerAuthModal() {
+    function openDealerAuthModal(reason = '') {
       arRenderIndustryChip();
       arFillSignupFieldsForIndustry();
       const m = document.getElementById('dealerAuthModal');
+      document.getElementById('authGenerationNotice').classList.toggle('hidden', reason === '');
+      document.getElementById('arBrowseAsGuest').classList.toggle('hidden', reason !== 'welcome');
       switchAuthModalTab('login');
       arSyncAuthMethods(true);
       if (m) m.classList.remove('hidden');
@@ -174,6 +176,7 @@
       document.getElementById('arPhoneCode').value = '';
       arPhoneChallenge = null;
     }
+    document.getElementById('arBrowseAsGuest').addEventListener('click', closeDealerAuthModal);
 
     function switchAuthModalTab(tab) {
       if (authModalTab !== tab) {
@@ -580,9 +583,15 @@
       const demo = document.getElementById('authDemoSection');
       if (demo) demo.classList.add('hidden');
       const me = await arApi('me');
-      if (me.ok) arApplyMe(me.body);
-      else arLockDemoDealers();
       const callbackParams = new URLSearchParams(location.search);
+      if (me.ok) arApplyMe(me.body);
+      else {
+        arLockDemoDealers();
+        const authModal = document.getElementById('dealerAuthModal');
+        if (me.body.guest && !callbackParams.has('plan') && authModal.classList.contains('hidden')) {
+          openDealerAuthModal('welcome');
+        }
+      }
       const kakaoResult = callbackParams.get('kakao');
       if (kakaoResult) {
         callbackParams.delete('kakao');

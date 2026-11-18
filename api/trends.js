@@ -322,7 +322,7 @@ function extractVideosFromYtHtml(html) {
   }
 }
 
-async function fetchTrendsForIndustry(indKey, customQ = '') {
+async function fetchTrendsForIndustry(indKey, customQ = '', { publicOnly = false } = {}) {
   const conf = INDUSTRY_QUERIES[indKey] || INDUSTRY_QUERIES.auto;
   // ig 는 해시태그 하나(문자열) 또는 여러 개(배열)
   const igTags = customQ ? [customQ.replace(/\s+/g, '')] : (Array.isArray(conf.ig) ? conf.ig : [conf.ig]);
@@ -332,22 +332,22 @@ async function fetchTrendsForIndustry(indKey, customQ = '') {
 
   let source = 'empty';
   let rawVideos = [];
-  const diag = { hasApify: Boolean(process.env.APIFY_TOKEN) };
+  const diag = { hasApify: !publicOnly && Boolean(process.env.APIFY_TOKEN) };
 
   // 1) 운영자 Apify 토큰이 있으면 인스타 릴스 우선 조회
-  if (process.env.APIFY_TOKEN) {
+  if (diag.hasApify) {
     rawVideos = await fetchInstagramApify(igTags, diag, apifyOpts).catch((e) => { diag.apifyEx = e?.message; return []; });
     if (rawVideos.length) source = 'instagram_apify';
   }
 
   // 2) 운영자 Meta Graph API 토큰이 있으면 공식 인스타 해시태그 조회 (첫 해시태그)
-  if (!rawVideos.length && process.env.IG_ACCESS_TOKEN && process.env.IG_USER_ID) {
+  if (!publicOnly && !rawVideos.length && process.env.IG_ACCESS_TOKEN && process.env.IG_USER_ID) {
     rawVideos = await fetchInstagramGraph(igTag).catch(() => []);
     if (rawVideos.length) source = 'instagram_graph';
   }
 
   // 3) YouTube Data API (YOUTUBE_API_KEY) — 최근 30일 조회수순
-  if (!rawVideos.length && process.env.YOUTUBE_API_KEY) {
+  if (!publicOnly && !rawVideos.length && process.env.YOUTUBE_API_KEY) {
     const monthAgoIso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=short&order=viewCount&publishedAfter=${encodeURIComponent(monthAgoIso)}&maxResults=6&regionCode=KR&relevanceLanguage=ko&q=${encodeURIComponent(ytQuery)}&key=${encodeURIComponent(process.env.YOUTUBE_API_KEY)}`;
     const r = await fetch(apiUrl, { signal: AbortSignal.timeout(5000) });
@@ -391,7 +391,7 @@ async function fetchTrendsForIndustry(indKey, customQ = '') {
   return { source, query: source.startsWith('instagram') ? igLabel : ytQuery, items, diag };
 }
 
-const { isSameSiteRequest, consume, refundUsage } = require('../lib/server/usage');
+const { isSameSiteRequest, resolveSubject, consume, refundUsage } = require('../lib/server/usage');
 const { timingSafeEqual } = require('node:crypto');
 const { runScheduledSpecialtyTrends } = require('../lib/server/specialty-trends');
 
@@ -428,7 +428,7 @@ async function handler(req, res) {
       const secret = process.env.CRON_SECRET || process.env.ADMIN_TOKEN || '';
       const auth = String((req.headers && req.headers.authorization) || '').replace(/^Bearer\s+/i, '');
       const tok = String((req.headers && req.headers['x-admin-token']) || '');
-      if (secret && auth !== secret && tok !== secret) {
+      if (!secret || (auth !== secret && tok !== secret)) {
         return res.status(403).json({ ok: false, error: 'forbidden' });
       }
       const keys = Object.keys(INDUSTRY_QUERIES);
@@ -463,12 +463,14 @@ async function handler(req, res) {
       return res.status(gate.status).json(gate.body);
     }
 
-    const { source, query, items, diag } = await fetchTrendsForIndustry(indKey, customQ);
+    const hasProvider = Boolean(process.env.APIFY_TOKEN || process.env.IG_ACCESS_TOKEN || process.env.YOUTUBE_API_KEY);
+    const publicOnly = hasProvider && (await resolveSubject(req)).kind !== 'user';
+    const { source, query, items, diag } = await fetchTrendsForIndustry(indKey, customQ, { publicOnly });
     if (!items.length) await refundUsage(req, 'trends', 1);
-    if (!customQ && items.length) {
+    if (!customQ && items.length && !publicOnly) {
       await writeTrendCache(indKey, source, query, items);
       res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
-    }
+    } else res.setHeader('Cache-Control', 'no-store');
 
     return res.status(200).json({
       ok: true,
