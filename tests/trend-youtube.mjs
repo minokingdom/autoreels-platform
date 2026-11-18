@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { extractVideosFromYtHtml, fetchPublicYoutube } from '../scripts/trend-youtube.mjs';
+const data={contents:{twoColumnSearchResultsRenderer:{primaryContents:{sectionListRenderer:{contents:[{itemSectionRenderer:{contents:[{videoRenderer:{videoId:'video123',title:{runs:[{text:'Fresh result'}]}}}]}}]}}}}};
+const html='var ytInitialData = '+JSON.stringify(data)+';</script>';
+assert.equal(extractVideosFromYtHtml(html)[0].videoId,'video123');
+assert.equal(extractVideosFromYtHtml('bad').length,0);
+let calls=0;const result=await fetchPublicYoutube('test',async(url)=>{calls++;assert.match(url,/youtube\.com\/results/);return {ok:true,text:async()=>html}});
+assert.equal(calls,1);assert.equal(result[0].title,'Fresh result');
+await assert.rejects(fetchPublicYoutube('test',async()=>({ok:false,status:429})),/youtube_http_429/);
+console.log('free trend fallback tests ok');
