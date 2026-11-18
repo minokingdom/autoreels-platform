@@ -14,7 +14,7 @@ for(const factor of [0.5,1,4]) for (const card of [false,true]) for(const base o
  const bounds=rawBounds.map(x=>x*factor);
  const sources=[];
  const ctx={currentTime:1,createBufferSource(){const s={connect(){},start(t,offset){this.offset=offset},stop(){this.stopped=true}};sources.push(s);return s},createGain(){return {connect(){},gain:{value:1,cancelScheduledValues(){},setValueAtTime(){},linearRampToValueAtTime(){}}}}};
- const env={BASE_DURATION:base,TOTAL_DURATION:base,OUTRO_DURATION:0,campaign:{cutLenScale:[2,1,1,1]},arCardEmpty:()=>!card,audioEngineReady:()=>true,getTargetCutCount:()=>4,arVoiceAllowed:()=>true,getMainDuration:()=>env.TOTAL_DURATION-env.OUTRO_DURATION,isPlaying:true,window:{__timelines:{main:{currentTime:2}}}};
+ const env={BASE_DURATION:base,TOTAL_DURATION:base,OUTRO_DURATION:0,campaign:{cutLenScale:[2,1,1,1]},arCardEmpty:()=>!card,audioEngineReady:()=>true,getTargetCutCount:()=>4,arVoiceAllowed:()=>true,getMainDuration:()=>env.TOTAL_DURATION-env.OUTRO_DURATION,isPlaying:true,arEditSheetOpen:false,window:{__timelines:{main:{currentTime:2}}}};
  vm.createContext(env);
  vm.runInContext('this.AudioEngine={'+methods+'}',env);
  Object.assign(env.AudioEngine,{ctx,enabled:true,ttsVoice:'test',masterBuffer:{duration:bounds.at(-1)},masterDuration:bounds.at(-1),masterCutBounds:bounds,masterPeak:1,ttsGain:{},ensureContext:()=>ctx,handleSceneSfx(){},getNarrationSeconds:()=>bounds.slice(1).map((b,i)=>b-bounds[i]),speakCutLine(){throw Error('continuous narration interrupted by a cut')}});
@@ -35,6 +35,12 @@ for(const factor of [0.5,1,4]) for (const card of [false,true]) for(const base o
  assert.ok(!first.stopped);
  env.AudioEngine.onPlayStateChange(false);
  assert.ok(first.stopped);
+ env.arEditSheetOpen=true;
+ env.AudioEngine.onPlayStateChange(true);
+ env.AudioEngine.syncWithTimeline(2);
+ assert.equal(env.AudioEngine.masterSource,null);
+ assert.equal(sources.length,1);
+ env.arEditSheetOpen=false;
  env.AudioEngine.onPlayStateChange(true);
  assert.equal(env.AudioEngine.masterSource.offset,2);
  env.AudioEngine.playMasterAt(0);
