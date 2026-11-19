@@ -189,10 +189,11 @@
   var heroEl = document.getElementById('arCineHero');
   var deckEl = document.getElementById('lpReelDeck');
   var mainReelEl = document.getElementById('landingPhoneStage');
-  var fanL2 = document.querySelector('.lp-fan-l2');
-  var fanL1 = document.querySelector('.lp-fan-l1');
-  var fanR1 = document.querySelector('.lp-fan-r1');
-  var fanR2 = document.querySelector('.lp-fan-r2');
+  var orbitCarousel = document.getElementById('lpOrbitCarousel');
+  var orbitCards = document.querySelectorAll('#lpOrbitCarousel .lp-orbit-card');
+  var orbitCarEl = document.getElementById('lpOrbitCar');
+  var orbitRingEl = document.getElementById('lpOrbitRing');
+  var portalWipeEl = document.getElementById('lpPortalWipe');
   var hudL = document.getElementById('lpHudLeft');
   var hudR = document.getElementById('lpHudRight');
   var act1 = document.getElementById('lpAct1');
@@ -206,6 +207,7 @@
   var scrollCue = document.getElementById('lpScrollCue');
   var glowEl = document.getElementById('lpMouseGlow');
   var activeAct = -1;
+  var idleOrbitDeg = 0;
 
   var HUD_BY_ACT = [
     null,
@@ -263,63 +265,115 @@
     curMy += (targetMy - curMy) * 0.08;
 
     var p = scrollP;
-    var spread = clamp(1 - p * 3.1, 0, 1);  // 1막(0~32%)에서 부채꼴이 시네마틱하게 열리며 빠짐
-    var focus = clamp(p * 2.6, 0, 1);       // 2막부터 중앙 릴스 집중
     var isMobile = window.innerWidth < 768;
 
-    // 4막 계산 (0: 0~25%, 1: 25~50%, 2: 50~75%, 3: 75~100%)
-    var curAct = p < 0.24 ? 0 : (p < 0.50 ? 1 : (p < 0.76 ? 2 : 3));
+    // 4막 계산:
+    //  0막 (0.00 ~ 0.34): 3D 원형 궤도 공전(0~0.18) -> 자동차 카드 카메라 돌출 & 포털 화면 전환(0.18~0.34)
+    //  1막 (0.34 ~ 0.56): 전환 후 2막 (링크 분석 & 하이라이트 추출)
+    //  2막 (0.56 ~ 0.78): 3막 (747+ 스타일 & AI 성우 + 시네마 레터박스)
+    //  3막 (0.78 ~ 1.00): 4막 (9:16 MP4 완성 + SNS 원클릭 발행)
+    var curAct = p < 0.33 ? 0 : (p < 0.56 ? 1 : (p < 0.78 ? 2 : 3));
 
-    // 1) 전체 덱 3D 틸트 강화 (마우스 따라 깊은 원근 입체 반응 + 유리 반사광)
-    if (deckEl && !reducedMotion) {
-      var rx = (-curMy * 9 * (1 - p * 0.22)).toFixed(2);
-      var ry = (curMx * 13 * (1 - p * 0.22)).toFixed(2);
-      deckEl.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
+    // =========================================================================
+    // A) 3D 원형 궤도 공전 (p: 0 ~ 0.18) -> 자동차 돌출 & 포털 전환 (p: 0.18 ~ 0.36)
+    // =========================================================================
+    var orbitRadius = isMobile ? 168 : 325;
+    var orbitSpinP = clamp(p / 0.18, 0, 1);        // 0 -> 1 동안 360도 공전
+    var breakoutP = clamp((p - 0.18) / 0.17, 0, 1); // 0.18 -> 0.35 자동차가 카메라로 튀어나옴
+    var revealMainP = clamp((p - 0.31) / 0.10, 0, 1); // 0.31 -> 0.41 전환 후 본 메인 릴스 등장
+
+    // 스크롤이 맨 위(p < 0.04)일 때는 원형 궤도가 천천히 자동 공전, 스크롤하면 정확히 360° 정면(자동차)에 정렬!
+    if (!reducedMotion && p < 0.04) {
+      idleOrbitDeg = (idleOrbitDeg + 0.22) % 360;
+    } else if (p >= 0.04) {
+      // 자동차(0도)가 정면에 딱 맞춰지도록 부드럽게 0/360도로 수렴
+      idleOrbitDeg *= 0.88;
+    }
+    var ringAngle = -(orbitSpinP * 360 + idleOrbitDeg);
+
+    if (orbitCarousel) {
+      var orbitVisible = p < 0.38;
+      orbitCarousel.style.opacity = orbitVisible ? (1 - clamp((p - 0.33) / 0.05, 0, 1)).toFixed(3) : '0';
+      orbitCarousel.style.pointerEvents = p < 0.22 ? 'auto' : 'none';
+      if (orbitVisible) {
+        var tiltX = reducedMotion ? -6 : (-6 - curMy * 7 * (1 - breakoutP));
+        var tiltY = reducedMotion ? 0 : (curMx * 9 * (1 - breakoutP));
+        orbitCarousel.style.transform = 'rotateX(' + tiltX.toFixed(2) + 'deg) rotateY(' + tiltY.toFixed(2) + 'deg)';
+      }
+    }
+    if (orbitRingEl) {
+      var ringAlpha = clamp(1 - breakoutP * 1.4, 0, 1);
+      orbitRingEl.style.opacity = ringAlpha.toFixed(3);
+      orbitRingEl.style.transform = 'translate(-50%, -50%) perspective(900px) rotateX(75deg) rotateZ(' + ringAngle.toFixed(1) + 'deg) scale(' + (1 + breakoutP * 0.45).toFixed(3) + ')';
+    }
+
+    // 6장의 카드를 60도 간격으로 원형 궤도 배치 + 0번(자동차) 카드 돌출!
+    if (orbitCards.length && p < 0.4) {
+      var easeOutBreak = 1 - Math.pow(1 - breakoutP, 3);
+      orbitCards.forEach(function (card, i) {
+        var baseDeg = i * 60 + ringAngle;
+        var normDeg = ((baseDeg % 360) + 360) % 360;
+        var distFromFront = Math.min(normDeg, 360 - normDeg); // 0(정면) ~ 180(뒤)
+        var depthFade = 0.34 + 0.66 * (1 - distFromFront / 180);
+
+        if (i === 0 && breakoutP > 0) {
+          // 최단각(-180~180)으로 정확히 정중앙(0도) 정렬 후 카메라 정면으로 일직선 돌출!
+          var shortestDeg = ((baseDeg % 360) + 540) % 360 - 180;
+          var carZ = orbitRadius + easeOutBreak * (isMobile ? 420 : 620);
+          var carScale = 1 + easeOutBreak * (isMobile ? 2.1 : 2.5);
+          var carOpacity = 1 - clamp((breakoutP - 0.74) / 0.26, 0, 1);
+          card.style.transform = 'rotateY(' + (shortestDeg * (1 - easeOutBreak)).toFixed(2) + 'deg) translateZ(' + carZ.toFixed(1) + 'px) scale(' + carScale.toFixed(3) + ')';
+          card.style.opacity = carOpacity.toFixed(3);
+          card.style.zIndex = '20';
+          card.style.filter = 'brightness(' + (1 + easeOutBreak * 0.4).toFixed(2) + ')';
+        } else {
+          // 나머지 5장 카드는 궤도를 돌다가 자동차 돌출 시 뒤로 물러나며 페이드아웃 (뒷면은 은은하게 감춤)
+          var frontVis = distFromFront > 95 ? 0.14 : depthFade;
+          var cardZ = orbitRadius - easeOutBreak * 180;
+          var cardOpacity = frontVis * (1 - clamp(breakoutP * 1.7, 0, 1));
+          card.style.transform = 'rotateY(' + baseDeg.toFixed(2) + 'deg) translateZ(' + cardZ.toFixed(1) + 'px) scale(' + (0.88 + 0.12 * (1 - distFromFront / 180)).toFixed(3) + ')';
+          card.style.opacity = cardOpacity.toFixed(3);
+          card.style.zIndex = String(Math.round(10 - distFromFront / 20));
+          card.style.filter = 'brightness(' + (0.58 + 0.42 * (1 - distFromFront / 180)).toFixed(2) + ')';
+        }
+      });
+    }
+
+    // B) 자동차 돌출 피크(p: 0.28 ~ 0.40)에 시네마틱 포털 플래시로 화면 한 번 전환!
+    if (portalWipeEl) {
+      var wipeBell = 0;
+      if (p >= 0.27 && p <= 0.41) {
+        var wt = (p - 0.27) / 0.14; // 0 -> 1
+        wipeBell = Math.sin(wt * Math.PI); // 0 -> 1(피크) -> 0
+      }
+      portalWipeEl.style.opacity = (wipeBell * 0.92).toFixed(3);
+      portalWipeEl.style.transform = 'scale(' + (0.85 + wipeBell * 0.35).toFixed(3) + ')';
+    }
+
+    // C) 전환 후 등장하는 메인 9:16 릴스 덱 & 좌우 3D HUD (p >= 0.31)
+    if (deckEl) {
+      var rx = reducedMotion ? 0 : (-curMy * 8).toFixed(2);
+      var ry = reducedMotion ? 0 : (curMx * 11).toFixed(2);
+      var deckScale = (0.82 + revealMainP * 0.18).toFixed(3);
+      deckEl.style.opacity = revealMainP.toFixed(3);
+      deckEl.style.pointerEvents = revealMainP > 0.5 ? 'auto' : 'none';
+      deckEl.style.transform = 'scale(' + deckScale + ') rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
     }
     var glareEl = document.getElementById('lpMainGlare');
     if (glareEl) {
       glareEl.style.setProperty('--gx', (50 + curMx * 35).toFixed(1) + '%');
       glareEl.style.setProperty('--gy', (30 + curMy * 30).toFixed(1) + '%');
     }
-
-    // 2) 중앙 메인 릴스: 1막->2막 3D 전진(translateZ) 확대, 3막 시네마 레터박스, 4막 완성 글로우 링
     if (mainReelEl) {
-      var mScale = (1 + focus * (isMobile ? 0.05 : 0.11)).toFixed(3);
-      var mY = (-focus * 6).toFixed(1);
-      var mZ = (36 + focus * 32).toFixed(1);
-      mainReelEl.style.transform = 'translate3d(0,' + mY + 'px,' + mZ + 'px) scale(' + mScale + ')';
+      var mScale = (1 + revealMainP * (isMobile ? 0.04 : 0.08)).toFixed(3);
+      mainReelEl.style.transform = 'translate3d(0,-4px,48px) scale(' + mScale + ')';
       mainReelEl.classList.toggle('is-cinema', curAct === 2);
       mainReelEl.classList.toggle('is-export-ready', curAct === 3);
     }
 
-    // 3) 좌우 3D 커버플로우 4장: 진짜 rotateY + translateZ 깊이로 아치형 배치
-    var dx1 = isMobile ? 118 : 226;
-    var dx2 = 408;
-    var outX = (1 - spread) * (isMobile ? 95 : 195);
-    if (fanL1) {
-      fanL1.style.transform = 'translate(-50%, -50%) translate3d(' + (-dx1 - outX).toFixed(1) + 'px,' + (12 + (1 - spread) * 20).toFixed(1) + 'px,-75px) rotateY(' + (26 + (1 - spread) * 14).toFixed(1) + 'deg) rotateZ(' + (-6 - (1 - spread) * 5).toFixed(1) + 'deg) scale(' + (0.91 - (1 - spread) * 0.08).toFixed(3) + ')';
-      fanL1.style.opacity = (spread * 0.92).toFixed(3);
-      fanL1.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
-    }
-    if (fanR1) {
-      fanR1.style.transform = 'translate(-50%, -50%) translate3d(' + (dx1 + outX).toFixed(1) + 'px,' + (12 + (1 - spread) * 20).toFixed(1) + 'px,-75px) rotateY(' + (-26 - (1 - spread) * 14).toFixed(1) + 'deg) rotateZ(' + (6 + (1 - spread) * 5).toFixed(1) + 'deg) scale(' + (0.91 - (1 - spread) * 0.08).toFixed(3) + ')';
-      fanR1.style.opacity = (spread * 0.92).toFixed(3);
-      fanR1.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
-    }
-    if (fanL2) {
-      fanL2.style.transform = 'translate(-50%, -50%) translate3d(' + (-dx2 - outX * 1.35).toFixed(1) + 'px,' + (30 + (1 - spread) * 28).toFixed(1) + 'px,-165px) rotateY(' + (40 + (1 - spread) * 16).toFixed(1) + 'deg) rotateZ(' + (-11 - (1 - spread) * 6).toFixed(1) + 'deg) scale(0.82)';
-      fanL2.style.opacity = (spread * 0.68).toFixed(3);
-      fanL2.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
-    }
-    if (fanR2) {
-      fanR2.style.transform = 'translate(-50%, -50%) translate3d(' + (dx2 + outX * 1.35).toFixed(1) + 'px,' + (30 + (1 - spread) * 28).toFixed(1) + 'px,-165px) rotateY(' + (-40 - (1 - spread) * 16).toFixed(1) + 'deg) rotateZ(' + (11 + (1 - spread) * 6).toFixed(1) + 'deg) scale(0.82)';
-      fanR2.style.opacity = (spread * 0.68).toFixed(3);
-      fanR2.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
-    }
-
-    // 4) 좌우 3D AR HUD 카드: 안쪽으로 살짝 기울어진 3D 공간 부양
-    var hudAlpha = clamp((p - 0.18) / 0.14, 0, 1);
-    var hudY = (1 - hudAlpha) * 26;
+    // 좌우 3D AR HUD 카드: 화면 전환 직후(p >= 0.34) 스윽 떠오름
+    var hudAlpha = clamp((p - 0.34) / 0.10, 0, 1);
+    var hudY = (1 - hudAlpha) * 28;
     if (hudL) {
       hudL.style.opacity = hudAlpha.toFixed(3);
       hudL.style.transform = 'perspective(900px) translate3d(' + (-curMx * 14).toFixed(1) + 'px, calc(-50% + ' + hudY.toFixed(1) + 'px), 48px) rotateY(' + (14 + curMx * 5).toFixed(1) + 'deg)';
@@ -456,7 +510,7 @@
       if (!heroEl) return;
       var idx = Number(btn.getAttribute('data-act')) || 0;
       var span = Math.max(1, heroEl.offsetHeight - window.innerHeight);
-      var targets = [0, 0.36, 0.62, 0.88];
+      var targets = [0, 0.44, 0.66, 0.88];
       window.scrollTo({ top: Math.round(span * (targets[idx] || 0)), behavior: 'smooth' });
     });
   });

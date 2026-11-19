@@ -76,14 +76,14 @@ html { scroll-behavior: smooth; }
 .lp-scroll-track i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #4cc38a, #f4f4f5); will-change: width; }
 
 /* ============================================================================
-   시네마틱 스크롤-드리븐 히어로 (460vh 4막 스티키 스테이지)
+   시네마틱 3D 원형 궤도 회전 -> 자동차 돌출 화면 전환 -> 4막 스테이지
    ============================================================================ */
 .lp-cine-hero {
   position: relative;
-  height: 460vh;
+  height: 500vh;
 }
 @media (max-width: 767px) {
-  .lp-cine-hero { height: 340vh; }
+  .lp-cine-hero { height: 380vh; }
 }
 .lp-cine-sticky {
   position: sticky;
@@ -1093,4 +1093,83 @@ html { scroll-behavior: smooth; }
 [data-tilt-3d] {
   transform-style: preserve-3d;
   transition: transform 0.22s cubic-bezier(.22,1,.36,1);
+}
+
+/* ============================================================================
+   3D 원형 궤도 공전 + 자동차 돌출(Breakout) + 포털 화면 전환(Wipe)
+   ============================================================================ */
+.lp-orbit-ring {
+  position: absolute;
+  top: 54%;
+  left: 50%;
+  width: min(700px, 92vw);
+  height: min(700px, 92vw);
+  border-radius: 50%;
+  border: 1px solid rgba(76, 195, 138, 0.26);
+  box-shadow: 0 0 60px rgba(76, 195, 138, 0.12), inset 0 0 60px rgba(76, 195, 138, 0.08);
+  transform: translate(-50%, -50%) perspective(900px) rotateX(75deg);
+  pointer-events: none;
+  z-index: 1;
+  will-change: transform, opacity;
+}
+.lp-orbit-carousel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+  z-index: 7;
+  will-change: transform, opacity;
+}
+.lp-orbit-card {
+  position: absolute;
+  width: min(214px, 44vw, 24dvh);
+  aspect-ratio: 9 / 16;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #141418;
+  box-shadow: 0 28px 68px rgba(0, 0, 0, 0.72);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  backface-visibility: visible;
+  will-change: transform, opacity, filter;
+}
+.lp-orbit-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.lp-orbit-card.is-hero-car {
+  border-color: rgba(76, 195, 138, 0.65);
+  box-shadow: 0 30px 76px rgba(0, 0, 0, 0.8), 0 0 36px rgba(76, 195, 138, 0.22);
+}
+.lp-orbit-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(9, 9, 11, 0.72);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(76, 195, 138, 0.5);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #4cc38a;
+}
+.lp-portal-wipe {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 50% 52%, rgba(255, 255, 255, 0.92) 0%, rgba(76, 195, 138, 0.55) 28%, rgba(9, 9, 11, 0.88) 72%);
+  will-change: opacity, transform;
 }
