@@ -1,6 +1,12 @@
 import {mediaEvent} from './analysis.mjs';
 import {linkedFile,analyzeOnPhone,rewriteOnPhone} from './on-phone.mjs';
 
+import {nativeYouTube} from './native-reference.mjs';
+if(nativeYouTube){
+  document.getElementById('sourceTypes').textContent='유튜브 쇼츠·CapCut·영상 파일 링크 지원';
+  document.getElementById('refName').textContent='휴대폰에 저장된 참고 영상 · 최대 250MB';
+}
+
 const byId = id => document.getElementById(id);
 const preview = byId('preview');
 const status = message => { byId('status').textContent = message; };

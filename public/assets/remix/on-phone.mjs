@@ -1,5 +1,7 @@
 import {analyzeReference,mediaEvent} from './analysis.mjs';
 
+import {nativeYouTube,videoId,nativeFile} from './native-reference.mjs';
+
 const MAX_BYTES = 250*1024*1024;
 const galleryMessage='이 공유 링크는 휴대폰 브라우저에 영상 파일을 제공하지 않아요. 아래에서 갤러리에 저장한 참고 영상을 선택해 주세요.';
 export async function linkedFile(input, signal, update) {
@@ -8,6 +10,8 @@ export async function linkedFile(input, signal, update) {
   let url;
   try {url=new URL(match[0]);} catch {throw Error('영상 주소를 확인해 주세요.');}
   if(url.protocol!=='https:' && url.origin!==location.origin || url.username || url.password) throw Error('공개 HTTPS 영상 주소를 넣어 주세요.');
+  const youtubeId=videoId(url);
+  if(nativeYouTube && youtubeId)return nativeFile(youtubeId,signal,update);
   let title='';
   if (/(^|\.)(youtube\.com|youtu\.be|instagram\.com|tiktok\.com)$/.test(url.hostname)) throw Error(galleryMessage);
   if (/(^|\.)capcut\.com$/.test(url.hostname)) {
@@ -92,6 +96,25 @@ async function speechText(file,scenes,signal,update) {
   signal.throwIfAborted();
   const audio=buffer.getChannelData(0);
   if(!audio.some((sample,i)=>i%32===0 && Math.abs(sample)>.002)) return;
+  if(nativeYouTube && !window.crossOriginIsolated){
+    update('휴대폰에서 음성 분석을 준비하고 있어요.');
+    const worker=new Worker(new URL('./native-speech-worker.mjs',import.meta.url),{type:'module'});
+    try {
+      await new Promise((resolve,reject)=>{
+        let timer;const abort=()=>finish(signal.reason);
+        function finish(error){clearTimeout(timer);signal.removeEventListener('abort',abort);if(error)reject(error);else resolve();}
+        function watch(){clearTimeout(timer);timer=setTimeout(()=>finish(Error('음성 분석 시간이 초과됐어요.')),180000);}
+        worker.onerror=()=>finish(Error('음성 분석기를 열지 못했어요.'));
+        worker.onmessage=({data})=>{
+          watch();if(data.error)finish(Error(data.error));else if(data.done)finish();
+          else if(data.state)update(data.state);
+          else if(data.text){const scene=scenes.find(s=>data.start*30<s.end)||scenes.at(-1);scene.speech=(scene.speech+' '+data.text).trim().slice(0,600);}
+        };
+        signal.addEventListener('abort',abort,{once:true});watch();const copy=audio.slice();worker.postMessage({audio:copy},[copy.buffer]);
+      });
+    }finally{worker.terminate();}
+    return;
+  }
   const frame=document.createElement('iframe');frame.hidden=true;frame.title='휴대폰 음성 분석';
   frame.src='../shorts/engine.html'; update('휴대폰에서 음성 분석을 준비하고 있어요.');
   await new Promise((resolve,reject)=>{
