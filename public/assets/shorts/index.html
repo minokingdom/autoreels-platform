@@ -4,7 +4,7 @@
 <title>오토릴스메이커 · 내 영상으로 쇼츠 만들기</title>
 <link rel="stylesheet" href="/assets/app/astryx-tokens.css"><link rel="stylesheet" href="/assets/design-system.css"><link rel="stylesheet" href="screen.css">
 </head><body><main>
-<header><b>오토릴스<span>메이커</span></b><a href="/studio">스튜디오로 돌아가기</a></header>
+<header><b>오토릴스<span>메이커</span></b><a data-studio-back href="/studio?from=shorts">스튜디오로 돌아가기</a></header>
 <section class="stage" hidden><div id="frame"><video playsinline id="sourceVideo" hidden></video><canvas id="overlay" width="540" height="960" aria-label="영상 제목과 자막"></canvas><button id="play" hidden type="button" aria-label="선택 구간 재생">▶</button></div></section>
 <section class="sheet"><div class="handle"></div><div id="entry">
 <h1>내 영상으로 쇼츠 만들기</h1><p class="hint">한국어로 말하는 영상에서 쇼츠로 쓸 구간을 찾아요.</p>
@@ -19,4 +19,4 @@
 <details id="editor" hidden><summary>제목·자막 편집</summary><fieldset id="fields"><label class="field" for="clipTitle">영상 위 제목</label>
 <input class="edit-input" id="clipTitle" maxlength="52" placeholder="제목 입력"><label class="toggle"><input id="showCaptions" type="checkbox" checked> 대사 자막 표시</label><div id="lineFields"></div></fieldset></details>
 <button id="save" class="primary" type="button" disabled>선택한 구간 저장</button><a id="download" hidden download="오토릴스메이커-쇼츠.mp4">완성된 MP4 다운로드</a></div>
-</section></main><script src="shorts.js"></script><script src="editor.js"></script></body></html>
+</section></main><script src="return.js"></script><script src="export-access.js"></script><script src="shorts.js"></script><script src="editor.js"></script></body></html>

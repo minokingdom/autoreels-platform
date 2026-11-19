@@ -204,8 +204,9 @@ const server = http.createServer(async (req, res) => {
   const reqPath = decodeURIComponent(String(req.url || '/').split('?')[0]);
   const filePath = path.normalize(path.join(publicDir, reqPath));
   if (reqPath !== '/' && filePath.startsWith(publicDir + path.sep) && fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-    const TYPES = { '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.wasm': 'application/wasm', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4' };
-    res.writeHead(200, { 'Content-Type': TYPES[path.extname(filePath).toLowerCase()] || 'application/octet-stream' });
+    const TYPES = { '.html': 'text/html; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.woff2': 'font/woff2', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.wasm': 'application/wasm', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4' };
+    const isolation = reqPath.startsWith('/assets/shorts/') ? { 'Cross-Origin-Opener-Policy': 'same-origin', 'Cross-Origin-Embedder-Policy': 'require-corp' } : {};
+    res.writeHead(200, { ...isolation, 'Content-Type': TYPES[path.extname(filePath).toLowerCase()] || 'application/octet-stream' });
     return fs.createReadStream(filePath).pipe(res);
   }
   // / 와 /intro 는 랜딩(index.html), 나머지 주소는 제작 화면(studio.html) — vercel.json 과 같게

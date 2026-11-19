@@ -144,9 +144,7 @@ save.addEventListener('click',async () => {
   document.addEventListener('visibilitychange',visibility);
   try {
     context = new AudioContext(); const resume = context.resume();
-    const account = await fetch('/api/account?action=me',{credentials:'same-origin',signal:s.controller.signal});
-    const me = await account.json();
-    if (!me.user || !me.entitlement?.pro) throw Error('스튜디오에서 로그인과 이용권을 확인한 뒤 저장해 주세요.');
+    await arCheckShortsAccess(s.controller.signal);
     await Promise.race([failure,new Promise((resolve,reject) => {
       source.onloadeddata = resolve; source.onerror = () => reject(Error('영상을 열 수 없어요.')); source.src = s.url;
     })]); await resume;

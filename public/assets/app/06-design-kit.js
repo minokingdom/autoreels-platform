@@ -4402,7 +4402,7 @@
         const todo = arCustomDesigns.concat(getDesignPickerList(), arVisibleDesigns()).filter((ds) => !designThumbCache.fresh[ds.id]);
         if (!todo.length) return;
         const batch = todo.filter((ds, i, arr) => arr.indexOf(ds) === i).slice(0, 6);
-        const fonts = [...new Set(batch.filter((ds) => ds.engine === 'kit').flatMap((ds) => [ds.font, ds.sfont, 'brush'].filter(Boolean)))];
+        const fonts = [...new Set(batch.filter((ds) => ds.engine === 'kit' || ds.font === 'brush').flatMap((ds) => [ds.font, ds.sfont, 'brush'].filter(Boolean)))];
         designThumbJob = true;
         Promise.race([Promise.all(fonts.map(kitEnsureFont)), new Promise((r) => setTimeout(r, 2500))]).then(() => {
           if (designThumbCache.key === key && !window.__exportingVideo) renderDesignThumbBatch(batch);

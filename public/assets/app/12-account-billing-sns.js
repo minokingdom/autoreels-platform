@@ -593,7 +593,7 @@
       else {
         arLockDemoDealers();
         const authModal = document.getElementById('dealerAuthModal');
-        if (me.body.guest && !callbackParams.has('plan') && authModal.classList.contains('hidden')) {
+        if (!window.arToolReturn && me.body.guest && !callbackParams.has('plan') && authModal.classList.contains('hidden')) {
           openDealerAuthModal('welcome');
         }
       }
@@ -1339,7 +1339,24 @@
     }
 
     (function initLandingOrStudioBoot() {
-      const showLanding = shouldShowLandingOnBoot();
+      const showLanding = !window.arToolReturn && shouldShowLandingOnBoot();
+      if (window.arToolReturn) {
+        const url = new URL(location.href);
+        if (url.searchParams.get('from') === 'shorts') url.searchParams.delete('from');
+        const saved = history.state?.studioTool;
+        if (saved) {
+          if (saved.industry && saved.industry !== IND.key && AR_INDUSTRIES[saved.industry]) setIndustry(saved.industry);
+          if (saved.design && arFindDesign(saved.design)) campaign.designStyle = saved.design;
+          document.getElementById('topicCustomInput').value = saved.topic || '';
+        }
+        const state = { ...history.state };
+        delete state.studioTool;
+        history.replaceState(state, '', url);
+      }
+      document.querySelectorAll('[data-studio-tool]').forEach(link => link.addEventListener('click', event => {
+        if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return;
+        history.replaceState({ ...history.state, studioTool: { topic: document.getElementById('topicCustomInput').value, industry: IND.key, design: campaign.designStyle } }, '');
+      }));
       if (!showLanding && (window.location.pathname === '/' || window.location.pathname === '') && !window.location.search && !window.location.hash) {
         try { history.replaceState({ arView: 'studio' }, '', '/studio'); } catch (e) {}
       }

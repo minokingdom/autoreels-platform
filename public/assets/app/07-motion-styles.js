@@ -105,9 +105,13 @@
       ['ty_focus', '워드 포커스', 'ty_focus', 'sans', '#111214', '#1d1d20', '#d5f185', '#ffffff', false],
       ['ty_spring', '스프링 스택', 'ty_spring', 'dohyeon', '#111214', '#1d1d20', '#f3d4bd', '#ffffff', false],
       ['in_lookbook_still', '룩북 · 고정 카드', 'in_lookbook_still', 'maru', '#eeeae2', '#e9e2d7', '#354e63', '#232722', true],
+      ['in_brush_seal', '붓끝 낙관', 'in_brush_seal', 'brush', '#211c17', '#372b23', '#ae3126', '#f8f1e5', false],
+      ['in_brush_letter', '여백에 쓴 편지', 'in_brush_letter', 'brush', '#201d18', '#383328', '#963629', '#fff6e3', false],
+      ['in_brush_postcard', '한 폭의 엽서', 'in_brush_postcard', 'brush', '#ede4d4', '#d0c5b0', '#a92c21', '#fff8ea', true],
     ];
     // 모션 디자인도 별도 분류를 만들지 않고 기존 분류에 넣음
     const MOTION_CAT = {
+      in_brush_seal: '손글씨', in_brush_letter: '손글씨', in_brush_postcard: '손글씨',
       ty_mask: '타이포', ty_focus: '타이포', ty_spring: '타이포',
       mo_blob: '재미', mo_sweep: '타이포', mo_tiles: '테크', mo_tunnel: '스포츠', mo_cards: '브이로그', mo_eq: '재미',
       mo_aurora: '감성', mo_dots: '재미', mo_number: '특가', mo_strips: '브이로그', mo_circle: '고급', mo_ribbon: '뉴스·방송',
@@ -130,6 +134,7 @@
       ba_slider: '비포·애프터', ba_diagonal: '비포·애프터', ba_collage: '비포·애프터', ba_flash: '비포·애프터', ba_polaroid: '비포·애프터'
     };
     const AR_MOTION_ADDED_AT = {"ed_vogue": "2026-11-14T06:25:59Z", "ed_glasspill": "2026-11-14T06:25:59Z", "ed_kinetic": "2026-11-14T06:25:59Z", "ed_arch": "2026-11-14T06:25:59Z", "ed_duotone": "2026-11-14T06:25:59Z", "stm_kinetic": "2026-11-14T17:02:21Z", "stm_cinema": "2026-11-14T17:02:21Z", "stm_sonar": "2026-11-14T17:02:21Z", "stm_glint": "2026-11-14T17:02:21Z", "stm_split": "2026-11-17T05:14:07Z", "stm_ticket": "2026-11-17T05:14:07Z", "stm_glassbar": "2026-11-17T05:14:07Z",
+      in_brush_seal: '2026-11-19T09:41:00Z', in_brush_letter: '2026-11-19T09:41:00Z', in_brush_postcard: '2026-11-19T09:41:00Z',
       in_lookbook_still: "2026-11-18T15:53:11Z"
     };
     const MOTION_DESIGNS = MOTION_ROWS.map((r, i) => ({
@@ -668,7 +673,46 @@
       const M = sp.mstyle;
       mBg(c, W, H, sp, t);
 
-      if (M === 'ty_mask' || M === 'ty_focus' || M === 'ty_spring') {
+      if (M === 'in_brush_seal' || M === 'in_brush_letter' || M === 'in_brush_postcard') {
+        const letter = M === 'in_brush_letter', postcard = M === 'in_brush_postcard';
+        const margin = postcard ? W * 0.046 : 0;
+        const frameH = H - margin * 2;
+        if (postcard) { c.fillStyle = '#e9dfcb'; c.fillRect(0, 0, W, H); }
+        inPhotoFade(c, S, cutIdx, local, margin, margin, W - margin * 2, frameH, 1 + lp * (postcard ? 0 : 0.025), 0.5);
+        inCaptionScrim(c, margin, margin, W - margin * 2, frameH, letter ? 0.21 : 0.78);
+        const key = mCapFont(cutIdx, sp.font), face = KIT_FONTS[key];
+        const wr = kWrap(c, caption, W * (postcard ? 0.72 : 0.76), 3, W * (postcard ? 0.088 : 0.102), W * 0.046, key);
+        const align = letter ? 'right' : postcard ? 'center' : 'left';
+        const x = W * (letter ? 0.90 : postcard ? 0.50 : 0.082);
+        const gap = wr.size * 1.02;
+        const y = letter ? H * 0.16 : H * (postcard ? 0.77 : 0.81) - (wr.lines.length - 1) * gap;
+        c.save(); c.font = gFont(face.w, wr.size, face.f); c.textAlign = align; c.textBaseline = 'middle';
+        if (wr.lines.length && mCapBegin(c, W, H, cutIdx, local, wr.lines, x, y, gap, align)) {
+          const reveal = mClamp(local / Math.min(0.85, cutDur * 0.30));
+          c.fillStyle = mCapColor(cutIdx, '#fff8ed');
+          wr.lines.forEach((line, i) => {
+            const width = c.measureText(line).width;
+            const left = align === 'left' ? x : align === 'right' ? x - width : x - width / 2;
+            const cy = y + i * gap;
+            c.save(); c.beginPath();
+            c.rect(left - 4, cy - gap * 0.62, (width + 8) * mEase(reveal * wr.lines.length - i), gap * 1.24);
+            c.clip(); c.fillText(line, x, cy); c.restore();
+          });
+          const lastWidth = c.measureText(wr.lines[wr.lines.length - 1]).width;
+          const sealX = letter ? x - W * 0.024 : postcard ? x : Math.min(W * 0.932, x + lastWidth + W * 0.046);
+          const sealY = y + (wr.lines.length - 1) * gap + (letter || postcard ? gap * 0.96 : 0);
+          c.save(); c.globalAlpha *= mEase((reveal - 0.75) / 0.25);
+          c.translate(sealX, sealY); c.rotate(postcard ? 0 : -0.055);
+          const sw = W * 0.052, sh = W * 0.078;
+          c.fillStyle = '#ac3127'; c.fillRect(-sw/2, -sh/2, sw, sh);
+          c.fillStyle = '#fff0d7'; c.font = gFont(400, sh * 0.47, KIT_FONTS.brush.f);
+          c.textAlign = 'center';
+          const seal = letter ? '여운' : postcard ? '기록' : '정성';
+          c.fillText(seal[0], 0, -sh*0.23); c.fillText(seal[1], 0, sh*0.23);
+          c.restore(); mCapEnd(c);
+        }
+        c.restore();
+      } else if (M === 'ty_mask' || M === 'ty_focus' || M === 'ty_spring') {
         inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.02 + lp * 0.035, 1);
         const shade = c.createLinearGradient(0, H * 0.35, 0, H);
         shade.addColorStop(0, 'rgba(12,12,14,0)');

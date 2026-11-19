@@ -1,5 +1,12 @@
 
     /* 기존 스타일 기반: Unslop Graphite Neutral Ramp (Damir Sokolovsky, CC BY 4.0). */
+    @font-face {
+      font-family: 'Nanum Brush Script';
+      src: url('./nanum-brush-script.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
     :root {
       --secondary: var(--raised);
       --muted: var(--card);

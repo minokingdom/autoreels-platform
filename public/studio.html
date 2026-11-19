@@ -37,17 +37,20 @@
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
   <link rel="stylesheet" href="https://hangeul.pstatic.net/hangeul_static/css/maru-buri.css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Black+Han+Sans&family=Noto+Serif+KR:wght@700;900&family=Do+Hyeon&family=Jua&family=Nanum+Pen+Script&family=Gugi&family=Gaegu:wght@700&family=Hi+Melody&family=East+Sea+Dokdo&family=Single+Day&family=Yeon+Sung&family=Poor+Story&family=Gamja+Flower&family=Nanum+Brush+Script&family=Gasoek+One&family=Bagel+Fat+One&family=Song+Myung&family=Black+And+White+Picture&family=Dongle:wght@700&family=Great+Vibes&family=Pinyon+Script&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Black+Han+Sans&family=Noto+Serif+KR:wght@700;900&family=Do+Hyeon&family=Jua&family=Nanum+Pen+Script&family=Gugi&family=Gaegu:wght@700&family=Hi+Melody&family=East+Sea+Dokdo&family=Single+Day&family=Yeon+Sung&family=Poor+Story&family=Gamja+Flower&family=Gasoek+One&family=Bagel+Fat+One&family=Song+Myung&family=Black+And+White+Picture&family=Dongle:wght@700&family=Great+Vibes&family=Pinyon+Script&display=swap" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-rewrite-palette" />
-  <link rel="stylesheet" href="/assets/app/splash.css?v=ko-wordmark" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-brush" />
+  <link rel="stylesheet" href="/assets/app/splash.css?v=studio-return" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
     (function () {
       try {
         var path = (location.pathname || '/').toLowerCase(), sp = new URLSearchParams(location.search || ''), landing;
+        var back = performance.getEntriesByType('navigation')[0]?.type === 'back_forward';
+        window.arToolReturn = sp.get('from') === 'shorts' || (back && !!history.state?.studioTool);
+        if (window.arToolReturn) document.documentElement.classList.add('ar-tool-return');
         if (sp.get('landing') === '1') landing = true;
         else if (path.indexOf('/studio') === 0 || path.indexOf('/admin') === 0) landing = false;
         else if (['sns', 'admin', 'role', 'billing', 'plan', 'code', 'state', 'paymentId'].some(function (k) { return sp.has(k); })) landing = false;
@@ -743,7 +746,8 @@
         </div>
         <!-- ★ 1단계 · 오늘의 주제: 요일·계절·다가오는 날·인기 키워드로 오늘 올릴 주제 후보를 보여 주고, 고르면 AI 대본을 바로 만듦 -->
         <div id="studioPanel_topic" role="tabpanel" aria-labelledby="studioTabBtn_topic" class="studio-panel p-5 sm:p-6 space-y-4">
-          <a class="bgm-now" href="/assets/shorts/index.html"><span class="bgm-now-txt"><strong>내 영상으로 쇼츠 만들기</strong><small>갤러리 영상에서 핵심 발언 찾기</small></span><span class="bgm-now-go">열기 ›</span></a>
+          <a class="bgm-now" data-studio-tool href="/assets/shorts/index.html"><span class="bgm-now-txt"><strong>내 영상으로 쇼츠 만들기</strong><small>갤러리 영상에서 핵심 발언 찾기</small></span><span class="bgm-now-go">열기 ›</span></a>
+          <a class="bgm-now" data-studio-tool href="/assets/remix/index.html"><span class="bgm-now-txt"><strong>참고 쇼츠·릴스로 재구성하기</strong><small>참고 영상의 컷 길이에 내 사진과 문구 맞추기</small></span><span class="bgm-now-go">열기 ›</span></a>
           <div>
             <div class="text-[16px] font-semibold text-[#ededed]">오늘은 어떤 내용으로 올릴까요?</div>
             <p id="topicDateLine" class="text-[12px] text-[#85858b] mt-1"></p>
@@ -2112,7 +2116,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117r" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261119-rewrite-palette"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261119-brush-return"><\/script>');
     }
   </script>
   <!--

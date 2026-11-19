@@ -120,18 +120,6 @@ function renderPreview(at=video.currentTime) {
 }
 video.addEventListener('seeked',() => renderPreview());
 async function confirmExport(s,clip,blob) {
-  const uri=URL.createObjectURL(blob), check=document.createElement('video');
-  try {
-    await new Promise((resolve,reject) => {
-      const timer=setTimeout(()=>reject(Error('완성된 MP4를 확인하지 못했어요.')),10000);
-      check.onloadedmetadata=()=>{clearTimeout(timer);resolve();};
-      check.onerror=()=>{clearTimeout(timer);reject(Error('MP4를 읽지 못했어요.'));};check.src=uri;
-    });
-    if (check.videoWidth!==1080 || check.videoHeight!==1920) throw Error('영상 해상도를 확인하지 못했어요.');
-  } finally {check.removeAttribute('src');check.load();URL.revokeObjectURL(uri);}
-  if (s!==session) throw Error('저장이 중단됐어요.');
   clip.exportId ||= crypto.randomUUID();
-  const response=await fetch('/api/account?action=consume-export',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({requestId:clip.exportId})});
-  const result=await response.json();
-  if (!response.ok || !result.ok) throw Error(result.message || '스튜디오에서 로그인과 이용권을 확인해 주세요.');
+  await arConfirmShortsExport(blob,clip.exportId,() => session === s);
 }
