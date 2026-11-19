@@ -1396,10 +1396,23 @@ select.ig-select-src { display: none !important; }
 .ig-search-row { display: flex; align-items: center; gap: var(--astryx-spacing-1); padding: var(--astryx-spacing-1) var(--astryx-spacing-1) var(--astryx-spacing-1) 0; border-radius: var(--studio-panel); border: 1px solid var(--border); background: var(--raised); }
 .ig-search-row input { flex: 1; min-width: 0; background: transparent !important; border: 0 !important; }
 .ig-search-go { flex: 0 0 auto; height: 38px; padding: 0 var(--astryx-spacing-4); border-radius: var(--studio-control); border: 0; background: var(--primary); color: var(--primary-foreground); font-size: var(--astryx-font-size-base); font-weight: var(--astryx-font-weight-semibold); cursor: pointer; }
-.ig-chip-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.ig-ctx-chip { display: inline-flex; align-items: center; gap: var(--astryx-spacing-2); max-width: 100%; height: 44px; padding: 0 var(--astryx-spacing-3); border-radius: var(--studio-control); border: 1px solid var(--border); background: var(--raised); cursor: pointer; }
-.ig-ctx-chip span { flex: none; font-size: var(--astryx-font-size-sm); color: var(--secondary-foreground); }
-.ig-ctx-chip strong { font-size: var(--astryx-font-size-base); color: var(--foreground); font-weight: var(--astryx-font-weight-semibold); max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ig-chip-row { display: flex; align-items: center; gap: 5px; }
+.ig-chip-row > .ig-ctx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg-deep);
+  cursor: pointer;
+}
+.ig-ctx-chip:hover, .ig-ctx-chip:focus-visible { background: var(--raised); border-color: var(--border-strong); }
+.ig-ctx-chip span { flex: none; font-size: 11px; color: var(--secondary-foreground); }
+.ig-ctx-chip strong { min-width: 0; max-width: 180px; overflow: hidden; color: var(--foreground); font-size: 12px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .ig-variant-row { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 0 6px; }
 .ig-variant { flex: 0 0 82%; scroll-snap-align: start; display: flex; flex-direction: column; gap: var(--astryx-spacing-2); padding: var(--astryx-spacing-3); border-radius: var(--studio-panel); border: 1px solid var(--border); background: var(--card); text-align: left; cursor: pointer; }
 @media (min-width: 640px) { .ig-variant { flex-basis: calc(33.333% - 6px); } }

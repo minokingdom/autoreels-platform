@@ -41,7 +41,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-photo-tools" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-script-chips" />
   <link rel="stylesheet" href="/assets/app/splash.css" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -743,12 +743,9 @@
         </div>
         <!-- ★ 1단계 · 오늘의 주제: 요일·계절·다가오는 날·인기 키워드로 오늘 올릴 주제 후보를 보여 주고, 고르면 AI 대본을 바로 만듦 -->
         <div id="studioPanel_topic" role="tabpanel" aria-labelledby="studioTabBtn_topic" class="studio-panel p-5 sm:p-6 space-y-4">
-          <div class="flex items-start justify-between gap-2">
-            <div>
-              <div class="text-[16px] font-semibold text-[#ededed]">오늘은 어떤 내용으로 올릴까요?</div>
-              <p id="topicDateLine" class="text-[12px] text-[#85858b] mt-1"></p>
-            </div>
-            <button type="button" onclick="openPresetDrawer('right')" class="h-7 px-2.5 rounded-[7px] bg-[#232325] hover:bg-[#323236] border border-[var(--border)] text-[11px] font-medium text-[#ededed] cursor-pointer shrink-0">🎨 디자인 ›</button>
+          <div>
+            <div class="text-[16px] font-semibold text-[#ededed]">오늘은 어떤 내용으로 올릴까요?</div>
+            <p id="topicDateLine" class="text-[12px] text-[#85858b] mt-1"></p>
           </div>
           <button type="button" id="topicProfileBtn" class="btn-secondary px-3 h-8 text-[12px] cursor-pointer">제작 유형</button>
           <button type="button" class="bgm-now" data-business-product onclick="arOpenProductSheet()">

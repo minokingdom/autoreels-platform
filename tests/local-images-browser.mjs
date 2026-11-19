@@ -179,7 +179,7 @@ try {
    return {height:rect.height,top:rect.top,textCenter:text.top+text.height/2};
   }));
   assert.equal(chipRects.length,2);
-  assert.equal(chipRects[0].height,44);
+  assert.equal(chipRects[0].height,28);
   assert.deepEqual(chipRects[0],chipRects[1]);
   console.log('topic photos, product-to-script button and aligned chips verified');
  }
