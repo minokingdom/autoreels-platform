@@ -164,10 +164,12 @@ export async function rewriteOnPhone(scenes,change,signal,update) {
   try {
     return await new Promise((resolve,reject)=>{
       const abort=()=>finish(signal.reason);
-      const timer=setTimeout(()=>finish(Error('대본 준비 시간이 길어졌어요. 장면별 문구를 직접 수정할 수 있어요.')),240000);
+      let timer;
+      function watch(){clearTimeout(timer);timer=setTimeout(()=>finish(Error('대본 준비 시간이 길어졌어요. 장면별 문구를 직접 수정할 수 있어요.')),240000);}
+      watch();
       function finish(err,result){clearTimeout(timer);signal.removeEventListener('abort',abort);if(err)reject(err);else resolve(result);}
       worker.onerror=()=>finish(Error('이 기기에서 대본 모델을 열지 못했어요. 장면별 문구를 직접 수정할 수 있어요.'));
-      worker.onmessage=({data})=>{if(data.state)update(data.state);else if(data.error)finish(Error(data.error));else finish(null,data.draft);};
+      worker.onmessage=({data})=>{if(data.state){watch();update(data.state);}else if(data.error)finish(Error(data.error));else finish(null,data.draft);};
       signal.throwIfAborted();signal.addEventListener('abort',abort,{once:true});
       worker.postMessage({scenes:scenes.map(s=>({screen:s.screen,speech:s.speech})),change});
     });
