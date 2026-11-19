@@ -3,7 +3,7 @@ const vm = require('node:vm');
 const fs = require('node:fs');
 const source = fs.readFileSync('api/generate-script.js', 'utf8');
 const start = source.indexOf('async function generateSingleKieSceneImage(');
-const end = source.indexOf('\nconst { isSameSiteRequest }', start);
+const end = source.indexOf('\nconst { isSameSiteRequest', start);
 assert(start >= 0 && end > start);
 let calls = [], mode = 'success';
 const imageBytes = Buffer.from('test-image');
