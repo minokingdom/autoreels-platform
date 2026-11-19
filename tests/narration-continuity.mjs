@@ -1,5 +1,11 @@
 import assert from 'node:assert/strict';
 import koreanNumbers from '../lib/korean-numbers.js';
+for (const [input, spoken] of [
+  ['1,150만원', '천백오십만 원'], ['1150만 원까지', '천백오십만 원까지'],
+  ['1,050만원', '천오십만 원'], ['10,000만 원', '일억 원'],
+  ['11,500,000원', '천백오십만 원'], ['월 0원', '월 영 원'],
+  ['-480만원', '사백팔십만 원 할인'], ['차량 4대', '차량 네 대']
+]) assert.equal(koreanNumbers.normalizeKoreanNumbers(input), spoken);
 assert.equal(koreanNumbers.normalizeKoreanNumbers('BMW 7시리즈, BMW 일곱 시리즈, 재고 7대'), 'BMW 칠시리즈, BMW 칠시리즈, 재고 일곱 대');
 import fs from 'node:fs';
 import vm from 'node:vm';

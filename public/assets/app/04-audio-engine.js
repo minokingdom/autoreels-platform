@@ -683,15 +683,16 @@
 
         const ctx = this.ensureContext();
         let provider = 'fish';
+        const activity = arBeginGeneration('voice', '음성 만드는 중…');
         const job = (async () => {
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
           let body, full, exactBounds;
           if (onDevice) {
             provider = 'device';
-            ({ full, bounds: exactBounds } = await arDeviceNarration(ctx, voice, lines, speed));
+              ({ full, bounds: exactBounds } = await arDeviceNarration(ctx, voice, lines, speed, activity));
           } else {
-            const url = `/api/tts-script?v=10&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
+              const url = `/api/tts-script?v=11&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
             const res = await this.runTtsRequest(() => this.isGoogleVoice(voice) ? fetch('/api/tts-script', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -812,8 +813,10 @@
 
         this.scriptCache.set(scriptKey, job);
         job.then(
-          () => this.setTtsProvider(provider),
+          () => { activity.end(); this.setTtsProvider(provider); },
           (err) => {
+            if (err?.message === 'device_voice_changed' || this.masterWantKey !== scriptKey) activity.end();
+            else activity.fail(onDevice ? '기기 음성 생성 실패 · 사운드 설정을 확인해 주세요.' : '성우 연결 실패 · 사운드 설정을 확인해 주세요.');
             this.scriptCache.delete(scriptKey);
             const code = String(err && err.message);
             if (onDevice) return;
@@ -848,7 +851,7 @@
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
           // v: 서버의 읽기 규칙이 바뀌면 올려서, 예전에 저장된 음성 대신 새 음성을 받게 함
-          const url = `/api/tts?v=9&speed=${speed}` + (voice !== 'auto' ? `&ref=${encodeURIComponent(voice)}` : '') + `&text=${encodeURIComponent(text)}`;
+          const url = `/api/tts?v=10&speed=${speed}` + (voice !== 'auto' ? `&ref=${encodeURIComponent(voice)}` : '') + `&text=${encodeURIComponent(text)}`;
           let res = await this.runTtsRequest(() => fetch(url));
           if (!res.ok && (res.status === 429 || res.status >= 500) && res.status !== 503) {
             await new Promise((r) => setTimeout(r, 900));
@@ -1550,8 +1553,37 @@
       }
     };
 
-    const arDeviceVoiceIds = ['device-F1', 'device-M1'];
+    const arGenerationTasks = new Map();
+    function arBeginGeneration(kind, label) {
+      const task = { label, error: false };
+      const render = () => {
+        const items = Array.from(arGenerationTasks.values());
+        const shown = items.filter(t => !t.error).at(-1) || items.at(-1);
+        document.querySelectorAll('[data-generation-status]').forEach(el => {
+          el.hidden = !shown;
+          el.toggleAttribute('data-error', Boolean(shown?.error));
+          const text = el.querySelector('span');
+          if (text.textContent !== (shown?.label || '')) text.textContent = shown?.label || '';
+        });
+      };
+      arGenerationTasks.delete(kind);
+      arGenerationTasks.set(kind, task);
+      render();
+      const end = () => {
+        if (arGenerationTasks.get(kind) !== task) return;
+        arGenerationTasks.delete(kind);
+        render();
+      };
+      return {
+        update(message) { task.label = message; render(); },
+        end,
+        fail(message) { task.label = message; task.error = true; render(); setTimeout(end, 6000); }
+      };
+    }
+
+    const arDeviceVoiceIds = ['F', 'M'].flatMap(sex => [1, 2, 3, 4, 5].map(i => 'device-' + sex + i));
     const arIsDeviceVoice = voice => arDeviceVoiceIds.includes(voice);
+    const arDeviceVoiceLabel = id => '휴대폰 성우 · ' + (id[7] === 'F' ? '여성 ' : '남성 ') + id[8];
     const arDeviceModule = () => import('/assets/device-voice/model.mjs');
     let arDeviceInstalled = false;
     let arDeviceInstalling = false;
@@ -1571,7 +1603,7 @@
         const group = document.createElement('optgroup');
         group.dataset.deviceVoices = '';
         group.label = '이 기기에서 합성';
-        group.append(new Option('휴대폰 성우 · 여성', 'device-F1'), new Option('휴대폰 성우 · 남성', 'device-M1'));
+        group.append(...arDeviceVoiceIds.map(id => new Option(arDeviceVoiceLabel(id), id)));
         select.insertBefore(group, select.querySelector('[value="off"]'));
       }
       if (arIsDeviceVoice(AudioEngine.ttsVoice)) select.value = AudioEngine.ttsVoice;
@@ -1581,6 +1613,13 @@
       const panel = document.getElementById('deviceVoiceControls');
       if (!panel || !arHasGenerationAccount()) return;
       panel.hidden = false;
+      const audition = document.getElementById('deviceAuditionSelect');
+      if (!audition.options.length) {
+        audition.append(...arDeviceVoiceIds.map(id => new Option(arDeviceVoiceLabel(id), id)));
+        if (arIsDeviceVoice(AudioEngine.ttsVoice)) audition.value = AudioEngine.ttsVoice;
+        arLoadVoiceSample();
+        arSyncIgSelects(panel);
+      }
       const button = document.getElementById('deviceVoiceInstall');
       if (!window.isSecureContext || !window.caches || !window.Worker || !window.WebAssembly) {
         button.disabled = true;
@@ -1589,25 +1628,49 @@
       }
       try {
         arDeviceInstalled = await (await arDeviceModule()).isInstalled();
+        document.getElementById('deviceVoiceApply').hidden = !arDeviceInstalled;
         if (arDeviceInstalled) {
           arShowDeviceVoices();
           button.hidden = true;
-          arDeviceStatus('설치 완료 · 성우 목소리에서 휴대폰 성우를 고르세요.');
+          arDeviceStatus('설치 완료 · 예문을 듣고 ‘이 목소리 적용’을 눌러 주세요.');
         } else {
           button.hidden = false;
         }
       } catch { arDeviceStatus('브라우저 저장 공간을 확인한 후 다시 시도해 주세요.'); }
     }
 
+    function arLoadVoiceSample() {
+      const voice = document.getElementById('deviceAuditionSelect').value;
+      if (arIsDeviceVoice(voice)) document.getElementById('deviceAuditionPlayer').src = '/assets/device-voice/samples/' + voice.slice(7) + '.mp3';
+    }
+    document.getElementById('deviceAuditionSelect')?.addEventListener('change', arLoadVoiceSample);
+    document.getElementById('deviceAuditionPlayer')?.addEventListener('play', arPauseForStudioEdit);
+    document.getElementById('deviceVoiceApply')?.addEventListener('click', () => {
+      const voice = document.getElementById('deviceAuditionSelect').value;
+      if (!arDeviceInstalled || !arHasGenerationAccount() || !arIsDeviceVoice(voice)) return;
+      document.getElementById('deviceAuditionPlayer').pause();
+      const select = document.getElementById('ttsVoiceSelect');
+      select.value = voice;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      arDeviceStatus(arDeviceVoiceLabel(voice) + ' 적용됨');
+    });
+
     document.getElementById('deviceVoiceInstall')?.addEventListener('click', async function () {
       if (!arHasGenerationAccount() || arDeviceInstalling) return;
       this.disabled = arDeviceInstalling = true;
+      const activity = arBeginGeneration('download', '음성 모델 다운로드 중…');
       const lock = await arDeviceScreenLock();
       try {
         const model = await arDeviceModule();
-        await model.install((i, total) => arDeviceStatus(`음성 파일 다운로드 중 · ${i}/${total}`));
+        await model.install((i, total) => {
+          const message = `음성 파일 다운로드 중 · ${i}/${total}`;
+          arDeviceStatus(message);
+          activity.update(message);
+        });
         await arRefreshDeviceVoice();
+        activity.end();
       } catch (error) {
+        activity.fail('다운로드가 멈췄습니다. 사운드에서 다시 시도해 주세요.');
         arDeviceStatus(error.name === 'QuotaExceededError' ? '저장 공간이 부족합니다. 공간을 확보한 뒤 다시 눌러 주세요.' : '다운로드가 멈췄습니다. 다시 누르면 받은 파일부터 이어집니다.');
       } finally {
         this.disabled = arDeviceInstalling = false;
@@ -1619,7 +1682,7 @@
       try { return await navigator.wakeLock?.request('screen'); } catch { return null; }
     }
 
-    function arDeviceNarration(ctx, voice, lines, speed) {
+    function arDeviceNarration(ctx, voice, lines, speed, activity) {
       const job = arDeviceQueue.then(async () => {
         if (!arHasGenerationAccount()) throw new Error('device_login_required');
         if (!arDeviceInstalled && !await (await arDeviceModule()).isInstalled()) throw new Error('device_model_missing');
@@ -1642,6 +1705,7 @@
               clearTimeout(timer);
               timer = setTimeout(() => fail('device_timeout'), 240000);
               arDeviceStatus(data.status);
+              activity.update(data.status);
               return;
             }
             if (data.error) return fail(data.error);
@@ -1743,6 +1807,7 @@
       const unlock = (ev) => {
         if (window.__arUserMuted || AudioEngine.enabled) return;
         const t = ev && ev.target;
+        if (t?.closest?.('#deviceVoiceControls, #arOptionSheet[data-source-select="deviceAuditionSelect"]')) return;
         if (t && typeof t.closest === 'function' && t.closest('#soundToggleBtn, #mobileDockSoundBtn, #arQuickBar [data-qb="sound"], #topicCards, #bgmRecommendRow, #arBgmSheet, #arSheetHandle')) return;
         toggleAudioMaster(true);
       };

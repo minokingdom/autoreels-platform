@@ -27,7 +27,14 @@ export async function install(progress) {
 }
 
 export async function readAsset(name) {
-  const response = await (await caches.open(cacheName)).match(key(name));
+  const cache = await caches.open(cacheName);
+  let response = await cache.match(key(name));
+  // 기존 설치에서도 새로 고른 성우의 작은 프로필만 한 번 받습니다.
+  if (!response && /^voice_styles\/[FM][2-5]\.json$/.test(name)) {
+    response = await fetch(base + name, { credentials: 'omit' });
+    if (!response.ok) throw new Error('device_voice_download_failed');
+    await cache.put(key(name), response.clone());
+  }
   if (!response) throw new Error('device_model_missing');
   return name.endsWith('.json') ? response.json() : response.arrayBuffer();
 }

@@ -104,7 +104,7 @@ try {
   };
   await page.route('**/api/tts-script?**',async route=>{
     const url = new URL(route.request().url());
-    assert.equal(url.searchParams.get('v'),'10');
+    assert.equal(url.searchParams.get('v'),'11');
     assert.deepEqual(JSON.parse(url.searchParams.get('lines')),['첫 컷','둘째 컷','셋째 컷','마지막 컷']);
     await route.fulfill({json:{ok:true,model:'airy-tts-v1',clips_base64:[audioClip(4800,220),audioClip(9600,240),audioClip(14400,260),audioClip(19200,280)]}});
   });

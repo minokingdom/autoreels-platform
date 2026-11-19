@@ -1505,3 +1505,35 @@ body.ar-cut-editing #arQuickBar { display: none; }
 .preset-drawer > * { flex-shrink: 0; }
 .preset-drawer .pd-cats { min-height: 44px; align-items: center; overflow-y: hidden; }
 .preset-drawer .pd-list { flex: 0 0 auto; overflow-y: visible; }
+.ar-generation-status {
+  position: absolute;
+  z-index: 24;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  width: max-content;
+  max-width: 92%;
+  padding: .6rem .9rem;
+  border-radius: .75rem;
+  background: rgb(18 18 20 / 88%);
+  color: white;
+  font-size: .82rem;
+  pointer-events: none;
+}
+.ar-generation-status[hidden], #deviceVoiceApply[hidden] { display: none; }
+.ar-generation-status i {
+  flex: 0 0 1em;
+  height: 1em;
+  border: 2px solid rgb(255 255 255 / 38%);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: ar-generation-turn .8s linear infinite;
+}
+.ar-generation-status[data-error] i { display: none; }
+.ar-generation-compact { position: static; transform: none; padding: 0; background: transparent; }
+.ar-voice-sample { width: 100%; height: 34px; margin: .4rem 0; }
+@keyframes ar-generation-turn { to { transform: rotate(1turn); } }
+@media (prefers-reduced-motion: reduce) { .ar-generation-status i { animation: none; } }

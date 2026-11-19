@@ -15,7 +15,10 @@ export function buildApp(repoRoot) {
   if (!parts.length) throw new Error('no app parts in ' + dir);
   const body = parts.map((f) => `// ===== ${f} =====\n` + fs.readFileSync(path.join(dir, f), 'utf8').replace(/\s+$/, '') + '\n').join('\n');
   const catalog = referenceStyles.validateCatalog(JSON.parse(fs.readFileSync(path.join(repoRoot, 'public/assets/reference-styles.json'), 'utf8')));
-  const referenceData = 'const AR_REFERENCE_STYLES = ' + JSON.stringify(catalog) + ';\n';
+  const speechRules = fs.readFileSync(path.join(repoRoot, 'lib/korean-numbers.js'), 'utf8');
+  const referenceData = 'window.__koSpeech = (() => { const module = { exports: {} };\n' +
+    speechRules + '\nreturn module.exports.normalizeKoreanNumbers; })();\n' +
+    'const AR_REFERENCE_STYLES = ' + JSON.stringify(catalog) + ';\n';
   const assets = path.join(repoRoot, 'public/assets');
   const audio = JSON.parse(fs.readFileSync(path.join(assets, 'audio-library.json'), 'utf8'));
   const groups = [

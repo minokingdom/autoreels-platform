@@ -19,7 +19,8 @@ async function loadEngine() {
 self.onmessage = async ({ data }) => {
   try {
     engine ??= await loadEngine();
-    const voice = await readAsset('voice_styles/' + (data.voice === 'device-F1' ? 'F1' : 'M1') + '.json');
+    if (!/^device-[FM][1-5]$/.test(data.voice)) throw new Error('device_unknown_voice');
+    const voice = await readAsset('voice_styles/' + data.voice.slice(7) + '.json');
     const tensor = v => new ort.Tensor('float32', Float32Array.from(v.data.flat(Infinity)), v.dims);
     const style = new Style(tensor(voice.style_ttl), tensor(voice.style_dp));
     const clips = [];

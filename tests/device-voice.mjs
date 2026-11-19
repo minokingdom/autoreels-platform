@@ -4,10 +4,12 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { Readable } from 'node:stream';
+import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { buildApp } from '../scripts/build-app.mjs';
 
-const real = process.argv.includes('--android') || process.argv.includes('--real');
+const samples = process.argv.includes('--samples');
+const real = samples || process.argv.includes('--android') || process.argv.includes('--real');
 const android = process.argv.includes('--android');
 const root = path.resolve('public');
 buildApp(path.resolve('.'));
@@ -21,7 +23,7 @@ const server = http.createServer(async (req, res) => {
       const upstream = url.pathname.slice('/fixture/'.length);
       const model = 'https://huggingface.co/supertone-oss-archive/supertonic-3/resolve/aafc6e32416a594460b32413efc49d7fe4ce6d46/';
       const source = upstream === 'runtime' ? 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort-wasm-simd-threaded.wasm'
-        : /^(?:onnx\/(?:tts.json|unicode_indexer.json|duration_predictor.onnx|text_encoder.onnx|vector_estimator.onnx|vocoder.onnx)|voice_styles\/[FM]1.json)$/.test(upstream) ? model + upstream : null;
+        : /^(?:onnx\/(?:tts.json|unicode_indexer.json|duration_predictor.onnx|text_encoder.onnx|vector_estimator.onnx|vocoder.onnx)|voice_styles\/[FM][1-5]\.json)$/.test(upstream) ? model + upstream : null;
       assert.ok(source);
       const response = await fetch(source);
       console.log('asset', upstream, response.status);
@@ -39,7 +41,7 @@ const server = http.createServer(async (req, res) => {
     const mime = { '.html': 'text/html', '.mjs': 'text/javascript', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
     res.setHeader('Content-Type', mime[path.extname(file)] || 'application/octet-stream');
     if (url.pathname.endsWith('/model.mjs')) {
-      res.end(fs.readFileSync(file, 'utf8').replace('wasm : base + name', "'/fixture/runtime' : '/fixture/' + name"));
+      res.end(fs.readFileSync(file, 'utf8').replace('wasm :', "'/fixture/runtime' :").replaceAll('base + name', "location.origin + '/fixture/' + name"));
     } else if (!real && url.pathname.endsWith('/worker.mjs')) {
       res.end('onmessage=e=>postMessage({sampleRate:24000,clips:e.data.lines.map(()=>new Float32Array(24000).fill(.1))})');
     } else fs.createReadStream(file).pipe(res);
@@ -59,6 +61,12 @@ try {
   });
   assert.equal(await page.locator('#deviceVoiceControls').isHidden(), true);
   await login();
+  assert.equal(await page.locator('#deviceAuditionSelect option').count(), 10);
+  assert.equal(await page.evaluate(() => window.__koSpeech('최대 1,150만원')), '최대 천백오십만 원');
+  await page.evaluate(() => document.getElementById('studioTabBtn_sound').click());
+  await page.locator('#deviceAuditionSelect + .ig-select-row').click();
+  await page.locator('#arOptionSheet [data-v="device-M5"]').click();
+  assert.match(await page.locator('#deviceAuditionPlayer').getAttribute('src'), /M5\.mp3$/);
   const before = downloads;
   const start = Date.now();
   await page.evaluate(() => document.getElementById('deviceVoiceInstall').click());
@@ -69,12 +77,22 @@ try {
   await login();
   assert.equal(await page.evaluate(() => arDeviceInstalled), true);
   assert.equal(downloads, count);
+  await page.evaluate(() => {
+    const select = document.getElementById('deviceAuditionSelect');
+    select.value = 'device-M5';
+    select.dispatchEvent(new Event('change'));
+    document.getElementById('deviceVoiceApply').click();
+  });
+  assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'device-M5');
   const result = await page.evaluate(async () => {
     const lines = ['눈길을 끄는 BMW i4 eDrive40, 오늘 만나 보세요.', '전시 차량은 4대, 할인은 최대 800만 원입니다.'];
     AudioEngine.restoreVoice('device-F1');
     const key = AudioEngine.masterWantKey = AudioEngine.scriptKeyFor(lines);
     const start = performance.now();
-    await AudioEngine.fetchScriptNarration(lines);
+    const recording = AudioEngine.fetchScriptNarration(lines);
+    if (document.querySelector('#previewViewport [data-generation-status]').hidden) throw new Error('녹음 중 스피너 누락');
+    await recording;
+    if (!document.querySelector('#previewViewport [data-generation-status]').hidden) throw new Error('녹음 완료 후 스피너가 남았습니다.');
     const master = AudioEngine.scriptMasters.get(key);
     const result = { seconds: master.full.duration, elapsed: (performance.now() - start) / 1000,
       bounds: master.bounds, peak: master.peak, rate: master.full.sampleRate };
@@ -85,6 +103,31 @@ try {
   assert.ok(result.seconds > 0 && result.peak > .001 && result.bounds.length === 3);
   assert.equal(result.bounds.at(-1), result.seconds);
   assert.equal(paid, 0);
+  if (samples) {
+    const dir = path.join(root, 'assets/device-voice/samples');
+    fs.mkdirSync(dir, { recursive: true });
+    for (const sex of ['F', 'M']) for (let i = 1; i <= 5; i++) {
+      const id = sex + i;
+      const audio = await page.evaluate(async id => {
+        const worker = window.sampleWorker ||= new Worker('/assets/device-voice/worker.mjs', { type: 'module' });
+        return new Promise((resolve, reject) => {
+          worker.onerror = () => reject(new Error('sample_worker_failed'));
+          worker.onmessage = ({ data }) => {
+            if (data.error) return reject(new Error(data.error));
+            if (!data.clips) return;
+            const pcm = Int16Array.from(data.clips[0], n => Math.round(Math.max(-1, Math.min(1, n)) * 32767));
+            let binary = '';
+            for (const byte of new Uint8Array(pcm.buffer)) binary += String.fromCharCode(byte);
+            resolve({ rate: data.sampleRate, pcm: btoa(binary) });
+          };
+          worker.postMessage({ voice: 'device-' + id, speed: 1.1, lines: [window.__koSpeech('오늘의 혜택, 최대 1,150만 원 할인입니다.')] });
+        });
+      }, id);
+      execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-f', 's16le', '-ar', String(audio.rate), '-ac', '1', '-i', 'pipe:0',
+        '-codec:a', 'libmp3lame', '-b:a', '96k', path.join(dir, id + '.mp3')], { input: Buffer.from(audio.pcm, 'base64') });
+      console.log('sample', id);
+    }
+  }
 } finally {
   await page.close();
   await browser.close();

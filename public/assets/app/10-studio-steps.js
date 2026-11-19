@@ -673,6 +673,7 @@
       triggerFullAudioPreview();
     }
     function switchStudioTab(key) {
+      if (key !== 'sound') document.getElementById('deviceAuditionPlayer')?.pause();
       if (!STUDIO_TABS.includes(key)) return;
       // 발행 단계는 명함까지 순서대로 마쳐야 열림
       if (key === 'publish' && !arFinalAudioUnlocked) {
@@ -996,6 +997,8 @@
         el.addEventListener('click', (e) => { if (e.target === el) arCloseOptionSheet(); });
         document.body.appendChild(el);
       }
+      el.dataset.sourceSelect = sel.id;
+      if (sel.id === 'deviceAuditionSelect') arPauseForStudioEdit();
       arWatchEditSheet(el);
       const esc = (v) => String(v || '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
       const isPhoto = sel.getAttribute('data-sheet-kind') === 'photo';
@@ -1965,6 +1968,8 @@
       if (!arRequireAiAccess()) return;
       arPauseForStudioEdit();
       const generationId = ++arScriptGenerationId;
+      const activity = arBeginGeneration('script', '대본 만드는 중…');
+      let progressError = '';
       arSetScriptGenerating(true);
       const promptEl = document.getElementById('aiPromptInput');
       const excludeEl = document.getElementById('aiExcludeInput');
@@ -2067,6 +2072,7 @@
           return;
         }
         if (['trial_expired', 'quota_exceeded', 'service_budget_exceeded'].includes(result.error)) {
+          progressError = result.message || '대본 생성 한도에 도달했습니다.';
           if (noticeEl) noticeEl.textContent = result.message;
           return;
         }
@@ -2083,9 +2089,11 @@
         applyAiScriptToCampaign(variants[0], d, stripExcludedLocal, vehicleLocked);
         renderScriptVariantPicker();
         aiUsedFallback = Boolean(result.aiFallback);
+        if (aiUsedFallback) progressError = 'AI 대본을 만들지 못해 기본 대본을 표시합니다.';
         triggerTopicImages(variants[0]?.cutCaptions);
       } catch (err) {
         if (generationId !== arScriptGenerationId || staleProduct()) return;
+        progressError = 'AI 대본을 만들지 못해 기본 대본을 표시합니다.';
         arScriptVariants.list = [];
         renderScriptVariantPicker();
         if (IND.key !== 'auto') {
@@ -2128,6 +2136,8 @@
         arFillAutoScriptOffline(parsedLocal, d);
         triggerTopicImages(campaign.cutCaptions);
       } finally {
+        if (progressError) activity.fail(progressError);
+        else activity.end();
         if (generationId === arScriptGenerationId) arSetScriptGenerating(false);
         if (btnEl && generationId === arScriptGenerationId) {
           btnEl.disabled = false;
@@ -2196,11 +2206,14 @@
     }
 
     async function arApplyLocalSceneImages(payload, applySlotImage, stillCurrent, noticeEl) {
+      const activity = arBeginGeneration('images', '컷 이미지 준비 중…');
+      let progressError = '';
       const btn = document.getElementById('regenTopicImgBtn');
       let completed = 0;
       const update = (message) => {
         if (!stillCurrent()) return;
         if (noticeEl) { noticeEl.classList.remove('hidden'); noticeEl.textContent = message; }
+        activity.update(message);
         if (btn) btn.textContent = message;
       };
       try {
@@ -2240,8 +2253,12 @@
       } catch (error) {
         if (!stillCurrent()) return;
         const message = `${completed ? completed + '장 적용 후 중단: ' : ''}${error.message || '이미지 생성에 실패했어요.'}`;
+        progressError = message;
         if (noticeEl) { noticeEl.classList.remove('hidden'); noticeEl.textContent = message; }
         if (typeof arToast === 'function') arToast(message);
+      } finally {
+        if (progressError && stillCurrent()) activity.fail(progressError);
+        else activity.end();
       }
     }
 
@@ -2337,6 +2354,8 @@
 
       if (arUseLocalSceneImages()) return arApplyLocalSceneImages(payload, applySlotImage, stillCurrent, noticeEl);
 
+      const activity = arBeginGeneration('images', '컷 이미지 만드는 중…');
+      let progressError = '';
       try {
         if (noticeEl) {
           noticeEl.classList.remove('hidden');
@@ -2351,6 +2370,7 @@
         if (!stillCurrent()) return;
         const prompts = Array.isArray(pj.prompts) ? pj.prompts : [];
         if (!promptRes.ok || !pj.ok || !prompts.length) {
+          progressError = pj.message || '컷 이미지를 만들지 못했습니다.';
           if (noticeEl) {
             const reason = pj.error === 'quota_exceeded'
               ? '계정의 AI 생성 한도에 도달했어요. 내 계정에서 사용량을 확인해 주세요.'
@@ -2383,6 +2403,7 @@
             }
             const results = await Promise.all(applied);
             readyCount += results.filter(Boolean).length;
+            activity.update(`컷 이미지 적용 중 · ${readyCount}/${totalCutsTarget}`);
             if (results.includes(false)) { failedCount += 1; firstError ||= 'kie_image_download_failed'; }
           } catch (e) { failedCount += 1; firstError = firstError || 'kie_image_failed'; }
         }));
@@ -2394,10 +2415,15 @@
           renderDynamicCutCardsUI();
           if (noticeEl) noticeEl.textContent = `[${label}] 이미지 ${prompts.length}장으로 ${readyCount}컷을 교체했어요.`;
         } else if (failedCount && noticeEl) {
+          progressError = `이미지 ${readyCount}/${totalCutsTarget}컷 적용 · 사진 단계에서 확인해 주세요.`;
           const messages = { missing_kie_key: 'KIE API 키가 설정되지 않았습니다.', kie_insufficient_credits: 'KIE 크레딧이 부족합니다.', kie_invalid_key: 'KIE API 키를 확인해 주세요.', kie_rate_limited: '요청이 많습니다. 잠시 후 다시 시도해 주세요.', kie_image_timeout: '이미지 생성이 지연되고 있습니다. 잠시 후 확인해 주세요.', kie_image_download_failed: '생성된 이미지를 받지 못했습니다.', kie_image_failed: 'KIE 이미지 생성에 실패했습니다.' };
           noticeEl.textContent = `${readyCount}/${totalCutsTarget}컷 교체 · 나머지 컷은 기존 사진을 유지했어요. ${messages[firstError] || firstError}`;
         }
       } catch (e) {
         if (noticeEl && stillCurrent()) noticeEl.textContent = '이미지 생성기에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.';
+        progressError = '이미지 생성기에 연결하지 못했습니다.';
+      } finally {
+        if (progressError && stillCurrent()) activity.fail(progressError);
+        else activity.end();
       }
     }
