@@ -503,7 +503,7 @@
 
         // 대본 탭: 컷별 헤드라인·성우 대사만 (사진·화면·모션은 사진 탭)
         html += `
-          <div class="p-3 rounded-[8px] bg-[#141415] border border-[var(--border)] space-y-1.5">
+          <div data-cut-card="${i}" class="p-3 rounded-[8px] bg-[#141415] border border-[var(--border)] space-y-1.5">
             <div class="flex items-center justify-between gap-2">
               <button type="button" onclick="seekToTime(${seekSec})" id="cutTimeLabel${i}" class="font-mono text-[12px] text-[#ededed] font-medium hover:text-[#38bdf8] cursor-pointer" title="이 장면(${s}초)으로 미리보기 이동">CUT ${i + 1} (${s}~${e}초)</button>
               <button type="button" onclick="openCutEditor(${i}, 'caption')" class="px-2 py-0.5 rounded-[6px] bg-white/10 hover:bg-white/20 text-[11px] font-semibold text-[#ededed] cursor-pointer transition">🎛️ 컷 편집</button>
@@ -516,7 +516,7 @@
         `;
         // 사진 탭: 컷별 사진/영상 · 화면 디자인 · 카메라 모션
         mediaHtml += `
-          <div class="p-3.5 rounded-[10px] bg-[#141415] border border-[var(--border)] space-y-3">
+          <div data-cut-card="${i}" class="p-3.5 rounded-[10px] bg-[#141415] border border-[var(--border)] space-y-3">
             <div class="flex items-start gap-3">
               <button type="button" onclick="seekToTime(${seekSec})" title="이 장면(${s}초)으로 미리보기 이동" class="w-12 aspect-[9/16] rounded-[8px] overflow-hidden border border-[var(--border)] hover:border-[#3b82f6] bg-black shrink-0 cursor-pointer relative">
                 ${thumbUrl ? `<img src="${thumbUrl}" class="w-full h-full object-cover" />` : ''}
@@ -571,14 +571,15 @@
         const keepX = container.scrollLeft;
         container.innerHTML = html;
         container.scrollLeft = keepX;
+        arRenderCutJumpBar('cutScriptJumpBar', container, 'script', targetCuts);
         let hint = document.getElementById('cutScriptSwipeHint');
         if (!hint) {
           hint = document.createElement('p');
           hint.id = 'cutScriptSwipeHint';
-          hint.className = 'lg:hidden text-[12px] text-[#85858b] mb-1';
-          container.parentNode.insertBefore(hint, container);
+          hint.className = 'lg:hidden text-[11px] text-[#85858b] mb-1';
+          container.parentNode.insertBefore(hint, document.getElementById('cutScriptJumpBar') || container);
         }
-        hint.textContent = `컷 ${targetCuts}개 · 옆으로 넘겨 컷마다 자막·대사를 고쳐요 →`;
+        hint.textContent = `컷 ${targetCuts}개 · 번호를 누르거나 옆으로 넘겨 고쳐요`;
       }
       const mediaBox = document.getElementById('cutMediaCardsContainer');
       if (mediaBox) {
@@ -586,16 +587,101 @@
         const keepX = mediaBox.scrollLeft;
         mediaBox.innerHTML = mediaHtml;
         mediaBox.scrollLeft = keepX;
+        arRenderCutJumpBar('cutMediaJumpBar', mediaBox, 'photo', targetCuts);
         let hint = document.getElementById('cutMediaSwipeHint');
         if (!hint) {
           hint = document.createElement('p');
           hint.id = 'cutMediaSwipeHint';
-          hint.className = 'lg:hidden text-[12px] text-[#85858b] mb-2';
-          mediaBox.parentNode.insertBefore(hint, mediaBox);
+          hint.className = 'lg:hidden text-[11px] text-[#85858b] mb-1';
+          mediaBox.parentNode.insertBefore(hint, document.getElementById('cutMediaJumpBar') || mediaBox);
         }
-        hint.textContent = `컷 ${targetCuts}개 · 옆으로 넘겨 보세요 →`;
+        hint.textContent = `컷 ${targetCuts}개 · 번호를 누르거나 옆으로 넘겨 보세요`;
       }
     }
+
+    function arSetActiveCutJumpBtn(bar, activeIdx) {
+      if (!bar) return;
+      const btns = bar.querySelectorAll('[data-jump-cut]');
+      btns.forEach((b) => {
+        const on = Number(b.getAttribute('data-jump-cut')) === activeIdx;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+    }
+
+    function arRenderCutJumpBar(barId, container, kind, targetCuts) {
+      if (!container || !container.parentNode) return;
+      let bar = document.getElementById(barId);
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = barId;
+        bar.className = 'ar-cut-jumpbar ar-swipe no-scrollbar';
+        bar.setAttribute('role', 'tablist');
+        bar.setAttribute('aria-label', kind === 'script' ? '대본 컷 빠른 이동' : '사진 컷 빠른 이동');
+        container.parentNode.insertBefore(bar, container);
+      }
+      let activeIdx = 0;
+      const curT = (window.__timelines && window.__timelines.main) ? (window.__timelines.main.currentTime || 0) : 0;
+      if (typeof getCutIndexAt === 'function') activeIdx = Math.max(0, Math.min(targetCuts - 1, getCutIndexAt(curT)));
+      if (bar.children.length !== targetCuts) {
+        bar.innerHTML = Array.from({ length: targetCuts }, (_, i) => {
+          const on = i === activeIdx;
+          return `<button type="button" role="tab" aria-selected="${on ? 'true' : 'false'}" data-jump-cut="${i}" onclick="arJumpToCutCard('${kind}', ${i})" class="ar-cut-jump-btn${on ? ' is-active' : ''}">${i + 1}컷</button>`;
+        }).join('');
+      } else {
+        arSetActiveCutJumpBtn(bar, activeIdx);
+      }
+      if (!container.__arJumpScrollBound) {
+        container.__arJumpScrollBound = true;
+        let rafId = 0;
+        container.addEventListener('scroll', () => {
+          if (container.__arJumpLockUntil && Date.now() < container.__arJumpLockUntil) return;
+          if (rafId) return;
+          rafId = requestAnimationFrame(() => {
+            rafId = 0;
+            if (container.scrollWidth <= container.clientWidth + 8) return;
+            const cards = container.querySelectorAll('[data-cut-card]');
+            if (!cards.length) return;
+            const leftEdge = container.scrollLeft + container.clientWidth * 0.25;
+            let bestIdx = 0;
+            let bestDist = Infinity;
+            cards.forEach((c) => {
+              const dist = Math.abs((c.offsetLeft - container.offsetLeft) - leftEdge);
+              if (dist < bestDist) {
+                bestDist = dist;
+                bestIdx = Number(c.getAttribute('data-cut-card')) || 0;
+              }
+            });
+            arSetActiveCutJumpBtn(document.getElementById(barId), bestIdx);
+          });
+        }, { passive: true });
+      }
+    }
+
+    function arJumpToCutCard(kind, cutIdx) {
+      const containerId = kind === 'script' ? 'dynamicCutCardsContainer' : 'cutMediaCardsContainer';
+      const barId = kind === 'script' ? 'cutScriptJumpBar' : 'cutMediaJumpBar';
+      const container = document.getElementById(containerId);
+      const bar = document.getElementById(barId);
+      if (!container) return;
+      const card = container.querySelector(`[data-cut-card="${cutIdx}"]`);
+      if (card) {
+        container.__arJumpLockUntil = Date.now() + 500;
+        if (container.scrollWidth > container.clientWidth + 8) {
+          container.scrollTo({ left: Math.max(0, card.offsetLeft - container.offsetLeft), behavior: 'smooth' });
+        } else {
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+        card.classList.remove('ar-cut-card-flash');
+        void card.offsetWidth;
+        card.classList.add('ar-cut-card-flash');
+      }
+      arSetActiveCutJumpBtn(bar, cutIdx);
+      if (typeof seekToTime === 'function' && typeof getCutStart === 'function') {
+        seekToTime(Number((getCutStart(cutIdx) + 0.1).toFixed(2)));
+      }
+    }
+    window.arJumpToCutCard = arJumpToCutCard;
 
     function arApplySinglePhotoAllCuts(photoIdx) {
       const photos = Array.isArray(campaign.uploadedPhotos) ? campaign.uploadedPhotos : [];

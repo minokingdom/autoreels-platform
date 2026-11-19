@@ -41,7 +41,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261120a" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261120b" />
   <link rel="stylesheet" href="/assets/app/splash.css?v=studio-return" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -2119,9 +2119,9 @@
     if (window.__AR_MOBILE_SHELL) {
       document.head.innerHTML = '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>오토릴스메이커 — 모바일 보기 (390×844)</title><style>*{box-sizing:border-box}html,body{margin:0;height:100%;background:#09090b;color:#ededed;font-family:Pretendard,system-ui,sans-serif;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px}.bar{display:flex;align-items:center;justify-content:space-between;width:394px;max-width:100%;font-size:12px;color:#a1a1a6}.bar a{color:#ededed;text-decoration:none;padding:5px 10px;border-radius:8px;background:#232325;border:1px solid rgba(255,255,255,.14)}.frame{width:394px;height:min(848px,calc(100dvh - 54px));border-radius:26px;overflow:hidden;border:2px solid rgba(255,255,255,.16);box-shadow:0 24px 64px rgba(0,0,0,.75);background:#0f0f10}iframe{width:100%;height:100%;border:0;display:block}</style>';
       document.body.className = '';
-      document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120a" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
+      document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261120a"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261120b"><\/script>');
     }
   </script>
   <!--

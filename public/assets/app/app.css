@@ -1527,10 +1527,13 @@ body.ar-cut-editing #arQuickBar { display: none; }
   body.ar-sheet:not(.ar-cut-editing) .monitor-frame:has(#arQuickColors[open]) #previewViewport { height: calc(100% - 40px); flex: none; }
   body.ar-sheet:not(.ar-cut-editing) #previewViewport { height: 100%; width: auto; aspect-ratio: 9 / 16; }
   body.ar-sheet:not(.ar-cut-editing) #arQuickBar {
-    position: fixed; left: auto; right: 6px; top: calc((100dvh - var(--ar-sheet) - var(--ar-msb)) / 2);
-    gap: 5px; transition: top .3s ease;
+    position: fixed; left: auto; right: 4px; top: calc((100dvh - var(--ar-sheet) - var(--ar-msb)) / 2);
+    gap: 2px; transition: top .3s ease;
   }
-  body.ar-sheet:not(.ar-cut-editing) #arQuickBar .aq-dot { width: 32px; height: 32px; }
+  body.ar-sheet:not(.ar-cut-editing) #arQuickBar .aq-btn {
+    min-width: 44px; min-height: 44px; padding: 2px; justify-content: center;
+  }
+  body.ar-sheet:not(.ar-cut-editing) #arQuickBar .aq-dot { width: 34px; height: 34px; }
   body.ar-sheet:not(.ar-cut-editing) #arQuickBar .aq-label { font-size: 9.5px; }
   /* 모바일 바텀시트에서는 #arQuickBar의 '디자인' 버튼이 대신하므로 캔버스 위 세로 손잡이(#presetHandle) 숨김 (확대 시 겹침·스티커 가림 방지) */
   body.ar-sheet #presetHandle { display: none !important; }
@@ -1556,11 +1559,27 @@ body.ar-cut-editing #arQuickBar { display: none; }
   body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn > .studio-card > div:first-child { padding: 2px 12px 4px; }
   body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn > .studio-card > div.sticky { padding-top: 8px; padding-bottom: 8px; }
   body.ar-sheet:not(.ar-cut-editing) #arSheetHandle {
-    display: flex; position: sticky; top: 0; z-index: 25; width: 100%; height: 24px; align-items: center; justify-content: center;
+    display: flex; position: sticky; top: 0; z-index: 25; width: 100%; height: 30px; align-items: center; justify-content: center;
     background: var(--card); border: 0; cursor: pointer; touch-action: none; padding: 0;
   }
-  #arSheetHandle span { width: 40px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.32); display: block; }
-  body.ar-sheet:not(.ar-cut-editing) div.sticky:has(> .studio-tablist) { top: 24px !important; }
+  #arSheetHandle span { width: 42px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.34); display: block; }
+  body.ar-sheet:not(.ar-cut-editing) div.sticky:has(> .studio-tablist) { top: 30px !important; }
+  /* 모바일 바텀시트 스크롤 다이어트 + 주요 컨트롤 터치 영역(>=38px) 보강 */
+  body.ar-sheet:not(.ar-cut-editing) .studio-panel {
+    padding: 12px 12px 20px !important;
+  }
+  body.ar-sheet:not(.ar-cut-editing) .studio-panel > * + * {
+    margin-top: 12px !important;
+  }
+  body.ar-sheet:not(.ar-cut-editing) .studio-sub {
+    padding: 12px !important;
+  }
+  body.ar-sheet:not(.ar-cut-editing) .studio-tab,
+  body.ar-sheet:not(.ar-cut-editing) #mobileStepBar button,
+  body.ar-sheet:not(.ar-cut-editing) .cut-ctl select,
+  body.ar-sheet:not(.ar-cut-editing) .cut-upload {
+    min-height: 38px;
+  }
 
   /* 컷 편집 중: 시트·하단바는 숨기고 화면 안에 미리보기 + 컷 전환바 + 편집 시트를 깔끔하게 배치 */
   body.ar-sheet.ar-cut-editing { overflow: hidden; }
@@ -1677,6 +1696,46 @@ body.ar-cut-editing #arQuickBar { display: none; }
 .ar-generation-compact { position: static; transform: none; padding: 0; background: transparent; }
 .ar-voice-sample { width: 100%; height: 34px; margin: .4rem 0; }
 @keyframes ar-generation-turn { to { transform: rotate(1turn); } }
+
+/* 대본·사진 탭 상단 컷 빠른 점프 바 ([1컷][2컷][3컷]...) */
+.ar-cut-jumpbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0 6px;
+  margin-bottom: 4px;
+}
+.ar-cut-jump-btn {
+  flex: 0 0 auto;
+  min-width: 48px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: #18181b;
+  color: #a1a1aa;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+.ar-cut-jump-btn:hover {
+  color: #ededed;
+  border-color: rgba(255, 255, 255, 0.28);
+}
+.ar-cut-jump-btn.is-active {
+  background: #2563eb;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+@keyframes ar-cut-card-pulse {
+  0% { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35); }
+  100% { border-color: var(--border); box-shadow: none; }
+}
+.ar-cut-card-flash {
+  animation: ar-cut-card-pulse .7s ease-out;
+}
 @media (prefers-reduced-motion: reduce) { .ar-generation-status i { animation: none; } }
 @font-face { font-family: 'AR Gaegu'; src: url('../fonts/point/Gaegu-Bold.ttf') format('truetype'); font-weight: 700; font-display: swap; }
 @font-face { font-family: 'AR Dokdo'; src: url('../fonts/point/EastSeaDokdo-Regular.ttf') format('truetype'); font-weight: 400; font-display: swap; }
