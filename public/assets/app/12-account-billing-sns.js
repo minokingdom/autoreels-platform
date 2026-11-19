@@ -531,7 +531,6 @@
     function arApplyMe(me) {
       const newAccount = AR_SERVER.me?.user?.id !== me.user.id;
       AR_SERVER.me = me;
-      arRefreshDeviceVoice();
       const u = me.user;
       arLoadAccountCustomStyles(u.id);
       const pro = Boolean(me.entitlement && me.entitlement.pro);

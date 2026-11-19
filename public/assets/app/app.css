@@ -1104,6 +1104,7 @@ body.ar-cut-editing #igSelectedBar { bottom: auto !important; top: calc(100% + 8
 
 /* 휴대폰 기본 선택창 대신 쓰는 아래 시트 */
 #arOptionSheet { align-items: flex-end; padding: 0; }
+#arOptionSheet[data-source-select="ttsVoiceSelect"] { position: fixed; inset: 0; z-index: 95; }
 #arOptionSheet .aos-card { width: 100%; max-width: 520px; margin: 0 auto; max-height: 78vh; display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border-strong); border-bottom: 0; border-radius: 18px 18px 0 0; padding: 14px 14px calc(14px + env(safe-area-inset-bottom)); animation: aosUp 200ms var(--ease-out); }
 @keyframes aosUp { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 #arOptionSheet .aos-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 10px; }
@@ -1530,7 +1531,7 @@ body.ar-cut-editing #arQuickBar { display: none; }
   font-size: .82rem;
   pointer-events: none;
 }
-.ar-generation-status[hidden], #deviceVoiceControls [hidden] { display: none; }
+.ar-generation-status[hidden] { display: none; }
 .ar-generation-status i {
   flex: 0 0 1em;
   height: 1em;

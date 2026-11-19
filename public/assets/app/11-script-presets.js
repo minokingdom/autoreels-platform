@@ -720,8 +720,7 @@
             let timeout;
             try {
               const ready = AudioEngine.prefetchTtsBuffers(true);
-              if (arIsDeviceVoice(AudioEngine.ttsVoice)) await ready;
-              else await Promise.race([ready, new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('성우 음성이 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.')), 45000); })]);
+              await Promise.race([ready, new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('성우 음성이 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.')), 45000); })]);
             } finally { clearTimeout(timeout); }
             if (!AudioEngine.masterBuffer || (AudioEngine.masterWantKey && AudioEngine.masterKey !== AudioEngine.masterWantKey)) throw new Error('성우 음성을 만들지 못했습니다. 음성을 다시 준비한 뒤 저장해 주세요.');
           }

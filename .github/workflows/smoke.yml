@@ -61,5 +61,5 @@ jobs:
           node tests/reference-styles-browser.mjs
       - name: Render every design
         run: node tests/smoke-render.mjs
-      - name: Installed device narration
-        run: node tests/device-voice.mjs
+      - name: Voice audition and selection
+        run: node tests/voice-preview.mjs

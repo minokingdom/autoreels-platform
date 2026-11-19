@@ -492,17 +492,13 @@
         return /^(airy|google)_/.test(code);
       },
       restoreVoice(voice) {
+        if (arIsLegacyDeviceVoice(voice)) voice = 'off';
         this.defaultVoicePending = false;
         this.ttsVoice = voice;
         const sel = document.getElementById('ttsVoiceSelect');
         if (!sel) return;
         if (!Array.from(sel.options).some((option) => option.value === voice)) {
-          if (arIsDeviceVoice(voice)) {
-            const missing = new Option('휴대폰 성우 · 모델 다운로드 필요', voice);
-            missing.dataset.deviceMissing = '';
-            missing.disabled = true;
-            sel.add(missing, sel.querySelector('[value="off"]'));
-          } else if (this.isGoogleVoice(voice)) {
+          if (this.isGoogleVoice(voice)) {
             const label = voice.includes('Chirp3-HD') ? 'Google Chirp 3 HD' : 'Google WaveNet';
             sel.add(new Option(label, voice), sel.querySelector('[value="off"]'));
           } else if (/^[a-f0-9]{16,64}$/i.test(voice)) {
@@ -538,11 +534,11 @@
               (groups.get(group) || options).append(new Option(title, id));
             }
             const off = select.querySelector('option[value="off"]');
-            const device = select.querySelector('[data-device-voices]');
-            select.replaceChildren(options, ...(device ? [device] : []), off);
+            select.replaceChildren(options, off);
             const preferred = this.defaultVoicePending && voices.find((voice) => voice.preferred);
             this.restoreVoice(preferred?.id || this.ttsVoice);
             this.voiceListLoaded = true;
+            if (select.__igRow) arSyncIgSelects(select.parentElement);
           } catch (error) {
             // 목록을 받지 못했으면 현재 성우를 사용하고, 다음에 목록을 다시 조회합니다.
           } finally {
@@ -646,8 +642,7 @@
       },
       fetchScriptNarration(lines) {
         const voice = this.ttsVoice;
-        const onDevice = arIsDeviceVoice(voice);
-        if (!(onDevice ? arHasGenerationAccount() : arCanUseAi())) return Promise.reject(new Error('ai_access_required'));
+        if (!arCanUseAi()) return Promise.reject(new Error('ai_access_required'));
         const speed = this.ttsSpeed;
         const scriptKey = `${voice}@${speed}|${lines.join('\n')}`;
         if (this.scriptCache.has(scriptKey)) return this.scriptCache.get(scriptKey);
@@ -659,55 +654,50 @@
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
           let body, full, exactBounds;
-          if (onDevice) {
-            provider = 'device';
-              ({ full, bounds: exactBounds } = await arDeviceNarration(ctx, voice, lines, speed, activity));
+          const url = `/api/tts-script?v=11&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
+          const res = await this.runTtsRequest(() => this.isGoogleVoice(voice) ? fetch('/api/tts-script', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ref: voice, speed, lines })
+          }) : fetch(url));
+          if (!res.ok) {
+            let code = `http_${res.status}`;
+            try {
+              const errBody = await res.json();
+              if (errBody && (errBody.error === 'fish_api_key_missing' || this.isTtsServiceError(errBody.error))) code = errBody.error;
+              if (errBody && (errBody.error === 'quota_exceeded' || errBody.error === 'service_tts_cap')) {
+                code = 'quota';
+                if (window.arNotifyQuota) window.arNotifyQuota(errBody.message);
+              }
+            } catch (e) {}
+            throw new Error(code);
+          }
+          body = await res.json();
+          if (body?.model === 'google-wavenet') {
+            provider = 'google';
+            try {
+              ({ full, bounds: exactBounds } = await this.decodeGoogleNarration(ctx, body.parts, lines.length));
+            } catch (error) {
+              throw new Error(this.isTtsServiceError(error.message) ? error.message : 'google_tts_invalid_audio');
+            }
+          } else if (body?.model === 'airy-tts-v1' || body?.model === 'google-chirp3-hd') {
+            const chirp = body.model === 'google-chirp3-hd';
+            provider = chirp ? 'chirp' : 'airy';
+            const audioError = chirp ? 'google_tts_invalid_audio' : 'airy_invalid_audio';
+            if (!Array.isArray(body.clips_base64) || body.clips_base64.length !== lines.length) {
+              throw new Error(audioError);
+            }
+            try {
+              const clips = await Promise.all(body.clips_base64.map((clip) => this.decodeNarration(ctx, clip)));
+              // Chirp는 서버에서 말하기 속도를 적용해 오디오를 반환합니다.
+              ({ full, bounds: exactBounds } = await this.renderNarrationClips(ctx, clips, chirp ? 1 : speed));
+            } catch (error) { throw new Error(audioError); }
           } else {
-              const url = `/api/tts-script?v=11&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
-            const res = await this.runTtsRequest(() => this.isGoogleVoice(voice) ? fetch('/api/tts-script', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ref: voice, speed, lines })
-            }) : fetch(url));
-            if (!res.ok) {
-              let code = `http_${res.status}`;
-              try {
-                const errBody = await res.json();
-                if (errBody && (errBody.error === 'fish_api_key_missing' || this.isTtsServiceError(errBody.error))) code = errBody.error;
-                if (errBody && (errBody.error === 'quota_exceeded' || errBody.error === 'service_tts_cap')) {
-                  code = 'quota';
-                  if (window.arNotifyQuota) window.arNotifyQuota(errBody.message);
-                }
-              } catch (e) {}
-              throw new Error(code);
+            this.noteTtsModel(body && body.model);
+            if (!body || !body.audio_base64 || !Array.isArray(body.lines) || body.lines.length !== lines.length) {
+              throw new Error('bad_script_response');
             }
-            body = await res.json();
-            if (body?.model === 'google-wavenet') {
-              provider = 'google';
-              try {
-                ({ full, bounds: exactBounds } = await this.decodeGoogleNarration(ctx, body.parts, lines.length));
-              } catch (error) {
-                throw new Error(this.isTtsServiceError(error.message) ? error.message : 'google_tts_invalid_audio');
-              }
-            } else if (body?.model === 'airy-tts-v1' || body?.model === 'google-chirp3-hd') {
-              const chirp = body.model === 'google-chirp3-hd';
-              provider = chirp ? 'chirp' : 'airy';
-              const audioError = chirp ? 'google_tts_invalid_audio' : 'airy_invalid_audio';
-              if (!Array.isArray(body.clips_base64) || body.clips_base64.length !== lines.length) {
-                throw new Error(audioError);
-              }
-              try {
-                const clips = await Promise.all(body.clips_base64.map((clip) => this.decodeNarration(ctx, clip)));
-                // Chirp는 서버에서 말하기 속도를 적용해 오디오를 반환합니다.
-                ({ full, bounds: exactBounds } = await this.renderNarrationClips(ctx, clips, chirp ? 1 : speed));
-              } catch (error) { throw new Error(audioError); }
-            } else {
-              this.noteTtsModel(body && body.model);
-              if (!body || !body.audio_base64 || !Array.isArray(body.lines) || body.lines.length !== lines.length) {
-                throw new Error('bad_script_response');
-              }
-              full = await this.decodeNarration(ctx, body.audio_base64);
-            }
+            full = await this.decodeNarration(ctx, body.audio_base64);
           }
 
           // 전체 녹음의 최대 음량 (모든 문장을 같은 배율로 키워 문장 사이 크기를 일정하게 유지)
@@ -786,11 +776,10 @@
         job.then(
           () => { activity.end(); this.setTtsProvider(provider); },
           (err) => {
-            if (err?.message === 'device_voice_changed' || this.masterWantKey !== scriptKey) activity.end();
-            else activity.fail(onDevice ? '기기 음성 생성 실패 · 사운드 설정을 확인해 주세요.' : '성우 연결 실패 · 사운드 설정을 확인해 주세요.');
+            if (this.masterWantKey !== scriptKey) activity.end();
+            else activity.fail('성우 연결 실패 · 사운드 설정을 확인해 주세요.');
             this.scriptCache.delete(scriptKey);
             const code = String(err && err.message);
-            if (onDevice) return;
             if (this.isTtsServiceError(code)) {
               this.ttsBlockedUntil = Date.now() + (code === 'airy_credit_exhausted' ? 60000 : 2000);
               this.setTtsProvider('browser', code);
@@ -807,7 +796,6 @@
 
       // 문장 하나만 따로 녹음 (전체 녹음을 쓸 수 없을 때의 대체 경로)
       fetchLineBuffer(text) {
-        if (arIsDeviceVoice(this.ttsVoice)) return Promise.reject(new Error('device_master_pending'));
         if (!arCanUseAi()) return Promise.reject(new Error('ai_access_required'));
         const voice = this.ttsVoice;
         const speed = this.ttsSpeed;
@@ -907,8 +895,7 @@
 
       // 모든 컷 + 마지막 명함 멘트 음성을 미리 받아 두고, 받은 길이에 맞춰 영상 길이를 조정
       prefetchTtsBuffers(force) {
-        if (arIsDeviceVoice(this.ttsVoice) && !force && arEditSheetOpen) return Promise.resolve([]);
-        if (!(arIsDeviceVoice(this.ttsVoice) ? arHasGenerationAccount() : arCanUseAi())) {
+        if (!arCanUseAi()) {
           this.setTtsProvider('browser');
           refitDurationToNarration();
           return Promise.resolve([]);
@@ -942,7 +929,7 @@
         if (this.ttsPrefetchTimer) { clearTimeout(this.ttsPrefetchTimer); this.ttsPrefetchTimer = null; }
 
         // 1순위: 대본 전체를 한 번에 녹음. 실패하면 문장별 녹음으로 대체
-        const perLine = (error) => (arIsDeviceVoice(this.ttsVoice) || this.isTtsServiceError(error?.message || this.ttsLastError) || !arVoiceAllowed() || this.masterWantKey !== wantKey)
+        const perLine = (error) => (this.isTtsServiceError(error?.message || this.ttsLastError) || !arVoiceAllowed() || this.masterWantKey !== wantKey)
           ? Promise.resolve([])
           : Promise.all(lines.map((t) => this.fetchLineBuffer(t).catch(() => null)));
         const job = (Date.now() < this.ttsBlockedUntil ? perLine() : this.fetchScriptNarration(lines).catch(perLine)).then(
@@ -1122,7 +1109,6 @@
       },
 
       speakWithBrowserVoice(text) {
-        if (arIsDeviceVoice(this.ttsVoice)) return;
         if (!('speechSynthesis' in window) || !arVoiceAllowed()) return;
         try {
           window.speechSynthesis.cancel();
@@ -1552,301 +1538,15 @@
       };
     }
 
-    const arDeviceVoiceIds = ['F', 'M'].flatMap(sex => [1, 2, 3, 4, 5].map(i => 'device-' + sex + i));
-    const arVoxVoice = 'device-voxcpm2';
-    const arIsDeviceVoice = voice => voice === arVoxVoice || arDeviceVoiceIds.includes(voice);
-    const arDeviceVoiceLabel = id => '휴대폰 성우 · ' + (id[7] === 'F' ? '여성 ' : '남성 ') + id[8];
-    const arDeviceModule = () => import('/assets/device-voice/model.mjs');
-    let arDeviceInstalled = false;
-    let arDeviceInstalling = false;
-    let arDeviceWorker = null;
-    let arDeviceWorkerModel;
-    let arDeviceIdleTimer;
-    let arDeviceQueue = Promise.resolve();
-
-    function arDeviceStatus(message) {
-      const el = document.getElementById('deviceVoiceStatus');
-      if (el) el.textContent = message;
-    }
-
-    function arShowDeviceVoices() {
-      const select = document.getElementById('ttsVoiceSelect');
-      select.querySelectorAll('[data-device-missing]').forEach(option => {
-        if (arDeviceVoiceIds.includes(option.value)) option.remove();
-      });
-      if (!select.querySelector('[data-device-voices]')) {
-        const group = document.createElement('optgroup');
-        group.dataset.deviceVoices = '';
-        group.label = '이 기기에서 합성';
-        group.append(...arDeviceVoiceIds.map(id => new Option(arDeviceVoiceLabel(id), id)));
-        select.insertBefore(group, select.querySelector('[value="off"]'));
-      }
-      if (arIsDeviceVoice(AudioEngine.ttsVoice)) select.value = AudioEngine.ttsVoice;
-    }
-
-    async function arRefreshDeviceVoice() {
-      const panel = document.getElementById('deviceVoiceControls');
-      if (!panel || !arHasGenerationAccount()) return;
-      panel.hidden = false;
-      arRefreshVoxVoice().catch(() => {});
-      const audition = document.getElementById('deviceAuditionSelect');
-      if (!audition.options.length) {
-        audition.append(...arDeviceVoiceIds.map(id => new Option(arDeviceVoiceLabel(id), id)));
-        if (arDeviceVoiceIds.includes(AudioEngine.ttsVoice)) audition.value = AudioEngine.ttsVoice;
-        arLoadVoiceSample();
-        arSyncIgSelects(panel);
-      }
-      const button = document.getElementById('deviceVoiceInstall');
-      if (!window.isSecureContext || !window.caches || !window.Worker || !window.WebAssembly) {
-        button.disabled = true;
-        arDeviceStatus('이 브라우저는 기기 음성 합성을 지원하지 않습니다.');
-        return;
-      }
-      try {
-        arDeviceInstalled = await (await arDeviceModule()).isInstalled();
-        document.getElementById('deviceVoiceApply').hidden = !arDeviceInstalled;
-        if (arDeviceInstalled) {
-          arShowDeviceVoices();
-          button.hidden = true;
-          arDeviceStatus('설치 완료 · 예문을 듣고 ‘이 목소리 적용’을 눌러 주세요.');
-        } else {
-          button.hidden = false;
-        }
-      } catch { arDeviceStatus('브라우저 저장 공간을 확인한 후 다시 시도해 주세요.'); }
-    }
-
-    function arLoadVoiceSample() {
-      const voice = document.getElementById('deviceAuditionSelect').value;
-      if (arIsDeviceVoice(voice)) document.getElementById('deviceAuditionPlayer').src = '/assets/device-voice/samples/' + voice.slice(7) + '.mp3';
-    }
-    document.getElementById('deviceAuditionSelect')?.addEventListener('change', arLoadVoiceSample);
-    document.getElementById('deviceAuditionPlayer')?.addEventListener('play', arPauseForStudioEdit);
-    document.getElementById('deviceVoiceApply')?.addEventListener('click', () => {
-      const voice = document.getElementById('deviceAuditionSelect').value;
-      if (!arDeviceInstalled || !arHasGenerationAccount() || !arIsDeviceVoice(voice)) return;
-      document.getElementById('deviceAuditionPlayer').pause();
-      const select = document.getElementById('ttsVoiceSelect');
-      select.value = voice;
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-      arDeviceStatus(arDeviceVoiceLabel(voice) + ' 적용됨');
-    });
-
-    document.getElementById('deviceVoiceInstall')?.addEventListener('click', async function () {
-      if (!arHasGenerationAccount() || arDeviceInstalling) return;
-      this.disabled = arDeviceInstalling = true;
-      const activity = arBeginGeneration('download', '음성 모델 다운로드 중…');
-      const lock = await arDeviceScreenLock();
-      try {
-        const model = await arDeviceModule();
-        await model.install((i, total) => {
-          const message = `음성 파일 다운로드 중 · ${i}/${total}`;
-          arDeviceStatus(message);
-          activity.update(message);
-        });
-        await arRefreshDeviceVoice();
-        activity.end();
-      } catch (error) {
-        activity.fail('다운로드가 멈췄습니다. 사운드에서 다시 시도해 주세요.');
-        arDeviceStatus(error.name === 'QuotaExceededError' ? '저장 공간이 부족합니다. 공간을 확보한 뒤 다시 눌러 주세요.' : '다운로드가 멈췄습니다. 다시 누르면 받은 파일부터 이어집니다.');
-      } finally {
-        this.disabled = arDeviceInstalling = false;
-        await lock?.release().catch(() => {});
-      }
-    });
-
-    async function arDeviceScreenLock() {
-      try { return await navigator.wakeLock?.request('screen'); } catch { return null; }
-    }
-
-    const arVoxModel = () => import('/assets/device-voice/vox-model.mjs');
-    const arVoxProofKey = 'autoreels_voxcpm2_device_test_v1';
-    function arVoxStatus(message) { document.getElementById('voxVoiceStatus').textContent = message; }
-    async function arRefreshVoxVoice() {
-      const button = document.getElementById('voxVoiceInstall');
-      if (!(window.isSecureContext && window.Worker && navigator.gpu && navigator.storage?.getDirectory)) {
-        button.disabled = true;
-        arVoxStatus('이 브라우저에서는 VoxCPM2를 실행할 수 없습니다.');
-        return;
-      }
-      const installed = await (await arVoxModel()).isInstalled();
-      button.hidden = installed;
-      const ready = installed && localStorage.getItem(arVoxProofKey) === 'ok';
-      document.getElementById('voxVoiceApply').hidden = !ready;
-      const testButton = document.getElementById('voxVoiceTest');
-      testButton.hidden = !installed || ready;
-      if (!ready) {
-        if (!installed) localStorage.removeItem(arVoxProofKey);
-        const info = await navigator.userAgentData?.getHighEntropyValues(['model']).catch(() => null);
-        if (info?.model === 'SM-G977N') {
-          testButton.hidden = true;
-          arVoxStatus((installed ? '모델 저장 완료. ' : '') + '갤럭시 S10 5G에서는 메모리 부족으로 VoxCPM2 음성 합성을 지원하지 않습니다.');
-        } else if (installed) arVoxStatus('모델 저장 완료 · 이 휴대폰에서 짧은 예문을 만들어 실행을 확인해 주세요.');
-        return;
-      }
-      const select = document.getElementById('ttsVoiceSelect');
-      const missing = select.querySelector('[data-device-missing][value="' + arVoxVoice + '"]');
-      missing?.remove();
-      if (!Array.from(select.options).some(o => o.value === arVoxVoice)) {
-        select.add(new Option('VoxCPM2 · 휴대폰', arVoxVoice), select.querySelector('[value="off"]'));
-      }
-      if (AudioEngine.ttsVoice === arVoxVoice) select.value = arVoxVoice;
-      arSyncIgSelects(select.parentElement);
-      arVoxStatus(AudioEngine.ttsVoice === arVoxVoice ? 'VoxCPM2 적용됨' : '다운로드 완료 · 대본을 읽을 수 있습니다.');
-    }
-    document.getElementById('voxVoiceApply')?.addEventListener('click', () => {
-      if (!arHasGenerationAccount() || localStorage.getItem(arVoxProofKey) !== 'ok') return;
-      const select = document.getElementById('ttsVoiceSelect');
-      select.value = arVoxVoice;
-      select.dispatchEvent(new Event('change', { bubbles: true }));
-      arVoxStatus('VoxCPM2 적용됨');
-    });
-    document.getElementById('voxVoiceTest')?.addEventListener('click', async function () {
-      if (!arHasGenerationAccount() || this.disabled) return;
-      this.disabled = true;
-      arPauseForStudioEdit();
-      const ctx = AudioEngine.ensureContext();
-      const resumed = ctx?.resume().catch(() => {});
-      const activity = arBeginGeneration('voice', '휴대폰에서 예문 생성 중…');
-      const lock = await arDeviceScreenLock();
-      let worker, timer;
-      try {
-        const result = await new Promise((resolve, reject) => {
-          const timeout = () => { clearTimeout(timer); timer = setTimeout(() => reject(new Error('device_timeout')), 240000); };
-          timeout();
-          worker = new Worker('/assets/device-voice/vox-worker.mjs', { type: 'module' });
-          worker.onerror = () => reject(new Error('device_worker'));
-          worker.onmessage = ({ data }) => {
-            if (data.status) { timeout(); arVoxStatus(data.status); activity.update(data.status); }
-            else if (data.clips?.[0]?.length) resolve(data);
-            else reject(new Error(data.error));
-          };
-          worker.postMessage({ lines: ['안녕하세요.'], speed: 1 });
-        });
-        await resumed;
-        const buffer = ctx.createBuffer(1, result.clips[0].length, result.sampleRate);
-        buffer.copyToChannel(result.clips[0], 0);
-        const sample = ctx.createBufferSource();
-        sample.buffer = buffer;
-        sample.connect(ctx.destination);
-        sample.start();
-        localStorage.setItem(arVoxProofKey, 'ok');
-        await arRefreshVoxVoice();
-        arVoxStatus('이 기기에서 음성 확인 완료 · 대본에 적용할 수 있습니다.');
-        activity.end();
-      } catch {
-        const message = '모델은 저장됐지만 이 기기에서 예문을 만들지 못했습니다.';
-        arVoxStatus(message);
-        activity.fail(message);
-      } finally {
-        clearTimeout(timer);
-        worker?.terminate();
-        this.disabled = false;
-        await lock?.release().catch(() => {});
-      }
-    });
-    document.getElementById('voxVoiceInstall')?.addEventListener('click', async function () {
-      if (!arHasGenerationAccount() || this.disabled) return;
-      this.disabled = true;
-      const activity = arBeginGeneration('download', 'VoxCPM2 준비 중…');
-      const lock = await arDeviceScreenLock();
-      let worker;
-      try {
-        await new Promise((resolve, reject) => {
-          worker = new Worker('/assets/device-voice/vox-worker.mjs', { type: 'module' });
-          worker.onerror = () => reject(new Error('device_worker'));
-          worker.onmessage = ({ data }) => {
-            if (data.status) { arVoxStatus(data.status); activity.update(data.status); }
-            else if (data.installed) resolve();
-            else reject(new Error(data.error));
-          };
-          worker.postMessage({ install: true });
-        });
-        await arRefreshVoxVoice();
-        activity.end();
-      } catch (error) {
-        const message = error.message === 'device_gpu' ? '이 휴대폰의 GPU에서는 VoxCPM2를 실행할 수 없습니다.'
-          : error.message === 'device_space' ? '휴대폰 저장 공간을 확보한 뒤 다시 눌러 주세요.'
-          : '다운로드가 멈췄습니다. 다시 누르면 받은 부분부터 이어집니다.';
-        arVoxStatus(message);
-        activity.fail(message);
-      } finally {
-        worker?.terminate();
-        this.disabled = false;
-        await lock?.release().catch(() => {});
-      }
-    });
-
-    function arDeviceNarration(ctx, voice, lines, speed, activity) {
-      const job = arDeviceQueue.then(async () => {
-        if (!arHasGenerationAccount()) throw new Error('device_login_required');
-        const vox = voice === arVoxVoice;
-        if (vox && localStorage.getItem(arVoxProofKey) !== 'ok') throw new Error('device_test_required');
-        if (vox ? !await (await arVoxModel()).isInstalled() : !arDeviceInstalled && !await (await arDeviceModule()).isInstalled()) throw new Error('device_model_missing');
-        if (AudioEngine.ttsVoice !== voice || AudioEngine.masterWantKey !== AudioEngine.scriptKeyFor(lines)) throw new Error('device_voice_changed');
-        const status = vox ? arVoxStatus : arDeviceStatus;
-        status('이 기기에서 대본을 읽고 있습니다…');
-        clearTimeout(arDeviceIdleTimer);
-        const lock = await arDeviceScreenLock();
-        const result = await new Promise((resolve, reject) => {
-          const model = vox ? 'vox-worker' : 'worker';
-          if (arDeviceWorker && arDeviceWorkerModel !== model) {
-            arDeviceWorker.terminate();
-            arDeviceWorker = null;
-          }
-          arDeviceWorkerModel = model;
-          const worker = arDeviceWorker ||= new Worker('/assets/device-voice/' + model + '.mjs', { type: 'module' });
-          const fail = reason => {
-            clearTimeout(timer);
-            worker.terminate();
-            arDeviceWorker = null;
-            reject(new Error(reason));
-          };
-          let timer = setTimeout(() => fail('device_timeout'), 240000);
-          worker.onerror = () => fail('device_worker_failed');
-          worker.onmessage = ({ data }) => {
-            if (data.status) {
-              clearTimeout(timer);
-              timer = setTimeout(() => fail('device_timeout'), 240000);
-              status(data.status);
-              activity.update(data.status);
-              return;
-            }
-            if (data.error) return fail(data.error);
-            clearTimeout(timer);
-            if (vox) {
-              worker.terminate();
-              arDeviceWorker = null;
-            } else arDeviceIdleTimer = setTimeout(() => {
-              worker.terminate();
-              arDeviceWorker = null;
-            }, 60000);
-            resolve(data);
-          };
-          worker.postMessage({ voice, lines: lines.map(line => window.__koSpeech(line)), speed });
-        }).finally(() => lock?.release().catch(() => {}));
-        const frames = result.clips.reduce((sum, clip) => sum + clip.length, 0);
-        const full = ctx.createBuffer(1, frames, result.sampleRate);
-        let offset = 0;
-        const bounds = [0];
-        for (const clip of result.clips) {
-          full.copyToChannel(clip, 0, offset);
-          offset += clip.length;
-          bounds.push(offset / result.sampleRate);
-        }
-        status('휴대폰 음성이 준비됐습니다.');
-        return { full, bounds };
-      });
-      arDeviceQueue = job.catch(error => {
-        if (error.message !== 'device_voice_changed') (voice === arVoxVoice ? arVoxStatus : arDeviceStatus)('휴대폰 음성을 만들지 못했습니다. 저장 공간을 확인하거나 다른 성우를 선택해 주세요.');
-      });
-      return job;
+    function arIsLegacyDeviceVoice(voice) {
+      return /^device-(?:[FM][1-5]|voxcpm2)$/.test(voice);
     }
 
     // 지난번에 고른 성우를 다시 선택
     try {
       const savedVoice = localStorage.getItem('autoreels_tts_voice');
       const voiceSel = document.getElementById('ttsVoiceSelect');
-      if (savedVoice && (arIsDeviceVoice(savedVoice) || AudioEngine.isGoogleVoice(savedVoice) || Array.from(voiceSel?.options || []).some((o) => o.value === savedVoice))) {
+      if (savedVoice && (arIsLegacyDeviceVoice(savedVoice) || AudioEngine.isGoogleVoice(savedVoice) || Array.from(voiceSel?.options || []).some((o) => o.value === savedVoice))) {
         AudioEngine.restoreVoice(savedVoice);
       }
     } catch (e) {}
@@ -1913,7 +1613,7 @@
       const unlock = (ev) => {
         if (window.__arUserMuted || AudioEngine.enabled) return;
         const t = ev && ev.target;
-        if (t?.closest?.('#deviceVoiceControls, #arOptionSheet[data-source-select="deviceAuditionSelect"]')) return;
+        if (t?.closest?.('#ttsVoiceSelect + .ig-select-row, #arOptionSheet[data-source-select="ttsVoiceSelect"]')) return;
         if (t && typeof t.closest === 'function' && t.closest('#soundToggleBtn, #mobileDockSoundBtn, #arQuickBar [data-qb="sound"], #topicCards, #bgmRecommendRow, #arBgmSheet, #arSheetHandle')) return;
         toggleAudioMaster(true);
       };

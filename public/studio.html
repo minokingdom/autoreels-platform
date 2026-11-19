@@ -41,7 +41,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-sound-actions" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-voice-audition" />
   <link rel="stylesheet" href="/assets/app/splash.css" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -1189,19 +1189,6 @@
                   <option value="9a50287ddd26414690b538539ad52d61" hidden>저장된 성우</option>
                   <option value="off">성우 끄기</option>
                 </select>
-                <div id="deviceVoiceControls" class="mt-2" hidden>
-                  <label for="deviceAuditionSelect" class="block text-[12px] mb-1">휴대폰 성우 미리듣기</label>
-                  <select id="deviceAuditionSelect" class="studio-input w-full h-9 px-2.5 text-[12px]"></select>
-                  <audio id="deviceAuditionPlayer" class="ar-voice-sample" controls preload="none" aria-label="한국어 릴스 예문 미리듣기"></audio>
-                  <button type="button" id="deviceVoiceApply" class="btn-secondary" hidden>이 목소리 적용</button>
-                  <button type="button" id="deviceVoiceInstall" class="tag-chip px-3 py-2">휴대폰 음성 모델 다운로드</button>
-                  <p id="deviceVoiceStatus" role="status" class="text-[11px] text-[#a1a1a6] mt-1">약 410MB · Wi-Fi 연결을 권장합니다. 갤럭시 S10 5G에서 9초 음성을 만드는 데 약 3분 40초 걸렸습니다.</p>
-                  <button type="button" id="voxVoiceInstall" class="tag-chip px-3 py-2 mt-2">VoxCPM2 다운로드 · 2.63GB</button>
-                  <button type="button" id="voxVoiceTest" class="tag-chip px-3 py-2" hidden>이 휴대폰에서 음성 확인</button>
-                  <button type="button" id="voxVoiceApply" class="btn-secondary" hidden>VoxCPM2로 대본 읽기</button>
-                  <p id="voxVoiceStatus" role="status" class="text-[11px] text-[#a1a1a6] mt-1">Wi-Fi에서 받아 주세요. 모델은 이 휴대폰의 브라우저에 저장됩니다.</p>
-                  <a class="text-[11px] underline" href="/assets/device-voice/MODEL-LICENSE.txt" target="_blank" rel="noopener">모델 이용 조건</a>
-                </div>
               </div>
 
               <div>
@@ -2150,7 +2137,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117r" title="AutoReels 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261119-shuffle-play"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261119-voice-audition"><\/script>');
     }
   </script>
   <!--

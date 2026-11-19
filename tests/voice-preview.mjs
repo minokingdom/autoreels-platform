@@ -1,0 +1,94 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import http from 'node:http';
+import path from 'node:path';
+import { chromium } from 'playwright';
+import google from '../lib/google-tts.js';
+import { buildApp } from '../scripts/build-app.mjs';
+
+const root = path.resolve('public');
+buildApp(path.resolve('.'));
+process.env.GOOGLE_TTS_API_KEY = 'fixture';
+const voices = google.listGoogleVoices(3);
+const previewDir = path.join(root, 'assets/voice-previews');
+assert.deepEqual(fs.readdirSync(previewDir).sort(), voices.map(v => v.id + '.mp3').sort());
+
+let synthesisCalls = 0;
+const server = http.createServer((req, res) => {
+  const { pathname } = new URL(req.url, 'http://localhost');
+  if (pathname === '/api/tts-voices') {
+    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ voices }));
+    return;
+  }
+  if (/^\/api\/tts(?:-script)?$/.test(pathname)) synthesisCalls++;
+  const file = path.resolve(root, '.' + (pathname === '/studio' ? '/studio.html' : pathname));
+  if (!file.startsWith(root + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
+    res.writeHead(404).end();
+    return;
+  }
+  const mime = { '.mp3': 'audio/mpeg', '.js': 'text/javascript', '.css': 'text/css', '.html': 'text/html; charset=utf-8' };
+  res.writeHead(200, { 'Content-Type': mime[path.extname(file)] || 'application/octet-stream' });
+  fs.createReadStream(file).pipe(res);
+});
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const origin = process.argv[2] || 'http://127.0.0.1:' + server.address().port;
+const browser = await chromium.launch();
+try {
+  for (const width of [393, 1280]) {
+    const page = await browser.newPage({ viewport: { width, height: 860 } });
+    await page.route('**/*', route => {
+      const url = new URL(route.request().url());
+      if (url.origin !== origin) return route.abort();
+      if (process.argv[2] && url.pathname.startsWith('/api/') && url.pathname !== '/api/tts-voices') {
+        if (/^\/api\/tts(?:-script)?$/.test(url.pathname)) synthesisCalls++;
+        return route.fulfill({ status: 401, json: {} });
+      }
+      return route.continue();
+    });
+    await page.addInitScript(() => localStorage.setItem('autoreels_tts_voice', 'device-F1'));
+    await page.goto(origin + '/studio');
+    assert.equal(await page.locator('#deviceVoiceControls,#deviceVoiceInstall,#voxVoiceInstall').count(), 0);
+    assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'off');
+    await page.evaluate(() => {
+      AR_SERVER.me = { user: { id: 'audition-test' } };
+      window.__arUserMuted = true;
+      switchStudioTab('sound');
+      arToggleSheet(false);
+    });
+    const open = page.locator('#ttsVoiceSelect + .ig-select-row');
+    const sheet = page.locator('#arOptionSheet');
+    const option = id => sheet.locator('[data-v="' + id + '"]');
+    const play = async id => {
+      await option(id).waitFor();
+      await option(id).click();
+      await page.waitForFunction(id => {
+        const audio = document.querySelector('#arOptionSheet audio');
+        return audio && audio.currentSrc.endsWith('/' + id + '.mp3') && !audio.paused && audio.currentTime > 0;
+      }, id);
+    };
+    synthesisCalls = 0;
+    await open.click();
+    await play('ko-KR-Chirp3-HD-Puck');
+    await play('ko-KR-Wavenet-A');
+    assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'off');
+    assert.equal(synthesisCalls, 0);
+    await option('ko-KR-Wavenet-A').click();
+    assert.equal(await sheet.locator('audio').evaluate(el => el.paused), true);
+    await sheet.click({ position: { x: 2, y: 2 } });
+    assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'off');
+    await open.click();
+    await play('ko-KR-Wavenet-B');
+    assert.equal(synthesisCalls, 0);
+    const player = await sheet.locator('audio').elementHandle();
+    await sheet.getByRole('button', { name: '완료' }).click();
+    assert.equal(await player.evaluate(el => el.paused), true);
+    assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'ko-KR-Wavenet-B');
+    assert.equal(await page.evaluate(() => localStorage.getItem('autoreels_tts_voice')), 'ko-KR-Wavenet-B');
+    await page.close();
+  }
+  console.log('Google voice samples, selection, cancellation and legacy device settings OK');
+} finally {
+  await browser.close();
+  server.closeAllConnections();
+  server.close();
+}

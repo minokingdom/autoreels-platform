@@ -673,7 +673,7 @@
       triggerFullAudioPreview();
     }
     function switchStudioTab(key) {
-      if (key !== 'sound') document.getElementById('deviceAuditionPlayer')?.pause();
+      if (key !== 'sound' && document.querySelector('#arOptionSheet[data-source-select="ttsVoiceSelect"]:not(.hidden)')) arCloseOptionSheet();
       if (!STUDIO_TABS.includes(key)) return;
       // 발행 단계는 명함까지 순서대로 마쳐야 열림
       if (key === 'publish' && !arFinalAudioUnlocked) {
@@ -984,9 +984,93 @@
       if (prev && prev.tagName === 'LABEL') return prev.textContent.trim();
       return sel.getAttribute('title') || '선택';
     }
+    function arShowVoiceChoices(el, sel) {
+      el.innerHTML = `<div class="bgm-sheet" role="dialog" aria-modal="true" aria-label="성우 목소리">
+        <div class="bgm-head"><strong>성우 목소리</strong><button type="button" class="bgm-done">완료</button></div>
+        <div class="bgm-list"></div><audio preload="none"></audio>
+      </div>`;
+      const list = el.querySelector('.bgm-list');
+      const player = el.querySelector('audio');
+      let choice = sel.value;
+      let hasChosen = false;
+      let currentRow = null;
+      function render() {
+        list.replaceChildren();
+        for (const opt of sel.options) {
+          if (opt.hidden || opt.disabled || opt.classList.contains('hidden')) continue;
+          const row = document.createElement('button');
+          row.type = 'button';
+          row.className = 'bgm-row' + (opt.value === choice ? ' on' : '');
+          row.dataset.v = opt.value;
+          row.setAttribute('aria-pressed', String(opt.value === choice));
+          const name = document.createElement('strong');
+          name.className = 'bgm-row-txt';
+          name.textContent = opt.textContent;
+          const state = document.createElement('span');
+          state.className = 'bgm-row-state';
+          state.textContent = opt.value === 'off' ? '' : '▶';
+          state.setAttribute('aria-hidden', 'true');
+          row.append(name, state);
+          list.append(row);
+        }
+      }
+      function stopSample() {
+        player.pause();
+        if (currentRow) currentRow.lastElementChild.textContent = '▶';
+        currentRow = null;
+      }
+      player.onended = stopSample;
+      player.onerror = () => {
+        if (!currentRow) return;
+        stopSample();
+        arToast('예문을 재생하지 못했습니다. 다시 눌러 주세요.');
+      };
+      list.onclick = (event) => {
+        const row = event.target.closest('button[data-v]');
+        if (!row) return;
+        const wasPlaying = currentRow === row;
+        stopSample();
+        choice = row.dataset.v;
+        hasChosen = true;
+        for (const item of list.children) {
+          item.classList.toggle('on', item === row);
+          item.setAttribute('aria-pressed', String(item === row));
+        }
+        if (choice === 'off' || wasPlaying) return;
+        currentRow = row;
+        const file = encodeURIComponent(choice);
+        player.src = AudioEngine.isGoogleVoice(choice) ? '/assets/voice-previews/' + file + '.mp3'
+          : '/api/tts?' + new URLSearchParams({ ref: choice, speed: '1.1', text: '오늘은 어떤 릴스를 만들어 볼까요? 오토릴스메이커와 함께 사진 한 장으로 시작해 보세요.' });
+        row.lastElementChild.textContent = 'Ⅱ';
+        player.play().catch(error => {
+          if (currentRow !== row || error.name === 'AbortError') return;
+          player.onerror();
+        });
+      };
+      el.querySelector('.bgm-done').onclick = () => {
+        arCloseOptionSheet();
+        if (choice === sel.value) return;
+        sel.value = choice;
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      render();
+      if (!AudioEngine.voiceListLoaded && arCanUseAi()) {
+        AudioEngine.loadVoiceList().then(() => {
+          if (!list.isConnected || currentRow) return;
+          if (!hasChosen) choice = sel.value;
+          render();
+        });
+      }
+    }
     function arCloseOptionSheet() {
       const el = document.getElementById('arOptionSheet');
-      if (el) { el.classList.add('hidden'); el.style.display = 'none'; el.innerHTML = ''; }
+      if (el) {
+        const audio = el.querySelector('audio');
+        if (audio) { audio.onerror = null; audio.pause(); audio.removeAttribute('src'); audio.load(); }
+        el.classList.add('hidden');
+        el.style.display = 'none';
+        el.innerHTML = '';
+      }
     }
     function arOpenOptionSheet(sel) {
       let el = document.getElementById('arOptionSheet');
@@ -998,8 +1082,14 @@
         document.body.appendChild(el);
       }
       el.dataset.sourceSelect = sel.id;
-      if (sel.id === 'deviceAuditionSelect') arPauseForStudioEdit();
       arWatchEditSheet(el);
+      if (sel.id === 'ttsVoiceSelect') {
+        arShowVoiceChoices(el, sel);
+        el.classList.remove('hidden');
+        el.style.display = 'flex';
+        arSyncEditSheetPlayback();
+        return;
+      }
       const esc = (v) => String(v || '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
       const isPhoto = sel.getAttribute('data-sheet-kind') === 'photo';
       const photos = (typeof campaign !== 'undefined' && campaign.uploadedPhotos) || [];
