@@ -32,7 +32,7 @@
   <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120i" />
+  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120h" />
 </head>
 <body class="antialiased lp-cine-body">
   <!-- 시네마틱 글래스 상단 네비게이션 + 1px 스크롤 타임라인 바 -->
@@ -149,50 +149,9 @@
         <button type="button" data-act="3" class="lp-chap-btn" aria-label="4막 완성과 발행"><span>04</span><i></i></button>
       </nav>
 
-      <!-- 시네마틱 화면 전환 포털 플래시 (자동차 카드가 카메라 앞으로 튀어나올 때 화면 전환!) -->
-      <div id="lpPortalWipe" class="lp-portal-wipe" aria-hidden="true"></div>
-
-      <!-- 3. 중앙 3D 원형 궤도 스테이지 + 전환 후 메인 릴스 & 좌우 편집 HUD -->
+      <!-- 3. 중앙 3D 시네마틱 실사 릴스 덱 + 스크롤 패럴랙스 편집 HUD -->
       <div class="lp-stage-wrap">
-        <!-- 3D 원형 궤도 광원 링 (바닥에 은은하게 회전하는 원형 궤도) -->
-        <div id="lpOrbitRing" class="lp-orbit-ring" aria-hidden="true"></div>
-
-        <!-- 3D 원형 궤도 6장 실사 릴스 링 (스크롤 0~22% 공전 -> 22~38% 자동차 돌출 화면 전환!) -->
-        <div id="lpOrbitCarousel" class="lp-orbit-carousel">
-          <button type="button" data-ind="auto" data-quick="1" data-orbit-idx="0" id="lpOrbitCar" class="lp-orbit-card is-hero-car" aria-label="자동차 릴스 보기">
-            <img src="/assets/scenes/auto/11.jpg" alt="" loading="eager" />
-            <div class="lp-fan-scrim"></div>
-            <div class="lp-orbit-badge">🚗 자동차 · FEATURED</div>
-            <div class="lp-fan-meta"><span>01 · 자동차 영업</span><strong>오늘도 출고 완료!</strong></div>
-          </button>
-          <button type="button" data-ind="cafe" data-quick="1" data-orbit-idx="1" class="lp-orbit-card" aria-label="카페·디저트 릴스 보기">
-            <img src="/assets/scenes/cafe/4.jpg" alt="" loading="eager" />
-            <div class="lp-fan-scrim"></div>
-            <div class="lp-fan-meta"><span>☕ 카페·디저트</span><strong>시그니처 라떼 15초</strong></div>
-          </button>
-          <button type="button" data-ind="beauty" data-quick="1" data-orbit-idx="2" class="lp-orbit-card" aria-label="미용·네일·뷰티 릴스 보기">
-            <img src="/assets/scenes/beauty/4.jpg" alt="" loading="eager" />
-            <div class="lp-fan-scrim"></div>
-            <div class="lp-fan-meta"><span>💇 미용·뷰티</span><strong>시술 전후 무드 릴스</strong></div>
-          </button>
-          <button type="button" data-ind="restaurant" data-quick="1" data-orbit-idx="3" class="lp-orbit-card" aria-label="음식점 릴스 보기">
-            <img src="/assets/scenes/restaurant/4.jpg" alt="" loading="eager" />
-            <div class="lp-fan-scrim"></div>
-            <div class="lp-fan-meta"><span>🍽️ 음식점</span><strong>오늘의 시그니처 메뉴</strong></div>
-          </button>
-          <button type="button" data-ind="interior" data-quick="1" data-orbit-idx="4" class="lp-orbit-card" aria-label="인테리어 릴스 보기">
-            <img src="/assets/scenes/interior/4.jpg" alt="" loading="eager" />
-            <div class="lp-fan-scrim"></div>
-            <div class="lp-fan-meta"><span>🛋️ 인테리어</span><strong>시공 비포·애프터</strong></div>
-          </button>
-          <button type="button" data-ind="realestate" data-quick="1" data-orbit-idx="5" class="lp-orbit-card" aria-label="부동산 중개 릴스 보기">
-            <img src="/assets/scenes/realestate/4.jpg" alt="" loading="eager" />
-            <div class="lp-fan-scrim"></div>
-            <div class="lp-fan-meta"><span>🏠 부동산 중개</span><strong>역세권 프리미엄 매물</strong></div>
-          </button>
-        </div>
-
-        <!-- 좌측 플로팅 HUD (전환 후 2~4막 등장) -->
+        <!-- 좌측 플로팅 HUD (2막~4막 동적 전환) -->
         <aside id="lpHudLeft" class="lp-hud lp-hud-left" aria-hidden="true">
           <div id="lpHudLeftTag" class="lp-hud-tag">NEW · LINK &amp; HIGHLIGHT</div>
           <div id="lpHudLeftTitle" class="lp-hud-title">참고 링크 컷 리듬 분석</div>
@@ -204,8 +163,22 @@
           <div id="lpHudLeftMeta" class="lp-hud-meta">10분 영상 → 핵심 15초 하이라이트</div>
         </aside>
 
-        <!-- 전환 후 등장하는 중앙 메인 9:16 3D 시네마틱 라이브 릴스 프레임 -->
+        <!-- 5장 입체 3D 커버플로우 실사 릴스 덱 (중복 없는 고유 실사 4.jpg) -->
         <div id="lpReelDeck" class="lp-reel-deck">
+          <!-- 좌2 -->
+          <button type="button" data-ind="cafe" data-quick="1" class="lp-fan-card lp-fan-l2" aria-label="카페·디저트 릴스 예시 보기">
+            <img src="/assets/scenes/cafe/4.jpg" alt="" loading="eager" />
+            <div class="lp-fan-scrim"></div>
+            <div class="lp-fan-meta"><span>☕ 카페·디저트</span><strong>시그니처 라떼 15초</strong></div>
+          </button>
+          <!-- 좌1 -->
+          <button type="button" data-ind="beauty" data-quick="1" class="lp-fan-card lp-fan-l1" aria-label="미용·네일·뷰티 릴스 예시 보기">
+            <img src="/assets/scenes/beauty/4.jpg" alt="" loading="eager" />
+            <div class="lp-fan-scrim"></div>
+            <div class="lp-fan-meta"><span>💇 미용·뷰티</span><strong>시술 전후 무드 릴스</strong></div>
+          </button>
+
+          <!-- 중앙 메인 9:16 3D 시네마틱 라이브 릴스 프레임 -->
           <div id="landingPhoneStage" role="button" tabindex="0" aria-label="미리보기 다음 컷 보기" class="lp-main-reel">
             <img id="lpMainPhoto" class="lp-main-photo" src="/assets/scenes/auto/1.jpg" alt="" />
             <div class="lp-main-scrim"></div>
@@ -242,6 +215,19 @@
               </div>
             </div>
           </div>
+
+          <!-- 우1 -->
+          <button type="button" data-ind="restaurant" data-quick="1" class="lp-fan-card lp-fan-r1" aria-label="음식점 릴스 예시 보기">
+            <img src="/assets/scenes/restaurant/4.jpg" alt="" loading="eager" />
+            <div class="lp-fan-scrim"></div>
+            <div class="lp-fan-meta"><span>🍽️ 음식점</span><strong>오늘의 시그니처 메뉴</strong></div>
+          </button>
+          <!-- 우2 -->
+          <button type="button" data-ind="interior" data-quick="1" class="lp-fan-card lp-fan-r2" aria-label="인테리어 릴스 예시 보기">
+            <img src="/assets/scenes/interior/4.jpg" alt="" loading="eager" />
+            <div class="lp-fan-scrim"></div>
+            <div class="lp-fan-meta"><span>🛋️ 인테리어</span><strong>시공 비포·애프터</strong></div>
+          </button>
         </div>
 
         <!-- 우측 플로팅 HUD (2막~4막 동적 전환) -->
@@ -819,7 +805,7 @@
       m.classList.remove('hidden');
     }
   </script>
-  <script src="/assets/landing/industries.js?v=20261120i"></script>
-  <script src="/assets/landing/landing.js?v=20261120i"></script>
+  <script src="/assets/landing/industries.js?v=20261120h"></script>
+  <script src="/assets/landing/landing.js?v=20261120h"></script>
 </body>
 </html>
