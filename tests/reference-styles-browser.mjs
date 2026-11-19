@@ -78,6 +78,12 @@ try{
   await page.reload({waitUntil:'load'});
   await page.evaluate(()=>{setIndustry('cafe');Date.now=()=>Math.max(...AR_REFERENCE_STYLES.map(x=>Date.parse(x.addedAt)))+1000;});
   await page.waitForTimeout(500);
+  const shuffle = page.locator(viewport.width === 390 ? '#arQuickBar [data-qb="shuffle"]' : '#previewRandomDesignBtnMain');
+  await page.evaluate(() => { arQuickRestart(); window.__timelines.main.seek(3); });
+  await shuffle.click();
+  await page.waitForFunction(() => isPlaying && window.__timelines.main.currentTime < 2);
+  const restartTime = await page.evaluate(() => window.__timelines.main.currentTime);
+  await page.waitForFunction(t => isPlaying && window.__timelines.main.currentTime > t + 0.3, restartTime);
   await page.evaluate(()=>{pdMood='';openPresetDrawer('right');});
   console.log('clicking new tab',viewport.width);
   assert.ok(await page.locator('#pdCats').evaluate(e=>e.clientHeight>=44),'category row compressed');

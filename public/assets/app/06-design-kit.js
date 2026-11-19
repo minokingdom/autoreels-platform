@@ -4710,9 +4710,7 @@
       }
       campaign.motionSeed = Math.floor(Math.random() * 9973);
       if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
-      if (typeof renderDesignStylePicker === 'function') { try { renderDesignStylePicker(); } catch (e) {} }
-      arPauseForStudioEdit();
-      if (window.__timelines?.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+      arQuickRestart();
     }
 
     function selectDesignStyle(id) {
