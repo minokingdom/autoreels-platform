@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>오토릴스메이커 — 사진 한 장이 한 편의 영화가 되는 릴스 스튜디오</title>
-  <meta name="description" content="사진, 참고 영상 링크, 긴 촬영 영상만으로 업종 맞춤 9:16 릴스·쇼츠를 대본·AI 성우·BGM·엔딩까지 한 곳에서 완성합니다." />
-  <meta name="theme-color" content="#0b0a08" />
+  <title>오토릴스메이커 — 사진 한 장이, 한 편의 릴스가 된다</title>
+  <meta name="description" content="사진 한 장에서 9:16 릴스 완성까지. AI 대본, 참고 링크 분석, 10분 영상 하이라이트, 747종 스타일, AI 성우와 오리지널 BGM." />
+  <meta name="theme-color" content="#080808" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="오토릴스메이커" />
   <meta property="og:locale" content="ko_KR" />
   <meta property="og:url" content="https://autoreelsmaker.kr/" />
-  <meta property="og:title" content="AutoReelsMaker - 오토릴스메이커" />
-  <meta property="og:description" content="사진과 아이디어만 준비하세요. 주제 대본 사진 음성 sns 발행까지" />
+  <meta property="og:title" content="AutoReelsMaker — 오토릴스메이커" />
+  <meta property="og:description" content="사진 한 장에서 9:16 릴스 완성까지. 대본, 참고 링크 분석, 하이라이트 추출, 성우, 발행까지." />
   <meta property="og:image" content="https://autoreelsmaker.kr/og-cover-autoreelsmaker-20261118.png" />
   <meta property="og:image:width" content="1731" />
   <meta property="og:image:height" content="909" />
@@ -31,562 +31,374 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" />
   <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120t" />
+  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120u" />
 </head>
-<body class="antialiased mn-body">
-  <!-- 35mm 필름 그레인 글로벌 레이어 -->
-  <div class="mn-grain" aria-hidden="true"></div>
+<body class="ed-body antialiased">
 
-  <!-- 상단 고정 네비게이션 + 2px 테라코타 진행 라인 -->
-  <header id="mnNav" class="mn-nav">
-    <div class="mn-nav-inner">
-      <a href="#mnHero" class="flex items-center gap-2.5">
-        <span class="mn-mark">AR</span>
-        <span class="text-[14px] font-semibold tracking-tight">오토릴스메이커</span>
+  <!-- 상단 미니멀 에디토리얼 네비게이션 (웜 아이보리 섹션에서 자동 극성 반전) -->
+  <header id="edNav" class="ed-nav">
+    <div class="ed-nav-inner">
+      <a href="#edHero" class="ed-brand">
+        <span class="ed-brand-word">AutoReels</span>
+        <span class="ed-brand-sub hidden sm:inline">오토릴스메이커</span>
       </a>
-      <nav class="flex items-center gap-1 sm:gap-3 text-[12.5px]" aria-label="주요 메뉴">
-        <a href="#mnPipeline" class="hidden md:inline-block px-2.5 py-1.5 opacity-70 hover:opacity-100 transition-opacity">엔진</a>
-        <a href="#mnShowcase" class="hidden sm:inline-block px-2.5 py-1.5 opacity-70 hover:opacity-100 transition-opacity">실제 앱</a>
-        <a href="#mnGallery" class="hidden sm:inline-block px-2.5 py-1.5 opacity-70 hover:opacity-100 transition-opacity">스타일·BGM</a>
-        <a href="#mnFinale" class="px-2.5 py-1.5 opacity-70 hover:opacity-100 transition-opacity">요금제</a>
-        <button type="button" data-go="/studio" class="mn-btn-accent h-9 px-4 text-[12.5px]">스튜디오 열기</button>
+      <nav class="flex items-center gap-1 sm:gap-6 text-[13px]" aria-label="주요 메뉴">
+        <a href="#edEngines" class="hidden md:inline-block ed-nav-link">기능</a>
+        <a href="#edShowcase" class="hidden sm:inline-block ed-nav-link">스튜디오</a>
+        <a href="#edIndustries" class="hidden sm:inline-block ed-nav-link">업종·사운드</a>
+        <a href="#edPricing" class="ed-nav-link">요금제</a>
+        <button type="button" data-go="/studio" class="ed-nav-cta">시작하기</button>
       </nav>
     </div>
-    <div class="mn-progress-track" aria-hidden="true"><i id="mnScrollBar"></i></div>
   </header>
 
-  <!-- 좌측 하단 고정: 시네마 앰비언트 사운드 토글 -->
-  <button type="button" id="mnAmbientSoundBtn" class="mn-sound-pill" aria-label="배경 사운드 켜기/끄기">
-    <span class="mn-sound-bars" aria-hidden="true"><i></i><i></i><i></i></span>
-    <span id="mnAmbientSoundLabel" class="font-mono text-[10.5px]">SOUND OFF</span>
-  </button>
-
-  <!-- 우측 하단 고정: 방송/편집실 전술 타임코드 HUD (라이트 섹션에서 자동 극성 반전) -->
-  <aside id="mnHudClock" class="mn-hud-clock" aria-hidden="true">
-    <div class="mn-hud-top">
-      <span id="mnHudChapter" class="font-mono text-[10px]">01 / 06</span>
-      <span class="font-mono text-[10px] opacity-60">60FPS</span>
-    </div>
-    <div id="mnHudTime" class="mn-hud-digits font-mono">00:00</div>
-    <div id="mnHudTicks" class="mn-hud-ticks"></div>
-    <div id="mnHudLabel" class="font-mono text-[9.5px] tracking-wider uppercase opacity-75">HERO STUDIO</div>
-  </aside>
-
   <!-- ====================================================================== -->
-  <!-- CH 01 · MONUMENTAL 3D FAN-SHAPE CINEMA HERO (5장 부채꼴 릴스 덱 + 3막 스크롤 핀) -->
+  <!-- CH 01 · INTERACTIVE 3D ARC EDITORIAL GALLERY + FULLSCREEN EXPAND HERO  -->
   <!-- ====================================================================== -->
-  <section id="mnHero" class="mn-hero" data-chapter="01" data-chapter-label="HERO STUDIO">
-    <!-- 풀-블리드 시네마 스튜디오 키 비주얼 + 황금 먼지 + 블루프린트 그리드 -->
-    <div class="mn-hero-kv-wrap" aria-hidden="true">
-      <img id="mnHeroKvImg" class="mn-hero-kv-img" src="/assets/landing/hero-cinema-kv.jpg" alt="" loading="eager" />
-      <div class="mn-hero-kv-vignette"></div>
+  <section id="edHero" class="ed-hero" aria-label="오토릴스메이커 에디토리얼 3D 아크 갤러리">
+    <!-- 현재 선택된 화보에서 은은하게 번지는 앰비언트 배경광 -->
+    <div id="edHeroAura" class="ed-hero-aura" aria-hidden="true"></div>
+
+    <!-- 상단 미니멀 에디토리얼 카피 (스크롤 시 자연스럽게 위로 정리) -->
+    <div id="edHeroHeader" class="ed-hero-header">
+      <p class="ed-eyebrow">AutoReels Studio · 9:16 Editorial Reels</p>
+      <h1 class="ed-hero-h1">사진 한 장이, 한 편의 릴스가 된다</h1>
+      <div class="ed-hero-actions">
+        <a href="/studio" class="ed-btn-ivory">무료로 만들기</a>
+        <a href="#edEngines" class="ed-btn-ghost">기능 둘러보기</a>
+      </div>
     </div>
-    <div class="mn-blueprint-grid" aria-hidden="true"></div>
-    <canvas id="mnDustCanvas" class="mn-dust-canvas" aria-hidden="true"></canvas>
-    <div id="mnBgWatermark" class="mn-bg-watermark" aria-hidden="true">ONE SHOT · ONE REEL</div>
 
-    <!-- 스크롤 시 부드럽게 닫히는 영화관 2.39:1 시네마스코프 레터박스 -->
-    <div id="mnHeroBarTop" class="mn-cinema-bar mn-cinema-bar-top" aria-hidden="true"></div>
-    <div id="mnHeroBarBot" class="mn-cinema-bar mn-cinema-bar-bot" aria-hidden="true"></div>
-
-    <!-- 코너 등록 마크 -->
-    <div class="mn-corner-meta mn-corner-tl font-mono" aria-hidden="true">+ A1 · 9:16 MASTER STUDIO</div>
-    <div class="mn-corner-meta mn-corner-tr font-mono" aria-hidden="true">747+ STYLES · LINK REMIX · HIGHLIGHT AI +</div>
-
-    <!-- 히어로 중앙 수직 스택: 상단 3막 시네마 카피 + 중앙 5장 3D 부채꼴 릴스 덱 + 하단 업종 칩 -->
-    <div class="mn-hero-fan-shell">
-      <!-- 상단 3막 크로스페이드 헤드라인 -->
-      <div class="mn-fan-copy-wrap">
-        <div id="mnAct1" class="mn-fan-act is-visible">
-          <div class="font-mono text-[10.5px] sm:text-[11px] tracking-[0.2em] uppercase text-[#e07a4f]">01 / 03 · 747+ STYLES · LINK REMIX · HIGHLIGHT AI</div>
-          <h1 class="mn-fan-h1">사진 한 장이, <span class="mn-fan-h1-accent">한 편의 영화 같은 릴스가 된다</span></h1>
-          <div class="flex flex-wrap items-center justify-center gap-3 mt-4">
-            <a href="/studio" class="mn-btn-cream">지금 무료로 릴스 만들기 →</a>
-            <a href="#mnPipeline" class="mn-btn-outline">4대 엔진 둘러보기 ↓</a>
-          </div>
-        </div>
-
-        <div id="mnAct2" class="mn-fan-act" aria-hidden="true">
-          <div class="font-mono text-[10.5px] sm:text-[11px] tracking-[0.2em] uppercase text-[#e07a4f]">02 / 03 · LINK REMIX &amp; HIGHLIGHT EXTRACTOR</div>
-          <h2 class="mn-fan-h1">링크 하나, 긴 영상 하나로<br class="hidden sm:inline" /> <span class="mn-fan-h1-accent">컷 리듬과 핵심 구간 자동 추출</span></h2>
-          <div class="flex flex-wrap items-center justify-center gap-3 mt-4">
-            <a href="/assets/remix/index.html" class="mn-btn-cream">참고 링크 분석하기 →</a>
-            <a href="/assets/shorts/index.html" class="mn-btn-outline">10분 영상 하이라이트 →</a>
-          </div>
-        </div>
-
-        <div id="mnAct3" class="mn-fan-act" aria-hidden="true">
-          <div class="font-mono text-[10.5px] sm:text-[11px] tracking-[0.2em] uppercase text-[#e07a4f]">03 / 03 · 747+ STYLES · AI VOICE · ORIGINAL BGM</div>
-          <h2 class="mn-fan-h1">브랜드 색·AI 성우·매장 엔딩까지<br class="hidden sm:inline" /> <span class="mn-fan-h1-accent">9:16 고화질 MP4 즉시 완성</span></h2>
-          <div class="flex flex-wrap items-center justify-center gap-3 mt-4">
-            <a href="/studio" class="mn-btn-cream">지금 무료로 첫 릴스 만들기 →</a>
-            <a href="#mnFinale" class="mn-btn-outline">요금제 보기</a>
-          </div>
-        </div>
+    <!-- 중앙 시그니처: 마우스 드래그 · 터치 스와이프 물리 관성 3D 아크 갤러리 -->
+    <div id="edArcStage" class="ed-arc-stage" aria-label="드래그하거나 스와이프해 5개 업종 화보를 넘겨보세요">
+      <div id="edArcTrack" class="ed-arc-track">
+        <article class="ed-arc-card" data-idx="0" data-ind="cafe">
+          <img src="/assets/landing/ed-cafe.jpg" alt="카페 에스프레소 크레마 에디토리얼 릴스" draggable="false" loading="eager" />
+        </article>
+        <article class="ed-arc-card" data-idx="1" data-ind="beauty">
+          <img src="/assets/landing/ed-beauty.jpg" alt="뷰티 세럼 에디토리얼 릴스" draggable="false" loading="eager" />
+        </article>
+        <article class="ed-arc-card is-active" data-idx="2" data-ind="auto">
+          <img src="/assets/landing/ed-auto.jpg" alt="자동차 갤러리 에디토리얼 릴스" draggable="false" loading="eager" />
+        </article>
+        <article class="ed-arc-card" data-idx="3" data-ind="restaurant">
+          <img src="/assets/landing/ed-dining.jpg" alt="파인다이닝 미식 에디토리얼 릴스" draggable="false" loading="eager" />
+        </article>
+        <article class="ed-arc-card" data-idx="4" data-ind="interior">
+          <img src="/assets/landing/ed-interior.jpg" alt="건축 인테리어 에디토리얼 릴스" draggable="false" loading="eager" />
+        </article>
       </div>
+    </div>
 
-      <!-- 중앙 5장 3D 부채꼴 실사 릴스 덱 + 스크롤 2~3막 좌우 시네마 HUD -->
-      <div class="mn-fan-stage">
-        <aside id="mnHudLeft" class="mn-side-hud mn-side-hud-left" aria-hidden="true">
-          <div class="font-mono text-[10px] tracking-widest uppercase text-[#e07a4f]">LINK &amp; HIGHLIGHT</div>
-          <div class="text-[14px] font-bold text-[#f5efe2] mt-1">참고 링크 컷 리듬 분석</div>
-          <div class="mn-hud-bars">
-            <span style="width:28%"></span>
-            <span style="width:44%"></span>
-            <span style="width:28%"></span>
-          </div>
-          <div class="text-[11px] text-[#a69d91] mt-1.5">10분 영상 → 핵심 15초 하이라이트</div>
-        </aside>
-
-        <div id="mnFanDeck" class="mn-fan-deck">
-          <!-- 좌2 (카페 4.jpg) -->
-          <button type="button" id="mnFanL2" data-ind="cafe" data-quick="1" class="mn-fan-card mn-fan-l2" aria-label="카페·디저트 릴스 예시 보기">
-            <img src="/assets/scenes/cafe/4.jpg" alt="" loading="eager" />
-            <div class="mn-fan-scrim"></div>
-            <div class="mn-fan-meta"><span>카페·디저트</span><strong>시그니처 라떼 15초</strong></div>
-          </button>
-
-          <!-- 좌1 (뷰티 4.jpg) -->
-          <button type="button" id="mnFanL1" data-ind="beauty" data-quick="1" class="mn-fan-card mn-fan-l1" aria-label="미용·네일·뷰티 릴스 예시 보기">
-            <img src="/assets/scenes/beauty/4.jpg" alt="" loading="eager" />
-            <div class="mn-fan-scrim"></div>
-            <div class="mn-fan-meta"><span>미용·뷰티</span><strong>시술 전후 무드 릴스</strong></div>
-          </button>
-
-          <!-- 중앙 마스터 9:16 라이브 릴스 -->
-          <div id="landingPhoneStage" role="button" tabindex="0" aria-label="미리보기 다음 컷 보기" class="mn-hero-reel mn-fan-center">
-            <img id="lpMainPhoto" class="mn-reel-photo" src="/assets/scenes/auto/1.jpg" alt="" />
-            <div class="mn-reel-scrim"></div>
-            <div class="relative z-10 space-y-2">
-              <div id="landingPhoneBars" class="mn-bars" aria-hidden="true">
-                <span class="mn-bar"><i class="mn-bar-fill"></i></span>
-                <span class="mn-bar"><i class="mn-bar-fill"></i></span>
-                <span class="mn-bar"><i class="mn-bar-fill"></i></span>
-              </div>
-              <div class="flex items-center justify-between gap-2 text-[10.5px] text-[#f5efe2] font-mono">
-                <span id="landingPhoneBadge" class="px-2 py-0.5 bg-black/55 border border-white/15 truncate">자동차 영업</span>
-                <div class="flex items-center gap-1.5 shrink-0">
-                  <span id="landingPhoneCutTag" class="px-1.5 py-0.5 bg-black/55 text-[10px]">01 / 03</span>
-                  <button type="button" id="landingPhonePlayBtn" aria-label="미리보기 일시정지" class="mn-play-btn">❚❚</button>
-                </div>
-              </div>
-            </div>
-
-            <div id="landingPhoneSlide" class="relative z-10 my-auto space-y-2">
-              <div id="landingPhoneKicker" class="font-mono text-[10px] tracking-wider uppercase text-[#e07a4f]"></div>
-              <div id="landingPhoneHook" class="text-[19px] font-bold text-[#f5efe2] leading-snug mn-shadow"></div>
-              <div id="landingPhoneSub" class="text-[11.5px] text-[#f5efe2]/90 leading-relaxed bg-black/55 backdrop-blur-sm p-2.5 border border-white/15"></div>
-              <div id="landingPhoneTags" class="flex flex-wrap gap-1"></div>
-            </div>
-
-            <div class="relative z-10 bg-black/70 border border-white/15 px-3 py-2 flex items-center justify-between gap-2">
-              <div class="min-w-0">
-                <div id="landingPhonePlace" class="text-[11px] font-semibold text-[#f5efe2] truncate"></div>
-                <div id="landingPhonePromo" class="text-[10px] text-[#e07a4f] truncate mt-0.5"></div>
-              </div>
-              <span class="px-2 py-0.5 bg-[#f5efe2] text-[#0b0a08] font-mono text-[10px] font-bold shrink-0">END</span>
-            </div>
-          </div>
-
-          <!-- 우1 (음식점 4.jpg) -->
-          <button type="button" id="mnFanR1" data-ind="restaurant" data-quick="1" class="mn-fan-card mn-fan-r1" aria-label="음식점 릴스 예시 보기">
-            <img src="/assets/scenes/restaurant/4.jpg" alt="" loading="eager" />
-            <div class="mn-fan-scrim"></div>
-            <div class="mn-fan-meta"><span>음식점</span><strong>오늘의 시그니처 메뉴</strong></div>
-          </button>
-
-          <!-- 우2 (인테리어 4.jpg) -->
-          <button type="button" id="mnFanR2" data-ind="interior" data-quick="1" class="mn-fan-card mn-fan-r2" aria-label="인테리어 릴스 예시 보기">
-            <img src="/assets/scenes/interior/4.jpg" alt="" loading="eager" />
-            <div class="mn-fan-scrim"></div>
-            <div class="mn-fan-meta"><span>인테리어</span><strong>시공 비포·애프터</strong></div>
-          </button>
-        </div>
-
-        <aside id="mnHudRight" class="mn-side-hud mn-side-hud-right" aria-hidden="true">
-          <div class="font-mono text-[10px] tracking-widest uppercase text-[#e07a4f]">AI VOICE &amp; 747+ STYLES</div>
-          <div class="text-[14px] font-bold text-[#f5efe2] mt-1">성우 내레이션 · 오리지널 BGM</div>
-          <div class="mn-hud-eq" aria-hidden="true">
-            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-          </div>
-          <div class="text-[11px] text-[#a69d91] mt-1.5">9:16 1080×1920 MP4 즉시 저장</div>
-        </aside>
-
-        <!-- 모바일 전용 스크롤 2~3막 시네마틱 HUD 필 -->
-        <aside id="mnMobileHud" class="mn-mobile-hud" aria-hidden="true">
-          <span class="mn-mobile-hud-dot"></span>
-          <span id="mnMobileHudText" class="font-mono text-[10.5px] tracking-wider uppercase text-[#f5efe2]">LINK REMIX · AI VOICE · 747+ STYLES</span>
-        </aside>
+    <!-- 하단 절제된 1줄 에디토리얼 캡션 + 드래그/스와이프 컨트롤 -->
+    <div id="edHeroFooter" class="ed-hero-footer">
+      <div class="ed-arc-meta">
+        <span id="edArcNum" class="ed-mono text-[11px] opacity-55">03 / 05</span>
+        <span class="ed-meta-sep" aria-hidden="true"></span>
+        <span id="edArcTitle" class="text-[13px] font-medium text-[#f4f0e8]">자동차 영업 — 전시장의 빛이 15초의 릴스로</span>
+        <a id="edArcOpenLink" href="/studio?ind=auto" class="ed-inline-link hidden sm:inline">스튜디오에서 열기 →</a>
       </div>
+      <div class="ed-arc-controls">
+        <button type="button" id="edArcPrev" class="ed-arc-arrow" aria-label="이전 화보">←</button>
+        <span class="ed-mono text-[10.5px] tracking-[0.14em] uppercase opacity-45">Drag · Swipe · Scroll</span>
+        <button type="button" id="edArcNext" class="ed-arc-arrow" aria-label="다음 화보">→</button>
+      </div>
+    </div>
 
-      <!-- 하단 빠른 업종 칩 + 스크롤 유도 -->
-      <div class="mn-fan-bottom">
-        <div id="landingQuickInds" class="mn-quick-row justify-center" aria-label="빠른 업종 미리보기"></div>
-        <div id="mnScrollCue" class="mn-scroll-cue font-mono" aria-hidden="true">SCROLL TO DIRECT ↓</div>
+    <!-- 스크롤 시 정중앙 화보가 풀스크린으로 확장되는 시네마 레이어 (단방향 정방향 전환) -->
+    <div id="edExpandLayer" class="ed-expand-layer" aria-hidden="true">
+      <img id="edExpandImg" class="ed-expand-img" src="/assets/landing/ed-auto.jpg" alt="" />
+      <div class="ed-expand-scrim"></div>
+      <div id="edExpandCopy" class="ed-expand-copy">
+        <p id="edExpandKicker" class="ed-mono text-[11px] tracking-[0.18em] uppercase text-[#f4f0e8]/65">03 · AUTOMOTIVE STUDIO</p>
+        <h2 class="ed-expand-h2">대본부터 참고 링크 분석,<br />하이라이트 추출과 AI 성우까지.</h2>
+        <p class="ed-expand-sub">사진 한 장만 올리면 747종 스타일과 오리지널 BGM으로 9:16 고화질 MP4가 완성됩니다.</p>
+        <div class="mt-7 flex flex-wrap items-center gap-3">
+          <a id="edExpandCta" href="/studio?ind=auto" class="ed-btn-ivory">이 무드로 릴스 만들기 →</a>
+          <a href="#edEngines" class="ed-btn-ghost">아래에서 계속 보기 ↓</a>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- ====================================================================== -->
-  <!-- CH 02 · 스크롤 컬러 필 선언문 + 핀 고정 가로 스크럽 4대 엔진 (theinfinitysocks #tech) -->
+  <!-- CH 02 · EDITORIAL MANIFESTO & 4 CORE ENGINES                           -->
   <!-- ====================================================================== -->
-  <section id="mnStatement" class="mn-statement-sec" data-chapter="02" data-chapter-label="THE ENGINE">
-    <div class="max-w-[1180px] mx-auto px-6 md:px-10">
-      <div class="font-mono text-[11px] tracking-widest uppercase text-[#e07a4f] mb-6">+ CH_02 · FOUR ENGINES. ONE TIMELINE.</div>
-      <p id="mnScrubText" class="mn-manifesto-text">
-        <span>사진 한 장에서</span>
-        <span>9:16 마스터 출력까지.</span>
-        <span>대본, 참고 링크 분석,</span>
-        <span>긴 영상 하이라이트,</span>
-        <span>AI 성우와 BGM을</span>
-        <span class="is-accent">하나의 타임라인으로.</span>
-      </p>
-    </div>
-  </section>
+  <section id="edEngines" class="ed-sec-dark">
+    <div class="ed-container">
+      <div class="ed-sec-head">
+        <span class="ed-mono text-[11px] tracking-[0.16em] uppercase opacity-50">01 — The Engine</span>
+        <p id="edManifesto" class="ed-manifesto">
+          <span>촬영은 짧게.</span>
+          <span>편집은 자동으로.</span>
+          <span>대본, 링크 분석,</span>
+          <span>긴 영상 하이라이트,</span>
+          <span>성우와 사운드까지</span>
+          <span>하나의 타임라인에서.</span>
+        </p>
+      </div>
 
-  <!-- 핀 고정 가로 스크럽 파이프라인 트랙 (데스크톱 핀 고정 가로 이동, 모바일 수직 스택) -->
-  <section id="mnPipeline" class="mn-hpin-section" data-chapter="02" data-chapter-label="4-STAGE PIPELINE">
-    <div id="mnHpinTrack" class="mn-hpin-track">
-      <!-- 패널 01: 사진 -> AI 구어체 대본 -->
-      <article class="mn-hcard">
-        <div class="mn-hcard-meta font-mono"><span>ENGINE 01 / 04</span><span>AI SCRIPT &amp; TOPIC</span></div>
-        <div class="mn-hcard-body">
-          <div class="mn-hcard-copy">
-            <h3>오늘의 주제 ·<br />AI 구어체 대본</h3>
-            <p>매일 새벽 자동 갱신되는 급상승 키워드와 10개 업종·개인 맞춤 구어체 대본 3안을 즉시 생성합니다. 사진 3장만 올려도 컷 구성이 끝납니다.</p>
-            <a href="/studio" class="mn-btn-outline mt-4">스튜디오에서 써보기 →</a>
-          </div>
-          <div class="mn-hcard-vis">
-            <div class="mn-flow-trio">
-              <img src="/assets/scenes/shop/6.jpg" alt="" loading="lazy" />
-              <img src="/assets/scenes/shop/7.jpg" alt="" loading="lazy" />
-              <img src="/assets/scenes/shop/8.jpg" alt="" loading="lazy" />
-            </div>
-            <div class="mn-vis-caption font-mono">3 PHOTOS → 15S 9:16 MASTER</div>
-          </div>
-        </div>
-      </article>
+      <div class="ed-engine-grid">
+        <article class="ed-engine-item ed-reveal">
+          <div class="ed-engine-num ed-mono">01</div>
+          <h3 class="ed-engine-title">AI 주제 추천 · 구어체 대본</h3>
+          <p class="ed-engine-desc">업종과 키워드만 입력하면 실제 조회가 나오는 훅과 자연스러운 구어체 대본을 3초 만에 구성합니다.</p>
+          <a href="/studio" class="ed-text-link">스튜디오에서 써보기 →</a>
+        </article>
 
-      <!-- 패널 02: 참고 영상 링크 분석 & 재구성 -->
-      <article class="mn-hcard">
-        <div class="mn-hcard-meta font-mono"><span>ENGINE 02 / 04</span><span>NEW · LINK REMIX</span></div>
-        <div class="mn-hcard-body">
-          <div class="mn-hcard-copy">
-            <h3>참고 링크 넣어<br />컷·대본 재구성</h3>
-            <p>따라 만들고 싶은 쇼츠·릴스 링크를 붙여넣거나 저장 영상을 올리면 원본 컷 길이·주제·자막과 대사를 분석해 내 상품과 영상으로 재구성합니다.</p>
-            <a href="/assets/remix/index.html" class="mn-btn-cream mt-4">참고 링크 분석 열기 →</a>
-          </div>
-          <div class="mn-hcard-vis">
-            <div class="mn-tech-box">
-              <div class="mn-tech-row font-mono"><span class="mn-dot"></span><span>youtube.com/shorts/reference</span><span class="text-[#e07a4f]">PARSED</span></div>
-              <div class="mn-cut-bars">
-                <div><b>0.0~2.4s</b><span>후킹 리듬 감지</span></div>
-                <div><b>2.4~6.8s</b><span>핵심 비교 자막</span></div>
-                <div><b>6.8~11.2s</b><span>결론·CTA 매칭</span></div>
-              </div>
-              <div class="mn-tech-out">“청바지 비교” → “우리 매장 신메뉴 비교” 자동 치환</div>
-            </div>
-          </div>
-        </div>
-      </article>
+        <article class="ed-engine-item ed-reveal">
+          <div class="ed-engine-num ed-mono">02</div>
+          <h3 class="ed-engine-title">참고 영상 링크 재구성</h3>
+          <p class="ed-engine-desc">마음에 드는 인스타그램·유튜브·틱톡 링크를 붙여 넣으면 컷 길이와 리듬을 분석해 내 매장 버전으로 바꿉니다.</p>
+          <a href="/assets/remix/index.html" class="ed-text-link">링크 분석 열기 →</a>
+        </article>
 
-      <!-- 패널 03: 10분 긴 영상 하이라이트 자동 추출 -->
-      <article class="mn-hcard">
-        <div class="mn-hcard-meta font-mono"><span>ENGINE 03 / 04</span><span>NEW · HIGHLIGHT AI</span></div>
-        <div class="mn-hcard-body">
-          <div class="mn-hcard-copy">
-            <h3>10분 긴 영상에서<br />핵심 15초 추출</h3>
-            <p>최대 10분(250MB) 말하는 영상을 올리면 AI가 음성을 분석해 쇼츠로 쓰기 좋은 핵심 발언 구간만 자동으로 추천하고 제목·자막까지 입혀줍니다.</p>
-            <a href="/assets/shorts/index.html" class="mn-btn-cream mt-4">하이라이트 뽑기 열기 →</a>
-          </div>
-          <div class="mn-hcard-vis">
-            <div class="mn-tech-box">
-              <div class="mn-tech-row font-mono"><span class="mn-dot"></span><span>매장_인터뷰_08m42s.mp4</span><span class="text-[#e07a4f]">3 CLIPS</span></div>
-              <div class="mn-wave-vis" aria-hidden="true">
-                <i style="height:28%"></i><i style="height:44%"></i><i class="is-hot" style="height:92%"></i><i class="is-hot" style="height:84%"></i>
-                <i style="height:30%"></i><i style="height:38%"></i><i class="is-hot" style="height:96%"></i><i class="is-hot" style="height:78%"></i>
-                <i style="height:24%"></i><i style="height:42%"></i><i class="is-hot" style="height:88%"></i><i style="height:30%"></i>
-              </div>
-              <div class="mn-tech-out">01:14~01:31 · “가장 많이 물어보시는 가격 차이…”</div>
-            </div>
-          </div>
-        </div>
-      </article>
+        <article class="ed-engine-item ed-reveal">
+          <div class="ed-engine-num ed-mono">03</div>
+          <h3 class="ed-engine-title">10분 영상 하이라이트 추출</h3>
+          <p class="ed-engine-desc">긴 원본 영상에서 말소리와 장면 전환이 가장 살아 있는 15~30초 핵심 구간만 자동으로 골라냅니다.</p>
+          <a href="/assets/shorts/index.html" class="ed-text-link">하이라이트 추출 열기 →</a>
+        </article>
 
-      <!-- 패널 04: 747+ 스타일 · 내 스타일 · AI 성우 & BGM -->
-      <article class="mn-hcard">
-        <div class="mn-hcard-meta font-mono"><span>ENGINE 04 / 04</span><span>747+ STYLES &amp; SOUND</span></div>
-        <div class="mn-hcard-body">
-          <div class="mn-hcard-copy">
-            <h3>747종 스타일 ·<br />AI 성우 · BGM</h3>
-            <p>감성·매거진·카드뉴스·시네마 스타일과 브랜드 색·글꼴·로고를 저장하는 내 스타일 만들기, 한국어 AI 성우와 저작권 걱정 없는 오리지널 BGM까지 완비했습니다.</p>
-            <a href="/studio" class="mn-btn-outline mt-4">스타일 체험하기 →</a>
-          </div>
-          <div class="mn-hcard-vis">
-            <div class="mn-style-mini-grid">
-              <img src="/assets/scenes/cafe/10.jpg" alt="" loading="lazy" />
-              <img src="/assets/scenes/beauty/10.jpg" alt="" loading="lazy" />
-              <img src="/assets/scenes/auto/10.jpg" alt="" loading="lazy" />
-              <img src="/assets/scenes/restaurant/10.jpg" alt="" loading="lazy" />
-            </div>
-            <div class="mn-vis-caption font-mono">747+ TEMPLATES · CUSTOM BRAND KIT</div>
-          </div>
-        </div>
-      </article>
+        <article class="ed-engine-item ed-reveal">
+          <div class="ed-engine-num ed-mono">04</div>
+          <h3 class="ed-engine-title">747+ 스타일 · AI 성우 · BGM</h3>
+          <p class="ed-engine-desc">브랜드 컬러와 글꼴, 자연스러운 AI 성우, 저작권 걱정 없는 오리지널 BGM을 입혀 1080p MP4로 내보냅니다.</p>
+          <a href="/studio" class="ed-text-link">스타일 둘러보기 →</a>
+        </article>
+      </div>
     </div>
   </section>
 
   <!-- ====================================================================== -->
-  <!-- CH 03 · REAL APP WORKSTATION (MacBook Pro + 티타늄 iPhone + GSAP 3D 언폴드) -->
+  <!-- CH 03 · REAL /STUDIO HARDWARE SHOWCASE (PC MACBOOK + MOBILE IPHONE)    -->
   <!-- ====================================================================== -->
-  <section id="mnShowcase" class="mn-dark-sec" data-chapter="03" data-chapter-label="WORKSTATION">
-    <div class="max-w-[1180px] mx-auto px-6 md:px-10 space-y-8">
-      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+  <section id="edShowcase" class="ed-sec-dark ed-sec-border">
+    <div class="ed-container">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
         <div>
-          <div class="font-mono text-[11px] tracking-widest uppercase text-[#e07a4f]">+ CH_03 · LIVE WORKSTATION</div>
-          <h2 class="mn-h2 mt-2">실제 오토릴스메이커 앱 화면 그대로</h2>
-          <p class="text-[14px] text-[#a69d91] mt-1.5">PC와 모바일 브라우저 어디서나 실시간 9:16 미리보기, 747종 디자인 서랍, 컷별 세부 편집을 바로 사용합니다.</p>
+          <span class="ed-mono text-[11px] tracking-[0.16em] uppercase opacity-50">02 — Real Studio</span>
+          <h2 class="ed-sec-h2 mt-3">PC와 모바일 어디서나,<br />같은 속도로 완성합니다</h2>
         </div>
-        <div class="mn-seg-tabs" role="tablist" aria-label="실제 앱 화면 선택">
-          <button type="button" role="tab" aria-selected="true" data-app-view="main" class="lp-app-tab mn-seg-btn is-active">01 대본 · 미리보기</button>
-          <button type="button" role="tab" aria-selected="false" data-app-view="design" class="lp-app-tab mn-seg-btn">02 디자인 서랍</button>
-          <button type="button" role="tab" aria-selected="false" data-app-view="edit" class="lp-app-tab mn-seg-btn">03 모바일 컷 편집</button>
+        <div class="flex flex-wrap gap-2" role="tablist" aria-label="스튜디오 화면 보기">
+          <button type="button" data-app-view="edit" class="ed-tab is-active">대본 · 사진 편집</button>
+          <button type="button" data-app-view="design" class="ed-tab">747종 스타일</button>
+          <button type="button" data-app-view="cutedit" class="ed-tab">모바일 컷 편집</button>
         </div>
       </div>
 
-      <div id="lp3dDeviceStage" class="mn-device-stage">
-        <div id="lp3dUnfoldRig" class="mn-device-rig">
-          <div class="lp-macbook-wrap">
-            <div class="lp-macbook-lid">
-              <div class="lp-macbook-cam" aria-hidden="true"></div>
-              <div class="lp-3d-screen">
-                <img id="lpAppDesktopImg" src="/assets/landing/studio-desktop-main.jpg" alt="오토릴스메이커 PC 스튜디오 실제 화면" loading="lazy" />
+      <div id="edHardwareStage" class="ed-hardware-stage">
+        <div class="ed-macbook-col">
+          <div class="ed-device-label ed-mono">DESKTOP · /studio</div>
+          <div class="ed-macbook">
+            <div class="ed-macbook-bezel">
+              <div class="ed-macbook-bar" aria-hidden="true"><i></i><i></i><i></i><span>autoreelsmaker.kr/studio</span></div>
+              <div class="ed-macbook-screen">
+                <img id="lpAppDesktopImg" src="/assets/landing/studio-desktop-main.jpg" alt="오토릴스메이커 PC 스튜디오 화면" loading="lazy" />
               </div>
             </div>
-            <div class="lp-macbook-base" aria-hidden="true"><span></span></div>
-            <div class="lp-device-shadow" aria-hidden="true"></div>
+            <div class="ed-macbook-base" aria-hidden="true"></div>
           </div>
-          <div class="lp-iphone-wrap">
-            <div class="lp-iphone-body">
-              <div class="lp-iphone-island" aria-hidden="true"></div>
-              <div class="lp-3d-mobile-screen">
-                <img id="lpAppMobileImg" src="/assets/landing/studio-mobile-main.jpg" alt="오토릴스메이커 모바일 스튜디오 실제 화면" loading="lazy" />
+        </div>
+
+        <div class="ed-iphone-col">
+          <div class="ed-device-label ed-mono">MOBILE · 9:16</div>
+          <div class="ed-iphone">
+            <div class="ed-iphone-notch" aria-hidden="true"></div>
+            <div class="ed-iphone-screen">
+              <img id="lpAppMobileImg" src="/assets/landing/studio-mobile-main.jpg" alt="오토릴스메이커 모바일 스튜디오 화면" loading="lazy" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p id="lpAppCaption" class="text-[13px] text-[#8a847a] mt-8">주제 선택부터 대본·사진 배치·실시간 9:16 미리보기까지 한 화면에서 작업합니다.</p>
+    </div>
+  </section>
+
+  <!-- ====================================================================== -->
+  <!-- CH 04 · WARM IVORY EDITORIAL LIGHT FINALE (업종 · BGM · 요금제 · FAQ)   -->
+  <!-- ====================================================================== -->
+  <div id="edLightZone" class="ed-light-zone">
+
+    <!-- 11개 업종 & 오리지널 BGM -->
+    <section id="edIndustries" class="ed-sec-light">
+      <div class="ed-container">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          <div class="lg:col-span-5">
+            <span class="ed-mono text-[11px] tracking-[0.16em] uppercase opacity-50">03 — Industries &amp; Sound</span>
+            <h2 class="ed-sec-h2-light mt-3">11개 업종 맞춤 흐름과<br />오리지널 사운드</h2>
+            <p class="text-[14.5px] leading-relaxed text-[#5c564d] mt-4">
+              업종을 고르면 그 분야에 맞는 말투, 자막 구조, 매장 엔딩 카드가 자동으로 맞춰집니다. 저작권 걱정 없는 오리지널 BGM도 바로 입힐 수 있습니다.
+            </p>
+            <div class="mt-7">
+              <button type="button" id="edStartIndustryBtn" data-go="/studio?ind=auto" class="ed-btn-dark">자동차 영업으로 시작하기 →</button>
+            </div>
+          </div>
+
+          <div class="lg:col-span-7 space-y-10">
+            <!-- 11개 업종 리스트 -->
+            <div>
+              <div class="ed-mono text-[10.5px] tracking-[0.14em] uppercase opacity-50 mb-4">Select Industry</div>
+              <div id="edIndustryGrid" class="ed-ind-grid"></div>
+            </div>
+
+            <!-- 4곡 오리지널 BGM 사운드 바 -->
+            <div class="pt-8 border-t border-black/10">
+              <div class="flex items-center justify-between gap-4 mb-4">
+                <span class="ed-mono text-[10.5px] tracking-[0.14em] uppercase opacity-50">Original BGM Preview</span>
+                <span class="text-[12px] text-[#6d665c]">상업적 사용 가능</span>
+              </div>
+              <div class="ed-bgm-list">
+                <button type="button" data-bgm-src="/assets/bgm/pack/cafe_citypop_01.mp3" class="ed-bgm-row">
+                  <span class="ed-bgm-idx ed-mono">01</span>
+                  <span class="ed-bgm-name">카페 시티팝</span>
+                  <span class="ed-bgm-mood">감성 브이로그 · 로파이</span>
+                  <span class="ed-bgm-play ed-mono">PLAY</span>
+                </button>
+                <button type="button" data-bgm-src="/assets/bgm/pack/auto_cinematic_01.mp3" class="ed-bgm-row">
+                  <span class="ed-bgm-idx ed-mono">02</span>
+                  <span class="ed-bgm-name">시네마틱 드라이브</span>
+                  <span class="ed-bgm-mood">전시장 · 하이엔드 무드</span>
+                  <span class="ed-bgm-play ed-mono">PLAY</span>
+                </button>
+                <button type="button" data-bgm-src="/assets/bgm/pack/beauty_lounge_01.mp3" class="ed-bgm-row">
+                  <span class="ed-bgm-idx ed-mono">03</span>
+                  <span class="ed-bgm-name">라운지 앰비언트</span>
+                  <span class="ed-bgm-mood">뷰티 · 공간 에디토리얼</span>
+                  <span class="ed-bgm-play ed-mono">PLAY</span>
+                </button>
+                <button type="button" data-bgm-src="/assets/bgm/pack/restaurant_groove_01.mp3" class="ed-bgm-row">
+                  <span class="ed-bgm-idx ed-mono">04</span>
+                  <span class="ed-bgm-name">키친 그루브</span>
+                  <span class="ed-bgm-mood">다이닝 · 리드미컬 컷</span>
+                  <span class="ed-bgm-play ed-mono">PLAY</span>
+                </button>
               </div>
             </div>
-            <div class="lp-device-shadow lp-device-shadow-sm" aria-hidden="true"></div>
           </div>
         </div>
-        <div class="mn-device-foot">
-          <span id="lpAppCaption" class="font-mono text-[12px] text-[#a69d91]">01 · 실시간 9:16 미리보기 · 상단 컷 빠른 점프 바 · AI 대본 다시 쓰기</span>
-          <a href="/studio" class="mn-btn-outline h-9 px-4 text-[12px]">스튜디오 직접 열기 →</a>
+      </div>
+    </section>
+
+    <!-- 요금제 -->
+    <section id="edPricing" class="ed-sec-light border-t border-black/10">
+      <div class="ed-container">
+        <div class="max-w-[640px]">
+          <span class="ed-mono text-[11px] tracking-[0.16em] uppercase opacity-50">04 — Pricing</span>
+          <h2 class="ed-sec-h2-light mt-3">부담 없이 시작하고,<br />필요할 때 확장하세요</h2>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- ====================================================================== -->
-  <!-- CH 04 · LIVE REELS FILMSTRIP + ORIGINAL BGM PLAYER + 11개 업종 그리드 -->
-  <!-- ====================================================================== -->
-  <section id="mnGallery" class="mn-dark-sec border-t border-white/[0.08]" data-chapter="04" data-chapter-label="REELS & SOUND">
-    <div class="max-w-[1180px] mx-auto px-6 md:px-10 mb-8 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <div class="font-mono text-[11px] tracking-widest uppercase text-[#e07a4f]">+ CH_04 · 10 INDUSTRIES &amp; ORIGINAL SOUND</div>
-        <h2 class="mn-h2 mt-2">업종별 9:16 실사 필름 스트립 &amp; 오리지널 BGM</h2>
-      </div>
-      <span class="font-mono text-[11px] text-[#a69d91]">SCROLL VELOCITY REACTIVE · CLICK TO LAUNCH</span>
-    </div>
-
-    <!-- 무한 실사 필름 스트립 (GSAP Velocity Skew, 중복 없는 5.jpg) -->
-    <div class="mn-marquee-wrap mb-16">
-      <div id="lpMarqueeTrack" class="mn-marquee-track"></div>
-    </div>
-
-    <!-- 하단 2컬럼: 좌측 11개 업종 선택 + 우측 오리지널 BGM 1클릭 미리듣기 -->
-    <div class="max-w-[1180px] mx-auto px-6 md:px-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      <div class="lg:col-span-7 space-y-4">
-        <div class="flex items-center justify-between gap-2">
-          <h3 class="text-[16px] font-semibold text-[#f5efe2]">10개 업종 · 개인 전용 대본과 엔딩</h3>
-          <button type="button" id="landingStartIndustryBtn" data-go-ind class="font-mono text-[11.5px] text-[#e07a4f] hover:underline cursor-pointer">자동차 영업으로 바로 만들기 →</button>
-        </div>
-        <div id="landingIndustryGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
-      </div>
-
-      <div class="lg:col-span-5 mn-bgm-box">
-        <div class="flex items-center justify-between gap-2 pb-3 mb-3 border-b border-white/10">
-          <div>
-            <div class="text-[14.5px] font-semibold text-[#f5efe2]">오리지널 BGM 바로 들어보기</div>
-            <p class="text-[11.5px] text-[#a69d91]">상업용 릴스·쇼츠에 안심하고 쓰는 내장 음원</p>
-          </div>
-          <span id="lpBgmNowStatus" class="font-mono text-[10.5px] text-[#e07a4f]">READY</span>
-        </div>
-        <div id="lpBgmList" class="space-y-2">
-          <button type="button" data-bgm-src="/assets/bgm/pack/showroom.mp3" data-bgm-name="쇼룸 시티팝" class="mn-bgm-row">
-            <img src="/assets/bgm/pack/showroom.jpg" alt="" loading="lazy" />
-            <span class="mn-bgm-info"><strong>쇼룸 시티팝</strong><small>자동차 · 브랜드 홍보</small></span>
-            <span class="mn-bgm-btn" aria-hidden="true">▶</span>
-          </button>
-          <button type="button" data-bgm-src="/assets/bgm/pack/cafe.mp3" data-bgm-name="연남 오후 로파이" class="mn-bgm-row">
-            <img src="/assets/bgm/pack/cafe.jpg" alt="" loading="lazy" />
-            <span class="mn-bgm-info"><strong>연남 오후 로파이</strong><small>카페 · 디저트 · 브이로그</small></span>
-            <span class="mn-bgm-btn" aria-hidden="true">▶</span>
-          </button>
-          <button type="button" data-bgm-src="/assets/bgm/pack/beauty.mp3" data-bgm-name="글로우 업 팝" class="mn-bgm-row">
-            <img src="/assets/bgm/pack/beauty.jpg" alt="" loading="lazy" />
-            <span class="mn-bgm-info"><strong>글로우 업 팝</strong><small>미용 · 네일 · 쇼핑몰</small></span>
-            <span class="mn-bgm-btn" aria-hidden="true">▶</span>
-          </button>
-          <button type="button" data-bgm-src="/assets/bgm/pack/cinema.mp3" data-bgm-name="시네마 스포트라이트" class="mn-bgm-row">
-            <img src="/assets/bgm/pack/cinema.jpg" alt="" loading="lazy" />
-            <span class="mn-bgm-info"><strong>시네마 스포트라이트</strong><small>인테리어 · 부동산 · 프리미엄</small></span>
-            <span class="mn-bgm-btn" aria-hidden="true">▶</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 대각선 황금빛 빛줄기 전환 브리지 (다크 -> 웜 샌드 피날레) -->
-  <div class="mn-light-bridge" aria-hidden="true"></div>
-
-  <!-- ====================================================================== -->
-  <!-- CH 05 · WARM SAND FINALE (#EDE4D2 극적 라이트 반전 · 요금제 & FAQ) -->
-  <!-- ====================================================================== -->
-  <section id="mnFinale" class="mn-finale-light" data-chapter="05" data-chapter-label="PRICING & FAQ" data-light-section="1">
-    <div class="max-w-[1180px] mx-auto px-6 md:px-10 space-y-20">
-      <!-- 모뉴멘탈 피날레 타이틀 + 스펙 수치 -->
-      <div class="text-center space-y-4">
-        <div class="font-mono text-[11px] tracking-widest uppercase text-[#b8562e]">+ CH_05 · SEASON 2026 · READY TO DIRECT</div>
-        <h2 class="mn-finale-giant">READY TO DIRECT.</h2>
-        <p class="text-[15px] text-[#5c5349] max-w-[540px] mx-auto">가입 후 7일간 스튜디오 제작, 참고 링크 분석, 긴 영상 하이라이트 추출을 먼저 체험하고 필요할 때 이용권을 선택하세요.</p>
-      </div>
-
-      <!-- 3개 요금제 카드 (웜 샌드 위 크림/다크 대비) -->
-      <div id="arLandingPricing" class="grid grid-cols-1 md:grid-cols-3 gap-5 mn-gsap-group">
-        <div class="mn-price-card mn-gsap-item">
-          <div class="space-y-3">
-            <div class="font-mono text-[11.5px] uppercase text-[#7a6f63]">01 · 7일 무료 체험</div>
-            <div class="text-[34px] font-bold font-mono text-[#14110e]">0원</div>
-            <ul class="text-[13.5px] text-[#5c5349] space-y-2 pt-3 border-t border-[#14110e]/10">
-              <li>10개 업종과 개인 · 747종 디자인 미리보기</li>
-              <li>AI 대본 · 참고 링크 · 컷 편집 체험</li>
-              <li>워터마크 포함 영상 미리보기</li>
+        <div class="ed-pricing-grid mt-12">
+          <article class="ed-plan">
+            <div class="ed-mono text-[11px] uppercase tracking-[0.14em] opacity-55">Free</div>
+            <h3 class="text-[22px] font-semibold mt-2">무료 체험</h3>
+            <div class="ed-plan-price">0원 <span class="text-[13px] font-normal opacity-55">/ 월</span></div>
+            <ul class="ed-plan-list">
+              <li>주제 추천 · AI 대본 · 사진 편집</li>
+              <li>747종 스타일 실시간 미리보기</li>
+              <li>워터마크 포함 MP4 다운로드</li>
             </ul>
-          </div>
-          <button type="button" data-go="/studio" class="mn-btn-dark-outline w-full h-11 text-[13px]">무료로 시작하기 →</button>
-        </div>
+            <button type="button" data-go="/studio" class="ed-btn-dark-outline w-full mt-8">무료로 시작하기</button>
+          </article>
 
-        <div class="mn-price-card mn-gsap-item">
-          <div class="space-y-3">
-            <div class="font-mono text-[11.5px] uppercase text-[#7a6f63]">02 · 스탠다드 (월간)</div>
-            <div class="text-[34px] font-bold font-mono text-[#14110e]">29,900원<span class="text-[13px] font-normal text-[#7a6f63]"> / 월</span></div>
-            <ul class="text-[13.5px] text-[#3f3831] space-y-2 pt-3 border-t border-[#14110e]/10">
-              <li><strong>영상 제작 · AI 대본·이미지 생성</strong></li>
-              <li><strong>다운로드 및 SNS 게시 월 20회</strong></li>
-              <li>워터마크 제거 · 9:16 1080p MP4</li>
+          <article class="ed-plan is-featured">
+            <div class="ed-mono text-[11px] uppercase tracking-[0.14em] opacity-65">Standard · Most Popular</div>
+            <h3 class="text-[22px] font-semibold mt-2">스탠다드</h3>
+            <div class="ed-plan-price">29,900원 <span class="text-[13px] font-normal opacity-65">/ 월</span></div>
+            <ul class="ed-plan-list">
+              <li>워터마크 없는 1080p MP4 월 30회</li>
+              <li>참고 링크 재구성 · 하이라이트 추출</li>
+              <li>AI 성우 · 오리지널 BGM 전체 이용</li>
+              <li>인스타그램 · 유튜브 · 틱톡 발행</li>
             </ul>
-          </div>
-          <button type="button" data-go="/studio?plan=standard_29900" class="mn-btn-dark-outline w-full h-11 text-[13px]">스탠다드 시작하기 →</button>
-        </div>
+            <button type="button" data-go="/studio?plan=standard" class="ed-btn-ivory w-full mt-8">스탠다드 시작하기</button>
+          </article>
 
-        <div class="mn-price-card is-featured mn-gsap-item">
-          <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="font-mono text-[11.5px] uppercase text-[#e07a4f]">03 · 프로 무제한 (월간)</span>
-              <span class="font-mono text-[10px] px-2 py-0.5 bg-[#e07a4f] text-[#0b0a08] font-bold">RECOMMENDED</span>
-            </div>
-            <div class="text-[34px] font-bold font-mono text-[#f5efe2]">59,000원<span class="text-[13px] font-normal text-[#a69d91]"> / 월</span></div>
-            <ul class="text-[13.5px] text-[#d9d0c3] space-y-2 pt-3 border-t border-white/15">
-              <li><strong class="text-white">영상 제작 · AI 대본·이미지 생성</strong></li>
-              <li><strong class="text-white">다운로드 및 SNS 게시 무제한</strong></li>
-              <li>연결한 SNS에 영상 바로 업로드</li>
+          <article class="ed-plan">
+            <div class="ed-mono text-[11px] uppercase tracking-[0.14em] opacity-55">Pro</div>
+            <h3 class="text-[22px] font-semibold mt-2">프로 무제한</h3>
+            <div class="ed-plan-price">59,000원 <span class="text-[13px] font-normal opacity-55">/ 월</span></div>
+            <ul class="ed-plan-list">
+              <li>워터마크 없는 1080p MP4 무제한</li>
+              <li>나만의 브랜드 스타일 무제한 저장</li>
+              <li>다계정 · 대행사 대량 제작 최적화</li>
+              <li>우선 렌더링 및 고객 지원</li>
             </ul>
-          </div>
-          <button type="button" data-go="/studio?plan=pro_59000" class="mn-btn-cream w-full h-11 text-[13px]">프로 무제한 시작하기 →</button>
+            <button type="button" data-go="/studio?plan=pro" class="ed-btn-dark-outline w-full mt-8">프로 시작하기</button>
+          </article>
         </div>
       </div>
+    </section>
 
-      <!-- 라이트 모드 FAQ 아코디언 -->
-      <div id="arLandingFaq" class="max-w-[820px] mx-auto space-y-3">
-        <div class="font-mono text-[11px] tracking-widest uppercase text-[#b8562e] mb-4">+ FREQUENTLY ASKED QUESTIONS</div>
-        <details class="mn-faq-light" open>
-          <summary>영상 편집 경험이 없어도 모바일에서 바로 만들 수 있나요?</summary>
-          <p>네, 스마트폰과 PC 브라우저 모두에서 별도 앱 설치 없이 바로 제작할 수 있습니다. 업종을 고르고 사진만 올리면 대본·자막·성우·BGM·엔딩 카드까지 자동으로 맞춰져 9:16 MP4로 저장할 수 있습니다.</p>
-        </details>
-        <details class="mn-faq-light">
-          <summary>내장된 오리지널 BGM은 상업용 인스타 릴스·유튜브 쇼츠에 올려도 되나요?</summary>
-          <p>네, 오토릴스메이커에 기본 내장된 오리지널 BGM은 상업용 SNS 홍보 영상에도 안심하고 사용할 수 있도록 제작되었습니다. 직접 소장한 MP3 음원을 불러와 합성할 수도 있습니다.</p>
-        </details>
-        <details class="mn-faq-light">
-          <summary>참고 영상 링크 분석과 긴 영상 하이라이트 뽑기도 무료 체험이 가능한가요?</summary>
-          <p>가입 후 7일 무료 체험 기간 동안 스튜디오 제작과 참고 링크 분석·하이라이트 추출 미리보기를 직접 체험해 볼 수 있습니다.</p>
-        </details>
-        <details class="mn-faq-light">
-          <summary>우리 가게 로고와 브랜드 색상을 매번 다시 설정해야 하나요?</summary>
-          <p>‘내 스타일 만들기’에 브랜드 색, 글꼴, 로고 이미지, 자막 위치를 한 번 저장해 두면 다음 영상을 만들 때 맨 위에서 바로 불러올 수 있습니다.</p>
-        </details>
-        <details class="mn-faq-light">
-          <summary>구독 해지나 환불은 어떻게 진행되나요?</summary>
-          <p>스튜디오 내 결제 관리에서 언제든 해지 예약이 가능하며, 결제 후 7일 이내에 유료 내보내기를 1회도 사용하지 않은 경우 전액 환불해 드립니다.</p>
-        </details>
+    <!-- 자주 묻는 질문 -->
+    <section id="edFaq" class="ed-sec-light border-t border-black/10">
+      <div class="ed-container max-w-[820px]">
+        <span class="ed-mono text-[11px] tracking-[0.16em] uppercase opacity-50">05 — FAQ</span>
+        <h2 class="ed-sec-h2-light mt-3 mb-10">자주 묻는 질문</h2>
+        <div class="ed-faq-list">
+          <details class="ed-faq-item" open>
+            <summary>영상 편집을 전혀 못해도 만들 수 있나요?</summary>
+            <p>네. 매장 사진 몇 장과 한 줄 아이디어만 넣으면 대본, 자막, AI 성우, 배경음악, 엔딩 카드까지 자동으로 배치됩니다.</p>
+          </details>
+          <details class="ed-faq-item">
+            <summary>모바일에서도 PC와 똑같이 작업할 수 있나요?</summary>
+            <p>네. 별도 앱 설치 없이 모바일 브라우저에서 바로 사진 업로드, 컷별 편집, MP4 저장까지 모두 가능합니다.</p>
+          </details>
+          <details class="ed-faq-item">
+            <summary>오리지널 BGM은 인스타그램·유튜브에 올려도 안전한가요?</summary>
+            <p>네. 스튜디오 내장 오리지널 BGM은 상업적 용도의 릴스·쇼츠·틱톡 발행에 저작권 문제 없이 사용하실 수 있습니다.</p>
+          </details>
+          <details class="ed-faq-item">
+            <summary>구독 해지나 환불은 어떻게 진행되나요?</summary>
+            <p>스튜디오 내 결제 관리에서 언제든 해지 예약이 가능하며, 결제 후 7일 이내 유료 내보내기 미사용 시 전액 환불됩니다.</p>
+          </details>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 
   <!-- ====================================================================== -->
-  <!-- CH 06 · BACK-TO-DARK CINEMA FOOTER ("PROVEN, NOT PROMISED.") -->
+  <!-- CH 05 · MINIMAL OBSIDIAN FOOTER                                        -->
   <!-- ====================================================================== -->
-  <footer id="mnFooter" class="mn-cinema-footer" data-chapter="06" data-chapter-label="RENDER NOW">
-    <div class="max-w-[1180px] mx-auto px-6 md:px-10 space-y-14">
-      <div class="text-center space-y-5 pt-8">
-        <div class="font-mono text-[11px] tracking-widest uppercase text-[#e07a4f]">+ CH_06 · START RENDERING</div>
-        <h2 class="mn-footer-giant">PROVEN,<br />NOT PROMISED.</h2>
-        <p class="text-[14.5px] text-[#a69d91] max-w-[460px] mx-auto">말이 아닌 완성된 9:16 릴스로 증명합니다. 오늘 찍은 사진 한 장으로 바로 시작해 보세요.</p>
-        <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
-          <a href="/studio" class="mn-btn-cream">지금 무료로 스튜디오 열기 →</a>
-          <a href="/assets/remix/index.html" class="mn-btn-outline">참고 링크 분석</a>
-          <a href="/assets/shorts/index.html" class="mn-btn-outline">하이라이트 추출</a>
+  <footer id="edFooter" class="ed-footer">
+    <div class="ed-container">
+      <div class="py-20 sm:py-28 border-b border-white/10">
+        <p class="ed-mono text-[11px] tracking-[0.16em] uppercase opacity-45">Ready When You Are</p>
+        <h2 class="ed-footer-h2 mt-4">사진 한 장이면 충분합니다.</h2>
+        <div class="mt-9 flex flex-wrap items-center gap-3">
+          <a href="/studio" class="ed-btn-ivory">지금 무료로 시작하기 →</a>
+          <a href="/assets/remix/index.html" class="ed-btn-ghost">참고 링크 분석하기</a>
         </div>
       </div>
 
-      <!-- 사업자·약관 고지 -->
-      <div class="mn-legal-bar">
-        <div class="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-white/10">
-          <div class="flex items-center gap-2.5 text-[12.5px] text-[#d9d0c3]">
-            <span class="mn-mark">AR</span>
-            <strong>오토릴스메이커</strong>
-            <span class="opacity-40">·</span>
-            <span class="opacity-70">업종 맞춤 릴스·쇼츠 스튜디오</span>
-          </div>
-          <div class="flex flex-wrap items-center gap-5 text-[12px] text-[#a69d91]">
-            <button type="button" onclick="openLandingLegal('terms')" class="hover:text-white cursor-pointer">이용약관</button>
-            <button type="button" onclick="openLandingLegal('privacy')" class="text-[#f5efe2] font-semibold hover:text-white cursor-pointer">개인정보처리방침</button>
-            <button type="button" onclick="openLandingLegal('refund')" class="hover:text-white cursor-pointer">환불·해지 규정</button>
-            <button type="button" onclick="openLandingLegal('support')" class="hover:text-white cursor-pointer">고객센터</button>
-          </div>
-        </div>
-        <div class="pt-4 text-[11.5px] text-[#7a7166] space-y-1 font-mono">
-          <div>상호: 슬기로운건강생활 · 대표자: 이민호 · 사업자등록번호: 422-25-01352 · 통신판매업신고: 제 2021-인천연수구-2127호</div>
-          <div>주소: 인천 남동구 서창남순환로 190-15 · 고객센터: ektjtthsrk@gmail.com · 010-5872-7179</div>
-          <div class="pt-1 opacity-70">© 2026 오토릴스메이커 · 슬기로운건강생활. All rights reserved.</div>
+      <div class="py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-[12px] text-[#8a847a]">
+        <div>오토릴스메이커 · 사업자등록번호 601-17-95586 · 대표 김민호 · ektjtthsrk@gmail.com</div>
+        <div class="flex flex-wrap items-center gap-5">
+          <button type="button" onclick="openLandingLegal('terms')" class="hover:text-[#f4f0e8] transition-colors">이용약관</button>
+          <button type="button" onclick="openLandingLegal('privacy')" class="hover:text-[#f4f0e8] transition-colors">개인정보처리방침</button>
+          <button type="button" onclick="openLandingLegal('refund')" class="hover:text-[#f4f0e8] transition-colors">환불·해지</button>
+          <button type="button" onclick="openLandingLegal('support')" class="hover:text-[#f4f0e8] transition-colors">고객센터</button>
         </div>
       </div>
     </div>
   </footer>
 
-  <!-- 약관 모달 -->
-  <div id="arLandingLegalModal" class="hidden fixed inset-0 z-60 bg-black/75 backdrop-blur-sm items-center justify-center p-4" onclick="if(event.target===this)this.classList.add('hidden')">
-    <div class="w-full max-w-[500px] bg-[#161310] border border-white/15 p-6 space-y-4">
-      <div class="flex items-center justify-between pb-3 border-b border-white/10">
-        <h3 id="arLandingLegalTitle" class="text-[15px] font-semibold text-[#f5efe2]">이용약관</h3>
-        <button type="button" onclick="document.getElementById('arLandingLegalModal').classList.add('hidden')" class="text-[#a69d91] hover:text-white text-[20px] leading-none cursor-pointer">×</button>
+  <!-- 약관/고객센터 모달 -->
+  <div id="arLandingLegalModal" class="hidden fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="arLandingLegalTitle" onclick="if(event.target===this){this.classList.add('hidden');this.classList.remove('flex');}">
+    <div class="w-full max-w-[520px] bg-[#121210] border border-white/15 rounded-xl p-6 text-[#f4f0e8] space-y-4">
+      <div class="flex items-center justify-between gap-3">
+        <h3 id="arLandingLegalTitle" class="text-[16px] font-semibold">안내</h3>
+        <button type="button" onclick="var m=document.getElementById('arLandingLegalModal');m.classList.add('hidden');m.classList.remove('flex');" class="text-white/60 hover:text-white text-sm px-2 py-1">닫기</button>
       </div>
-      <div id="arLandingLegalBody" class="text-[12.5px] text-[#d9d0c3] leading-relaxed space-y-2 max-h-[60vh] overflow-y-auto"></div>
+      <div id="arLandingLegalBody" class="text-[13px] leading-relaxed text-[#a8a299] space-y-2.5"></div>
     </div>
   </div>
+
   <script>
     function openLandingLegal(kind) {
       var m = document.getElementById('arLandingLegalModal'), t = document.getElementById('arLandingLegalTitle'), b = document.getElementById('arLandingLegalBody');
@@ -605,11 +417,10 @@
     }
   </script>
 
-  <!-- Lenis 부드러운 관성 스크롤 + GSAP 3.12.7 + ScrollTrigger -->
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
-  <script src="/assets/landing/industries.js?v=20261120t"></script>
-  <script src="/assets/landing/landing.js?v=20261120t"></script>
+  <script src="/assets/landing/industries.js?v=20261120u"></script>
+  <script src="/assets/landing/landing.js?v=20261120u"></script>
 </body>
 </html>

@@ -1,24 +1,13 @@
-// AutoReels 모뉴멘탈 시네마 랜딩 (Lenis + GSAP 3 + ScrollTrigger + 전술 타임코드 HUD + 황금 먼지 캔버스)
+// AutoReels Editorial 3D Arc Gallery — Physics Drag/Swipe + One-Way Fullscreen Scroll Expand
 (function () {
   var INDS = window.AR_LP_INDUSTRIES || {};
-  var current = 'auto';
-  var currentCut = 0;
-  var playing = true;
-  var cutTimer = null;
-  var CUT_MS = 3400;
   var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // 해시 없는 기본 진입/새로고침 시 항상 히어로 맨 위(00:00)부터 시작
+  // 해시 없는 기본 진입 시 항상 히어로 맨 위부터 시작
   if (!location.hash) {
     try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
     window.scrollTo(0, 0);
   }
-
-  var SCENE_DIR = {
-    auto: 'auto', cafe: 'cafe', restaurant: 'restaurant', beauty: 'beauty',
-    realestate: 'realestate', academy: 'academy', clinic: 'clinic',
-    fitness: 'fitness', shop: 'shop', interior: 'interior', personal: 'cafe'
-  };
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -37,251 +26,205 @@
     return (jong === 0 || jong === 8) ? '로' : '으로';
   }
 
-  function scenePhoto(indKey, cutIdx) {
-    var dir = SCENE_DIR[indKey] || 'auto';
-    return '/assets/scenes/' + dir + '/' + ((cutIdx % 3) + 1) + '.jpg';
-  }
+  // =========================================================================
+  // 1. 5장 하이엔드 에디토리얼 3D 아크 갤러리 (마우스 드래그 + 터치 스와이프 물리 관성)
+  // =========================================================================
+  var ITEMS = [
+    {
+      idx: 0, ind: 'cafe', num: '01 / 05',
+      kicker: '01 · CAFE & ROASTERY',
+      title: '카페·디저트 — 에스프레소 크레마가 흐르는 15초',
+      img: '/assets/landing/ed-cafe.jpg',
+      aura: 'radial-gradient(ellipse 56% 48% at 50% 56%, rgba(196, 146, 86, 0.14) 0%, rgba(8, 8, 8, 0) 70%)'
+    },
+    {
+      idx: 1, ind: 'beauty', num: '02 / 05',
+      kicker: '02 · BEAUTY & RITUAL',
+      title: '미용·뷰티 — 빛과 질감이 머무는 브랜드 무드',
+      img: '/assets/landing/ed-beauty.jpg',
+      aura: 'radial-gradient(ellipse 56% 48% at 50% 56%, rgba(214, 166, 108, 0.15) 0%, rgba(8, 8, 8, 0) 70%)'
+    },
+    {
+      idx: 2, ind: 'auto', num: '03 / 05',
+      kicker: '03 · AUTOMOTIVE GALLERY',
+      title: '자동차 영업 — 전시장의 실루엣이 한 편의 릴스로',
+      img: '/assets/landing/ed-auto.jpg',
+      aura: 'radial-gradient(ellipse 56% 48% at 50% 56%, rgba(206, 184, 152, 0.12) 0%, rgba(8, 8, 8, 0) 70%)'
+    },
+    {
+      idx: 3, ind: 'restaurant', num: '04 / 05',
+      kicker: '04 · FINE DINING',
+      title: '음식점·다이닝 — 셰프의 온기와 풍미를 그대로',
+      img: '/assets/landing/ed-dining.jpg',
+      aura: 'radial-gradient(ellipse 56% 48% at 50% 56%, rgba(190, 128, 84, 0.14) 0%, rgba(8, 8, 8, 0) 70%)'
+    },
+    {
+      idx: 4, ind: 'interior', num: '05 / 05',
+      kicker: '05 · ARCHITECTURE & SPACE',
+      title: '인테리어·공간 — 오후의 빛이 완성하는 비포·애프터',
+      img: '/assets/landing/ed-interior.jpg',
+      aura: 'radial-gradient(ellipse 56% 48% at 50% 56%, rgba(212, 188, 150, 0.13) 0%, rgba(8, 8, 8, 0) 70%)'
+    }
+  ];
 
-  function buildCuts(ind) {
-    var where = ind.branchPlaceholder || ind.place || '';
-    var hook = ind.vlogDone || (ind.name + ' 프로모션');
-    var quote = ind.chatAsk || ind.cta || '';
-    var promo = ind.promoPlaceholder || ind.promise || '';
-    return [
-      { tag: '01 / 03', kicker: '01 · HOOK', hook: hook, sub: where + (quote ? ' · "' + quote + '"' : ''), tags: (ind.hashtags || []).slice(0, 3) },
-      { tag: '02 / 03', kicker: '02 · AI VOICE', hook: quote || hook, sub: ind.promise || (ind.role + ' · ' + ind.product + ' 핵심 포인트를 15초 안에 전달합니다'), tags: (ind.hashtags || []).slice(1, 5) },
-      { tag: '03 / 03', kicker: '03 · ENDING', hook: promo || (where + '에서 만나요'), sub: where + ' · ' + ind.title + ' — 연락처·로고 자동 엔딩', tags: (ind.hashtags || []).slice(0, 4) }
-    ];
-  }
+  var stageEl = document.getElementById('edArcStage');
+  var cardEls = Array.prototype.slice.call(document.querySelectorAll('.ed-arc-card'));
+  var arcPos = 2.0;      // 현재 아크 실수 위치 (0 ~ 4)
+  var arcTarget = 2.0;   // 스냅 목표 위치
+  var arcVel = 0;        // 드래그/스와이프 관성 속도
+  var isDragging = false;
+  var dragStartX = 0;
+  var dragLastX = 0;
+  var dragMoved = 0;
+  var activeIdx = 2;
+  var scrollExpandProgress = 0; // 0(아크) -> 1(풀스크린 확장)
 
-  function renderBars() {
-    var wrap = document.getElementById('landingPhoneBars');
-    if (!wrap) return;
-    wrap.querySelectorAll('.mn-bar').forEach(function (bar, i) {
-      bar.classList.remove('is-done', 'is-active', 'is-paused');
-      var fill = bar.querySelector('.mn-bar-fill');
-      if (fill) { fill.style.animation = 'none'; void fill.offsetWidth; fill.style.animation = ''; }
-      if (i < currentCut) bar.classList.add('is-done');
-      else if (i === currentCut) {
-        bar.classList.add('is-active');
-        if (!playing) bar.classList.add('is-paused');
-      }
+  function syncActiveItem(idx) {
+    var it = ITEMS[idx] || ITEMS[2];
+    activeIdx = it.idx;
+    setText('edArcNum', it.num);
+    setText('edArcTitle', it.title);
+    setText('edExpandKicker', it.kicker);
+
+    var openLink = document.getElementById('edArcOpenLink');
+    if (openLink) openLink.setAttribute('href', '/studio?ind=' + it.ind);
+    var expCta = document.getElementById('edExpandCta');
+    if (expCta) expCta.setAttribute('href', '/studio?ind=' + it.ind);
+    var expImg = document.getElementById('edExpandImg');
+    if (expImg && expImg.getAttribute('src') !== it.img) expImg.setAttribute('src', it.img);
+    var aura = document.getElementById('edHeroAura');
+    if (aura) aura.style.background = it.aura;
+
+    cardEls.forEach(function (el, i) {
+      el.classList.toggle('is-active', i === activeIdx);
     });
   }
 
-  function renderCut(ind, cutIdx) {
-    var cuts = buildCuts(ind);
-    currentCut = ((cutIdx % cuts.length) + cuts.length) % cuts.length;
-    var c = cuts[currentCut];
-    var photoUrl = scenePhoto(ind.key, currentCut);
+  function layoutArcCards() {
+    var w = window.innerWidth || 1280;
+    var isMob = w < 768;
+    var spacing = isMob ? Math.min(138, w * 0.34) : Math.min(232, w * 0.175);
+    var arcDrop = isMob ? 18 : 26;
+    var zDepth = isMob ? 72 : 118;
+    var spreadBoost = 1 + scrollExpandProgress * 0.55;
 
-    var mainImg = document.getElementById('lpMainPhoto');
-    if (mainImg && mainImg.getAttribute('src') !== photoUrl) mainImg.setAttribute('src', photoUrl);
-    var amb = document.getElementById('mnHeroAmbient');
-    if (amb) amb.style.backgroundImage = 'url("' + photoUrl + '")';
+    for (var i = 0; i < cardEls.length; i++) {
+      var el = cardEls[i];
+      var rel = i - arcPos;
+      var absRel = Math.abs(rel);
+      var x = rel * spacing * spreadBoost;
+      var y = absRel * absRel * arcDrop;
+      var z = -absRel * zDepth;
+      var rotY = -rel * (isMob ? 14 : 17);
+      var rotZ = rel * (isMob ? 6.5 : 7.5);
+      var sc = Math.max(0.72, 1 - absRel * 0.095);
+      var op = Math.max(0.18, 1 - absRel * 0.24);
 
-    setText('landingPhoneCutTag', c.tag);
-    setText('landingPhoneKicker', c.kicker);
-    setText('landingPhoneHook', c.hook);
-    setText('landingPhoneSub', c.sub);
-    var tags = document.getElementById('landingPhoneTags');
-    if (tags) {
-      tags.innerHTML = (c.tags || []).map(function (t) {
-        return '<span class="px-1.5 py-0.5 bg-black/55 border border-white/15 text-[10px] text-[#f5efe2]">#' + esc(t) + '</span>';
-      }).join('');
-    }
-    if (window.gsap && !reducedMotion) {
-      window.gsap.fromTo('#landingPhoneSlide', { y: 8, opacity: 0.35 }, { y: 0, opacity: 1, duration: 0.32, ease: 'power2.out' });
-    }
-    renderBars();
-  }
-
-  function scheduleNextCut() {
-    if (cutTimer) { clearTimeout(cutTimer); cutTimer = null; }
-    if (!playing) return;
-    cutTimer = setTimeout(function () {
-      var ind = INDS[current] || INDS.auto;
-      if (!ind) return;
-      renderCut(ind, currentCut + 1);
-      scheduleNextCut();
-    }, CUT_MS);
-  }
-
-  function syncPlayBtn() {
-    var btn = document.getElementById('landingPhonePlayBtn');
-    if (!btn) return;
-    btn.textContent = playing ? '❚❚' : '▶';
-    btn.setAttribute('aria-label', playing ? '미리보기 일시정지' : '미리보기 자동 재생');
-  }
-
-  function selectIndustry(key, opts) {
-    var ind = INDS[key] || INDS.auto;
-    if (!ind) return;
-    current = ind.key;
-    var keys = Object.keys(INDS);
-
-    var grid = document.getElementById('landingIndustryGrid');
-    if (grid) {
-      grid.innerHTML = keys.map(function (k, idx) {
-        var it = INDS[k], on = it.key === ind.key;
-        var num = (idx + 1 < 10 ? '0' : '') + (idx + 1);
-        return '<button type="button" data-ind="' + esc(it.key) + '" class="px-3 py-2.5 border text-left cursor-pointer transition-colors ' +
-          (on ? 'bg-[#e07a4f] text-[#0b0a08] border-[#e07a4f] font-bold' : 'bg-[#161310] hover:bg-[#1f1b16] text-[#f5efe2] border-white/10') + '">' +
-          '<div class="flex items-center justify-between gap-2"><span class="text-[12.5px] truncate">' + esc(it.name) + '</span><span class="font-mono text-[10px] opacity-60">' + num + '</span></div>' +
-          '<div class="text-[11px] opacity-70 truncate mt-0.5">' + esc(it.role) + ' · ' + esc(it.product) + '</div></button>';
-      }).join('');
-    }
-
-    var quick = document.getElementById('landingQuickInds');
-    if (quick) {
-      quick.innerHTML = keys.map(function (k) {
-        var it = INDS[k], on = it.key === ind.key;
-        return '<button type="button" data-ind="' + esc(it.key) + '" data-quick="1" class="mn-quick-chip' + (on ? ' is-active' : '') + '">' + esc(it.name) + '</button>';
-      }).join('');
-    }
-
-    var where = ind.branchPlaceholder || ind.place || '';
-    setText('landingPhoneBadge', ind.name);
-    setText('landingPhonePlace', where + ' · ' + ind.title);
-    setText('landingPhonePromo', ind.promoPlaceholder || '');
-    setText('landingStartIndustryBtn', ind.name + josaRo(ind.name) + ' 바로 만들기 →');
-
-    renderCut(ind, 0);
-    scheduleNextCut();
-
-    if (opts && opts.fromGrid) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }
-
-  function renderMarqueeStrip() {
-    var track = document.getElementById('lpMarqueeTrack');
-    if (!track) return;
-    var keys = Object.keys(INDS).filter(function (k) { return k !== 'personal'; });
-    var cardsHtml = keys.map(function (k) {
-      var it = INDS[k];
-      var dir = SCENE_DIR[it.key] || 'auto';
-      var photo = '/assets/scenes/' + dir + '/5.jpg';
-      var hook = it.vlogDone || (it.name + ' 릴스');
-      return '<button type="button" data-go="/studio?ind=' + esc(it.key) + '" class="lp-strip-card" aria-label="' + esc(it.name) + ' 스튜디오 열기">' +
-        '<img src="' + photo + '" alt="" loading="lazy" />' +
-        '<div class="lp-strip-scrim"></div>' +
-        '<div class="lp-strip-meta"><span>' + esc(it.name) + '</span><strong>' + esc(hook) + '</strong></div>' +
-        '</button>';
-    }).join('');
-    track.innerHTML = cardsHtml + cardsHtml;
-  }
-
-  // 히어로 황금빛 먼지 입자 캔버스 (theinfinitysocks volumetric dust motes)
-  (function initDustCanvas() {
-    var c = document.getElementById('mnDustCanvas');
-    if (!c || reducedMotion) return;
-    var ctx = c.getContext('2d');
-    if (!ctx) return;
-    var motes = Array.from({ length: 58 }, function () {
-      return {
-        x: Math.random(), y: Math.random(),
-        r: 0.7 + Math.random() * 1.9,
-        vx: (Math.random() - 0.5) * 0.00022,
-        vy: -0.00018 - Math.random() * 0.00028,
-        a: 0.15 + Math.random() * 0.5
-      };
-    });
-    function resize() {
-      var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      c.width = Math.max(1, Math.floor(c.clientWidth * dpr));
-      c.height = Math.max(1, Math.floor(c.clientHeight * dpr));
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-    resize();
-    window.addEventListener('resize', resize, { passive: true });
-    function tick() {
-      var w = c.clientWidth || 1, h = c.clientHeight || 1;
-      ctx.clearRect(0, 0, w, h);
-      for (var i = 0; i < motes.length; i++) {
-        var m = motes[i];
-        m.x += m.vx; m.y += m.vy;
-        if (m.y < -0.02) { m.y = 1.02; m.x = Math.random(); }
-        if (m.x < -0.02) m.x = 1.02;
-        if (m.x > 1.02) m.x = -0.02;
-        ctx.fillStyle = 'rgba(245, 226, 196, ' + m.a.toFixed(2) + ')';
-        ctx.beginPath();
-        ctx.arc(m.x * w, m.y * h, m.r, 0, Math.PI * 2);
-        ctx.fill();
+      // 스크롤 풀스크린 확장 시 좌우 카드들은 자연스럽게 바깥으로 페이드아웃
+      if (scrollExpandProgress > 0.02 && i !== activeIdx) {
+        op *= Math.max(0, 1 - scrollExpandProgress * 2.2);
       }
-      requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  })();
 
-  // 히어로 5장 부채꼴 3D 덱 마우스 틸트 (GSAP quickTo 부드러운 관성 보간)
-  var fanDeckEl = document.getElementById('mnFanDeck');
-  var bgWmEl = document.getElementById('mnBgWatermark');
-  if (!reducedMotion && fanDeckEl && window.gsap) {
-    var deckRotY = window.gsap.quickTo(fanDeckEl, 'rotationY', { duration: 0.85, ease: 'power3.out' });
-    var deckRotX = window.gsap.quickTo(fanDeckEl, 'rotationX', { duration: 0.85, ease: 'power3.out' });
-    var wmX = bgWmEl ? window.gsap.quickTo(bgWmEl, 'x', { duration: 1.0, ease: 'power3.out' }) : null;
-    window.addEventListener('pointermove', function (e) {
-      if (e.pointerType === 'touch' || window.scrollY > window.innerHeight * 2.6) return;
-      var nx = (e.clientX / Math.max(1, window.innerWidth)) * 2 - 1;
-      var ny = (e.clientY / Math.max(1, window.innerHeight)) * 2 - 1;
-      deckRotY(nx * 6.5);
-      deckRotX(-ny * 4.0);
-      if (wmX) wmX(-nx * 24);
-    }, { passive: true });
+      el.style.zIndex = String(10 - Math.round(absRel * 2));
+      el.style.opacity = op.toFixed(3);
+      el.style.transform =
+        'translate3d(' + x.toFixed(1) + 'px, ' + y.toFixed(1) + 'px, ' + z.toFixed(1) + 'px) ' +
+        'rotateY(' + rotY.toFixed(2) + 'deg) rotateZ(' + rotZ.toFixed(2) + 'deg) scale(' + sc.toFixed(3) + ')';
+    }
   }
 
-  // 우측 하단 전술 타임코드 HUD (24틱 + 실시간 타임코드 + 라이트 섹션 자동 극성 반전)
-  var hudTicksEl = document.getElementById('mnHudTicks');
-  var hudTickNodes = [];
-  if (hudTicksEl) {
-    hudTicksEl.innerHTML = Array.from({ length: 24 }, function () { return '<i></i>'; }).join('');
-    hudTickNodes = hudTicksEl.querySelectorAll('i');
-  }
-  var scrollBar = document.getElementById('mnScrollBar');
-  var navEl = document.getElementById('mnNav');
-  var hudClockEl = document.getElementById('mnHudClock');
-  var soundPillEl = document.getElementById('mnAmbientSoundBtn');
-  var chapterEls = document.querySelectorAll('[data-chapter]');
-
-  function updateTelemetry() {
-    var docH = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-    var p = clamp(window.scrollY / docH, 0, 1);
-    if (scrollBar) scrollBar.style.width = (p * 100).toFixed(2) + '%';
-
-    // 00:00 ~ 15:00 (초:프레임)
-    var totalSec = p * 15;
-    var sec = Math.floor(totalSec);
-    var frm = Math.floor((totalSec - sec) * 60);
-    setText('mnHudTime', (sec < 10 ? '0' : '') + sec + ':' + (frm < 10 ? '0' : '') + frm);
-
-    var litCount = Math.round(p * 24);
-    for (var i = 0; i < hudTickNodes.length; i++) {
-      hudTickNodes[i].classList.toggle('is-lit', i < litCount);
-    }
-
-    // 현재 챕터 및 라이트 극성 반전 체크
-    var midY = window.innerHeight * 0.48;
-    var isLight = false;
-    chapterEls.forEach(function (secEl) {
-      var r = secEl.getBoundingClientRect();
-      if (r.top <= midY && r.bottom >= midY) {
-        setText('mnHudChapter', secEl.getAttribute('data-chapter') + ' / 06');
-        setText('mnHudLabel', secEl.getAttribute('data-chapter-label') || '');
-        if (secEl.hasAttribute('data-light-section')) isLight = true;
+  function tickArc() {
+    if (!isDragging) {
+      if (Math.abs(arcVel) > 0.0012) {
+        arcPos += arcVel;
+        arcVel *= 0.90;
+        if (arcPos < -0.25) { arcPos = -0.25; arcVel = 0; }
+        if (arcPos > ITEMS.length - 0.75) { arcPos = ITEMS.length - 0.75; arcVel = 0; }
+        arcTarget = clamp(Math.round(arcPos), 0, ITEMS.length - 1);
+      } else {
+        arcVel = 0;
+        var diff = arcTarget - arcPos;
+        if (Math.abs(diff) > 0.0008) {
+          arcPos += diff * 0.13;
+        } else {
+          arcPos = arcTarget;
+        }
       }
-    });
-    if (navEl) navEl.classList.toggle('is-light', isLight);
-    if (hudClockEl) hudClockEl.classList.toggle('is-light', isLight);
-    if (soundPillEl) soundPillEl.classList.toggle('is-light', isLight);
+    }
+
+    var nearest = clamp(Math.round(arcPos), 0, ITEMS.length - 1);
+    if (nearest !== activeIdx) syncActiveItem(nearest);
+    layoutArcCards();
+    requestAnimationFrame(tickArc);
   }
-  window.addEventListener('scroll', updateTelemetry, { passive: true });
-  window.addEventListener('resize', updateTelemetry, { passive: true });
+
+  if (stageEl && cardEls.length) {
+    syncActiveItem(2);
+    layoutArcCards();
+    requestAnimationFrame(tickArc);
+
+    stageEl.addEventListener('pointerdown', function (e) {
+      if (scrollExpandProgress > 0.2) return;
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragLastX = e.clientX;
+      dragMoved = 0;
+      arcVel = 0;
+      stageEl.classList.add('is-dragging');
+      try { stageEl.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+
+    stageEl.addEventListener('pointermove', function (e) {
+      if (!isDragging) return;
+      var dx = e.clientX - dragLastX;
+      dragLastX = e.clientX;
+      dragMoved += Math.abs(dx);
+      var divisor = window.innerWidth < 768 ? 165 : 230;
+      var delta = -dx / divisor;
+      arcPos = clamp(arcPos + delta, -0.35, ITEMS.length - 0.65);
+      arcVel = delta * 0.85;
+      arcTarget = clamp(Math.round(arcPos), 0, ITEMS.length - 1);
+    });
+
+    function endDrag(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      stageEl.classList.remove('is-dragging');
+      try { if (e && e.pointerId != null) stageEl.releasePointerCapture(e.pointerId); } catch (err) {}
+      if (Math.abs(arcVel) > 0.03) {
+        arcTarget = clamp(Math.round(arcPos + arcVel * 4.5), 0, ITEMS.length - 1);
+      } else {
+        arcTarget = clamp(Math.round(arcPos), 0, ITEMS.length - 1);
+      }
+    }
+    stageEl.addEventListener('pointerup', endDrag);
+    stageEl.addEventListener('pointercancel', endDrag);
+
+    // 카드 클릭 시 해당 카드로 부드럽게 회전 (드래그 직후 오작동 방지)
+    cardEls.forEach(function (el, idx) {
+      el.addEventListener('click', function () {
+        if (dragMoved > 10 || scrollExpandProgress > 0.2) return;
+        arcVel = 0;
+        arcTarget = idx;
+      });
+    });
+
+    var prevBtn = document.getElementById('edArcPrev');
+    var nextBtn = document.getElementById('edArcNext');
+    if (prevBtn) prevBtn.addEventListener('click', function () { arcVel = 0; arcTarget = clamp(activeIdx - 1, 0, ITEMS.length - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function () { arcVel = 0; arcTarget = clamp(activeIdx + 1, 0, ITEMS.length - 1); });
+
+    window.addEventListener('keydown', function (e) {
+      if (window.scrollY > window.innerHeight * 0.5) return;
+      if (e.key === 'ArrowLeft') { arcVel = 0; arcTarget = clamp(activeIdx - 1, 0, ITEMS.length - 1); }
+      if (e.key === 'ArrowRight') { arcVel = 0; arcTarget = clamp(activeIdx + 1, 0, ITEMS.length - 1); }
+    });
+  }
 
   // =========================================================================
-  // Lenis 관성 스크롤 + GSAP 3 + ScrollTrigger (핀 가로 스크럽 · 텍스트 필 · 3D 언폴드)
+  // 2. Lenis + GSAP 3 + ScrollTrigger (단방향 풀스크린 시네마 익스팬드 — PC & 모바일)
   // =========================================================================
-  function initMotionEngine() {
+  function initMotion() {
     var gsap = window.gsap;
     var ST = window.ScrollTrigger;
     if (gsap && ST) {
@@ -289,7 +232,7 @@
       ST.config({ ignoreMobileResize: true });
     }
 
-    // Lenis + GSAP Ticker 단일 프레임 루프 동기화 (쫀쫀하고 즉각적인 60fps 관성 스크롤)
+    // 데스크톱 관성 스크롤 (쫀쫀한 반응성)
     if (window.Lenis && !reducedMotion && window.innerWidth >= 960) {
       var lenis = new window.Lenis({
         duration: 1.0,
@@ -298,13 +241,10 @@
         wheelMultiplier: 1.0
       });
       if (ST) lenis.on('scroll', ST.update);
-      lenis.on('scroll', updateTelemetry);
+      lenis.on('scroll', syncNavPolarity);
       if (gsap && gsap.ticker) {
         gsap.ticker.add(function (time) { lenis.raf(time * 1000); });
         gsap.ticker.lagSmoothing(0);
-      } else {
-        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
-        requestAnimationFrame(raf);
       }
     }
 
@@ -313,142 +253,48 @@
       document.fonts.ready.then(function () { ST.refresh(); }).catch(function () {});
     }
 
-    // 1) 히어로 5장 부채꼴 3D 덱 — 데스크톱 + 모바일 모두 GSAP Pinned 3막 시네마틱 스크롤 구동!
-    gsap.from('.mn-fan-act.is-visible', { y: 16, opacity: 0, duration: 0.7, ease: 'power3.out', clearProps: 'transform,opacity' });
-    gsap.from('.mn-hero-reel', { scale: 0.92, opacity: 0, duration: 0.75, delay: 0.08, ease: 'power3.out', clearProps: 'transform,opacity' });
-
-    if (document.getElementById('mnHero')) {
-      var isMob = window.innerWidth < 960;
-      var actNodes = [
-        document.getElementById('mnAct1'),
-        document.getElementById('mnAct2'),
-        document.getElementById('mnAct3')
-      ];
-      var lastHeroAct = 0;
-      var lastHeroCut = -1;
-
-      function setHeroAct(idx) {
-        if (idx === lastHeroAct) return;
-        lastHeroAct = idx;
-        actNodes.forEach(function (el, i) {
-          if (!el) return;
-          var on = i === idx;
-          el.classList.toggle('is-visible', on);
-          el.setAttribute('aria-hidden', on ? 'false' : 'true');
-        });
-      }
-
-      // 반응형 5장 부채꼴 3D 궤도 좌표 (데스크톱 & 모바일 각각 화면폭에 최적화)
-      var g = isMob ? {
-        sL2: { x: -124, y: 30, z: -100, ry: 20, rz: -15, sc: 0.68, op: 0.72 },
-        sL1: { x: -70,  y: 12, z: -45,  ry: 11, rz: -7.5, sc: 0.80, op: 0.88 },
-        eL2: { x: -178, y: 52, z: -80,  ry: 28, rz: -24, sc: 0.74, op: 0.88 },
-        eL1: { x: -108, y: 20, z: -30,  ry: 16, rz: -13, sc: 0.86, op: 0.96 },
-        wL2: { x: -290, y: 78, z: -180, ry: 52, rz: -36, sc: 0.56, op: 0.06 },
-        wL1: { x: -210, y: 42, z: -120, ry: 38, rz: -24, sc: 0.66, op: 0.16 },
-        bL2: { x: -148, y: 38, z: -90,  ry: 22, rz: -18, sc: 0.72, op: 0.78 },
-        bL1: { x: -86,  y: 15, z: -40,  ry: 13, rz: -9,  sc: 0.84, op: 0.90 },
-        cZoom: 1.12, cY: -10
-      } : {
-        sL2: { x: -290, y: 34, z: -130, ry: 22, rz: -14, sc: 0.82, op: 0.82 },
-        sL1: { x: -160, y: 12, z: -55,  ry: 12, rz: -7,  sc: 0.91, op: 0.94 },
-        eL2: { x: -455, y: 72, z: -90,  ry: 32, rz: -24, sc: 0.88, op: 0.94 },
-        eL1: { x: -252, y: 26, z: -30,  ry: 18, rz: -12, sc: 0.96, op: 1.00 },
-        wL2: { x: -690, y: 110, z: -220, ry: 58, rz: -36, sc: 0.64, op: 0.06 },
-        wL1: { x: -480, y: 54, z: -150, ry: 42, rz: -23, sc: 0.74, op: 0.18 },
-        bL2: { x: -375, y: 48, z: -110, ry: 26, rz: -18, sc: 0.85, op: 0.86 },
-        bL1: { x: -208, y: 18, z: -45,  ry: 14, rz: -9,  sc: 0.93, op: 0.95 },
-        cZoom: 1.20, cY: -12
-      };
-
-      // 초기 5장 부채꼴 3D 포즈 등록
-      gsap.set('#mnFanDeck', { rotationX: 8 });
-      gsap.set('#mnFanL2', { x: g.sL2.x, y: g.sL2.y, z: g.sL2.z, rotationY: g.sL2.ry, rotationZ: g.sL2.rz, scale: g.sL2.sc, opacity: g.sL2.op });
-      gsap.set('#mnFanL1', { x: g.sL1.x, y: g.sL1.y, z: g.sL1.z, rotationY: g.sL1.ry, rotationZ: g.sL1.rz, scale: g.sL1.sc, opacity: g.sL1.op });
-      gsap.set('#mnFanR1', { x: -g.sL1.x, y: g.sL1.y, z: g.sL1.z, rotationY: -g.sL1.ry, rotationZ: -g.sL1.rz, scale: g.sL1.sc, opacity: g.sL1.op });
-      gsap.set('#mnFanR2', { x: -g.sL2.x, y: g.sL2.y, z: g.sL2.z, rotationY: -g.sL2.ry, rotationZ: -g.sL2.rz, scale: g.sL2.sc, opacity: g.sL2.op });
-      gsap.set('#landingPhoneStage', { x: 0, y: 0, z: 40, scale: 1, opacity: 1 });
-      gsap.set('#mnHudLeft', { x: -36, opacity: 0 });
-      gsap.set('#mnHudRight', { x: 36, opacity: 0 });
-      gsap.set('#mnMobileHud', { y: 14, opacity: 0 });
-
-      var mobHudTexts = [
-        'LINK REMIX · 컷 리듬 자동 분석',
-        'AI VOICE · 747+ 스타일 · 오리지널 BGM',
-        '9:16 1080p MP4 · 매장 엔딩 완성'
-      ];
+    // CH 01 히어로 단방향 풀스크린 시네마 익스팬드 (PC & 모바일 동일 작동, 되돌림 ZERO)
+    var heroEl = document.getElementById('edHero');
+    var expLayer = document.getElementById('edExpandLayer');
+    if (heroEl && expLayer) {
+      var isMob = window.innerWidth < 768;
+      var startInset = isMob ? 'inset(26% 22% 16% 22% round 14px)' : 'inset(23% 39% 16% 39% round 14px)';
+      gsap.set(expLayer, { clipPath: startInset, opacity: 0 });
+      gsap.set('#edExpandImg', { scale: 1.12 });
+      gsap.set('#edExpandCopy', { opacity: 0, y: 28 });
 
       var heroTl = gsap.timeline({
         scrollTrigger: {
-          trigger: '#mnHero',
+          trigger: '#edHero',
           start: 'top top',
-          end: isMob ? '+=185%' : '+=220%',
+          end: isMob ? '+=135%' : '+=155%',
           pin: true,
-          scrub: isMob ? 0.22 : 0.38,
+          scrub: isMob ? 0.22 : 0.35,
           anticipatePin: 1,
-          invalidateOnRefresh: true,
           onUpdate: function (self) {
-            var p = self.progress;
-            var act = p < 0.28 ? 0 : (p < 0.64 ? 1 : 2);
-            setHeroAct(act);
-            if (p > 0.14 && p < 0.96) {
-              var cut = p < 0.42 ? 0 : (p < 0.70 ? 1 : 2);
-              if (cut !== lastHeroCut) {
-                lastHeroCut = cut;
-                var ind = INDS[current] || INDS.auto;
-                if (ind && cut !== currentCut) {
-                  renderCut(ind, cut);
-                  scheduleNextCut();
-                }
-                setText('mnMobileHudText', mobHudTexts[cut] || mobHudTexts[0]);
-              }
-            }
-            var cue = document.getElementById('mnScrollCue');
-            if (cue) {
-              cue.textContent = p < 0.28 ? 'SCROLL TO DIRECT · 01 / 03'
-                : (p < 0.64 ? 'FAN EXPAND · 02 / 03' : 'MASTER FOCUS · 03 / 03');
-            }
+            scrollExpandProgress = self.progress;
+            expLayer.classList.toggle('is-interactive', self.progress > 0.48);
           }
         }
       });
 
-      // Stage 1 (0 -> 0.42): 웅장한 부채꼴 대개방 + 3D 덱 정면 틸트 + 시네마 카메라 돌리-인 + 2.39:1 레터박스
       heroTl
-        .to('#mnHeroKvImg', { scale: 1.28, yPercent: 4, ease: 'none', duration: 1 }, 0)
-        .to('#mnBgWatermark', { scale: 1.20, opacity: 0.16, ease: 'power1.inOut', duration: 0.5 }, 0)
-        .to('#mnFanDeck', { rotationX: 0, ease: 'power2.out', duration: 0.42 }, 0)
-        .to('#mnHeroBarTop', { yPercent: 105, ease: 'power2.inOut', duration: 0.28 }, 0.06)
-        .to('#mnHeroBarBot', { yPercent: -105, ease: 'power2.inOut', duration: 0.28 }, 0.06)
-        .to('.mn-fan-bottom', { opacity: 0, y: 12, ease: 'power2.out', duration: 0.20 }, 0.06)
-        .to('#mnFanL2', { x: g.eL2.x, y: g.eL2.y, z: g.eL2.z, rotationY: g.eL2.ry, rotationZ: g.eL2.rz, scale: g.eL2.sc, opacity: g.eL2.op, ease: 'power2.out', duration: 0.42 }, 0)
-        .to('#mnFanL1', { x: g.eL1.x, y: g.eL1.y, z: g.eL1.z, rotationY: g.eL1.ry, rotationZ: g.eL1.rz, scale: g.eL1.sc, opacity: g.eL1.op, ease: 'power2.out', duration: 0.42 }, 0)
-        .to('#mnFanR1', { x: -g.eL1.x, y: g.eL1.y, z: g.eL1.z, rotationY: -g.eL1.ry, rotationZ: -g.eL1.rz, scale: g.eL1.sc, opacity: g.eL1.op, ease: 'power2.out', duration: 0.42 }, 0)
-        .to('#mnFanR2', { x: -g.eL2.x, y: g.eL2.y, z: g.eL2.z, rotationY: -g.eL2.ry, rotationZ: -g.eL2.rz, scale: g.eL2.sc, opacity: g.eL2.op, ease: 'power2.out', duration: 0.42 }, 0)
-        // Stage 2 (0.42 -> 0.84): 좌우 4장 3D 윙 스윕(카메라 양옆으로 완전히 퇴장, 되돌아오지 않음) + 중앙 마스터 릴스 IMAX 포커스 + HUD 등장
-        .to('#mnFanL2', { x: g.wL2.x, y: g.wL2.y, z: g.wL2.z, rotationY: g.wL2.ry, rotationZ: g.wL2.rz, scale: g.wL2.sc, opacity: 0, ease: 'power2.in', duration: 0.38 }, 0.42)
-        .to('#mnFanL1', { x: g.wL1.x, y: g.wL1.y, z: g.wL1.z, rotationY: g.wL1.ry, rotationZ: g.wL1.rz, scale: g.wL1.sc, opacity: 0, ease: 'power2.in', duration: 0.38 }, 0.42)
-        .to('#mnFanR1', { x: -g.wL1.x, y: g.wL1.y, z: g.wL1.z, rotationY: -g.wL1.ry, rotationZ: -g.wL1.rz, scale: g.wL1.sc, opacity: 0, ease: 'power2.in', duration: 0.38 }, 0.42)
-        .to('#mnFanR2', { x: -g.wL2.x, y: g.wL2.y, z: g.wL2.z, rotationY: -g.wL2.ry, rotationZ: -g.wL2.rz, scale: g.wL2.sc, opacity: 0, ease: 'power2.in', duration: 0.38 }, 0.42)
-        .to('#landingPhoneStage', { scale: g.cZoom, y: g.cY, z: 120, ease: 'power2.inOut', duration: 0.42 }, 0.42)
-        .to('#mnHudLeft', { x: 0, opacity: 1, ease: 'power2.out', duration: 0.24 }, 0.48)
-        .to('#mnHudRight', { x: 0, opacity: 1, ease: 'power2.out', duration: 0.24 }, 0.48)
-        .to('#mnMobileHud', { y: 0, opacity: 1, ease: 'power2.out', duration: 0.24 }, 0.48)
-        // Stage 3 (0.84 -> 1.0): 되돌림 없이 정방향 시네마 리졸브 -> 레터박스 오픈 & CH 02로 자연스럽게 연결
-        .to('#mnHudLeft', { opacity: 0, y: -14, ease: 'power2.in', duration: 0.16 }, 0.84)
-        .to('#mnHudRight', { opacity: 0, y: -14, ease: 'power2.in', duration: 0.16 }, 0.84)
-        .to('#mnMobileHud', { opacity: 0, y: -10, ease: 'power2.in', duration: 0.16 }, 0.84)
-        .to('#mnHeroBarTop', { yPercent: 0, ease: 'power2.inOut', duration: 0.16 }, 0.84)
-        .to('#mnHeroBarBot', { yPercent: 0, ease: 'power2.inOut', duration: 0.16 }, 0.84);
+        .to('#edHeroHeader', { y: -36, opacity: 0, ease: 'power2.in', duration: 0.32 }, 0)
+        .to('#edHeroFooter', { y: 24, opacity: 0, ease: 'power2.in', duration: 0.28 }, 0)
+        .to(expLayer, { opacity: 1, ease: 'power1.out', duration: 0.14 }, 0.06)
+        .to(expLayer, { clipPath: 'inset(0% 0% 0% 0% round 0px)', ease: 'power2.inOut', duration: 0.52 }, 0.10)
+        .to('#edExpandImg', { scale: 1.0, ease: 'power2.out', duration: 0.65 }, 0.10)
+        .to('#edExpandCopy', { opacity: 1, y: 0, ease: 'power2.out', duration: 0.32 }, 0.56);
     }
 
-    // 2) CH 02 성명문 스크롤 컬러 필 (한 구절씩 어두움 -> 크림/테라코타 점등)
-    var spans = document.querySelectorAll('#mnScrubText span');
+    // CH 02 매니페스토 구절별 스크롤 점등
+    var spans = document.querySelectorAll('#edManifesto span');
     if (spans.length) {
       ST.create({
-        trigger: '#mnStatement',
-        start: 'top 78%',
+        trigger: '#edManifesto',
+        start: 'top 80%',
         end: 'bottom 45%',
-        scrub: 0.4,
+        scrub: 0.3,
         onUpdate: function (self) {
           var litIdx = Math.floor(self.progress * (spans.length + 0.5));
           spans.forEach(function (sp, idx) { sp.classList.toggle('is-lit', idx <= litIdx); });
@@ -456,82 +302,62 @@
       });
     }
 
-    // 3) CH 02 핀 고정 가로 스크럽 4대 엔진 (데스크톱 >= 960px)
-    var hpinTrack = document.getElementById('mnHpinTrack');
-    if (hpinTrack && window.innerWidth >= 960) {
-      gsap.to(hpinTrack, {
-        x: function () { return -(hpinTrack.scrollWidth - window.innerWidth + 80); },
-        ease: 'none',
-        scrollTrigger: {
-          trigger: '#mnPipeline',
-          start: 'top 14%',
-          end: function () { return '+=' + Math.max(900, hpinTrack.scrollWidth - window.innerWidth); },
-          pin: true,
-          scrub: 1.2,
-          invalidateOnRefresh: true
-        }
-      });
-    }
-
-    // 4) CH 03 실제 앱 MacBook Pro + iPhone 3D 언폴드
-    if (document.getElementById('lp3dUnfoldRig')) {
-      gsap.fromTo('#lp3dUnfoldRig',
-        { rotateX: 15, scale: 0.93, y: 24 },
-        {
-          rotateX: 0, scale: 1, y: 0, ease: 'none',
-          scrollTrigger: { trigger: '#lp3dDeviceStage', start: 'top 90%', end: 'top 30%', scrub: 1.1 }
-        }
-      );
-    }
-
-    // 5) CH 04 필름 스트립 Velocity Skew
-    var marqueeTrack = document.getElementById('lpMarqueeTrack');
-    if (marqueeTrack) {
-      var skewProxy = { skew: 0 };
-      var skewSetter = gsap.quickSetter(marqueeTrack, 'skewX', 'deg');
-      ST.create({
-        trigger: '#mnGallery',
-        start: 'top bottom',
-        end: 'bottom top',
-        onUpdate: function (self) {
-          var v = clamp(self.getVelocity() / -340, -6, 6);
-          if (Math.abs(v) > Math.abs(skewProxy.skew)) {
-            skewProxy.skew = v;
-            gsap.to(skewProxy, {
-              skew: 0, duration: 0.65, ease: 'power3.out', overwrite: true,
-              onUpdate: function () { skewSetter(skewProxy.skew); }
-            });
-          }
-        }
-      });
-    }
-
-    // 6) CH 05 웜 샌드 피날레 요금제 스태거
-    document.querySelectorAll('.mn-gsap-group').forEach(function (g) {
-      var items = g.querySelectorAll('.mn-gsap-item');
-      if (!items.length) return;
-      gsap.from(items, {
-        y: 28, opacity: 0, duration: 0.65, stagger: 0.1, ease: 'power2.out', clearProps: 'transform,opacity',
-        scrollTrigger: { trigger: g, start: 'top 84%', once: true }
+    // CH 02 4대 엔진 & 섹션 리빌
+    gsap.utils.toArray('.ed-reveal').forEach(function (el, idx) {
+      gsap.from(el, {
+        y: 24, opacity: 0, duration: 0.7, delay: (idx % 4) * 0.06, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 88%', once: true }
       });
     });
+
+    // CH 03 맥북 + 아이폰 3D 언폴드
+    var hwStage = document.getElementById('edHardwareStage');
+    if (hwStage) {
+      gsap.fromTo(hwStage,
+        { rotateX: 12, y: 32, opacity: 0.7 },
+        { rotateX: 0, y: 0, opacity: 1, ease: 'none', scrollTrigger: { trigger: hwStage, start: 'top 86%', end: 'top 32%', scrub: 0.6 } }
+      );
+    }
   }
 
-  // 실제 앱 3단계 탭 전환
+  // 상단 네비게이션 라이트/다크 자동 극성 반전
+  var navEl = document.getElementById('edNav');
+  var lightZoneEl = document.getElementById('edLightZone');
+  function syncNavPolarity() {
+    if (!navEl || !lightZoneEl) return;
+    var r = lightZoneEl.getBoundingClientRect();
+    var isLight = r.top <= 56 && r.bottom >= 56;
+    navEl.classList.toggle('is-light', isLight);
+  }
+  window.addEventListener('scroll', syncNavPolarity, { passive: true });
+  window.addEventListener('resize', syncNavPolarity, { passive: true });
+
+  // =========================================================================
+  // 3. 실제 /studio 화면 탭 전환
+  // =========================================================================
   var APP_VIEWS = {
-    main: { desktop: '/assets/landing/studio-desktop-main.jpg', mobile: '/assets/landing/studio-mobile-main.jpg', caption: '01 · 실시간 9:16 미리보기 · 상단 컷 빠른 점프 바 · AI 대본 다시 쓰기' },
-    design: { desktop: '/assets/landing/studio-desktop-design.jpg', mobile: '/assets/landing/studio-mobile-main.jpg', caption: '02 · 747종 디자인 스타일 서랍 · 내 스타일 만들기 · 지금 대본에 어울리는 자동 추천' },
-    edit: { desktop: '/assets/landing/studio-desktop-design.jpg', mobile: '/assets/landing/studio-mobile-cutedit.jpg', caption: '03 · 모바일 1컷 세부 편집 · 자막 직접 수정·드래그 · 폰트·색상·전환 즉시 적용' }
+    edit: {
+      desktop: '/assets/landing/studio-desktop-main.jpg',
+      mobile: '/assets/landing/studio-mobile-main.jpg',
+      caption: '주제 선택부터 대본·사진 배치·실시간 9:16 미리보기까지 한 화면에서 작업합니다.'
+    },
+    design: {
+      desktop: '/assets/landing/studio-desktop-design.jpg',
+      mobile: '/assets/landing/studio-mobile-main.jpg',
+      caption: '747종 스타일 프리셋과 나만의 브랜드 색·폰트 조합을 즉시 적용합니다.'
+    },
+    cutedit: {
+      desktop: '/assets/landing/studio-desktop-main.jpg',
+      mobile: '/assets/landing/studio-mobile-cutedit.jpg',
+      caption: '모바일에서도 컷별 이동·사진 교체·자막 편집과 1080p MP4 저장까지 바로 이어집니다.'
+    }
   };
-  var appTabs = document.querySelectorAll('.lp-app-tab[data-app-view]');
-  appTabs.forEach(function (tab) {
-    tab.addEventListener('click', function () {
-      var v = APP_VIEWS[tab.getAttribute('data-app-view')] || APP_VIEWS.main;
-      appTabs.forEach(function (b) {
-        var on = b === tab;
-        b.classList.toggle('is-active', on);
-        b.setAttribute('aria-selected', on ? 'true' : 'false');
-      });
+  document.querySelectorAll('[data-app-view]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var k = btn.getAttribute('data-app-view');
+      var v = APP_VIEWS[k];
+      if (!v) return;
+      document.querySelectorAll('[data-app-view]').forEach(function (b) { b.classList.toggle('is-active', b === btn); });
       var dImg = document.getElementById('lpAppDesktopImg');
       var mImg = document.getElementById('lpAppMobileImg');
       if (dImg) dImg.setAttribute('src', v.desktop);
@@ -540,102 +366,75 @@
     });
   });
 
-  // 오리지널 BGM 미리듣기 + 좌측 하단 글로벌 시네마 사운드 토글 공유
+  // =========================================================================
+  // 4. 11개 업종 선택 & 4곡 오리지널 BGM 미리듣기
+  // =========================================================================
+  var selectedInd = 'auto';
+  function renderIndustryGrid() {
+    var grid = document.getElementById('edIndustryGrid');
+    if (!grid) return;
+    var keys = Object.keys(INDS);
+    if (!keys.length) return;
+    grid.innerHTML = keys.map(function (k) {
+      var it = INDS[k];
+      var on = it.key === selectedInd;
+      return '<button type="button" data-ind="' + esc(it.key) + '" class="ed-ind-chip' + (on ? ' is-active' : '') + '">' + esc(it.name) + '</button>';
+    }).join('');
+    var cur = INDS[selectedInd] || INDS.auto;
+    var btn = document.getElementById('edStartIndustryBtn');
+    if (btn && cur) {
+      btn.setAttribute('data-go', '/studio?ind=' + cur.key);
+      btn.textContent = cur.name + josaRo(cur.name) + ' 시작하기 →';
+    }
+  }
+  renderIndustryGrid();
+
   var bgmAudio = null;
   var playingBgmBtn = null;
-  var ambientOn = false;
-  var bgmStatusEl = document.getElementById('lpBgmNowStatus');
-
-  function syncAmbientBtn(on, label) {
-    ambientOn = on;
-    if (soundPillEl) soundPillEl.classList.toggle('is-on', on);
-    setText('mnAmbientSoundLabel', on ? (label || 'SOUND ON') : 'SOUND OFF');
-  }
-  function stopAllBgm() {
-    if (bgmAudio) { try { bgmAudio.pause(); } catch (e) {} }
+  function stopBgm() {
+    if (bgmAudio) { try { bgmAudio.pause(); bgmAudio.currentTime = 0; } catch (e) {} }
     if (playingBgmBtn) {
       playingBgmBtn.classList.remove('is-playing');
-      var ic = playingBgmBtn.querySelector('.mn-bgm-btn');
-      if (ic) ic.textContent = '▶';
+      var pl = playingBgmBtn.querySelector('.ed-bgm-play');
+      if (pl) pl.textContent = 'PLAY';
       playingBgmBtn = null;
     }
-    if (bgmStatusEl) bgmStatusEl.textContent = 'READY';
-    syncAmbientBtn(false);
-  }
-  if (soundPillEl) {
-    soundPillEl.addEventListener('click', function () {
-      if (ambientOn) { stopAllBgm(); return; }
-      stopAllBgm();
-      if (!bgmAudio) { bgmAudio = new Audio(); bgmAudio.loop = true; bgmAudio.volume = 0.55; }
-      bgmAudio.src = '/assets/bgm/pack/cinema.mp3';
-      syncAmbientBtn(true, 'CINEMA ON');
-      bgmAudio.play().catch(function () {});
-    });
-  }
-  document.querySelectorAll('#lpBgmList .mn-bgm-row').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var src = btn.getAttribute('data-bgm-src');
-      var name = btn.getAttribute('data-bgm-name') || 'BGM';
-      if (playingBgmBtn === btn) { stopAllBgm(); return; }
-      stopAllBgm();
-      if (!bgmAudio) { bgmAudio = new Audio(); bgmAudio.loop = true; bgmAudio.volume = 0.6; }
-      bgmAudio.src = src;
-      playingBgmBtn = btn;
-      btn.classList.add('is-playing');
-      var ic = btn.querySelector('.mn-bgm-btn');
-      if (ic) ic.textContent = '❚❚';
-      if (bgmStatusEl) bgmStatusEl.textContent = 'PLAYING · ' + name;
-      syncAmbientBtn(true, 'PLAYING');
-      bgmAudio.play().catch(function () {});
-    });
-  });
-
-  // 메인 릴스 클릭/키보드 -> 다음 컷
-  var mainReelEl = document.getElementById('landingPhoneStage');
-  if (mainReelEl) {
-    mainReelEl.addEventListener('click', function (e) {
-      if (e.target && e.target.closest && e.target.closest('#landingPhonePlayBtn')) return;
-      var ind = INDS[current] || INDS.auto;
-      if (!ind) return;
-      renderCut(ind, currentCut + 1);
-      scheduleNextCut();
-    });
-    mainReelEl.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        var ind = INDS[current] || INDS.auto;
-        if (!ind) return;
-        renderCut(ind, currentCut + 1);
-        scheduleNextCut();
-      }
-    });
-  }
-  var playBtn = document.getElementById('landingPhonePlayBtn');
-  if (playBtn) {
-    playBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      playing = !playing;
-      syncPlayBtn();
-      renderBars();
-      scheduleNextCut();
-    });
   }
 
   document.addEventListener('click', function (e) {
-    var t = e.target.closest && e.target.closest('[data-ind],[data-go],[data-go-ind]');
-    if (!t) return;
-    if (t.hasAttribute('data-ind')) {
-      selectIndustry(t.getAttribute('data-ind'), { fromGrid: !t.hasAttribute('data-quick') });
+    var bgmBtn = e.target.closest('[data-bgm-src]');
+    if (bgmBtn) {
+      var src = bgmBtn.getAttribute('data-bgm-src');
+      if (playingBgmBtn === bgmBtn) { stopBgm(); return; }
+      stopBgm();
+      try {
+        if (!bgmAudio) bgmAudio = new Audio();
+        bgmAudio.src = src;
+        bgmAudio.volume = 0.6;
+        bgmAudio.play().catch(function () {});
+        bgmAudio.onended = stopBgm;
+        playingBgmBtn = bgmBtn;
+        bgmBtn.classList.add('is-playing');
+        var pl = bgmBtn.querySelector('.ed-bgm-play');
+        if (pl) pl.textContent = 'STOP';
+      } catch (err) {}
       return;
     }
-    var url = t.hasAttribute('data-go-ind') ? '/studio?ind=' + encodeURIComponent(current) : t.getAttribute('data-go');
-    try { localStorage.setItem('ar_visited_studio', '1'); } catch (err) {}
-    location.href = url;
+
+    var indBtn = e.target.closest('#edIndustryGrid [data-ind]');
+    if (indBtn) {
+      selectedInd = indBtn.getAttribute('data-ind') || 'auto';
+      renderIndustryGrid();
+      return;
+    }
+
+    var goBtn = e.target.closest('[data-go]');
+    if (goBtn) {
+      var target = goBtn.getAttribute('data-go');
+      if (target) location.href = target;
+    }
   });
 
-  syncPlayBtn();
-  selectIndustry('auto');
-  renderMarqueeStrip();
-  updateTelemetry();
-  initMotionEngine();
+  initMotion();
+  syncNavPolarity();
 })();
