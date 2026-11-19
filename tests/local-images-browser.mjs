@@ -213,6 +213,17 @@ try {
   assert.equal(await daily.isHidden(),true);
   await cloud.evaluate(async () => { setIndustry('restaurant'); await arLoadDailyKeywords(); });
   const refreshDaily = () => cloud.evaluate(async () => { arKeywordDay = ''; await arLoadDailyKeywords(); });
+  const day = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date(collectedAt));
+  feed.issues = [
+    {term:'수능', day, kind:'일정', publisher:'교육부', url:'https://www.moe.go.kr/boardCnts/viewRenew.do?boardSeq=100526'},
+    {term:'시험과 AI 부정행위 논란', day, kind:'보도', publisher:'연합뉴스', url:'https://www.yna.co.kr/view/test', publishedAt:collectedAt}
+  ];
+  await refreshDaily();
+  await daily.locator('summary').click();
+  assert.equal(await daily.getByRole('button').count(),3);
+  await daily.getByRole('button',{name:/시험과 AI 부정행위 논란/}).click();
+  assert.equal(await cloud.locator('#topicCustomInput').inputValue(),'시험과 AI 부정행위 논란');
+  assert.equal(await daily.getByRole('link',{name:'수능 출처 · 교육부'}).count(),1);
   feed.collectedAt = old;
   await refreshDaily();
   assert.equal(await daily.isHidden(),true);

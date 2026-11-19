@@ -1,7 +1,17 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-19T22:56:59.085667+09:00",
+  "collectedAt": "2026-11-19T23:51:52.886339+09:00",
   "items": [
+    {
+      "term": "ant",
+      "startedAt": "2026-11-19T05:30:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "lg화학",
+      "startedAt": "2026-11-19T05:10:00-08:00",
+      "traffic": "500+"
+    },
     {
       "term": "변상일",
       "startedAt": "2026-11-19T04:30:00-08:00",
@@ -13,24 +23,24 @@
       "traffic": "200+"
     },
     {
-      "term": "필리버스터",
-      "startedAt": "2026-11-19T04:10:00-08:00",
-      "traffic": "500+"
-    },
-    {
       "term": "하나로마트",
       "startedAt": "2026-11-19T03:50:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "cuaca besok",
-      "startedAt": "2026-11-19T03:40:00-08:00",
-      "traffic": "500+"
+      "term": "김민지",
+      "startedAt": "2026-11-19T03:50:00-08:00",
+      "traffic": "1000+"
     },
     {
       "term": "thời tiết ngày mai",
       "startedAt": "2026-11-19T03:40:00-08:00",
       "traffic": "5000+"
+    },
+    {
+      "term": "cuaca besok",
+      "startedAt": "2026-11-19T03:40:00-08:00",
+      "traffic": "500+"
     },
     {
       "term": "정부24",
@@ -41,16 +51,47 @@
       "term": "야구 경기장",
       "startedAt": "2026-11-19T03:10:00-08:00",
       "traffic": "200+"
+    }
+  ],
+  "issues": [
+    {
+      "term": "수능",
+      "day": "2026-11-19",
+      "kind": "일정",
+      "publisher": "교육부",
+      "url": "https://www.moe.go.kr/boardCnts/viewRenew.do?boardID=294&boardSeq=100526&s=moe"
     },
     {
-      "term": "이재시",
-      "startedAt": "2026-11-19T03:00:00-08:00",
-      "traffic": "1000+"
+      "term": "시험과 AI 부정행위 논란",
+      "day": "2026-11-19",
+      "kind": "보도",
+      "publisher": "연합뉴스",
+      "url": "https://www.yna.co.kr/view/AKR20261119173000057",
+      "publishedAt": "2026-11-19T19:51:03+09:00"
     },
     {
-      "term": "푸틴",
-      "startedAt": "2026-11-19T03:00:00-08:00",
-      "traffic": "100+"
+      "term": "'3대 의혹' 김건희 징역 4년 확정…영부인 출신 첫 실형",
+      "day": "2026-11-19",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008854515",
+      "publishedAt": "2026-11-19T23:22:00+09:00"
+    },
+    {
+      "term": "한덕수 내란죄 인정되지만…일부 무죄 취지 파기환송",
+      "day": "2026-11-19",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008854507",
+      "publishedAt": "2026-11-19T23:13:00+09:00"
+    },
+    {
+      "term": "'내란 가담' 김명수 전 합참의장 징역 15년 구형…다음달 24일 선고",
+      "day": "2026-11-19",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008854633",
+      "publishedAt": "2026-11-19T20:30:00+09:00"
     }
   ]
 }

@@ -297,50 +297,76 @@
     function arKeywordMatchText(value) {
       return String(value || '').normalize('NFKC').toLowerCase().replace(/\s+/g, '');
     }
+    function arDailyKeywordRow(list, term, detailText, publisher, url) {
+      const row = document.createElement('div');
+      row.className = 'daily-keyword-row';
+      const button = document.createElement('button');
+      button.type = 'button';
+      const title = document.createElement('span');
+      title.textContent = term;
+      const detail = document.createElement('small');
+      detail.textContent = detailText;
+      button.append(title, detail);
+      button.addEventListener('click', () => {
+        const input = document.getElementById('topicCustomInput');
+        input.value = term;
+        input.focus();
+      });
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = publisher;
+      link.setAttribute('aria-label', term + ' 출처 · ' + publisher);
+      row.append(button, link);
+      list.append(row);
+    }
     async function arLoadDailyKeywords() {
       const panel = document.getElementById('dailyKeywords');
       const now = new Date();
       const day = arKstDay.format(now);
       const phrases = [arIndustrySpecialty(), campaign.vehicleEntered ? campaign.vehicle : '',
         ...(arIndustrySearchTerms[IND.key] || '').split('|')].map(arKeywordMatchText).filter(Boolean);
-      const scope = JSON.stringify([day, IND.key, phrases]);
+      const scope = JSON.stringify([day, Math.floor(now.getTime() / 3600000), IND.key, phrases]);
       if (!panel || arKeywordDay === scope) return;
       arKeywordDay = scope;
       panel.hidden = true;
       panel.open = false;
       clearTimeout(arKeywordTimer);
-      arKeywordTimer = setTimeout(arLoadDailyKeywords, Date.parse(day + 'T00:00:00+09:00') + 86400000 - now.getTime() + 50);
+      arKeywordTimer = setTimeout(arLoadDailyKeywords, 3600000 - now.getTime() % 3600000 + 50);
       try {
         const response = await fetch('/daily-keywords.json', { cache: 'no-store' });
         if (!response.ok) throw new Error('키워드 수집 파일 없음');
         const data = await response.json();
         if (arKeywordDay !== scope) return;
         const collected = Date.parse(data.collectedAt);
-        if (data.source !== panel.querySelector('a').href || !Number.isFinite(collected) || collected > Date.now() ||
+        if (data.source !== 'https://trends.google.com/trending/rss?geo=KR' || !Number.isFinite(collected) || collected > Date.now() ||
             arKstDay.format(collected) !== day || !Array.isArray(data.items)) {
           arKeywordDay = '';
           return;
         }
         const list = panel.querySelector('.daily-keyword-list');
         list.replaceChildren();
+        const shown = new Set();
+        const origins = { '교육부': 'https://www.moe.go.kr', '연합뉴스': 'https://www.yna.co.kr', SBS: 'https://news.sbs.co.kr' };
+        for (const issue of Array.isArray(data.issues) ? data.issues : []) {
+          if (issue?.day !== day || typeof issue.term !== 'string' || !issue.term.trim() || shown.has(issue.term)) continue;
+          if (!Object.hasOwn(origins, issue.publisher) || typeof issue.url !== 'string' ||
+              !issue.url.startsWith(origins[issue.publisher] + '/')) continue;
+          const schedule = issue.kind === '일정' && issue.publisher === '교육부';
+          const published = Date.parse(issue.publishedAt);
+          if (!schedule && (issue.kind !== '보도' || !Number.isFinite(published) ||
+              published > collected || arKstDay.format(published) !== day)) continue;
+          arDailyKeywordRow(list, issue.term, schedule ? '오늘 일정' : '오늘 ' + arKstTime.format(published) + ' 보도', issue.publisher, issue.url);
+          shown.add(issue.term);
+        }
         for (const item of data.items) {
           const started = Date.parse(item?.startedAt);
           if (typeof item?.term !== 'string' || !item.term.trim() || !Number.isFinite(started) ||
               started > collected || arKstDay.format(started) !== day) continue;
-          if (!phrases.includes(arKeywordMatchText(item.term))) continue;
-          const button = document.createElement('button');
-          button.type = 'button';
-          const title = document.createElement('span');
-          title.textContent = item.term;
-          const detail = document.createElement('small');
-          detail.textContent = '급상승 시작 ' + arKstTime.format(started) + (item.traffic ? ' · 검색량 ' + item.traffic : '');
-          button.append(title, detail);
-          button.addEventListener('click', () => {
-            const input = document.getElementById('topicCustomInput');
-            input.value = item.term;
-            input.focus();
-          });
-          list.append(button);
+          if (shown.has(item.term) || !phrases.includes(arKeywordMatchText(item.term))) continue;
+          arDailyKeywordRow(list, item.term, '급상승 시작 ' + arKstTime.format(started) + (item.traffic ? ' · 검색량 ' + item.traffic : ''), 'Google 트렌드', data.source);
+          shown.add(item.term);
         }
         const time = panel.querySelector('time');
         time.dateTime = data.collectedAt;

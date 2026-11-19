@@ -1421,6 +1421,8 @@ select.ig-select-src { display: none !important; }
 .daily-keywords p { margin: 6px 0; }
 .daily-keywords a { text-decoration: underline; }
 .daily-keyword-list { display: grid; gap: 4px; }
+.daily-keyword-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.daily-keyword-row a { font-size: 12px; white-space: nowrap; }
 .daily-keyword-list button { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; text-align: left; padding: 5px 8px; border-radius: 6px; background: var(--raised); color: var(--foreground); cursor: pointer; }
 .ig-chip-row { display: flex; align-items: center; gap: 5px; }
 .ig-chip-row > .ig-ctx-chip {
