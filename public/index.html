@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120n" />
+  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120p" />
 </head>
 <body class="antialiased mn-body">
   <!-- 35mm 필름 그레인 글로벌 레이어 -->
@@ -77,29 +77,40 @@
   </aside>
 
   <!-- ====================================================================== -->
-  <!-- CH 01 · MONUMENTAL HERO (Z-깊이 샌드위치 + 황금빛 갓레이 + 먼지 입자 캔버스) -->
+  <!-- CH 01 · FULL-BLEED IMAX CINEMA STUDIO HERO (전용 시네마 카메라 KV + 갓레이) -->
   <!-- ====================================================================== -->
   <section id="mnHero" class="mn-hero" data-chapter="01" data-chapter-label="HERO STUDIO">
-    <!-- 배경 앰비언트 + 블루프린트 크로스헤어 + 대각선 황금빛 갓레이 + 먼지 입자 캔버스 -->
-    <div id="mnHeroAmbient" class="mn-hero-ambient" aria-hidden="true"></div>
+    <!-- 풀-블리드 16:9 IMAX 시네마 스튜디오 키 비주얼 + 스크롤 줌인 패럴랙스 -->
+    <div class="mn-hero-kv-wrap" aria-hidden="true">
+      <img id="mnHeroKvImg" class="mn-hero-kv-img" src="/assets/landing/hero-cinema-kv.jpg" alt="" loading="eager" />
+      <div class="mn-hero-kv-vignette"></div>
+    </div>
     <div class="mn-blueprint-grid" aria-hidden="true"></div>
-    <div class="mn-godray" aria-hidden="true"></div>
     <canvas id="mnDustCanvas" class="mn-dust-canvas" aria-hidden="true"></canvas>
 
-    <!-- 코너 등록 마크 (loop-brake.pl 스타일 좌표) -->
+    <!-- 코너 등록 마크 -->
     <div class="mn-corner-meta mn-corner-tl font-mono" aria-hidden="true">+ A1 · 9:16 MASTER STUDIO</div>
     <div class="mn-corner-meta mn-corner-tr font-mono" aria-hidden="true">747+ STYLES · LINK REMIX · HIGHLIGHT AI +</div>
 
-    <!-- Z-깊이 샌드위치 무대: 뒤(거대 디스플레이 타이포) -> 앞(9:16 실사 릴스 프레임) -->
-    <div class="mn-hero-stage">
-      <!-- 뒤쪽 레이어: 화면을 꽉 채우는 초대형 모뉴멘탈 타이포 -->
-      <div id="mnHeroGiantType" class="mn-giant-type" aria-hidden="true">
-        <div class="mn-giant-line">ONE SHOT</div>
-        <div class="mn-giant-line mn-giant-accent">ONE REEL</div>
+    <!-- 시네마틱 비대칭 히어로 무대 (좌측 초대형 타이포 + 우측 시네마 카메라와 어우러지는 9:16 라이브 릴스) -->
+    <div class="mn-hero-cinema-grid">
+      <div id="mnHeroGiantType" class="mn-hero-left-col">
+        <div class="font-mono text-[11px] tracking-widest uppercase text-[#e07a4f] mb-3">AUTOREELSMAKER · CINEMA REELS STUDIO</div>
+        <div class="mn-giant-stack">
+          <div class="mn-giant-line">ONE SHOT</div>
+          <div class="mn-giant-line mn-giant-accent">ONE REEL</div>
+        </div>
+        <h1 class="mn-ko-title mt-5">사진 한 장이, 한 편의 영화 같은 릴스가 된다</h1>
+        <p class="mn-ko-sub">오늘의 주제 추천 · 참고 영상 링크 분석 · 10분 영상 하이라이트 추출 · 747종 스타일 · AI 성우 · 9:16 MP4 즉시 저장</p>
+        <div class="flex flex-wrap items-center gap-3 mt-6">
+          <a href="/studio" class="mn-btn-cream">지금 무료로 릴스 만들기 →</a>
+          <a href="#mnPipeline" class="mn-btn-outline">4대 엔진 둘러보기 ↓</a>
+        </div>
+        <div id="landingQuickInds" class="mn-quick-row mt-5" aria-label="빠른 업종 미리보기"></div>
       </div>
 
-      <!-- 앞쪽 전경 레이어: 초대형 타이포 앞을 가로지르는 9:16 실사 릴스 프레임 -->
-      <div id="mnHeroForeWrap" class="mn-hero-fore">
+      <!-- 우측 전경 9:16 실사 릴스 프레임 (시네마 카메라 갓레이 위에 안착) -->
+      <div id="mnHeroForeWrap" class="mn-hero-right-col">
         <div id="landingPhoneStage" role="button" tabindex="0" aria-label="미리보기 다음 컷 보기" class="mn-hero-reel">
           <img id="lpMainPhoto" class="mn-reel-photo" src="/assets/scenes/auto/1.jpg" alt="" />
           <div class="mn-reel-scrim"></div>
@@ -133,21 +144,6 @@
             <span class="px-2 py-0.5 bg-[#f5efe2] text-[#0b0a08] font-mono text-[10px] font-bold shrink-0">END</span>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- 히어로 하단 바: 좌측 한국어 핵심 선언 + 우측 액션 & 업종 칩 -->
-    <div class="mn-hero-bottom">
-      <div class="mn-hero-bottom-left">
-        <h1 class="mn-ko-title">사진 한 장이, 한 편의 영화 같은 릴스가 된다</h1>
-        <p class="mn-ko-sub">오늘의 주제 추천 · 참고 영상 링크 분석 · 10분 영상 하이라이트 추출 · 747종 스타일 · AI 성우 · 9:16 MP4 즉시 저장</p>
-      </div>
-      <div class="mn-hero-bottom-right">
-        <div class="flex flex-wrap items-center gap-2.5">
-          <a href="/studio" class="mn-btn-cream">지금 무료로 릴스 만들기 →</a>
-          <a href="#mnPipeline" class="mn-btn-outline">4대 엔진 둘러보기 ↓</a>
-        </div>
-        <div id="landingQuickInds" class="mn-quick-row" aria-label="빠른 업종 미리보기"></div>
       </div>
     </div>
   </section>
@@ -530,7 +526,7 @@
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
-  <script src="/assets/landing/industries.js?v=20261120n"></script>
-  <script src="/assets/landing/landing.js?v=20261120n"></script>
+  <script src="/assets/landing/industries.js?v=20261120p"></script>
+  <script src="/assets/landing/landing.js?v=20261120p"></script>
 </body>
 </html>

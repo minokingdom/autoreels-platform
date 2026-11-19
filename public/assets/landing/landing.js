@@ -312,9 +312,20 @@
       document.fonts.ready.then(function () { ST.refresh(); }).catch(function () {});
     }
 
-    // 1) 히어로 입장 스태거
+    // 1) 히어로 입장 스태거 + 풀-블리드 시네마 KV 스크롤 줌인 패럴랙스
     gsap.from('.mn-giant-line', { yPercent: 35, opacity: 0, duration: 0.9, stagger: 0.12, ease: 'power3.out', clearProps: 'transform,opacity' });
     gsap.from('.mn-hero-reel', { scale: 0.9, opacity: 0, duration: 0.85, delay: 0.18, ease: 'power3.out', clearProps: 'transform,opacity' });
+    if (document.getElementById('mnHeroKvImg')) {
+      gsap.fromTo('#mnHeroKvImg',
+        { scale: 1.03, yPercent: 0 },
+        {
+          scale: 1.15,
+          yPercent: 7,
+          ease: 'none',
+          scrollTrigger: { trigger: '#mnHero', start: 'top top', end: 'bottom top', scrub: 1.1 }
+        }
+      );
+    }
 
     // 2) CH 02 성명문 스크롤 컬러 필 (한 구절씩 어두움 -> 크림/테라코타 점등)
     var spans = document.querySelectorAll('#mnScrubText span');

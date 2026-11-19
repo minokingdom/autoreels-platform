@@ -171,7 +171,7 @@ html, body {
 @media (max-width: 767px) { .mn-hud-clock { display: none; } }
 
 /* ============================================================================
-   CH 01 · MONUMENTAL HERO (Z-깊이 샌드위치 + 황금빛 갓레이 + 블루프린트)
+   CH 01 · FULL-BLEED IMAX CINEMA STUDIO HERO
    ============================================================================ */
 .mn-hero {
   position: relative;
@@ -179,21 +179,71 @@ html, body {
   width: 100%;
   overflow: hidden;
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 76px 24px 28px;
+  align-items: center;
+  padding: 96px 24px 80px;
   box-sizing: border-box;
   isolation: isolate;
 }
-.mn-hero-ambient {
+.mn-hero-kv-wrap {
   position: absolute;
-  inset: -6%;
+  inset: 0;
   z-index: -5;
-  background-image: url('/assets/scenes/auto/1.jpg');
-  background-size: cover;
-  background-position: center;
-  filter: blur(56px) saturate(0.7) brightness(0.24);
-  transition: background-image 0.55s ease;
+  overflow: hidden;
+}
+.mn-hero-kv-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 68% 58%;
+  transform: scale(1.03);
+  will-change: transform;
+}
+.mn-hero-kv-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(11, 10, 8, 0.88) 0%, rgba(11, 10, 8, 0.56) 44%, rgba(11, 10, 8, 0.16) 76%, rgba(11, 10, 8, 0.45) 100%),
+    linear-gradient(180deg, rgba(11, 10, 8, 0.58) 0%, rgba(11, 10, 8, 0.08) 38%, rgba(11, 10, 8, 0.25) 75%, #0b0a08 100%);
+}
+.mn-hero-cinema-grid {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 36px;
+  align-items: center;
+}
+@media (min-width: 960px) {
+  .mn-hero-cinema-grid {
+    grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr);
+    gap: 48px;
+  }
+}
+.mn-hero-left-col { min-width: 0; will-change: transform; }
+.mn-hero-right-col {
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  will-change: transform;
+}
+@media (min-width: 960px) {
+  .mn-hero-right-col { justify-content: flex-start; padding-left: 12px; padding-bottom: 44px; }
+}
+.mn-giant-stack { display: flex; flex-direction: column; }
+.mn-giant-line {
+  font-family: 'Anton', var(--brand-font), sans-serif;
+  font-size: clamp(66px, 11.2vw, 152px);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: var(--mn-cream);
+  white-space: nowrap;
+}
+.mn-giant-accent {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(245, 239, 226, 0.72);
 }
 .mn-blueprint-grid {
   position: absolute;
