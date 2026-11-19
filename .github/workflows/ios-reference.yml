@@ -17,6 +17,7 @@ jobs:
       - name: Generate iOS project
         run: |
           command -v xcodegen || brew install xcodegen
+          python3 Tests/check-public-playback.py
           xcodegen generate
       - name: Build for iPhone
         run: |
@@ -25,11 +26,10 @@ jobs:
         run: |
           DEVICE=$(xcodebuild -project AutoReelsMaker.xcodeproj -scheme AutoReelsMaker -showdestinations | python3 -c 'import re,sys; print(next(re.search(r"id:([0-9A-Fa-f-]{36})", line)[1] for line in sys.stdin if "platform:iOS Simulator" in line and "name:iPhone" in line and re.search(r"id:([0-9A-Fa-f-]{36})",line)))')
           echo "DEVICE=$DEVICE" >> "$GITHUB_ENV"
-          xcrun simctl boot "$DEVICE" || xcrun simctl bootstatus "$DEVICE"
       - name: Build and package simulator app
         run: |
-          xcodebuild -project AutoReelsMaker.xcodeproj -scheme AutoReelsMaker -destination "id=$DEVICE" -derivedDataPath DerivedData ONLY_ACTIVE_ARCH=NO 'ARCHS=arm64 x86_64' build-for-testing
-          APP=DerivedData/Build/Products/Debug-iphonesimulator/AutoReelsMaker.app
+          xcodebuild -project AutoReelsMaker.xcodeproj -scheme AutoReelsMaker -configuration Debug -destination 'generic/platform=iOS Simulator' -derivedDataPath SimPackage ONLY_ACTIVE_ARCH=NO 'ARCHS=arm64 x86_64' -jobs 2 build
+          APP=SimPackage/Build/Products/Debug-iphonesimulator/AutoReelsMaker.app
           lipo "$APP/AutoReelsMaker" -verify_arch arm64 x86_64
           ditto -c -k --keepParent "$APP" AutoReelsMaker-iPhone-Simulator.zip
       - uses: actions/upload-artifact@v4
@@ -39,7 +39,7 @@ jobs:
           if-no-files-found: error
       - name: Test on iPhone simulator
         run: |
-          xcodebuild -project AutoReelsMaker.xcodeproj -scheme AutoReelsMaker -destination "id=$DEVICE" -derivedDataPath DerivedData -parallel-testing-enabled NO -resultBundlePath TestResult test-without-building
+          xcodebuild -project AutoReelsMaker.xcodeproj -scheme AutoReelsMaker -destination "id=$DEVICE" -derivedDataPath DerivedData -parallel-testing-enabled NO -resultBundlePath TestResult test
       - name: Export test screenshots
         if: always()
         run: |

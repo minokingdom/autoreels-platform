@@ -49,12 +49,15 @@ async function screenText(file,scenes,signal,update) {
   const stop=()=>worker?.terminate();
   try {
     await mediaEvent(video,'loadeddata',()=>{video.src=url;},signal);
-    const engine=(await import('./ocr/ocr.mjs')).default;
-    const assets=new URL('./ocr/',import.meta.url).href;
-    worker=await engine.createWorker('kor',1,{workerPath:assets+'worker.min.js',corePath:assets+'tesseract-core-lstm.wasm.js',langPath:assets,workerBlobURL:false});
-    signal.throwIfAborted();
-    signal.addEventListener('abort',stop,{once:true});
-    await worker.setParameters({tessedit_pageseg_mode:'11'});
+    const reader=window.webkit?.messageHandlers?.readCaption;
+    if(!reader){
+      const engine=(await import('./ocr/ocr.mjs')).default;
+      const assets=new URL('./ocr/',import.meta.url).href;
+      worker=await engine.createWorker('kor',1,{workerPath:assets+'worker.min.js',corePath:assets+'tesseract-core-lstm.wasm.js',langPath:assets,workerBlobURL:false});
+      signal.throwIfAborted();
+      signal.addEventListener('abort',stop,{once:true});
+      await worker.setParameters({tessedit_pageseg_mode:'11'});
+    }
     const canvas=document.createElement('canvas'),scale=Math.min(1,960/Math.max(video.videoWidth,video.videoHeight));
     canvas.width=Math.max(1,Math.round(video.videoWidth*scale));canvas.height=Math.max(1,Math.round(video.videoHeight*scale));
     const ctx=canvas.getContext('2d',{willReadFrequently:true});
@@ -78,8 +81,15 @@ async function screenText(file,scenes,signal,update) {
       s.position=top<bottom*.85?'top':'bottom';
       const bucket=buckets.indexOf(Math.max(...buckets));
       if(buckets[bucket])s.accent='#'+[bucket>>6,(bucket>>3)&7,bucket&7].map(v=>(v*32+16).toString(16).padStart(2,'0')).join('');
-      const {data}=await worker.recognize(canvas);signal.throwIfAborted();
-      s.screen=data.confidence>=48 ? data.text.trim().replace(/\s+/g,' ').slice(0,300) : '';
+      let text='';
+      if(reader){
+        text=await reader.postMessage(canvas.toDataURL('image/jpeg',.87).split(',')[1]);
+      }else{
+        const {data}=await worker.recognize(canvas);
+        if(data.confidence>=48)text=data.text;
+      }
+      signal.throwIfAborted();
+      s.screen=text.trim().replace(/\s+/g,' ').slice(0,300);
     }
   } finally {
     signal.removeEventListener('abort',stop);

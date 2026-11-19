@@ -30,6 +30,7 @@ final class StudioViewController: UIViewController, WKUIDelegate, WKNavigationDe
         super.viewDidLoad()
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
+        config.userContentController.addScriptMessageHandler(CaptionReader(), contentWorld: .page, name: "readCaption")
         config.applicationNameForUserAgent = "AutoReelsMakeriOS/1"
         web = WKWebView(frame:.zero,configuration:config)
         web.translatesAutoresizingMaskIntoConstraints = false
@@ -71,7 +72,7 @@ final class StudioViewController: UIViewController, WKUIDelegate, WKNavigationDe
                     files.append(file);finish([file])
                 }catch{
                     guard requestID==token else{return}
-                    await report("error",(error as? ImportProblem)?.errorDescription ?? "이 유튜브 영상을 읽지 못했어요. 공개 쇼츠인지 확인해 주세요.",key:args[1])
+                    await report("error",(error as? ImportProblem)?.errorDescription ?? "유튜브에서 영상 파일을 받지 못했어요. 갤러리에 저장한 참고 영상을 선택해 주세요.",key:args[1])
                     if requestID==token {finish(nil)}
                 }
             }else{

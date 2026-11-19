@@ -19,7 +19,24 @@ final class StudioTests: XCTestCase {
         capture.lifetime = .keepAlways
         add(capture)
         XCTAssertEqual(outcome, .completed, app.webViews.firstMatch.debugDescription)
+        if !complete.exists, url.contains("youtube.com/shorts"), failure.exists,
+           failure.label.contains("영상 파일을 받지 못했어요"),
+           let probe = Bundle(for: StudioTests.self).url(forResource: "PublicPlayback", withExtension: "json"),
+           let status = try JSONSerialization.jsonObject(with: Data(contentsOf: probe)) as? [String: String],
+           status["status"] == "LOGIN_REQUIRED" {
+            throw XCTSkip("유튜브가 이 Mac에서 공개 재생에 로그인을 요구했습니다.")
+        }
         XCTAssertTrue(complete.exists, failure.exists ? failure.label : app.webViews.firstMatch.debugDescription)
+        if url.contains("remix-spoken-ko"), complete.exists {
+            XCTAssertFalse(complete.label.contains("미완료"), complete.label)
+            let details = app.webViews.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "장면별 원본 문구·대사 보기")).firstMatch
+            XCTAssertTrue(details.exists)
+            details.tap()
+            for prefix in ["화면 문구", "대사"] {
+                let label = NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", prefix, "김치")
+                XCTAssertTrue(app.staticTexts.containing(label).firstMatch.exists, prefix)
+            }
+        }
     }
 
     func testPublicShort() throws {

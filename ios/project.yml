@@ -28,7 +28,9 @@ targets:
   AutoReelsMakerUITests:
     type: bundle.ui-testing
     platform: iOS
-    sources: [Tests]
+    sources:
+      - path: Tests
+        excludes: ["*.py"]
     dependencies:
       - target: AutoReelsMaker
     settings:
