@@ -81,6 +81,12 @@ try{
   const colorToggle = page.locator('#arQuickBar [data-qb="design"] + #arQuickColors summary');
   const palette = page.locator('#designColorSwatches');
   await colorToggle.click();
+  const swatches = palette.getByRole('button');
+  await swatches.first().waitFor();
+  assert.equal(await swatches.count(),12);
+  const swatchBoxes = await swatches.evaluateAll(buttons=>buttons.map(b=>b.getBoundingClientRect().toJSON()));
+  assert.equal(new Set(swatchBoxes.map(b=>b.x)).size,2);
+  assert.equal(new Set(swatchBoxes.map(b=>b.y)).size,6);
   await palette.getByRole('button', {name:'레드', exact:true}).click();
   assert.equal(await palette.isHidden(), true);
   assert.equal(await page.evaluate(()=>campaign.colorKey), 'red');

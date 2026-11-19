@@ -80,6 +80,17 @@ try {
   await cloud.getByRole('button',{name:'만들기',exact:true}).click();
   await cloud.locator('#aiVariantList').getByText('BMW 7시리즈 출시',{exact:true}).waitFor();
   assert.equal(requests.find(r=>r.prompt==='bmw 7시리즈 출시').vehicle,'BMW 7시리즈');
+  const rewrite=cloud.locator('#scriptRewritePanel');
+  const exclusions=rewrite.getByRole('textbox',{name:'제외할 문구'});
+  assert.equal(await exclusions.isHidden(),true);
+  await rewrite.locator('summary').click();
+  await exclusions.fill('무료, 최저가');
+  await rewrite.locator('summary').click();
+  const editable=rewrite.getByRole('textbox',{name:'원하는 내용과 말투'});
+  await editable.fill('bmw 7시리즈 출시');
+  const submit=rewrite.getByRole('button',{name:'다시 쓰기',exact:true});
+  await Promise.all([cloud.waitForRequest(r=>r.url().includes('/api/generate-script') && r.postDataJSON()?.exclude==='무료, 최저가'),submit.click()]);
+  await submit.waitFor();
   await cloud.evaluate(async original=>{
    AR_SERVER.me={user:{id:'mock'},usage:{}};
    campaign.vehicle='BMW 520i M Sport 패키지';

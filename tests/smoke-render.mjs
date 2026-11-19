@@ -40,7 +40,7 @@ for (const width of [320, 375, 390, 600, 601, 1280]) {
     const range = document.createRange();
     range.selectNodeContents(el);
     const rect = range.getBoundingClientRect();
-    return el.textContent.trim() === '오토릴스메이커' && range.getClientRects().length === 1
+    return el.textContent.trim() === 'AutoReelsMaker' && range.getClientRects().length === 1
       && rect.width > 0 && rect.left >= 12 && rect.right <= document.documentElement.clientWidth - 12;
   });
   if (!fits) pageErrors.push('시작 화면 서비스명 잘림: ' + width + 'px');
