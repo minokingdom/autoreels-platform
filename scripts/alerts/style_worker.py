@@ -97,7 +97,7 @@ def download(url,directory,private=False):
     run(common+['--max-filesize','200M','-f','bv*[height<=720]+ba/b[height<=720]','--merge-output-format','mp4','-o',directory/'source.%(ext)s','--',url],timeout=240)
     files=[p for p in directory.glob('source.*') if p.suffix.lower() in ('.mp4','.webm','.mkv','.mov')]
     if len(files)!=1 or files[0].stat().st_size>210_000_000:raise ValueError('영상 다운로드가 완료되지 않았습니다.')
-    return files[0],url
+    return files[0],str(meta.get('title') or '')[:160] if private else url
 
 def analyse(video,directory):
     output=directory/'analysis'

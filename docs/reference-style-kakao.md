@@ -33,3 +33,13 @@
 작업기 시작 흔적 `started`와 `published.json`을 임의 삭제하지 않는다. 카탈로그가 등록됐지만 배포 확인이 실패했다면 해당 커밋·Vercel·smoke를 먼저 확인한다. 자동 등록은 쉘 코드가 아니라 검증된 스타일 JSON 한 건으로 한정된다.
 
 검증: `python scripts/alerts/test_style_commands.py`, `node --test tests/reference-styles.cjs`, `node tests/reference-styles-browser.mjs`, `node tests/smoke-render.mjs`, `node tests/narration-continuity.mjs`, `node tests/narration-browser.mjs`.
+
+## 스튜디오의 개인 참고 영상
+
+스튜디오의 ‘참고 쇼츠·릴스로 재구성하기’에서 로그인한 회원이 공개 영상 URL을 입력합니다. 계정 API는 사용자 ID와 요청 ID로 원본·대본을 조회합니다. 공용 카탈로그·GitHub·카톡 전송은 호출하지 않습니다. 원본 파일은 분석 중 작업기 임시 폴더에만 두며 완료 후 지웁니다. 링크는 처리 완료 시 비우고 서버 분석 결과는 1시간 후 만료됩니다.
+
+Windows 예약 작업 `AutoReels-PrivateRemix`가 `D:\AutoReelsLocal\StyleLab\private-remix\start-private-remix.ps1`를 실행합니다. 같은 디렉터리에 저장소의 `private_remix_worker.py`, `private_remix_content.py`, `style_worker.py`, `autoreels_style_commands.py`를 둡니다. PC가 쉴 때는 대기 상태로 표시됩니다. `StyleLab/remix-worker-credential.xml`은 해당 Windows 사용자의 DPAPI로 보호되며 서버에는 토큰의 SHA-256 검증값만 있습니다. 인증 파일은 커밋하지 않습니다.
+
+작업기는 기존 rea-video 컷 분석기, Windows 한국어 OCR, faster-whisper small CPU int8을 사용합니다. `.venv`에 `faster-whisper`, `winrt-Windows.Media.Ocr`, `winrt-Windows.Graphics.Imaging`, `winrt-Windows.Globalization`, `winrt-Windows.Foundation`과 기존 OpenCV/NumPy가 필요합니다. Whisper 모델을 미리 내려받아 오프라인에서 엽니다. 주제 요약은 대표 프레임·화면 글자·인식한 대사를 함께 보고, 재작성은 원본 주제와 컷별 근거·요청한 변경 사항을 사용합니다. 두 단계 모두 작업기에서 실행합니다. 음성 합성은 수행하지 않습니다.
+
+`StyleLab/models/remix-vlm`에 ggml-org/Qwen2.5-VL-3B-Instruct-GGUF의 Q4_K_M과 mmproj Q8_0, `llama/`에 llama.cpp b12541 Windows x64 배포본을 둡니다. 운영 PC는 큰 두 모델 파일을 SSD의 `%LOCALAPPDATA%/AutoReelsMaker/Models/reference-vlm`에서 우선 읽습니다. 모델 서버는 작업기가 필요할 때 임의의 루프백 포트와 임시 인증키로 시작하고, 유휴 상태가 되면 메모리를 반환합니다. 운영 점검은 `node tests/private-remix.cjs`로 계정 격리와 원본·대본 연결을 확인하고, 공개 영상 및 알려진 문구·음성 파일로 작업기의 실측 결과를 점검합니다.

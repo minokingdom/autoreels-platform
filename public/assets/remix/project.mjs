@@ -32,7 +32,7 @@ export async function projectZip(scenes, draw) {
     'main.svml':strToU8(projectSource(scenes)),
     'look.svs':strToU8('<?svml using="@hypit/recipe@1"?>\n<sheet version="1" id="look">\n  film.main { background: #131313; }\n</sheet>'),
     'build.svrun':strToU8('<?svml using="@hypit/markup/run@1"?>\n<svrun version="1"><author source="./main.svml"/><target output="final.video"/></svrun>'),
-    'scenes.json':strToU8(JSON.stringify({fps:30,scenes},null,2))
+    'scenes.json':strToU8(JSON.stringify({fps:30,scenes:scenes.map(({start,end,caption,position,accent})=>({start,end,caption,position,accent}))},null,2))
   };
   const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1920;
   async function add(path, type) {

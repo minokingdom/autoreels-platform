@@ -42,6 +42,7 @@ jobs:
         run: |
           node tests/account-projects.cjs
           node tests/private-remix.cjs
+          node tests/private-remix-browser.mjs
           node tests/projects-browser.mjs
           node tests/kakao-browser.mjs
           node tests/production-safety.cjs

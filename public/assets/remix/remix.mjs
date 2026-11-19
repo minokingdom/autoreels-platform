@@ -63,10 +63,27 @@ function showScenes() {
   showFrame();
 }
 const jobKey = 'ar_private_remix_pending';
+const draftKey = 'ar_private_remix_draft';
+let sourceId = '';
+function clearDraftId() {try {sessionStorage.removeItem(draftKey);} catch {}}
+function showStory(id,context) {
+  sourceId = id; byId('referenceStory').hidden = false;
+  byId('sourceTopic').textContent = context?.topic || context?.title || '확인된 주제 없음';
+  byId('sourceLines').replaceChildren(...scenes.map(scene=>{
+    const item = document.createElement('li');
+    const time = document.createElement('strong');
+    time.textContent = (scene.start/30).toFixed(1)+'–'+(scene.end/30).toFixed(1)+'초';
+    const screen = document.createElement('p'), speech = document.createElement('p');
+    screen.textContent = '화면 문구 · '+(scene.screen || '인식된 문구 없음');
+    speech.textContent = '대사 · '+(scene.speech || '인식된 대사 없음');
+    item.append(time,screen,speech); return item;
+  }));
+}
 function rememberJob(id) { try { sessionStorage.setItem(jobKey,id); } catch {} }
 function forgetJob() { try { sessionStorage.removeItem(jobKey); } catch {} }
 function startReference() {
   analysis?.abort(); analysis = new AbortController();
+  sourceId = ''; byId('referenceStory').hidden = true; byId('sourceDetails').open = false; byId('adaptChange').value = '';
   byId('urlSubmit').disabled = false; byId('loginHelp').hidden = true;
   stopPreview(); resetDownload(); selected = 0; photoVersion++;
   photos = []; scenes = []; byId('photos').value = ''; byId('arrange').hidden = true; showScenes();
@@ -102,6 +119,7 @@ async function loadPrivateJob(url, previousId) {
   let id = previousId || crypto.randomUUID();
   try {
     if (!previousId) {
+      clearDraftId();
       status('링크를 접수하고 있어요…');
       const job = await privateRequest('remix-url',signal,{url,id});
       signal.throwIfAborted();
@@ -118,13 +136,18 @@ async function loadPrivateJob(url, previousId) {
       }
       signal.throwIfAborted(); errors = 0;
       if (result.status === 'done') {
-        scenes = result.scenes; forgetJob(); byId('arrange').hidden = false; showScenes();
-        status(scenes.length+'개 장면을 찾았어요. 내 사진을 골라 주세요.'); break;
+        scenes = result.scenes; byId('arrange').hidden = false; showScenes(); showStory(id,result.context);
+        status(scenes.length+'개 장면을 찾았어요. 원본 대본을 확인하고 바꿀 내용을 적어 주세요.');
+        if (previousId) {
+          let pendingDraft; try {pendingDraft=sessionStorage.getItem(draftKey);} catch {}
+          if (pendingDraft) await adaptStory('',pendingDraft);
+        }
+        break;
       }
       if (result.status === 'failed') {
         forgetJob(); throw Error('공개 영상을 읽지 못했어요. 90초 이내의 공개 링크를 확인하거나 갤러리에서 선택해 주세요.');
       }
-      status(result.status === 'running' ? '참고 영상의 장면 전환과 색감을 분석하고 있어요…' : '분석을 기다리고 있어요. 완료되면 여기에 장면이 표시돼요.');
+      status(result.status === 'running' ? '참고 영상의 주제·화면 문구·대사를 읽고 있어요…' : '분석을 기다리고 있어요. 완료되면 여기에 장면이 표시돼요.');
       await waitForPoll(signal,5000);
     }
   } catch (err) {
@@ -135,6 +158,37 @@ async function loadPrivateJob(url, previousId) {
     }
   } finally {if (controller === analysis) button.disabled = false;}
 }
+async function adaptStory(change, previousId) {
+  if (!sourceId || busy) return;
+  const signal = analysis.signal;
+  busy = true; stopPreview(); byId('inputs').disabled = true;
+  try {
+    const id = previousId || (await privateRequest('remix-url',signal,{id:crypto.randomUUID(),sourceId,change})).id;
+    try {sessionStorage.setItem(draftKey,id);} catch {}
+    for (;;) {
+      const result = await privateRequest('remix-status&id='+encodeURIComponent(id),signal);
+      if (result.source_id !== sourceId) throw Error('현재 영상에 맞는 대본을 찾지 못했어요.');
+      if (result.status === 'done') {
+        if (!Array.isArray(result.draft) || result.draft.length !== scenes.length) throw Error('장면 수를 확인하고 다시 시도해 주세요.');
+        scenes.forEach((scene,i)=>{scene.caption=result.draft[i];});
+        selected=0;resetDownload();showScenes();status('원본 흐름에 맞춰 대본을 바꿨어요. 장면별 문구를 눌러 고칠 수 있어요.');
+        break;
+      }
+      if (result.status === 'failed') throw Error('대본을 완성하지 못했어요. 기존 문구를 확인하고 다시 시도해 주세요.');
+      status('원본의 흐름에 맞춰 장면별 대본을 바꾸고 있어요…');
+      await waitForPoll(signal,4000);
+    }
+    // 새로고침하면 계정 소유권을 다시 확인한 뒤 같은 결과를 복구합니다.
+  } catch (err) {
+    if (err.status === 404 || err.status === 401 || !err.status && !(err instanceof TypeError)) clearDraftId();
+    if (!signal.aborted) status(err.message);
+  } finally {busy=false;byId('inputs').disabled=false;}
+}
+byId('adaptForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const change=byId('adaptChange').value.trim();
+  if(change) adaptStory(change);
+});
 byId('urlForm').addEventListener('submit',event => {
   event.preventDefault();
   const url = byId('referenceUrl').value.trim();
@@ -144,7 +198,7 @@ byId('urlSubmit').disabled = false;
 async function readSelectedReference() {
   const input = byId('reference');
   const file = input.files[0]; if (!file) return;
-  forgetJob(); byId('referenceUrl').value = '';
+  forgetJob(); clearDraftId(); byId('referenceUrl').value = '';
   const controller = startReference();
   byId('refName').textContent = file.name; status('장면 전환을 찾고 있어요…');
   try {

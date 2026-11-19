@@ -14,14 +14,16 @@ import cv2
 import numpy as np
 from rea_video.media import video_info
 from rea_video.shots import build_track, detect_shots
+from private_remix_content import extract_content, rewrite
 from style_worker import CAPCUT_HOSTS, capcut_media_url, download, download_capcut_preview
 
 API = 'https://autoreelsmaker.kr/api/account?action=remix-worker'
+WORKER_TOKEN = os.environ.pop('AR_PRIVATE_REMIX_TOKEN','')
 
 
 def download_private(url, directory):
     if urlsplit(url).hostname not in CAPCUT_HOSTS:
-        return download(url, directory, private=True)[0]
+        return download(url, directory, private=True)
 
     class PageRedirect(urllib.request.HTTPRedirectHandler):
         def redirect_request(self, req, fp, code, msg, headers, newurl):
@@ -33,9 +35,12 @@ def download_private(url, directory):
 
     class Preview(HTMLParser):
         media = None
+        title = ""
 
         def handle_starttag(self, tag, attrs):
             a = dict(attrs)
+            if tag == 'meta' and a.get('property') == 'og:title':
+                self.title = a.get('content') or ''
             if tag == 'meta' and a.get('property') in ('og:video:url', 'og:video:secure_url'):
                 self.media = capcut_media_url(a.get('content') or '')
 
@@ -48,7 +53,7 @@ def download_private(url, directory):
         parser.feed(response.read(4_000_000).decode('utf-8', errors='replace'))
     meta = {'webpage_url': 'https://www.capcut.com/template-detail/'+match[1],
             'formats': [{'protocol': 'https', 'url': parser.media}]}
-    return download_capcut_preview(meta, directory)[0]
+    return download_capcut_preview(meta, directory)[0], parser.title
 
 
 def analyse_private(video):
@@ -100,9 +105,8 @@ def analyse_private(video):
 
 
 def rpc(payload):
-    token = os.environ['AR_PRIVATE_REMIX_TOKEN']
     req = urllib.request.Request(API, data=json.dumps(payload).encode(),
-                                 headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '+token})
+                                 headers={'Content-Type': 'application/json', 'Authorization': 'Bearer '+WORKER_TOKEN})
     # 인증 헤더를 다른 주소로 전달하지 않습니다.
     class NoRedirect(urllib.request.HTTPRedirectHandler):
         def redirect_request(self, *args):
@@ -115,8 +119,13 @@ def run_job(job):
     result = {'op': 'complete', 'id': job['id'], 'lease': job['lease']}
     try:
         with tempfile.TemporaryDirectory(prefix='ar-private-remix-') as directory:
-            video = download_private(job['url'], Path(directory))
-            result['scenes'] = analyse_private(video)
+            work = Path(directory)
+            if job.get('source_id'):
+                result['draft'] = rewrite(job['context'], job['scenes'], job['requested_change'], work)
+            else:
+                video,title = download_private(job['url'],work)
+                result['scenes'] = analyse_private(video)
+                result['context'] = extract_content(video,result['scenes'],title)
     except Exception as exc:
         print('analysis failed:', type(exc).__name__, flush=True)
         result['failed'] = True
