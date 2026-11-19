@@ -1,5 +1,4 @@
-// AutoReels 랜딩 (/) — 업종별 3컷 자동 미리보기 + 제작 화면으로 이동
-// 업종 데이터는 배포 때 scripts/build-app.mjs 가 01-industries.js 에서 뽑아 industries.js(window.AR_LP_INDUSTRIES)로 만듦
+// AutoReels 랜딩 (/) — 시네마틱 스크롤-드리븐 히어로 + 마우스 3D 틸트 + 3컷 실사 미리보기
 (function () {
   var INDS = window.AR_LP_INDUSTRIES || {};
   var current = 'auto';
@@ -7,20 +6,21 @@
   var playing = true;
   var cutTimer = null;
   var CUT_MS = 3400;
+  var lastScrollCut = -1;
 
-  // 업종별 차분한 딥톤 배경 팔레트 (과한 네온 없이 실제 릴스 무드 차이만 표현)
-  var IND_MOODS = {
-    auto: 'linear-gradient(160deg, #27272a 0%, #171923 55%, #09090b 100%)',
-    cafe: 'linear-gradient(160deg, #33271e 0%, #1c1714 55%, #0b0a09 100%)',
-    restaurant: 'linear-gradient(160deg, #34211b 0%, #1c1412 55%, #0a0909 100%)',
-    beauty: 'linear-gradient(160deg, #2f2228 0%, #1b1518 55%, #0a090a 100%)',
-    realestate: 'linear-gradient(160deg, #1d2926 0%, #121917 55%, #090b0a 100%)',
-    academy: 'linear-gradient(160deg, #1e2634 0%, #131720 55%, #090a0d 100%)',
-    clinic: 'linear-gradient(160deg, #1b2a2f 0%, #111a1d 55%, #090c0d 100%)',
-    fitness: 'linear-gradient(160deg, #2b221a 0%, #171411 55%, #0a0908 100%)',
-    shop: 'linear-gradient(160deg, #292524 0%, #181616 55%, #090909 100%)',
-    interior: 'linear-gradient(160deg, #282520 0%, #171614 55%, #090908 100%)',
-    personal: 'linear-gradient(160deg, #24262d 0%, #15161b 55%, #09090b 100%)'
+  // 업종별 실제 고화질 씬 이미지 3장 (/assets/scenes/<dir>/1~3.jpg)
+  var SCENE_DIR = {
+    auto: 'auto',
+    cafe: 'cafe',
+    restaurant: 'restaurant',
+    beauty: 'beauty',
+    realestate: 'realestate',
+    academy: 'academy',
+    clinic: 'clinic',
+    fitness: 'fitness',
+    shop: 'shop',
+    interior: 'interior',
+    personal: 'cafe'
   };
 
   function esc(s) {
@@ -29,8 +29,8 @@
     });
   }
   function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+  function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
 
-  // 한국어 받침 조사 ('으로' vs '로', ㄹ 받침은 '로')
   function josaRo(word) {
     var s = String(word || '').trim();
     if (!s) return '로';
@@ -38,6 +38,12 @@
     if (code < 0xAC00 || code > 0xD7A3) return '로';
     var jong = (code - 0xAC00) % 28;
     return (jong === 0 || jong === 8) ? '로' : '으로';
+  }
+
+  function scenePhoto(indKey, cutIdx) {
+    var dir = SCENE_DIR[indKey] || 'auto';
+    var n = (cutIdx % 3) + 1;
+    return '/assets/scenes/' + dir + '/' + n + '.jpg';
   }
 
   function buildCuts(ind) {
@@ -73,8 +79,7 @@
   function renderBars() {
     var wrap = document.getElementById('landingPhoneBars');
     if (!wrap) return;
-    var bars = wrap.querySelectorAll('.lp-bar');
-    bars.forEach(function (bar, i) {
+    wrap.querySelectorAll('.lp-bar').forEach(function (bar, i) {
       bar.classList.remove('is-done', 'is-active', 'is-paused');
       var fill = bar.querySelector('.lp-bar-fill');
       if (fill) {
@@ -94,6 +99,13 @@
     var cuts = buildCuts(ind);
     currentCut = ((cutIdx % cuts.length) + cuts.length) % cuts.length;
     var c = cuts[currentCut];
+    var photoUrl = scenePhoto(ind.key, currentCut);
+
+    var mainImg = document.getElementById('lpMainPhoto');
+    if (mainImg && mainImg.getAttribute('src') !== photoUrl) mainImg.setAttribute('src', photoUrl);
+    var amb = document.getElementById('lpAmbientPhoto');
+    if (amb) amb.style.backgroundImage = 'url("' + photoUrl + '")';
+
     setText('landingPhoneCutTag', c.tag);
     setText('landingPhoneKicker', c.kicker);
     setText('landingPhoneHook', c.hook);
@@ -101,7 +113,7 @@
     var tags = document.getElementById('landingPhoneTags');
     if (tags) {
       tags.innerHTML = (c.tags || []).map(function (t) {
-        return '<span class="px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-white/80">#' + esc(t) + '</span>';
+        return '<span class="px-1.5 py-0.5 rounded bg-black/45 border border-white/15 text-[10px] text-white/90">#' + esc(t) + '</span>';
       }).join('');
     }
     var slide = document.getElementById('landingPhoneSlide');
@@ -157,9 +169,6 @@
       }).join('');
     }
 
-    var bg = document.getElementById('landingPhoneBg');
-    if (bg) bg.style.background = IND_MOODS[ind.key] || IND_MOODS.auto;
-
     var where = ind.branchPlaceholder || ind.place || '';
     setText('landingPhoneBadge', ind.icon + ' ' + ind.name);
     setText('landingPhonePlace', where + ' · ' + ind.title);
@@ -169,28 +178,178 @@
     renderCut(ind, 0);
     scheduleNextCut();
 
-    // 아래 업종 그리드에서 골랐을 때 폰이 화면 밖에 있으면 부드럽게 올려서 바로 확인 가능하게
     if (opts && opts.fromGrid) {
-      var stage = document.getElementById('landingPhoneStage');
-      if (stage) {
-        var rect = stage.getBoundingClientRect();
-        if (rect.bottom < 80 || rect.top > window.innerHeight - 60) {
-          stage.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
-  var stageEl = document.getElementById('landingPhoneStage');
-  if (stageEl) {
-    stageEl.addEventListener('click', function (e) {
+  // =========================================================================
+  // 시네마틱 스크롤 드리븐 + 마우스 3D 패럴랙스 엔진 (60fps rAF)
+  // =========================================================================
+  var heroEl = document.getElementById('arCineHero');
+  var deckEl = document.getElementById('lpReelDeck');
+  var mainReelEl = document.getElementById('landingPhoneStage');
+  var fanL2 = document.querySelector('.lp-fan-l2');
+  var fanL1 = document.querySelector('.lp-fan-l1');
+  var fanR1 = document.querySelector('.lp-fan-r1');
+  var fanR2 = document.querySelector('.lp-fan-r2');
+  var hudL = document.getElementById('lpHudLeft');
+  var hudR = document.getElementById('lpHudRight');
+  var act1 = document.getElementById('lpAct1');
+  var act2 = document.getElementById('lpAct2');
+  var wmEl = document.getElementById('lpBgWatermark');
+  var scrollBar = document.getElementById('lpScrollBar');
+  var scrollCue = document.getElementById('lpScrollCue');
+  var glowEl = document.getElementById('lpMouseGlow');
+
+  var targetMx = 0, targetMy = 0; // -1 ~ 1
+  var curMx = 0, curMy = 0;
+  var targetPx = 50, targetPy = 42;
+  var scrollP = 0; // 히어로 내부 스크롤 진행도 0 ~ 1
+  var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function computeScrollProgress() {
+    var docH = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    var globalP = clamp(window.scrollY / docH, 0, 1);
+    if (scrollBar) scrollBar.style.width = (globalP * 100).toFixed(2) + '%';
+    if (!heroEl) return;
+    var rect = heroEl.getBoundingClientRect();
+    var span = Math.max(1, heroEl.offsetHeight - window.innerHeight);
+    scrollP = clamp(-rect.top / span, 0, 1);
+  }
+
+  function applyCineFrame() {
+    curMx += (targetMx - curMx) * 0.08;
+    curMy += (targetMy - curMy) * 0.08;
+
+    var p = scrollP;
+    var spread = clamp(1 - p * 1.45, 0, 1); // 0% -> 1, 70% -> 0 (부채꼴이 서서히 열리며 빠짐)
+    var focus = clamp(p * 1.4, 0, 1);        // 0% -> 0, 70% -> 1 (중앙 릴스 집중)
+    var isMobile = window.innerWidth < 768;
+
+    // 1) 전체 덱 3D 틸트 (마우스 따라 입체 반응)
+    if (deckEl && !reducedMotion) {
+      var rx = (-curMy * 6 * (1 - p * 0.35)).toFixed(2);
+      var ry = (curMx * 8 * (1 - p * 0.35)).toFixed(2);
+      deckEl.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
+    }
+
+    // 2) 중앙 메인 릴스: 스크롤 시 시네마틱하게 커지며 정면 포커스
+    if (mainReelEl) {
+      var mScale = (1 + focus * (isMobile ? 0.05 : 0.09)).toFixed(3);
+      var mY = (-focus * 6).toFixed(1);
+      mainReelEl.style.transform = 'translate3d(0,' + mY + 'px,0) scale(' + mScale + ')';
+    }
+
+    // 3) 좌우 부채꼴 4장: 스크롤에 따라 바깥으로 펼쳐지며 시네마틱 페이드아웃
+    var dx1 = isMobile ? 116 : 210;
+    var dx2 = 380;
+    var outX = (1 - spread) * (isMobile ? 90 : 170);
+    if (fanL1) {
+      fanL1.style.transform = 'translate(-50%, -50%) translate3d(' + (-dx1 - outX).toFixed(1) + 'px,' + (14 + (1 - spread) * 20).toFixed(1) + 'px,-60px) rotate(' + (-9 - (1 - spread) * 7).toFixed(1) + 'deg) scale(' + (0.9 - (1 - spread) * 0.08).toFixed(3) + ')';
+      fanL1.style.opacity = (spread * 0.88).toFixed(3);
+      fanL1.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
+    }
+    if (fanR1) {
+      fanR1.style.transform = 'translate(-50%, -50%) translate3d(' + (dx1 + outX).toFixed(1) + 'px,' + (14 + (1 - spread) * 20).toFixed(1) + 'px,-60px) rotate(' + (9 + (1 - spread) * 7).toFixed(1) + 'deg) scale(' + (0.9 - (1 - spread) * 0.08).toFixed(3) + ')';
+      fanR1.style.opacity = (spread * 0.88).toFixed(3);
+      fanR1.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
+    }
+    if (fanL2) {
+      fanL2.style.transform = 'translate(-50%, -50%) translate3d(' + (-dx2 - outX * 1.35).toFixed(1) + 'px,' + (36 + (1 - spread) * 28).toFixed(1) + 'px,-120px) rotate(' + (-17 - (1 - spread) * 9).toFixed(1) + 'deg) scale(0.8)';
+      fanL2.style.opacity = (spread * 0.62).toFixed(3);
+      fanL2.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
+    }
+    if (fanR2) {
+      fanR2.style.transform = 'translate(-50%, -50%) translate3d(' + (dx2 + outX * 1.35).toFixed(1) + 'px,' + (36 + (1 - spread) * 28).toFixed(1) + 'px,-120px) rotate(' + (17 + (1 - spread) * 9).toFixed(1) + 'deg) scale(0.8)';
+      fanR2.style.opacity = (spread * 0.62).toFixed(3);
+      fanR2.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
+    }
+
+    // 4) 좌우 시네마틱 HUD 카드: 스크롤 32% 이후 스윽 떠오름
+    var hudAlpha = clamp((p - 0.28) / 0.32, 0, 1);
+    var hudY = (1 - hudAlpha) * 28;
+    if (hudL) {
+      hudL.style.opacity = hudAlpha.toFixed(3);
+      hudL.style.transform = 'translate3d(' + (-curMx * 10).toFixed(1) + 'px, calc(-50% + ' + hudY.toFixed(1) + 'px), 0)';
+    }
+    if (hudR) {
+      hudR.style.opacity = hudAlpha.toFixed(3);
+      hudR.style.transform = 'translate3d(' + (-curMx * 10).toFixed(1) + 'px, calc(-50% + ' + hudY.toFixed(1) + 'px), 0)';
+    }
+
+    // 5) 배경 워터마크 수평 패럴랙스 + 스크롤 큐 페이드
+    if (wmEl) {
+      wmEl.style.transform = 'translate(calc(-50% + ' + (-p * 140).toFixed(1) + 'px), -50%)';
+    }
+    if (scrollCue) {
+      scrollCue.style.opacity = clamp(1 - p * 4, 0, 1).toFixed(2);
+    }
+
+    // 6) 상단 타이포 1막 ↔ 2막 크로스페이드
+    var inAct2 = p >= 0.44;
+    if (act1 && act2) {
+      act1.classList.toggle('is-visible', !inAct2);
+      act1.setAttribute('aria-hidden', inAct2 ? 'true' : 'false');
+      act2.classList.toggle('is-visible', inAct2);
+      act2.setAttribute('aria-hidden', inAct2 ? 'false' : 'true');
+    }
+
+    // 7) 스크롤에 연동된 3컷 자동 전환 (스크롤을 내릴 때 CUT 1 -> 2 -> 3 자연 전환)
+    if (p > 0.08 && p < 0.98) {
+      var desiredCut = p < 0.42 ? 0 : (p < 0.74 ? 1 : 2);
+      if (desiredCut !== lastScrollCut) {
+        lastScrollCut = desiredCut;
+        var ind = INDS[current] || INDS.auto;
+        if (ind && desiredCut !== currentCut) {
+          renderCut(ind, desiredCut);
+          scheduleNextCut();
+        }
+      }
+    }
+
+    requestAnimationFrame(applyCineFrame);
+  }
+
+  window.addEventListener('scroll', computeScrollProgress, { passive: true });
+  window.addEventListener('resize', computeScrollProgress, { passive: true });
+  window.addEventListener('pointermove', function (e) {
+    if (e.pointerType === 'touch') return;
+    targetMx = (e.clientX / Math.max(1, window.innerWidth)) * 2 - 1;
+    targetMy = (e.clientY / Math.max(1, window.innerHeight)) * 2 - 1;
+    targetPx = (e.clientX / Math.max(1, window.innerWidth)) * 100;
+    targetPy = (e.clientY / Math.max(1, window.innerHeight)) * 100;
+    if (glowEl) {
+      glowEl.style.setProperty('--mx', targetPx.toFixed(1) + '%');
+      glowEl.style.setProperty('--my', targetPy.toFixed(1) + '%');
+    }
+  }, { passive: true });
+
+  // 하단 섹션 스크롤 리빌
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (ent) {
+        if (ent.isIntersecting) {
+          ent.target.classList.add('is-in');
+          io.unobserve(ent.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.ar-reveal').forEach(function (el) { io.observe(el); });
+  } else {
+    document.querySelectorAll('.ar-reveal').forEach(function (el) { el.classList.add('is-in'); });
+  }
+
+  // 메인 릴스 클릭/키보드 -> 다음 컷 전환
+  if (mainReelEl) {
+    mainReelEl.addEventListener('click', function (e) {
       if (e.target && e.target.closest && e.target.closest('#landingPhonePlayBtn')) return;
       var ind = INDS[current] || INDS.auto;
       if (!ind) return;
       renderCut(ind, currentCut + 1);
       scheduleNextCut();
     });
-    stageEl.addEventListener('keydown', function (e) {
+    mainReelEl.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         var ind = INDS[current] || INDS.auto;
@@ -226,4 +385,6 @@
 
   syncPlayBtn();
   selectIndustry('auto');
+  computeScrollProgress();
+  requestAnimationFrame(applyCineFrame);
 })();

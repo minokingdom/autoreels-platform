@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>오토릴스메이커 — 누구나 쉽게 만드는 릴스·쇼츠</title>
-  <meta name="description" content="사진과 아이디어만 준비하세요. 주제 추천부터 대본, 성우, 영상 제작까지 한 번에." />
-  <meta name="theme-color" content="#0e1015" />
+  <meta name="description" content="사진과 아이디어만 준비하세요. 주제 추천, 참고 링크 분석, 하이라이트 추출, 대본, 성우, 영상 제작까지 한 번에." />
+  <meta name="theme-color" content="#09090b" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="오토릴스메이커" />
   <meta property="og:locale" content="ko_KR" />
-  <meta property="og:url" content="https://autoreels-studio.vercel.app/" />
+  <meta property="og:url" content="https://autoreelsmaker.kr/" />
   <meta property="og:title" content="AutoReelsMaker - 오토릴스메이커" />
   <meta property="og:description" content="사진과 아이디어만 준비하세요. 주제 대본 사진 음성 sns 발행까지" />
   <meta property="og:image" content="https://autoreelsmaker.kr/og-cover-autoreelsmaker-20261118.png" />
@@ -18,9 +18,6 @@
   <meta property="og:image:height" content="909" />
   <meta name="twitter:card" content="summary_large_image" />
   <script>
-    // 랜딩은 제작 화면(/studio)과 분리된 가벼운 페이지 (2026-11-14).
-    // 한 번이라도 제작 화면을 연 사람, 또는 제작 화면으로 돌아가는 주소(SNS·결제 복귀 등)는 바로 /studio 로.
-    // ?landing=1 이나 /intro 로 들어오면 항상 랜딩을 보여 줌.
     (function () {
       try {
         var sp = new URLSearchParams(location.search || '');
@@ -35,215 +32,301 @@
   <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120c" />
+  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120d" />
 </head>
-<body class="antialiased px-4 py-6 md:px-8 md:py-8">
-  <!-- 랜딩 페이지 (/) — 제작 화면 코드·글꼴을 받지 않아 바로 뜸. 스타일: tailwind 로 미리 만든 landing.css (npm run build:landing-css) -->
-  <main id="arLandingView" class="max-w-[1160px] mx-auto space-y-16 pb-16">
-    <!-- 랜딩 상단 네비게이션 -->
-    <nav class="flex items-center justify-between gap-4 py-2 border-b border-[var(--border)]">
-      <div class="flex items-center gap-2.5">
+<body class="antialiased lp-cine-body">
+  <!-- 시네마틱 글래스 상단 네비게이션 + 1px 스크롤 타임라인 바 -->
+  <header class="lp-nav">
+    <div class="lp-nav-inner">
+      <a href="#arCineHero" class="flex items-center gap-2.5">
         <div class="w-8 h-8 landing-mark flex items-center justify-center text-xs">AR</div>
-        <span class="text-[16px] font-semibold text-[#ededed] tracking-tight">오토릴스메이커</span>
-        <span class="hidden sm:inline-block px-2 py-0.5 rounded-full bg-[#18181b] border border-[var(--border)] text-[11px] text-[#a1a1a6]">릴스·쇼츠 제작 스튜디오</span>
-      </div>
-      <div class="flex items-center gap-2 sm:gap-3 text-[13px]">
-        <a href="#arLandingIndustries" class="hidden sm:inline-block px-2.5 py-1.5 text-[#a1a1a6] hover:text-[#ededed] transition-colors">업종별 예시</a>
-        <a href="#arLandingFeatures" class="hidden sm:inline-block px-2.5 py-1.5 text-[#a1a1a6] hover:text-[#ededed] transition-colors">주요 기능</a>
-        <a href="#arLandingPricing" class="px-2.5 py-1.5 text-[#a1a1a6] hover:text-[#ededed] transition-colors">요금제</a>
+        <span class="text-[15px] font-semibold text-[#f4f4f5] tracking-tight">오토릴스메이커</span>
+      </a>
+      <div class="flex items-center gap-1.5 sm:gap-3 text-[13px]">
+        <a href="#arLandingFeatures" class="hidden sm:inline-block px-2.5 py-1.5 text-[#a1a1aa] hover:text-white transition-colors">주요 기능</a>
+        <a href="#arLandingIndustries" class="hidden sm:inline-block px-2.5 py-1.5 text-[#a1a1aa] hover:text-white transition-colors">업종별 예시</a>
+        <a href="#arLandingPricing" class="px-2.5 py-1.5 text-[#a1a1aa] hover:text-white transition-colors">요금제</a>
         <button type="button" data-go="/studio" class="landing-primary h-9 px-4 text-[13px]">스튜디오 열기</button>
       </div>
-    </nav>
+    </div>
+    <div class="lp-scroll-track" aria-hidden="true"><i id="lpScrollBar"></i></div>
+  </header>
 
-    <!-- 히어로 영역: 좌측 카피+CTA / 우측 업종별 3컷 실시간 미리보기 폰 -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-      <div class="lg:col-span-7 space-y-6">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#18181b] border border-[var(--border-strong)] text-[12px] text-[#d4d4d8]">
-          <span class="w-2 h-2 rounded-full bg-[#4cc38a]"></span>
-          <span>디자인 700종+ · 참고 링크 분석 · 하이라이트 추출 · AI 성우</span>
-        </div>
-        <h1 class="text-[32px] sm:text-[42px] font-bold text-[#f4f4f5] leading-[1.2] tracking-tight">
-          사진만 올리면 <br />내 이야기가 릴스가 됩니다
-        </h1>
-        <p class="text-[15px] sm:text-[16px] text-[#a1a1a6] leading-relaxed max-w-[540px]">
-          오늘의 인기 주제 추천, 참고 영상 링크 분석·재구성, 긴 영상 하이라이트 추출부터 구어체 AI 대본, 700종+ 모션 디자인, 자연스러운 AI 성우, 매장 엔딩까지 한 곳에서 만들고 9:16 MP4로 저장하세요.
-        </p>
-        <div class="flex flex-wrap items-center gap-3 pt-1">
-          <a href="/studio" class="landing-primary landing-hero-cta">
-            지금 무료로 릴스 만들기 <span aria-hidden="true">→</span>
-          </a>
-          <a href="#arLandingFeatures" class="landing-secondary h-11 px-5 text-[14px] flex items-center">
-            새 기능 둘러보기
-          </a>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 max-w-[500px] text-[12px]">
-          <div class="rounded-[10px] bg-[#141415] border border-[var(--border)] px-3 py-2.5">
-            <div class="text-[15px] font-bold text-[#ededed]">10개 업종 · 개인</div>
-            <div class="text-[#85858b] mt-0.5">업종별 대본 · 로고 엔딩</div>
+  <!-- ====================================================================== -->
+  <!-- 시네마틱 스크롤-드리븐 히어로 스테이지 (240vh 스티키 연출 + 마우스 3D 틸트) -->
+  <!-- ====================================================================== -->
+  <section id="arCineHero" class="lp-cine-hero" aria-label="오토릴스메이커 시네마틱 히어로">
+    <div id="arCineSticky" class="lp-cine-sticky">
+      <!-- 1. 동적 배경: 실사 앰비언트 블러 + 마우스 스포트라이트 + 필름 그레인 + 패럴랙스 워터마크 -->
+      <div id="lpAmbientPhoto" class="lp-ambient-photo" aria-hidden="true"></div>
+      <div class="lp-ambient-vignette" aria-hidden="true"></div>
+      <div id="lpMouseGlow" class="lp-mouse-glow" aria-hidden="true"></div>
+      <div class="lp-film-grain" aria-hidden="true"></div>
+      <div id="lpBgWatermark" class="lp-bg-watermark" aria-hidden="true">AUTOREELS · CINEMA STUDIO · 9:16</div>
+
+      <!-- 2. 상단 시네마틱 타이포 (스크롤 1막 ↔ 2막 크로스페이드) -->
+      <div class="lp-hero-copy-wrap">
+        <div id="lpAct1" class="lp-hero-act is-visible">
+          <div class="lp-eyebrow">
+            <span class="lp-eyebrow-dot"></span>
+            <span>700+ 스타일 · 참고 링크 분석 · 하이라이트 추출 · AI 성우</span>
           </div>
-          <div class="rounded-[10px] bg-[#141415] border border-[var(--border)] px-3 py-2.5">
-            <div class="text-[15px] font-bold text-[#ededed]">700+ 스타일</div>
-            <div class="text-[#85858b] mt-0.5">카드뉴스 · 내 스타일 저장</div>
+          <h1 class="lp-cine-h1">
+            사진 한 장이,<br />
+            <span class="lp-cine-h1-accent">한 편의 릴스가 된다</span>
+          </h1>
+          <div class="lp-hero-actions">
+            <a href="/studio" class="landing-primary landing-hero-cta">
+              지금 무료로 릴스 만들기 <span aria-hidden="true">→</span>
+            </a>
+            <a href="#arLandingFeatures" class="lp-ghost-cta">
+              새 기능 보기
+            </a>
           </div>
-          <div class="rounded-[10px] bg-[#141415] border border-[var(--border)] px-3 py-2.5">
-            <div class="text-[15px] font-bold text-[#ededed]">링크 분석 · 하이라이트</div>
-            <div class="text-[#85858b] mt-0.5">참고 재구성 · 핵심 구간 추출</div>
+        </div>
+
+        <div id="lpAct2" class="lp-hero-act" aria-hidden="true">
+          <div class="lp-eyebrow">
+            <span class="lp-eyebrow-dot"></span>
+            <span>SCROLL DIRECTOR · 실시간 3컷 자동 연출</span>
+          </div>
+          <h2 class="lp-cine-h1 lp-cine-h2">
+            링크 하나, 긴 영상 하나로<br />
+            <span class="lp-cine-h1-accent">컷 · 자막 · 성우까지 한 번에</span>
+          </h2>
+          <div class="lp-hero-actions">
+            <a href="/assets/remix/index.html" class="landing-primary landing-hero-cta">
+              참고 링크 분석하기 <span aria-hidden="true">→</span>
+            </a>
+            <a href="/assets/shorts/index.html" class="lp-ghost-cta">
+              하이라이트 뽑기 →
+            </a>
           </div>
         </div>
       </div>
 
-      <!-- 우측 업종별 3컷 자동 미리보기 폰 -->
-      <div class="lg:col-span-5 flex flex-col items-center space-y-3">
-        <div class="w-full max-w-[296px] rounded-[24px] bg-[#141415] border border-[var(--border-strong)] p-2.5 shadow-2xl">
-          <div id="landingPhoneStage" role="button" tabindex="0" aria-label="미리보기 다음 컷 보기" class="lp-phone-stage relative w-full aspect-[9/16] rounded-[18px] overflow-hidden bg-[#18181b] border border-white/10 flex flex-col justify-between p-4 cursor-pointer select-none">
-            <div id="landingPhoneBg" class="lp-phone-bg absolute inset-0"></div>
+      <!-- 3. 중앙 3D 시네마틱 실사 릴스 덱 + 스크롤 패럴랙스 편집 HUD -->
+      <div class="lp-stage-wrap">
+        <!-- 좌측 플로팅 HUD (스크롤 시 등장) -->
+        <aside id="lpHudLeft" class="lp-hud lp-hud-left" aria-hidden="true">
+          <div class="lp-hud-tag">NEW · LINK &amp; HIGHLIGHT</div>
+          <div class="lp-hud-title">참고 링크 컷 리듬 분석</div>
+          <div class="lp-hud-timeline">
+            <span style="width:28%"></span>
+            <span style="width:42%"></span>
+            <span style="width:30%"></span>
+          </div>
+          <div class="lp-hud-meta">10분 영상 → 핵심 15초 하이라이트</div>
+        </aside>
+
+        <!-- 5장 입체 부채꼴 실사 릴스 덱 (마우스 3D 틸트 + 스크롤 시 중앙 집중 확대) -->
+        <div id="lpReelDeck" class="lp-reel-deck">
+          <!-- 좌2 -->
+          <button type="button" data-ind="cafe" data-quick="1" class="lp-fan-card lp-fan-l2" aria-label="카페·디저트 릴스 예시 보기">
+            <img src="/assets/scenes/cafe/1.jpg" alt="" loading="eager" />
+            <div class="lp-fan-scrim"></div>
+            <div class="lp-fan-meta"><span>☕ 카페·디저트</span><strong>시그니처 라떼 15초</strong></div>
+          </button>
+          <!-- 좌1 -->
+          <button type="button" data-ind="beauty" data-quick="1" class="lp-fan-card lp-fan-l1" aria-label="미용·네일·뷰티 릴스 예시 보기">
+            <img src="/assets/scenes/beauty/1.jpg" alt="" loading="eager" />
+            <div class="lp-fan-scrim"></div>
+            <div class="lp-fan-meta"><span>💇 미용·뷰티</span><strong>시술 전후 무드 릴스</strong></div>
+          </button>
+
+          <!-- 중앙 메인 9:16 시네마틱 라이브 릴스 프레임 -->
+          <div id="landingPhoneStage" role="button" tabindex="0" aria-label="미리보기 다음 컷 보기" class="lp-main-reel">
+            <img id="lpMainPhoto" class="lp-main-photo" src="/assets/scenes/auto/1.jpg" alt="" />
+            <div class="lp-main-scrim"></div>
             <div class="relative z-10 space-y-2">
               <div id="landingPhoneBars" class="lp-bars" aria-hidden="true">
                 <span class="lp-bar"><i class="lp-bar-fill"></i></span>
                 <span class="lp-bar"><i class="lp-bar-fill"></i></span>
                 <span class="lp-bar"><i class="lp-bar-fill"></i></span>
               </div>
-              <div class="flex items-center justify-between gap-2 text-[10px] text-white/80 font-mono">
-                <span id="landingPhoneBadge" class="px-2 py-0.5 rounded-full bg-white/10 border border-white/15 truncate">🚗 자동차 영업</span>
+              <div class="flex items-center justify-between gap-2 text-[10px] text-white/90 font-mono">
+                <span id="landingPhoneBadge" class="px-2 py-0.5 rounded-full bg-black/45 backdrop-blur-md border border-white/15 truncate">🚗 자동차 영업</span>
                 <div class="flex items-center gap-1.5 shrink-0">
-                  <span id="landingPhoneCutTag" class="text-[10px] text-white/75">CUT 1/3</span>
+                  <span id="landingPhoneCutTag" class="px-1.5 py-0.5 rounded bg-black/45 text-[10px] text-white/90">CUT 1/3</span>
                   <button type="button" id="landingPhonePlayBtn" aria-label="미리보기 일시정지" class="lp-play-btn">❚❚</button>
                 </div>
               </div>
             </div>
-            <div id="landingPhoneSlide" class="relative z-10 my-auto space-y-2.5">
-              <div id="landingPhoneKicker" class="text-[10px] font-semibold tracking-wide text-[#4cc38a] uppercase"></div>
-              <div id="landingPhoneHook" class="text-[19px] font-bold text-white leading-snug"></div>
-              <div id="landingPhoneSub" class="text-[12px] text-white/85 leading-relaxed bg-black/35 backdrop-blur-sm rounded-[10px] p-2.5 border border-white/10"></div>
+
+            <div id="landingPhoneSlide" class="relative z-10 my-auto space-y-2">
+              <div id="landingPhoneKicker" class="text-[10px] font-semibold tracking-wider text-[#4cc38a] uppercase"></div>
+              <div id="landingPhoneHook" class="text-[19px] sm:text-[21px] font-bold text-white leading-snug lp-text-shadow"></div>
+              <div id="landingPhoneSub" class="text-[12px] text-white/90 leading-relaxed bg-black/45 backdrop-blur-md rounded-[10px] p-2.5 border border-white/15"></div>
               <div id="landingPhoneTags" class="flex flex-wrap gap-1"></div>
             </div>
-            <div class="relative z-10 space-y-2">
-              <div class="rounded-[12px] bg-black/55 backdrop-blur-md border border-white/15 px-3 py-2 flex items-center justify-between gap-2">
+
+            <div class="relative z-10 space-y-1.5">
+              <div class="rounded-[12px] bg-black/60 backdrop-blur-md border border-white/15 px-3 py-2 flex items-center justify-between gap-2">
                 <div class="min-w-0">
-                  <div id="landingPhonePlace" class="text-[11px] font-semibold text-white leading-tight"></div>
+                  <div id="landingPhonePlace" class="text-[11px] font-semibold text-white leading-tight truncate"></div>
                   <div id="landingPhonePromo" class="text-[10px] text-[#4cc38a] truncate mt-0.5"></div>
                 </div>
                 <span class="px-2 py-1 rounded-[6px] bg-white text-[#09090b] text-[10px] font-bold shrink-0">엔딩</span>
               </div>
-              <div class="text-center text-[10px] text-white/55">화면을 탭하면 다음 컷으로 넘어가요</div>
             </div>
           </div>
+
+          <!-- 우1 -->
+          <button type="button" data-ind="restaurant" data-quick="1" class="lp-fan-card lp-fan-r1" aria-label="음식점 릴스 예시 보기">
+            <img src="/assets/scenes/restaurant/1.jpg" alt="" loading="eager" />
+            <div class="lp-fan-scrim"></div>
+            <div class="lp-fan-meta"><span>🍽️ 음식점</span><strong>오늘의 시그니처 메뉴</strong></div>
+          </button>
+          <!-- 우2 -->
+          <button type="button" data-ind="interior" data-quick="1" class="lp-fan-card lp-fan-r2" aria-label="인테리어 릴스 예시 보기">
+            <img src="/assets/scenes/interior/1.jpg" alt="" loading="eager" />
+            <div class="lp-fan-scrim"></div>
+            <div class="lp-fan-meta"><span>🛋️ 인테리어</span><strong>시공 비포·애프터</strong></div>
+          </button>
         </div>
+
+        <!-- 우측 플로팅 HUD (스크롤 시 등장) -->
+        <aside id="lpHudRight" class="lp-hud lp-hud-right" aria-hidden="true">
+          <div class="lp-hud-tag">AI VOICE &amp; 700+ STYLES</div>
+          <div class="lp-hud-title">성우 내레이션 · 오리지널 BGM</div>
+          <div class="lp-eq" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div class="lp-hud-meta">9:16 1080×1920 MP4 즉시 저장</div>
+        </aside>
+      </div>
+
+      <!-- 4. 하단 시네마틱 스크롤 인디케이터 + 빠른 업종 바 -->
+      <div class="lp-hero-bottom">
         <div id="landingQuickInds" class="lp-quick-row" aria-label="빠른 업종 미리보기"></div>
-        <button type="button" id="landingStartIndustryBtn" data-go-ind class="px-4 py-2 rounded-[8px] bg-[#232325] hover:bg-[#2e2e32] border border-[var(--border-strong)] text-[12px] font-medium text-[#ededed] cursor-pointer transition-colors">
-          이 업종으로 바로 만들기 →
-        </button>
+        <div id="lpScrollCue" class="lp-scroll-cue" aria-hidden="true">
+          <span>SCROLL TO EXPLORE</span>
+          <i class="lp-scroll-line"></i>
+        </div>
       </div>
     </div>
+  </section>
 
-    <!-- 업종별 지원 섹션 (10개 업종 실제 데이터 연동) -->
-    <div id="arLandingIndustries" class="space-y-4">
+  <!-- ====================================================================== -->
+  <!-- 본문 섹션 (스크롤 리빌 적용) -->
+  <!-- ====================================================================== -->
+  <main id="arLandingView" class="max-w-[1160px] mx-auto px-4 md:px-8 space-y-20 pt-10 pb-16">
+    <!-- 실제 기능 (신규 도구 2종 + 스튜디오 핵심 기능 6종) -->
+    <section id="arLandingFeatures" class="space-y-5 ar-reveal">
       <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
         <div>
-          <h2 class="text-[20px] font-semibold text-[#ededed]">업종과 개인에 맞는 문구 · 대본 · 엔딩</h2>
-          <p class="text-[13px] text-[#85858b] mt-1">제작 유형을 고르면 위 미리보기에서 대본과 엔딩 구성을 확인할 수 있어요.</p>
+          <span class="text-[11px] font-mono tracking-wider uppercase text-[#4cc38a]">STUDIO CAPABILITIES</span>
+          <h2 class="text-[22px] sm:text-[26px] font-bold text-[#f4f4f5] mt-1 tracking-tight">스튜디오에 실제로 들어있는 기능</h2>
+          <p class="text-[13.5px] text-[#85858b] mt-1">과장 없이 지금 바로 쓸 수 있는 최신 제작 도구와 편집 기능만 담았습니다.</p>
         </div>
-      </div>
-      <div id="landingIndustryGrid" class="grid grid-cols-2 sm:grid-cols-5 gap-2.5"></div>
-    </div>
-
-    <!-- 실제 기능 (신규 도구 2종 + 스튜디오 핵심 기능 6종) -->
-    <div id="arLandingFeatures" class="space-y-4">
-      <div>
-        <h2 class="text-[20px] font-semibold text-[#ededed]">스튜디오에 실제로 들어있는 기능</h2>
-        <p class="text-[13px] text-[#85858b] mt-1">과장 없이 지금 바로 쓸 수 있는 최신 제작 도구와 편집 기능만 담았습니다.</p>
       </div>
 
       <!-- 신규 핵심 도구 2종: 참고 영상 링크 분석 & 긴 영상 하이라이트 추출 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        <div class="studio-card p-5 flex flex-col justify-between gap-4 border-[var(--border-strong)] bg-[#18181b]">
-          <div class="space-y-2">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="studio-card lp-feature-spotlight p-5 sm:p-6 flex flex-col justify-between gap-5">
+          <div class="space-y-2.5">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="lp-new-badge">NEW · 링크 분석</span>
-              <span class="text-[11px] text-[#85858b]">참고 쇼츠·릴스 재구성</span>
+              <span class="text-[11.5px] text-[#85858b]">참고 쇼츠·릴스 재구성</span>
             </div>
-            <h3 class="text-[16px] font-semibold text-[#ededed]">참고 영상 링크 넣어 컷·대본 그대로 재구성</h3>
-            <p class="text-[13px] text-[#a1a1a6] leading-relaxed">마음에 드는 쇼츠·릴스 링크를 붙여넣거나 저장한 영상을 올리면 원본의 컷 길이, 주제, 자막 문구와 대사를 분석합니다. 내 상품·주제에 맞게 대본을 바꾸고 내 사진·영상만 얹어 새 쇼츠로 완성하세요.</p>
+            <h3 class="text-[18px] font-semibold text-[#f4f4f5] tracking-tight">참고 영상 링크 넣어 컷·대본 그대로 재구성</h3>
+            <p class="text-[13.5px] text-[#a1a1a6] leading-relaxed">마음에 드는 쇼츠·릴스 링크를 붙여넣거나 저장한 영상을 올리면 원본의 컷 길이, 주제, 자막 문구와 대사를 분석합니다. 내 상품·주제에 맞게 대본을 바꾸고 내 사진·영상만 얹어 새 쇼츠로 완성하세요.</p>
           </div>
-          <div class="flex items-center justify-between gap-2 pt-1">
-            <span class="text-[11.5px] text-[#85858b]">최대 90초 · 컷 타이밍 자동 맞춤</span>
-            <a href="/assets/remix/index.html" class="landing-secondary h-9 px-3.5 text-[12px] inline-flex items-center gap-1 shrink-0">링크 분석 열기 →</a>
+          <div class="flex items-center justify-between gap-2 pt-2 border-t border-white/10">
+            <span class="text-[12px] text-[#85858b]">최대 90초 · 컷 타이밍 자동 맞춤</span>
+            <a href="/assets/remix/index.html" class="landing-secondary h-9 px-4 text-[12px] inline-flex items-center gap-1 shrink-0">링크 분석 열기 →</a>
           </div>
         </div>
-        <div class="studio-card p-5 flex flex-col justify-between gap-4 border-[var(--border-strong)] bg-[#18181b]">
-          <div class="space-y-2">
+        <div class="studio-card lp-feature-spotlight p-5 sm:p-6 flex flex-col justify-between gap-5">
+          <div class="space-y-2.5">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="lp-new-badge">NEW · 하이라이트</span>
-              <span class="text-[11px] text-[#85858b]">내 영상 → 쇼츠 자동 추출</span>
+              <span class="text-[11.5px] text-[#85858b]">내 영상 → 쇼츠 자동 추출</span>
             </div>
-            <h3 class="text-[16px] font-semibold text-[#ededed]">긴 영상에서 핵심 발언 하이라이트 자동 뽑기</h3>
-            <p class="text-[13px] text-[#a1a1a6] leading-relaxed">최대 10분짜리 말하는 영상을 올리면 AI가 음성을 분석해 쇼츠로 쓰기 좋은 핵심 구간만 골라줍니다. 찾고 싶은 주제를 적어 구간을 추리고, 제목과 대사 자막까지 편집해 9:16 MP4로 바로 저장하세요.</p>
+            <h3 class="text-[18px] font-semibold text-[#f4f4f5] tracking-tight">긴 영상에서 핵심 발언 하이라이트 자동 뽑기</h3>
+            <p class="text-[13.5px] text-[#a1a1a6] leading-relaxed">최대 10분짜리 말하는 영상을 올리면 AI가 음성을 분석해 쇼츠로 쓰기 좋은 핵심 구간만 골라줍니다. 찾고 싶은 주제를 적어 구간을 추리고, 제목과 대사 자막까지 편집해 9:16 MP4로 바로 저장하세요.</p>
           </div>
-          <div class="flex items-center justify-between gap-2 pt-1">
-            <span class="text-[11.5px] text-[#85858b]">최대 10분 · 250MB · 자동 자막</span>
-            <a href="/assets/shorts/index.html" class="landing-secondary h-9 px-3.5 text-[12px] inline-flex items-center gap-1 shrink-0">하이라이트 열기 →</a>
+          <div class="flex items-center justify-between gap-2 pt-2 border-t border-white/10">
+            <span class="text-[12px] text-[#85858b]">최대 10분 · 250MB · 자동 자막</span>
+            <a href="/assets/shorts/index.html" class="landing-secondary h-9 px-4 text-[12px] inline-flex items-center gap-1 shrink-0">하이라이트 열기 →</a>
           </div>
         </div>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-        <div class="studio-card p-4 space-y-1.5">
-          <div class="text-[14px] font-semibold text-[#ededed]">1. 오늘의 주제 · AI 구어체 대본</div>
-          <p class="text-[12.5px] text-[#a1a1a6] leading-relaxed">매일 새벽 자동 갱신되는 급상승 키워드와 업종별 상황(계기→마음→상품→가게)에 맞는 릴스 대본 3안을 바로 생성하고 컷별로 수정할 수 있습니다.</p>
+        <div class="studio-card p-5 space-y-2">
+          <div class="text-[14.5px] font-semibold text-[#ededed]">1. 오늘의 주제 · AI 구어체 대본</div>
+          <p class="text-[13px] text-[#a1a1a6] leading-relaxed">매일 새벽 자동 갱신되는 급상승 키워드와 업종별 상황(계기→마음→상품→가게)에 맞는 릴스 대본 3안을 바로 생성하고 컷별로 수정할 수 있습니다.</p>
         </div>
-        <div class="studio-card p-4 space-y-1.5">
-          <div class="text-[14px] font-semibold text-[#ededed]">2. 디자인 700종+ · 카드뉴스 · 내 스타일</div>
-          <p class="text-[12.5px] text-[#a1a1a6] leading-relaxed">감성·브이로그·매거진·카드뉴스 등 700종+ 스타일에 더해, 우리 가게의 브랜드 색·글꼴·로고·자막 위치를 저장하는 ‘내 스타일 만들기’를 지원합니다.</p>
+        <div class="studio-card p-5 space-y-2">
+          <div class="text-[14.5px] font-semibold text-[#ededed]">2. 디자인 700종+ · 카드뉴스 · 내 스타일</div>
+          <p class="text-[13px] text-[#a1a1a6] leading-relaxed">감성·브이로그·매거진·카드뉴스 등 700종+ 스타일에 더해, 우리 가게의 브랜드 색·글꼴·로고·자막 위치를 저장하는 ‘내 스타일 만들기’를 지원합니다.</p>
         </div>
-        <div class="studio-card p-4 space-y-1.5">
-          <div class="text-[14px] font-semibold text-[#ededed]">3. AI 성우 내레이션 · 오리지널 BGM</div>
-          <p class="text-[12.5px] text-[#a1a1a6] leading-relaxed">자연스러운 한국어 AI 성우 합성과 음성 길이에 맞춘 자동 컷 전환, 저작권 걱정 없는 오리지널 BGM 라이브러리와 내 MP3 음원 불러오기를 제공합니다.</p>
+        <div class="studio-card p-5 space-y-2">
+          <div class="text-[14.5px] font-semibold text-[#ededed]">3. AI 성우 내레이션 · 오리지널 BGM</div>
+          <p class="text-[13px] text-[#a1a1a6] leading-relaxed">자연스러운 한국어 AI 성우 합성과 음성 길이에 맞춘 자동 컷 전환, 저작권 걱정 없는 오리지널 BGM 라이브러리와 내 MP3 음원 불러오기를 제공합니다.</p>
         </div>
-        <div class="studio-card p-4 space-y-1.5">
-          <div class="text-[14px] font-semibold text-[#ededed]">4. 컷별 세부 편집 · 빠른 컷 이동</div>
-          <p class="text-[12.5px] text-[#a1a1a6] leading-relaxed">컷마다 글씨(14종 폰트), 스티커, 네온 펜 그리기, 색감 필터, 사진 1장 전체 통일을 적용하고 상단 컷 점프 바로 원하는 장면을 바로 오갈 수 있습니다.</p>
+        <div class="studio-card p-5 space-y-2">
+          <div class="text-[14.5px] font-semibold text-[#ededed]">4. 컷별 세부 편집 · 빠른 컷 이동</div>
+          <p class="text-[13px] text-[#a1a1a6] leading-relaxed">컷마다 글씨(14종 폰트), 스티커, 네온 펜 그리기, 색감 필터, 사진 1장 전체 통일을 적용하고 상단 컷 점프 바로 원하는 장면을 바로 오갈 수 있습니다.</p>
         </div>
-        <div class="studio-card p-4 space-y-1.5">
-          <div class="text-[14px] font-semibold text-[#ededed]">5. 매장 정보·로고 엔딩 &amp; 9:16 MP4 저장</div>
-          <p class="text-[12.5px] text-[#a1a1a6] leading-relaxed">연락처·매장명·혜택 문구를 넣으면 엔딩 카드가 자동 부착되며, 별도 프로그램 없이 브라우저에서 1080×1920 세로형 MP4로 바로 저장할 수 있습니다.</p>
+        <div class="studio-card p-5 space-y-2">
+          <div class="text-[14.5px] font-semibold text-[#ededed]">5. 매장 정보·로고 엔딩 &amp; 9:16 MP4 저장</div>
+          <p class="text-[13px] text-[#a1a1a6] leading-relaxed">연락처·매장명·혜택 문구를 넣으면 엔딩 카드가 자동 부착되며, 별도 프로그램 없이 브라우저에서 1080×1920 세로형 MP4로 바로 저장할 수 있습니다.</p>
         </div>
-        <div class="studio-card p-4 space-y-1.5">
-          <div class="text-[14px] font-semibold text-[#ededed]">6. 연결한 SNS에 영상 업로드</div>
-          <p class="text-[12.5px] text-[#a1a1a6] leading-relaxed">SNS 계정을 연결해 두면 만든 릴스·쇼츠를 스튜디오 안에서 바로 업로드할 수 있습니다. 프로젝트 저장과 이어서 편집도 지원합니다.</p>
+        <div class="studio-card p-5 space-y-2">
+          <div class="text-[14.5px] font-semibold text-[#ededed]">6. 연결한 SNS에 영상 업로드</div>
+          <p class="text-[13px] text-[#a1a1a6] leading-relaxed">SNS 계정을 연결해 두면 만든 릴스·쇼츠를 스튜디오 안에서 바로 업로드할 수 있습니다. 프로젝트 저장과 이어서 편집도 지원합니다.</p>
         </div>
       </div>
-    </div>
+    </section>
+
+    <!-- 업종별 지원 섹션 -->
+    <section id="arLandingIndustries" class="space-y-4 ar-reveal">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div>
+          <span class="text-[11px] font-mono tracking-wider uppercase text-[#4cc38a]">10 INDUSTRIES + PERSONAL</span>
+          <h2 class="text-[22px] sm:text-[26px] font-bold text-[#f4f4f5] mt-1 tracking-tight">업종과 개인에 맞는 문구 · 대본 · 엔딩</h2>
+          <p class="text-[13.5px] text-[#85858b] mt-1">유형을 고르면 상단 시네마틱 미리보기가 해당 업종 실사와 대본으로 즉시 바뀝니다.</p>
+        </div>
+        <button type="button" id="landingStartIndustryBtn" data-go-ind class="landing-secondary h-10 px-4 text-[13px] shrink-0">
+          🚗 자동차 영업으로 바로 만들기 →
+        </button>
+      </div>
+      <div id="landingIndustryGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5"></div>
+    </section>
 
     <!-- 요금제 (실제 BILLING_PLANS 기준) -->
-    <div id="arLandingPricing" class="space-y-4">
+    <section id="arLandingPricing" class="space-y-5 ar-reveal">
       <div>
-        <h2 class="text-[20px] font-semibold text-[#ededed]">요금제 안내</h2>
-        <p class="text-[13px] text-[#85858b] mt-1">가입 후 7일간 AI 제작을 체험하고, 다운로드·SNS 게시가 필요할 때 이용권을 선택하세요.</p>
+        <span class="text-[11px] font-mono tracking-wider uppercase text-[#4cc38a]">PRICING</span>
+        <h2 class="text-[22px] sm:text-[26px] font-bold text-[#f4f4f5] mt-1 tracking-tight">요금제 안내</h2>
+        <p class="text-[13.5px] text-[#85858b] mt-1">가입 후 7일간 AI 제작을 체험하고, 다운로드·SNS 게시가 필요할 때 이용권을 선택하세요.</p>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="studio-card p-5 flex flex-col justify-between space-y-4">
           <div class="space-y-2.5">
             <div class="text-[13px] font-medium text-[#a1a1a6]">가입 후 7일 무료 체험</div>
-            <div class="text-[24px] font-bold text-[#ededed]">0원</div>
+            <div class="text-[26px] font-bold text-[#ededed]">0원</div>
             <ul class="text-[12.5px] text-[#85858b] space-y-1.5">
               <li>• 10개 업종과 개인 · 700종+ 디자인 미리보기</li>
               <li>• AI 대본 · 컷 편집 체험</li>
               <li>• 워터마크 포함 영상 미리보기</li>
             </ul>
           </div>
-          <button type="button" data-go="/studio" class="landing-secondary w-full h-9 text-[12px] cursor-pointer">무료로 시작하기</button>
+          <button type="button" data-go="/studio" class="landing-secondary w-full h-10 text-[12.5px] cursor-pointer">무료로 시작하기</button>
         </div>
         <div class="studio-card p-5 flex flex-col justify-between space-y-4">
           <div class="space-y-2.5">
             <div class="text-[13px] font-medium text-[#d4d4d8]">스탠다드 (월간)</div>
-            <div class="text-[24px] font-bold text-[#ededed]">29,900원<span class="text-[12px] font-normal text-[#85858b]"> / 월</span></div>
+            <div class="text-[26px] font-bold text-[#ededed]">29,900원<span class="text-[12px] font-normal text-[#85858b]"> / 월</span></div>
             <ul class="text-[12.5px] text-[#a1a1a6] space-y-1.5">
               <li>• <strong class="text-[#ededed]">영상 제작 · AI 대본·이미지 생성</strong></li>
               <li>• <strong class="text-[#ededed]">다운로드 &amp; SNS 게시 월 20회</strong></li>
               <li>• 워터마크 제거 · 9:16 고화질 MP4</li>
             </ul>
           </div>
-          <button type="button" data-go="/studio?plan=standard_29900" class="landing-secondary w-full h-9 text-[12px] cursor-pointer">스탠다드 시작하기</button>
+          <button type="button" data-go="/studio?plan=standard_29900" class="landing-secondary w-full h-10 text-[12.5px] cursor-pointer">스탠다드 시작하기</button>
         </div>
         <div class="studio-card p-5 flex flex-col justify-between space-y-4 border-[#ededed]/40 bg-[#18181b]">
           <div class="space-y-2.5">
@@ -251,161 +334,41 @@
               <span class="text-[13px] font-semibold text-[#ededed]">프로 무제한 (월간)</span>
               <span class="px-2 py-0.5 rounded-full bg-[#4cc38a]/20 text-[#4cc38a] text-[10px] font-semibold">추천</span>
             </div>
-            <div class="text-[24px] font-bold text-[#ededed]">59,000원<span class="text-[12px] font-normal text-[#85858b]"> / 월</span></div>
+            <div class="text-[26px] font-bold text-[#ededed]">59,000원<span class="text-[12px] font-normal text-[#85858b]"> / 월</span></div>
             <ul class="text-[12.5px] text-[#d4d4d8] space-y-1.5">
               <li>• <strong class="text-white">영상 제작 · AI 대본·이미지 생성</strong></li>
               <li>• <strong class="text-white">다운로드 &amp; SNS 게시 무제한</strong></li>
               <li>• 연결한 SNS에 영상 업로드</li>
             </ul>
           </div>
-          <button type="button" data-go="/studio?plan=pro_59000" class="landing-primary w-full h-9 text-[12px]">프로 무제한 시작하기</button>
+          <button type="button" data-go="/studio?plan=pro_59000" class="landing-primary w-full h-10 text-[12.5px]">프로 무제한 시작하기</button>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 하단 사업자·약관 고지 푸터 (랜딩) -->
+    <!-- 하단 사업자·약관 고지 푸터 -->
     <style>
-      .ar-site-footer {
-        margin-top: 56px;
-        padding: 28px 0 12px;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        color: #71717a;
-        font-size: 12px;
-        line-height: 1.65;
-      }
-      .ar-footer-top {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px 24px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      }
-      .ar-footer-brand {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: #a1a1aa;
-        font-size: 12.5px;
-        font-weight: 500;
-      }
-      .ar-footer-brand-badge {
-        width: 22px;
-        height: 22px;
-        border-radius: 6px;
-        background: #1c1c1f;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 10px;
-        font-weight: 700;
-        color: #e4e4e7;
-      }
-      .ar-footer-links {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 6px 18px;
-      }
-      .ar-footer-links button {
-        background: none;
-        border: 0;
-        padding: 2px 0;
-        color: #a1a1aa;
-        font-size: 12px;
-        cursor: pointer;
-        transition: color 0.15s ease;
-      }
-      .ar-footer-links button:hover {
-        color: #f4f4f5;
-      }
-      .ar-footer-links button.ar-footer-privacy {
-        color: #d4d4d8;
-        font-weight: 600;
-      }
-      .ar-footer-meta {
-        padding-top: 14px;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        color: #71717a;
-        font-size: 11.5px;
-      }
-      .ar-footer-row {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 2px 0;
-      }
-      .ar-footer-item {
-        white-space: nowrap;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-      }
-      .ar-footer-item + .ar-footer-item::before {
-        content: "";
-        display: inline-block;
-        width: 1px;
-        height: 10px;
-        background: rgba(255, 255, 255, 0.12);
-        margin: 0 10px;
-      }
-      .ar-footer-item b {
-        font-weight: 500;
-        color: #52525b;
-      }
-      .ar-footer-item span {
-        color: #8e8e96;
-      }
-      .ar-footer-copy {
-        margin-top: 6px;
-        font-size: 11px;
-        color: #52525b;
-      }
-      #arLandingLegalModal {
-        position: fixed;
-        inset: 0;
-        z-index: 60;
-        background: rgba(0, 0, 0, 0.72);
-        backdrop-filter: blur(4px);
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-      }
-      #arLandingLegalModal:not(.hidden) {
-        display: flex;
-      }
-      .ar-legal-dialog {
-        width: 100%;
-        max-width: 500px;
-        border-radius: 14px;
-        background: #161618;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        padding: 20px 22px;
-        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55);
-      }
-      .ar-legal-dialog-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding-bottom: 12px;
-        margin-bottom: 12px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      }
-      .ar-legal-dialog-body {
-        font-size: 12.5px;
-        color: #a1a1aa;
-        line-height: 1.7;
-        max-height: 60vh;
-        overflow-y: auto;
-      }
-      .ar-legal-dialog-body p + p {
-        margin-top: 8px;
-      }
+      .ar-site-footer { margin-top: 56px; padding: 28px 0 12px; border-top: 1px solid rgba(255,255,255,0.08); color: #71717a; font-size: 12px; line-height: 1.65; }
+      .ar-footer-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+      .ar-footer-brand { display: inline-flex; align-items: center; gap: 8px; color: #a1a1aa; font-size: 12.5px; font-weight: 500; }
+      .ar-footer-brand-badge { width: 22px; height: 22px; border-radius: 6px; background: #1c1c1f; border: 1px solid rgba(255,255,255,0.12); display: inline-flex; align-items: center; justify-content: center; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; font-weight: 700; color: #e4e4e7; }
+      .ar-footer-links { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; }
+      .ar-footer-links button { background: none; border: 0; padding: 2px 0; color: #a1a1aa; font-size: 12px; cursor: pointer; transition: color 0.15s ease; }
+      .ar-footer-links button:hover { color: #f4f4f5; }
+      .ar-footer-links button.ar-footer-privacy { color: #d4d4d8; font-weight: 600; }
+      .ar-footer-meta { padding-top: 14px; display: flex; flex-direction: column; gap: 4px; color: #71717a; font-size: 11.5px; }
+      .ar-footer-row { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 0; }
+      .ar-footer-item { white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
+      .ar-footer-item + .ar-footer-item::before { content: ""; display: inline-block; width: 1px; height: 10px; background: rgba(255,255,255,0.12); margin: 0 10px; }
+      .ar-footer-item b { font-weight: 500; color: #52525b; }
+      .ar-footer-item span { color: #8e8e96; }
+      .ar-footer-copy { margin-top: 6px; font-size: 11px; color: #52525b; }
+      #arLandingLegalModal { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,0.72); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; }
+      #arLandingLegalModal:not(.hidden) { display: flex; }
+      .ar-legal-dialog { width: 100%; max-width: 500px; border-radius: 14px; background: #161618; border: 1px solid rgba(255,255,255,0.12); padding: 20px 22px; box-shadow: 0 24px 48px rgba(0,0,0,0.55); }
+      .ar-legal-dialog-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+      .ar-legal-dialog-body { font-size: 12.5px; color: #a1a1aa; line-height: 1.7; max-height: 60vh; overflow-y: auto; }
+      .ar-legal-dialog-body p + p { margin-top: 8px; }
     </style>
     <footer class="ar-site-footer">
       <div class="ar-footer-top">
@@ -463,7 +426,7 @@
       m.classList.remove('hidden');
     }
   </script>
-  <script src="/assets/landing/industries.js?v=20261120c"></script>
-  <script src="/assets/landing/landing.js?v=20261120c"></script>
+  <script src="/assets/landing/industries.js?v=20261120d"></script>
+  <script src="/assets/landing/landing.js?v=20261120d"></script>
 </body>
 </html>
