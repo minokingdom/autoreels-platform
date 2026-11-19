@@ -41,7 +41,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-sound-step" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-compact-preview" />
   <link rel="stylesheet" href="/assets/app/splash.css" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -713,8 +713,9 @@
 
         <!-- 단계 안내: 탭을 바꾸면 문구가 바뀜 -->
         <div id="easyStepGuide" class="mx-5 sm:mx-6 mt-4 studio-step-guide" aria-live="polite">
-          <div class="studio-step-heading">
-            <div class="studio-step-label"><span id="easyStepCount">1 / 6</span> · <span id="easyStepTitle">오늘의 주제</span></div>
+          <div class="studio-step-heading studio-step-label">
+            <span id="easyStepCount">1 / 6</span>
+            <span id="easyStepTitle">오늘의 주제</span>
             <div id="soundStepActions" class="audio-preview-actions" hidden>
               <button type="button" onclick="testCurrentCutTtsNow()" class="btn-secondary px-3 text-[12px] cursor-pointer">
                 현재 컷 듣기

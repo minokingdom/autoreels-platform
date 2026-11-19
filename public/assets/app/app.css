@@ -1288,15 +1288,31 @@ select.ig-select-src { display: none !important; }
 .ig-switch-row input:checked + i { background: var(--studio-focus); }
 .ig-switch-row input:checked + i::after { transform: translateX(18px); }
 .studio-panel .btn-primary { min-height: 44px; }
-.studio-step-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.studio-step-guide { container-type: inline-size; }
+.studio-step-heading { display: flex; align-items: center; gap: 4px; }
+#easyStepCount { white-space: nowrap; }
+#easyStepTitle::before { content: "· "; }
 #soundStepActions[hidden], .studio-step-text:empty { display: none; }
 .audio-preview-actions {
-  display: grid;
+  display: inline-grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  width: min(100%, 206px);
+  flex: none;
+  gap: 4px;
+  margin-left: 3px;
 }
-.audio-preview-actions > button { min-height: 44px; }
+.audio-preview-actions > button {
+  height: 28px;
+  min-height: 28px;
+  padding: 0 5px;
+  border-radius: 7px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+@container (max-width: 265px) {
+  .studio-step-heading:has(#soundStepActions:not([hidden])) { display: grid; grid-template-columns: max-content minmax(0, max-content); }
+  .studio-step-heading:has(#soundStepActions:not([hidden])) #easyStepTitle { grid-row: 2; grid-column: 1 / -1; }
+  .studio-step-heading:has(#soundStepActions:not([hidden])) #easyStepTitle::before { content: none; }
+}
 #easyGuideBox { border-radius: var(--studio-panel); }
 .cut-ctl > select { background: var(--raised); border: 1px solid var(--border); border-radius: var(--studio-control); min-height: 40px; }
 .cut-upload { border-color: var(--border-strong); background: var(--raised); border-radius: var(--studio-control); }

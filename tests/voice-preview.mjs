@@ -63,6 +63,22 @@ try {
     const buttons = actions.getByRole('button');
     assert.deepEqual((await buttons.allTextContents()).map(t => t.trim()), ['현재 컷 듣기', '처음부터 듣기']);
     for (const button of await buttons.all()) await button.click({ trial: true });
+    const guide = page.locator('#easyStepGuide');
+    for (const guideWidth of ['', '195px']) {
+      await guide.evaluate((el, width) => { el.style.width = width; }, guideWidth);
+      const count = await page.locator('#easyStepCount').boundingBox();
+      const card = await guide.boundingBox();
+      let right = count.x + count.width;
+      for (const button of await buttons.all()) {
+        const box = await button.boundingBox();
+        assert.ok(Math.abs(box.y + box.height / 2 - count.y - count.height / 2) < 2,
+          JSON.stringify({ width, guideWidth, card, count, button: box }));
+        assert.ok(box.height >= 24 && box.height <= 30 && box.x >= right);
+        right = box.x + box.width;
+      }
+      assert.ok(right <= card.x + card.width);
+    }
+    await guide.evaluate(el => el.style.removeProperty('width'));
     assert.deepEqual(await page.locator('#studioPanel_sound select').evaluateAll(els => els.map(el => el.id)),
       ['ttsVoiceSelect', 'bgmStyleSelect', 'sfxModeSelect', 'ttsSpeedSelect']);
     const sheet = page.locator('#arOptionSheet');
