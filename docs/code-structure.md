@@ -10,6 +10,7 @@
 | `02-story-presets.js` | 색 테마, 스토리 아키타입 데이터 |
 | `03-campaign-timing.js` | 카마스터별 변주, 영상 길이·컷 길이 |
 | `04-audio-engine.js` | 배경음악, AI 성우(TTS), 효과음 |
+| `assets/device-voice/` | 로그인 후 선택 설치하는 Supertonic 3 한국어 성우. 모델 파일은 브라우저 Cache Storage에 저장하며, 전용 워커가 컷별 PCM을 만들어 미리보기와 내보내기에 전달합니다. |
 | `05-genre-engine.js` | 캔버스 준비, 장르 엔진 |
 | `06-design-kit.js` | 디자인 스타일 목록, 디자인 키트, 분류 |
 | `07-motion-styles.js` | 모션·인스타 감성 스타일 (`MOTION_ROWS`, `renderMotionFrame`) |

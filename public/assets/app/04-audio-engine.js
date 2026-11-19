@@ -461,8 +461,8 @@
         this.ttsLastError = errorCode || '';
         const badge = document.getElementById('ttsProviderBadge');
         if (!badge) return;
-        if (provider === 'airy' || provider === 'google' || provider === 'chirp') {
-          const providerNames = { airy: 'Airy', google: 'Google WaveNet', chirp: 'Google Chirp 3 HD' };
+        if (provider === 'airy' || provider === 'google' || provider === 'chirp' || provider === 'device') {
+          const providerNames = { airy: 'Airy', google: 'Google WaveNet', chirp: 'Google Chirp 3 HD', device: '휴대폰 성우' };
           badge.textContent = '성우: ' + providerNames[provider];
           badge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#4cc38a]';
         } else if (provider === 'fish' && this.ttsFreeModel) {
@@ -526,7 +526,12 @@
         const sel = document.getElementById('ttsVoiceSelect');
         if (!sel) return;
         if (!Array.from(sel.options).some((option) => option.value === voice)) {
-          if (this.isGoogleVoice(voice)) {
+          if (arIsDeviceVoice(voice)) {
+            const missing = new Option('휴대폰 성우 · 모델 다운로드 필요', voice);
+            missing.dataset.deviceMissing = '';
+            missing.disabled = true;
+            sel.add(missing, sel.querySelector('[value="off"]'));
+          } else if (this.isGoogleVoice(voice)) {
             const label = voice.includes('Chirp3-HD') ? 'Google Chirp 3 HD' : 'Google WaveNet';
             sel.add(new Option(label, voice), sel.querySelector('[value="off"]'));
           } else if (/^[a-f0-9]{16,64}$/i.test(voice)) {
@@ -562,7 +567,8 @@
               (groups.get(group) || options).append(new Option(title, id));
             }
             const off = select.querySelector('option[value="off"]');
-            select.replaceChildren(options, off);
+            const device = select.querySelector('[data-device-voices]');
+            select.replaceChildren(options, ...(device ? [device] : []), off);
             const preferred = this.defaultVoicePending && voices.find((voice) => voice.preferred);
             this.restoreVoice(preferred?.id || this.ttsVoice);
             this.voiceListLoaded = true;
@@ -668,8 +674,9 @@
         return { full, bounds };
       },
       fetchScriptNarration(lines) {
-        if (!arCanUseAi()) return Promise.reject(new Error('ai_access_required'));
         const voice = this.ttsVoice;
+        const onDevice = arIsDeviceVoice(voice);
+        if (!(onDevice ? arHasGenerationAccount() : arCanUseAi())) return Promise.reject(new Error('ai_access_required'));
         const speed = this.ttsSpeed;
         const scriptKey = `${voice}@${speed}|${lines.join('\n')}`;
         if (this.scriptCache.has(scriptKey)) return this.scriptCache.get(scriptKey);
@@ -679,51 +686,56 @@
         const job = (async () => {
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
-          const url = `/api/tts-script?v=10&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
-          const res = await this.runTtsRequest(() => this.isGoogleVoice(voice) ? fetch('/api/tts-script', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ref: voice, speed, lines })
-          }) : fetch(url));
-          if (!res.ok) {
-            let code = `http_${res.status}`;
-            try {
-              const errBody = await res.json();
-              if (errBody && (errBody.error === 'fish_api_key_missing' || this.isTtsServiceError(errBody.error))) code = errBody.error;
-              if (errBody && (errBody.error === 'quota_exceeded' || errBody.error === 'service_tts_cap')) {
-                code = 'quota';
-                if (window.arNotifyQuota) window.arNotifyQuota(errBody.message);
-              }
-            } catch (e) {}
-            throw new Error(code);
-          }
-          const body = await res.json();
-          let full, exactBounds;
-          if (body?.model === 'google-wavenet') {
-            provider = 'google';
-            try {
-              ({ full, bounds: exactBounds } = await this.decodeGoogleNarration(ctx, body.parts, lines.length));
-            } catch (error) {
-              throw new Error(this.isTtsServiceError(error.message) ? error.message : 'google_tts_invalid_audio');
-            }
-          } else if (body?.model === 'airy-tts-v1' || body?.model === 'google-chirp3-hd') {
-            const chirp = body.model === 'google-chirp3-hd';
-            provider = chirp ? 'chirp' : 'airy';
-            const audioError = chirp ? 'google_tts_invalid_audio' : 'airy_invalid_audio';
-            if (!Array.isArray(body.clips_base64) || body.clips_base64.length !== lines.length) {
-              throw new Error(audioError);
-            }
-            try {
-              const clips = await Promise.all(body.clips_base64.map((clip) => this.decodeNarration(ctx, clip)));
-              // Chirp는 서버에서 말하기 속도를 적용해 오디오를 반환합니다.
-              ({ full, bounds: exactBounds } = await this.renderNarrationClips(ctx, clips, chirp ? 1 : speed));
-            } catch (error) { throw new Error(audioError); }
+          let body, full, exactBounds;
+          if (onDevice) {
+            provider = 'device';
+            ({ full, bounds: exactBounds } = await arDeviceNarration(ctx, voice, lines, speed));
           } else {
-            this.noteTtsModel(body && body.model);
-            if (!body || !body.audio_base64 || !Array.isArray(body.lines) || body.lines.length !== lines.length) {
-              throw new Error('bad_script_response');
+            const url = `/api/tts-script?v=10&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
+            const res = await this.runTtsRequest(() => this.isGoogleVoice(voice) ? fetch('/api/tts-script', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ref: voice, speed, lines })
+            }) : fetch(url));
+            if (!res.ok) {
+              let code = `http_${res.status}`;
+              try {
+                const errBody = await res.json();
+                if (errBody && (errBody.error === 'fish_api_key_missing' || this.isTtsServiceError(errBody.error))) code = errBody.error;
+                if (errBody && (errBody.error === 'quota_exceeded' || errBody.error === 'service_tts_cap')) {
+                  code = 'quota';
+                  if (window.arNotifyQuota) window.arNotifyQuota(errBody.message);
+                }
+              } catch (e) {}
+              throw new Error(code);
             }
-            full = await this.decodeNarration(ctx, body.audio_base64);
+            body = await res.json();
+            if (body?.model === 'google-wavenet') {
+              provider = 'google';
+              try {
+                ({ full, bounds: exactBounds } = await this.decodeGoogleNarration(ctx, body.parts, lines.length));
+              } catch (error) {
+                throw new Error(this.isTtsServiceError(error.message) ? error.message : 'google_tts_invalid_audio');
+              }
+            } else if (body?.model === 'airy-tts-v1' || body?.model === 'google-chirp3-hd') {
+              const chirp = body.model === 'google-chirp3-hd';
+              provider = chirp ? 'chirp' : 'airy';
+              const audioError = chirp ? 'google_tts_invalid_audio' : 'airy_invalid_audio';
+              if (!Array.isArray(body.clips_base64) || body.clips_base64.length !== lines.length) {
+                throw new Error(audioError);
+              }
+              try {
+                const clips = await Promise.all(body.clips_base64.map((clip) => this.decodeNarration(ctx, clip)));
+                // Chirp는 서버에서 말하기 속도를 적용해 오디오를 반환합니다.
+                ({ full, bounds: exactBounds } = await this.renderNarrationClips(ctx, clips, chirp ? 1 : speed));
+              } catch (error) { throw new Error(audioError); }
+            } else {
+              this.noteTtsModel(body && body.model);
+              if (!body || !body.audio_base64 || !Array.isArray(body.lines) || body.lines.length !== lines.length) {
+                throw new Error('bad_script_response');
+              }
+              full = await this.decodeNarration(ctx, body.audio_base64);
+            }
           }
 
           // 전체 녹음의 최대 음량 (모든 문장을 같은 배율로 키워 문장 사이 크기를 일정하게 유지)
@@ -804,6 +816,7 @@
           (err) => {
             this.scriptCache.delete(scriptKey);
             const code = String(err && err.message);
+            if (onDevice) return;
             if (this.isTtsServiceError(code)) {
               this.ttsBlockedUntil = Date.now() + (code === 'airy_credit_exhausted' ? 60000 : 2000);
               this.setTtsProvider('browser', code);
@@ -820,6 +833,7 @@
 
       // 문장 하나만 따로 녹음 (전체 녹음을 쓸 수 없을 때의 대체 경로)
       fetchLineBuffer(text) {
+        if (arIsDeviceVoice(this.ttsVoice)) return Promise.reject(new Error('device_master_pending'));
         if (!arCanUseAi()) return Promise.reject(new Error('ai_access_required'));
         const voice = this.ttsVoice;
         const speed = this.ttsSpeed;
@@ -919,7 +933,8 @@
 
       // 모든 컷 + 마지막 명함 멘트 음성을 미리 받아 두고, 받은 길이에 맞춰 영상 길이를 조정
       prefetchTtsBuffers(force) {
-        if (!arCanUseAi()) {
+        if (arIsDeviceVoice(this.ttsVoice) && !force && arEditSheetOpen) return Promise.resolve([]);
+        if (!(arIsDeviceVoice(this.ttsVoice) ? arHasGenerationAccount() : arCanUseAi())) {
           this.setTtsProvider('browser');
           refitDurationToNarration();
           return Promise.resolve([]);
@@ -953,7 +968,7 @@
         if (this.ttsPrefetchTimer) { clearTimeout(this.ttsPrefetchTimer); this.ttsPrefetchTimer = null; }
 
         // 1순위: 대본 전체를 한 번에 녹음. 실패하면 문장별 녹음으로 대체
-        const perLine = (error) => (this.isTtsServiceError(error?.message || this.ttsLastError) || !arVoiceAllowed() || this.masterWantKey !== wantKey)
+        const perLine = (error) => (arIsDeviceVoice(this.ttsVoice) || this.isTtsServiceError(error?.message || this.ttsLastError) || !arVoiceAllowed() || this.masterWantKey !== wantKey)
           ? Promise.resolve([])
           : Promise.all(lines.map((t) => this.fetchLineBuffer(t).catch(() => null)));
         const job = (Date.now() < this.ttsBlockedUntil ? perLine() : this.fetchScriptNarration(lines).catch(perLine)).then(
@@ -1133,6 +1148,7 @@
       },
 
       speakWithBrowserVoice(text) {
+        if (arIsDeviceVoice(this.ttsVoice)) return;
         if (!('speechSynthesis' in window) || !arVoiceAllowed()) return;
         try {
           window.speechSynthesis.cancel();
@@ -1534,11 +1550,133 @@
       }
     };
 
+    const arDeviceVoiceIds = ['device-F1', 'device-M1'];
+    const arIsDeviceVoice = voice => arDeviceVoiceIds.includes(voice);
+    const arDeviceModule = () => import('/assets/device-voice/model.mjs');
+    let arDeviceInstalled = false;
+    let arDeviceInstalling = false;
+    let arDeviceWorker = null;
+    let arDeviceIdleTimer;
+    let arDeviceQueue = Promise.resolve();
+
+    function arDeviceStatus(message) {
+      const el = document.getElementById('deviceVoiceStatus');
+      if (el) el.textContent = message;
+    }
+
+    function arShowDeviceVoices() {
+      const select = document.getElementById('ttsVoiceSelect');
+      select.querySelectorAll('[data-device-missing]').forEach(option => option.remove());
+      if (!select.querySelector('[data-device-voices]')) {
+        const group = document.createElement('optgroup');
+        group.dataset.deviceVoices = '';
+        group.label = '이 기기에서 합성';
+        group.append(new Option('휴대폰 성우 · 여성', 'device-F1'), new Option('휴대폰 성우 · 남성', 'device-M1'));
+        select.insertBefore(group, select.querySelector('[value="off"]'));
+      }
+      if (arIsDeviceVoice(AudioEngine.ttsVoice)) select.value = AudioEngine.ttsVoice;
+    }
+
+    async function arRefreshDeviceVoice() {
+      const panel = document.getElementById('deviceVoiceControls');
+      if (!panel || !arHasGenerationAccount()) return;
+      panel.hidden = false;
+      const button = document.getElementById('deviceVoiceInstall');
+      if (!window.isSecureContext || !window.caches || !window.Worker || !window.WebAssembly) {
+        button.disabled = true;
+        arDeviceStatus('이 브라우저는 기기 음성 합성을 지원하지 않습니다.');
+        return;
+      }
+      try {
+        arDeviceInstalled = await (await arDeviceModule()).isInstalled();
+        if (arDeviceInstalled) {
+          arShowDeviceVoices();
+          button.hidden = true;
+          arDeviceStatus('설치 완료 · 성우 목소리에서 휴대폰 성우를 고르세요.');
+        } else {
+          button.hidden = false;
+        }
+      } catch { arDeviceStatus('브라우저 저장 공간을 확인한 후 다시 시도해 주세요.'); }
+    }
+
+    document.getElementById('deviceVoiceInstall')?.addEventListener('click', async function () {
+      if (!arHasGenerationAccount() || arDeviceInstalling) return;
+      this.disabled = arDeviceInstalling = true;
+      const lock = await arDeviceScreenLock();
+      try {
+        const model = await arDeviceModule();
+        await model.install((i, total) => arDeviceStatus(`음성 파일 다운로드 중 · ${i}/${total}`));
+        await arRefreshDeviceVoice();
+      } catch (error) {
+        arDeviceStatus(error.name === 'QuotaExceededError' ? '저장 공간이 부족합니다. 공간을 확보한 뒤 다시 눌러 주세요.' : '다운로드가 멈췄습니다. 다시 누르면 받은 파일부터 이어집니다.');
+      } finally {
+        this.disabled = arDeviceInstalling = false;
+        await lock?.release().catch(() => {});
+      }
+    });
+
+    async function arDeviceScreenLock() {
+      try { return await navigator.wakeLock?.request('screen'); } catch { return null; }
+    }
+
+    function arDeviceNarration(ctx, voice, lines, speed) {
+      const job = arDeviceQueue.then(async () => {
+        if (!arHasGenerationAccount()) throw new Error('device_login_required');
+        if (!arDeviceInstalled && !await (await arDeviceModule()).isInstalled()) throw new Error('device_model_missing');
+        if (AudioEngine.ttsVoice !== voice || AudioEngine.masterWantKey !== AudioEngine.scriptKeyFor(lines)) throw new Error('device_voice_changed');
+        arDeviceStatus('이 기기에서 대본을 읽고 있습니다…');
+        clearTimeout(arDeviceIdleTimer);
+        const lock = await arDeviceScreenLock();
+        const result = await new Promise((resolve, reject) => {
+          const worker = arDeviceWorker ||= new Worker('/assets/device-voice/worker.mjs', { type: 'module' });
+          const fail = reason => {
+            clearTimeout(timer);
+            worker.terminate();
+            arDeviceWorker = null;
+            reject(new Error(reason));
+          };
+          let timer = setTimeout(() => fail('device_timeout'), 240000);
+          worker.onerror = () => fail('device_worker_failed');
+          worker.onmessage = ({ data }) => {
+            if (data.status) {
+              clearTimeout(timer);
+              timer = setTimeout(() => fail('device_timeout'), 240000);
+              arDeviceStatus(data.status);
+              return;
+            }
+            if (data.error) return fail(data.error);
+            clearTimeout(timer);
+            arDeviceIdleTimer = setTimeout(() => {
+              worker.terminate();
+              arDeviceWorker = null;
+            }, 60000);
+            resolve(data);
+          };
+          worker.postMessage({ voice, lines: lines.map(line => window.__koSpeech(line)), speed });
+        }).finally(() => lock?.release().catch(() => {}));
+        const frames = result.clips.reduce((sum, clip) => sum + clip.length, 0);
+        const full = ctx.createBuffer(1, frames, result.sampleRate);
+        let offset = 0;
+        const bounds = [0];
+        for (const clip of result.clips) {
+          full.copyToChannel(clip, 0, offset);
+          offset += clip.length;
+          bounds.push(offset / result.sampleRate);
+        }
+        arDeviceStatus('휴대폰 음성이 준비됐습니다.');
+        return { full, bounds };
+      });
+      arDeviceQueue = job.catch(error => {
+        if (error.message !== 'device_voice_changed') arDeviceStatus('휴대폰 음성을 만들지 못했습니다. 저장 공간을 확인하거나 다른 성우를 선택해 주세요.');
+      });
+      return job;
+    }
+
     // 지난번에 고른 성우를 다시 선택
     try {
       const savedVoice = localStorage.getItem('autoreels_tts_voice');
       const voiceSel = document.getElementById('ttsVoiceSelect');
-      if (savedVoice && (AudioEngine.isGoogleVoice(savedVoice) || Array.from(voiceSel?.options || []).some((o) => o.value === savedVoice))) {
+      if (savedVoice && (arIsDeviceVoice(savedVoice) || AudioEngine.isGoogleVoice(savedVoice) || Array.from(voiceSel?.options || []).some((o) => o.value === savedVoice))) {
         AudioEngine.restoreVoice(savedVoice);
       }
     } catch (e) {}
