@@ -189,10 +189,10 @@
   var heroEl = document.getElementById('arCineHero');
   var deckEl = document.getElementById('lpReelDeck');
   var mainReelEl = document.getElementById('landingPhoneStage');
-  var portalIntroEl = document.getElementById('lpPortalIntro');
-  var letterTopEl = document.getElementById('lpLetterTop');
-  var letterBotEl = document.getElementById('lpLetterBot');
-  var flareEl = document.getElementById('lpAnamorphicFlare');
+  var fanL2 = document.querySelector('.lp-fan-l2');
+  var fanL1 = document.querySelector('.lp-fan-l1');
+  var fanR1 = document.querySelector('.lp-fan-r1');
+  var fanR2 = document.querySelector('.lp-fan-r2');
   var hudL = document.getElementById('lpHudLeft');
   var hudR = document.getElementById('lpHudRight');
   var act1 = document.getElementById('lpAct1');
@@ -263,69 +263,62 @@
     curMy += (targetMy - curMy) * 0.08;
 
     var p = scrollP;
+    var spread = clamp(1 - p * 3.1, 0, 1);  // 1막(0~32%)에서 부채꼴이 시네마틱하게 열리며 빠짐
+    var focus = clamp(p * 2.6, 0, 1);       // 2막부터 중앙 릴스 집중
     var isMobile = window.innerWidth < 768;
 
-    // WebGL 3D 터널 엔진과 진행도·마우스 동기화
-    window.__arHeroProgress = p;
-    window.__arHeroMouse = { x: curMx, y: curMy };
+    // 4막 계산 (0: 0~25%, 1: 25~50%, 2: 50~75%, 3: 75~100%)
+    var curAct = p < 0.24 ? 0 : (p < 0.50 ? 1 : (p < 0.76 ? 2 : 3));
 
-    // 4막 계산:
-    //  0막 (0.00 ~ 0.42): 거대 타이포 포털 줌 + 2.39:1 레터박스 개방 + WebGL 3D 곡면 릴스 터널 관통 비행
-    //  1막 (0.42 ~ 0.62): 아나모픽 렌즈 플레어 전환 직후 2막 (링크 분석 & 하이라이트)
-    //  2막 (0.62 ~ 0.81): 3막 (747+ 스타일 & AI 성우 + 시네마 레터박스)
-    //  3막 (0.81 ~ 1.00): 4막 (9:16 MP4 완성 + SNS 원클릭 발행)
-    var curAct = p < 0.41 ? 0 : (p < 0.62 ? 1 : (p < 0.81 ? 2 : 3));
-
-    // 1) 오프닝 거대 타이포 포털 줌 (p: 0 -> 0.24 동안 scale 1 -> 8.5로 카메라를 뚫고 지나감!)
-    if (portalIntroEl) {
-      var zoomP = clamp(p / 0.24, 0, 1);
-      var zoomScale = 1 + Math.pow(zoomP, 2.2) * 7.5;
-      var zoomAlpha = 1 - clamp((zoomP - 0.35) / 0.55, 0, 1);
-      portalIntroEl.style.transform = 'scale(' + zoomScale.toFixed(3) + ')';
-      portalIntroEl.style.opacity = zoomAlpha.toFixed(3);
-      portalIntroEl.style.pointerEvents = zoomP < 0.35 ? 'auto' : 'none';
-    }
-
-    // 2) 2.39:1 시네마스코프 레터박스 개방 (p: 0.08 -> 0.30)
-    var openLetterP = clamp((p - 0.08) / 0.22, 0, 1);
-    var letterShift = (openLetterP * 115).toFixed(1);
-    if (letterTopEl) letterTopEl.style.transform = 'translate3d(0, -' + letterShift + '%, 0)';
-    if (letterBotEl) letterBotEl.style.transform = 'translate3d(0, ' + letterShift + '%, 0)';
-
-    // 3) 아나모픽 시네마 렌즈 플레어 전환 (터널 관통 피크 p: 0.34 ~ 0.49)
-    if (flareEl) {
-      var fBell = 0;
-      if (p >= 0.34 && p <= 0.49) {
-        fBell = Math.sin(((p - 0.34) / 0.15) * Math.PI);
-      }
-      flareEl.style.opacity = (fBell * 0.95).toFixed(3);
-      flareEl.style.transform = 'translate(-50%, -50%) scaleX(' + (0.35 + fBell * 0.95).toFixed(3) + ') scaleY(' + (0.6 + fBell * 0.7).toFixed(3) + ')';
-    }
-
-    // 4) 전환 후 메인 9:16 릴스 덱 & 좌우 3D HUD 등장 (p >= 0.39)
-    var revealMainP = clamp((p - 0.39) / 0.10, 0, 1);
-    if (deckEl) {
-      var rx = reducedMotion ? 0 : (-curMy * 8).toFixed(2);
-      var ry = reducedMotion ? 0 : (curMx * 11).toFixed(2);
-      var deckScale = (0.84 + revealMainP * 0.16).toFixed(3);
-      deckEl.style.opacity = revealMainP.toFixed(3);
-      deckEl.style.pointerEvents = revealMainP > 0.5 ? 'auto' : 'none';
-      deckEl.style.transform = 'scale(' + deckScale + ') rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
+    // 1) 전체 덱 3D 틸트 강화 (마우스 따라 깊은 원근 입체 반응 + 유리 반사광)
+    if (deckEl && !reducedMotion) {
+      var rx = (-curMy * 9 * (1 - p * 0.22)).toFixed(2);
+      var ry = (curMx * 13 * (1 - p * 0.22)).toFixed(2);
+      deckEl.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
     }
     var glareEl = document.getElementById('lpMainGlare');
     if (glareEl) {
       glareEl.style.setProperty('--gx', (50 + curMx * 35).toFixed(1) + '%');
       glareEl.style.setProperty('--gy', (30 + curMy * 30).toFixed(1) + '%');
     }
+
+    // 2) 중앙 메인 릴스: 1막->2막 3D 전진(translateZ) 확대, 3막 시네마 레터박스, 4막 완성 글로우 링
     if (mainReelEl) {
-      var mScale = (1 + revealMainP * (isMobile ? 0.04 : 0.08)).toFixed(3);
-      mainReelEl.style.transform = 'translate3d(0,-4px,48px) scale(' + mScale + ')';
+      var mScale = (1 + focus * (isMobile ? 0.05 : 0.11)).toFixed(3);
+      var mY = (-focus * 6).toFixed(1);
+      var mZ = (36 + focus * 32).toFixed(1);
+      mainReelEl.style.transform = 'translate3d(0,' + mY + 'px,' + mZ + 'px) scale(' + mScale + ')';
       mainReelEl.classList.toggle('is-cinema', curAct === 2);
       mainReelEl.classList.toggle('is-export-ready', curAct === 3);
     }
 
-    // 좌우 3D AR HUD 카드: 터널 통과 직후 등장
-    var hudAlpha = clamp((p - 0.42) / 0.10, 0, 1);
+    // 3) 좌우 3D 커버플로우 4장: 진짜 rotateY + translateZ 깊이로 아치형 배치
+    var dx1 = isMobile ? 118 : 226;
+    var dx2 = 408;
+    var outX = (1 - spread) * (isMobile ? 95 : 195);
+    if (fanL1) {
+      fanL1.style.transform = 'translate(-50%, -50%) translate3d(' + (-dx1 - outX).toFixed(1) + 'px,' + (12 + (1 - spread) * 20).toFixed(1) + 'px,-75px) rotateY(' + (26 + (1 - spread) * 14).toFixed(1) + 'deg) rotateZ(' + (-6 - (1 - spread) * 5).toFixed(1) + 'deg) scale(' + (0.91 - (1 - spread) * 0.08).toFixed(3) + ')';
+      fanL1.style.opacity = (spread * 0.92).toFixed(3);
+      fanL1.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
+    }
+    if (fanR1) {
+      fanR1.style.transform = 'translate(-50%, -50%) translate3d(' + (dx1 + outX).toFixed(1) + 'px,' + (12 + (1 - spread) * 20).toFixed(1) + 'px,-75px) rotateY(' + (-26 - (1 - spread) * 14).toFixed(1) + 'deg) rotateZ(' + (6 + (1 - spread) * 5).toFixed(1) + 'deg) scale(' + (0.91 - (1 - spread) * 0.08).toFixed(3) + ')';
+      fanR1.style.opacity = (spread * 0.92).toFixed(3);
+      fanR1.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
+    }
+    if (fanL2) {
+      fanL2.style.transform = 'translate(-50%, -50%) translate3d(' + (-dx2 - outX * 1.35).toFixed(1) + 'px,' + (30 + (1 - spread) * 28).toFixed(1) + 'px,-165px) rotateY(' + (40 + (1 - spread) * 16).toFixed(1) + 'deg) rotateZ(' + (-11 - (1 - spread) * 6).toFixed(1) + 'deg) scale(0.82)';
+      fanL2.style.opacity = (spread * 0.68).toFixed(3);
+      fanL2.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
+    }
+    if (fanR2) {
+      fanR2.style.transform = 'translate(-50%, -50%) translate3d(' + (dx2 + outX * 1.35).toFixed(1) + 'px,' + (30 + (1 - spread) * 28).toFixed(1) + 'px,-165px) rotateY(' + (-40 - (1 - spread) * 16).toFixed(1) + 'deg) rotateZ(' + (11 + (1 - spread) * 6).toFixed(1) + 'deg) scale(0.82)';
+      fanR2.style.opacity = (spread * 0.68).toFixed(3);
+      fanR2.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
+    }
+
+    // 4) 좌우 3D AR HUD 카드: 안쪽으로 살짝 기울어진 3D 공간 부양
+    var hudAlpha = clamp((p - 0.18) / 0.14, 0, 1);
     var hudY = (1 - hudAlpha) * 26;
     if (hudL) {
       hudL.style.opacity = hudAlpha.toFixed(3);
@@ -463,7 +456,7 @@
       if (!heroEl) return;
       var idx = Number(btn.getAttribute('data-act')) || 0;
       var span = Math.max(1, heroEl.offsetHeight - window.innerHeight);
-      var targets = [0, 0.50, 0.70, 0.90];
+      var targets = [0, 0.36, 0.62, 0.88];
       window.scrollTo({ top: Math.round(span * (targets[idx] || 0)), behavior: 'smooth' });
     });
   });
