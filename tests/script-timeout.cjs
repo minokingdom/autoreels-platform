@@ -17,11 +17,32 @@ const res={statusCode:200,status(n){this.statusCode=n;return this},json(b){this.
  assert.equal(res.body.ok,true);
  assert.ok(res.body.aiFallback);
  assert.equal(now-100000,42000);
- assert.deepEqual(attempts.map(x=>x.ms),[14000,14000,12000,2000]);
+ assert.deepEqual(attempts.map(x=>x.ms),[14000,14000,4668,4666,4666]);
  assert.equal(res.body.variants.length,3);
  assert(res.body.variants.every(variant=>variant.vehicle==='BMW 7시리즈'));
  assert.doesNotMatch(JSON.stringify(res.body.variants),/520i|5시리즈|0\s*만\s*원/);
  console.log('first script request keeps BMW 7시리즈 when every provider times out');
+ const keys = ctx.process.env;
+ const timedOutFetch = ctx.fetch;
+ delete keys.GEMINI_API_KEY;
+ delete keys.OPENAI_API_KEY;
+ const models = [];
+ ctx.fetch = async (url,options) => {
+   models.push(url.split('/')[3]);
+   assert.ok(options.signal.ms >= 18000);
+   const script = {vehicle:'수프',cutCaptions:['수프','재료','향','한 그릇']};
+   const content = JSON.stringify(models.length === 1 ? {error:'unusable'} : {variants:[script]});
+   return {ok:true,status:200,text:async()=>JSON.stringify({choices:[{message:{content}}]})};
+ };
+ await moduleObj.exports({method:'POST',headers:{origin:'https://example.com',host:'example.com'},body:{
+   industry:'restaurant',prompt:'수프 소개',industryInfo:{name:'식당',product:'메뉴'},cutCount:4
+ }},res);
+ assert.deepEqual(models,['gemini-3-6-flash-openai','gemini-4-hydrogen-openai']);
+ assert.equal(res.body.aiFallback,undefined);
+ assert.equal(res.body.data.cutCaptions[0],'수프');
+ keys.GEMINI_API_KEY='fake';
+ keys.OPENAI_API_KEY='fake';
+ ctx.fetch=timedOutFetch;
 
  const request = {
   method:'POST', headers:{origin:'https://example.com',host:'example.com'},

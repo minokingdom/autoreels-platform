@@ -871,7 +871,7 @@ async function handler(req, res) {
   const kieKey = String(process.env.KIE_API_KEY || '').trim();
   // 쉼표로 여러 개 지정 가능, 앞에서부터 차례로 시도
   // 2026-11-14 진단(?diag=kie): 3.8 Flash 무응답, 3.7 Flash 500 오류 → 응답이 확인된 두 모델을 기본으로
-  const kieModels = String(process.env.KIE_SCRIPT_MODEL || 'gemini-4-hydrogen-openai,gemini-3-6-flash-openai')
+  const kieModels = String(process.env.KIE_SCRIPT_MODEL || 'gemini-3-6-flash-openai,gemini-4-hydrogen-openai')
     .split(',').map((s) => s.trim()).filter(Boolean).slice(0, 2);
   const aiDiag = { kieKey: Boolean(kieKey), openaiKey: Boolean(adminOpenAiKey), geminiKey: Boolean(adminGeminiKey) };
   const secrets = [kieKey, adminOpenAiKey, adminGeminiKey].filter(Boolean);
@@ -1003,7 +1003,7 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
           gTry.status = resp.status;
           if (resp.ok) {
             const data = await resp.json();
-            const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const rawText = (data?.candidates?.[0]?.content?.parts || []).filter(part => !part.thought).map(part => part.text || '').join('');
             const parsed = parseJsonLoose(rawText);
             if (parsed && extractAiVariants(parsed).length > 0) {
               aiResult = parsed;
@@ -1024,10 +1024,12 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
     // 2순위(백업): kie.ai (OpenAI 호환 chat.completions)
     if (!aiResult && kieKey) {
       aiDiag.kieTries = [];
-      const deadline = scriptDeadline;
-      for (const model of kieModels) {
+      for (const [index, model] of kieModels.entries()) {
         if (aiResult) break;
-        const left = Math.min(12000, deadline - Date.now());
+        const available = scriptDeadline - Date.now();
+        const later = kieModels.length - index - 1 + Number(Boolean(adminOpenAiKey));
+        const reserve = Math.min(8000, Math.floor(available / (later + 1))) * later;
+        const left = Math.min(24000, available - reserve);
         if (left < 1500) break;
         const tryInfo = { model };
         aiDiag.kieTries.push(tryInfo);
@@ -1051,11 +1053,11 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
             const { text, data } = await readKieStream(resp);
             if (typeof text === 'string' && text.trim()) {
               const parsed = parseJsonLoose(text);
-              if (parsed) {
+              if (parsed && extractAiVariants(parsed).length) {
                 aiResult = parsed;
                 providerUsed = `kie.ai ${model} Director`;
               } else {
-                tryInfo.error = 'JSON 해석 실패: ' + text.replace(/\s+/g, ' ').slice(0, 120);
+                tryInfo.error = '응답에 사용할 대본이 없음';
               }
             } else {
               tryInfo.error = data ? `code ${data.code}: ${String(data.msg || '').slice(0, 160)}` : '빈 응답';

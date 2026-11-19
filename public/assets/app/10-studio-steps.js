@@ -687,6 +687,19 @@
       if (pool.length > 1 && cur) pool = pool.filter((d) => d.id !== cur.id);
       return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
     }
+    function arScriptFallbackNotice(diag) {
+      const tries = [...(diag.geminiTries || []), ...(diag.kieTries || [])];
+      if (diag.openaiStatus || diag.openaiError || diag.exception) {
+        tries.push({status:diag.openaiStatus, error:diag.openaiError || diag.exception});
+      }
+      let cause = 'AI에서 사용할 대본을 받지 못했습니다.';
+      if (diag.reason && !diag.kieKey && !diag.openaiKey && !diag.geminiKey) cause = '서비스에 대본 생성 AI 연결이 설정되지 않았습니다.';
+      else if (tries.length && tries.every(t => /시간 초과|시간 안에|timeout|timed out/i.test(t.error))) cause = '대본 생성 AI의 응답 시간이 초과됐습니다.';
+      else if (tries.length && tries.every(t => t.status === 429)) cause = '대본 생성 AI의 요청 한도에 도달했습니다.';
+      else if (tries.length && tries.every(t => [401,403].includes(t.status))) cause = '대본 생성 AI의 인증에 실패했습니다.';
+      else if (tries.length && tries.every(t => t.status >= 500)) cause = '대본 생성 AI 서버에서 오류가 발생했습니다.';
+      return cause + ' 기본 대본을 표시합니다.';
+    }
     function arPickCustomTopic() {
       const el = document.getElementById('topicCustomInput');
       const v = (el && el.value || '').trim();
@@ -2325,8 +2338,9 @@
           })
         });
 
-        const result = await response.json();
+        const result = await response.json().catch(() => null);
         if (generationId !== arScriptGenerationId || staleProduct()) return;
+        if (!result) throw Object.assign(new Error('대본 응답을 읽을 수 없습니다.'), {status:response.status});
         if (response.status === 401 && result.error === 'login_required') {
           noticeEl?.classList.add('hidden');
           openDealerAuthModal('generation');
@@ -2338,7 +2352,7 @@
           return;
         }
         if (!response.ok || !result.ok || !result.data) {
-          throw new Error(result.error || 'AI 서버 응답 오류');
+          throw Object.assign(new Error(result.error || 'AI 서버 응답 오류'), {status:response.status});
         }
 
         // 대본 3안 저장 (예전 서버 응답이면 data 1개만)
@@ -2350,11 +2364,15 @@
         applyAiScriptToCampaign(variants[0], d, stripExcludedLocal, vehicleLocked);
         renderScriptVariantPicker();
         aiUsedFallback = Boolean(result.aiFallback);
-        if (aiUsedFallback) progressError = 'AI 대본을 만들지 못해 기본 대본을 표시합니다.';
+        if (aiUsedFallback) progressError = arScriptFallbackNotice(result.aiFallback);
         triggerTopicImages(variants[0]?.cutCaptions);
       } catch (err) {
         if (generationId !== arScriptGenerationId || staleProduct()) return;
-        progressError = 'AI 대본을 만들지 못해 기본 대본을 표시합니다.';
+        const cause = err.status === 504 ? '대본 서버의 응답 시간이 초과됐습니다.'
+          : err.status ? '대본 서버에서 사용할 응답을 받지 못했습니다.'
+          : err instanceof TypeError ? '대본 생성 요청을 마치지 못했습니다. 네트워크 연결을 확인해 주세요.'
+          : '대본을 적용하는 중 오류가 발생했습니다.';
+        progressError = cause + ' 기본 대본을 표시합니다.';
         arScriptVariants.list = [];
         renderScriptVariantPicker();
         if (IND.key !== 'auto') {
@@ -2384,12 +2402,12 @@
             applyAiScriptToCampaign(offlineAi, d, stripExcludedLocal, vehicleLocked);
             arSetScriptGenerating(false);
             arFinishScriptApply(totalCuts);
-            if (noticeEl) noticeEl.textContent = `AI 대본을 만들지 못해 주제 [${topicTitle}]의 기본 대본을 표시합니다. 다시 쓰기로 재시도할 수 있어요.`;
+            if (noticeEl) noticeEl.textContent = progressError;
             triggerTopicImages(campaign.cutCaptions);
             return;
           } else {
             if (campaign.presetKey && (AR_INDUSTRY_PRESETS[IND.key] || {})[campaign.presetKey]) applyIndustryPreset(campaign.presetKey);
-            if (noticeEl) noticeEl.textContent = `AI 대본을 만들지 못해 기본 대본으로 채웠습니다. (${err.message || '연결 오류'})`;
+            if (noticeEl) noticeEl.textContent = progressError;
             triggerTopicImages(campaign.cutCaptions);
             return;
           }
@@ -2407,7 +2425,7 @@
       }
 
       arFinishScriptApply(totalCuts);
-      if (aiUsedFallback && noticeEl) noticeEl.textContent = 'AI 대본을 만들지 못해 기본 대본을 표시합니다. 다시 시도해 주세요.';
+      if (progressError && noticeEl) noticeEl.textContent = progressError;
     }
 
     function arBuildThemeContextForImages() {
