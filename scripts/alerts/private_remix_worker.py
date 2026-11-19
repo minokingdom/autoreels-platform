@@ -133,12 +133,35 @@ def run_job(job):
 
 
 def main():
+    import ctypes
+    import msvcrt
+    supervisor = int(os.environ.get('AR_PRIVATE_REMIX_SUPERVISOR','0'))
+    kernel = ctypes.windll.kernel32
+    kernel.OpenProcess.restype = ctypes.c_void_p
+    kernel.WaitForSingleObject.argtypes = [ctypes.c_void_p, ctypes.c_uint32]
+    parent = kernel.OpenProcess(0x00100000,False,supervisor) if supervisor else None
+    def active():
+        return not supervisor or (parent and kernel.WaitForSingleObject(parent,0)==258)
+    lock = open(Path(__file__).with_name('private-remix.lock'),'a+b')
+    lock.seek(0)
+    if not lock.read(1):
+        lock.write(b'1');lock.flush()
+    while active():
+        try:
+            lock.seek(0);msvcrt.locking(lock.fileno(),msvcrt.LK_NBLCK,1)
+            break
+        except OSError:
+            time.sleep(2)
+    else:
+        return
     pending = None
-    while True:
+    while active() or pending:
         try:
             if pending:
                 rpc(pending)
                 pending = None
+            if not active():
+                break
             job = rpc({'op': 'claim'}).get('job')
             if job:
                 pending = run_job(job)

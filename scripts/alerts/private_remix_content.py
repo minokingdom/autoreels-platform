@@ -73,7 +73,7 @@ def predict(prompt, directory, image=None, tokens=300, count=None):
     if image:
         data = base64.b64encode(image.read_bytes()).decode('ascii')
         content.append({'type':'image_url','image_url':{'url':'data:image/jpeg;base64,'+data}})
-    payload = {'messages':[{'role':'user','content':content}], 'n_predict':tokens, 'temperature':0.15}
+    payload = {'messages':[{'role':'system','content':'한국어 편집자입니다. 답은 반드시 자연스러운 한국어 한글로 씁니다. 고유명사 외에는 다른 언어로 쓰지 않습니다.'},{'role':'user','content':content}], 'n_predict':tokens, 'temperature':0.15}
     if count:
         payload['json_schema'] = {'type':'array','minItems':count,'maxItems':count,'items':{'type':'string'}}
     req = urllib.request.Request(endpoint+'/v1/chat/completions',data=json.dumps(payload).encode(),
@@ -206,7 +206,8 @@ def rewrite(source, scenes, change, directory):
             groups[-1]['indices'].append(i)
         else:
             groups.append({'text':text,'indices':[i]})
-    if not groups:
+    silent = not groups
+    if silent:
         # 무자막 영상은 짧은 첫 문구와 마무리만 제안해 사진을 볼 여백을 살립니다.
         groups = [{'text':'','indices':[0]}]
         if len(scenes)>1 and scenes[-1]['end']>=150:
@@ -235,7 +236,7 @@ def rewrite(source, scenes, change, directory):
         try:
             lines = json.loads(answer[answer.index('['):answer.rindex(']')+1])
             if (isinstance(lines,list) and len(lines)==len(groups)
-                    and all(isinstance(t,str) and t.strip() and len(t)<=56 for t in lines)):
+                    and all(isinstance(t,str) and re.search(r'[가-힣]',t) and len(t)<=56 for t in lines)):
                 normalized = [re.sub(r'[\W_]','',line) for line in lines]
                 if (len(set(normalized))==len(lines) and all(w in ' '.join(lines) for w in target_pair)
                         and any(line not in original for line in normalized)):
@@ -246,5 +247,8 @@ def rewrite(source, scenes, change, directory):
                     return draft
         except ValueError:
             pass
-        prompt += '\n다시 작성: 소재가 정확해야 하며 같은 문장을 반복하지 않는다. 각 문장은 25자 이내로 짧게.'
+        prompt += '\n다시 작성: 모든 문장을 한글로만 출력한다. 소재가 정확해야 하며 같은 문장을 반복하지 않는다. 각 문장은 25자 이내로 짧게.'
+    if silent and replacement and re.search(r'[가-힣]',target):
+        opening = re.sub(r'[을를]\s*만드는\s*(?:장면|과정)(?:\s*순서)?$', ' 만들기', target).strip()
+        return [single_line(opening,56)]+['']*(len(scenes)-1)
     raise ValueError('원본 흐름과 변경 요청에 맞는 대본을 완성하지 못했습니다.')
