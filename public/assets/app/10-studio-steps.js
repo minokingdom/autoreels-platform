@@ -965,7 +965,7 @@
       const steps = {
         topic: ['오늘의 주제', '오늘 올릴 주제를 골라 주세요. 고르면 그 주제로 AI가 대본 3안을 바로 만들어 드려요.'],
         script: ['대본 고르기', '영상 길이와 상품을 확인하고 대본을 고르세요. 바꾸고 싶으면 아래에 적어 [다시 쓰기]를 누르면 됩니다.'],
-        photo: ['사진 넣기', '내 사진이나 영상을 올리세요. 올리지 않으면 기본 사진으로 만들어집니다.'],
+        photo: ['사진 넣기', '사진이나 영상을 올리지 않으면 기본 사진을 사용해요. 주제와 테마에 맞는 이미지도 만들 수 있어요. 썸네일을 누르면 해당 장면으로 이동해 사진·영상, 구도와 카메라 움직임을 바꿀 수 있어요.'],
         sound: ['성우 · 배경음악', '성우 목소리와 배경음악을 골라 보세요. 현재 컷의 대사를 듣거나 영상 처음부터 들어볼 수 있어요.'],
         card: ['엔딩 꾸미기', '영상 마지막에 나올 가게 정보와 로고를 넣고, 보일 항목만 켜 두세요.'],
         publish: ['완성본 확인 · SNS에 올리기', '배경음악과 성우가 들어간 완성본을 확인하고, 올릴 곳을 켜고 [공유하기]를 누르세요.']
@@ -979,6 +979,7 @@
       set('easyStepTitle', step[0]);
       set('easyStepText', step[1]);
       document.getElementById('soundStepActions').hidden = key !== 'sound';
+      document.getElementById('photoStepTools').hidden = key !== 'photo';
     }
 
     // ★ 휴대폰의 기본 선택창(회색 안드로이드 목록) 대신 우리 디자인의 아래 시트로 고르기
@@ -1001,10 +1002,22 @@
     function arShowVoiceChoices(el, sel) {
       el.innerHTML = `<div class="bgm-sheet" role="dialog" aria-modal="true" aria-label="성우 목소리">
         <div class="bgm-head"><strong>성우 목소리</strong><button type="button" class="bgm-done">적용</button></div>
+        <label class="voice-speed-setting">말하는 속도<select class="studio-input"></select></label>
         <div class="bgm-list"></div><audio preload="none"></audio>
       </div>`;
       const list = el.querySelector('.bgm-list');
       const player = el.querySelector('audio');
+      const speed = document.getElementById('ttsSpeedSelect');
+      const draftSpeed = el.querySelector('.voice-speed-setting select');
+      draftSpeed.replaceChildren(...Array.from(speed.options, option => option.cloneNode(true)));
+      draftSpeed.value = String(AudioEngine.ttsSpeed || 1.1);
+      // 예문은 1.1배로 합성한 파일이므로 미리듣기에서는 재생 속도만 조절합니다.
+      const syncSampleSpeed = () => {
+        player.defaultPlaybackRate = Number(draftSpeed.value) / 1.1;
+        player.playbackRate = player.defaultPlaybackRate;
+      };
+      draftSpeed.onchange = syncSampleSpeed;
+      syncSampleSpeed();
       let choice = sel.value;
       let hasChosen = false;
       let currentRow = null;
@@ -1063,7 +1076,8 @@
       };
       el.querySelector('.bgm-done').onclick = () => {
         arCloseOptionSheet();
-        if (choice === sel.value) return;
+        if (choice === sel.value && Number(draftSpeed.value) === AudioEngine.ttsSpeed) return;
+        speed.value = draftSpeed.value;
         sel.value = choice;
         sel.dispatchEvent(new Event('change', { bubbles: true }));
       };
@@ -2131,7 +2145,7 @@
 
       const triggerTopicImages = () => {
         // 고객 클릭마다 유료 이미지 API가 자동 과금되지 않도록, 사전 제작 이미지(/assets/scenes, /assets/topics)를 0원으로 매칭하고
-        // 필요 시 [3 사진] 탭의 '✨ 주제·테마 맞춤 이미지' 버튼으로만 직접 생성
+        // 필요 시 사진 단계의 맞춤 이미지 생성 버튼에서 직접 생성
         if (!campaign.isUserCustomPhotos && typeof arMatchPhotosToCaptions === 'function') {
           try { arMatchPhotosToCaptions(); } catch (e) {}
         }
@@ -2312,13 +2326,11 @@
     async function arApplyLocalSceneImages(payload, applySlotImage, stillCurrent, noticeEl) {
       const activity = arBeginGeneration('images', '컷 이미지 준비 중…');
       let progressError = '';
-      const btn = document.getElementById('regenTopicImgBtn');
       let completed = 0;
       const update = (message) => {
         if (!stillCurrent()) return;
         if (noticeEl) { noticeEl.classList.remove('hidden'); noticeEl.textContent = message; }
         activity.update(message);
-        if (btn) btn.textContent = message;
       };
       try {
         update('✨ 이미지 생성 준비 중...');
@@ -2380,8 +2392,9 @@
       const imageContext = arSceneImageContextKey();
       campaign.isUserCustomPhotos = false;
       const btn = document.getElementById('regenTopicImgBtn');
+      const idleLabel = btn?.textContent;
       const th = arBuildThemeContextForImages();
-      if (btn) { btn.disabled = true; btn.textContent = '✨ 이미지 생성 중...'; }
+      if (btn) { btn.disabled = true; btn.textContent = '생성 중…'; }
       if (typeof arToast === 'function') arToast(`[${topicText}] · [${th.designName || '기본'} / ${th.themeName || '테마'}] 맞춤 이미지를 만들고 있어요`);
       return Promise.resolve(arApplyTopicSceneImages({
         prompt: rawPrompt || topicText,
@@ -2396,7 +2409,7 @@
         totalCuts,
         adminGeminiKey: localStorage.getItem('autoreels_admin_gemini_key') || ''
       })).finally(() => {
-        if (btn) { btn.disabled = false; btn.textContent = '✨ 주제·테마 맞춤 이미지'; }
+        if (btn) { btn.disabled = false; btn.textContent = idleLabel; }
         if (imageContext !== arSceneImageContextKey()) {
           const notice = document.getElementById('sceneImageNotice');
           notice.textContent = '주제나 대본이 바뀌어 이전 이미지 생성 결과의 적용을 중단했어요.';

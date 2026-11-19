@@ -1320,6 +1320,36 @@ select.ig-select-src { display: none !important; }
 #easyStepCount { white-space: nowrap; }
 #easyStepTitle::before { content: "· "; }
 #soundStepActions[hidden], .studio-step-text:empty { display: none; }
+#photoStepTools[hidden] { display: none; }
+.photo-step-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  margin-top: 5px;
+  max-width: 420px;
+}
+.photo-step-actions > button {
+  min-height: 28px;
+  padding: 3px 5px;
+  border-radius: 7px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.photo-step-actions #regenTopicImgBtn { color: var(--studio-focus); }
+.voice-speed-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 0 2px;
+  color: var(--foreground);
+  font-size: 13px;
+}
+.voice-speed-setting select { min-height: 32px; padding: 4px 8px; font: inherit; }
+@container (min-width: 420px) {
+  .photo-step-actions { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 .audio-preview-actions {
   display: inline-grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
