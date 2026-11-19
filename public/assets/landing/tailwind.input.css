@@ -76,14 +76,14 @@ html { scroll-behavior: smooth; }
 .lp-scroll-track i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #4cc38a, #f4f4f5); will-change: width; }
 
 /* ============================================================================
-   시네마틱 스크롤-드리븐 히어로 (230vh 스티키 스테이지)
+   시네마틱 스크롤-드리븐 히어로 (460vh 4막 스티키 스테이지)
    ============================================================================ */
 .lp-cine-hero {
   position: relative;
-  height: 230vh;
+  height: 460vh;
 }
 @media (max-width: 767px) {
-  .lp-cine-hero { height: 185vh; }
+  .lp-cine-hero { height: 340vh; }
 }
 .lp-cine-sticky {
   position: sticky;
@@ -475,6 +475,140 @@ html { scroll-behavior: smooth; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp-main-photo, .lp-eq i, .lp-bar.is-active .lp-bar-fill, .lp-cut-enter { animation: none; }
+  .lp-main-photo, .lp-eq i, .lp-bar.is-active .lp-bar-fill, .lp-cut-enter, .lp-marquee-track { animation: none; }
   .ar-reveal { opacity: 1; transform: none; transition: none; }
 }
+
+/* 우측 시네마틱 챕터 네비게이션 (01 ~ 04) */
+.lp-chapter-nav {
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+@media (max-width: 1023px) { .lp-chapter-nav { display: none; } }
+.lp-chap-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 4px;
+  background: none;
+  border: 0;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.lp-chap-btn i {
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+  transition: width 0.25s ease, background-color 0.25s ease;
+}
+.lp-chap-btn:hover { color: rgba(255, 255, 255, 0.78); }
+.lp-chap-btn.is-active { color: #ffffff; font-weight: 700; }
+.lp-chap-btn.is-active i { width: 32px; background: #4cc38a; }
+
+/* 3막 시네마틱 레터박스 & 4막 완성 글로우 상태 */
+.lp-main-reel.is-cinema::before,
+.lp-main-reel.is-cinema::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 22px;
+  background: rgba(0, 0, 0, 0.78);
+  z-index: 8;
+  pointer-events: none;
+}
+.lp-main-reel.is-cinema::before { top: 0; }
+.lp-main-reel.is-cinema::after { bottom: 0; }
+.lp-main-reel.is-export-ready {
+  border-color: rgba(76, 195, 138, 0.75);
+  box-shadow: 0 36px 90px rgba(0, 0, 0, 0.78), 0 0 0 1px rgba(76, 195, 138, 0.45), 0 0 42px rgba(76, 195, 138, 0.22);
+}
+
+/* 무한 시네마틱 실사 필름 스트립 (Marquee) */
+.lp-marquee-section {
+  padding: 28px 0 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(180deg, rgba(16, 16, 20, 0.65), rgba(7, 7, 9, 0.95));
+  overflow: hidden;
+}
+.lp-marquee-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.lp-marquee-wrap {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+}
+.lp-marquee-track {
+  display: flex;
+  gap: 14px;
+  width: max-content;
+  animation: lp-marquee-scroll 42s linear infinite;
+}
+.lp-marquee-wrap:hover .lp-marquee-track {
+  animation-play-state: paused;
+}
+@keyframes lp-marquee-scroll {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+.lp-strip-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: 168px;
+  aspect-ratio: 9 / 16;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #141417;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+.lp-strip-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.38);
+}
+.lp-strip-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.lp-strip-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0.84) 100%);
+}
+.lp-strip-meta {
+  position: absolute;
+  left: 11px;
+  right: 11px;
+  bottom: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.lp-strip-meta span { font-size: 10.5px; color: rgba(255, 255, 255, 0.8); }
+.lp-strip-meta strong { font-size: 12.5px; color: #ffffff; font-weight: 700; line-height: 1.25; }

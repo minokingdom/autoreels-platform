@@ -32,7 +32,7 @@
   <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120d" />
+  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120e" />
 </head>
 <body class="antialiased lp-cine-body">
   <!-- 시네마틱 글래스 상단 네비게이션 + 1px 스크롤 타임라인 바 -->
@@ -64,12 +64,12 @@
       <div class="lp-film-grain" aria-hidden="true"></div>
       <div id="lpBgWatermark" class="lp-bg-watermark" aria-hidden="true">AUTOREELS · CINEMA STUDIO · 9:16</div>
 
-      <!-- 2. 상단 시네마틱 타이포 (스크롤 1막 ↔ 2막 크로스페이드) -->
+      <!-- 2. 상단 시네마틱 타이포 (스크롤 4막 크로스페이드) -->
       <div class="lp-hero-copy-wrap">
         <div id="lpAct1" class="lp-hero-act is-visible">
           <div class="lp-eyebrow">
             <span class="lp-eyebrow-dot"></span>
-            <span>700+ 스타일 · 참고 링크 분석 · 하이라이트 추출 · AI 성우</span>
+            <span>01 / 04 · 700+ 스타일 · 참고 링크 분석 · 하이라이트 추출 · AI 성우</span>
           </div>
           <h1 class="lp-cine-h1">
             사진 한 장이,<br />
@@ -88,11 +88,11 @@
         <div id="lpAct2" class="lp-hero-act" aria-hidden="true">
           <div class="lp-eyebrow">
             <span class="lp-eyebrow-dot"></span>
-            <span>SCROLL DIRECTOR · 실시간 3컷 자동 연출</span>
+            <span>02 / 04 · LINK REMIX &amp; HIGHLIGHT EXTRACTOR</span>
           </div>
           <h2 class="lp-cine-h1 lp-cine-h2">
             링크 하나, 긴 영상 하나로<br />
-            <span class="lp-cine-h1-accent">컷 · 자막 · 성우까지 한 번에</span>
+            <span class="lp-cine-h1-accent">컷 리듬과 핵심 구간을 자동 추출</span>
           </h2>
           <div class="lp-hero-actions">
             <a href="/assets/remix/index.html" class="landing-primary landing-hero-cta">
@@ -103,20 +103,63 @@
             </a>
           </div>
         </div>
+
+        <div id="lpAct3" class="lp-hero-act" aria-hidden="true">
+          <div class="lp-eyebrow">
+            <span class="lp-eyebrow-dot"></span>
+            <span>03 / 04 · 700+ DESIGN · AI VOICE · ORIGINAL BGM</span>
+          </div>
+          <h2 class="lp-cine-h1 lp-cine-h2">
+            브랜드 색과 글꼴, AI 성우까지<br />
+            <span class="lp-cine-h1-accent">감각적인 700+ 스타일로 완성</span>
+          </h2>
+          <div class="lp-hero-actions">
+            <a href="/studio" class="landing-primary landing-hero-cta">
+              내 스타일 만들어보기 <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </div>
+
+        <div id="lpAct4" class="lp-hero-act" aria-hidden="true">
+          <div class="lp-eyebrow">
+            <span class="lp-eyebrow-dot"></span>
+            <span>04 / 04 · 9:16 1080×1920 MP4 · ONE-CLICK PUBLISH</span>
+          </div>
+          <h2 class="lp-cine-h1 lp-cine-h2">
+            매장 엔딩까지 붙은 고화질 MP4,<br />
+            <span class="lp-cine-h1-accent">저장하고 SNS에 바로 발행</span>
+          </h2>
+          <div class="lp-hero-actions">
+            <a href="/studio" class="landing-primary landing-hero-cta">
+              지금 무료로 첫 릴스 만들기 <span aria-hidden="true">→</span>
+            </a>
+            <a href="#arLandingPricing" class="lp-ghost-cta">
+              요금제 보기
+            </a>
+          </div>
+        </div>
       </div>
+
+      <!-- 우측 시네마틱 챕터 네비게이션 (01 ~ 04) -->
+      <nav id="lpChapterNav" class="lp-chapter-nav" aria-label="히어로 챕터 이동">
+        <button type="button" data-act="0" class="lp-chap-btn is-active" aria-label="1막 시작"><span>01</span><i></i></button>
+        <button type="button" data-act="1" class="lp-chap-btn" aria-label="2막 링크 분석과 하이라이트"><span>02</span><i></i></button>
+        <button type="button" data-act="2" class="lp-chap-btn" aria-label="3막 디자인과 사운드"><span>03</span><i></i></button>
+        <button type="button" data-act="3" class="lp-chap-btn" aria-label="4막 완성과 발행"><span>04</span><i></i></button>
+      </nav>
 
       <!-- 3. 중앙 3D 시네마틱 실사 릴스 덱 + 스크롤 패럴랙스 편집 HUD -->
       <div class="lp-stage-wrap">
-        <!-- 좌측 플로팅 HUD (스크롤 시 등장) -->
+        <!-- 좌측 플로팅 HUD (2막~4막 동적 전환) -->
         <aside id="lpHudLeft" class="lp-hud lp-hud-left" aria-hidden="true">
-          <div class="lp-hud-tag">NEW · LINK &amp; HIGHLIGHT</div>
-          <div class="lp-hud-title">참고 링크 컷 리듬 분석</div>
+          <div id="lpHudLeftTag" class="lp-hud-tag">NEW · LINK &amp; HIGHLIGHT</div>
+          <div id="lpHudLeftTitle" class="lp-hud-title">참고 링크 컷 리듬 분석</div>
           <div class="lp-hud-timeline">
             <span style="width:28%"></span>
             <span style="width:42%"></span>
             <span style="width:30%"></span>
           </div>
-          <div class="lp-hud-meta">10분 영상 → 핵심 15초 하이라이트</div>
+          <div id="lpHudLeftMeta" class="lp-hud-meta">10분 영상 → 핵심 15초 하이라이트</div>
         </aside>
 
         <!-- 5장 입체 부채꼴 실사 릴스 덱 (마우스 3D 틸트 + 스크롤 시 중앙 집중 확대) -->
@@ -185,14 +228,14 @@
           </button>
         </div>
 
-        <!-- 우측 플로팅 HUD (스크롤 시 등장) -->
+        <!-- 우측 플로팅 HUD (2막~4막 동적 전환) -->
         <aside id="lpHudRight" class="lp-hud lp-hud-right" aria-hidden="true">
-          <div class="lp-hud-tag">AI VOICE &amp; 700+ STYLES</div>
-          <div class="lp-hud-title">성우 내레이션 · 오리지널 BGM</div>
+          <div id="lpHudRightTag" class="lp-hud-tag">AI VOICE &amp; 700+ STYLES</div>
+          <div id="lpHudRightTitle" class="lp-hud-title">성우 내레이션 · 오리지널 BGM</div>
           <div class="lp-eq" aria-hidden="true">
             <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
           </div>
-          <div class="lp-hud-meta">9:16 1080×1920 MP4 즉시 저장</div>
+          <div id="lpHudRightMeta" class="lp-hud-meta">9:16 1080×1920 MP4 즉시 저장</div>
         </aside>
       </div>
 
@@ -200,10 +243,21 @@
       <div class="lp-hero-bottom">
         <div id="landingQuickInds" class="lp-quick-row" aria-label="빠른 업종 미리보기"></div>
         <div id="lpScrollCue" class="lp-scroll-cue" aria-hidden="true">
-          <span>SCROLL TO EXPLORE</span>
+          <span>SCROLL TO DIRECT · 01 / 04</span>
           <i class="lp-scroll-line"></i>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- 무한 시네마틱 실사 필름 스트립 (10개 업종 라이브 쇼케이스) -->
+  <section class="lp-marquee-section" aria-label="업종별 릴스 쇼케이스 필름 스트립">
+    <div class="lp-marquee-head max-w-[1160px] mx-auto px-4 md:px-8">
+      <span class="text-[11px] font-mono tracking-wider uppercase text-[#4cc38a]">LIVE REELS FILMSTRIP</span>
+      <p class="text-[13px] text-[#85858b]">카드를 누르면 해당 업종 스튜디오로 바로 이동합니다</p>
+    </div>
+    <div class="lp-marquee-wrap">
+      <div id="lpMarqueeTrack" class="lp-marquee-track"></div>
     </div>
   </section>
 
@@ -426,7 +480,7 @@
       m.classList.remove('hidden');
     }
   </script>
-  <script src="/assets/landing/industries.js?v=20261120d"></script>
-  <script src="/assets/landing/landing.js?v=20261120d"></script>
+  <script src="/assets/landing/industries.js?v=20261120e"></script>
+  <script src="/assets/landing/landing.js?v=20261120e"></script>
 </body>
 </html>

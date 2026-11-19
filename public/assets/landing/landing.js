@@ -197,10 +197,49 @@
   var hudR = document.getElementById('lpHudRight');
   var act1 = document.getElementById('lpAct1');
   var act2 = document.getElementById('lpAct2');
+  var act3 = document.getElementById('lpAct3');
+  var act4 = document.getElementById('lpAct4');
+  var acts = [act1, act2, act3, act4];
+  var chapBtns = document.querySelectorAll('#lpChapterNav .lp-chap-btn');
   var wmEl = document.getElementById('lpBgWatermark');
   var scrollBar = document.getElementById('lpScrollBar');
   var scrollCue = document.getElementById('lpScrollCue');
   var glowEl = document.getElementById('lpMouseGlow');
+  var activeAct = -1;
+
+  var HUD_BY_ACT = [
+    null,
+    {
+      lTag: '02 · LINK REMIX', lTitle: '참고 링크 컷 리듬·대사 분석', lMeta: '유튜브·CapCut 링크 → 내 대본 재구성',
+      rTag: '02 · HIGHLIGHT AI', rTitle: '10분 영상 → 핵심 15초 추출', rMeta: '핵심 발언 자동 추천 · 제목·자막 편집'
+    },
+    {
+      lTag: '03 · 700+ STYLES', lTitle: '카드뉴스 · 매거진 · 내 스타일', lMeta: '우리 가게 색·글꼴·로고 영구 저장',
+      rTag: '03 · AI VOICE & BGM', rTitle: '성우 내레이션 · 오리지널 BGM', rMeta: '음성 길이에 맞춘 자동 컷 전환'
+    },
+    {
+      lTag: '04 · RENDER READY', lTitle: '1080×1920 9:16 MP4 완성', lMeta: '매장 연락처·로고 엔딩 자동 부착',
+      rTag: '04 · ONE-CLICK SNS', rTitle: '인스타 · 유튜브 · 틱톡 발행', rMeta: '스튜디오에서 바로 저장 및 업로드'
+    }
+  ];
+
+  function renderMarqueeStrip() {
+    var track = document.getElementById('lpMarqueeTrack');
+    if (!track) return;
+    var keys = Object.keys(INDS).filter(function (k) { return k !== 'personal'; });
+    var cardsHtml = keys.map(function (k) {
+      var it = INDS[k];
+      var photo = scenePhoto(it.key, 0);
+      var hook = it.vlogDone || (it.name + ' 릴스');
+      return '<button type="button" data-go="/studio?ind=' + esc(it.key) + '" class="lp-strip-card" aria-label="' + esc(it.name) + ' 스튜디오 열기">' +
+        '<img src="' + photo + '" alt="" loading="lazy" />' +
+        '<div class="lp-strip-scrim"></div>' +
+        '<div class="lp-strip-meta"><span>' + esc(it.icon) + ' ' + esc(it.name) + '</span><strong>' + esc(hook) + '</strong></div>' +
+        '</button>';
+    }).join('');
+    // 끊김 없는 무한 루프를 위해 2회 복제
+    track.innerHTML = cardsHtml + cardsHtml;
+  }
 
   var targetMx = 0, targetMy = 0; // -1 ~ 1
   var curMx = 0, curMy = 0;
@@ -223,28 +262,33 @@
     curMy += (targetMy - curMy) * 0.08;
 
     var p = scrollP;
-    var spread = clamp(1 - p * 1.45, 0, 1); // 0% -> 1, 70% -> 0 (부채꼴이 서서히 열리며 빠짐)
-    var focus = clamp(p * 1.4, 0, 1);        // 0% -> 0, 70% -> 1 (중앙 릴스 집중)
+    var spread = clamp(1 - p * 3.1, 0, 1);  // 1막(0~32%)에서 부채꼴이 시네마틱하게 열리며 빠짐
+    var focus = clamp(p * 2.6, 0, 1);       // 2막부터 중앙 릴스 집중
     var isMobile = window.innerWidth < 768;
+
+    // 4막 계산 (0: 0~25%, 1: 25~50%, 2: 50~75%, 3: 75~100%)
+    var curAct = p < 0.24 ? 0 : (p < 0.50 ? 1 : (p < 0.76 ? 2 : 3));
 
     // 1) 전체 덱 3D 틸트 (마우스 따라 입체 반응)
     if (deckEl && !reducedMotion) {
-      var rx = (-curMy * 6 * (1 - p * 0.35)).toFixed(2);
-      var ry = (curMx * 8 * (1 - p * 0.35)).toFixed(2);
+      var rx = (-curMy * 6 * (1 - p * 0.25)).toFixed(2);
+      var ry = (curMx * 8 * (1 - p * 0.25)).toFixed(2);
       deckEl.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
     }
 
-    // 2) 중앙 메인 릴스: 스크롤 시 시네마틱하게 커지며 정면 포커스
+    // 2) 중앙 메인 릴스: 1막->2막 확대, 3막 시네마 레터박스, 4막 완성 글로우 링
     if (mainReelEl) {
-      var mScale = (1 + focus * (isMobile ? 0.05 : 0.09)).toFixed(3);
+      var mScale = (1 + focus * (isMobile ? 0.05 : 0.10)).toFixed(3);
       var mY = (-focus * 6).toFixed(1);
       mainReelEl.style.transform = 'translate3d(0,' + mY + 'px,0) scale(' + mScale + ')';
+      mainReelEl.classList.toggle('is-cinema', curAct === 2);
+      mainReelEl.classList.toggle('is-export-ready', curAct === 3);
     }
 
-    // 3) 좌우 부채꼴 4장: 스크롤에 따라 바깥으로 펼쳐지며 시네마틱 페이드아웃
+    // 3) 좌우 부채꼴 4장: 1막에서 스크롤할 때 바깥으로 펼쳐지며 시네마틱 페이드아웃
     var dx1 = isMobile ? 116 : 210;
     var dx2 = 380;
-    var outX = (1 - spread) * (isMobile ? 90 : 170);
+    var outX = (1 - spread) * (isMobile ? 95 : 185);
     if (fanL1) {
       fanL1.style.transform = 'translate(-50%, -50%) translate3d(' + (-dx1 - outX).toFixed(1) + 'px,' + (14 + (1 - spread) * 20).toFixed(1) + 'px,-60px) rotate(' + (-9 - (1 - spread) * 7).toFixed(1) + 'deg) scale(' + (0.9 - (1 - spread) * 0.08).toFixed(3) + ')';
       fanL1.style.opacity = (spread * 0.88).toFixed(3);
@@ -266,38 +310,54 @@
       fanR2.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
     }
 
-    // 4) 좌우 시네마틱 HUD 카드: 스크롤 32% 이후 스윽 떠오름
-    var hudAlpha = clamp((p - 0.28) / 0.32, 0, 1);
-    var hudY = (1 - hudAlpha) * 28;
+    // 4) 좌우 시네마틱 HUD 카드: 2막~4막 동안 유지되며 마우스 패럴랙스 반응
+    var hudAlpha = clamp((p - 0.18) / 0.14, 0, 1);
+    var hudY = (1 - hudAlpha) * 26;
     if (hudL) {
       hudL.style.opacity = hudAlpha.toFixed(3);
-      hudL.style.transform = 'translate3d(' + (-curMx * 10).toFixed(1) + 'px, calc(-50% + ' + hudY.toFixed(1) + 'px), 0)';
+      hudL.style.transform = 'translate3d(' + (-curMx * 12).toFixed(1) + 'px, calc(-50% + ' + hudY.toFixed(1) + 'px), 0)';
     }
     if (hudR) {
       hudR.style.opacity = hudAlpha.toFixed(3);
-      hudR.style.transform = 'translate3d(' + (-curMx * 10).toFixed(1) + 'px, calc(-50% + ' + hudY.toFixed(1) + 'px), 0)';
+      hudR.style.transform = 'translate3d(' + (-curMx * 12).toFixed(1) + 'px, calc(-50% + ' + hudY.toFixed(1) + 'px), 0)';
     }
 
-    // 5) 배경 워터마크 수평 패럴랙스 + 스크롤 큐 페이드
+    // 5) 배경 워터마크 수평 패럴랙스 + 스크롤 큐
     if (wmEl) {
-      wmEl.style.transform = 'translate(calc(-50% + ' + (-p * 140).toFixed(1) + 'px), -50%)';
+      wmEl.style.transform = 'translate(calc(-50% + ' + (-p * 260).toFixed(1) + 'px), -50%)';
     }
     if (scrollCue) {
-      scrollCue.style.opacity = clamp(1 - p * 4, 0, 1).toFixed(2);
+      scrollCue.style.opacity = clamp(1 - (p - 0.85) * 6, 0, 1).toFixed(2);
+      var cueSpan = scrollCue.querySelector('span');
+      if (cueSpan) cueSpan.textContent = 'SCROLL TO DIRECT · 0' + (curAct + 1) + ' / 04';
     }
 
-    // 6) 상단 타이포 1막 ↔ 2막 크로스페이드
-    var inAct2 = p >= 0.44;
-    if (act1 && act2) {
-      act1.classList.toggle('is-visible', !inAct2);
-      act1.setAttribute('aria-hidden', inAct2 ? 'true' : 'false');
-      act2.classList.toggle('is-visible', inAct2);
-      act2.setAttribute('aria-hidden', inAct2 ? 'false' : 'true');
+    // 6) 상단 4막 타이포 + 챕터 네비 + HUD 내용 동기화
+    if (curAct !== activeAct) {
+      activeAct = curAct;
+      acts.forEach(function (el, idx) {
+        if (!el) return;
+        var on = idx === curAct;
+        el.classList.toggle('is-visible', on);
+        el.setAttribute('aria-hidden', on ? 'false' : 'true');
+      });
+      chapBtns.forEach(function (btn, idx) {
+        btn.classList.toggle('is-active', idx === curAct);
+      });
+      var hc = HUD_BY_ACT[curAct];
+      if (hc) {
+        setText('lpHudLeftTag', hc.lTag);
+        setText('lpHudLeftTitle', hc.lTitle);
+        setText('lpHudLeftMeta', hc.lMeta);
+        setText('lpHudRightTag', hc.rTag);
+        setText('lpHudRightTitle', hc.rTitle);
+        setText('lpHudRightMeta', hc.rMeta);
+      }
     }
 
-    // 7) 스크롤에 연동된 3컷 자동 전환 (스크롤을 내릴 때 CUT 1 -> 2 -> 3 자연 전환)
-    if (p > 0.08 && p < 0.98) {
-      var desiredCut = p < 0.42 ? 0 : (p < 0.74 ? 1 : 2);
+    // 7) 스크롤에 연동된 3컷 자동 전환 (1막->CUT1, 2막->CUT2, 3~4막->CUT3)
+    if (p > 0.05 && p < 0.99) {
+      var desiredCut = curAct === 0 ? 0 : (curAct === 1 ? 1 : 2);
       if (desiredCut !== lastScrollCut) {
         lastScrollCut = desiredCut;
         var ind = INDS[current] || INDS.auto;
@@ -383,8 +443,20 @@
     location.href = url;
   });
 
+  // 우측 챕터 버튼 클릭 -> 해당 막으로 스크롤 점프
+  chapBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (!heroEl) return;
+      var idx = Number(btn.getAttribute('data-act')) || 0;
+      var span = Math.max(1, heroEl.offsetHeight - window.innerHeight);
+      var targets = [0, 0.36, 0.62, 0.88];
+      window.scrollTo({ top: Math.round(span * (targets[idx] || 0)), behavior: 'smooth' });
+    });
+  });
+
   syncPlayBtn();
   selectIndustry('auto');
+  renderMarqueeStrip();
   computeScrollProgress();
   requestAnimationFrame(applyCineFrame);
 })();
