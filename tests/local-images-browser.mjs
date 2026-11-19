@@ -197,18 +197,21 @@ try {
   const old = new Date(Date.now() - 86400000).toISOString();
   const feed = {
     source: 'https://trends.google.com/trending/rss?geo=KR', collectedAt,
-    items: [{ term:'테스트 검색어', startedAt:collectedAt, traffic:'200+' }, { term:'지난 검색어', startedAt:old }]
+    items: [{ term:'변상일', startedAt:collectedAt, traffic:'200+' }, { term:'생맥주', startedAt:collectedAt, traffic:'200+' }, { term:'치킨', startedAt:old }]
   };
   await cloud.route('**/daily-keywords.json', route => route.fulfill({json:feed}));
   await cloud.evaluate(async () => {
-    switchStudioTab('topic'); arToggleSheet(false);
+    setIndustry('restaurant'); switchStudioTab('topic'); arToggleSheet(false);
     arKeywordDay = ''; await arLoadDailyKeywords();
   });
   const daily = cloud.locator('#dailyKeywords');
   await daily.locator('summary').click();
   assert.equal(await daily.getByRole('button').count(),1);
-  await daily.getByRole('button',{name:/테스트 검색어.*200\+/}).click();
-  assert.equal(await cloud.locator('#topicCustomInput').inputValue(),'테스트 검색어');
+  await daily.getByRole('button',{name:/생맥주.*200\+/}).click();
+  assert.equal(await cloud.locator('#topicCustomInput').inputValue(),'생맥주');
+  await cloud.evaluate(async () => { setIndustry('auto'); await arLoadDailyKeywords(); });
+  assert.equal(await daily.isHidden(),true);
+  await cloud.evaluate(async () => { setIndustry('restaurant'); await arLoadDailyKeywords(); });
   const refreshDaily = () => cloud.evaluate(async () => { arKeywordDay = ''; await arLoadDailyKeywords(); });
   feed.collectedAt = old;
   await refreshDaily();

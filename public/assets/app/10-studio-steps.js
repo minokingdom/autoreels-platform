@@ -280,12 +280,32 @@
     const arKstTime = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
     let arKeywordDay = '';
     let arKeywordTimer;
+    // Only match complete search phrases. A person's name in the national feed
+    // carries no evidence of a connection to a particular business.
+    const arIndustrySearchTerms = {
+      restaurant: '외식|맛집|안주|맥주|생맥주|수제맥주|치킨|삼겹살|국밥|제철음식|호프집|맥주 안주',
+      cafe: '커피|원두|라떼|카페|디저트|케이크|베이커리|크루아상|디카페인',
+      auto: '자동차|전기차|하이브리드|중고차|전기차 보조금|자동차세',
+      beauty: '미용실|네일아트|헤어스타일|염색|펌|피부관리',
+      realestate: '부동산|전세|월세|청약|아파트 청약|전세대출',
+      academy: '수능|대학수학능력시험|모의고사|대입|수시|정시|수능 등급컷',
+      clinic: '예방접종|독감|독감 예방접종|건강검진|비염|알레르기',
+      fitness: '헬스장|필라테스|웨이트 트레이닝|근력운동|요가',
+      shop: '블랙프라이데이|쇼핑몰|온라인 쇼핑|코리아세일페스타',
+      interior: '인테리어|리모델링|도배|바닥재|아파트 인테리어'
+    };
+    function arKeywordMatchText(value) {
+      return String(value || '').normalize('NFKC').toLowerCase().replace(/\s+/g, '');
+    }
     async function arLoadDailyKeywords() {
       const panel = document.getElementById('dailyKeywords');
       const now = new Date();
       const day = arKstDay.format(now);
-      if (!panel || arKeywordDay === day) return;
-      arKeywordDay = day;
+      const phrases = [arIndustrySpecialty(), campaign.vehicleEntered ? campaign.vehicle : '',
+        ...(arIndustrySearchTerms[IND.key] || '').split('|')].map(arKeywordMatchText).filter(Boolean);
+      const scope = JSON.stringify([day, IND.key, phrases]);
+      if (!panel || arKeywordDay === scope) return;
+      arKeywordDay = scope;
       panel.hidden = true;
       panel.open = false;
       clearTimeout(arKeywordTimer);
@@ -294,7 +314,7 @@
         const response = await fetch('/daily-keywords.json', { cache: 'no-store' });
         if (!response.ok) throw new Error('키워드 수집 파일 없음');
         const data = await response.json();
-        if (arKeywordDay !== day) return;
+        if (arKeywordDay !== scope) return;
         const collected = Date.parse(data.collectedAt);
         if (data.source !== panel.querySelector('a').href || !Number.isFinite(collected) || collected > Date.now() ||
             arKstDay.format(collected) !== day || !Array.isArray(data.items)) {
@@ -307,6 +327,7 @@
           const started = Date.parse(item?.startedAt);
           if (typeof item?.term !== 'string' || !item.term.trim() || !Number.isFinite(started) ||
               started > collected || arKstDay.format(started) !== day) continue;
+          if (!phrases.includes(arKeywordMatchText(item.term))) continue;
           const button = document.createElement('button');
           button.type = 'button';
           const title = document.createElement('span');
@@ -326,7 +347,7 @@
         time.textContent = day + ' ' + arKstTime.format(collected) + ' (한국시간)';
         panel.hidden = !list.childElementCount;
       } catch {
-        if (arKeywordDay === day) arKeywordDay = '';
+        if (arKeywordDay === scope) arKeywordDay = '';
       }
     }
     document.addEventListener('visibilitychange', () => { if (!document.hidden) arLoadDailyKeywords(); });
