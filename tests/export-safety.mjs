@@ -121,12 +121,12 @@ try {
     window.lastRecordedVideoBlob=null;
     await exportSynthesizedVideo();
     return {bounds,duration,provider:AudioEngine.ttsProvider,exportSize:window.lastRecordedVideoBlob?.size||0,
-      badge:document.getElementById('ttsProviderBadge').textContent, audioTracks:AudioEngine.streamDest.stream.getAudioTracks().length};
+      audioTracks:AudioEngine.streamDest.stream.getAudioTracks().length};
   });
   [0,1/6,.5,1,5/3].forEach((bound,index)=>assert.ok(Math.abs(airy.bounds[index]-bound)<.003));
   assert.ok(Math.abs(airy.duration-5/3)<.003);
   assert.equal(airy.provider,'airy');
-  assert.match(airy.badge,/Airy/);
+  assert.equal(await page.locator('#audioEngineBadge, #ttsProviderBadge').count(), 0);
   assert.equal(airy.audioTracks,1);
   assert.ok(airy.exportSize>1000);
   await page.route('**/api/tts-voices?v=3',route=>route.fulfill({json:{ok:true,voices:[

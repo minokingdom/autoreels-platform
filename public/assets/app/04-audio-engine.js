@@ -459,40 +459,11 @@
       setTtsProvider(provider, errorCode) {
         this.ttsProvider = provider;
         this.ttsLastError = errorCode || '';
-        const badge = document.getElementById('ttsProviderBadge');
-        if (!badge) return;
-        if (provider === 'airy' || provider === 'google' || provider === 'chirp' || provider === 'device') {
-          const providerNames = { airy: 'Airy', google: 'Google WaveNet', chirp: 'Google Chirp 3 HD', device: '휴대폰 성우' };
-          badge.textContent = '성우: ' + providerNames[provider];
-          badge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#4cc38a]';
-        } else if (provider === 'fish' && this.ttsFreeModel) {
-          badge.textContent = '성우: Fish Audio 무료 모델 (크레딧 부족 · 음질 낮음)';
-          badge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#f5a524]';
-        } else if (provider === 'fish') {
-          badge.textContent = '성우: Fish Audio';
-          badge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#4cc38a]';
-        } else if (provider === 'browser') {
-          const reason =
-            errorCode === 'fish_api_key_missing' ? 'API 키 미설정' :
-            errorCode === 'http_401' ? 'API 키 오류' :
-            errorCode === 'http_402' ? '크레딧 부족' :
-            errorCode === 'offline' ? '서버 없이 실행 중' :
-            errorCode === 'quota' ? '이번 사용량 한도 도달' : '연결 실패';
-          const code = String(errorCode || '');
-          const source = code.startsWith('google_') ? 'Google ' : code.startsWith('airy_') ? 'Airy ' : '';
-          const cause = code === 'airy_credit_exhausted' ? '크레딧 부족' :
-            code.endsWith('_rate_limited') ? '음성 요청이 많음' : reason;
-          badge.textContent = `성우: 브라우저 음성 (${source}${cause} · 추출 영상에는 녹음 안 됨)`;
-          badge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#f5a524]';
-        } else {
-          badge.textContent = '성우: 준비 중';
-          badge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#85858b]';
-        }
       },
 
       // 서버가 알려 준 Fish Audio 모델 이름 확인 (/api/tts 의 X-TTS-Model, /api/tts-script 의 model)
       // 유료 크레딧이 떨어지면 서버가 무료 모델로 바꿔 음질이 기계음처럼 떨어지므로,
-      // 배지를 바꾸고 관리자 모드에서는 한 번 알림을 띄움 (사장님·고객 화면에는 알림을 띄우지 않음)
+      // 관리자 모드에서는 한 번 알림을 띄웁니다.
       ttsFreeModel: false,
       ttsFreeNotified: false,
       noteTtsModel(model) {
@@ -1957,7 +1928,6 @@
       const btn = document.getElementById('soundToggleBtn');
       const dot = document.getElementById('soundDot');
       const lbl = document.getElementById('soundToggleLabel');
-      const engineBadge = document.getElementById('audioEngineBadge');
 
       if (AudioEngine.enabled) {
         const ctx = AudioEngine.ensureContext();
@@ -1973,10 +1943,6 @@
         if (btn) {
           btn.className = 'btn-secondary h-9 px-2.5 text-[12px] cursor-pointer flex items-center justify-center gap-1.5 border-[#4cc38a] text-[#ededed]';
         }
-        if (engineBadge) {
-          engineBadge.textContent = '🔊 BGM + 한국어 성우(TTS) 작동중';
-          engineBadge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#4cc38a]';
-        }
       } else {
         AudioEngine.stopBgmLoop();
         AudioEngine.stopTts();
@@ -1985,10 +1951,6 @@
         if (lbl) lbl.textContent = '사운드 켜기';
         if (btn) {
           btn.className = 'btn-secondary h-9 px-2.5 text-[12px] cursor-pointer flex items-center justify-center gap-1.5';
-        }
-        if (engineBadge) {
-          engineBadge.textContent = '🔇 사운드 일시정지됨 (클릭 시 켜짐)';
-          engineBadge.className = 'tag-chip px-2 py-0.5 font-mono text-[11px] text-[#85858b]';
         }
       }
     }

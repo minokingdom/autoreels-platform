@@ -41,7 +41,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-vox-device" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-sound-actions" />
   <link rel="stylesheet" href="/assets/app/splash.css" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -1102,16 +1102,12 @@
           <!-- ★ 영상 시간(컷·사진 자동확장) · AI 성우(TTS) · 릴스/숏츠 음원(BGM) 컨트롤 바 -->
           <div class="studio-sub p-4 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-[13px] font-medium text-[#ededed]">배경음악 · 성우</span>
-                <span id="audioEngineBadge" class="tag-chip px-2 py-0.5 font-mono text-[11px] text-[#4cc38a]">클릭 시 사운드 자동 활성</span>
-                <span id="ttsProviderBadge" class="tag-chip px-2 py-0.5 font-mono text-[11px] text-[#85858b]">성우: 준비 중</span>
-              </div>
-              <div class="flex items-center gap-1.5 flex-wrap">
-                <button type="button" onclick="testCurrentCutTtsNow()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">
+              <span class="text-[13px] font-medium text-[#ededed]">배경음악 · 성우</span>
+              <div class="audio-preview-actions">
+                <button type="button" onclick="testCurrentCutTtsNow()" class="btn-secondary px-3 text-[12px] cursor-pointer">
                   현재 컷 듣기
                 </button>
-                <button type="button" onclick="triggerFullAudioPreview()" class="btn-primary h-8 px-3 text-[12px] cursor-pointer">
+                <button type="button" onclick="triggerFullAudioPreview()" class="btn-primary px-3 text-[12px] cursor-pointer">
                   처음부터 듣기
                 </button>
               </div>
@@ -2154,7 +2150,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117r" title="AutoReels 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261119-bgm-picker"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261119-sound-actions"><\/script>');
     }
   </script>
   <!--
