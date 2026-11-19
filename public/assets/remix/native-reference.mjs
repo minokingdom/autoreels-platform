@@ -19,15 +19,16 @@ export function nativeFile(id,signal,update) {
   document.body.append(input);
   update('휴대폰에서 유튜브 쇼츠를 열고 있어요.');
   return new Promise((resolve,reject)=>{
-    let timer;
+    let timer, title='';
     function finish(error,file) {
       clearTimeout(timer);window.removeEventListener('ar-native-reference',message);signal.removeEventListener('abort',abort);
-      input.remove();if(error)reject(error);else resolve({file,title:''});
+      input.remove();if(error)reject(error);else resolve({file,title});
     }
     function abort(){finish(signal.reason);}
     function watch(){clearTimeout(timer);timer=setTimeout(()=>finish(Error('유튜브 연결 시간이 길어졌어요. 다시 시도해 주세요.')),150000);}
     function message(e){
       if(e.detail?.id!==input.dataset.requestId)return;
+      if(e.detail.kind==='title'){title=String(e.detail.message||'').slice(0,160);return;}
       if(e.detail.kind==='error')finish(Error(e.detail.message));
       else {watch();update(e.detail.message);}
     }

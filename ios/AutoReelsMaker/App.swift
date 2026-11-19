@@ -64,7 +64,7 @@ final class StudioViewController: UIViewController, WKUIDelegate, WKNavigationDe
             guard requestID==token else{return}
             if let args=data as? [String],args.count==2,web.url?.path==start.path {
                 do{
-                    let file=try await YouTubeReference.load(id:args[0]) { [weak self] msg in
+                    let file=try await YouTubeReference.load(id:args[0],title:{ [weak self] name in await self?.report("title",name,key:args[1]) }) { [weak self] msg in
                         Task { @MainActor in await self?.report("progress",msg,key:args[1]) }
                     }
                     guard requestID==token else {try? FileManager.default.removeItem(at:file);return}

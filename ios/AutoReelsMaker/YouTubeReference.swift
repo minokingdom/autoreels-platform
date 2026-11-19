@@ -73,9 +73,11 @@ final class ClipDownloader: NSObject, URLSessionDownloadDelegate, @unchecked Sen
 }
 
 struct YouTubeReference {
-    static func load(id: String, progress: @escaping @Sendable (String) -> Void) async throws -> URL {
+    static func load(id: String, title: @escaping @Sendable (String) async -> Void, progress: @escaping @Sendable (String) -> Void) async throws -> URL {
         guard id.range(of: "^[a-zA-Z0-9_-]{11}$", options: .regularExpression) != nil else { throw ImportProblem.unsupported }
-        let streams = try await YouTube(videoID: id, methods: [.local]).streams
+        let video=YouTube(videoID:id,methods:[.local])
+        let streams = try await video.streams
+        if let name = try? await video.metadata?.title { await title(name) }
         try Task.checkCancellation()
         let pictures = streams.filter { $0.includesVideoTrack && $0.fileExtension == .mp4 && $0.isNativelyPlayable }
             .sorted { abs(($0.videoResolution ?? 0)-720) < abs(($1.videoResolution ?? 0)-720) }

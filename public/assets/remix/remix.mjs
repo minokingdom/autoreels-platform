@@ -309,6 +309,7 @@ async function save(kind) {
       status('편집 프로젝트를 준비하고 있어요…');
       const {projectZip} = await import('./project.mjs');
       const zip = await projectZip(scenes,paint,photos,offsetFrames);
+      if(window.AutoReelsExport){const {saveAndroidFile}=await import('./native-export.mjs');await saveAndroidFile(zip,'zip');status('프로젝트를 저장했어요.');return;}
       const link = document.createElement('a'); link.href = URL.createObjectURL(zip);
       link.download = '오토릴스메이커-Hypit.zip'; document.body.append(link); link.click(); link.remove();
       setTimeout(() => URL.revokeObjectURL(link.href),60000); status('프로젝트 파일이 준비됐어요.'); return;
@@ -327,6 +328,12 @@ async function save(kind) {
   } catch (err) { status(err.message || '저장하지 못했어요. 다시 시도해 주세요.'); }
   finally {busy = false; for (const id of ['inputs','play','project','save']) byId(id).disabled = false;}
 }
+byId('download').addEventListener('click',async event=>{
+  if(!window.AutoReelsExport || !savedUrl)return;
+  event.preventDefault();if(busy)return;busy=true;
+  try{const {saveAndroidFile}=await import('./native-export.mjs');await saveAndroidFile(await (await fetch(savedUrl)).blob(),'mp4');status('MP4를 저장했어요.');}
+  catch(error){status(error.message);}finally{busy=false;}
+});
 byId('save').addEventListener('click',() => save('mp4'));
 byId('project').addEventListener('click',() => save('project'));
 document.addEventListener('visibilitychange',() => {if (document.hidden) stopPreview();});

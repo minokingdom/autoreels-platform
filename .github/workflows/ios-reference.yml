@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   iphone:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
@@ -23,12 +23,23 @@ jobs:
       - name: Run simulator test
         working-directory: ios
         run: |
-          DEVICE=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; print(next(d["udid"] for devices in json.load(sys.stdin)["devices"].values() for d in devices if d["name"].startswith("iPhone")))')
+          DEVICE=$(xcodebuild -project AutoReelsMaker.xcodeproj -scheme AutoReelsMaker -showdestinations | python3 -c 'import re,sys; print(next(re.search(r"id:([0-9A-Fa-f-]{36})", line)[1] for line in sys.stdin if "platform:iOS Simulator" in line and "name:iPhone" in line and re.search(r"id:([0-9A-Fa-f-]{36})",line)))')
           xcodebuild -project AutoReelsMaker.xcodeproj -scheme AutoReelsMaker -destination "id=$DEVICE" -derivedDataPath DerivedData -parallel-testing-enabled NO -resultBundlePath TestResult test
+      - name: Package simulator app
+        if: always()
+        working-directory: ios
+        run: |
+          if test -d DerivedData/Build/Products/Debug-iphonesimulator/AutoReelsMaker.app; then
+            ditto -c -k --keepParent DerivedData/Build/Products/Debug-iphonesimulator/AutoReelsMaker.app AutoReelsMaker-iPhone-Simulator.zip
+          fi
+          if test -d TestResult.xcresult; then
+            xcrun xcresulttool export attachments --path TestResult.xcresult --output-path Attachments || true
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: iPhone-simulator
           path: |
-            ios/DerivedData/Build/Products/Debug-iphonesimulator/AutoReelsMaker.app
+            ios/AutoReelsMaker-iPhone-Simulator.zip
+            ios/Attachments
             ios/TestResult.xcresult
