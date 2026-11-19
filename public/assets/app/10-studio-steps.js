@@ -990,21 +990,34 @@
       qb.innerHTML = ['sound', 'voice', 'shuffle', 'design', 'restart', 'settings'].map((k) => `<button type="button" class="aq-btn" data-qb="${k}"><span class="aq-dot">${arQbSvg(k === 'sound' ? 'mute' : k)}</span><span class="aq-label"></span></button>`).join('');
       const colors = document.createElement('details');
       colors.id = 'arQuickColors';
-      colors.innerHTML = `<summary class="aq-btn"><span class="aq-dot">${arQbSvg('color')}</span><span class="aq-label">색상</span></summary>
-        <div id="designColorSwatches" role="group" aria-label="디자인 색상"></div>`;
+      colors.innerHTML = `<summary class="aq-btn" aria-controls="previewColorShelf"><span class="aq-dot">${arQbSvg('color')}</span><span class="aq-label">색상</span></summary>`;
       qb.querySelector('[data-qb="design"]').after(colors);
       const colorToggle = colors.querySelector('summary');
+      const shelf = document.createElement('div');
+      shelf.id = 'previewColorShelf';
+      shelf.hidden = true;
+      shelf.innerHTML = '<button type="button" class="color-page" aria-label="이전 색상">‹</button><div id="designColorSwatches" role="group" aria-label="디자인 색상"></div><button type="button" class="color-page" aria-label="다음 색상">›</button>';
+      document.getElementById('previewViewport').after(shelf);
+      const strip = shelf.querySelector('#designColorSwatches');
+      const [prev, next] = shelf.querySelectorAll('.color-page');
+      const syncPages = () => {
+        prev.disabled = strip.scrollLeft <= 1;
+        next.disabled = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 1;
+      };
+      prev.onclick = () => strip.scrollBy({left:-strip.clientWidth * 0.8, behavior:'smooth'});
+      next.onclick = () => strip.scrollBy({left:strip.clientWidth * 0.8, behavior:'smooth'});
+      strip.addEventListener('scroll', syncPages, {passive:true});
+      new ResizeObserver(syncPages).observe(strip);
       colors.addEventListener('toggle', () => {
-        if (colors.open) renderColorPalettePicker();
-      });
-      colors.addEventListener('click', (event) => {
-        if (event.target.closest('.color-swatch')) {
-          colors.open = false;
-          colorToggle.focus({ preventScroll: true });
-        }
+        shelf.hidden = !colors.open;
+        if (!colors.open) return;
+        renderColorPalettePicker();
+        const active = strip.querySelector('[aria-pressed="true"]');
+        if (active) strip.scrollLeft = active.offsetLeft - (strip.clientWidth - active.offsetWidth) / 2;
+        syncPages();
       });
       document.addEventListener('pointerdown', (event) => {
-        if (colors.open && !colors.contains(event.target)) colors.open = false;
+        if (colors.open && !colors.contains(event.target) && !shelf.contains(event.target)) colors.open = false;
       });
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && colors.open) {
@@ -1175,21 +1188,37 @@
     function arShowVoiceChoices(el, sel) {
       el.innerHTML = `<div class="bgm-sheet" role="dialog" aria-modal="true" aria-label="성우 목소리">
         <div class="bgm-head"><strong>성우 목소리</strong><button type="button" class="bgm-done">적용</button></div>
-        <label class="voice-speed-setting">말하는 속도<select class="studio-input"></select></label>
+        <fieldset class="voice-speed-setting"><legend>말하는 속도</legend><div class="voice-speed-options"></div></fieldset>
         <div class="bgm-list"></div><audio preload="none"></audio>
       </div>`;
       const list = el.querySelector('.bgm-list');
       const player = el.querySelector('audio');
       const speed = document.getElementById('ttsSpeedSelect');
-      const draftSpeed = el.querySelector('.voice-speed-setting select');
-      draftSpeed.replaceChildren(...Array.from(speed.options, option => option.cloneNode(true)));
-      draftSpeed.value = String(AudioEngine.ttsSpeed || 1.1);
+      const speedOptions = el.querySelector('.voice-speed-options');
+      let draftSpeed = String(AudioEngine.ttsSpeed || 1.1);
+      for (const option of speed.options) {
+        const label = document.createElement('label');
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'voice-preview-speed';
+        radio.value = option.value;
+        radio.checked = radio.value === draftSpeed;
+        const rate = document.createElement('b');
+        rate.textContent = Number(option.value).toFixed(1) + '×';
+        const caption = document.createElement('span');
+        caption.textContent = option.textContent;
+        label.append(radio, rate, caption);
+        speedOptions.append(label);
+      }
       // 예문은 1.1배로 합성한 파일이므로 미리듣기에서는 재생 속도만 조절합니다.
       const syncSampleSpeed = () => {
-        player.defaultPlaybackRate = Number(draftSpeed.value) / 1.1;
+        player.defaultPlaybackRate = Number(draftSpeed) / 1.1;
         player.playbackRate = player.defaultPlaybackRate;
       };
-      draftSpeed.onchange = syncSampleSpeed;
+      speedOptions.addEventListener('change', event => {
+        draftSpeed = event.target.value;
+        syncSampleSpeed();
+      });
       syncSampleSpeed();
       let choice = sel.value;
       let hasChosen = false;
@@ -1249,8 +1278,8 @@
       };
       el.querySelector('.bgm-done').onclick = () => {
         arCloseOptionSheet();
-        if (choice === sel.value && Number(draftSpeed.value) === AudioEngine.ttsSpeed) return;
-        speed.value = draftSpeed.value;
+        if (choice === sel.value && Number(draftSpeed) === AudioEngine.ttsSpeed) return;
+        speed.value = draftSpeed;
         sel.value = choice;
         sel.dispatchEvent(new Event('change', { bubbles: true }));
       };

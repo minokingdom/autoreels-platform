@@ -82,7 +82,8 @@ try {
     assert.deepEqual(await page.locator('#studioPanel_sound select').evaluateAll(els => els.map(el => el.id)),
       ['ttsVoiceSelect', 'bgmStyleSelect', 'sfxModeSelect', 'ttsSpeedSelect']);
     const sheet = page.locator('#arOptionSheet');
-    const speed = sheet.getByLabel('말하는 속도');
+    const speed = sheet.getByRole('group', { name: '말하는 속도' });
+    const speedOption = value => speed.locator('input[value="' + value + '"]');
     assert.equal(await page.locator('#ttsSpeedSelect').isHidden(), true);
     const option = id => sheet.locator('[data-v="' + id + '"]');
     const play = async id => {
@@ -96,7 +97,7 @@ try {
     synthesisCalls = 0;
     await open.click();
     await play('ko-KR-Chirp3-HD-Puck');
-    await speed.selectOption('1.2');
+    await speedOption('1.2').check();
     assert.ok(Math.abs(await sheet.locator('audio').evaluate(el => el.playbackRate) - 1.2 / 1.1) < 0.001);
     await play('ko-KR-Wavenet-A');
     assert.equal(await page.evaluate(() => AudioEngine.ttsSpeed), 1.1);
@@ -107,8 +108,8 @@ try {
     await sheet.click({ position: { x: 2, y: 2 } });
     assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'off');
     await open.click();
-    assert.equal(await speed.inputValue(), '1.1');
-    await speed.selectOption('1');
+    assert.equal(await speedOption('1.1').isChecked(), true);
+    await speedOption('1').check();
     await play('ko-KR-Wavenet-B');
     assert.equal(synthesisCalls, 0);
     const player = await sheet.locator('audio').elementHandle();
@@ -117,8 +118,8 @@ try {
     assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'ko-KR-Wavenet-B');
     assert.equal(await page.evaluate(() => AudioEngine.ttsSpeed), 1);
     await open.click();
-    assert.equal(await speed.inputValue(), '1');
-    await speed.selectOption('1.2');
+    assert.equal(await speedOption('1').isChecked(), true);
+    await speedOption('1.2').check();
     await sheet.getByRole('button', { name: '적용', exact: true }).click();
     assert.equal(await page.evaluate(() => AudioEngine.ttsSpeed), 1.2);
     assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'ko-KR-Wavenet-B');
