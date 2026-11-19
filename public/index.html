@@ -32,7 +32,7 @@
   <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120g" />
+  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120h" />
 </head>
 <body class="antialiased lp-cine-body">
   <!-- 시네마틱 글래스 상단 네비게이션 + 1px 스크롤 타임라인 바 -->
@@ -291,46 +291,55 @@
       </div>
     </section>
 
-    <!-- 1-2. 실제 앱 3D 디바이스 쇼케이스 (PC 스튜디오 + 모바일 컷 편집 실화면) -->
+    <!-- 1-2. 실제 앱 3D 디바이스 쇼케이스 (Apple 스타일 스크롤 3D 언폴드 + MacBook & iPhone 나란히 배치) -->
     <section id="arLandingShowcase" class="space-y-6 ar-reveal">
       <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
-          <span class="text-[11px] font-mono tracking-wider uppercase text-[#4cc38a]">REAL APP · 3D STUDIO TOUR</span>
+          <span class="text-[11px] font-mono tracking-wider uppercase text-[#4cc38a]">REAL APP · LIVE STUDIO TOUR</span>
           <h2 class="text-[22px] sm:text-[28px] font-bold text-[#f4f4f5] mt-1 tracking-tight">실제 오토릴스메이커 앱 화면 그대로</h2>
           <p class="text-[13.5px] text-[#85858b] mt-1">PC와 모바일 브라우저 어디서나 동일한 실시간 릴스 미리보기, 747+ 디자인 서랍, 컷별 세부 편집을 바로 쓸 수 있습니다.</p>
         </div>
         <div class="lp-mode-tabs" role="tablist" aria-label="실제 앱 화면 선택">
-          <button type="button" role="tab" aria-selected="true" data-app-view="main" class="lp-app-tab lp-mode-tab is-active">① 스튜디오 기본 화면</button>
-          <button type="button" role="tab" aria-selected="false" data-app-view="edit" class="lp-app-tab lp-mode-tab">② 디자인 서랍 · 컷 편집</button>
+          <button type="button" role="tab" aria-selected="true" data-app-view="main" class="lp-app-tab lp-mode-tab is-active">01 · 대본 &amp; 미리보기</button>
+          <button type="button" role="tab" aria-selected="false" data-app-view="design" class="lp-app-tab lp-mode-tab">02 · 747+ 디자인 서랍</button>
+          <button type="button" role="tab" aria-selected="false" data-app-view="edit" class="lp-app-tab lp-mode-tab">03 · 모바일 컷 편집</button>
         </div>
       </div>
 
-      <div id="lp3dDeviceStage" class="lp-3d-stage" data-tilt-3d="1">
-        <div class="lp-3d-stage-inner">
-          <!-- 3D PC 브라우저 프레임 -->
-          <div class="lp-3d-desktop">
-            <div class="lp-3d-chrome">
-              <i></i><i></i><i></i>
-              <span>autoreelsmaker.kr/studio</span>
+      <div id="lp3dDeviceStage" class="lp-3d-stage">
+        <div id="lp3dUnfoldRig" class="lp-3d-unfold-rig">
+          <!-- 좌측: 정교한 MacBook Pro 3D 디스플레이 + 알루미늄 베이스 -->
+          <div class="lp-macbook-wrap">
+            <div class="lp-macbook-lid">
+              <div class="lp-macbook-cam" aria-hidden="true"></div>
+              <div class="lp-3d-screen">
+                <img id="lpAppDesktopImg" src="/assets/landing/studio-desktop-main.jpg" alt="오토릴스메이커 PC 스튜디오 실제 화면" loading="lazy" />
+                <div class="lp-3d-sheen" aria-hidden="true"></div>
+              </div>
             </div>
-            <div class="lp-3d-screen">
-              <img id="lpAppDesktopImg" src="/assets/landing/studio-desktop-main.jpg" alt="오토릴스메이커 PC 스튜디오 실제 화면" loading="lazy" />
-              <div class="lp-3d-sheen" aria-hidden="true"></div>
-            </div>
+            <div class="lp-macbook-base" aria-hidden="true"><span></span></div>
+            <div class="lp-device-shadow" aria-hidden="true"></div>
           </div>
 
-          <!-- 우측 하단에 입체로 붕 떠 있는 3D 모바일 실사용 화면 -->
-          <div class="lp-3d-mobile">
-            <div class="lp-3d-mobile-notch" aria-hidden="true"></div>
-            <div class="lp-3d-mobile-screen">
-              <img id="lpAppMobileImg" src="/assets/landing/studio-mobile-main.jpg" alt="오토릴스메이커 모바일 스튜디오 실제 화면" loading="lazy" />
-              <div class="lp-3d-sheen" aria-hidden="true"></div>
+          <!-- 우측: 독립 배치된 티타늄 iPhone 3D 프레임 (겹침 0%) -->
+          <div class="lp-iphone-wrap">
+            <div class="lp-iphone-body">
+              <div class="lp-iphone-island" aria-hidden="true"></div>
+              <div class="lp-3d-mobile-screen">
+                <img id="lpAppMobileImg" src="/assets/landing/studio-mobile-main.jpg" alt="오토릴스메이커 모바일 스튜디오 실제 화면" loading="lazy" />
+                <div class="lp-3d-sheen" aria-hidden="true"></div>
+              </div>
             </div>
+            <div class="lp-device-shadow lp-device-shadow-sm" aria-hidden="true"></div>
           </div>
         </div>
+
         <div class="lp-3d-caption-bar">
-          <span id="lpAppCaption">실시간 9:16 미리보기 · 컷 빠른 점프 바 · AI 대본 다시 쓰기 (PC &amp; 모바일 동기화)</span>
-          <a href="/studio" class="landing-secondary h-8 px-3 text-[12px] inline-flex items-center shrink-0">직접 열어보기 →</a>
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-2 h-2 rounded-full bg-[#4cc38a] shrink-0"></span>
+            <span id="lpAppCaption" class="truncate">01 · 실시간 9:16 미리보기 · 컷 빠른 점프 바 · AI 대본 다시 쓰기 (PC &amp; 모바일 동기화)</span>
+          </div>
+          <a href="/studio" class="landing-secondary h-8 px-3.5 text-[12px] inline-flex items-center shrink-0">스튜디오 직접 열기 →</a>
         </div>
       </div>
     </section>
@@ -796,7 +805,7 @@
       m.classList.remove('hidden');
     }
   </script>
-  <script src="/assets/landing/industries.js?v=20261120g"></script>
-  <script src="/assets/landing/landing.js?v=20261120g"></script>
+  <script src="/assets/landing/industries.js?v=20261120h"></script>
+  <script src="/assets/landing/landing.js?v=20261120h"></script>
 </body>
 </html>

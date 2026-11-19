@@ -543,17 +543,22 @@
     countEls.forEach(function (el) { countIo.observe(el); });
   }
 
-  // 실제 앱 3D 디바이스 쇼케이스 화면 전환 (스튜디오 메인 ↔ 디자인 서랍·컷 편집)
+  // 실제 앱 3D 디바이스 쇼케이스: 3단계 실사용 화면 전환 + Apple 스타일 스크롤 3D 언폴드(rotateX 16deg -> 0deg)
   var APP_VIEWS = {
     main: {
       desktop: '/assets/landing/studio-desktop-main.jpg',
       mobile: '/assets/landing/studio-mobile-main.jpg',
-      caption: '실시간 9:16 미리보기 · 컷 빠른 점프 바 · AI 대본 다시 쓰기 (PC & 모바일 동기화)'
+      caption: '01 · 실시간 9:16 미리보기 · 컷 빠른 점프 바 · AI 대본 다시 쓰기 (PC & 모바일 동기화)'
+    },
+    design: {
+      desktop: '/assets/landing/studio-desktop-design.jpg',
+      mobile: '/assets/landing/studio-mobile-main.jpg',
+      caption: '02 · 747+ 디자인 스타일 서랍 · 내 스타일 만들기 · 지금 대본에 어울리는 자동 추천'
     },
     edit: {
       desktop: '/assets/landing/studio-desktop-design.jpg',
       mobile: '/assets/landing/studio-mobile-cutedit.jpg',
-      caption: '747+ 디자인 스타일 서랍 · 내 스타일 만들기 · 모바일 1컷 자막·색상·폰트 세부 편집'
+      caption: '03 · 모바일 1컷 세부 편집 · 자막 직접 수정·드래그 · 폰트·색상·전환 즉시 적용'
     }
   };
   var appTabs = document.querySelectorAll('.lp-app-tab[data-app-view]');
@@ -574,20 +579,36 @@
     });
   });
 
-  // 경량 3D 틸트 인터랙션 (실제 앱 3D 스테이지 + 스타일 카드)
+  // 스크롤 진입 시 3D 디스플레이가 16도 누운 상태에서 반듯하게 세워지는 Apple 스타일 언폴드
+  var unfoldStage = document.getElementById('lp3dDeviceStage');
+  var unfoldRig = document.getElementById('lp3dUnfoldRig');
+  function updateUnfold3d() {
+    if (!unfoldStage || !unfoldRig || reducedMotion) return;
+    var r = unfoldStage.getBoundingClientRect();
+    var vh = Math.max(1, window.innerHeight);
+    // 화면 아래에서 중앙(0.35*vh)까지 들어올 때 0 -> 1
+    var prog = clamp((vh - r.top) / (vh * 0.72), 0, 1);
+    var eased = 1 - Math.pow(1 - prog, 3);
+    var rx = ((1 - eased) * 16).toFixed(2);
+    var sc = (0.93 + eased * 0.07).toFixed(3);
+    unfoldRig.style.transform = 'rotateX(' + rx + 'deg) scale(' + sc + ')';
+  }
+  window.addEventListener('scroll', updateUnfold3d, { passive: true });
+  window.addEventListener('resize', updateUnfold3d, { passive: true });
+  updateUnfold3d();
+
+  // 경량 3D 틸트 인터랙션 (4종 스타일 카드)
   if (!reducedMotion) {
     document.querySelectorAll('[data-tilt-3d]').forEach(function (card) {
-      var target = card.querySelector('.lp-3d-stage-inner') || card;
-      var maxDeg = card.id === 'lp3dDeviceStage' ? 7 : 10;
       card.addEventListener('pointermove', function (e) {
         if (e.pointerType === 'touch') return;
         var r = card.getBoundingClientRect();
         var nx = ((e.clientX - r.left) / Math.max(1, r.width)) * 2 - 1;
         var ny = ((e.clientY - r.top) / Math.max(1, r.height)) * 2 - 1;
-        target.style.transform = 'perspective(1200px) rotateX(' + (-ny * maxDeg).toFixed(2) + 'deg) rotateY(' + (nx * maxDeg).toFixed(2) + 'deg)';
+        card.style.transform = 'perspective(1000px) rotateX(' + (-ny * 9).toFixed(2) + 'deg) rotateY(' + (nx * 9).toFixed(2) + 'deg)';
       });
       card.addEventListener('pointerleave', function () {
-        target.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg)';
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
       });
     });
   }
