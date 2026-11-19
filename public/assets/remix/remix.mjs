@@ -33,10 +33,15 @@ function paint(canvas, index, layer = 'all') {
     else row = next;
   }
   if (row) lines.push(row);
-  const step = w*.084, bottom = h*.84;
-  const shade = ctx.createLinearGradient(0,bottom-(lines.length+2)*step,0,h);
+  const top = scenes[index]?.position === 'top';
+  const step = w*.084, bottom = top ? h*.12+lines.length*step : h*.84;
+  const shade = top ? ctx.createLinearGradient(0,bottom+step,0,0) : ctx.createLinearGradient(0,bottom-(lines.length+2)*step,0,h);
   shade.addColorStop(0,'rgba(0,0,0,0)'); shade.addColorStop(1,'rgba(0,0,0,.8)');
   ctx.fillStyle = shade; ctx.fillRect(0,0,w,h);
+  if (scenes[index].accent) {
+    ctx.fillStyle = scenes[index].accent;
+    ctx.fillRect(w*.07,bottom-lines.length*step-w*.016,w*.11,w*.011);
+  }
   ctx.fillStyle = '#fff8f0';
   lines.forEach((line,i) => ctx.fillText(line,w*.07,bottom-(lines.length-1-i)*step,w*.86));
 }
@@ -57,12 +62,90 @@ function showScenes() {
   byId('stage').hidden = byId('actions').hidden = !photos.length || !scenes.length;
   showFrame();
 }
+const jobKey = 'ar_private_remix_pending';
+function rememberJob(id) { try { sessionStorage.setItem(jobKey,id); } catch {} }
+function forgetJob() { try { sessionStorage.removeItem(jobKey); } catch {} }
+function startReference() {
+  analysis?.abort(); analysis = new AbortController();
+  byId('urlSubmit').disabled = false; byId('loginHelp').hidden = true;
+  stopPreview(); resetDownload(); selected = 0; photoVersion++;
+  photos = []; scenes = []; byId('photos').value = ''; byId('arrange').hidden = true; showScenes();
+  return analysis;
+}
+async function privateRequest(action, signal, data) {
+  const response = await fetch('/api/account?action='+action, {
+    method:data ? 'POST':'GET', credentials:'same-origin', cache:'no-store', signal,
+    ...(data && {headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+  });
+  const result = await response.json();
+  if (!response.ok || !result.ok) {
+    const err = Error(result.message || '분석 상태를 확인하지 못했어요.');
+    err.status = response.status;
+    throw err;
+  }
+  return result;
+}
+function waitForPoll(signal, ms) {
+  return new Promise((resolve,reject) => {
+    signal.throwIfAborted();
+    const abort = () => {clearTimeout(timer); reject(signal.reason);};
+    const timer = setTimeout(() => {signal.removeEventListener('abort',abort); resolve();},ms);
+    signal.addEventListener('abort',abort,{once:true});
+  });
+}
+async function loadPrivateJob(url, previousId) {
+  if (busy) return;
+  const controller = startReference();
+  const {signal} = controller;
+  const button = byId('urlSubmit'); button.disabled = true;
+  byId('refName').textContent = '최대 90초 · 250MB';
+  let id = previousId || crypto.randomUUID();
+  try {
+    if (!previousId) {
+      status('링크를 접수하고 있어요…');
+      const job = await privateRequest('remix-url',signal,{url,id});
+      signal.throwIfAborted();
+      id = job.id;
+      rememberJob(id);
+    }
+    let errors = 0;
+    for (;;) {
+      let result;
+      try {result = await privateRequest('remix-status&id='+encodeURIComponent(id),signal);}
+      catch (err) {
+        if (signal.aborted || (err.status && err.status < 500) || ++errors >= 4) throw err;
+        status('연결을 다시 확인하고 있어요…'); await waitForPoll(signal,5000); continue;
+      }
+      signal.throwIfAborted(); errors = 0;
+      if (result.status === 'done') {
+        scenes = result.scenes; forgetJob(); byId('arrange').hidden = false; showScenes();
+        status(scenes.length+'개 장면을 찾았어요. 내 사진을 골라 주세요.'); break;
+      }
+      if (result.status === 'failed') {
+        forgetJob(); throw Error('공개 영상을 읽지 못했어요. 90초 이내의 공개 링크를 확인하거나 갤러리에서 선택해 주세요.');
+      }
+      status(result.status === 'running' ? '참고 영상의 장면 전환과 색감을 분석하고 있어요…' : '분석을 기다리고 있어요. 완료되면 여기에 장면이 표시돼요.');
+      await waitForPoll(signal,5000);
+    }
+  } catch (err) {
+    if (!signal.aborted) {
+      if (err.status === 401 || err.status === 404) forgetJob();
+      byId('loginHelp').hidden = err.status !== 401;
+      status(err.status === 401 ? '내 영상에 적용하려면 스튜디오에서 로그인해 주세요.' : err.message || '분석에 연결하지 못했어요.');
+    }
+  } finally {if (controller === analysis) button.disabled = false;}
+}
+byId('urlForm').addEventListener('submit',event => {
+  event.preventDefault();
+  const url = byId('referenceUrl').value.trim();
+  if (url) loadPrivateJob(url);
+});
+byId('urlSubmit').disabled = false;
 async function readSelectedReference() {
   const input = byId('reference');
   const file = input.files[0]; if (!file) return;
-  analysis?.abort(); const controller = analysis = new AbortController();
-  stopPreview(); resetDownload(); selected = 0; photoVersion++;
-  photos = []; scenes = []; byId('photos').value = ''; byId('arrange').hidden = true; showScenes();
+  forgetJob(); byId('referenceUrl').value = '';
+  const controller = startReference();
   byId('refName').textContent = file.name; status('장면 전환을 찾고 있어요…');
   try {
     const next = await analyzeReference(file, controller.signal, pct => status('장면 전환을 찾고 있어요 · '+pct+'%'));
@@ -75,6 +158,9 @@ async function readSelectedReference() {
 byId('reference').addEventListener('change', readSelectedReference);
 // 모듈이 내려오는 동안 먼저 고른 파일도 처리합니다.
 if (byId('reference').files.length) readSelectedReference();
+else {
+  try { const pending = sessionStorage.getItem(jobKey); if (pending) loadPrivateJob('',pending); } catch {}
+}
 async function openPhoto(file) {
   const url = URL.createObjectURL(file);
   const image = new Image();

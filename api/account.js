@@ -123,6 +123,11 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    if (action === 'remix-worker' && req.method === 'POST') {
+      const remix = require('../lib/server/private-remix');
+      if (!remix.verifyWorker(req.headers.authorization)) return send(res,403,{ok:false});
+      return send(res,200,{ok:true,...await remix.worker(await readBody(req))});
+    }
     if (action === 'admin-console-login' && req.method === 'POST') {
       const key = adminSession.adminKey();
       if (!key) return send(res, 503, { ok: false, message: '관리자 키가 설정되지 않았습니다.' });
@@ -220,6 +225,13 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'me') return send(res, 200, await mePayload(user));
+    if (action === 'remix-url' && req.method === 'POST') {
+      const b = await readBody(req);
+      return send(res,200,{ok:true,...await require('../lib/server/private-remix').submit(user,b.url,b.id)});
+    }
+    if (action === 'remix-status' && req.method === 'GET') {
+      return send(res,200,{ok:true,...await require('../lib/server/private-remix').status(user,req.query.id)});
+    }
     if (action === 'specialty-trends' && req.method === 'GET') {
       const row = user.specialty ? await readSpecialtyTrends(user.industry, user.specialty) : null;
       return send(res, 200, { ok: true, industry: user.industry, specialty: user.specialty || '', keywords: row?.keywords || [], updatedAt: row?.updated_at || null });

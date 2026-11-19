@@ -83,13 +83,16 @@ def download_capcut_preview(meta,directory):
     finally:
         partial.unlink(missing_ok=True)
 
-def download(url,directory):
+def download(url,directory,private=False):
     url=extract_url('!분석 '+url)
     common=[sys.executable,'-m','yt_dlp','--ignore-config','--js-runtimes','node','--no-playlist','--no-warnings','--socket-timeout','20','--retries','1','--no-progress']
+    if private:
+        # 웹 요청에서는 등록된 플랫폼 추출기만 쓰고 범용 URL 추출기를 사용하지 않습니다.
+        common += ['--use-extractors','youtube,instagram,tiktok,vm.tiktok','--no-cache-dir']
     meta=json.loads(run(common+['--skip-download','--dump-single-json','--',url],timeout=90))
     if urlsplit(url).hostname in CAPCUT_HOSTS:
         return download_capcut_preview(meta,directory)
-    if meta.get('_type') in ('playlist','multi_video') or meta.get('is_live') or not isinstance(meta.get('duration'),(int,float)) or not 1<=meta['duration']<=180:
+    if meta.get('_type') in ('playlist','multi_video') or meta.get('is_live') or not isinstance(meta.get('duration'),(int,float)) or not 1<=meta['duration']<=(90 if private else 180):
         raise ValueError('3분 이하의 공개 영상 하나만 분석할 수 있습니다. 라이브·목록·길이 미확인 영상은 제외합니다.')
     run(common+['--max-filesize','200M','-f','bv*[height<=720]+ba/b[height<=720]','--merge-output-format','mp4','-o',directory/'source.%(ext)s','--',url],timeout=240)
     files=[p for p in directory.glob('source.*') if p.suffix.lower() in ('.mp4','.webm','.mkv','.mov')]

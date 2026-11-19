@@ -2,17 +2,24 @@
 <html lang="ko"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>오토릴스메이커 · 참고 쇼츠·릴스로 재구성하기</title>
-<link rel="stylesheet" href="../shorts/screen.css"><link rel="stylesheet" href="remix.css">
+<link rel="stylesheet" href="../shorts/screen.css"><link rel="stylesheet" href="remix.css?v=private-url">
 </head><body><main>
 <header><b>오토릴스<span>메이커</span></b><a data-studio-back href="/studio?from=shorts">스튜디오로 돌아가기</a></header>
 <section class="stage" id="stage" hidden><div id="frame"><canvas id="preview" width="540" height="960" aria-label="재구성한 영상"></canvas><button id="play" type="button" aria-label="미리보기 재생">▶</button></div></section>
 <section class="sheet"><div class="handle"></div><h1>참고 쇼츠·릴스로 재구성하기</h1>
 <p class="hint">참고 영상의 컷 길이에 맞춰 내 사진과 문구로 새 영상을 만들어요.</p>
-<fieldset id="inputs"><label class="entry" for="reference"><span><strong>갤러리에서 참고 영상 선택</strong><small id="refName">최대 90초 · 250MB</small></span><i aria-hidden="true">›</i></label>
+<fieldset id="inputs">
+<form id="urlForm">
+<label class="field" for="referenceUrl">참고 영상 URL</label>
+<div class="url-row"><input id="referenceUrl" type="text" inputmode="url" autocomplete="off" maxlength="5000" required class="edit-input" placeholder="쇼츠·릴스 링크 붙여넣기"><button id="urlSubmit" type="submit" disabled>링크 분석</button></div>
+<p class="hint">공개 영상 최대 90초 · 내 영상에만 적용돼요.</p>
+<a id="loginHelp" href="/studio?from=shorts" hidden>스튜디오에서 로그인</a>
+</form>
+<label class="entry" for="reference"><span><strong>갤러리에서 참고 영상 선택</strong><small id="refName">최대 90초 · 250MB</small></span><i aria-hidden="true">›</i></label>
 <input class="sr" type="file" id="reference" accept="video/*">
 <div id="arrange" hidden><label class="entry" for="photos"><span><strong>내 사진 선택</strong><small>고른 순서대로 장면에 배치해요 · 최대 10장</small></span><i aria-hidden="true">›</i></label><input class="sr" type="file" id="photos" accept="image/*" multiple>
 <h2>장면별 문구</h2><div id="scenes"></div></div></fieldset>
 <p id="status" role="status" aria-live="polite"></p>
 <div id="actions" hidden><button class="primary" id="save" type="button">MP4 만들기</button><a id="download" hidden download="오토릴스메이커-재구성.mp4">완성된 MP4 다운로드</a>
 <button class="secondary" id="project" type="button">Hypit 편집 프로젝트 저장</button></div>
-</section></main><script src="../shorts/return.js"></script><script src="../shorts/export-access.js"></script><script type="module" src="remix.mjs"></script></body></html>
+</section></main><script src="../shorts/return.js"></script><script src="../shorts/export-access.js"></script><script type="module" src="remix.mjs?v=private-url"></script></body></html>
