@@ -895,3 +895,161 @@ html { scroll-behavior: smooth; }
   align-items: center;
   gap: 12px;
 }
+
+/* ============================================================================
+   3D 입체감 강화: 원근 그리드 플로어 · 유리 반사광 · 실제 앱 3D 디바이스 쇼케이스
+   ============================================================================ */
+.lp-3d-floor {
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  bottom: -24%;
+  height: 62%;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+  background-size: 54px 54px;
+  transform: perspective(680px) rotateX(74deg);
+  transform-origin: 50% 100%;
+  -webkit-mask-image: radial-gradient(ellipse 68% 72% at 50% 80%, #000 0%, transparent 78%);
+  mask-image: radial-gradient(ellipse 68% 72% at 50% 80%, #000 0%, transparent 78%);
+}
+.lp-3d-glare {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  background: radial-gradient(280px circle at var(--gx, 50%) var(--gy, 25%), rgba(255, 255, 255, 0.24), transparent 60%);
+  mix-blend-mode: screen;
+  opacity: 0.72;
+}
+
+/* 실제 앱 3D 디바이스 쇼케이스 (PC 브라우저 + 입체 부양 iPhone) */
+.lp-3d-stage {
+  position: relative;
+  padding: 28px 20px 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 15%, rgba(76, 195, 138, 0.12), transparent 65%),
+    linear-gradient(160deg, rgba(22, 22, 28, 0.94), rgba(10, 10, 13, 0.98));
+  perspective: 1400px;
+  overflow: hidden;
+}
+@media (min-width: 768px) { .lp-3d-stage { padding: 40px 36px 24px; } }
+.lp-3d-stage-inner {
+  position: relative;
+  max-width: 960px;
+  margin: 0 auto 24px;
+  transform-style: preserve-3d;
+  transition: transform 0.22s cubic-bezier(.22,1,.36,1);
+  will-change: transform;
+}
+.lp-3d-desktop {
+  width: 100%;
+  max-width: 840px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #141418;
+  box-shadow: 0 36px 90px rgba(0, 0, 0, 0.78), 0 0 0 1px rgba(255,255,255,0.06) inset;
+  transform: translateZ(10px);
+}
+.lp-3d-chrome {
+  height: 30px;
+  padding: 0 12px;
+  background: #1b1b21;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lp-3d-chrome i { width: 9px; height: 9px; border-radius: 999px; background: rgba(255, 255, 255, 0.2); display: block; }
+.lp-3d-chrome i:nth-child(1) { background: #ef4444; opacity: 0.75; }
+.lp-3d-chrome i:nth-child(2) { background: #f59e0b; opacity: 0.75; }
+.lp-3d-chrome i:nth-child(3) { background: #22c55e; opacity: 0.75; }
+.lp-3d-chrome span {
+  margin-left: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: #85858b;
+}
+.lp-3d-screen {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: #0d0d10;
+  overflow: hidden;
+}
+.lp-3d-screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+.lp-3d-mobile {
+  position: absolute;
+  right: 0;
+  bottom: -14px;
+  width: min(218px, 34%);
+  padding: 7px;
+  border-radius: 28px;
+  background: linear-gradient(145deg, #27272e, #121216);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  box-shadow: -18px 28px 64px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255,255,255,0.08) inset;
+  transform: translateZ(65px) rotateY(-8deg);
+}
+@media (max-width: 639px) {
+  .lp-3d-mobile {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: 210px;
+    margin: 18px auto 0;
+    transform: translateZ(30px);
+  }
+}
+.lp-3d-mobile-notch {
+  width: 54px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  margin: 2px auto 6px;
+}
+.lp-3d-mobile-screen {
+  position: relative;
+  aspect-ratio: 390 / 844;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #09090b;
+}
+.lp-3d-mobile-screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+.lp-3d-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(125deg, rgba(255,255,255,0.16) 0%, transparent 42%, transparent 65%, rgba(255,255,255,0.06) 100%);
+}
+.lp-3d-caption-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12.5px;
+  color: #a1a1aa;
+}
+[data-tilt-3d] {
+  transform-style: preserve-3d;
+  transition: transform 0.22s cubic-bezier(.22,1,.36,1);
+}

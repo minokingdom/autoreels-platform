@@ -229,7 +229,9 @@
     var keys = Object.keys(INDS).filter(function (k) { return k !== 'personal'; });
     var cardsHtml = keys.map(function (k) {
       var it = INDS[k];
-      var photo = scenePhoto(it.key, 0);
+      // 히어로(1~4.jpg)·스타일(10.jpg)과 겹치지 않는 전용 5.jpg 사용
+      var dir = SCENE_DIR[it.key] || 'auto';
+      var photo = '/assets/scenes/' + dir + '/5.jpg';
       var hook = it.vlogDone || (it.name + ' 릴스');
       return '<button type="button" data-go="/studio?ind=' + esc(it.key) + '" class="lp-strip-card" aria-label="' + esc(it.name) + ' 스튜디오 열기">' +
         '<img src="' + photo + '" alt="" loading="lazy" />' +
@@ -237,7 +239,6 @@
         '<div class="lp-strip-meta"><span>' + esc(it.icon) + ' ' + esc(it.name) + '</span><strong>' + esc(hook) + '</strong></div>' +
         '</button>';
     }).join('');
-    // 끊김 없는 무한 루프를 위해 2회 복제
     track.innerHTML = cardsHtml + cardsHtml;
   }
 
@@ -269,57 +270,63 @@
     // 4막 계산 (0: 0~25%, 1: 25~50%, 2: 50~75%, 3: 75~100%)
     var curAct = p < 0.24 ? 0 : (p < 0.50 ? 1 : (p < 0.76 ? 2 : 3));
 
-    // 1) 전체 덱 3D 틸트 (마우스 따라 입체 반응)
+    // 1) 전체 덱 3D 틸트 강화 (마우스 따라 깊은 원근 입체 반응 + 유리 반사광)
     if (deckEl && !reducedMotion) {
-      var rx = (-curMy * 6 * (1 - p * 0.25)).toFixed(2);
-      var ry = (curMx * 8 * (1 - p * 0.25)).toFixed(2);
+      var rx = (-curMy * 9 * (1 - p * 0.22)).toFixed(2);
+      var ry = (curMx * 13 * (1 - p * 0.22)).toFixed(2);
       deckEl.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
     }
+    var glareEl = document.getElementById('lpMainGlare');
+    if (glareEl) {
+      glareEl.style.setProperty('--gx', (50 + curMx * 35).toFixed(1) + '%');
+      glareEl.style.setProperty('--gy', (30 + curMy * 30).toFixed(1) + '%');
+    }
 
-    // 2) 중앙 메인 릴스: 1막->2막 확대, 3막 시네마 레터박스, 4막 완성 글로우 링
+    // 2) 중앙 메인 릴스: 1막->2막 3D 전진(translateZ) 확대, 3막 시네마 레터박스, 4막 완성 글로우 링
     if (mainReelEl) {
-      var mScale = (1 + focus * (isMobile ? 0.05 : 0.10)).toFixed(3);
+      var mScale = (1 + focus * (isMobile ? 0.05 : 0.11)).toFixed(3);
       var mY = (-focus * 6).toFixed(1);
-      mainReelEl.style.transform = 'translate3d(0,' + mY + 'px,0) scale(' + mScale + ')';
+      var mZ = (36 + focus * 32).toFixed(1);
+      mainReelEl.style.transform = 'translate3d(0,' + mY + 'px,' + mZ + 'px) scale(' + mScale + ')';
       mainReelEl.classList.toggle('is-cinema', curAct === 2);
       mainReelEl.classList.toggle('is-export-ready', curAct === 3);
     }
 
-    // 3) 좌우 부채꼴 4장: 1막에서 스크롤할 때 바깥으로 펼쳐지며 시네마틱 페이드아웃
-    var dx1 = isMobile ? 116 : 210;
-    var dx2 = 380;
-    var outX = (1 - spread) * (isMobile ? 95 : 185);
+    // 3) 좌우 3D 커버플로우 4장: 진짜 rotateY + translateZ 깊이로 아치형 배치
+    var dx1 = isMobile ? 118 : 226;
+    var dx2 = 408;
+    var outX = (1 - spread) * (isMobile ? 95 : 195);
     if (fanL1) {
-      fanL1.style.transform = 'translate(-50%, -50%) translate3d(' + (-dx1 - outX).toFixed(1) + 'px,' + (14 + (1 - spread) * 20).toFixed(1) + 'px,-60px) rotate(' + (-9 - (1 - spread) * 7).toFixed(1) + 'deg) scale(' + (0.9 - (1 - spread) * 0.08).toFixed(3) + ')';
-      fanL1.style.opacity = (spread * 0.88).toFixed(3);
+      fanL1.style.transform = 'translate(-50%, -50%) translate3d(' + (-dx1 - outX).toFixed(1) + 'px,' + (12 + (1 - spread) * 20).toFixed(1) + 'px,-75px) rotateY(' + (26 + (1 - spread) * 14).toFixed(1) + 'deg) rotateZ(' + (-6 - (1 - spread) * 5).toFixed(1) + 'deg) scale(' + (0.91 - (1 - spread) * 0.08).toFixed(3) + ')';
+      fanL1.style.opacity = (spread * 0.92).toFixed(3);
       fanL1.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
     }
     if (fanR1) {
-      fanR1.style.transform = 'translate(-50%, -50%) translate3d(' + (dx1 + outX).toFixed(1) + 'px,' + (14 + (1 - spread) * 20).toFixed(1) + 'px,-60px) rotate(' + (9 + (1 - spread) * 7).toFixed(1) + 'deg) scale(' + (0.9 - (1 - spread) * 0.08).toFixed(3) + ')';
-      fanR1.style.opacity = (spread * 0.88).toFixed(3);
+      fanR1.style.transform = 'translate(-50%, -50%) translate3d(' + (dx1 + outX).toFixed(1) + 'px,' + (12 + (1 - spread) * 20).toFixed(1) + 'px,-75px) rotateY(' + (-26 - (1 - spread) * 14).toFixed(1) + 'deg) rotateZ(' + (6 + (1 - spread) * 5).toFixed(1) + 'deg) scale(' + (0.91 - (1 - spread) * 0.08).toFixed(3) + ')';
+      fanR1.style.opacity = (spread * 0.92).toFixed(3);
       fanR1.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
     }
     if (fanL2) {
-      fanL2.style.transform = 'translate(-50%, -50%) translate3d(' + (-dx2 - outX * 1.35).toFixed(1) + 'px,' + (36 + (1 - spread) * 28).toFixed(1) + 'px,-120px) rotate(' + (-17 - (1 - spread) * 9).toFixed(1) + 'deg) scale(0.8)';
-      fanL2.style.opacity = (spread * 0.62).toFixed(3);
+      fanL2.style.transform = 'translate(-50%, -50%) translate3d(' + (-dx2 - outX * 1.35).toFixed(1) + 'px,' + (30 + (1 - spread) * 28).toFixed(1) + 'px,-165px) rotateY(' + (40 + (1 - spread) * 16).toFixed(1) + 'deg) rotateZ(' + (-11 - (1 - spread) * 6).toFixed(1) + 'deg) scale(0.82)';
+      fanL2.style.opacity = (spread * 0.68).toFixed(3);
       fanL2.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
     }
     if (fanR2) {
-      fanR2.style.transform = 'translate(-50%, -50%) translate3d(' + (dx2 + outX * 1.35).toFixed(1) + 'px,' + (36 + (1 - spread) * 28).toFixed(1) + 'px,-120px) rotate(' + (17 + (1 - spread) * 9).toFixed(1) + 'deg) scale(0.8)';
-      fanR2.style.opacity = (spread * 0.62).toFixed(3);
+      fanR2.style.transform = 'translate(-50%, -50%) translate3d(' + (dx2 + outX * 1.35).toFixed(1) + 'px,' + (30 + (1 - spread) * 28).toFixed(1) + 'px,-165px) rotateY(' + (-40 - (1 - spread) * 16).toFixed(1) + 'deg) rotateZ(' + (11 + (1 - spread) * 6).toFixed(1) + 'deg) scale(0.82)';
+      fanR2.style.opacity = (spread * 0.68).toFixed(3);
       fanR2.style.pointerEvents = spread > 0.25 ? 'auto' : 'none';
     }
 
-    // 4) 좌우 시네마틱 HUD 카드: 2막~4막 동안 유지되며 마우스 패럴랙스 반응
+    // 4) 좌우 3D AR HUD 카드: 안쪽으로 살짝 기울어진 3D 공간 부양
     var hudAlpha = clamp((p - 0.18) / 0.14, 0, 1);
     var hudY = (1 - hudAlpha) * 26;
     if (hudL) {
       hudL.style.opacity = hudAlpha.toFixed(3);
-      hudL.style.transform = 'translate3d(' + (-curMx * 12).toFixed(1) + 'px, calc(-50% + ' + hudY.toFixed(1) + 'px), 0)';
+      hudL.style.transform = 'perspective(900px) translate3d(' + (-curMx * 14).toFixed(1) + 'px, calc(-50% + ' + hudY.toFixed(1) + 'px), 48px) rotateY(' + (14 + curMx * 5).toFixed(1) + 'deg)';
     }
     if (hudR) {
       hudR.style.opacity = hudAlpha.toFixed(3);
-      hudR.style.transform = 'translate3d(' + (-curMx * 12).toFixed(1) + 'px, calc(-50% + ' + hudY.toFixed(1) + 'px), 0)';
+      hudR.style.transform = 'perspective(900px) translate3d(' + (-curMx * 14).toFixed(1) + 'px, calc(-50% + ' + hudY.toFixed(1) + 'px), 48px) rotateY(' + (-14 + curMx * 5).toFixed(1) + 'deg)';
     }
 
     // 5) 배경 워터마크 수평 패럴랙스 + 스크롤 큐
@@ -534,6 +541,55 @@
       });
     }, { threshold: 0.35 });
     countEls.forEach(function (el) { countIo.observe(el); });
+  }
+
+  // 실제 앱 3D 디바이스 쇼케이스 화면 전환 (스튜디오 메인 ↔ 디자인 서랍·컷 편집)
+  var APP_VIEWS = {
+    main: {
+      desktop: '/assets/landing/studio-desktop-main.jpg',
+      mobile: '/assets/landing/studio-mobile-main.jpg',
+      caption: '실시간 9:16 미리보기 · 컷 빠른 점프 바 · AI 대본 다시 쓰기 (PC & 모바일 동기화)'
+    },
+    edit: {
+      desktop: '/assets/landing/studio-desktop-design.jpg',
+      mobile: '/assets/landing/studio-mobile-cutedit.jpg',
+      caption: '747+ 디자인 스타일 서랍 · 내 스타일 만들기 · 모바일 1컷 자막·색상·폰트 세부 편집'
+    }
+  };
+  var appTabs = document.querySelectorAll('.lp-app-tab[data-app-view]');
+  appTabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var key = tab.getAttribute('data-app-view');
+      var v = APP_VIEWS[key] || APP_VIEWS.main;
+      appTabs.forEach(function (b) {
+        var on = b === tab;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      var dImg = document.getElementById('lpAppDesktopImg');
+      var mImg = document.getElementById('lpAppMobileImg');
+      if (dImg) dImg.setAttribute('src', v.desktop);
+      if (mImg) mImg.setAttribute('src', v.mobile);
+      setText('lpAppCaption', v.caption);
+    });
+  });
+
+  // 경량 3D 틸트 인터랙션 (실제 앱 3D 스테이지 + 스타일 카드)
+  if (!reducedMotion) {
+    document.querySelectorAll('[data-tilt-3d]').forEach(function (card) {
+      var target = card.querySelector('.lp-3d-stage-inner') || card;
+      var maxDeg = card.id === 'lp3dDeviceStage' ? 7 : 10;
+      card.addEventListener('pointermove', function (e) {
+        if (e.pointerType === 'touch') return;
+        var r = card.getBoundingClientRect();
+        var nx = ((e.clientX - r.left) / Math.max(1, r.width)) * 2 - 1;
+        var ny = ((e.clientY - r.top) / Math.max(1, r.height)) * 2 - 1;
+        target.style.transform = 'perspective(1200px) rotateX(' + (-ny * maxDeg).toFixed(2) + 'deg) rotateY(' + (nx * maxDeg).toFixed(2) + 'deg)';
+      });
+      card.addEventListener('pointerleave', function () {
+        target.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg)';
+      });
+    });
   }
 
   syncPlayBtn();
