@@ -284,15 +284,18 @@
   function initMotionEngine() {
     var gsap = window.gsap;
     var ST = window.ScrollTrigger;
-    if (gsap && ST) gsap.registerPlugin(ST);
+    if (gsap && ST) {
+      gsap.registerPlugin(ST);
+      ST.config({ ignoreMobileResize: true });
+    }
 
-    // Lenis + GSAP Ticker 단일 프레임 루프 동기화 (1px 떨림 없는 비단결 관성 스크롤)
+    // Lenis + GSAP Ticker 단일 프레임 루프 동기화 (쫀쫀하고 즉각적인 60fps 관성 스크롤)
     if (window.Lenis && !reducedMotion && window.innerWidth >= 960) {
       var lenis = new window.Lenis({
-        duration: 1.3,
-        lerp: 0.085,
+        duration: 1.0,
+        lerp: 0.11,
         smoothWheel: true,
-        wheelMultiplier: 0.92
+        wheelMultiplier: 1.0
       });
       if (ST) lenis.on('scroll', ST.update);
       lenis.on('scroll', updateTelemetry);
@@ -310,11 +313,12 @@
       document.fonts.ready.then(function () { ST.refresh(); }).catch(function () {});
     }
 
-    // 1) 히어로 5장 부채꼴 3D 덱 입장 + 데스크톱 GSAP Pinned 3막 시네마틱 스크롤 (pin: true, scrub: 1.15)
-    gsap.from('.mn-fan-act.is-visible', { y: 18, opacity: 0, duration: 0.8, ease: 'power3.out', clearProps: 'transform,opacity' });
-    gsap.from('.mn-hero-reel', { scale: 0.9, opacity: 0, duration: 0.85, delay: 0.1, ease: 'power3.out', clearProps: 'transform,opacity' });
+    // 1) 히어로 5장 부채꼴 3D 덱 — 데스크톱 + 모바일 모두 GSAP Pinned 3막 시네마틱 스크롤 구동!
+    gsap.from('.mn-fan-act.is-visible', { y: 16, opacity: 0, duration: 0.7, ease: 'power3.out', clearProps: 'transform,opacity' });
+    gsap.from('.mn-hero-reel', { scale: 0.92, opacity: 0, duration: 0.75, delay: 0.08, ease: 'power3.out', clearProps: 'transform,opacity' });
 
-    if (window.innerWidth >= 960 && document.getElementById('mnHero')) {
+    if (document.getElementById('mnHero')) {
+      var isMob = window.innerWidth < 960;
       var actNodes = [
         document.getElementById('mnAct1'),
         document.getElementById('mnAct2'),
@@ -334,26 +338,58 @@
         });
       }
 
-      // 기본 부채꼴(Fan-Shape) 3D 초기 포즈를 GSAP에 정밀 등록 (점프 없는 보간 보장)
-      gsap.set('#mnFanL2', { x: -345, y: 42, z: -140, rotationY: 24, rotationZ: -15, scale: 0.84, opacity: 0.82 });
-      gsap.set('#mnFanL1', { x: -190, y: 16, z: -60, rotationY: 13, rotationZ: -7.5, scale: 0.92, opacity: 0.94 });
-      gsap.set('#mnFanR1', { x: 190, y: 16, z: -60, rotationY: -13, rotationZ: 7.5, scale: 0.92, opacity: 0.94 });
-      gsap.set('#mnFanR2', { x: 345, y: 42, z: -140, rotationY: -24, rotationZ: 15, scale: 0.84, opacity: 0.82 });
+      // 반응형 5장 부채꼴 3D 궤도 좌표 (데스크톱 & 모바일 각각 화면폭에 최적화)
+      var g = isMob ? {
+        sL2: { x: -124, y: 30, z: -100, ry: 20, rz: -15, sc: 0.68, op: 0.72 },
+        sL1: { x: -70,  y: 12, z: -45,  ry: 11, rz: -7.5, sc: 0.80, op: 0.88 },
+        eL2: { x: -178, y: 52, z: -80,  ry: 28, rz: -24, sc: 0.74, op: 0.88 },
+        eL1: { x: -108, y: 20, z: -30,  ry: 16, rz: -13, sc: 0.86, op: 0.96 },
+        wL2: { x: -290, y: 78, z: -180, ry: 52, rz: -36, sc: 0.56, op: 0.06 },
+        wL1: { x: -210, y: 42, z: -120, ry: 38, rz: -24, sc: 0.66, op: 0.16 },
+        bL2: { x: -148, y: 38, z: -90,  ry: 22, rz: -18, sc: 0.72, op: 0.78 },
+        bL1: { x: -86,  y: 15, z: -40,  ry: 13, rz: -9,  sc: 0.84, op: 0.90 },
+        cZoom: 1.12, cY: -10
+      } : {
+        sL2: { x: -290, y: 34, z: -130, ry: 22, rz: -14, sc: 0.82, op: 0.82 },
+        sL1: { x: -160, y: 12, z: -55,  ry: 12, rz: -7,  sc: 0.91, op: 0.94 },
+        eL2: { x: -455, y: 72, z: -90,  ry: 32, rz: -24, sc: 0.88, op: 0.94 },
+        eL1: { x: -252, y: 26, z: -30,  ry: 18, rz: -12, sc: 0.96, op: 1.00 },
+        wL2: { x: -690, y: 110, z: -220, ry: 58, rz: -36, sc: 0.64, op: 0.06 },
+        wL1: { x: -480, y: 54, z: -150, ry: 42, rz: -23, sc: 0.74, op: 0.18 },
+        bL2: { x: -375, y: 48, z: -110, ry: 26, rz: -18, sc: 0.85, op: 0.86 },
+        bL1: { x: -208, y: 18, z: -45,  ry: 14, rz: -9,  sc: 0.93, op: 0.95 },
+        cZoom: 1.20, cY: -12
+      };
+
+      // 초기 5장 부채꼴 3D 포즈 등록
+      gsap.set('#mnFanDeck', { rotationX: 8 });
+      gsap.set('#mnFanL2', { x: g.sL2.x, y: g.sL2.y, z: g.sL2.z, rotationY: g.sL2.ry, rotationZ: g.sL2.rz, scale: g.sL2.sc, opacity: g.sL2.op });
+      gsap.set('#mnFanL1', { x: g.sL1.x, y: g.sL1.y, z: g.sL1.z, rotationY: g.sL1.ry, rotationZ: g.sL1.rz, scale: g.sL1.sc, opacity: g.sL1.op });
+      gsap.set('#mnFanR1', { x: -g.sL1.x, y: g.sL1.y, z: g.sL1.z, rotationY: -g.sL1.ry, rotationZ: -g.sL1.rz, scale: g.sL1.sc, opacity: g.sL1.op });
+      gsap.set('#mnFanR2', { x: -g.sL2.x, y: g.sL2.y, z: g.sL2.z, rotationY: -g.sL2.ry, rotationZ: -g.sL2.rz, scale: g.sL2.sc, opacity: g.sL2.op });
       gsap.set('#landingPhoneStage', { x: 0, y: 0, z: 40, scale: 1, opacity: 1 });
-      gsap.set('#mnHudLeft', { x: -32, opacity: 0 });
-      gsap.set('#mnHudRight', { x: 32, opacity: 0 });
+      gsap.set('#mnHudLeft', { x: -36, opacity: 0 });
+      gsap.set('#mnHudRight', { x: 36, opacity: 0 });
+      gsap.set('#mnMobileHud', { y: 14, opacity: 0 });
+
+      var mobHudTexts = [
+        'LINK REMIX · 컷 리듬 자동 분석',
+        'AI VOICE · 747+ 스타일 · 오리지널 BGM',
+        '9:16 1080p MP4 · 매장 엔딩 완성'
+      ];
 
       var heroTl = gsap.timeline({
         scrollTrigger: {
           trigger: '#mnHero',
           start: 'top top',
-          end: '+=240%',
+          end: isMob ? '+=185%' : '+=220%',
           pin: true,
-          scrub: 1.15,
+          scrub: isMob ? 0.22 : 0.38,
           anticipatePin: 1,
+          invalidateOnRefresh: true,
           onUpdate: function (self) {
             var p = self.progress;
-            var act = p < 0.30 ? 0 : (p < 0.66 ? 1 : 2);
+            var act = p < 0.28 ? 0 : (p < 0.64 ? 1 : 2);
             setHeroAct(act);
             if (p > 0.14 && p < 0.96) {
               var cut = p < 0.42 ? 0 : (p < 0.70 ? 1 : 2);
@@ -364,52 +400,51 @@
                   renderCut(ind, cut);
                   scheduleNextCut();
                 }
+                setText('mnMobileHudText', mobHudTexts[cut] || mobHudTexts[0]);
               }
             }
             var cue = document.getElementById('mnScrollCue');
             if (cue) {
-              cue.textContent = p < 0.30 ? 'SCROLL TO DIRECT · 01 / 03'
-                : (p < 0.66 ? 'FAN EXPAND · 02 / 03' : 'MASTER FOCUS · 03 / 03');
+              cue.textContent = p < 0.28 ? 'SCROLL TO DIRECT · 01 / 03'
+                : (p < 0.64 ? 'FAN EXPAND · 02 / 03' : 'MASTER FOCUS · 03 / 03');
             }
           }
         }
       });
 
-      // Phase 1 (0 -> 0.36): 부채꼴 대확장 + 시네마 카메라 돌리-인 + 2.39:1 레터박스 클로즈
+      // Stage 1 (0 -> 0.36): 웅장한 부채꼴 대개방 + 3D 덱 정면 틸트 + 시네마 카메라 돌리-인 + 2.39:1 레터박스
       heroTl
-        .to('#mnHeroKvImg', { scale: 1.24, yPercent: 3, ease: 'none', duration: 1 }, 0)
-        .to('#mnBgWatermark', { scale: 1.16, opacity: 0.25, ease: 'none', duration: 0.5 }, 0)
-        .to('#mnHeroBarTop', { yPercent: 105, ease: 'none', duration: 0.28 }, 0.06)
-        .to('#mnHeroBarBot', { yPercent: -105, ease: 'none', duration: 0.28 }, 0.06)
-        .to('.mn-fan-bottom', { opacity: 0, y: 14, ease: 'none', duration: 0.20 }, 0.08)
-        .to('#mnFanL2', { x: -465, y: 66, z: -110, rotationY: 30, rotationZ: -21, scale: 0.88, opacity: 0.92, ease: 'none', duration: 0.36 }, 0)
-        .to('#mnFanL1', { x: -258, y: 24, z: -40, rotationY: 17, rotationZ: -11, scale: 0.96, opacity: 1, ease: 'none', duration: 0.36 }, 0)
-        .to('#mnFanR1', { x: 258, y: 24, z: -40, rotationY: -17, rotationZ: 11, scale: 0.96, opacity: 1, ease: 'none', duration: 0.36 }, 0)
-        .to('#mnFanR2', { x: 465, y: 66, z: -110, rotationY: -30, rotationZ: 21, scale: 0.88, opacity: 0.92, ease: 'none', duration: 0.36 }, 0)
-        // Phase 2 (0.36 -> 0.72): 좌우 4장 부채꼴 3D 후퇴 + 중앙 마스터 릴스 1.14배 클로즈업 + 좌우 시네마 HUD 등장
-        .to('#mnFanL2', { x: -510, y: 74, z: -240, scale: 0.72, opacity: 0.24, ease: 'none', duration: 0.34 }, 0.36)
-        .to('#mnFanL1', { x: -310, y: 34, z: -160, scale: 0.78, opacity: 0.36, ease: 'none', duration: 0.34 }, 0.36)
-        .to('#mnFanR1', { x: 310, y: 34, z: -160, scale: 0.78, opacity: 0.36, ease: 'none', duration: 0.34 }, 0.36)
-        .to('#mnFanR2', { x: 510, y: 74, z: -240, scale: 0.72, opacity: 0.24, ease: 'none', duration: 0.34 }, 0.36)
-        .to('#landingPhoneStage', { scale: 1.14, y: -8, z: 110, ease: 'none', duration: 0.34 }, 0.36)
-        .to('#mnHudLeft', { x: 0, opacity: 1, ease: 'none', duration: 0.24 }, 0.42)
-        .to('#mnHudRight', { x: 0, opacity: 1, ease: 'none', duration: 0.24 }, 0.42)
-        // Phase 3 (0.76 -> 1.0): 부채꼴 와이드 블룸 + 레터박스 오픈 -> CH 02 성명문으로 연결
-        .to('#mnHudLeft', { x: -28, opacity: 0, ease: 'none', duration: 0.20 }, 0.76)
-        .to('#mnHudRight', { x: 28, opacity: 0, ease: 'none', duration: 0.20 }, 0.76)
-        .to('#mnFanL2', { x: -400, y: 50, z: -120, scale: 0.84, opacity: 0.76, ease: 'none', duration: 0.24 }, 0.76)
-        .to('#mnFanL1', { x: -220, y: 20, z: -50, scale: 0.92, opacity: 0.9, ease: 'none', duration: 0.24 }, 0.76)
-        .to('#mnFanR1', { x: 220, y: 20, z: -50, scale: 0.92, opacity: 0.9, ease: 'none', duration: 0.24 }, 0.76)
-        .to('#mnFanR2', { x: 400, y: 50, z: -120, scale: 0.84, opacity: 0.76, ease: 'none', duration: 0.24 }, 0.76)
-        .to('#landingPhoneStage', { scale: 1.04, y: 0, z: 50, ease: 'none', duration: 0.24 }, 0.76)
-        .to('#mnHeroBarTop', { yPercent: 0, ease: 'none', duration: 0.22 }, 0.78)
-        .to('#mnHeroBarBot', { yPercent: 0, ease: 'none', duration: 0.22 }, 0.78)
-        .to('.mn-fan-bottom', { opacity: 1, y: 0, ease: 'none', duration: 0.20 }, 0.80);
-    } else if (document.getElementById('mnHeroKvImg')) {
-      gsap.fromTo('#mnHeroKvImg',
-        { scale: 1.04, yPercent: 0 },
-        { scale: 1.15, yPercent: 6, ease: 'none', scrollTrigger: { trigger: '#mnHero', start: 'top top', end: 'bottom top', scrub: 1.1 } }
-      );
+        .to('#mnHeroKvImg', { scale: 1.28, yPercent: 4, ease: 'none', duration: 1 }, 0)
+        .to('#mnBgWatermark', { scale: 1.18, opacity: 0.22, ease: 'power1.inOut', duration: 0.45 }, 0)
+        .to('#mnFanDeck', { rotationX: 0, ease: 'power2.out', duration: 0.36 }, 0)
+        .to('#mnHeroBarTop', { yPercent: 105, ease: 'power2.inOut', duration: 0.26 }, 0.05)
+        .to('#mnHeroBarBot', { yPercent: -105, ease: 'power2.inOut', duration: 0.26 }, 0.05)
+        .to('.mn-fan-bottom', { opacity: 0, y: 12, ease: 'power2.out', duration: 0.18 }, 0.06)
+        .to('#mnFanL2', { x: g.eL2.x, y: g.eL2.y, z: g.eL2.z, rotationY: g.eL2.ry, rotationZ: g.eL2.rz, scale: g.eL2.sc, opacity: g.eL2.op, ease: 'power2.out', duration: 0.36 }, 0)
+        .to('#mnFanL1', { x: g.eL1.x, y: g.eL1.y, z: g.eL1.z, rotationY: g.eL1.ry, rotationZ: g.eL1.rz, scale: g.eL1.sc, opacity: g.eL1.op, ease: 'power2.out', duration: 0.36 }, 0)
+        .to('#mnFanR1', { x: -g.eL1.x, y: g.eL1.y, z: g.eL1.z, rotationY: -g.eL1.ry, rotationZ: -g.eL1.rz, scale: g.eL1.sc, opacity: g.eL1.op, ease: 'power2.out', duration: 0.36 }, 0)
+        .to('#mnFanR2', { x: -g.eL2.x, y: g.eL2.y, z: g.eL2.z, rotationY: -g.eL2.ry, rotationZ: -g.eL2.rz, scale: g.eL2.sc, opacity: g.eL2.op, ease: 'power2.out', duration: 0.36 }, 0)
+        // Stage 2 (0.36 -> 0.72): 좌우 4장 3D 윙 스윕(카메라 양옆으로 갈라짐) + 중앙 마스터 릴스 IMAX 돌진 + HUD 등장
+        .to('#mnFanL2', { x: g.wL2.x, y: g.wL2.y, z: g.wL2.z, rotationY: g.wL2.ry, rotationZ: g.wL2.rz, scale: g.wL2.sc, opacity: g.wL2.op, ease: 'power2.inOut', duration: 0.34 }, 0.36)
+        .to('#mnFanL1', { x: g.wL1.x, y: g.wL1.y, z: g.wL1.z, rotationY: g.wL1.ry, rotationZ: g.wL1.rz, scale: g.wL1.sc, opacity: g.wL1.op, ease: 'power2.inOut', duration: 0.34 }, 0.36)
+        .to('#mnFanR1', { x: -g.wL1.x, y: g.wL1.y, z: g.wL1.z, rotationY: -g.wL1.ry, rotationZ: -g.wL1.rz, scale: g.wL1.sc, opacity: g.wL1.op, ease: 'power2.inOut', duration: 0.34 }, 0.36)
+        .to('#mnFanR2', { x: -g.wL2.x, y: g.wL2.y, z: g.wL2.z, rotationY: -g.wL2.ry, rotationZ: -g.wL2.rz, scale: g.wL2.sc, opacity: g.wL2.op, ease: 'power2.inOut', duration: 0.34 }, 0.36)
+        .to('#landingPhoneStage', { scale: g.cZoom, y: g.cY, z: 120, ease: 'power2.inOut', duration: 0.34 }, 0.36)
+        .to('#mnHudLeft', { x: 0, opacity: 1, ease: 'power2.out', duration: 0.22 }, 0.42)
+        .to('#mnHudRight', { x: 0, opacity: 1, ease: 'power2.out', duration: 0.22 }, 0.42)
+        .to('#mnMobileHud', { y: 0, opacity: 1, ease: 'power2.out', duration: 0.22 }, 0.42)
+        // Stage 3 (0.76 -> 1.0): 부채꼴 피날레 블룸 + 레터박스 오픈 -> CH 02 성명문으로 부드럽게 연결
+        .to('#mnHudLeft', { x: -28, opacity: 0, ease: 'power2.in', duration: 0.18 }, 0.76)
+        .to('#mnHudRight', { x: 28, opacity: 0, ease: 'power2.in', duration: 0.18 }, 0.76)
+        .to('#mnMobileHud', { y: 12, opacity: 0, ease: 'power2.in', duration: 0.18 }, 0.76)
+        .to('#mnFanL2', { x: g.bL2.x, y: g.bL2.y, z: g.bL2.z, rotationY: g.bL2.ry, rotationZ: g.bL2.rz, scale: g.bL2.sc, opacity: g.bL2.op, ease: 'power2.out', duration: 0.24 }, 0.76)
+        .to('#mnFanL1', { x: g.bL1.x, y: g.bL1.y, z: g.bL1.z, rotationY: g.bL1.ry, rotationZ: g.bL1.rz, scale: g.bL1.sc, opacity: g.bL1.op, ease: 'power2.out', duration: 0.24 }, 0.76)
+        .to('#mnFanR1', { x: -g.bL1.x, y: g.bL1.y, z: g.bL1.z, rotationY: -g.bL1.ry, rotationZ: -g.bL1.rz, scale: g.bL1.sc, opacity: g.bL1.op, ease: 'power2.out', duration: 0.24 }, 0.76)
+        .to('#mnFanR2', { x: -g.bL2.x, y: g.bL2.y, z: g.bL2.z, rotationY: -g.bL2.ry, rotationZ: -g.bL2.rz, scale: g.bL2.sc, opacity: g.bL2.op, ease: 'power2.out', duration: 0.24 }, 0.76)
+        .to('#landingPhoneStage', { scale: 1.04, y: 0, z: 50, ease: 'power2.out', duration: 0.24 }, 0.76)
+        .to('#mnHeroBarTop', { yPercent: 0, ease: 'power2.inOut', duration: 0.22 }, 0.78)
+        .to('#mnHeroBarBot', { yPercent: 0, ease: 'power2.inOut', duration: 0.22 }, 0.78)
+        .to('.mn-fan-bottom', { opacity: 1, y: 0, ease: 'power2.out', duration: 0.20 }, 0.80);
     }
 
     // 2) CH 02 성명문 스크롤 컬러 필 (한 구절씩 어두움 -> 크림/테라코타 점등)
