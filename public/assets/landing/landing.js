@@ -214,22 +214,20 @@
     requestAnimationFrame(tick);
   })();
 
-  // 히어로 Z-깊이 마우스 패럴랙스 (GSAP quickTo 부드러운 관성 보간)
-  var giantTypeEl = document.getElementById('mnHeroGiantType');
-  var foreWrapEl = document.getElementById('mnHeroForeWrap');
-  if (!reducedMotion && giantTypeEl && foreWrapEl && window.gsap) {
-    var gx = window.gsap.quickTo(giantTypeEl, 'x', { duration: 0.9, ease: 'power3.out' });
-    var gy = window.gsap.quickTo(giantTypeEl, 'y', { duration: 0.9, ease: 'power3.out' });
-    var fx = window.gsap.quickTo(foreWrapEl, 'x', { duration: 0.85, ease: 'power3.out' });
-    var fy = window.gsap.quickTo(foreWrapEl, 'y', { duration: 0.85, ease: 'power3.out' });
+  // 히어로 5장 부채꼴 3D 덱 마우스 틸트 (GSAP quickTo 부드러운 관성 보간)
+  var fanDeckEl = document.getElementById('mnFanDeck');
+  var bgWmEl = document.getElementById('mnBgWatermark');
+  if (!reducedMotion && fanDeckEl && window.gsap) {
+    var deckRotY = window.gsap.quickTo(fanDeckEl, 'rotationY', { duration: 0.85, ease: 'power3.out' });
+    var deckRotX = window.gsap.quickTo(fanDeckEl, 'rotationX', { duration: 0.85, ease: 'power3.out' });
+    var wmX = bgWmEl ? window.gsap.quickTo(bgWmEl, 'x', { duration: 1.0, ease: 'power3.out' }) : null;
     window.addEventListener('pointermove', function (e) {
-      if (e.pointerType === 'touch' || window.scrollY > window.innerHeight) return;
+      if (e.pointerType === 'touch' || window.scrollY > window.innerHeight * 2.6) return;
       var nx = (e.clientX / Math.max(1, window.innerWidth)) * 2 - 1;
       var ny = (e.clientY / Math.max(1, window.innerHeight)) * 2 - 1;
-      gx(-nx * 14);
-      gy(-ny * 10);
-      fx(nx * 18);
-      fy(ny * 12);
+      deckRotY(nx * 6.5);
+      deckRotX(-ny * 4.0);
+      if (wmX) wmX(-nx * 24);
     }, { passive: true });
   }
 
@@ -312,28 +310,52 @@
       document.fonts.ready.then(function () { ST.refresh(); }).catch(function () {});
     }
 
-    // 1) 히어로 입장 스태거 + 데스크톱 GSAP Pinned 시네마틱 스크롤 카메라 워크 (pin: true, scrub: 1.2)
-    gsap.from('.mn-giant-line', { yPercent: 35, opacity: 0, duration: 0.9, stagger: 0.12, ease: 'power3.out', clearProps: 'transform,opacity' });
-    gsap.from('.mn-hero-reel', { scale: 0.9, opacity: 0, duration: 0.85, delay: 0.18, ease: 'power3.out', clearProps: 'transform,opacity' });
+    // 1) 히어로 5장 부채꼴 3D 덱 입장 + 데스크톱 GSAP Pinned 3막 시네마틱 스크롤 (pin: true, scrub: 1.15)
+    gsap.from('.mn-fan-act.is-visible', { y: 18, opacity: 0, duration: 0.8, ease: 'power3.out', clearProps: 'transform,opacity' });
+    gsap.from('.mn-hero-reel', { scale: 0.9, opacity: 0, duration: 0.85, delay: 0.1, ease: 'power3.out', clearProps: 'transform,opacity' });
 
     if (window.innerWidth >= 960 && document.getElementById('mnHero')) {
-      var lastHeroCut = -1;
-      var directorHeadlines = [
-        '한 장의 사진이<br />3컷 릴스로 살아나는 순간',
-        'AI 구어체 대본과 성우가<br />영상 길이에 맞춰 자동 싱크',
-        '매장 로고·혜택 엔딩까지<br />9:16 1080p MP4 완성'
+      var actNodes = [
+        document.getElementById('mnAct1'),
+        document.getElementById('mnAct2'),
+        document.getElementById('mnAct3')
       ];
+      var lastHeroAct = 0;
+      var lastHeroCut = -1;
+
+      function setHeroAct(idx) {
+        if (idx === lastHeroAct) return;
+        lastHeroAct = idx;
+        actNodes.forEach(function (el, i) {
+          if (!el) return;
+          var on = i === idx;
+          el.classList.toggle('is-visible', on);
+          el.setAttribute('aria-hidden', on ? 'false' : 'true');
+        });
+      }
+
+      // 기본 부채꼴(Fan-Shape) 3D 초기 포즈를 GSAP에 정밀 등록 (점프 없는 보간 보장)
+      gsap.set('#mnFanL2', { x: -345, y: 42, z: -140, rotationY: 24, rotationZ: -15, scale: 0.84, opacity: 0.82 });
+      gsap.set('#mnFanL1', { x: -190, y: 16, z: -60, rotationY: 13, rotationZ: -7.5, scale: 0.92, opacity: 0.94 });
+      gsap.set('#mnFanR1', { x: 190, y: 16, z: -60, rotationY: -13, rotationZ: 7.5, scale: 0.92, opacity: 0.94 });
+      gsap.set('#mnFanR2', { x: 345, y: 42, z: -140, rotationY: -24, rotationZ: 15, scale: 0.84, opacity: 0.82 });
+      gsap.set('#landingPhoneStage', { x: 0, y: 0, z: 40, scale: 1, opacity: 1 });
+      gsap.set('#mnHudLeft', { x: -32, opacity: 0 });
+      gsap.set('#mnHudRight', { x: 32, opacity: 0 });
+
       var heroTl = gsap.timeline({
         scrollTrigger: {
           trigger: '#mnHero',
           start: 'top top',
-          end: '+=210%',
+          end: '+=240%',
           pin: true,
-          scrub: 1.2,
+          scrub: 1.15,
           anticipatePin: 1,
           onUpdate: function (self) {
             var p = self.progress;
-            if (p > 0.12 && p < 0.96) {
+            var act = p < 0.30 ? 0 : (p < 0.66 ? 1 : 2);
+            setHeroAct(act);
+            if (p > 0.14 && p < 0.96) {
               var cut = p < 0.42 ? 0 : (p < 0.70 ? 1 : 2);
               if (cut !== lastHeroCut) {
                 lastHeroCut = cut;
@@ -342,34 +364,51 @@
                   renderCut(ind, cut);
                   scheduleNextCut();
                 }
-                var dh = document.getElementById('mnDirectorHeadline');
-                if (dh) dh.innerHTML = directorHeadlines[cut] || directorHeadlines[0];
               }
+            }
+            var cue = document.getElementById('mnScrollCue');
+            if (cue) {
+              cue.textContent = p < 0.30 ? 'SCROLL TO DIRECT · 01 / 03'
+                : (p < 0.66 ? 'FAN EXPAND · 02 / 03' : 'MASTER FOCUS · 03 / 03');
             }
           }
         }
       });
 
-      // Phase 1 (0 -> 0.42): 시네마 카메라 씬 돌리 인 + 거대 타이포 좌우 파팅 + 좌측 카피 퇴장 + 레터박스 클로즈
+      // Phase 1 (0 -> 0.36): 부채꼴 대확장 + 시네마 카메라 돌리-인 + 2.39:1 레터박스 클로즈
       heroTl
-        .to('#mnHeroKvImg', { scale: 1.24, xPercent: -5, yPercent: 3, ease: 'none', duration: 1 }, 0)
-        .to('.mn-giant-line:first-child', { xPercent: -18, opacity: 0.08, ease: 'none', duration: 0.42 }, 0)
-        .to('.mn-giant-line:last-child', { xPercent: 18, opacity: 0.06, ease: 'none', duration: 0.42 }, 0)
-        .to('#mnHeroGiantType > :not(.mn-giant-stack)', { y: -28, opacity: 0, ease: 'none', duration: 0.34 }, 0)
-        .to('#mnHeroBarTop', { yPercent: 105, ease: 'none', duration: 0.32 }, 0.08)
-        .to('#mnHeroBarBot', { yPercent: -105, ease: 'none', duration: 0.32 }, 0.08)
-        // Phase 2 (0.14 -> 0.52): 9:16 라이브 릴스가 정중앙으로 유유히 이동하며 1.18배 시네마 포커스 + 디렉터 캡션 등장
-        .to('#landingPhoneStage', { x: function () { return -Math.min(180, window.innerWidth * 0.13); }, scale: 1.16, ease: 'none', duration: 0.42 }, 0.12)
-        .fromTo('#mnHeroDirectorNote', { opacity: 0, y: 24 }, { opacity: 1, y: 0, ease: 'none', duration: 0.24 }, 0.32)
-        // Phase 3 (0.78 -> 1.0): 레터박스 오픈 & 릴스/디렉터 캡션 시네마틱 페이드아웃 -> CH 02 성명문으로 연결
-        .to('#mnHeroDirectorNote', { opacity: 0, y: -20, ease: 'none', duration: 0.18 }, 0.80)
-        .to('#mnHeroBarTop', { yPercent: 0, ease: 'none', duration: 0.2 }, 0.80)
-        .to('#mnHeroBarBot', { yPercent: 0, ease: 'none', duration: 0.2 }, 0.80)
-        .to('#landingPhoneStage', { scale: 1.24, opacity: 0.82, ease: 'none', duration: 0.2 }, 0.80);
+        .to('#mnHeroKvImg', { scale: 1.24, yPercent: 3, ease: 'none', duration: 1 }, 0)
+        .to('#mnBgWatermark', { scale: 1.16, opacity: 0.25, ease: 'none', duration: 0.5 }, 0)
+        .to('#mnHeroBarTop', { yPercent: 105, ease: 'none', duration: 0.28 }, 0.06)
+        .to('#mnHeroBarBot', { yPercent: -105, ease: 'none', duration: 0.28 }, 0.06)
+        .to('.mn-fan-bottom', { opacity: 0, y: 14, ease: 'none', duration: 0.20 }, 0.08)
+        .to('#mnFanL2', { x: -465, y: 66, z: -110, rotationY: 30, rotationZ: -21, scale: 0.88, opacity: 0.92, ease: 'none', duration: 0.36 }, 0)
+        .to('#mnFanL1', { x: -258, y: 24, z: -40, rotationY: 17, rotationZ: -11, scale: 0.96, opacity: 1, ease: 'none', duration: 0.36 }, 0)
+        .to('#mnFanR1', { x: 258, y: 24, z: -40, rotationY: -17, rotationZ: 11, scale: 0.96, opacity: 1, ease: 'none', duration: 0.36 }, 0)
+        .to('#mnFanR2', { x: 465, y: 66, z: -110, rotationY: -30, rotationZ: 21, scale: 0.88, opacity: 0.92, ease: 'none', duration: 0.36 }, 0)
+        // Phase 2 (0.36 -> 0.72): 좌우 4장 부채꼴 3D 후퇴 + 중앙 마스터 릴스 1.14배 클로즈업 + 좌우 시네마 HUD 등장
+        .to('#mnFanL2', { x: -510, y: 74, z: -240, scale: 0.72, opacity: 0.24, ease: 'none', duration: 0.34 }, 0.36)
+        .to('#mnFanL1', { x: -310, y: 34, z: -160, scale: 0.78, opacity: 0.36, ease: 'none', duration: 0.34 }, 0.36)
+        .to('#mnFanR1', { x: 310, y: 34, z: -160, scale: 0.78, opacity: 0.36, ease: 'none', duration: 0.34 }, 0.36)
+        .to('#mnFanR2', { x: 510, y: 74, z: -240, scale: 0.72, opacity: 0.24, ease: 'none', duration: 0.34 }, 0.36)
+        .to('#landingPhoneStage', { scale: 1.14, y: -8, z: 110, ease: 'none', duration: 0.34 }, 0.36)
+        .to('#mnHudLeft', { x: 0, opacity: 1, ease: 'none', duration: 0.24 }, 0.42)
+        .to('#mnHudRight', { x: 0, opacity: 1, ease: 'none', duration: 0.24 }, 0.42)
+        // Phase 3 (0.76 -> 1.0): 부채꼴 와이드 블룸 + 레터박스 오픈 -> CH 02 성명문으로 연결
+        .to('#mnHudLeft', { x: -28, opacity: 0, ease: 'none', duration: 0.20 }, 0.76)
+        .to('#mnHudRight', { x: 28, opacity: 0, ease: 'none', duration: 0.20 }, 0.76)
+        .to('#mnFanL2', { x: -400, y: 50, z: -120, scale: 0.84, opacity: 0.76, ease: 'none', duration: 0.24 }, 0.76)
+        .to('#mnFanL1', { x: -220, y: 20, z: -50, scale: 0.92, opacity: 0.9, ease: 'none', duration: 0.24 }, 0.76)
+        .to('#mnFanR1', { x: 220, y: 20, z: -50, scale: 0.92, opacity: 0.9, ease: 'none', duration: 0.24 }, 0.76)
+        .to('#mnFanR2', { x: 400, y: 50, z: -120, scale: 0.84, opacity: 0.76, ease: 'none', duration: 0.24 }, 0.76)
+        .to('#landingPhoneStage', { scale: 1.04, y: 0, z: 50, ease: 'none', duration: 0.24 }, 0.76)
+        .to('#mnHeroBarTop', { yPercent: 0, ease: 'none', duration: 0.22 }, 0.78)
+        .to('#mnHeroBarBot', { yPercent: 0, ease: 'none', duration: 0.22 }, 0.78)
+        .to('.mn-fan-bottom', { opacity: 1, y: 0, ease: 'none', duration: 0.20 }, 0.80);
     } else if (document.getElementById('mnHeroKvImg')) {
       gsap.fromTo('#mnHeroKvImg',
-        { scale: 1.03, yPercent: 0 },
-        { scale: 1.14, yPercent: 6, ease: 'none', scrollTrigger: { trigger: '#mnHero', start: 'top top', end: 'bottom top', scrub: 1.1 } }
+        { scale: 1.04, yPercent: 0 },
+        { scale: 1.15, yPercent: 6, ease: 'none', scrollTrigger: { trigger: '#mnHero', start: 'top top', end: 'bottom top', scrub: 1.1 } }
       );
     }
 

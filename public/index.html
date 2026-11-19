@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120q" />
+  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120r" />
 </head>
 <body class="antialiased mn-body">
   <!-- 35mm 필름 그레인 글로벌 레이어 -->
@@ -77,82 +77,150 @@
   </aside>
 
   <!-- ====================================================================== -->
-  <!-- CH 01 · FULL-BLEED IMAX CINEMA STUDIO HERO (전용 시네마 카메라 KV + 갓레이) -->
+  <!-- CH 01 · MONUMENTAL 3D FAN-SHAPE CINEMA HERO (5장 부채꼴 릴스 덱 + 3막 스크롤 핀) -->
   <!-- ====================================================================== -->
   <section id="mnHero" class="mn-hero" data-chapter="01" data-chapter-label="HERO STUDIO">
-    <!-- 풀-블리드 16:9 IMAX 시네마 스튜디오 키 비주얼 + 스크롤 줌인 패럴랙스 -->
+    <!-- 풀-블리드 시네마 스튜디오 키 비주얼 + 황금 먼지 + 블루프린트 그리드 -->
     <div class="mn-hero-kv-wrap" aria-hidden="true">
       <img id="mnHeroKvImg" class="mn-hero-kv-img" src="/assets/landing/hero-cinema-kv.jpg" alt="" loading="eager" />
       <div class="mn-hero-kv-vignette"></div>
     </div>
     <div class="mn-blueprint-grid" aria-hidden="true"></div>
     <canvas id="mnDustCanvas" class="mn-dust-canvas" aria-hidden="true"></canvas>
+    <div id="mnBgWatermark" class="mn-bg-watermark" aria-hidden="true">ONE SHOT · ONE REEL</div>
+
     <!-- 스크롤 시 부드럽게 닫히는 영화관 2.39:1 시네마스코프 레터박스 -->
     <div id="mnHeroBarTop" class="mn-cinema-bar mn-cinema-bar-top" aria-hidden="true"></div>
     <div id="mnHeroBarBot" class="mn-cinema-bar mn-cinema-bar-bot" aria-hidden="true"></div>
-    <!-- 스크롤 2막 중앙 포커스 시 좌측에 떠오르는 시네마틱 디렉터 캡션 -->
-    <div id="mnHeroDirectorNote" class="mn-director-note" aria-hidden="true">
-      <div class="font-mono text-[11px] tracking-widest uppercase text-[#e07a4f]">DIRECTOR'S CUT · SCROLL SCRUB</div>
-      <div id="mnDirectorHeadline" class="mn-director-title">한 장의 사진이<br />3컷 릴스로 살아나는 순간</div>
-      <p id="mnDirectorDesc" class="mn-director-sub">스크롤에 맞춰 후킹 · AI 성우 대사 · 매장 엔딩까지 한 흐름으로 전환됩니다.</p>
-    </div>
 
     <!-- 코너 등록 마크 -->
     <div class="mn-corner-meta mn-corner-tl font-mono" aria-hidden="true">+ A1 · 9:16 MASTER STUDIO</div>
     <div class="mn-corner-meta mn-corner-tr font-mono" aria-hidden="true">747+ STYLES · LINK REMIX · HIGHLIGHT AI +</div>
 
-    <!-- 시네마틱 비대칭 히어로 무대 (좌측 초대형 타이포 + 우측 시네마 카메라와 어우러지는 9:16 라이브 릴스) -->
-    <div class="mn-hero-cinema-grid">
-      <div id="mnHeroGiantType" class="mn-hero-left-col">
-        <div class="font-mono text-[11px] tracking-widest uppercase text-[#e07a4f] mb-3">AUTOREELSMAKER · CINEMA REELS STUDIO</div>
-        <div class="mn-giant-stack">
-          <div class="mn-giant-line">ONE SHOT</div>
-          <div class="mn-giant-line mn-giant-accent">ONE REEL</div>
+    <!-- 히어로 중앙 수직 스택: 상단 3막 시네마 카피 + 중앙 5장 3D 부채꼴 릴스 덱 + 하단 업종 칩 -->
+    <div class="mn-hero-fan-shell">
+      <!-- 상단 3막 크로스페이드 헤드라인 -->
+      <div class="mn-fan-copy-wrap">
+        <div id="mnAct1" class="mn-fan-act is-visible">
+          <div class="font-mono text-[10.5px] sm:text-[11px] tracking-[0.2em] uppercase text-[#e07a4f]">01 / 03 · 747+ STYLES · LINK REMIX · HIGHLIGHT AI</div>
+          <h1 class="mn-fan-h1">사진 한 장이, <span class="mn-fan-h1-accent">한 편의 영화 같은 릴스가 된다</span></h1>
+          <div class="flex flex-wrap items-center justify-center gap-3 mt-4">
+            <a href="/studio" class="mn-btn-cream">지금 무료로 릴스 만들기 →</a>
+            <a href="#mnPipeline" class="mn-btn-outline">4대 엔진 둘러보기 ↓</a>
+          </div>
         </div>
-        <h1 class="mn-ko-title mt-5">사진 한 장이, 한 편의 영화 같은 릴스가 된다</h1>
-        <p class="mn-ko-sub">오늘의 주제 추천 · 참고 영상 링크 분석 · 10분 영상 하이라이트 추출 · 747종 스타일 · AI 성우 · 9:16 MP4 즉시 저장</p>
-        <div class="flex flex-wrap items-center gap-3 mt-6">
-          <a href="/studio" class="mn-btn-cream">지금 무료로 릴스 만들기 →</a>
-          <a href="#mnPipeline" class="mn-btn-outline">4대 엔진 둘러보기 ↓</a>
+
+        <div id="mnAct2" class="mn-fan-act" aria-hidden="true">
+          <div class="font-mono text-[10.5px] sm:text-[11px] tracking-[0.2em] uppercase text-[#e07a4f]">02 / 03 · LINK REMIX &amp; HIGHLIGHT EXTRACTOR</div>
+          <h2 class="mn-fan-h1">링크 하나, 긴 영상 하나로<br class="hidden sm:inline" /> <span class="mn-fan-h1-accent">컷 리듬과 핵심 구간 자동 추출</span></h2>
+          <div class="flex flex-wrap items-center justify-center gap-3 mt-4">
+            <a href="/assets/remix/index.html" class="mn-btn-cream">참고 링크 분석하기 →</a>
+            <a href="/assets/shorts/index.html" class="mn-btn-outline">10분 영상 하이라이트 →</a>
+          </div>
         </div>
-        <div id="landingQuickInds" class="mn-quick-row mt-5" aria-label="빠른 업종 미리보기"></div>
+
+        <div id="mnAct3" class="mn-fan-act" aria-hidden="true">
+          <div class="font-mono text-[10.5px] sm:text-[11px] tracking-[0.2em] uppercase text-[#e07a4f]">03 / 03 · 747+ STYLES · AI VOICE · ORIGINAL BGM</div>
+          <h2 class="mn-fan-h1">브랜드 색·AI 성우·매장 엔딩까지<br class="hidden sm:inline" /> <span class="mn-fan-h1-accent">9:16 고화질 MP4 즉시 완성</span></h2>
+          <div class="flex flex-wrap items-center justify-center gap-3 mt-4">
+            <a href="/studio" class="mn-btn-cream">지금 무료로 첫 릴스 만들기 →</a>
+            <a href="#mnFinale" class="mn-btn-outline">요금제 보기</a>
+          </div>
+        </div>
       </div>
 
-      <!-- 우측 전경 9:16 실사 릴스 프레임 (시네마 카메라 갓레이 위에 안착) -->
-      <div id="mnHeroForeWrap" class="mn-hero-right-col">
-        <div id="landingPhoneStage" role="button" tabindex="0" aria-label="미리보기 다음 컷 보기" class="mn-hero-reel">
-          <img id="lpMainPhoto" class="mn-reel-photo" src="/assets/scenes/auto/1.jpg" alt="" />
-          <div class="mn-reel-scrim"></div>
-          <div class="relative z-10 space-y-2">
-            <div id="landingPhoneBars" class="mn-bars" aria-hidden="true">
-              <span class="mn-bar"><i class="mn-bar-fill"></i></span>
-              <span class="mn-bar"><i class="mn-bar-fill"></i></span>
-              <span class="mn-bar"><i class="mn-bar-fill"></i></span>
-            </div>
-            <div class="flex items-center justify-between gap-2 text-[10.5px] text-[#f5efe2] font-mono">
-              <span id="landingPhoneBadge" class="px-2 py-0.5 bg-black/55 border border-white/15 truncate">자동차 영업</span>
-              <div class="flex items-center gap-1.5 shrink-0">
-                <span id="landingPhoneCutTag" class="px-1.5 py-0.5 bg-black/55 text-[10px]">01 / 03</span>
-                <button type="button" id="landingPhonePlayBtn" aria-label="미리보기 일시정지" class="mn-play-btn">❚❚</button>
+      <!-- 중앙 5장 3D 부채꼴 실사 릴스 덱 + 스크롤 2~3막 좌우 시네마 HUD -->
+      <div class="mn-fan-stage">
+        <aside id="mnHudLeft" class="mn-side-hud mn-side-hud-left" aria-hidden="true">
+          <div class="font-mono text-[10px] tracking-widest uppercase text-[#e07a4f]">LINK &amp; HIGHLIGHT</div>
+          <div class="text-[14px] font-bold text-[#f5efe2] mt-1">참고 링크 컷 리듬 분석</div>
+          <div class="mn-hud-bars">
+            <span style="width:28%"></span>
+            <span style="width:44%"></span>
+            <span style="width:28%"></span>
+          </div>
+          <div class="text-[11px] text-[#a69d91] mt-1.5">10분 영상 → 핵심 15초 하이라이트</div>
+        </aside>
+
+        <div id="mnFanDeck" class="mn-fan-deck">
+          <!-- 좌2 (카페 4.jpg) -->
+          <button type="button" id="mnFanL2" data-ind="cafe" data-quick="1" class="mn-fan-card mn-fan-l2" aria-label="카페·디저트 릴스 예시 보기">
+            <img src="/assets/scenes/cafe/4.jpg" alt="" loading="eager" />
+            <div class="mn-fan-scrim"></div>
+            <div class="mn-fan-meta"><span>카페·디저트</span><strong>시그니처 라떼 15초</strong></div>
+          </button>
+
+          <!-- 좌1 (뷰티 4.jpg) -->
+          <button type="button" id="mnFanL1" data-ind="beauty" data-quick="1" class="mn-fan-card mn-fan-l1" aria-label="미용·네일·뷰티 릴스 예시 보기">
+            <img src="/assets/scenes/beauty/4.jpg" alt="" loading="eager" />
+            <div class="mn-fan-scrim"></div>
+            <div class="mn-fan-meta"><span>미용·뷰티</span><strong>시술 전후 무드 릴스</strong></div>
+          </button>
+
+          <!-- 중앙 마스터 9:16 라이브 릴스 -->
+          <div id="landingPhoneStage" role="button" tabindex="0" aria-label="미리보기 다음 컷 보기" class="mn-hero-reel mn-fan-center">
+            <img id="lpMainPhoto" class="mn-reel-photo" src="/assets/scenes/auto/1.jpg" alt="" />
+            <div class="mn-reel-scrim"></div>
+            <div class="relative z-10 space-y-2">
+              <div id="landingPhoneBars" class="mn-bars" aria-hidden="true">
+                <span class="mn-bar"><i class="mn-bar-fill"></i></span>
+                <span class="mn-bar"><i class="mn-bar-fill"></i></span>
+                <span class="mn-bar"><i class="mn-bar-fill"></i></span>
+              </div>
+              <div class="flex items-center justify-between gap-2 text-[10.5px] text-[#f5efe2] font-mono">
+                <span id="landingPhoneBadge" class="px-2 py-0.5 bg-black/55 border border-white/15 truncate">자동차 영업</span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <span id="landingPhoneCutTag" class="px-1.5 py-0.5 bg-black/55 text-[10px]">01 / 03</span>
+                  <button type="button" id="landingPhonePlayBtn" aria-label="미리보기 일시정지" class="mn-play-btn">❚❚</button>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div id="landingPhoneSlide" class="relative z-10 my-auto space-y-2">
-            <div id="landingPhoneKicker" class="font-mono text-[10px] tracking-wider uppercase text-[#e07a4f]"></div>
-            <div id="landingPhoneHook" class="text-[20px] font-bold text-[#f5efe2] leading-snug mn-shadow"></div>
-            <div id="landingPhoneSub" class="text-[12px] text-[#f5efe2]/90 leading-relaxed bg-black/55 backdrop-blur-sm p-2.5 border border-white/15"></div>
-            <div id="landingPhoneTags" class="flex flex-wrap gap-1"></div>
-          </div>
-
-          <div class="relative z-10 bg-black/70 border border-white/15 px-3 py-2 flex items-center justify-between gap-2">
-            <div class="min-w-0">
-              <div id="landingPhonePlace" class="text-[11px] font-semibold text-[#f5efe2] truncate"></div>
-              <div id="landingPhonePromo" class="text-[10px] text-[#e07a4f] truncate mt-0.5"></div>
+            <div id="landingPhoneSlide" class="relative z-10 my-auto space-y-2">
+              <div id="landingPhoneKicker" class="font-mono text-[10px] tracking-wider uppercase text-[#e07a4f]"></div>
+              <div id="landingPhoneHook" class="text-[19px] font-bold text-[#f5efe2] leading-snug mn-shadow"></div>
+              <div id="landingPhoneSub" class="text-[11.5px] text-[#f5efe2]/90 leading-relaxed bg-black/55 backdrop-blur-sm p-2.5 border border-white/15"></div>
+              <div id="landingPhoneTags" class="flex flex-wrap gap-1"></div>
             </div>
-            <span class="px-2 py-0.5 bg-[#f5efe2] text-[#0b0a08] font-mono text-[10px] font-bold shrink-0">END</span>
+
+            <div class="relative z-10 bg-black/70 border border-white/15 px-3 py-2 flex items-center justify-between gap-2">
+              <div class="min-w-0">
+                <div id="landingPhonePlace" class="text-[11px] font-semibold text-[#f5efe2] truncate"></div>
+                <div id="landingPhonePromo" class="text-[10px] text-[#e07a4f] truncate mt-0.5"></div>
+              </div>
+              <span class="px-2 py-0.5 bg-[#f5efe2] text-[#0b0a08] font-mono text-[10px] font-bold shrink-0">END</span>
+            </div>
           </div>
+
+          <!-- 우1 (음식점 4.jpg) -->
+          <button type="button" id="mnFanR1" data-ind="restaurant" data-quick="1" class="mn-fan-card mn-fan-r1" aria-label="음식점 릴스 예시 보기">
+            <img src="/assets/scenes/restaurant/4.jpg" alt="" loading="eager" />
+            <div class="mn-fan-scrim"></div>
+            <div class="mn-fan-meta"><span>음식점</span><strong>오늘의 시그니처 메뉴</strong></div>
+          </button>
+
+          <!-- 우2 (인테리어 4.jpg) -->
+          <button type="button" id="mnFanR2" data-ind="interior" data-quick="1" class="mn-fan-card mn-fan-r2" aria-label="인테리어 릴스 예시 보기">
+            <img src="/assets/scenes/interior/4.jpg" alt="" loading="eager" />
+            <div class="mn-fan-scrim"></div>
+            <div class="mn-fan-meta"><span>인테리어</span><strong>시공 비포·애프터</strong></div>
+          </button>
         </div>
+
+        <aside id="mnHudRight" class="mn-side-hud mn-side-hud-right" aria-hidden="true">
+          <div class="font-mono text-[10px] tracking-widest uppercase text-[#e07a4f]">AI VOICE &amp; 747+ STYLES</div>
+          <div class="text-[14px] font-bold text-[#f5efe2] mt-1">성우 내레이션 · 오리지널 BGM</div>
+          <div class="mn-hud-eq" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div class="text-[11px] text-[#a69d91] mt-1.5">9:16 1080×1920 MP4 즉시 저장</div>
+        </aside>
+      </div>
+
+      <!-- 하단 빠른 업종 칩 + 스크롤 유도 -->
+      <div class="mn-fan-bottom">
+        <div id="landingQuickInds" class="mn-quick-row justify-center" aria-label="빠른 업종 미리보기"></div>
+        <div id="mnScrollCue" class="mn-scroll-cue font-mono" aria-hidden="true">SCROLL TO DIRECT ↓</div>
       </div>
     </div>
   </section>
@@ -535,7 +603,7 @@
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
-  <script src="/assets/landing/industries.js?v=20261120q"></script>
-  <script src="/assets/landing/landing.js?v=20261120q"></script>
+  <script src="/assets/landing/industries.js?v=20261120r"></script>
+  <script src="/assets/landing/landing.js?v=20261120r"></script>
 </body>
 </html>

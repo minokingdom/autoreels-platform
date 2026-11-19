@@ -171,7 +171,7 @@ html, body {
 @media (max-width: 767px) { .mn-hud-clock { display: none; } }
 
 /* ============================================================================
-   CH 01 · FULL-BLEED IMAX CINEMA STUDIO HERO
+   CH 01 · MONUMENTAL 3D FAN-SHAPE CINEMA HERO (5장 부채꼴 릴스 덱 + 3막 스크롤 핀)
    ============================================================================ */
 .mn-hero {
   position: relative;
@@ -179,8 +179,9 @@ html, body {
   width: 100%;
   overflow: hidden;
   display: flex;
-  align-items: center;
-  padding: 96px 24px 80px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 68px 20px 26px;
   box-sizing: border-box;
   isolation: isolate;
 }
@@ -194,97 +195,17 @@ html, body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 68% 58%;
-  transform: scale(1.03);
+  object-position: 50% 42%;
+  transform: scale(1.04);
+  filter: brightness(0.68) saturate(1.05);
   will-change: transform;
 }
 .mn-hero-kv-vignette {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(11, 10, 8, 0.88) 0%, rgba(11, 10, 8, 0.56) 44%, rgba(11, 10, 8, 0.16) 76%, rgba(11, 10, 8, 0.45) 100%),
-    linear-gradient(180deg, rgba(11, 10, 8, 0.58) 0%, rgba(11, 10, 8, 0.08) 38%, rgba(11, 10, 8, 0.25) 75%, #0b0a08 100%);
-}
-.mn-hero-cinema-grid {
-  position: relative;
-  z-index: 5;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 36px;
-  align-items: center;
-}
-@media (min-width: 960px) {
-  .mn-hero-cinema-grid {
-    grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr);
-    gap: 48px;
-  }
-}
-.mn-hero-left-col { min-width: 0; will-change: transform; }
-.mn-hero-right-col {
-  min-width: 0;
-  display: flex;
-  justify-content: center;
-  will-change: transform;
-}
-@media (min-width: 960px) {
-  .mn-hero-right-col { justify-content: flex-start; padding-left: 12px; padding-bottom: 44px; }
-}
-.mn-giant-stack { display: flex; flex-direction: column; }
-.mn-giant-line {
-  font-family: 'Anton', var(--brand-font), sans-serif;
-  font-size: clamp(66px, 11.2vw, 152px);
-  line-height: 0.9;
-  letter-spacing: -0.02em;
-  color: var(--mn-cream);
-  white-space: nowrap;
-}
-.mn-giant-accent {
-  color: transparent;
-  -webkit-text-stroke: 1.5px rgba(245, 239, 226, 0.72);
-}
-
-/* 히어로 스크롤 핀 시네마스코프 레터박스 & 디렉터 2막 캡션 */
-.mn-cinema-bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 9vh;
-  background: #060504;
-  z-index: 12;
-  pointer-events: none;
-  will-change: transform;
-}
-.mn-cinema-bar-top { top: 0; transform: translateY(-105%); border-bottom: 1px solid rgba(245, 239, 226, 0.08); }
-.mn-cinema-bar-bot { bottom: 0; transform: translateY(105%); border-top: 1px solid rgba(245, 239, 226, 0.08); }
-
-.mn-director-note {
-  position: absolute;
-  left: max(28px, calc(50% - 580px));
-  top: 50%;
-  transform: translateY(-50%);
-  max-width: 340px;
-  z-index: 8;
-  opacity: 0;
-  pointer-events: none;
-  will-change: transform, opacity;
-}
-@media (max-width: 1023px) { .mn-director-note { display: none; } }
-.mn-director-title {
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 1.22;
-  letter-spacing: -0.025em;
-  color: var(--mn-cream);
-  margin-top: 10px;
-}
-.mn-director-sub {
-  font-size: 13.5px;
-  color: var(--mn-muted);
-  line-height: 1.65;
-  margin-top: 10px;
+    radial-gradient(ellipse 70% 56% at 50% 54%, rgba(224, 122, 79, 0.14) 0%, rgba(11, 10, 8, 0.62) 64%, rgba(11, 10, 8, 0.92) 100%),
+    linear-gradient(180deg, rgba(11, 10, 8, 0.72) 0%, rgba(11, 10, 8, 0.22) 40%, rgba(11, 10, 8, 0.52) 78%, #0b0a08 100%);
 }
 .mn-blueprint-grid {
   position: absolute;
@@ -292,18 +213,9 @@ html, body {
   z-index: -4;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(245, 239, 226, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(245, 239, 226, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(245, 239, 226, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245, 239, 226, 0.035) 1px, transparent 1px);
   background-size: 80px 80px;
-}
-.mn-godray {
-  position: absolute;
-  inset: -10%;
-  z-index: -3;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 55% 65% at 72% 18%, rgba(224, 122, 79, 0.24) 0%, rgba(245, 239, 226, 0.06) 35%, transparent 68%),
-    linear-gradient(125deg, transparent 22%, rgba(245, 239, 226, 0.055) 45%, rgba(224, 122, 79, 0.08) 54%, transparent 72%);
 }
 .mn-dust-canvas {
   position: absolute;
@@ -313,75 +225,217 @@ html, body {
   z-index: -2;
   pointer-events: none;
 }
+.mn-bg-watermark {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  transform: translate(-50%, -50%);
+  font-family: 'Anton', var(--brand-font), sans-serif;
+  font-size: clamp(72px, 14vw, 220px);
+  line-height: 0.9;
+  letter-spacing: 0.03em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(245, 239, 226, 0.09);
+  white-space: nowrap;
+  z-index: -1;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+}
+
+/* 스크롤 시 부드럽게 닫히는 영화관 2.39:1 시네마스코프 레터박스 */
+.mn-cinema-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 7.5vh;
+  background: #060504;
+  z-index: 20;
+  pointer-events: none;
+  will-change: transform;
+}
+.mn-cinema-bar-top { top: 0; transform: translateY(-105%); border-bottom: 1px solid rgba(245, 239, 226, 0.09); }
+.mn-cinema-bar-bot { bottom: 0; transform: translateY(105%); border-top: 1px solid rgba(245, 239, 226, 0.09); }
+
 .mn-corner-meta {
   position: absolute;
-  top: 72px;
+  top: 66px;
   font-size: 10px;
   letter-spacing: 0.12em;
-  color: rgba(245, 239, 226, 0.45);
+  color: rgba(245, 239, 226, 0.42);
   pointer-events: none;
+  z-index: 6;
 }
 .mn-corner-tl { left: 24px; }
 .mn-corner-tr { right: 24px; }
-@media (max-width: 767px) { .mn-corner-tr { display: none; } }
+@media (max-width: 767px) { .mn-corner-tl, .mn-corner-tr { display: none; } }
 
-/* Z-깊이 샌드위치 무대 */
-.mn-hero-stage {
+/* 히어로 수직 메인 쉘 */
+.mn-hero-fan-shell {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 440px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 12px 0;
-}
-.mn-giant-type {
-  position: absolute;
-  inset: 0;
+  z-index: 5;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  z-index: 1;
-  pointer-events: none;
-  user-select: none;
-  will-change: transform;
-}
-.mn-giant-line {
-  font-family: 'Anton', var(--brand-font), sans-serif;
-  font-size: clamp(78px, 16.5vw, 240px);
-  line-height: 0.88;
-  letter-spacing: -0.02em;
-  color: var(--mn-cream);
-  opacity: 0.92;
-  white-space: nowrap;
-}
-.mn-giant-accent {
-  color: transparent;
-  -webkit-text-stroke: 1.5px rgba(245, 239, 226, 0.62);
+  justify-content: space-between;
+  gap: 14px;
+  flex: 1 1 auto;
 }
 
-/* 전경 9:16 릴스 프레임 (초대형 타이포 앞을 가로지름!) */
-.mn-hero-fore {
+/* 상단 3막 크로스페이드 헤드라인 */
+.mn-fan-copy-wrap {
   position: relative;
-  z-index: 5;
+  width: 100%;
+  max-width: 860px;
+  min-height: 124px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding-top: 6px;
+}
+.mn-fan-act {
+  grid-area: 1 / 1;
+  width: 100%;
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
+  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mn-fan-act.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.mn-fan-h1 {
+  font-size: clamp(24px, 3.4vw, 44px);
+  font-weight: 800;
+  line-height: 1.18;
+  letter-spacing: -0.03em;
+  color: var(--mn-cream);
+  margin-top: 8px;
+}
+.mn-fan-h1-accent {
+  color: var(--mn-accent);
+}
+
+/* 중앙 5장 3D 부채꼴 실사 릴스 스테이지 */
+.mn-fan-stage {
+  position: relative;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 410px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1600px;
+  perspective-origin: 50% 48%;
+}
+.mn-fan-deck {
+  position: relative;
+  width: 100%;
+  height: min(460px, 52dvh);
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
   will-change: transform;
 }
-.mn-hero-reel {
-  position: relative;
-  width: min(264px, 66vw, 31dvh);
+
+/* 부채꼴 좌우 4장 실사 릴스 카드 */
+.mn-fan-card {
+  position: absolute;
+  width: min(210px, 44vw, 24dvh);
   aspect-ratio: 9 / 16;
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(245, 239, 226, 0.34);
+  border: 1px solid rgba(245, 239, 226, 0.24);
   background: #14110e;
-  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.82), 0 0 0 1px rgba(245, 239, 226, 0.08) inset;
+  box-shadow: 0 32px 72px rgba(0, 0, 0, 0.78);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+  transition: border-color 0.2s ease, filter 0.2s ease;
+}
+.mn-fan-card:hover {
+  border-color: rgba(224, 122, 79, 0.85);
+  filter: brightness(1.08);
+}
+.mn-fan-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mn-fan-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(11, 10, 8, 0.12) 0%, rgba(11, 10, 8, 0.18) 54%, rgba(11, 10, 8, 0.88) 100%);
+}
+.mn-fan-meta {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mn-fan-meta span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  color: var(--mn-accent);
+  text-transform: uppercase;
+}
+.mn-fan-meta strong {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--mn-cream);
+  line-height: 1.25;
+}
+
+/* 기본 부채꼴(Fan-Shape) 3D 배치 (GSAP 스크롤 타임라인이 여기서 더 넓게/깊게 전개) */
+.mn-fan-l2 { z-index: 1; transform: translate3d(-345px, 42px, -140px) rotateY(24deg) rotateZ(-15deg) scale(0.84); opacity: 0.82; }
+.mn-fan-l1 { z-index: 2; transform: translate3d(-190px, 16px, -60px) rotateY(13deg) rotateZ(-7.5deg) scale(0.92); opacity: 0.94; }
+.mn-fan-r1 { z-index: 2; transform: translate3d(190px, 16px, -60px) rotateY(-13deg) rotateZ(7.5deg) scale(0.92); opacity: 0.94; }
+.mn-fan-r2 { z-index: 1; transform: translate3d(345px, 42px, -140px) rotateY(-24deg) rotateZ(15deg) scale(0.84); opacity: 0.82; }
+
+@media (max-width: 959px) {
+  .mn-fan-l2, .mn-fan-r2 { display: none; }
+  .mn-fan-l1 { transform: translate3d(-118px, 16px, -40px) rotateY(12deg) rotateZ(-9deg) scale(0.82); opacity: 0.78; }
+  .mn-fan-r1 { transform: translate3d(118px, 16px, -40px) rotateY(-12deg) rotateZ(9deg) scale(0.82); opacity: 0.78; }
+}
+@media (max-width: 479px) {
+  .mn-fan-l1 { transform: translate3d(-88px, 18px, -40px) rotateZ(-8deg) scale(0.76); }
+  .mn-fan-r1 { transform: translate3d(88px, 18px, -40px) rotateZ(8deg) scale(0.76); }
+}
+
+/* 중앙 마스터 9:16 릴스 프레임 */
+.mn-hero-reel {
+  position: relative;
+  z-index: 5;
+  width: min(244px, 58vw, 28.5dvh);
+  aspect-ratio: 9 / 16;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(245, 239, 226, 0.42);
+  background: #14110e;
+  box-shadow: 0 42px 96px rgba(0, 0, 0, 0.88), 0 0 42px rgba(224, 122, 79, 0.16), 0 0 0 1px rgba(245, 239, 226, 0.1) inset;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 14px;
+  padding: 13px;
   cursor: pointer;
   user-select: none;
+  will-change: transform, opacity;
 }
 .mn-reel-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
 .mn-reel-scrim { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(11,10,8,0.5) 0%, rgba(11,10,8,0.16) 42%, rgba(11,10,8,0.5) 72%, rgba(11,10,8,0.88) 100%); }
@@ -399,39 +453,54 @@ html, body {
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
 }
 
-/* 히어로 하단 선언문 & CTA & 빠른 업종 칩 */
-.mn-hero-bottom {
-  position: relative;
-  z-index: 10;
-  max-width: 1200px;
+/* 스크롤 2~3막에서 중앙 릴스 좌우에 떠오르는 시네마틱 HUD 카드 */
+.mn-side-hud {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 236px;
+  padding: 14px 16px;
+  background: rgba(16, 13, 10, 0.86);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(245, 239, 226, 0.16);
+  z-index: 8;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.mn-side-hud-left { left: max(16px, calc(50% - 455px)); }
+.mn-side-hud-right { right: max(16px, calc(50% - 455px)); }
+@media (max-width: 1023px) { .mn-side-hud { display: none; } }
+.mn-hud-bars { display: flex; gap: 4px; height: 5px; margin-top: 10px; }
+.mn-hud-bars span { background: var(--mn-accent); display: block; opacity: 0.85; }
+.mn-hud-bars span:nth-child(2) { background: var(--mn-cream); }
+.mn-hud-eq { display: flex; align-items: flex-end; gap: 4px; height: 18px; margin-top: 10px; }
+.mn-hud-eq i { width: 3px; height: 6px; background: var(--mn-accent); display: block; animation: mn-eq 0.75s ease-in-out infinite alternate; }
+.mn-hud-eq i:nth-child(2n) { animation-delay: 0.2s; }
+.mn-hud-eq i:nth-child(3n) { animation-delay: 0.42s; }
+
+/* 히어로 하단 업종 칩 & 스크롤 유도 */
+.mn-fan-bottom {
   width: 100%;
-  margin: 0 auto;
-  padding-top: 16px;
-  border-top: 1px solid var(--mn-line);
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  align-items: end;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 4px;
 }
-@media (min-width: 960px) {
-  .mn-hero-bottom {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 32px;
-    padding-left: 120px;
-    padding-right: 168px;
-  }
+.mn-scroll-cue {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: rgba(245, 239, 226, 0.52);
+  text-transform: uppercase;
 }
-.mn-ko-title { font-size: clamp(20px, 2.4vw, 28px); font-weight: 700; color: var(--mn-cream); letter-spacing: -0.025em; }
-.mn-ko-sub { font-size: 13px; color: var(--mn-muted); margin-top: 6px; line-height: 1.55; }
-.mn-hero-bottom-right { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
-@media (min-width: 960px) { .mn-hero-bottom-right { align-items: flex-end; } }
 .mn-quick-row {
-  display: flex; align-items: center; gap: 6px; max-width: 100%; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none;
+  display: flex; align-items: center; gap: 6px; max-width: 100%; overflow-x: auto; padding: 2px 4px; scrollbar-width: none;
 }
 .mn-quick-row::-webkit-scrollbar { display: none; }
 .mn-quick-chip {
   flex: 0 0 auto; height: 28px; padding: 0 10px; border-radius: 2px;
-  border: 1px solid var(--mn-line); background: rgba(22, 19, 16, 0.72);
+  border: 1px solid var(--mn-line); background: rgba(22, 19, 16, 0.78);
   color: var(--mn-muted); font-size: 11.5px; cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
