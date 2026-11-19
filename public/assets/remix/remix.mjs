@@ -1,4 +1,4 @@
-import {analyzeReference} from './analysis.mjs';
+import {analyzeReference, mediaEvent} from './analysis.mjs';
 
 const byId = id => document.getElementById(id);
 const preview = byId('preview');
@@ -6,12 +6,54 @@ const status = message => { byId('status').textContent = message; };
 let scenes = [], photos = [], analysis, photoVersion = 0;
 let playing = 0, selected = 0, savedUrl = '', exportId = '', busy = false;
 const photoAt = i => photos[i % photos.length];
+let activeVideo = null, audioContext, audioOutput;
+function haltMedia() {
+  activeVideo?.pause();
+  activeVideo = null;
+}
+function releaseMedia(items) {
+  for (const item of items) {
+    if (!item.file) continue;
+    item.pause();
+    item.audioNode?.disconnect();
+    const url = item.src;
+    item.removeAttribute('src');
+    item.load();
+    URL.revokeObjectURL(url);
+  }
+}
+function offsetFrames(index) {
+  let offset = 0;
+  for (let i = index - photos.length; i >= 0; i -= photos.length) offset += scenes[i].end - scenes[i].start;
+  return offset;
+}
+function startAudio() {
+  if (!photos.some(item=>item.file)) return;
+  const Context = window.AudioContext || window.webkitAudioContext;
+  if (!Context) throw Error('이 브라우저는 영상 소리 편집을 지원하지 않아요.');
+  audioContext ||= new Context();
+  return audioContext.resume();
+}
+function advanceMedia(index, seconds, onError) {
+  const item = photoAt(index);
+  const video = item?.file ? item : null;
+  if (video === activeVideo) return;
+  haltMedia();
+  if (!video) return;
+  activeVideo = video;
+  video.currentTime = (offsetFrames(index)/30 + Math.max(0,seconds-scenes[index].start/30)) % video.duration;
+  video.audioNode ||= audioContext.createMediaElementSource(video);
+  video.audioNode.disconnect();
+  video.audioNode.connect(audioOutput || audioContext.destination);
+  video.play().catch(error=>{ if (activeVideo===video && error.name!=='AbortError') onError(error); });
+}
 
 function resetDownload() {
   URL.revokeObjectURL(savedUrl); savedUrl = ''; exportId = '';
   byId('download').hidden = true; byId('download').removeAttribute('href');
 }
 function stopPreview() {
+  haltMedia();
   cancelAnimationFrame(playing); playing = 0;
   byId('play').textContent = '▶'; byId('play').setAttribute('aria-label','미리보기 재생');
 }
@@ -20,8 +62,9 @@ function paint(canvas, index, layer = 'all') {
   const photo = photoAt(index), caption = scenes[index]?.caption.trim();
   ctx.clearRect(0,0,w,h);
   if (layer !== 'caption' && photo) {
-    const scale = Math.max(w/photo.width,h/photo.height);
-    ctx.drawImage(photo,(w-photo.width*scale)/2,(h-photo.height*scale)/2,photo.width*scale,photo.height*scale);
+    const sw = photo.videoWidth || photo.width, sh = photo.videoHeight || photo.height;
+    const scale = Math.max(w/sw,h/sh);
+    ctx.drawImage(photo,(w-sw*scale)/2,(h-sh*scale)/2,sw*scale,sh*scale);
   }
   if (layer === 'photo' || !caption) return;
   ctx.font = '700 '+Math.round(w*.06)+'px Pretendard, sans-serif';
@@ -55,7 +98,7 @@ function showScenes() {
     label.textContent = (i+1)+'번째 장면 · '+(scene.start/30).toFixed(1)+'–'+(scene.end/30).toFixed(1)+'초';
     const input = document.createElement('input'); input.className = 'edit-input'; input.maxLength = 56;
     input.placeholder = '화면에 넣을 문구 (선택)'; input.value = scene.caption;
-    input.addEventListener('focus',() => {stopPreview(); selected = i; showFrame();});
+    input.addEventListener('focus',() => {stopPreview(); selected = i; const item = photoAt(i); if (item?.file) item.currentTime = (offsetFrames(i)/30) % item.duration; showFrame();});
     input.addEventListener('input',() => {scene.caption = input.value; resetDownload(); showFrame();});
     label.append(input); row.append(img,label); return row;
   }));
@@ -95,7 +138,7 @@ function startReference() {
   sourceId = ''; byId('referenceStory').hidden = true; byId('sourceDetails').open = false; byId('adaptChange').value = '';
   byId('urlSubmit').disabled = false; byId('loginHelp').hidden = true;
   stopPreview(); resetDownload(); selected = 0; photoVersion++;
-  photos = []; scenes = []; byId('photos').value = ''; byId('arrange').hidden = true; showScenes();
+  releaseMedia(photos); photos = []; scenes = []; byId('photos').value = ''; byId('arrange').hidden = true; showScenes();
   return analysis;
 }
 async function privateRequest(action, signal, data) {
@@ -215,7 +258,7 @@ async function readSelectedReference() {
     const next = await analyzeReference(file, controller.signal, pct => status('장면 전환을 찾고 있어요 · '+pct+'%'));
     if (controller !== analysis) return;
     scenes = next; byId('arrange').hidden = false; showScenes();
-    status(scenes.length+'개 장면을 찾았어요. 내 사진을 선택해 주세요.');
+    status(scenes.length+'개 장면을 찾았어요. 내 영상이나 사진을 선택해 주세요.');
   } catch (err) { if (!controller.signal.aborted) status(err.message); }
   finally { if (controller === analysis) input.value = ''; }
 }
@@ -239,22 +282,38 @@ async function openPhoto(file) {
     return frame;
   } finally { URL.revokeObjectURL(url); }
 }
+async function openMedia(file, signal) {
+  if (!file.type.startsWith('video/') && !/\.(mp4|mov|webm|m4v)$/i.test(file.name)) return openPhoto(file);
+  const video = document.createElement('video');
+  video.file = file;
+  video.playsInline = true;
+  video.preload = 'auto';
+  video.loop = true;
+  try {
+    await mediaEvent(video,'loadeddata',()=>{video.src=URL.createObjectURL(file);},signal);
+    if (!Number.isFinite(video.duration) || video.duration<=0) throw Error('재생 길이를 읽을 수 없는 영상이에요.');
+    const thumb = document.createElement('canvas'); thumb.width=60; thumb.height=106;
+    thumb.getContext('2d').drawImage(video,0,0,60,106);
+    video.thumbnail = thumb.toDataURL('image/jpeg',.75);
+    video.addEventListener('seeked',()=>{if (!playing && !busy && photoAt(selected)===video) showFrame();});
+    return video;
+  } catch (error) {releaseMedia([video]); throw error;}
+}
 byId('photos').addEventListener('change',async e => {
   const files = Array.from(e.target.files); if (!files.length) return;
   const version = ++photoVersion; stopPreview(); resetDownload();
   const count = Math.min(10, scenes.length, files.length);
-  byId('actions').hidden = true; status('사진을 배치하고 있어요…');
+  byId('actions').hidden = true; status('선택한 파일을 열고 있어요…');
+  const next = [];
   try {
-    const next = [];
     for (const file of files.slice(0,count)) {
-      next.push(await openPhoto(file));
+      next.push(await openMedia(file,analysis.signal));
       if (version !== photoVersion) return;
     }
-    photos = next; selected = 0; showScenes();
-    status(photos.length+'장의 사진을 '+scenes.length+'개 장면에 배치했어요.'+
-      (photos.length < scenes.length ? ' 사진은 순서대로 반복해요.' : files.length > count ? ' 앞에서 '+count+'장을 사용했어요.' : ''));
-  } catch { if (version === photoVersion) {showScenes(); status('열리지 않는 사진이 있어요. JPG나 PNG로 다시 골라 주세요.');} }
-  finally {if (version === photoVersion) e.target.value = '';}
+    releaseMedia(photos); photos = next; selected = 0; showScenes();
+    status('선택한 파일 '+count+'개를 '+scenes.length+'개 장면에 배치했어요.' + (files.length > count ? ' 앞에서 '+count+'개를 사용했어요.' : ''));
+  } catch { if (version === photoVersion) {showScenes(); status('파일을 열지 못했어요. 이 기기에서 재생되는 영상이나 사진을 골라 주세요.');} }
+  finally {if (photos !== next) releaseMedia(next); if (version === photoVersion) e.target.value = '';}
 });
 function indexAt(seconds) {
   const i = scenes.findIndex(scene => seconds*30 < scene.end);
@@ -262,10 +321,12 @@ function indexAt(seconds) {
 }
 byId('play').addEventListener('click',() => {
   if (playing) {stopPreview(); return;}
+  const fail = () => {stopPreview(); status('영상 재생을 시작하지 못했어요. 다시 눌러 주세요.');};
+  try {startAudio()?.catch(fail);} catch {fail(); return;}
   const start = performance.now(); byId('play').textContent = 'Ⅱ'; byId('play').setAttribute('aria-label','일시정지');
   const tick = now => {
     const seconds = (now-start)/1000;
-    selected = indexAt(seconds); showFrame();
+    selected = indexAt(seconds); advanceMedia(selected,seconds,fail); showFrame();
     if (seconds*30 >= scenes.at(-1).end) stopPreview();
     else playing = requestAnimationFrame(tick);
   };
@@ -277,6 +338,10 @@ async function recordMp4(mime) {
   const stream = canvas.captureStream(30);
   let recorder, raf, timer, hidden;
   try {
+    if (photos.some(item=>item.file)) {
+      audioOutput = audioContext.createMediaStreamDestination();
+      for (const track of audioOutput.stream.getAudioTracks()) stream.addTrack(track);
+    }
     recorder = new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6000000});
     const duration = scenes.at(-1).end/30;
     return await new Promise((resolve,reject) => {
@@ -287,16 +352,20 @@ async function recordMp4(mime) {
       hidden = () => {if(document.hidden) reject(Error('저장하는 동안 이 화면을 열어 주세요.'));};
       document.addEventListener('visibilitychange',hidden);
       timer = setTimeout(() => reject(Error('영상 저장 시간이 초과됐어요.')), (duration+15)*1000);
+      advanceMedia(0,0,reject);
       recorder.start(300);
       const start = performance.now();
       const tick = now => {
         const seconds = (now-start)/1000;
-        paint(canvas,indexAt(seconds));
+        const index = indexAt(seconds);
+        advanceMedia(index,seconds,reject);
+        paint(canvas,index);
         if (seconds >= duration) recorder.stop(); else raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);
     });
   } finally {
+    haltMedia(); audioOutput?.disconnect(); audioOutput = null;
     cancelAnimationFrame(raf); clearTimeout(timer);
     if (hidden) document.removeEventListener('visibilitychange',hidden);
     if (recorder?.state === 'recording') recorder.stop();
@@ -311,13 +380,14 @@ async function save(kind) {
     if (kind === 'project') {
       status('편집 프로젝트를 준비하고 있어요…');
       const {projectZip} = await import('./project.mjs');
-      const zip = await projectZip(scenes,paint);
+      const zip = await projectZip(scenes,paint,photos,offsetFrames);
       const link = document.createElement('a'); link.href = URL.createObjectURL(zip);
       link.download = '오토릴스메이커-Hypit.zip'; document.body.append(link); link.click(); link.remove();
       setTimeout(() => URL.revokeObjectURL(link.href),60000); status('프로젝트 파일이 준비됐어요.'); return;
     }
     const mime = ['video/mp4;codecs=avc1.42E01E','video/mp4'].find(type => window.MediaRecorder?.isTypeSupported(type));
     if (!mime || !HTMLCanvasElement.prototype.captureStream) throw Error('이 브라우저는 MP4 저장을 지원하지 않아요. Hypit 프로젝트로 저장할 수 있어요.');
+    await startAudio();
     status('이용권을 확인하고 있어요…'); await arCheckShortsAccess();
     status('MP4를 만드는 동안 화면을 열어 주세요.');
     const blob = await recordMp4(mime);

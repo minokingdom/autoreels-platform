@@ -1,4 +1,4 @@
-function mediaEvent(video, name, start, signal) {
+export function mediaEvent(video, name, start, signal) {
   return new Promise((resolve, reject) => {
     signal.throwIfAborted();
     const listeners = new AbortController();
