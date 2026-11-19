@@ -784,11 +784,20 @@ async function handler(req, res) {
       discardedCard = true;
     }
   }
-  const angles = isPersonal ? PERSONAL_SCRIPT_ANGLES : SCRIPT_ANGLES;
   const enteredVehicle = typeof body.vehicle === 'string' ? body.vehicle.trim() : '';
   const productLocked = !isPersonal && body.vehicleLocked === true && Boolean(enteredVehicle);
   const topic = body.topic && typeof body.topic === 'object' ? body.topic : null;
   const topicOnly = Boolean(topic && !productLocked && (topic.origin === 'daily-keyword' || discardedCard));
+  const angles = topicOnly ? [
+    {id:'question', label:'질문과 답', guide:'첫 질문에 끝에서 답하기'},
+    {id:'scene', label:'일상 장면', guide:'구체적인 상황에서 선택으로 이어가기'},
+    {id:'practice', label:'실천 제안', guide:'시청자가 해 볼 한 가지 행동을 제안하기'}
+  ] : isPersonal ? PERSONAL_SCRIPT_ANGLES : SCRIPT_ANGLES;
+  let verifiedIssue;
+  if (topic?.origin === 'daily-keyword') {
+    const daily = require('../public/daily-keywords.json');
+    verifiedIssue = [...(daily.issues || []), ...(daily.previousIssues || [])].find(item => item.term === topic.title);
+  }
   const vehicleLocked = isAutoReq && productLocked;
   const currentVehicle = enteredVehicle || (isAutoReq ? '2026 쏘렌토 하이브리드' : String(body.topic?.title || prompt || body.industryInfo?.product || '').slice(0, 36));
   const requestedDiscountNum = Number(body.discountNum);
@@ -850,8 +859,17 @@ async function handler(req, res) {
   let fallbackVariants;
   if (topicOnly) {
     const title = cut(topic.title || prompt, 36);
-    const parts = [title, '어떤 내용이 알려졌을까요?', '확인된 사실부터 살펴봐요', '자세한 내용은 출처를 확인하세요'];
-    const lines = Array.from({length:cutCount}, (_, i) => parts[i] || '');
+    const middle = [
+      '이 얘기를 친구에게 어떻게 전할까요?',
+      verifiedIssue ? `먼저 ${verifiedIssue.publisher}의 원문을 열어 보세요.` : '먼저 처음 올라온 글을 찾아보세요.',
+      '제목에서 궁금했던 단어 하나를 골라요.',
+      '그 단어가 나온 문장을 읽어 보세요.',
+      '앞뒤 문장까지 보면 뜻이 달라질 수 있어요.',
+      '언제 나온 이야기인지도 확인해요.',
+      '내가 덧붙인 해석은 따로 구분해요.',
+      '글에서 직접 확인한 문장만 남겨요.'
+    ];
+    const lines = [title, ...middle.slice(0, cutCount - 2), '친구에게는 확인한 한 줄과 원문을 함께 보내요.'];
     fallbackVariants = angles.map(() => ({
       vehicle:title, hook:title, cutCaptions:lines, ttsLines:lines, themeId:'royal', discount:'', discountNum:0,
       bullets:[], kakaoChat:[], ctaKeyword:'', ctaBanner:'', scenePlan:lines.map((_, i) => ({cut:i+1,widget:'LOWER_THIRD',pos:'bottom',cam:i%4}))
@@ -960,7 +978,7 @@ JSON 스키마:
     const storeLabel = isOther ? (dealerName || '') : [dealerName, dealerTitle].filter(Boolean).join(' ');
     // 가게 이름이 없을 때 부를 말: 업종 장소(병원·매장·학원 등)
     const placeWord = `저희 ${String((body.industryInfo && body.industryInfo.place) || '가게').slice(0, 10)}`;
-    const storyRule = topicOnly ? `\n[이슈 대본] 선택한 키워드 "${topicTitle}"를 주제로 작성하세요. 출처 표시 "${topicWhy}" 외에 확인되지 않은 사건·인물·결과를 만들어내지 마세요. 매장 홍보나 할인, 문의 유도 없이 키워드가 뜻하는 내용에 집중하세요.` : topic ? `
+    const storyRule = topic ? `
 
 [오늘의 주제로 이야기 잇기 — 가장 중요]
 오늘의 주제는 "${topicTitle}"(${topicWhy})입니다. 대본은 하나의 이야기로 이어져야 합니다:
@@ -976,7 +994,13 @@ JSON 스키마:
     const enteredProductRule = productLocked
       ? '\n[작성 기준] 직접 확인한 상품과 혜택을 모든 대본의 기준으로 사용하세요. 주제는 이야기의 계기로만 쓰세요. 제공하지 않은 판매 조건은 넣지 마세요.'
       : '';
-    const systemWithAngles = topicOnly ? `한국어 이슈 릴스 작가입니다. JSON으로만 작성하세요. variants의 각 대본은 vehicle(키워드), hook, cutCaptions와 ttsLines(각각 ${cutCount}개), discount(""), bullets([])를 포함합니다.${anglesRule}${storyRule}${excludeRule}` : isPersonal ? systemInstruction + anglesRule : `${systemInstruction}${anglesRule}${storyRule}${HUMAN_TONE_RULES}${specialtyRule}${enteredProductRule}`;
+    const issueBrief = topicOnly ? `한국어 릴스 대본을 작성하세요. 시청자는 아래 업종의 손님 또는 해당 활동에 관심 있는 사람입니다.
+한 편에 한 사람, 한 장면, 한 가지 선택만 담으세요. 첫 컷에서 질문이나 고민을 열고, 확인된 사실 하나가 왜 그 사람의 일상과 관계있는지 보여 주세요. 이어서 그 사람이 할 수 있는 행동과 그 이유를 말하고, 마지막 컷에서 처음의 질문에 직접 답하세요.
+가게 손님이 등장할 때는 가상의 상황임이 분명하게 제안형으로 쓰세요. 호프집이면 성인 손님의 관점에서 쓰세요. 업종과 접점이 약하면 매장 방문을 억지로 권하지 말고 그 손님이 일상에서 실제로 해 볼 말이나 선택으로 닫으세요.
+입력 자료의 기사 제목이 증명하는 범위까지만 사건을 언급하세요. 논란·우려를 적발 사실로 바꾸거나, 숫자·전문가 발언·정책·매장 혜택을 만들어 내지 마세요. 날짜·언론사 이름을 읽으며 컷을 채우지 마세요.
+마지막에 '윤리 의식이 필요합니다', '대책이 시급합니다'처럼 책임 주체와 행동이 없는 결론을 쓰지 마세요. 컷을 이어 읽었을 때 같은 말을 반복하면 그 컷을 장면·이유·실천 중 빠진 내용으로 고치세요.
+세 대본의 순서는 ${angles.map(a => a.guide).join(' / ')}입니다. {"variants":[...]} JSON으로만 출력하세요. 각 대본에 vehicle(키워드), hook, cutCaptions와 ttsLines(각각 정확히 ${cutCount}개), discount(""), bullets([])를 포함하세요. 각 컷의 자막과 성우 문장은 같은 의미, 한 호흡으로 쓰세요.${excludeRule}` : '';
+    const systemWithAngles = topicOnly ? issueBrief : isPersonal ? systemInstruction + anglesRule : `${systemInstruction}${anglesRule}${storyRule}${HUMAN_TONE_RULES}${specialtyRule}${enteredProductRule}`;
 
     const speaker = [dealerBranch, dealerName, dealerTitle].filter(Boolean).join(' ');
     const speakerLine = speaker
@@ -986,8 +1010,11 @@ JSON 스키마:
     const userMessageBase = isPersonal ? `[역할]: ${JSON.stringify(specialty || '개인')}\n[입력 상황]: ${JSON.stringify(prompt || personalSubject)}` : isOther ? `[입력 상황]: "${prompt || `${currentVehicle} 소개`}"
 ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${body.discount || ''}`}` : `[카마스터 입력 상황]: "${prompt || `${currentVehicle} ${productLocked ? '소개' : '당월 특별 프로모션'}`}"
 [담당 카마스터]: ${dealerBranch} ${dealerName} ${dealerTitle}${dealerPromo ? ` (사은품: ${dealerPromo})` : ' (사은품·혜택은 입력하지 않음 — 지어내지 말 것)'}`;
+    const issueEvidence = verifiedIssue ? '[확인된 자료] ' + JSON.stringify({date:verifiedIssue.day, source:verifiedIssue.publisher, kind:verifiedIssue.kind, title:verifiedIssue.headline || verifiedIssue.term}) : '';
     const userMessage = [
       topicOnly ? `[입력 주제]: ${JSON.stringify(prompt)}` : userMessageBase,
+      topicOnly ? '[시청자 맥락] ' + JSON.stringify({industry:I?.name || body.industry, specialty}) : '',
+      issueEvidence,
       topic ? `[오늘의 주제]: ${topicTitle} — ${topicWhy}` : '',
       productLocked ? `[직접 입력한 혜택]: ${enteredOffer || '제공된 판매 조건 없음'}` : '',
       explicitVehicle && !topicOnly ? `[지정 ${isOther ? I.product : '차량'}]: ${explicitVehicle}. 모든 대본의 제목, 자막, 성우 대사에 이 대상을 유지하고 제공되지 않은 판매 조건은 추가하지 마세요.` : ''

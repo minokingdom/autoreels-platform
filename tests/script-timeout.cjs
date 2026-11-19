@@ -99,6 +99,19 @@ const res={statusCode:200,status(n){this.statusCode=n;return this},json(b){this.
  assert.doesNotMatch(JSON.stringify(res.body.variants),/자동차회사|엔진오일|쏘렌토|이전 딜러|이전 자동차 케어/);
  assert.ok(res.body.variants.every(v=>v.vehicle==='AI 부정행위 논란' && v.discount===''));
  ctx.fetch=priorFetch;
+ const verifiedRequest = {...issueRequest, body:{...issueRequest.body,cutCount:10,specialty:'호프집',
+   topic:{title:'AI 부정행위 논란',origin:'daily-keyword'}}};
+ const originalRequire = ctx.require;
+ ctx.require = n => n === '../public/daily-keywords.json' ? {previousIssues:[{term:'AI 부정행위 논란',publisher:'연합뉴스',day:'2026-11-19',headline:'시험 마친 수험생들, 끝나서 후련'}]} : originalRequire(n);
+ await moduleObj.exports(verifiedRequest,res);
+ assert.match(input,/시청자 맥락.*호프집/);
+ assert.match(input,/확인된 자료.*시험 마친 수험생들, 끝나서 후련/);
+ assert.match(input,/마지막 컷에서 처음의 질문에 직접 답/);
+ ctx.fetch=timedOutFetch;
+ await moduleObj.exports(verifiedRequest,res);
+ assert.ok(res.body.variants.every(v=>v.ttsLines.length===10 && v.ttsLines.every(Boolean)));
+ ctx.require=originalRequire;
+ ctx.fetch=priorFetch;
 
  const personalRequest = {
   ...request, body:{prompt:'경기 전 루틴을 기록',industry:'personal',specialty:'야구선수',vehicle:'테스트 상품',

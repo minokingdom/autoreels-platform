@@ -104,7 +104,7 @@ def public_issues(feeds, collected):
                 continue
             labels = [term for term, pattern in ISSUES.items() if re.search(pattern, title, re.I)]
             for term in labels:
-                matches.setdefault(term, {}).setdefault(publisher, []).append((published, url))
+                matches.setdefault(term, {}).setdefault(publisher, []).append((published, url, title))
             if not labels:
                 # Compare complete same-day society headlines across independent
                 # outlets so that new stories can surface without a preset label.
@@ -118,9 +118,9 @@ def public_issues(feeds, collected):
         # coverage by two outlets for broader seasonal and social topics.
         if len(outlets) < 2 and term != "AI 부정행위 논란":
             continue
-        published, url, publisher = max((date, link, name) for name, rows in outlets.items() for date, link in rows)
+        published, url, publisher, headline = max((date, link, name, title) for name, rows in outlets.items() for date, link, title in rows)
         issues.append({"term": term, "day": day, "kind": "보도", "publisher": publisher,
-                       "url": url, "publishedAt": published.isoformat()})
+                       "url": url, "publishedAt": published.isoformat(), "headline": headline})
     used = set()
     for published, publisher, title, url, words in sorted(other_stories, key=lambda row: row[0], reverse=True):
         if url in used or len(issues) >= 8:

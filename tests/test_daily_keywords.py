@@ -18,6 +18,7 @@ class DailyKeywordsTest(unittest.TestCase):
         self.assertEqual(issues[0]["publisher"], "교육부")
         self.assertEqual([i["term"] for i in issues[1:]], ["AI 부정행위 논란", "광역 환승 정기권"])
         self.assertEqual(issues[-1]["headline"], headline)
+        self.assertEqual(issues[1]["headline"], "수능 AI 부정행위 방지 대책")
         tomorrow = datetime.fromisoformat("2026-11-20T00:01:00+09:00")
         self.assertEqual(public_issues({"연합뉴스": yna, "SBS": sbs}, tomorrow), [])
 
