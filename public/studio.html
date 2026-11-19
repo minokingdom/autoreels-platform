@@ -13,13 +13,13 @@
   </script>
   <style>html.ar-mobile-shell body{display:none!important}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>AutoReelsMaker — 누구나 쉽게 만드는 릴스·쇼츠</title>
+  <title>오토릴스메이커 — 누구나 쉽게 만드는 릴스·쇼츠</title>
   <meta name="description" content="사진과 아이디어만 준비하세요. 주제 추천부터 대본, 성우, 영상 제작까지 한 번에." />
   <meta name="theme-color" content="#0e1015" />
   <link rel="canonical" href="https://autoreels-studio.vercel.app/" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="AutoReelsMaker" />
+  <meta property="og:site_name" content="오토릴스메이커" />
   <meta property="og:locale" content="ko_KR" />
   <meta property="og:url" content="https://autoreels-studio.vercel.app/" />
   <meta property="og:title" content="AutoReelsMaker - 오토릴스메이커" />
@@ -42,7 +42,7 @@
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
   <link rel="stylesheet" href="/assets/app/app.css?v=20261119-topic-profile" />
-  <link rel="stylesheet" href="/assets/app/splash.css" />
+  <link rel="stylesheet" href="/assets/app/splash.css?v=ko-wordmark" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
     (function () {
@@ -61,7 +61,7 @@
 </head>
 <body class="antialiased px-4 py-6 md:px-8 md:py-8 pb-24 md:pb-12">
   <!-- 시작 스플래시 (코덱스 H 시안, 앱 색 톤): 페이지를 열자마자 보여 앱 로딩 시간을 가림. 준비되면 12-account-billing-sns.js 가 닫음. 누르면 바로 닫힘 -->
-  <div id="arSplashIntro" onclick="if (window.dismissAutoReelsSplash) dismissAutoReelsSplash()" class="ar-play fixed inset-0 z-[100] flex items-center justify-center px-5 select-none transition-opacity duration-500 cursor-pointer" style="opacity:1;" role="status" aria-label="AutoReelsMaker 시작 화면">
+  <div id="arSplashIntro" onclick="if (window.dismissAutoReelsSplash) dismissAutoReelsSplash()" class="ar-play fixed inset-0 z-[100] flex items-center justify-center px-5 select-none transition-opacity duration-500 cursor-pointer" style="opacity:1;" role="status" aria-label="오토릴스메이커 시작 화면">
     <div class="sp-corner" aria-hidden="true"></div>
     <div class="sp-corner second" aria-hidden="true"></div>
     <div class="sp-reg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -73,7 +73,7 @@
         <div class="sp-piece sp-wedge"></div>
       </div>
       <div class="sp-type">
-        <div class="sp-word">AutoReelsMaker</div>
+        <div class="sp-word">오토릴스메이커</div>
         <p class="sp-line">프로모션 릴스 스튜디오</p>
       </div>
     </div>
@@ -91,7 +91,7 @@
     <nav class="flex items-center justify-between gap-4 py-2 border-b border-[var(--border)]">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-[8px] bg-[#232325] border border-[var(--border-strong)] flex items-center justify-center font-mono text-xs font-semibold text-[#ededed]">AR</div>
-        <span class="text-[16px] font-semibold text-[#ededed] tracking-tight">AutoReelsMaker</span>
+        <span class="text-[16px] font-semibold text-[#ededed] tracking-tight">오토릴스메이커</span>
         <span class="hidden sm:inline-block px-2 py-0.5 rounded-full bg-[#18181b] border border-[var(--border)] text-[11px] text-[#a1a1a6]">릴스·쇼츠 제작 스튜디오</span>
       </div>
       <div class="flex items-center gap-2 sm:gap-3 text-[13px]">
@@ -289,7 +289,7 @@
           </div>
           <div class="flex items-baseline gap-2.5 flex-wrap">
             <h1 class="studio-brand-name leading-none">
-              AutoReelsMaker
+              오토릴스메이커
             </h1>
             <button type="button" onclick="openLandingView()" class="text-[11px] text-[#85858b] hover:text-[#ededed] underline underline-offset-2 cursor-pointer">소개</button>
           </div>
@@ -1452,7 +1452,7 @@
     <!-- 하단 푸터 -->
     <footer class="mt-12 pt-6 border-t border-[var(--border)] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#6e6e73]">
       <div>
-        © 2026 AutoReelsMaker Studio
+        © 2026 오토릴스메이커 Studio
       </div>
     </footer>
 
@@ -1946,7 +1946,7 @@
     <div class="ar-footer-top">
       <div class="ar-footer-brand">
         <span class="ar-footer-brand-badge">AR</span>
-        <span style="color:#d4d4d8;font-weight:600;">AutoReelsMaker</span>
+        <span style="color:#d4d4d8;font-weight:600;">오토릴스메이커</span>
         <span style="color:#52525b;">·</span>
         <span>업종 맞춤 릴스·쇼츠 스튜디오</span>
       </div>
@@ -2116,9 +2116,9 @@
 
 <script>
     if (window.__AR_MOBILE_SHELL) {
-      document.head.innerHTML = '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AutoReelsMaker — 모바일 보기 (390×844)</title><style>*{box-sizing:border-box}html,body{margin:0;height:100%;background:#09090b;color:#ededed;font-family:Pretendard,system-ui,sans-serif;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px}.bar{display:flex;align-items:center;justify-content:space-between;width:394px;max-width:100%;font-size:12px;color:#a1a1a6}.bar a{color:#ededed;text-decoration:none;padding:5px 10px;border-radius:8px;background:#232325;border:1px solid rgba(255,255,255,.14)}.frame{width:394px;height:min(848px,calc(100dvh - 54px));border-radius:26px;overflow:hidden;border:2px solid rgba(255,255,255,.16);box-shadow:0 24px 64px rgba(0,0,0,.75);background:#0f0f10}iframe{width:100%;height:100%;border:0;display:block}</style>';
+      document.head.innerHTML = '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>오토릴스메이커 — 모바일 보기 (390×844)</title><style>*{box-sizing:border-box}html,body{margin:0;height:100%;background:#09090b;color:#ededed;font-family:Pretendard,system-ui,sans-serif;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px}.bar{display:flex;align-items:center;justify-content:space-between;width:394px;max-width:100%;font-size:12px;color:#a1a1a6}.bar a{color:#ededed;text-decoration:none;padding:5px 10px;border-radius:8px;background:#232325;border:1px solid rgba(255,255,255,.14)}.frame{width:394px;height:min(848px,calc(100dvh - 54px));border-radius:26px;overflow:hidden;border:2px solid rgba(255,255,255,.16);box-shadow:0 24px 64px rgba(0,0,0,.75);background:#0f0f10}iframe{width:100%;height:100%;border:0;display:block}</style>';
       document.body.className = '';
-      document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117r" title="AutoReelsMaker 모바일 스튜디오"></iframe></div>';
+      document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117r" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
       document.write('<script src="/assets/app/app.js?v=20261119-quick-color"><\/script>');
     }
