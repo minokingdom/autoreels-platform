@@ -45,5 +45,18 @@ try{
   await input.fill('https://www.youtube.com/shorts/Iit7ZaSLRTw');await submit.tap();
   await page.getByText(/공유 링크는 휴대폰 브라우저에/).waitFor();
   assert.ok(await bar.isHidden());assert.ok(await submit.isEnabled());assert.deepEqual(calls,[]);
+  for(const platform of ['Android','iOS']){
+    const native=await browser.newPage({userAgent:'Mobile AutoReelsMaker'+platform+'/1'});
+    await native.goto(host+'/assets/remix/index.html');
+    await native.locator('#referenceUrl').fill('https://www.youtube.com/shorts/Iit7ZaSLRTw');
+    const picking=native.waitForEvent('filechooser');
+    await native.locator('#urlSubmit').click();
+    const chooser=await picking;
+    assert.equal(await chooser.element().getAttribute('data-video-id'),'Iit7ZaSLRTw');
+    await chooser.setFiles({name:'reference.webm',mimeType:'video/webm',buffer:fixture});
+    await native.locator('#sourceTopic').waitFor({timeout:45000});
+    assert.match(await native.locator('#sourceLines').textContent(),/김치찌개/);
+    await native.close();
+  }
   console.log('직접 영상 링크, 모바일 로딩바, 실제 한국어 OCR, 대본 변경, 복구, 공유 링크 안내, 서버 작업 요청 0건');
 }finally{release();await browser.close();server.close();}

@@ -32,7 +32,9 @@ export async function analyzeReference(file, signal, progress) {
     const ctx = canvas.getContext('2d', {willReadFrequently:true});
     let previous;
     const samples = [];
-    for (let t = 0; t < duration - .015; t += .25) {
+    const step = Math.max(.25,duration/110);
+    let lastPct = -1;
+    for (let t = 0; t < duration - .015; t += step) {
       if (t) await mediaEvent(video, 'seeked', () => { video.currentTime = t; }, signal);
       ctx.drawImage(video, 0, 0, 32, 32);
       const pixels = ctx.getImageData(0, 0, 32, 32).data;
@@ -44,7 +46,8 @@ export async function analyzeReference(file, signal, progress) {
         samples.push({t, score:diff / (32 * 32 * 3)});
       }
       previous = pixels;
-      if (Number.isInteger(t)) progress(Math.floor(100 * t / duration));
+      const pct=Math.floor(100*t/duration);
+      if(pct!==lastPct){progress(pct);lastPct=pct;}
     }
     const median = samples.map(s => s.score).sort((a,b) => a-b)[Math.floor(samples.length/2)] || 0;
     const peaks = samples.filter((s,i) => s.score >= Math.max(24,median * 2.1) && s.score >= (samples[i-1]?.score || 0) && s.score > (samples[i+1]?.score || 0));
