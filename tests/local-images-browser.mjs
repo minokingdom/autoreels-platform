@@ -151,7 +151,7 @@ try {
   ]);
 
   const openProduct=cloud.locator('#studioPanel_topic button').filter({has:cloud.locator('.ar-product-cover')});
-  assert.equal(await openProduct.locator('.bgm-now-go').textContent(),'확인 ›');
+  assert.equal(await openProduct.locator('.bgm-now-go').textContent(),'내 상품 확인 ›');
   await openProduct.click();
   const product=cloud.locator('#productSheet');
   assert.equal(await product.locator('#productExamples').isVisible(),false);
@@ -205,12 +205,13 @@ try {
     arKeywordDay = ''; await arLoadDailyKeywords();
   });
   const daily = cloud.locator('#dailyKeywords');
-  await daily.locator('summary').click();
+  assert.equal(await daily.isVisible(),true);
+  assert.equal(await daily.evaluate(el=>el.compareDocumentPosition(document.querySelector('#studioPanel_topic [data-business-product]')) & Node.DOCUMENT_POSITION_FOLLOWING),4);
   assert.equal(await daily.getByRole('button').count(),1);
   await daily.getByRole('button',{name:/생맥주.*200\+/}).click();
   assert.equal(await cloud.locator('#topicCustomInput').inputValue(),'생맥주');
   await cloud.evaluate(async () => { setIndustry('auto'); await arLoadDailyKeywords(); });
-  assert.equal(await daily.isHidden(),true);
+  assert.equal(await daily.getByRole('button').count(),0);
   await cloud.evaluate(async () => { setIndustry('restaurant'); await arLoadDailyKeywords(); });
   const refreshDaily = () => cloud.evaluate(async () => { arKeywordDay = ''; await arLoadDailyKeywords(); });
   const day = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date(collectedAt));
@@ -219,18 +220,26 @@ try {
     {term:'시험과 AI 부정행위 논란', day, kind:'보도', publisher:'연합뉴스', url:'https://www.yna.co.kr/view/test', publishedAt:collectedAt}
   ];
   await refreshDaily();
-  await daily.locator('summary').click();
   assert.equal(await daily.getByRole('button').count(),3);
   await daily.getByRole('button',{name:/시험과 AI 부정행위 논란/}).click();
   assert.equal(await cloud.locator('#topicCustomInput').inputValue(),'시험과 AI 부정행위 논란');
   assert.equal(await daily.getByRole('link',{name:'수능 출처 · 교육부'}).count(),1);
   feed.collectedAt = old;
+  const yesterday = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date(old));
+  feed.issues = feed.issues.map(issue=>({...issue,day:yesterday,publishedAt:old}));
   await refreshDaily();
-  assert.equal(await daily.isHidden(),true);
+  assert.equal(await daily.getByRole('button').count(),2);
+  assert.match(await daily.locator('h3').textContent(),new RegExp(yesterday));
+  assert.equal(await daily.getByRole('button',{name:/생맥주/}).count(),0);
+  feed.previousIssues = feed.issues;
+  feed.issues = [];
   feed.collectedAt = collectedAt;
+  feed.items = [];
+  await refreshDaily();
+  assert.equal(await daily.getByRole('button').count(),2);
   feed.source = 'unverified';
   await refreshDaily();
-  assert.equal(await daily.isHidden(),true);
+  assert.equal(await daily.getByRole('button').count(),0);
   assert.equal(await cloud.locator('#storeTopicHeading').textContent(),'우리 가게 추천 주제');
  }
  assert.deepEqual(errors,[]);console.log('local image browser OK');

@@ -41,7 +41,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-public-issues" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261120-visible-issues" />
   <link rel="stylesheet" href="/assets/app/splash.css?v=studio-return" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -752,20 +752,20 @@
             <div class="text-[16px] font-semibold text-[#ededed]">오늘은 어떤 내용으로 올릴까요?</div>
             <p id="topicDateLine" class="text-[12px] text-[#85858b] mt-1"></p>
           </div>
+          <section id="dailyKeywords" class="studio-sub daily-keywords" aria-labelledby="dailyKeywordHeading">
+            <h3 id="dailyKeywordHeading">오늘의 키워드</h3>
+            <p class="daily-keyword-status" role="status">키워드를 불러오는 중…</p>
+            <div class="daily-keyword-list"></div>
+          </section>
           <button type="button" class="bgm-now" data-business-product onclick="arOpenProductSheet()">
             <span class="bgm-cover ar-product-cover"><img class="ar-product-photo" alt="" /></span>
             <span class="bgm-now-txt"><strong class="ar-product-name">내 상품</strong><small class="ar-product-sub">무엇을 알릴지 정해 두면 대본에 들어가요</small></span>
-            <span class="bgm-now-go">확인 ›</span>
+            <span class="bgm-now-go">내 상품 확인 ›</span>
           </button>
           <div class="ig-search-row">
             <input id="topicCustomInput" type="text" placeholder="오늘 올릴 내용 적기 (예: 신메뉴 출시, 오늘만 할인)" onkeydown="if(event.key==='Enter'){event.preventDefault();arPickCustomTopic();}" class="studio-input" />
             <button type="button" onclick="arPickCustomTopic()" class="ig-search-go">만들기</button>
           </div>
-          <details id="dailyKeywords" class="studio-sub daily-keywords" hidden>
-            <summary>오늘의 키워드 <span>주요 이슈 · 내 업종 검색어</span></summary>
-            <p><time></time> 수집</p>
-            <div class="daily-keyword-list"></div>
-          </details>
           <div class="flex items-center justify-between gap-2">
             <span id="storeTopicHeading" class="text-[13px] font-semibold text-[#ededed]">우리 가게 추천 주제</span>
             <button type="button" onclick="arLoadTopics(true)" class="ig-text-btn">↻ 다른 주제</button>
@@ -2121,7 +2121,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117r" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261119-public-issues"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261120-visible-issues"><\/script>');
     }
   </script>
   <!--

@@ -1,7 +1,8 @@
 name: daily-keywords
 on:
   schedule:
-    # 04:13, 12:13 and 18:13 Korea time
+    # 00:05, 04:13, 12:13 and 18:13 Korea time
+    - cron: '5 15 * * *'
     - cron: '13 19,3,9 * * *'
   workflow_dispatch:
 permissions:

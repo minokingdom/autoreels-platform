@@ -330,8 +330,13 @@
       const scope = JSON.stringify([day, Math.floor(now.getTime() / 3600000), IND.key, phrases]);
       if (!panel || arKeywordDay === scope) return;
       arKeywordDay = scope;
-      panel.hidden = true;
-      panel.open = false;
+      const list = panel.querySelector('.daily-keyword-list');
+      const heading = panel.querySelector('h3');
+      const status = panel.querySelector('.daily-keyword-status');
+      const yesterday = arKstDay.format(now.getTime() - 86400000);
+      heading.textContent = '오늘의 키워드';
+      list.replaceChildren();
+      status.textContent = '키워드를 불러오는 중…';
       clearTimeout(arKeywordTimer);
       arKeywordTimer = setTimeout(arLoadDailyKeywords, 3600000 - now.getTime() % 3600000 + 50);
       try {
@@ -341,26 +346,30 @@
         if (arKeywordDay !== scope) return;
         const collected = Date.parse(data.collectedAt);
         if (data.source !== 'https://trends.google.com/trending/rss?geo=KR' || !Number.isFinite(collected) || collected > Date.now() ||
-            arKstDay.format(collected) !== day || !Array.isArray(data.items)) {
+            ![day, yesterday].includes(arKstDay.format(collected)) || !Array.isArray(data.items)) {
+          status.textContent = '아직 오늘 확인된 키워드가 없습니다.';
           arKeywordDay = '';
           return;
         }
-        const list = panel.querySelector('.daily-keyword-list');
-        list.replaceChildren();
+        const feedDay = arKstDay.format(collected);
         const shown = new Set();
         const origins = { '교육부': 'https://www.moe.go.kr', '연합뉴스': 'https://www.yna.co.kr', SBS: 'https://news.sbs.co.kr' };
-        for (const issue of Array.isArray(data.issues) ? data.issues : []) {
-          if (issue?.day !== day || typeof issue.term !== 'string' || !issue.term.trim() || shown.has(issue.term)) continue;
-          if (!Object.hasOwn(origins, issue.publisher) || typeof issue.url !== 'string' ||
-              !issue.url.startsWith(origins[issue.publisher] + '/')) continue;
-          const schedule = issue.kind === '일정' && issue.publisher === '교육부';
-          const published = Date.parse(issue.publishedAt);
-          if (!schedule && (issue.kind !== '보도' || !Number.isFinite(published) ||
-              published > collected || arKstDay.format(published) !== day)) continue;
-          arDailyKeywordRow(list, issue.term, schedule ? '오늘 일정' : '오늘 ' + arKstTime.format(published) + ' 보도', issue.publisher, issue.url);
-          shown.add(issue.term);
+        function showIssues(issues, issueDay) {
+          for (const issue of Array.isArray(issues) ? issues : []) {
+            if (issue?.day !== issueDay || typeof issue.term !== 'string' || !issue.term.trim() || shown.has(issue.term)) continue;
+            if (!Object.hasOwn(origins, issue.publisher) || typeof issue.url !== 'string' ||
+                !issue.url.startsWith(origins[issue.publisher] + '/')) continue;
+            const schedule = issue.kind === '일정' && issue.publisher === '교육부';
+            const published = Date.parse(issue.publishedAt);
+            if (!schedule && (issue.kind !== '보도' || !Number.isFinite(published) ||
+                published > collected || arKstDay.format(published) !== issueDay)) continue;
+            const when = issueDay === day ? '오늘' : '어제';
+            arDailyKeywordRow(list, issue.term, schedule ? when + ' 일정' : when + ' ' + arKstTime.format(published) + ' 보도', issue.publisher, issue.url);
+            shown.add(issue.term);
+          }
         }
-        for (const item of data.items) {
+        if (feedDay === day) showIssues(data.issues, day);
+        for (const item of feedDay === day ? data.items : []) {
           const started = Date.parse(item?.startedAt);
           if (typeof item?.term !== 'string' || !item.term.trim() || !Number.isFinite(started) ||
               started > collected || arKstDay.format(started) !== day) continue;
@@ -368,12 +377,18 @@
           arDailyKeywordRow(list, item.term, '급상승 시작 ' + arKstTime.format(started) + (item.traffic ? ' · 검색량 ' + item.traffic : ''), 'Google 트렌드', data.source);
           shown.add(item.term);
         }
-        const time = panel.querySelector('time');
-        time.dateTime = data.collectedAt;
-        time.textContent = day + ' ' + arKstTime.format(collected) + ' (한국시간)';
-        panel.hidden = !list.childElementCount;
+        if (shown.size) {
+          status.textContent = day + ' ' + arKstTime.format(collected) + ' 수집';
+        } else {
+          showIssues(feedDay === yesterday ? data.issues : data.previousIssues, yesterday);
+          if (shown.size) heading.textContent = '최근 이슈 · ' + yesterday;
+          status.textContent = shown.size ? '오늘 확인된 키워드가 없어 어제 이슈를 표시합니다.' : '아직 오늘 확인된 키워드가 없습니다.';
+        }
       } catch {
-        if (arKeywordDay === scope) arKeywordDay = '';
+        if (arKeywordDay === scope) {
+          status.textContent = '키워드를 불러오지 못했습니다.';
+          arKeywordDay = '';
+        }
       }
     }
     document.addEventListener('visibilitychange', () => { if (!document.hidden) arLoadDailyKeywords(); });

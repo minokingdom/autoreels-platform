@@ -1,59 +1,9 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-19T23:51:52.886339+09:00",
-  "items": [
-    {
-      "term": "ant",
-      "startedAt": "2026-11-19T05:30:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "lg화학",
-      "startedAt": "2026-11-19T05:10:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "변상일",
-      "startedAt": "2026-11-19T04:30:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "금오산",
-      "startedAt": "2026-11-19T04:20:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "하나로마트",
-      "startedAt": "2026-11-19T03:50:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "김민지",
-      "startedAt": "2026-11-19T03:50:00-08:00",
-      "traffic": "1000+"
-    },
-    {
-      "term": "thời tiết ngày mai",
-      "startedAt": "2026-11-19T03:40:00-08:00",
-      "traffic": "5000+"
-    },
-    {
-      "term": "cuaca besok",
-      "startedAt": "2026-11-19T03:40:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "정부24",
-      "startedAt": "2026-11-19T03:20:00-08:00",
-      "traffic": "1000+"
-    },
-    {
-      "term": "야구 경기장",
-      "startedAt": "2026-11-19T03:10:00-08:00",
-      "traffic": "200+"
-    }
-  ],
-  "issues": [
+  "collectedAt": "2026-11-20T00:14:37.169153+09:00",
+  "items": [],
+  "issues": [],
+  "previousIssues": [
     {
       "term": "수능",
       "day": "2026-11-19",

@@ -135,7 +135,12 @@ if __name__ == "__main__":
     except (OSError, URLError, ValueError, ElementTree.ParseError):
         data = {"source": FEED, "collectedAt": collected.isoformat(), "items": []}
     data["issues"] = public_issues(feeds, collected)
-    if not data["items"] and not data["issues"]:
+    if OUTPUT.exists():
+        prior = json.loads(OUTPUT.read_text(encoding="utf-8"))
+        yesterday = (collected - timedelta(days=1)).date().isoformat()
+        data["previousIssues"] = [issue for issue in prior.get("issues", []) + prior.get("previousIssues", [])
+                                  if issue.get("day") == yesterday]
+    if not feeds and not data["items"] and not data["issues"]:
         raise SystemExit("No verified items or issues for this date")
     temp = OUTPUT.with_suffix(".tmp")
     temp.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
