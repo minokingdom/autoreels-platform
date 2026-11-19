@@ -1,7 +1,7 @@
 name: iPhone reference
 on:
   push:
-    paths: ['ios/**', '.github/workflows/ios-reference.yml', 'tests/fixtures/remix-spoken-ko.mp4']
+    paths: ['ios/**', '.github/workflows/ios-reference.yml', 'public/assets/remix/fixtures/remix-spoken-ko.mp4']
   workflow_dispatch:
 permissions:
   contents: read
