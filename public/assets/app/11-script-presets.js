@@ -435,6 +435,7 @@
       void dr.offsetWidth;
       dr.classList.add('open');
       dr.setAttribute('aria-hidden', 'false');
+      if (typeof scheduleDesignThumbs === 'function') scheduleDesignThumbs();
     }
     function closePresetDrawer() {
       const dr = document.getElementById('presetDrawer');

@@ -357,6 +357,16 @@
 
         const resumed = ctx.state === 'running' ? Promise.resolve() : ctx.resume().catch(() => {});
 
+        // 내장 BGM도 브라우저 하드웨어 디코더(/assets/bgm/pack/*.mp3)로 우선 재생해
+        // 25ms JS 타이머 신스가 메인 스레드 부하로 뚝뚝 끊기는 현상을 근본적으로 방지
+        const packId = typeof arBgmPackId === 'function' ? arBgmPackId(this.bgmStyle) : '';
+        if (this.bgmStyle !== 'custom_mp3' && packId) {
+          const mp3Url = `/assets/bgm/pack/${packId}.mp3`;
+          const label = (this.BGM_LABELS && this.BGM_LABELS[this.bgmStyle]) || packId;
+          this.loadRemoteBgmUrl(mp3Url, label, !!isPlaying);
+          return;
+        }
+
         // 내가 불러온 릴스·숏츠 MP3: 사용자 클릭 제스처 안에서 동기 play() 먼저 시도 후 컨텍스트 재개 폴백
         if (this.bgmStyle === 'custom_mp3' && this.customBgmAudioEl) {
           if (!isPlaying) return;

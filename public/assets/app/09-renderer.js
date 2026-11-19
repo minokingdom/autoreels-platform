@@ -3528,9 +3528,9 @@
         ctx.restore();
       }
 
-      // 모바일 미니 캔버스 실시간 미러 렌더링 & 도크 UI 동기화
+      // 모바일 미니 캔버스 실시간 미러 렌더링 & 도크 UI 동기화 (보일 때만 미러링)
       const miniCanvas = document.getElementById('mobileMiniCanvas');
-      if (miniCanvas) {
+      if (miniCanvas && miniCanvas.offsetParent !== null) {
         const mCtx = miniCanvas.getContext('2d');
         if (mCtx) {
           mCtx.drawImage(canvas, 0, 0, miniCanvas.width, miniCanvas.height);

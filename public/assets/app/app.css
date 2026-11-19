@@ -222,6 +222,9 @@
     }
 
     /* ===== 모달 공통 디자인 (모든 팝업 창이 같은 모양) ===== */
+    .ar-modal.hidden {
+      display: none !important;
+    }
     .ar-modal {
       background: color-mix(in srgb, var(--astryx-color-overlay) 92%, transparent);
       -webkit-backdrop-filter: blur(6px);

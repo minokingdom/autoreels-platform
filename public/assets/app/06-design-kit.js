@@ -4401,12 +4401,14 @@
         }
         const todo = arCustomDesigns.concat(getDesignPickerList(), arVisibleDesigns()).filter((ds) => !designThumbCache.fresh[ds.id]);
         if (!todo.length) return;
-        const batch = todo.filter((ds, i, arr) => arr.indexOf(ds) === i).slice(0, 6);
+        const dr = document.getElementById('presetDrawer');
+        const batchSize = dr && dr.classList.contains('open') ? 3 : 2;
+        const batch = todo.filter((ds, i, arr) => arr.indexOf(ds) === i).slice(0, batchSize);
         const fonts = [...new Set(batch.filter((ds) => ds.engine === 'kit' || ds.font === 'brush').flatMap((ds) => [ds.font, ds.sfont, 'brush'].filter(Boolean)))];
         designThumbJob = true;
         Promise.race([Promise.all(fonts.map(kitEnsureFont)), new Promise((r) => setTimeout(r, 2500))]).then(() => {
           if (designThumbCache.key === key && !window.__exportingVideo) renderDesignThumbBatch(batch);
-          designThumbJob = setTimeout(step, 40);
+          designThumbJob = setTimeout(step, dr && dr.classList.contains('open') ? 45 : 65);
         });
       };
       designThumbJob = setTimeout(step, 0);
@@ -4467,7 +4469,7 @@
           return `<button type="button" onclick="selectDesignCat('${c}')" class="shrink-0 px-2.5 py-1 rounded-[6px] text-[11px] font-medium border cursor-pointer ${on ? 'border-[#ededed] bg-[#232325] text-white' : 'border-[var(--border)] text-[#a1a1a6] hover:text-[#ededed]'}">${c} <span class="text-[#6e6e73]">${n}</span></button>`;
         }).join('');
       }
-      if (grid) grid.innerHTML = (cat === '전체' ? arCustomPickerCards('dthumb_') : '') + getDesignPickerList().filter(ds => !ds.custom).map((ds) => {
+      if (grid && grid.offsetParent !== null) grid.innerHTML = (cat === '전체' ? arCustomPickerCards('dthumb_') : '') + getDesignPickerList().filter(ds => !ds.custom).map((ds) => {
         const on = ds.id === active;
         const src = urls[ds.id] || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
         return `
