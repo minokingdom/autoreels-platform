@@ -155,7 +155,7 @@
         const statusText = document.getElementById('lyriaBgmStatusText');
         if (statusText) {
           statusText.classList.remove('hidden');
-          statusText.textContent = `✨ ${label || 'AI 배경음악'} 적용됨 (완성 영상에도 그대로 들어가요)`;
+          statusText.textContent = `✨ ${label || 'AI 배경음악'} 적용됨`;
         }
         if (autoPlay !== false) {
           if (!this.enabled) {
@@ -2054,40 +2054,6 @@
       }
     }
 
-    async function generateCustomLyriaBgm() {
-      const inp = document.getElementById('lyriaCustomPromptInput');
-      const btn = document.getElementById('lyriaCustomGenBtn');
-      const st = document.getElementById('lyriaBgmStatusText');
-      const prompt = (inp && inp.value || '').trim();
-      if (!prompt) {
-        if (typeof arToast === 'function') arToast('만들고 싶은 음악 분위기를 입력해 주세요. (예: 따뜻한 카페 재즈)');
-        if (inp) inp.focus();
-        return;
-      }
-      if (!arRequireAiAccess()) return;
-      if (btn) { btn.disabled = true; btn.textContent = '✨ 생성 중...'; }
-      if (st) { st.classList.remove('hidden'); st.textContent = '✨ AI가 30초짜리 맞춤 음악을 만들고 있어요…'; }
-      try {
-        const res = await fetch('/api/tts-voices?action=generate-bgm', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.ok || !data.url) throw new Error(data.message || 'Lyria 생성 실패');
-        const opt = document.getElementById('customBgmOption');
-        const sel = document.getElementById('bgmStyleSelect');
-        if (opt) { opt.classList.remove('hidden'); opt.textContent = data.label; }
-        if (sel) sel.value = 'custom_mp3';
-        AudioEngine.loadRemoteBgmUrl(data.url, data.label);
-        if (typeof renderBgmRecommendations === 'function') renderBgmRecommendations();
-      } catch (err) {
-        if (st) { st.classList.remove('hidden'); st.textContent = arFriendlyBgmError(err, false); }
-      } finally {
-        if (btn) { btn.disabled = false; btn.textContent = '✨ 맞춤 BGM 만들기'; }
-      }
-    }
-
     function onAudioConfigChange({ autoPlay = true } = {}) {
       const prevVoice = AudioEngine.ttsVoice;
       const prevSpeed = AudioEngine.ttsSpeed;
@@ -2273,12 +2239,6 @@
       renderBgmRecommendations();
     }
 
-    function generateKeywordLyriaBgm(kw) {
-      const inp = document.getElementById('lyriaCustomPromptInput');
-      if (inp) inp.value = kw;
-      if (typeof generateCustomLyriaBgm === 'function') generateCustomLyriaBgm();
-    }
-
     // ★ 인스타 음악 고르기처럼: 지금 음악 한 줄 → 누르면 음악 목록(추천이 목록 맨 위에 '추천' 표시와 함께)
     const AR_BGM_META = {
       showroom: ['잔잔', '칠 하우스', '#0ea5e9', '#1e3a8a'], urban: ['신나는', '폰크 · 트랩', '#ef4444', '#111827'],
@@ -2371,12 +2331,10 @@
       sel.classList.add('hidden');
       const cur = sel.value;
       const opt = arBgmOptions().find((o) => o.id === cur) || { id: cur, name: cur };
-      const m = AR_BGM_META[cur] || [];
-      const reco = getRecommendedBgms(3).find((r) => r.id === cur);
       row.className = 'mb-1.5';
       row.innerHTML = `<button type="button" class="bgm-now" onclick="arOpenBgmSheet()">
           ${arBgmCover(cur, 44)}
-          <span class="bgm-now-txt"><strong>${opt.name}</strong><small>${reco ? '추천 · ' + reco.reason : (m[1] || '배경음악')}</small></span>
+          <span class="bgm-now-txt"><strong>${opt.name}</strong></span>
           <span class="bgm-now-go">바꾸기 ›</span>
         </button>`;
       const sheet = document.getElementById('arBgmSheet');
@@ -2459,19 +2417,11 @@
         list = list.filter((o) => (AR_BGM_META[o.id] || [])[0] === arBgmMood);
       }
       const esc = (v) => String(v || '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
-      const tp = window.arTodayTopic;
-      const kw = String((tp && tp.title) || '').trim();
       const rows = list.map((o) => {
-        const m = AR_BGM_META[o.id] || [];
-        const why = recoMap.get(o.id);
-        // 같은 말이 두 번 나오지 않게 (예: '재즈 · 재즈')
-        const parts = [];
-        [why, m[1], m[0] && m[0] !== 'AI 맞춤' ? m[0] : ''].forEach((v) => { if (v && !parts.includes(v)) parts.push(v); });
-        const sub = parts.map((v, i) => (i === 0 && why ? `<b>추천</b> ${esc(v)}` : esc(v))).join(' · ');
         const on = o.id === cur;
         return `<button type="button" class="bgm-row ${on ? 'on' : ''}" data-bgm-id="${o.id}" aria-pressed="${on}" onclick="arPickBgm('${o.id}')">
             ${arBgmCover(o.id, 48)}
-            <span class="bgm-row-txt"><strong>${esc(o.name)}</strong><small>${sub}</small></span>
+            <span class="bgm-row-txt"><strong>${esc(o.name)}</strong></span>
             <span class="bgm-row-state">${arBgmRowState(o.id, on)}</span>
           </button>`;
       }).join('');
@@ -2483,12 +2433,11 @@
         el.appendChild(panel);
       }
       panel.innerHTML = `<div class="bgm-head"><strong>음악</strong><button type="button" class="bgm-done" onclick="arCloseBgmSheet()">완료</button></div>
-          <input id="arBgmSearch" class="bgm-search" type="search" placeholder="음악 검색 (예: 재즈, 신나는, 카페)" value="${esc(q)}" oninput="arRenderBgmSheet(false)" />
+          <input id="arBgmSearch" class="bgm-search" type="search" aria-label="음악 검색" placeholder="음악 검색" value="${esc(q)}" oninput="arRenderBgmSheet(false)" />
           <div class="bgm-moods no-scrollbar">${AR_BGM_MOODS.map((md) => `<button type="button" class="${md === arBgmMood && !q ? 'on' : ''}" onclick="arBgmMood='${md}';const s=document.getElementById('arBgmSearch');if(s)s.value='';arRenderBgmSheet(false)">${md}</button>`).join('')}</div>
           <div class="bgm-list">
-            ${kw ? `<button type="button" class="bgm-row bgm-make" onclick="arCloseBgmSheet();generateKeywordLyriaBgm('${esc(kw).replace(/'/g, '')}')"><span class="bgm-cover bgm-cover-make">✨</span><span class="bgm-row-txt"><strong>'${esc(kw.length > 16 ? kw.slice(0, 16) + '…' : kw)}' 맞춤 음악 만들기</strong><small>오늘 주제에 맞춰 AI가 새로 작곡해요 (10~15초)</small></span><span class="bgm-row-state">＋</span></button>` : ''}
             ${rows || '<p class="bgm-empty">맞는 음악이 없어요</p>'}
-            <label for="customBgmFileInput" class="bgm-row bgm-make"><span class="bgm-cover bgm-cover-make">⤒</span><span class="bgm-row-txt"><strong>내 음원 불러오기</strong><small>휴대폰에 있는 음악·영상 소리를 써요</small></span><span class="bgm-row-state">＋</span></label>
+            <label for="customBgmFileInput" class="bgm-row bgm-make"><span class="bgm-cover bgm-cover-make">⤒</span><span class="bgm-row-txt"><strong>내 음원 불러오기</strong></span><span class="bgm-row-state">＋</span></label>
           </div>`;
       panel.querySelector('.bgm-list').scrollTop = scrollTop;
       if (hadFocus) { const s2 = el.querySelector('#arBgmSearch'); if (s2) { s2.focus(); s2.setSelectionRange(s2.value.length, s2.value.length); } }
@@ -2538,7 +2487,6 @@
     if (typeof window !== 'undefined') {
       window.renderBgmRecommendations = renderBgmRecommendations;
       window.applyRecommendedBgm = applyRecommendedBgm;
-      window.generateKeywordLyriaBgm = generateKeywordLyriaBgm;
       window.addEventListener('DOMContentLoaded', () => {
         arAppendAudioOptions(document.getElementById('bgmStyleSelect'), AR_LIBRARY_MUSIC.values(), 'genre');
         const sfx = document.getElementById('sfxModeSelect');
