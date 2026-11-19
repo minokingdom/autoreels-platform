@@ -412,39 +412,33 @@
         }
       });
 
-      // Stage 1 (0 -> 0.36): 웅장한 부채꼴 대개방 + 3D 덱 정면 틸트 + 시네마 카메라 돌리-인 + 2.39:1 레터박스
+      // Stage 1 (0 -> 0.42): 웅장한 부채꼴 대개방 + 3D 덱 정면 틸트 + 시네마 카메라 돌리-인 + 2.39:1 레터박스
       heroTl
         .to('#mnHeroKvImg', { scale: 1.28, yPercent: 4, ease: 'none', duration: 1 }, 0)
-        .to('#mnBgWatermark', { scale: 1.18, opacity: 0.22, ease: 'power1.inOut', duration: 0.45 }, 0)
-        .to('#mnFanDeck', { rotationX: 0, ease: 'power2.out', duration: 0.36 }, 0)
-        .to('#mnHeroBarTop', { yPercent: 105, ease: 'power2.inOut', duration: 0.26 }, 0.05)
-        .to('#mnHeroBarBot', { yPercent: -105, ease: 'power2.inOut', duration: 0.26 }, 0.05)
-        .to('.mn-fan-bottom', { opacity: 0, y: 12, ease: 'power2.out', duration: 0.18 }, 0.06)
-        .to('#mnFanL2', { x: g.eL2.x, y: g.eL2.y, z: g.eL2.z, rotationY: g.eL2.ry, rotationZ: g.eL2.rz, scale: g.eL2.sc, opacity: g.eL2.op, ease: 'power2.out', duration: 0.36 }, 0)
-        .to('#mnFanL1', { x: g.eL1.x, y: g.eL1.y, z: g.eL1.z, rotationY: g.eL1.ry, rotationZ: g.eL1.rz, scale: g.eL1.sc, opacity: g.eL1.op, ease: 'power2.out', duration: 0.36 }, 0)
-        .to('#mnFanR1', { x: -g.eL1.x, y: g.eL1.y, z: g.eL1.z, rotationY: -g.eL1.ry, rotationZ: -g.eL1.rz, scale: g.eL1.sc, opacity: g.eL1.op, ease: 'power2.out', duration: 0.36 }, 0)
-        .to('#mnFanR2', { x: -g.eL2.x, y: g.eL2.y, z: g.eL2.z, rotationY: -g.eL2.ry, rotationZ: -g.eL2.rz, scale: g.eL2.sc, opacity: g.eL2.op, ease: 'power2.out', duration: 0.36 }, 0)
-        // Stage 2 (0.36 -> 0.72): 좌우 4장 3D 윙 스윕(카메라 양옆으로 갈라짐) + 중앙 마스터 릴스 IMAX 돌진 + HUD 등장
-        .to('#mnFanL2', { x: g.wL2.x, y: g.wL2.y, z: g.wL2.z, rotationY: g.wL2.ry, rotationZ: g.wL2.rz, scale: g.wL2.sc, opacity: g.wL2.op, ease: 'power2.inOut', duration: 0.34 }, 0.36)
-        .to('#mnFanL1', { x: g.wL1.x, y: g.wL1.y, z: g.wL1.z, rotationY: g.wL1.ry, rotationZ: g.wL1.rz, scale: g.wL1.sc, opacity: g.wL1.op, ease: 'power2.inOut', duration: 0.34 }, 0.36)
-        .to('#mnFanR1', { x: -g.wL1.x, y: g.wL1.y, z: g.wL1.z, rotationY: -g.wL1.ry, rotationZ: -g.wL1.rz, scale: g.wL1.sc, opacity: g.wL1.op, ease: 'power2.inOut', duration: 0.34 }, 0.36)
-        .to('#mnFanR2', { x: -g.wL2.x, y: g.wL2.y, z: g.wL2.z, rotationY: -g.wL2.ry, rotationZ: -g.wL2.rz, scale: g.wL2.sc, opacity: g.wL2.op, ease: 'power2.inOut', duration: 0.34 }, 0.36)
-        .to('#landingPhoneStage', { scale: g.cZoom, y: g.cY, z: 120, ease: 'power2.inOut', duration: 0.34 }, 0.36)
-        .to('#mnHudLeft', { x: 0, opacity: 1, ease: 'power2.out', duration: 0.22 }, 0.42)
-        .to('#mnHudRight', { x: 0, opacity: 1, ease: 'power2.out', duration: 0.22 }, 0.42)
-        .to('#mnMobileHud', { y: 0, opacity: 1, ease: 'power2.out', duration: 0.22 }, 0.42)
-        // Stage 3 (0.76 -> 1.0): 부채꼴 피날레 블룸 + 레터박스 오픈 -> CH 02 성명문으로 부드럽게 연결
-        .to('#mnHudLeft', { x: -28, opacity: 0, ease: 'power2.in', duration: 0.18 }, 0.76)
-        .to('#mnHudRight', { x: 28, opacity: 0, ease: 'power2.in', duration: 0.18 }, 0.76)
-        .to('#mnMobileHud', { y: 12, opacity: 0, ease: 'power2.in', duration: 0.18 }, 0.76)
-        .to('#mnFanL2', { x: g.bL2.x, y: g.bL2.y, z: g.bL2.z, rotationY: g.bL2.ry, rotationZ: g.bL2.rz, scale: g.bL2.sc, opacity: g.bL2.op, ease: 'power2.out', duration: 0.24 }, 0.76)
-        .to('#mnFanL1', { x: g.bL1.x, y: g.bL1.y, z: g.bL1.z, rotationY: g.bL1.ry, rotationZ: g.bL1.rz, scale: g.bL1.sc, opacity: g.bL1.op, ease: 'power2.out', duration: 0.24 }, 0.76)
-        .to('#mnFanR1', { x: -g.bL1.x, y: g.bL1.y, z: g.bL1.z, rotationY: -g.bL1.ry, rotationZ: -g.bL1.rz, scale: g.bL1.sc, opacity: g.bL1.op, ease: 'power2.out', duration: 0.24 }, 0.76)
-        .to('#mnFanR2', { x: -g.bL2.x, y: g.bL2.y, z: g.bL2.z, rotationY: -g.bL2.ry, rotationZ: -g.bL2.rz, scale: g.bL2.sc, opacity: g.bL2.op, ease: 'power2.out', duration: 0.24 }, 0.76)
-        .to('#landingPhoneStage', { scale: 1.04, y: 0, z: 50, ease: 'power2.out', duration: 0.24 }, 0.76)
-        .to('#mnHeroBarTop', { yPercent: 0, ease: 'power2.inOut', duration: 0.22 }, 0.78)
-        .to('#mnHeroBarBot', { yPercent: 0, ease: 'power2.inOut', duration: 0.22 }, 0.78)
-        .to('.mn-fan-bottom', { opacity: 1, y: 0, ease: 'power2.out', duration: 0.20 }, 0.80);
+        .to('#mnBgWatermark', { scale: 1.20, opacity: 0.16, ease: 'power1.inOut', duration: 0.5 }, 0)
+        .to('#mnFanDeck', { rotationX: 0, ease: 'power2.out', duration: 0.42 }, 0)
+        .to('#mnHeroBarTop', { yPercent: 105, ease: 'power2.inOut', duration: 0.28 }, 0.06)
+        .to('#mnHeroBarBot', { yPercent: -105, ease: 'power2.inOut', duration: 0.28 }, 0.06)
+        .to('.mn-fan-bottom', { opacity: 0, y: 12, ease: 'power2.out', duration: 0.20 }, 0.06)
+        .to('#mnFanL2', { x: g.eL2.x, y: g.eL2.y, z: g.eL2.z, rotationY: g.eL2.ry, rotationZ: g.eL2.rz, scale: g.eL2.sc, opacity: g.eL2.op, ease: 'power2.out', duration: 0.42 }, 0)
+        .to('#mnFanL1', { x: g.eL1.x, y: g.eL1.y, z: g.eL1.z, rotationY: g.eL1.ry, rotationZ: g.eL1.rz, scale: g.eL1.sc, opacity: g.eL1.op, ease: 'power2.out', duration: 0.42 }, 0)
+        .to('#mnFanR1', { x: -g.eL1.x, y: g.eL1.y, z: g.eL1.z, rotationY: -g.eL1.ry, rotationZ: -g.eL1.rz, scale: g.eL1.sc, opacity: g.eL1.op, ease: 'power2.out', duration: 0.42 }, 0)
+        .to('#mnFanR2', { x: -g.eL2.x, y: g.eL2.y, z: g.eL2.z, rotationY: -g.eL2.ry, rotationZ: -g.eL2.rz, scale: g.eL2.sc, opacity: g.eL2.op, ease: 'power2.out', duration: 0.42 }, 0)
+        // Stage 2 (0.42 -> 0.84): 좌우 4장 3D 윙 스윕(카메라 양옆으로 완전히 퇴장, 되돌아오지 않음) + 중앙 마스터 릴스 IMAX 포커스 + HUD 등장
+        .to('#mnFanL2', { x: g.wL2.x, y: g.wL2.y, z: g.wL2.z, rotationY: g.wL2.ry, rotationZ: g.wL2.rz, scale: g.wL2.sc, opacity: 0, ease: 'power2.in', duration: 0.38 }, 0.42)
+        .to('#mnFanL1', { x: g.wL1.x, y: g.wL1.y, z: g.wL1.z, rotationY: g.wL1.ry, rotationZ: g.wL1.rz, scale: g.wL1.sc, opacity: 0, ease: 'power2.in', duration: 0.38 }, 0.42)
+        .to('#mnFanR1', { x: -g.wL1.x, y: g.wL1.y, z: g.wL1.z, rotationY: -g.wL1.ry, rotationZ: -g.wL1.rz, scale: g.wL1.sc, opacity: 0, ease: 'power2.in', duration: 0.38 }, 0.42)
+        .to('#mnFanR2', { x: -g.wL2.x, y: g.wL2.y, z: g.wL2.z, rotationY: -g.wL2.ry, rotationZ: -g.wL2.rz, scale: g.wL2.sc, opacity: 0, ease: 'power2.in', duration: 0.38 }, 0.42)
+        .to('#landingPhoneStage', { scale: g.cZoom, y: g.cY, z: 120, ease: 'power2.inOut', duration: 0.42 }, 0.42)
+        .to('#mnHudLeft', { x: 0, opacity: 1, ease: 'power2.out', duration: 0.24 }, 0.48)
+        .to('#mnHudRight', { x: 0, opacity: 1, ease: 'power2.out', duration: 0.24 }, 0.48)
+        .to('#mnMobileHud', { y: 0, opacity: 1, ease: 'power2.out', duration: 0.24 }, 0.48)
+        // Stage 3 (0.84 -> 1.0): 되돌림 없이 정방향 시네마 리졸브 -> 레터박스 오픈 & CH 02로 자연스럽게 연결
+        .to('#mnHudLeft', { opacity: 0, y: -14, ease: 'power2.in', duration: 0.16 }, 0.84)
+        .to('#mnHudRight', { opacity: 0, y: -14, ease: 'power2.in', duration: 0.16 }, 0.84)
+        .to('#mnMobileHud', { opacity: 0, y: -10, ease: 'power2.in', duration: 0.16 }, 0.84)
+        .to('#mnHeroBarTop', { yPercent: 0, ease: 'power2.inOut', duration: 0.16 }, 0.84)
+        .to('#mnHeroBarBot', { yPercent: 0, ease: 'power2.inOut', duration: 0.16 }, 0.84);
     }
 
     // 2) CH 02 성명문 스크롤 컬러 필 (한 구절씩 어두움 -> 크림/테라코타 점등)
