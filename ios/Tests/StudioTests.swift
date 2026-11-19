@@ -15,6 +15,6 @@ final class StudioTests: XCTestCase {
     func testStudioOpensOnPhone() {
         let app = XCUIApplication(); app.launch()
         XCTAssertTrue(app.buttons["링크 분석"].waitForExistence(timeout:60))
-        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format:"label CONTAINS %@", "유튜브 쇼츠·CapCut")).first.exists)
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format:"label CONTAINS %@", "유튜브 쇼츠·CapCut")).firstMatch.exists)
     }
 }
