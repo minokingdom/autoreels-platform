@@ -57,8 +57,9 @@ function showScenes() {
   byId('stage').hidden = byId('actions').hidden = !photos.length || !scenes.length;
   showFrame();
 }
-byId('reference').addEventListener('change', async e => {
-  const file = e.target.files[0]; if (!file) return;
+async function readSelectedReference() {
+  const input = byId('reference');
+  const file = input.files[0]; if (!file) return;
   analysis?.abort(); const controller = analysis = new AbortController();
   stopPreview(); resetDownload(); selected = 0; photoVersion++;
   photos = []; scenes = []; byId('photos').value = ''; byId('arrange').hidden = true; showScenes();
@@ -69,8 +70,11 @@ byId('reference').addEventListener('change', async e => {
     scenes = next; byId('arrange').hidden = false; showScenes();
     status(scenes.length+'개 장면을 찾았어요. 내 사진을 선택해 주세요.');
   } catch (err) { if (!controller.signal.aborted) status(err.message); }
-  finally { if (controller === analysis) e.target.value = ''; }
-});
+  finally { if (controller === analysis) input.value = ''; }
+}
+byId('reference').addEventListener('change', readSelectedReference);
+// 모듈이 내려오는 동안 먼저 고른 파일도 처리합니다.
+if (byId('reference').files.length) readSelectedReference();
 async function openPhoto(file) {
   const url = URL.createObjectURL(file);
   const image = new Image();
