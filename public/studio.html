@@ -41,7 +41,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-voice-audition" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-sound-step" />
   <link rel="stylesheet" href="/assets/app/splash.css" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -713,7 +713,17 @@
 
         <!-- 단계 안내: 탭을 바꾸면 문구가 바뀜 -->
         <div id="easyStepGuide" class="mx-5 sm:mx-6 mt-4 studio-step-guide" aria-live="polite">
-          <div class="studio-step-label"><span id="easyStepCount">1 / 6</span> · <span id="easyStepTitle">오늘의 주제</span></div>
+          <div class="studio-step-heading">
+            <div class="studio-step-label"><span id="easyStepCount">1 / 6</span> · <span id="easyStepTitle">오늘의 주제</span></div>
+            <div id="soundStepActions" class="audio-preview-actions" hidden>
+              <button type="button" onclick="testCurrentCutTtsNow()" class="btn-secondary px-3 text-[12px] cursor-pointer">
+                현재 컷 듣기
+              </button>
+              <button type="button" onclick="triggerFullAudioPreview()" class="btn-primary px-3 text-[12px] cursor-pointer">
+                처음부터 듣기
+              </button>
+            </div>
+          </div>
           <p id="easyStepText" class="studio-step-text"></p>
         </div>
         <!-- ★ 1단계 · 오늘의 주제: 요일·계절·다가오는 날·인기 키워드로 오늘 올릴 주제 후보를 보여 주고, 고르면 AI 대본을 바로 만듦 -->
@@ -1101,19 +1111,17 @@
         <div id="studioPanel_sound" role="tabpanel" aria-labelledby="studioTabBtn_sound" class="studio-panel hidden p-5 sm:p-6 space-y-5">
           <!-- ★ 영상 시간(컷·사진 자동확장) · AI 성우(TTS) · 릴스/숏츠 음원(BGM) 컨트롤 바 -->
           <div class="studio-sub p-4 space-y-3">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <span class="text-[13px] font-medium text-[#ededed]">배경음악 · 성우</span>
-              <div class="audio-preview-actions">
-                <button type="button" onclick="testCurrentCutTtsNow()" class="btn-secondary px-3 text-[12px] cursor-pointer">
-                  현재 컷 듣기
-                </button>
-                <button type="button" onclick="triggerFullAudioPreview()" class="btn-primary px-3 text-[12px] cursor-pointer">
-                  처음부터 듣기
-                </button>
-              </div>
-            </div>
-
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label for="ttsVoiceSelect" class="block text-[12px] text-[#a1a1a6] mb-1">성우 목소리</label>
+                <select id="ttsVoiceSelect" onchange="onAudioConfigChange()" class="studio-input w-full h-9 px-2.5 text-[12px] cursor-pointer">
+                  <option value="4e118bfbb83e401c84699c09b5f08257" selected hidden>성우 불러오는 중</option>
+                  <option value="8cf5ee4cb0224c109852a206f185a05f" hidden>저장된 성우</option>
+                  <option value="9a50287ddd26414690b538539ad52d61" hidden>저장된 성우</option>
+                  <option value="off">성우 끄기</option>
+                </select>
+              </div>
+
               <div>
                 <div class="flex items-center justify-between mb-1">
                   <label class="text-[12px] text-[#a1a1a6]">배경음악</label>
@@ -1179,16 +1187,6 @@
                   <option value="off">효과음 끄기</option>
                 </select>
                 <p class="text-[11px] text-[#85858b] mt-1">자동 선택은 컷의 문구와 영상 분위기에 맞춰 효과음을 바꿉니다.</p>
-              </div>
-
-              <div>
-                <label for="ttsVoiceSelect" class="block text-[12px] text-[#a1a1a6] mb-1">성우 목소리</label>
-                <select id="ttsVoiceSelect" onchange="onAudioConfigChange()" class="studio-input w-full h-9 px-2.5 text-[12px] cursor-pointer">
-                  <option value="4e118bfbb83e401c84699c09b5f08257" selected hidden>성우 불러오는 중</option>
-                  <option value="8cf5ee4cb0224c109852a206f185a05f" hidden>저장된 성우</option>
-                  <option value="9a50287ddd26414690b538539ad52d61" hidden>저장된 성우</option>
-                  <option value="off">성우 끄기</option>
-                </select>
               </div>
 
               <div>
@@ -2137,7 +2135,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117r" title="AutoReels 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261119-voice-apply"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261119-sound-step"><\/script>');
     }
   </script>
   <!--

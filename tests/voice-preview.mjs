@@ -47,6 +47,8 @@ try {
     });
     await page.addInitScript(() => localStorage.setItem('autoreels_tts_voice', 'device-F1'));
     await page.goto(origin + '/studio');
+    const actions = page.locator('#easyStepGuide #soundStepActions');
+    assert.equal(await actions.isHidden(), true);
     assert.equal(await page.locator('#deviceVoiceControls,#deviceVoiceInstall,#voxVoiceInstall').count(), 0);
     assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'off');
     await page.evaluate(() => {
@@ -56,6 +58,13 @@ try {
       arToggleSheet(false);
     });
     const open = page.locator('#ttsVoiceSelect + .ig-select-row');
+    assert.equal(await page.locator('#easyStepCount').textContent(), '4 / 6');
+    assert.equal(await page.locator('#easyStepTitle').textContent(), '성우 · 배경음악');
+    const buttons = actions.getByRole('button');
+    assert.deepEqual((await buttons.allTextContents()).map(t => t.trim()), ['현재 컷 듣기', '처음부터 듣기']);
+    for (const button of await buttons.all()) await button.click({ trial: true });
+    assert.deepEqual(await page.locator('#studioPanel_sound select').evaluateAll(els => els.map(el => el.id)),
+      ['ttsVoiceSelect', 'bgmStyleSelect', 'sfxModeSelect', 'ttsSpeedSelect']);
     const sheet = page.locator('#arOptionSheet');
     const option = id => sheet.locator('[data-v="' + id + '"]');
     const play = async id => {
@@ -84,6 +93,8 @@ try {
     assert.equal(await player.evaluate(el => el.paused), true);
     assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'ko-KR-Wavenet-B');
     assert.equal(await page.evaluate(() => localStorage.getItem('autoreels_tts_voice')), 'ko-KR-Wavenet-B');
+    await page.evaluate(() => switchStudioTab('card'));
+    assert.equal(await actions.isHidden(), true);
     await page.close();
   }
   console.log('Google voice samples, selection, cancellation and legacy device settings OK');
