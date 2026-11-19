@@ -454,6 +454,88 @@
     });
   });
 
+  // 3가지 제작 방식 인터랙티브 탭 전환
+  var modeTabs = document.querySelectorAll('.lp-mode-tab[data-mode]');
+  var modePanels = document.querySelectorAll('.lp-mode-panel[data-mode-panel]');
+  modeTabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      var target = tab.getAttribute('data-mode');
+      modeTabs.forEach(function (b) {
+        var on = b === tab;
+        b.classList.toggle('is-active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      modePanels.forEach(function (p) {
+        p.classList.toggle('is-active', p.getAttribute('data-mode-panel') === target);
+      });
+    });
+  });
+
+  // 오리지널 BGM 1클릭 미리듣기 플레이어
+  var bgmAudio = null;
+  var playingBgmBtn = null;
+  var bgmStatusEl = document.getElementById('lpBgmNowStatus');
+  function stopLandingBgm() {
+    if (bgmAudio) { try { bgmAudio.pause(); } catch (e) {} }
+    if (playingBgmBtn) {
+      playingBgmBtn.classList.remove('is-playing');
+      var icon = playingBgmBtn.querySelector('.lp-bgm-btn');
+      if (icon) icon.textContent = '▶';
+      playingBgmBtn = null;
+    }
+    if (bgmStatusEl) bgmStatusEl.textContent = 'READY';
+  }
+  document.querySelectorAll('#lpBgmList .lp-bgm-row').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = btn.getAttribute('data-bgm-src');
+      var name = btn.getAttribute('data-bgm-name') || 'BGM';
+      if (playingBgmBtn === btn) { stopLandingBgm(); return; }
+      stopLandingBgm();
+      if (!bgmAudio) {
+        bgmAudio = new Audio();
+        bgmAudio.loop = true;
+        bgmAudio.volume = 0.65;
+      }
+      bgmAudio.src = src;
+      playingBgmBtn = btn;
+      btn.classList.add('is-playing');
+      var icon = btn.querySelector('.lp-bgm-btn');
+      if (icon) icon.textContent = '❚❚';
+      if (bgmStatusEl) bgmStatusEl.textContent = 'PLAYING · ' + name;
+      bgmAudio.play().catch(function () {});
+    });
+  });
+
+  // 숫자 카운트업 애니메이션 (스크롤 진입 시 1회 실행)
+  var countEls = document.querySelectorAll('[data-count-to]');
+  function runCountUp(el) {
+    if (el.__counted) return;
+    el.__counted = true;
+    var to = Number(el.getAttribute('data-count-to')) || 0;
+    var suffix = el.getAttribute('data-count-suffix') || '';
+    if (reducedMotion || to <= 0) { el.textContent = to + suffix; return; }
+    var start = performance.now();
+    var dur = 950;
+    function step(now) {
+      var t = clamp((now - start) / dur, 0, 1);
+      var eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(to * eased) + suffix;
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  if ('IntersectionObserver' in window && countEls.length) {
+    var countIo = new IntersectionObserver(function (entries) {
+      entries.forEach(function (ent) {
+        if (ent.isIntersecting) {
+          runCountUp(ent.target);
+          countIo.unobserve(ent.target);
+        }
+      });
+    }, { threshold: 0.35 });
+    countEls.forEach(function (el) { countIo.observe(el); });
+  }
+
   syncPlayBtn();
   selectIndustry('auto');
   renderMarqueeStrip();
