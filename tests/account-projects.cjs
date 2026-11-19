@@ -148,7 +148,7 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
  await pg.exec("SELECT setval('ar_users_id_seq',2)");
  const proof3=await security.requestCode(req,'010-0000-0003','signup');
  const specialtyRules=require('../lib/business-specialty.cjs');
- const specialtyTrends=load('lib/server/specialty-trends.js',{'./db':db,'../business-specialty.cjs':specialtyRules});
+ const specialtyTrends=load('lib/server/specialty-trends.js',{'./db':db,'../business-specialty.cjs':specialtyRules,'../topic-references.cjs':require('../lib/topic-references.cjs')});
  const adminSession=load('lib/server/admin-session.js',{'./session':session},env);
  const account=load('api/account.js',{'../lib/server/db':db,'../lib/server/config':{readiness:()=>({serverMode:true})},'../lib/server/security':security,'../lib/server/projects':projects,'../lib/server/scheduler':{available:async()=>false},'../lib/server/session':session,'../lib/server/billing':{getSubscription:async()=>null,publicSubscription:()=>null},'../lib/server/plans':planRules,'../lib/server/usage':{usageFor:async()=>({}),isActive:()=>false},'../lib/business-specialty.cjs':specialtyRules,'../lib/server/specialty-trends':specialtyTrends,'../lib/server/admin-session':adminSession},env);
  const response=()=>({statusCode:200,headers:{},setHeader(k,v){this.headers[k]=v},status(s){this.statusCode=s;return this},json(b){this.body=b}});
