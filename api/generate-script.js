@@ -734,7 +734,7 @@ async function handler(req, res) {
     });
   }
 
-  const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+  const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : { ...req.body };
   // 오늘의 주제 추천: {mode:'topics'} — 대본 대신 오늘 올릴 주제 후보 6개를 돌려줌
   if (body.mode === 'topics') return handleTopics(body, res);
   if (body.mode === 'reference-style') return require('../lib/reference-analysis.cjs').handleReferenceAnalysis(body, res);
@@ -768,16 +768,34 @@ async function handler(req, res) {
   const excludeRule = excludeTerms.length > 0 ? `\n절대 사용하지 말아야 할 금지어(뺄 문구): ${excludeTerms.join(', ')}` : '';
   const isAutoReq = !body.industry || body.industry === 'auto';
   const isPersonal = body.industry === 'personal';
+  let discardedCard = false;
+  if (!isAutoReq) {
+    // Older studios may send the last generated product and a car dealer's
+    // saved ending card when starting a new topic in a restaurant project.
+    if (prompt && body.vehicleLocked !== true) {
+      body.vehicle = '';
+      body.discount = '';
+      body.discountNum = 0;
+      body.bullets = [];
+    }
+    const legacyCarCard = /카마스터|자동차\s*전시장|엔진\s*오일|신차\s*출고/.test([body.dealerTitle, body.dealerBranch, body.dealerPromo].join(' '));
+    if (body.dealerIndustry ? body.dealerIndustry !== body.industry : legacyCarCard) {
+      body.dealerName = body.dealerTitle = body.dealerBranch = body.dealerPromo = '';
+      discardedCard = true;
+    }
+  }
   const angles = isPersonal ? PERSONAL_SCRIPT_ANGLES : SCRIPT_ANGLES;
   const enteredVehicle = typeof body.vehicle === 'string' ? body.vehicle.trim() : '';
   const productLocked = !isPersonal && body.vehicleLocked === true && Boolean(enteredVehicle);
+  const topic = body.topic && typeof body.topic === 'object' ? body.topic : null;
+  const topicOnly = Boolean(topic && !productLocked && (topic.origin === 'daily-keyword' || discardedCard));
   const vehicleLocked = isAutoReq && productLocked;
-  const currentVehicle = enteredVehicle || '2026 쏘렌토 하이브리드';
+  const currentVehicle = enteredVehicle || (isAutoReq ? '2026 쏘렌토 하이브리드' : String(body.topic?.title || prompt || body.industryInfo?.product || '').slice(0, 36));
   const requestedDiscountNum = Number(body.discountNum);
   const currentDiscountNum = productLocked
     ? (Number.isFinite(requestedDiscountNum) && requestedDiscountNum > 0 ? requestedDiscountNum : 0)
-    : (requestedDiscountNum || 480);
-  const currentDiscount = productLocked ? String(body.discount ?? '') : (body.discount || '월 46만원대 · 3일 즉시출고');
+    : (requestedDiscountNum || (isAutoReq ? 480 : 0));
+  const currentDiscount = productLocked ? String(body.discount ?? '') : (body.discount || (isAutoReq ? '월 46만원대 · 3일 즉시출고' : ''));
   // 이름 없는 자동차 문의 문구에는 담당자로만 안내합니다.
   const dealerName = (body.dealerName !== '사용자' && body.dealerName) || (isAutoReq ? '담당자' : '');
   const dealerTitle = body.dealerTitle || '';
@@ -830,7 +848,15 @@ async function handler(req, res) {
     currentDiscount
   ].filter(Boolean).join(' · ');
   let fallbackVariants;
-  if (isPersonal) {
+  if (topicOnly) {
+    const title = cut(topic.title || prompt, 36);
+    const parts = [title, '어떤 내용이 알려졌을까요?', '확인된 사실부터 살펴봐요', '자세한 내용은 출처를 확인하세요'];
+    const lines = Array.from({length:cutCount}, (_, i) => parts[i] || '');
+    fallbackVariants = angles.map(() => ({
+      vehicle:title, hook:title, cutCaptions:lines, ttsLines:lines, themeId:'royal', discount:'', discountNum:0,
+      bullets:[], kakaoChat:[], ctaKeyword:'', ctaBanner:'', scenePlan:lines.map((_, i) => ({cut:i+1,widget:'LOWER_THIRD',pos:'bottom',cam:i%4}))
+    }));
+  } else if (isPersonal) {
     const beats = [
       ['하루를 시작하며', '활동 중 기억에 남은 장면', '오늘 느낀 점'],
       ['준비한 것', '직접 해 본 과정', '다음에 해 보고 싶은 것'],
@@ -929,13 +955,12 @@ JSON 스키마:
   "ctaBanner": "하단 댓글 유도 문구"
 }`;
     // 오늘의 주제로 만든 대본: 계기(수능 등) → 손님의 마음·필요 → 우리 가게·상품이 채워 줌 → 오세요, 한 이야기로 잇기
-    const topic = body.topic && typeof body.topic === 'object' ? body.topic : null;
     const topicTitle = topic ? String(topic.title || '').slice(0, 30) : '';
     const topicWhy = topic ? String(topic.why || '').slice(0, 50) : '';
     const storeLabel = isOther ? (dealerName || '') : [dealerName, dealerTitle].filter(Boolean).join(' ');
     // 가게 이름이 없을 때 부를 말: 업종 장소(병원·매장·학원 등)
     const placeWord = `저희 ${String((body.industryInfo && body.industryInfo.place) || '가게').slice(0, 10)}`;
-    const storyRule = topic ? `
+    const storyRule = topicOnly ? `\n[이슈 대본] 선택한 키워드 "${topicTitle}"를 주제로 작성하세요. 출처 표시 "${topicWhy}" 외에 확인되지 않은 사건·인물·결과를 만들어내지 마세요. 매장 홍보나 할인, 문의 유도 없이 키워드가 뜻하는 내용에 집중하세요.` : topic ? `
 
 [오늘의 주제로 이야기 잇기 — 가장 중요]
 오늘의 주제는 "${topicTitle}"(${topicWhy})입니다. 대본은 하나의 이야기로 이어져야 합니다:
@@ -951,7 +976,7 @@ JSON 스키마:
     const enteredProductRule = productLocked
       ? '\n[작성 기준] 직접 확인한 상품과 혜택을 모든 대본의 기준으로 사용하세요. 주제는 이야기의 계기로만 쓰세요. 제공하지 않은 판매 조건은 넣지 마세요.'
       : '';
-    const systemWithAngles = isPersonal ? systemInstruction + anglesRule : `${systemInstruction}${anglesRule}${storyRule}${HUMAN_TONE_RULES}${specialtyRule}${enteredProductRule}`;
+    const systemWithAngles = topicOnly ? `한국어 이슈 릴스 작가입니다. JSON으로만 작성하세요. variants의 각 대본은 vehicle(키워드), hook, cutCaptions와 ttsLines(각각 ${cutCount}개), discount(""), bullets([])를 포함합니다.${anglesRule}${storyRule}${excludeRule}` : isPersonal ? systemInstruction + anglesRule : `${systemInstruction}${anglesRule}${storyRule}${HUMAN_TONE_RULES}${specialtyRule}${enteredProductRule}`;
 
     const speaker = [dealerBranch, dealerName, dealerTitle].filter(Boolean).join(' ');
     const speakerLine = speaker
@@ -962,10 +987,10 @@ JSON 스키마:
 ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${body.discount || ''}`}` : `[카마스터 입력 상황]: "${prompt || `${currentVehicle} ${productLocked ? '소개' : '당월 특별 프로모션'}`}"
 [담당 카마스터]: ${dealerBranch} ${dealerName} ${dealerTitle}${dealerPromo ? ` (사은품: ${dealerPromo})` : ' (사은품·혜택은 입력하지 않음 — 지어내지 말 것)'}`;
     const userMessage = [
-      userMessageBase,
+      topicOnly ? `[입력 주제]: ${JSON.stringify(prompt)}` : userMessageBase,
       topic ? `[오늘의 주제]: ${topicTitle} — ${topicWhy}` : '',
       productLocked ? `[직접 입력한 혜택]: ${enteredOffer || '제공된 판매 조건 없음'}` : '',
-      explicitVehicle ? `[지정 ${isOther ? I.product : '차량'}]: ${explicitVehicle}. 모든 대본의 제목, 자막, 성우 대사에 이 대상을 유지하고 제공되지 않은 판매 조건은 추가하지 마세요.` : ''
+      explicitVehicle && !topicOnly ? `[지정 ${isOther ? I.product : '차량'}]: ${explicitVehicle}. 모든 대본의 제목, 자막, 성우 대사에 이 대상을 유지하고 제공되지 않은 판매 조건은 추가하지 마세요.` : ''
     ].filter(Boolean).join('\n');
 
     let aiResult = null;
@@ -1109,7 +1134,7 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
         const fb = fallbackVariants[i] || fallback;
         const v = aiVariants[i];
         if (!v) return fb;
-        if (explicitVehicle) {
+        if (explicitVehicle && !topicOnly) {
           const normalize = name => String(name || '').replace(/\s+/g, '').toLowerCase();
           const expected = normalize(explicitVehicle);
           const actual = normalize(v.vehicle);
@@ -1118,7 +1143,7 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
         return {
           ...fb,
           ...v,
-          ...(explicitVehicle ? { vehicle: explicitVehicle } : {}),
+          ...(topicOnly ? { vehicle: fb.vehicle, discount:'', discountNum:0, bullets:[], kakaoChat:[], ctaKeyword:'' } : explicitVehicle ? { vehicle: explicitVehicle } : {}),
           ...(isOther || isPersonal ? { scenePlan: fb.scenePlan } : {}),
           ...(v.themeId && !VALID_THEMES.includes(v.themeId) ? { themeId: fb.themeId } : {}),
           ttsLines: Array.isArray(v.ttsLines) && v.ttsLines.length >= 4 ? v.ttsLines : fb.ttsLines

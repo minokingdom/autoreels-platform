@@ -85,6 +85,20 @@ const res={statusCode:200,status(n){this.statusCode=n;return this},json(b){this.
  assert.match(input,/지정 메뉴.*바닐라 라떼/);
  assert.doesNotMatch(JSON.stringify(res.body.variants),/딸기 라떼|현대 아이오닉 6/);
  console.log('confirmed product kept for a non-automotive script');
+ const issueRequest = {...request, body:{industry:'restaurant',industryInfo:{name:'음식점',product:'메뉴',role:'사장님',cta:'문의'},
+   prompt:'AI 부정행위 논란',topic:{title:'AI 부정행위 논란',why:'직접 입력'},vehicleLocked:false,
+   vehicle:'이전 자동차 케어',discount:'엔진오일 교환',bullets:['엔진오일'],
+   dealerPromo:'3년 엔진오일 무상 교환',dealerBranch:'자동차회사',dealerName:'이전 딜러'}};
+ await moduleObj.exports(issueRequest,res);
+ assert.doesNotMatch(input,/자동차회사|엔진오일|이전 딜러|이전 자동차 케어/);
+ assert.match(input,/AI 부정행위 논란/);
+ const priorFetch=ctx.fetch;
+ ctx.fetch=timedOutFetch;
+ await moduleObj.exports(issueRequest,res);
+ assert.ok(res.body.aiFallback);
+ assert.doesNotMatch(JSON.stringify(res.body.variants),/자동차회사|엔진오일|쏘렌토|이전 딜러|이전 자동차 케어/);
+ assert.ok(res.body.variants.every(v=>v.vehicle==='AI 부정행위 논란' && v.discount===''));
+ ctx.fetch=priorFetch;
 
  const personalRequest = {
   ...request, body:{prompt:'경기 전 루틴을 기록',industry:'personal',specialty:'야구선수',vehicle:'테스트 상품',

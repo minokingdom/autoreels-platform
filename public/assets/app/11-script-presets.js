@@ -56,7 +56,7 @@
             campaign.discountNum = Number(ai.discountNum);
           }
           if (ai.discount) campaign.discount = stripExcludedLocal(ai.discount) || ai.discount;
-          else if (IND.key === 'personal') campaign.discount = '';
+          else if (IND.key === 'personal' || ai.discount === '') campaign.discount = '';
         }
         if (ai.hook) {
           campaign.hook = stripExcludedLocal(ai.hook);
@@ -81,9 +81,10 @@
           campaign.bullets = ai.bullets.map(stripExcludedLocal);
           if (d.variation) d.variation.bullets = [...campaign.bullets];
         }
-        if (IND.key === 'personal') {
-          campaign.kakaoChat = [];
+        if (IND.key === 'personal' || (!keepProduct && Array.isArray(ai.kakaoChat) && !ai.kakaoChat.length)) campaign.kakaoChat = [];
+        if (IND.key === 'personal' || (!keepProduct && Array.isArray(ai.bullets) && !ai.bullets.length)) {
           campaign.bullets = [];
+          if (d.variation) d.variation.bullets = [];
         }
         if (ai.ctaKeyword && d.variation) {
           d.variation.ctaKeyword = ai.ctaKeyword;

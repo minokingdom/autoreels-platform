@@ -312,6 +312,8 @@
       button.addEventListener('click', () => {
         const input = document.getElementById('topicCustomInput');
         input.value = term;
+        input.dataset.keyword = term;
+        input.dataset.keywordSource = publisher + ' · ' + detailText;
         input.focus();
       });
       const link = document.createElement('a');
@@ -707,7 +709,8 @@
       const el = document.getElementById('topicCustomInput');
       const v = (el && el.value || '').trim();
       if (!v) { if (el) el.focus(); return; }
-      arPickTopic({ title: v.slice(0, 20), why: '직접 입력', prompt: v });
+      const daily = el.dataset.keyword === v;
+      arPickTopic({ title: v.slice(0, 36), why: daily ? el.dataset.keywordSource : '직접 입력', origin: daily ? 'daily-keyword' : 'custom', prompt: v });
     }
     document.addEventListener('click', (e) => {
       const btn = e.target.closest && e.target.closest('[data-topic-idx]');
@@ -1792,6 +1795,7 @@
             snsAccounts: d.snsAccounts,
             cardHide: d.cardHide || {},
             endingFields: d._endingFields,
+            endingIndustry: d._endingIndustry || arDealerCopyIndustry(d),
             avatar: d._customAvatar?.src || '',
             logo: d.logoImg?.src || ''
           })
@@ -1808,6 +1812,7 @@
       try {
         const saved = JSON.parse(localStorage.getItem('autoreels_my_dealer_profile_' + d.id));
         if (saved) {
+          d._endingIndustry = saved.endingIndustry || arDealerCopyIndustry(saved);
           const explicit = {};
           for (const field of Object.values(AR_ENDING_INPUTS)) {
             if (typeof saved[field] !== 'string') continue;
@@ -1927,7 +1932,8 @@
         const fields = arReadEndingInputs();
         const { avatarImg, logoImg, cardHide } = arEndingDraft;
         const editedFields = Object.entries(fields).filter(([key, value]) => value !== String(dealer[key] ?? ''));
-        const updates = { ...fields, _endingFields: { ...dealer._endingFields, ...Object.fromEntries(editedFields) } };
+        const priorFields = arDealerCopyIndustry(dealer);
+        const updates = { ...fields, _endingIndustry: IND.key, _endingFields: { ...(!priorFields || priorFields === IND.key ? dealer._endingFields : {}), ...Object.fromEntries(editedFields) } };
         if (cardHide) updates.cardHide = cardHide;
         if (logoImg !== undefined) updates.logoImg = logoImg;
         if (avatarImg) Object.assign(updates, { avatarImg, _customAvatar: avatarImg });
@@ -2286,6 +2292,8 @@
         (productAtRequest !== arProductKey() && (vehicleLocked || arHasEnteredVehicle()));
       // 직접 입력한 차종이 없을 때 주제에서 차종을 찾습니다.
       const parsedLocal = IND.key === 'auto' && !vehicleLocked ? parsePromptVehicleAndTargetClient(raw) : {};
+      const includeProduct = industryAtRequest === 'auto' || vehicleLocked || !raw;
+      const card = arDealerForCopy(d);
       if (!vehicleLocked) campaign.vehicleEntered = false;
       if (parsedLocal.matchedCar) {
         campaign.vehicle = parsedLocal.matchedCar.vehicle;
@@ -2320,19 +2328,20 @@
           body: JSON.stringify({
             prompt: raw,
             exclude: excludeRaw,
-            vehicle: campaign.vehicle,
+            vehicle: includeProduct ? campaign.vehicle : '',
             vehicleLocked,
-            discountNum: campaign.discountNum,
-            discount: campaign.discount,
+            discountNum: includeProduct ? campaign.discountNum : 0,
+            discount: includeProduct ? campaign.discount : '',
             // 아직 바꾸지 않은 예시 매장 정보는 빼고 보냄 (자동차는 그대로)
-            dealerName: arDealerForCopy(d).name,
-            dealerTitle: arDealerForCopy(d).title,
-            dealerBranch: arDealerForCopy(d).branch,
-            dealerPromo: arDealerForCopy(d).promoTag,
+            dealerIndustry: arDealerCopyIndustry(d),
+            dealerName: card.name,
+            dealerTitle: card.title,
+            dealerBranch: card.branch,
+            dealerPromo: card.promoTag,
             cutCount: totalCuts,
-            bullets: campaign.bullets,
+            bullets: includeProduct ? campaign.bullets : [],
             // 오늘의 주제로 만든 대본이면 주제(계기·이유)를 같이 보내 "계기 → 손님 마음 → 우리 가게" 이야기로 이어지게 함
-            topic: (window.arTodayTopic && raw === window.arTodayTopic.prompt) ? { title: window.arTodayTopic.title, why: window.arTodayTopic.why, prompt: window.arTodayTopic.prompt } : null,
+            topic: (window.arTodayTopic && raw === window.arTodayTopic.prompt) ? { title: window.arTodayTopic.title, why: window.arTodayTopic.why, prompt: raw, origin: window.arTodayTopic.origin } : null,
             industry: IND.key,
             specialty: arIndustrySpecialty(),
             industryInfo: IND.key === 'auto' ? null : { name: IND.name, role: IND.role, product: IND.product, cta: IND.cta, aiRole: IND.aiRole, caution: IND.caution, place: IND.place },
@@ -2367,6 +2376,7 @@
         applyAiScriptToCampaign(variants[0], d, stripExcludedLocal, vehicleLocked);
         renderScriptVariantPicker();
         aiUsedFallback = Boolean(result.aiFallback);
+        if (noticeEl) noticeEl.title = aiUsedFallback ? '기본 대본' : String(result.provider || '');
         if (aiUsedFallback) progressError = arScriptFallbackNotice(result.aiFallback);
         triggerTopicImages(variants[0]?.cutCaptions);
       } catch (err) {
@@ -2398,7 +2408,7 @@
             const offlineAi = {
               vehicle: topicTitle,
               hook: topicTitle,
-              discount: personal ? '' : campaign.discount || (IND.cta || ''),
+              discount: !personal && includeProduct ? campaign.discount || '' : '',
               cutCaptions: Array.from({ length: totalCuts }, (_, i) => baseCaps[i % baseCaps.length]),
               ttsLines: Array.from({ length: totalCuts }, (_, i) => baseTts[i % baseTts.length])
             };

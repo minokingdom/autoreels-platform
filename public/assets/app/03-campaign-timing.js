@@ -294,6 +294,8 @@
       return view;
     }
     function arDealerForCopy(d) {
+      const cardIndustry = arDealerCopyIndustry(d);
+      if (cardIndustry && cardIndustry !== IND.key) return {name:'', title:'', branch:'', promoTag:''};
       const out = { name: (d && d.name) || '', title: (d && d.title) || '', branch: (d && d.branch) || '', promoTag: (d && d.promoTag) || '' };
       if (out.name === '사용자') {
         out.name = '';

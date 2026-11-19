@@ -765,6 +765,11 @@
 
     // 체험용 견본 카마스터(김민준 등)는 업종에 맞는 직함·가게 이름·혜택 문구로 바꿔 보여 줌
     const AR_DEMO_DEALER_IDS = ['dlr_1', 'dlr_2', 'dlr_3'];
+    function arDealerCopyIndustry(d) {
+      if (d?._endingIndustry) return d._endingIndustry;
+      const card = d?._endingFields || d || {};
+      return /카마스터|자동차\s*전시장|엔진\s*오일|신차\s*출고/.test([card.title, card.branch, card.promoTag].join(' ')) ? 'auto' : '';
+    }
     // 견본 값인지: 자동차 견본 원래 값이거나 어느 업종의 예시 매장 정보와 같으면 견본으로 봄
     function arIsSampleDealerValue(d, k) {
       const v = String(d[k] || '').trim();
@@ -789,7 +794,8 @@
           };
         }
         if (IND.key === 'auto') {
-          Object.assign(d, d._autoOrig, d._endingFields);
+          Object.assign(d, d._autoOrig);
+          if (!d._endingIndustry || d._endingIndustry === 'auto') Object.assign(d, d._endingFields);
           if (d._customAvatar) d.avatarImg = d._customAvatar;
           return;
         }
@@ -825,7 +831,9 @@
         ['name', 'title', 'branch', 'promoTag', 'phone'].forEach((k) => {
           if (arIsSampleDealerValue(d, k)) d[k] = '';
         });
-        Object.assign(d, d._endingFields);
+        const cardIndustry = arDealerCopyIndustry(d);
+        if (!cardIndustry || cardIndustry === IND.key) Object.assign(d, d._endingFields);
+        else for (const key of ['name', 'title', 'branch', 'promoTag', 'phone']) d[key] = '';
       });
       const nameLabel = document.getElementById('dlrNameTitleLabel');
       if (nameLabel) nameLabel.textContent = IND.outroMode === 'store' ? `${IND.place} 이름 및 소개` : '이름 및 직함';
