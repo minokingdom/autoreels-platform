@@ -21,7 +21,7 @@ EXAMS = {"2026-11-19": 100526, "2027-11-18": 103512, "2028-11-16": 106921}
 # Neutral topic labels. A headline must support the label even when the report
 # describes prevention or an allegation rather than a confirmed incident.
 ISSUES = {
-    "시험과 AI 부정행위 논란": r"(?=.*(?:시험|수능|수험|세무사|입시))(?=.*(?:\bAI|인공지능))(?=.*(?:부정행위|부정시험|커닝|컨닝))",
+    "AI 부정행위 논란": r"(?=.*(?:시험|수능|수험|세무사|입시))(?=.*(?:\bAI|인공지능))(?=.*(?:부정행위|부정시험|커닝|컨닝))",
     "수능": r"수능|대학수학능력시험",
     "첫눈": r"첫눈(?:이|은|을|에|·|…|\s|$)",
     "한파특보": r"한파\s*(?:특보|주의보|경보)",
@@ -36,6 +36,49 @@ ISSUES = {
     "사전투표": r"사전\s*투표",
     "장마": r"장마전선|장마철|장마\s*(?:시작|종료)",
 }
+
+
+def headline_keyword(title):
+    # Remove editorial prefixes before choosing a subject. Keep legal stages
+    # distinct: a sentence requested by prosecutors is not a court ruling.
+    text = re.sub(r"^(?:(?:\[[^\]]+\]|['‘“][^'’”]+['’”])\s*)+", "", title.strip())
+    person = re.match(r"^([가-힣]{2,4})\s+(?:전\s+\S+\s+)?징역\s*(\d+년)\s*(구형|확정|선고)", text)
+    if person:
+        return f"{person[1]} 징역 {person[2]} {person[3]}"
+    appeal = re.match(r"^([가-힣]{2,4})\s+(?:내란죄|항소심|상고심|유죄|무죄|원심).*파기환송", text)
+    if appeal:
+        return f"{appeal[1]} 파기환송"
+    # Use a short subject phrase, never a cropped sentence or ellipsis.
+    clause = re.split(r"[,…:·!?“”‘’'\"()\[\]]|\.{2,}", text, maxsplit=1)[0]
+    words = []
+    for token in clause.split():
+        if not re.fullmatch(r"[가-힣A-Za-z0-9-]+", token) or token in {"도입", "확정", "발표", "검토", "추진"}:
+            break
+        if token.endswith(("했다", "한다", "됐다", "지만", "는데", "하며", "한다는", "하는")):
+            break
+        if len(" ".join([*words, token])) > 16:
+            break
+        words.append(token)
+        if len(words) == 3:
+            break
+    return " ".join(words) if len(" ".join(words)) >= 2 else ""
+
+
+def keyword_issues(rows):
+    result = []
+    seen = set()
+    for issue in rows:
+        term = issue["term"]
+        if term == "시험과 AI 부정행위 논란":
+            term = "AI 부정행위 논란"
+        if issue.get("kind") == "보도" and term not in ISSUES:
+            title = issue.get("headline") or issue["term"]
+            term = headline_keyword(title)
+            issue = {**issue, "headline": title}
+        if term and term not in seen:
+            result.append({**issue, "term": term})
+            seen.add(term)
+    return result
 
 
 def public_issues(feeds, collected):
@@ -73,7 +116,7 @@ def public_issues(feeds, collected):
             continue
         # A specific headline can establish a narrowly defined issue. Require
         # coverage by two outlets for broader seasonal and social topics.
-        if len(outlets) < 2 and term != "시험과 AI 부정행위 논란":
+        if len(outlets) < 2 and term != "AI 부정행위 논란":
             continue
         published, url, publisher = max((date, link, name) for name, rows in outlets.items() for date, link in rows)
         issues.append({"term": term, "day": day, "kind": "보도", "publisher": publisher,
@@ -92,7 +135,7 @@ def public_issues(feeds, collected):
         issues.append({"term": title, "day": day, "kind": "보도", "publisher": publisher,
                        "url": url, "publishedAt": published.isoformat()})
         used.update(link for _, link in related)
-    return issues
+    return keyword_issues(issues)
 
 
 def daily_keywords(xml, collected):
@@ -138,8 +181,8 @@ if __name__ == "__main__":
     if OUTPUT.exists():
         prior = json.loads(OUTPUT.read_text(encoding="utf-8"))
         yesterday = (collected - timedelta(days=1)).date().isoformat()
-        data["previousIssues"] = [issue for issue in prior.get("issues", []) + prior.get("previousIssues", [])
-                                  if issue.get("day") == yesterday]
+        data["previousIssues"] = keyword_issues(issue for issue in prior.get("issues", []) + prior.get("previousIssues", [])
+                                                if issue.get("day") == yesterday)
     if not feeds and not data["items"] and not data["issues"]:
         raise SystemExit("No verified items or issues for this date")
     temp = OUTPUT.with_suffix(".tmp")

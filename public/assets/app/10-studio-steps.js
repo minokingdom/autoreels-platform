@@ -305,7 +305,9 @@
       const title = document.createElement('span');
       title.textContent = term;
       const detail = document.createElement('small');
+      detail.className = 'sr-only';
       detail.textContent = detailText;
+      button.title = detailText;
       button.append(title, detail);
       button.addEventListener('click', () => {
         const input = document.getElementById('topicCustomInput');
@@ -317,6 +319,7 @@
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
       link.textContent = publisher;
+      link.title = publisher + ' · ' + detailText;
       link.setAttribute('aria-label', term + ' 출처 · ' + publisher);
       row.append(button, link);
       list.append(row);

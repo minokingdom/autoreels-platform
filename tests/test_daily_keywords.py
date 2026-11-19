@@ -1,6 +1,6 @@
 import unittest
 from datetime import datetime
-from scripts.refresh_daily_keywords import FEED, daily_keywords, public_issues
+from scripts.refresh_daily_keywords import FEED, daily_keywords, keyword_issues, public_issues
 
 
 class DailyKeywordsTest(unittest.TestCase):
@@ -16,9 +16,18 @@ class DailyKeywordsTest(unittest.TestCase):
         issues = public_issues({"연합뉴스": yna, "SBS": sbs}, collected)
         self.assertEqual(issues[0]["term"], "수능")
         self.assertEqual(issues[0]["publisher"], "교육부")
-        self.assertEqual([i["term"] for i in issues[1:]], ["시험과 AI 부정행위 논란", headline])
+        self.assertEqual([i["term"] for i in issues[1:]], ["AI 부정행위 논란", "광역 환승 정기권"])
+        self.assertEqual(issues[-1]["headline"], headline)
         tomorrow = datetime.fromisoformat("2026-11-20T00:01:00+09:00")
         self.assertEqual(public_issues({"연합뉴스": yna, "SBS": sbs}, tomorrow), [])
+
+    def test_saved_headlines_become_keywords(self):
+        titles = ["'3대 의혹' 김건희 징역 4년 확정…영부인 출신 첫 실형",
+                  "한덕수 내란죄 인정되지만…일부 무죄 취지 파기환송",
+                  "'내란 가담' 김명수 전 합참의장 징역 15년 구형…다음달 24일 선고"]
+        issues = keyword_issues({"kind": "보도", "term": title} for title in titles)
+        self.assertEqual([i["term"] for i in issues], ["김건희 징역 4년 확정", "한덕수 파기환송", "김명수 징역 15년 구형"])
+        self.assertEqual(keyword_issues(issues), issues)
 
     def test_kst_midnight_future_and_missing_dates(self):
         collected = datetime.fromisoformat("2026-11-19T00:02:00+09:00")
