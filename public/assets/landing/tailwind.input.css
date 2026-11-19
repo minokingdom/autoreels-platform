@@ -16,6 +16,16 @@ body {
 .landing-mark { background: var(--raised); color: var(--primary); border-color: var(--border-strong); }
 .landing-primary { background: var(--primary); color: var(--primary-foreground); cursor: pointer; }
 .landing-primary:hover { background: color-mix(in srgb, var(--primary) 82%, var(--foreground)); }
+.landing-hero-cta {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 0 20px;
+  font-size: 15px;
+}
+.landing-hero-cta span { font-size: 18px; line-height: 1; }
 .landing-secondary { background: var(--raised); color: var(--foreground); border-color: var(--border); }
 .landing-secondary:hover { border-color: var(--border-strong); }
 :where(a, button):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }

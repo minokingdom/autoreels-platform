@@ -35,7 +35,7 @@
   <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261119-astryx" />
+  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120-hero-cta" />
 </head>
 <body class="antialiased px-4 py-6 md:px-8 md:py-8">
   <!-- 랜딩 페이지 (/) — 제작 화면 코드·글꼴을 받지 않아 바로 뜸. 스타일: tailwind 로 미리 만든 landing.css (npm run build:landing-css) -->
@@ -69,9 +69,9 @@
           오늘의 인기 주제 추천부터 구어체 AI 대본, 감성 모션 디자인, 자연스러운 AI 성우, 매장 정보·로고 엔딩까지 한 화면에서 바로 만들고 9:16 MP4로 저장하세요.
         </p>
         <div class="flex flex-wrap items-center gap-3 pt-1">
-          <button type="button" data-go="/studio" class="landing-primary h-11 px-6 text-[14px]">
-            무료로 릴스 만들기 →
-          </button>
+          <a href="/studio" class="landing-primary landing-hero-cta">
+            지금 무료로 릴스 만들기 <span aria-hidden="true">→</span>
+          </a>
           <a href="#arLandingPricing" class="landing-secondary h-11 px-5 text-[14px] flex items-center">
             요금제 보기
           </a>
