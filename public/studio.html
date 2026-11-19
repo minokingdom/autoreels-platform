@@ -41,7 +41,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-astryx" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-personal" />
   <link rel="stylesheet" href="/assets/app/splash.css" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -92,7 +92,7 @@
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-[8px] bg-[#232325] border border-[var(--border-strong)] flex items-center justify-center font-mono text-xs font-semibold text-[#ededed]">AR</div>
         <span class="text-[16px] font-semibold text-[#ededed] tracking-tight">AutoReels</span>
-        <span class="hidden sm:inline-block px-2 py-0.5 rounded-full bg-[#18181b] border border-[var(--border)] text-[11px] text-[#a1a1a6]">10개 업종 릴스·쇼츠 스튜디오</span>
+        <span class="hidden sm:inline-block px-2 py-0.5 rounded-full bg-[#18181b] border border-[var(--border)] text-[11px] text-[#a1a1a6]">릴스·쇼츠 제작 스튜디오</span>
       </div>
       <div class="flex items-center gap-2 sm:gap-3 text-[13px]">
         <a href="#arLandingIndustries" class="hidden sm:inline-block px-2.5 py-1.5 text-[#a1a1a6] hover:text-[#ededed] transition-colors">업종별 예시</a>
@@ -125,7 +125,7 @@
         </div>
         <div class="grid grid-cols-3 gap-3 pt-2 max-w-[460px] text-[12px]">
           <div class="rounded-[10px] bg-[#141415] border border-[var(--border)] px-3 py-2.5">
-            <div class="text-[16px] font-bold text-[#ededed]">10개 업종</div>
+            <div class="text-[16px] font-bold text-[#ededed]">10개 업종 · 개인</div>
             <div class="text-[#85858b] mt-0.5">전용 대본·엔딩</div>
           </div>
           <div class="rounded-[10px] bg-[#141415] border border-[var(--border)] px-3 py-2.5">
@@ -172,7 +172,7 @@
     <div id="arLandingIndustries" class="space-y-4">
       <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
         <div>
-          <h2 class="text-[20px] font-semibold text-[#ededed]">10개 업종 전용 문구 · 대본 · 엔딩</h2>
+          <h2 class="text-[20px] font-semibold text-[#ededed]">업종과 개인에 맞는 문구 · 대본 · 엔딩</h2>
           <p class="text-[13px] text-[#85858b] mt-1">업종을 눌러 위 미리보기 화면에서 실제 대본과 엔딩 구성을 확인해 보세요.</p>
         </div>
       </div>
@@ -225,7 +225,7 @@
             <div class="text-[13px] font-medium text-[#a1a1a6]">가입 후 7일 무료 체험</div>
             <div class="text-[24px] font-bold text-[#ededed]">0원</div>
             <ul class="text-[12.5px] text-[#85858b] space-y-1.5">
-              <li>• 10개 업종 · 136종 디자인 미리보기</li>
+              <li>• 10개 업종과 개인 · 136종 디자인 미리보기</li>
               <li>• AI 대본 · 컷 편집 체험</li>
               <li>• 워터마크 포함 영상 미리보기</li>
             </ul>
@@ -298,7 +298,7 @@
         <!-- 상단 통합 설정 버튼 (구독상태 · 업종 · 명함은 설정창에서 한 번에 관리) -->
         <div class="flex items-center gap-2">
           <a href="/studio?mobile=1" class="hidden lg:inline-flex btn-secondary h-8 px-2.5 text-[12px] items-center gap-1" title="넓은 PC 창에서 390×844 모바일 화면으로 보기">📱 모바일</a>
-          <button type="button" id="headerSettingsBtn" onclick="openStudioSettingsModal()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer flex items-center gap-2" title="구독 상태 · 업종 설정">
+          <button type="button" id="headerSettingsBtn" onclick="openStudioSettingsModal()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer flex items-center gap-2" title="구독 상태 · 제작 유형">
             <span id="headerDrmDot" class="w-2 h-2 rounded-full bg-[#4cc38a] shrink-0"></span>
             <span>⚙️ 설정</span>
           </button>
@@ -723,7 +723,8 @@
             </div>
             <button type="button" onclick="openPresetDrawer('right')" class="h-7 px-2.5 rounded-[7px] bg-[#232325] hover:bg-[#323236] border border-[var(--border)] text-[11px] font-medium text-[#ededed] cursor-pointer shrink-0">🎨 디자인 ›</button>
           </div>
-          <button type="button" class="bgm-now" onclick="arOpenProductSheet()">
+          <button type="button" id="topicProfileBtn" class="btn-secondary px-3 h-8 text-[12px] cursor-pointer">제작 유형</button>
+          <button type="button" class="bgm-now" data-business-product onclick="arOpenProductSheet()">
             <span class="bgm-cover ar-product-cover"><img class="ar-product-photo" alt="" /></span>
             <span class="bgm-now-txt"><strong class="ar-product-name">내 상품</strong><small class="ar-product-sub">무엇을 알릴지 정해 두면 대본에 들어가요</small></span>
             <span class="bgm-now-go">확인 ›</span>
@@ -744,7 +745,7 @@
           <!-- 맨 위: 오늘 주제 · 내 상품 (누르면 바꾸기) -->
           <div class="ig-chip-row">
             <button type="button" class="ig-ctx-chip" onclick="switchStudioTab('topic')"><span>주제</span><strong id="todayTopicChip">고르기</strong></button>
-            <button type="button" class="ig-ctx-chip" onclick="arOpenProductSheet()"><span>상품</span><strong class="ar-product-name">내 상품</strong></button>
+            <button type="button" class="ig-ctx-chip" data-business-product onclick="arOpenProductSheet()"><span>상품</span><strong class="ar-product-name">내 상품</strong></button>
           </div>
           <div id="scriptDurRewriteBar" class="hidden flex items-center justify-between gap-2 p-3 rounded-[10px] bg-[#141415] border border-[#f5a524]/40">
             <span id="scriptDurRewriteText" class="text-[11px] text-[#f5a524]">컷 수가 바뀌었어요. 새 길이에 맞춰 대본을 다시 쓸까요?</span>
@@ -2017,11 +2018,11 @@
       </div>
 
       <details id="settingsBusinessDetails" class="studio-sub fold" data-noind>
-        <summary class="p-4 text-[13px] cursor-pointer"><span class="font-medium text-[#ededed]">업종 설정</span> <span id="settingsIndustrySummary" class="text-[12px] text-[#a1a1a6]"></span></summary>
+        <summary class="p-4 text-[13px] cursor-pointer"><span class="font-medium text-[#ededed]">제작 유형</span> <span id="settingsIndustrySummary" class="text-[12px] text-[#a1a1a6]"></span></summary>
       <form id="settingsBusinessProfile" class="px-4 pb-4 space-y-3" data-noind>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label for="settingsIndustryInput" class="block text-[12px] text-[#a1a1a6] mb-1">업종 대분류</label>
+            <label for="settingsIndustryInput" class="block text-[12px] text-[#a1a1a6] mb-1">제작 유형</label>
             <select id="settingsIndustryInput" class="studio-input w-full h-10 px-2 text-[14px]"></select>
           </div>
           <div>
@@ -2031,7 +2032,7 @@
         </div>
         <p id="settingsSpecialtyHelp" class="text-[12px] text-[#a1a1a6]">세부 업종을 입력하면 그에 맞는 주제를 추천합니다.</p>
         <div class="flex flex-wrap items-center gap-2">
-          <button type="submit" id="settingsBusinessSave" class="btn-primary h-9 px-4 text-[12px] cursor-pointer disabled:opacity-50" disabled>업종 저장</button>
+          <button type="submit" id="settingsBusinessSave" class="btn-primary h-9 px-4 text-[12px] cursor-pointer disabled:opacity-50" disabled>제작 유형 저장</button>
           <p id="settingsBusinessStatus" class="text-[12px] text-[#a1a1a6]" role="status"></p>
         </div>
       </form>
@@ -2148,7 +2149,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117r" title="AutoReels 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261119-google-voices"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261119-personal"><\/script>');
     }
   </script>
   <!--

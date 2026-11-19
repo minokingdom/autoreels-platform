@@ -1477,6 +1477,14 @@ body.ar-cut-editing #arQuickBar { display: none; }
 .ar-product-cover { width: 44px; height: 44px; overflow: hidden; background: #1c1c1e; }
 .ar-product-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+.ar-personal-role-options { display: flex; flex-wrap: wrap; gap: var(--astryx-spacing-1); margin-top: var(--astryx-spacing-2); }
+.ar-personal-role-options[hidden] { display: none; }
+.ar-personal-role-options .ar-choice { padding: 0 var(--astryx-spacing-2); font-size: var(--astryx-font-size-sm); cursor: pointer; }
+#topicProfileBtn { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-business-product][hidden] { display: none; }
+.topic-row .bgm-cover { width: 52px; height: 52px; background: var(--raised); }
+.topic-row .bgm-cover img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; }
+
 /* 대본 생성 중에는 실제 진행률 대신 움직이는 대기 표시를 사용한다. */
 .studio-panel .ar-script-loading:not(.hidden) { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 270px; padding: 32px 24px; text-align: center; }
 .ar-script-loading-art { position: relative; width: 90px; height: 100px; margin-bottom: 20px; }

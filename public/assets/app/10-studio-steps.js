@@ -185,11 +185,12 @@
       const curTopic = window.arTodayTopic && window.arTodayTopic.title;
       const indKey = typeof IND !== 'undefined' && IND.key ? IND.key : 'auto';
       box.innerHTML = topics.slice(from, from + AR_TOPICS_PER_PAGE).map((t, k) => ({ t, i: from + k })).map(({ t, i }) => {
-        const fallback = `/assets/topics/${indKey}/${(i % 10) + 1}.jpg`;
+        const fallback = indKey === 'personal' ? '' : `/assets/topics/${indKey}/${(i % 10) + 1}.jpg`;
         const imgSrc = t.iconUrl || fallback;
+        const cover = imgSrc ? `<span class="bgm-cover overflow-hidden"><img src="${esc(imgSrc)}" data-fallback="${esc(fallback)}" alt="" loading="lazy" /></span>` : '';
         return `
         <button type="button" data-topic-idx="${i}" class="bgm-row topic-row ${curTopic === t.title ? 'on' : ''}">
-          <span class="bgm-cover overflow-hidden" style="width:52px;height:52px;background:#1c1c1e"><img src="${esc(imgSrc)}" data-fallback="${esc(fallback)}" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit" /></span>
+          ${cover}
           <span class="bgm-row-txt"><strong>${esc(t.title)}</strong><small><b>${esc(t.why)}</b>${t.prompt ? ' · ' + esc(t.prompt) : ''}</small></span>
           <span class="bgm-row-state">${curTopic === t.title ? '✓' : '›'}</span>        </button>`;
       }).join('') + pager;
@@ -255,12 +256,43 @@
         arRenderTopics(data.topics, specialty + ' 추천 주제예요.');
       } catch (_) {}
     }
+    const AR_PERSONAL_TOPIC_IDEAS = {
+      학생: ['시험 전 복습 루틴', '내가 정리한 공부 노트', '수업 끝나고 하는 일', '시간표 바뀐 날', '발표 준비 과정'],
+      군인: ['공개 가능한 하루 루틴', '체력 관리 기록', '휴가 중 기억에 남은 일', '복무 중 배운 습관', '틈날 때 읽은 책'],
+      야구선수: ['경기 전 몸 풀기', '타격 연습 한 장면', '글러브 챙기는 순서', '원정 경기 준비', '오늘 경기 돌아보기'],
+      정치인: ['공개 일정 요약', '정책 용어 쉽게 설명', '공개 회의에서 나온 질문', '공개 자료 읽는 법', '지역 행사에서 들은 이야기']
+    };
+    function arPersonalTopics(role) {
+      const common = ['기억에 남은 한 장면', '하루를 시작하는 습관', '이번 주에 배운 것', '준비 과정 기록', '요즘 바꾼 습관', '한 주 돌아보기', '자주 받는 질문'];
+      const roleKey = role.replace(/\s/g, '');
+      const roleIdeas = Object.hasOwn(AR_PERSONAL_TOPIC_IDEAS, roleKey) ? AR_PERSONAL_TOPIC_IDEAS[roleKey] : role ? [`${role}의 하루 기록`] : [];
+      const ideas = [...roleIdeas, ...common];
+      return ideas.slice(0, 10).map(title => ({
+        title,
+        why: role || '개인 기록',
+        prompt: `${role ? role + '의 관점에서 ' : ''}${title}. 공개 가능한 실제 경험을 한 장면으로 소개하기.`
+      }));
+    }
     async function arLoadTopics(force) {
       const myJob = ++arTopicsLoading;
       const dc = arDateContext();
       const line = document.getElementById('topicDateLine');
       if (line) line.textContent = `${dc.dateStr} ${dc.weekday} · ${dc.season}${dc.events.length ? ' · ' + dc.events.slice(0, 2).join(' · ') : ''}`;
       const specialty = arIndustrySpecialty();
+      const currentTopic = window.arTodayTopic;
+      if (currentTopic && (IND.key === 'personal' || currentTopic.industry === 'personal') &&
+          (currentTopic.industry !== IND.key || currentTopic.specialty !== specialty)) {
+        window.arTodayTopic = null;
+        document.getElementById('todayTopicBadge')?.classList.add('hidden');
+        const prompt = document.getElementById('aiPromptInput');
+        if (prompt?.value === currentTopic.prompt) prompt.value = '';
+      }
+      if (IND.key === 'personal') {
+        const topics = arPersonalTopics(specialty);
+        const first = force ? topics.findIndex(t => t.title === window.__arTopics?.[0]?.title) : -1;
+        const offset = first < 0 ? 0 : (first + 5) % topics.length;
+        return arRenderTopics([...topics.slice(offset), ...topics.slice(0, offset)], `${specialty || '개인'} 추천 주제예요.`);
+      }
       if (specialty) return arLoadSpecialtyTopics(force, dc, IND.key, specialty, myJob);
       const industry = IND.key;
       const cacheKey = `ar_topics_v4_${IND.key}_${dc.dateKey}`;
@@ -378,6 +410,16 @@
       }
     }
     function arSyncProductRows() {
+      const personal = IND.key === 'personal';
+      const role = personal && arIndustrySpecialty();
+      const profileBtn = document.getElementById('topicProfileBtn');
+      if (profileBtn) profileBtn.textContent = [IND.name, role].filter(Boolean).join(' · ') + ' ▾';
+      const custom = document.getElementById('topicCustomInput');
+      if (custom) custom.placeholder = personal ? '오늘 올릴 내용 적기 (예: 경기 전 루틴)' : '오늘 올릴 내용 적기 (예: 신메뉴 출시, 오늘만 할인)';
+      document.querySelectorAll('[data-business-product]').forEach(el => { el.hidden = personal; });
+      const chip = document.getElementById('todayTopicChip');
+      if (chip) chip.textContent = (window.arTodayTopic && window.arTodayTopic.title) || '고르기';
+      if (personal) return;
       arSyncProductPreset();
       const name = String((typeof campaign !== 'undefined' && campaign.vehicle) || (document.getElementById('inputVehicle') || {}).value || '').trim() || '내 상품';
       const sub = String((document.getElementById('inputDiscount') || {}).value || '').trim();
@@ -389,9 +431,8 @@
         if (img.getAttribute('src') !== photoSrc) img.src = photoSrc;
         img.alt = name;
       });
-      const chip = document.getElementById('todayTopicChip');
-      if (chip) chip.textContent = (window.arTodayTopic && window.arTodayTopic.title) || '고르기';
     }
+    document.getElementById('topicProfileBtn')?.addEventListener('click', openIndustryPicker);
     document.addEventListener('change', (e) => {
       if (e.target && e.target.id === 'presetSelect') setTimeout(arSyncProductRows, 60);
     });
@@ -436,7 +477,8 @@
       if (promptEl) promptEl.value = topic.prompt;
       if (!arRequireAiAccess()) return;
       arSuspendScriptNarration();
-      window.arTodayTopic = topic;
+      const picked = { ...topic, industry: IND.key, specialty: arIndustrySpecialty() };
+      window.arTodayTopic = picked;
       setTimeout(arSyncProductRows, 0);
       setTimeout(() => window.scrollTo({ top: Math.max(0, (document.getElementById('studioTabBtn_script') || document.body).getBoundingClientRect().top + window.scrollY - 160), behavior: 'smooth' }), 60);
       const badge = document.getElementById('todayTopicBadge');
@@ -449,7 +491,7 @@
       switchStudioTab('script');
       if (typeof generateStoryboardFromPrompt === 'function') {
         Promise.resolve(generateStoryboardFromPrompt()).finally(() => {
-          if (badge) badge.textContent = `오늘 주제: ${topic.title}${tail}`;
+          if (badge && window.arTodayTopic === picked) badge.textContent = `오늘 주제: ${topic.title}${tail}`;
         });
       }
     }
@@ -1194,6 +1236,7 @@
       save.disabled = pending || (select.value === IND.key && arNormalizeSpecialtyInput(input.value) === arIndustrySpecialty());
       select.disabled = pending;
       input.disabled = pending;
+      arConfigureSpecialtyInput(input, select.value);
     }
     function arFillSettingsBusinessFields() {
       const select = document.getElementById('settingsIndustryInput');
@@ -1203,8 +1246,8 @@
       }
       select.value = IND.key;
       input.value = arIndustrySpecialty();
-      document.getElementById('settingsIndustrySummary').textContent = input.value || IND.name;
-      input.placeholder = '예: ' + arSpecialtyExamples[IND.key];
+      document.getElementById('settingsIndustrySummary').textContent = IND.key === 'personal' ? [IND.name, input.value].filter(Boolean).join(' · ') : input.value || IND.name;
+      document.getElementById('settingsCardTitle').textContent = IND.key === 'personal' ? '엔딩 · 개인 프로필' : '엔딩 · 매장 정보';
       arSettingsBusinessChanged();
     }
     if (arSettingsBusinessForm) {
@@ -1213,7 +1256,6 @@
       const status = document.getElementById('settingsBusinessStatus');
       select.addEventListener('change', () => {
         input.value = select.value === IND.key ? arIndustrySpecialty() : '';
-        input.placeholder = '예: ' + arSpecialtyExamples[select.value];
         status.textContent = '';
         arSettingsBusinessChanged();
       });
@@ -1953,9 +1995,13 @@
         AudioEngine.ensureContext();
       }
 
-      const vehicleLocked = useCurrentProduct || arHasEnteredVehicle();
+      const industryAtRequest = IND.key;
+      const specialtyAtRequest = arIndustrySpecialty();
+      const personal = industryAtRequest === 'personal';
+      const vehicleLocked = !personal && (useCurrentProduct || arHasEnteredVehicle());
       const productAtRequest = arProductKey();
-      const staleProduct = () => productAtRequest !== arProductKey() && (vehicleLocked || arHasEnteredVehicle());
+      const staleProduct = () => industryAtRequest !== IND.key || specialtyAtRequest !== arIndustrySpecialty() ||
+        (productAtRequest !== arProductKey() && (vehicleLocked || arHasEnteredVehicle()));
       // 직접 입력한 차종이 없을 때 주제에서 차종을 찾습니다.
       const parsedLocal = IND.key === 'auto' && !vehicleLocked ? parsePromptVehicleAndTargetClient(raw) : {};
       if (!vehicleLocked) campaign.vehicleEntered = false;
@@ -2044,7 +2090,7 @@
         renderScriptVariantPicker();
         if (IND.key !== 'auto') {
           const tp = window.arTodayTopic;
-          const topicTitle = vehicleLocked ? campaign.vehicle : (tp && tp.title) ? String(tp.title).trim() : (raw ? raw.slice(0, 24) : '');
+          const topicTitle = vehicleLocked ? campaign.vehicle : (tp && tp.title) ? String(tp.title).trim() : (raw ? raw.slice(0, 24) : personal ? '오늘의 기록' : '');
           if (topicTitle) {
             const topicWhy = (tp && tp.why) ? String(tp.why).trim() : '';
             const shortRaw = (raw || topicTitle).replace(/[.!?]+$/, '').trim();
@@ -2052,8 +2098,8 @@
             const c2 = topicWhy ? topicWhy.slice(0, 26) : `${shortRaw.slice(0, 22)} 포인트`;
             const c3 = vehicleLocked ? (campaign.discount || '자세한 조건은 문의해 주세요.') : `${IND.name} 1:1 진행으로 깔끔하게`;
             const c4 = `${IND.cta || '상담 문의'} 바로 받아보세요`;
-            const baseCaps = [c1, c2, c3, c4];
-            const baseTts = [
+            const baseCaps = personal ? [topicTitle, '하루를 시작하며', '기억에 남은 장면', '오늘 느낀 점'] : [c1, c2, c3, c4];
+            const baseTts = personal ? baseCaps : [
               `${topicTitle}, 고민되시죠?`,
               topicWhy ? `${topicWhy}.` : `${shortRaw}, 핵심만 짚어드릴게요.`,
               vehicleLocked ? c3 : `${IND.name}에서 딱 맞게 정리해 드립니다.`,
@@ -2062,7 +2108,7 @@
             const offlineAi = {
               vehicle: topicTitle,
               hook: topicTitle,
-              discount: campaign.discount || (IND.cta || ''),
+              discount: personal ? '' : campaign.discount || (IND.cta || ''),
               cutCaptions: Array.from({ length: totalCuts }, (_, i) => baseCaps[i % baseCaps.length]),
               ttsLines: Array.from({ length: totalCuts }, (_, i) => baseTts[i % baseTts.length])
             };

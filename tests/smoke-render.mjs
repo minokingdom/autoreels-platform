@@ -54,7 +54,7 @@ await page.waitForTimeout(1000);
 
 const result = await page.evaluate(async () => {
   const out = { designs: 0, frames: 0, errors: [] };
-  const inds = ['auto', 'restaurant', 'cafe', 'clinic', 'beauty'];
+  const inds = ['auto', 'restaurant', 'cafe', 'clinic', 'beauty', 'personal'];
   for (const ind of inds) {
     try { setIndustry(ind); } catch (e) { out.errors.push(`setIndustry(${ind}): ${e.message}`); continue; }
     for (const ds of DESIGN_STYLES) {

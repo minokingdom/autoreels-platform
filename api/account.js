@@ -17,7 +17,7 @@ const { readSpecialtyTrends, readAdminSpecialties } = require('../lib/server/spe
 const adminSession = require('../lib/server/admin-session');
 const kakao = require('../lib/server/kakao-login');
 
-const INDUSTRY_KEYS = ['auto', 'restaurant', 'cafe', 'beauty', 'realestate', 'academy', 'clinic', 'fitness', 'shop', 'interior'];
+const INDUSTRY_KEYS = ['auto', 'restaurant', 'cafe', 'beauty', 'realestate', 'academy', 'clinic', 'fitness', 'shop', 'interior', 'personal'];
 
 function send(res, status, body) {
   res.setHeader('Cache-Control', 'no-store');

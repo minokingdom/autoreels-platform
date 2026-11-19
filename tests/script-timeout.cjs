@@ -64,4 +64,27 @@ const res={statusCode:200,status(n){this.statusCode=n;return this},json(b){this.
  assert.match(input,/지정 메뉴.*바닐라 라떼/);
  assert.doesNotMatch(JSON.stringify(res.body.variants),/딸기 라떼|현대 아이오닉 6/);
  console.log('confirmed product kept for a non-automotive script');
+
+ const personalRequest = {
+  ...request, body:{prompt:'경기 전 루틴을 기록',industry:'personal',specialty:'야구선수',vehicle:'테스트 상품',
+   vehicleLocked:true,discount:'테스트 할인',discountNum:10,cutCount:4,topic:{title:'경기 전 몸 풀기',why:'야구선수'}}
+ };
+ ctx.fetch=async(url,options)=>{
+  input=JSON.parse(options.body).contents[0].parts[0].text;
+  const script={vehicle:'경기 전 몸 풀기',cutCaptions:['경기 전 몸 풀기','글러브 준비','가볍게 캐치볼','오늘의 소감']};
+  return {ok:true,status:200,json:async()=>({candidates:[{content:{parts:[{text:JSON.stringify(script)}]}}]})};
+ };
+ await moduleObj.exports(personalRequest,res);
+ assert.equal(res.body.aiFallback,undefined);
+ assert.match(input,/\[역할\]: "야구선수"/);
+ assert.match(input,/오늘의 주제.*경기 전 몸 풀기/);
+ assert.doesNotMatch(input,/테스트 상품|테스트 할인|카마스터/);
+ assert.equal(res.body.variants[0].cutCaptions[1],'글러브 준비');
+ assert.deepEqual(Array.from(res.body.variants,v=>v.angleLabel),['일상 기록형','과정 소개형','돌아보기형']);
+ ctx.process.env={};
+ await moduleObj.exports(personalRequest,res);
+ assert.ok(res.body.aiFallback);
+ assert(res.body.variants.every(v=>v.vehicle==='경기 전 몸 풀기' && v.discount==='' && v.discountNum===0 && v.cutCaptions.length===4));
+ assert.doesNotMatch(JSON.stringify(res.body.variants),/테스트 상품|테스트 할인|견적/);
+ console.log('personal scripts use roles and topics through AI and fallback');
 })().catch(e=>{console.error(e);process.exitCode=1});

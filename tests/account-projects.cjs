@@ -165,7 +165,7 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
  assert.equal((await member('profile',{specialty:'피부과',branch:'테스트 지점'})).body.user.specialty,'피부과');
  assert.equal((await member('profile',{industry:'clinic'})).body.user.branch,'테스트 지점');
  assert.equal((await member('me')).body.user.specialty,'피부과');
- await pg.exec("UPDATE ar_users SET industry='clinic', specialty='치과' WHERE id IN (1,2)");
+ await pg.exec("UPDATE ar_users SET industry='clinic', specialty='치과' WHERE id IN (1,2); UPDATE ar_users SET industry='personal', specialty='군인' WHERE id=903");
  const searches = [];
  const mockSearch = async query => {
   searches.push(query);
@@ -207,6 +207,14 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
  assert.equal((await member('profile',{industry:'restaurant'})).body.user.specialty,'');
  assert.equal((await member('profile',{specialty:'태국  음식점'})).body.user.specialty,'태국 음식점');
  assert.equal((await member('specialty-trends')).body.keywords.length,0);
+ assert.equal((await member('profile',{industry:'personal',specialty:'정치인'})).body.user.industry,'personal');
+ assert.equal((await member('me')).body.user.specialty,'정치인');
+ const personalProject = await member('project-save',{
+   name:'공개 일정 요약',
+   snapshot:{version:1,industry:'personal',campaign:{cutCaptions:['공개 일정 요약'],ttsLines:[],scenePlan:[]},photos:[]}
+ });
+ assert.equal(personalProject.statusCode,200);
+ assert.equal((await member('project-load',{id:personalProject.body.project.id})).body.project.snapshot.industry,'personal');
  reply=response();await account({headers:{...req.headers,cookie},query:{action:'project-list'},method:'POST',body:{}},reply);assert.equal(reply.statusCode,200);
  reply=response();await account({headers:req.headers,query:{action:'project-list'},method:'POST',body:{}},reply);assert.equal(reply.statusCode,401);
  reply=response();await account({headers:req.headers,query:{action:'signup'},method:'POST',body:{phone:'010-0000-0004',password:'strong-test-password',challengeId:proof3.challengeId,code:sentCode}},reply);assert.equal(reply.statusCode,400);

@@ -56,6 +56,7 @@
             campaign.discountNum = Number(ai.discountNum);
           }
           if (ai.discount) campaign.discount = stripExcludedLocal(ai.discount) || ai.discount;
+          else if (IND.key === 'personal') campaign.discount = '';
         }
         if (ai.hook) {
           campaign.hook = stripExcludedLocal(ai.hook);
@@ -79,6 +80,10 @@
         if (Array.isArray(ai.bullets) && ai.bullets.length >= 2) {
           campaign.bullets = ai.bullets.map(stripExcludedLocal);
           if (d.variation) d.variation.bullets = [...campaign.bullets];
+        }
+        if (IND.key === 'personal') {
+          campaign.kakaoChat = [];
+          campaign.bullets = [];
         }
         if (ai.ctaKeyword && d.variation) {
           d.variation.ctaKeyword = ai.ctaKeyword;

@@ -10,7 +10,7 @@ const refresh = byId('refreshAdmin');
 const previous = byId('previousPage');
 const next = byId('nextPage');
 const output = byId('specialtyRows');
-const industries = window.AR_LP_INDUSTRIES || {};
+const industries = Object.fromEntries(Object.entries(window.AR_LP_INDUSTRIES || {}).filter(([code]) => code !== 'personal'));
 const results = {
   started: '시도 기록됨',
   collected: '수집 완료',

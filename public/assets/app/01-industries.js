@@ -139,12 +139,25 @@
         promise: '끝까지 책임지고 시공하겠습니다', vlogDone: '오늘도 시공 완료!', chatAsk: '견적 받아볼 수 있을까요?',
         hashtags: ['인테리어', '집꾸미기', '리모델링', '시공후기', '욕실리모델링'],
         aiRole: '인테리어·리모델링 업체 실장님', caution: ''
+      },
+      personal: {
+        key: 'personal', name: '개인', icon: '👤', role: '제작자', title: '개인 기록',
+        outroMode: 'store', storeNames: ['내 이야기'], storeSubtitle: '개인 기록', storeLocation: '',
+        product: '주제', deliver: '기록', cta: '소감', trial: '경험', place: '프로필',
+        branchLabel: '소속 · 채널 (선택)', branchPlaceholder: '',
+        promoLabel: '마무리 한마디 (선택)', promoPlaceholder: '',
+        promise: '다음 이야기에서 만나요', vlogDone: '오늘의 기록', chatAsk: '어떤 점이 기억에 남았나요?',
+        hashtags: ['일상기록', '브이로그', '나의이야기'], aiRole: '개인 숏폼 제작자', caution: ''
       }
     };
 
     // 업종별 상품 프리셋 (자동차는 아래 presets를 그대로 씀)
     //  priceTag: 가격 강조 문구 (예: -30%) / priceLine: "최대 ~" 같은 한 줄 문구
     const AR_INDUSTRY_PRESETS = {
+      personal: {
+        personal_log: { vehicle: '오늘의 기록', hook: '오늘 기억하고 싶은 순간', priceTag: '일상 기록', priceLine: '오늘의 이야기',
+          discountNum: 0, discount: '', bullets: [], neonColor: '#8fb6e2', bgGradient: ['#15202f', '#283e55'] }
+      },
       restaurant: {
         set_lunch: { vehicle: '점심 한정 갈비탕 정식', hook: '점심 11시~2시만! 한정 정식', priceTag: '-20%', priceLine: '점심 정식 -20%', discountNum: 20, discount: '평일 점심 한정 · 포장 가능',
           bullets: ['✔ 평일 점심 11시~2시 한정', '✔ 반찬 리필 무료', '✔ 포장 주문 가능'], neonColor: '#f97316', bgGradient: ['#1a0f08', '#3b1d0a'] },
@@ -292,6 +305,10 @@
         ['💡', '인테리어 팁', '작은 집 넓어 보이게', '좁은 집 넓어 보이는 방법', ['좁은 집 넓어 보이는 방법', '벽과 바닥 색은 밝게', '조명은 간접등으로', '상담 받아 보세요'], ['좁은 집이 넓어 보이는 방법이에요.', '벽과 바닥 색은 밝게 맞춰요.', '조명은 간접등이 좋습니다.', '우리 집에 맞는 방법 상담 받아 보세요.']],
         ['🏡', '시공 소개', '대표 시공', '이렇게 시공합니다', ['이렇게 시공합니다', '{product}', '공정표 미리 공유', '시공 후 1년 AS'], ['저희는 이렇게 시공합니다.', '{product}를 많이 맡고 있어요.', '공정표는 미리 공유해 드려요.', '시공 후 일 년 동안 AS 해 드립니다.']],
         ['🙋', '자주 묻는 질문', '시공 FAQ', '상담 때 많이 받는 질문', ['상담 때 많이 받는 질문', 'Q. 살면서 공사 가능한가요?', 'A. 부분 시공은 가능해요', '궁금한 점 남겨 주세요'], ['상담 때 많이 받는 질문이에요.', '살면서 공사가 되냐고 많이 물어보세요.', '부분 시공은 충분히 가능합니다.', '궁금한 점 남겨 주세요.']]
+      ],
+      personal: [
+        ['📓', '오늘의 기록', '하루 기록', '오늘의 기록', ['오늘의 기록', '하루를 시작하며', '기억에 남은 장면', '오늘 느낀 점'], ['오늘의 기록이에요.', '하루를 이렇게 시작했어요.', '기억에 남은 장면을 담았어요.', '오늘 느낀 점을 남겨요.']],
+        ['🎬', '준비 과정', '과정 기록', '준비부터 차근차근', ['준비부터 차근차근', '먼저 챙겨 둔 것', '직접 해 본 과정', '다음에 바꿔 볼 점'], ['준비한 것부터 살펴봐요.', '먼저 챙겨 둔 것들이에요.', '직접 해 본 과정을 담았어요.', '다음에 바꿔 볼 점도 적어 둡니다.']]
       ]
     };
 
@@ -305,8 +322,8 @@
             id, industry: ind, category: 'industry', layoutMode: 'CLASSIC_SHOWROOM',
             title: `${icon} ${title}`, shortTitle: short, tagline: hook, icon, themeId: 'royal', accentColor: '#38bdf8',
             hook, discountNum: 0, discount: '',
-            scenePlan: [{ cut: 1, widget: 'LOWER_THIRD', pos: 'bottom', cam: 0 }, { cut: 2, widget: 'RECEIPT_QUOTE', pos: 'bottom', cam: 1 },
-                        { cut: 3, widget: 'SMARTKEY_DELIVERY', pos: 'bottom', cam: 2 }, { cut: 4, widget: 'COMMENT_DM_MAGNET', pos: 'bottom', cam: 3 }],
+            scenePlan: (ind === 'personal' ? ['LOWER_THIRD', 'LOWER_THIRD', 'LOWER_THIRD', 'LOWER_THIRD'] :
+              ['LOWER_THIRD', 'RECEIPT_QUOTE', 'SMARTKEY_DELIVERY', 'COMMENT_DM_MAGNET']).map((widget, i) => ({ cut: i + 1, widget, pos: 'bottom', cam: i })),
             cutCaptions: caps, ttsLines: tts
           };
         });
@@ -497,8 +514,8 @@
         anchor.parentElement.insertBefore(btn, anchor);
       }
       if (btn) {
-        btn.textContent = arIndustryLocked ? `${IND.icon} ${IND.name} ▾` : `${IND.icon} ${IND.name} · 업종 선택`;
-        btn.title = arIndustryLocked ? '내 계정 업종 — 눌러서 바꿀 수 있습니다' : '회원가입할 때 업종을 고르면 내 계정 업종으로 저장됩니다';
+        btn.textContent = `${IND.icon} ${IND.name} ▾`;
+        btn.title = '제작 유형 바꾸기';
       }
       const auth = document.getElementById('authIndustryInput');
       if (auth) {
@@ -513,11 +530,65 @@
     let arIndustryLocked = false;
     let arBusinessSpecialty = '';
     let arSpecialtyIndustry = '';
+    try {
+      arBusinessSpecialty = arNormalizeSpecialtyInput(localStorage.getItem('autoreels_guest_personal_role') || '');
+      if (arBusinessSpecialty) arSpecialtyIndustry = 'personal';
+    } catch (_) {}
+    const AR_PERSONAL_ROLES = ['학생', '군인', '야구선수', '정치인'];
     const arSpecialtyExamples = {
       auto: '수입 중고차 매매', restaurant: '태국 음식점 또는 중식당', cafe: '구움과자 카페',
       beauty: '남성 전문 미용실 또는 네일숍', realestate: '상가 임대 중개', academy: '초등 영어 학원',
-      clinic: '치과 또는 피부과', fitness: '기구 필라테스', shop: '아동복 쇼핑몰', interior: '욕실 리모델링'
+      clinic: '치과 또는 피부과', fitness: '기구 필라테스', shop: '아동복 쇼핑몰', interior: '욕실 리모델링',
+      personal: '학생, 군인, 야구선수, 정치인 또는 직접 입력'
     };
+    function arConfigureSpecialtyInput(input, key) {
+      const personal = key === 'personal';
+      const label = input.labels?.[0];
+      if (label) {
+        label.dataset.businessLabel ??= label.textContent;
+        label.textContent = personal ? '역할 (선택 또는 직접 입력)' : label.dataset.businessLabel;
+      }
+      const help = document.getElementById(input.getAttribute('aria-describedby'));
+      if (help) {
+        help.dataset.businessHelp ??= help.textContent;
+        help.textContent = personal ? '역할에 맞는 추천 주제와 대본을 만들어요.' : help.dataset.businessHelp;
+      }
+      input.placeholder = '예: ' + arSpecialtyExamples[key];
+      let choices = document.getElementById(input.id + 'Roles');
+      if (!choices && personal) {
+        choices = document.createElement('div');
+        choices.id = input.id + 'Roles';
+        choices.className = 'ar-personal-role-options';
+        choices.setAttribute('role', 'group');
+        choices.setAttribute('aria-label', '개인 역할 예시');
+        for (const role of AR_PERSONAL_ROLES) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'ar-choice';
+          button.textContent = role;
+          button.addEventListener('click', () => {
+            input.value = role;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          });
+          choices.append(button);
+        }
+        input.after(choices);
+        input.addEventListener('input', () => arSyncRoleChoices(input, choices));
+      }
+      if (choices) {
+        choices.hidden = !personal;
+        arSyncRoleChoices(input, choices);
+      }
+    }
+    function arSyncRoleChoices(input, choices) {
+      const current = arNormalizeSpecialtyInput(input.value);
+      for (const button of choices.children) {
+        const selected = button.textContent === current;
+        button.classList.toggle('on', selected);
+        button.setAttribute('aria-pressed', String(selected));
+        button.disabled = input.disabled;
+      }
+    }
     function arIndustrySpecialty() {
       return arSpecialtyIndustry === IND.key ? arBusinessSpecialty : '';
     }
@@ -546,9 +617,9 @@
       const ind = AR_INDUSTRIES[key] || IND;
       const specialty = document.getElementById('authSpecialtyInput');
       if (specialty) {
-        if (specialty.dataset.industry && specialty.dataset.industry !== ind.key) specialty.value = '';
+        if (specialty.dataset.industry !== ind.key) specialty.value = ind.key === 'personal' && IND.key === 'personal' ? arIndustrySpecialty() : '';
         specialty.dataset.industry = ind.key;
-        specialty.placeholder = '예: ' + arSpecialtyExamples[ind.key];
+        arConfigureSpecialtyInput(specialty, ind.key);
       }
       arIndustryFieldHint('authNameInput', `${ind.role.replace(/님$/, '')} 성함`, '홍길동');
       arIndustryFieldHint('authTitleInput', '직함 · 소개', ind.title || ind.role);
@@ -567,15 +638,27 @@
     // 설정과 헤더의 업종 선택 화면에서 같은 계정 저장 흐름을 사용합니다.
     async function arSaveBusinessProfile(key, value, close) {
       const specialty = arNormalizeSpecialtyInput(value);
-      const error = '업종을 저장하지 못했습니다. 다시 시도해 주세요.';
+      const error = '설정을 저장하지 못했습니다. 다시 시도해 주세요.';
       try {
-        if (window.AR_SERVER && AR_SERVER.mode) {
+        const isServer = window.AR_SERVER && AR_SERVER.mode;
+        const phone = isServer ? null : localStorage.getItem('autoreels_logged_phone');
+        if (key === 'personal' && !(isServer ? AR_SERVER.me?.user : phone)) {
+          localStorage.setItem('autoreels_guest_personal_role', specialty);
+          arSpecialtyIndustry = key;
+          arBusinessSpecialty = specialty;
+          setIndustry(key);
+          close();
+          return { ok: true };
+        }
+        if (isServer) {
           if (!AR_SERVER.me?.user) {
             close();
             openDealerAuthModal();
             document.getElementById('authIndustryInput').value = key;
             switchAuthModalTab('signup');
-            document.getElementById('authSpecialtyInput').value = specialty;
+            const input = document.getElementById('authSpecialtyInput');
+            input.value = specialty;
+            arConfigureSpecialtyInput(input, key);
             return { redirected: true };
           }
           const r = await arApi('profile', { industry: key, specialty });
@@ -583,7 +666,6 @@
           AR_SERVER.me = r.body;
           arLockIndustry(r.body.user.industry, r.body.user.specialty);
         } else {
-          const phone = localStorage.getItem('autoreels_logged_phone');
           const accs = loadDealerAccounts();
           if (phone && accs[phone]) {
             Object.assign(accs[phone], { industry: key, specialty });
@@ -604,7 +686,7 @@
       save.disabled = true;
       try {
         const result = await arSaveBusinessProfile(key, input.value, () => m.remove());
-        if (result.ok) arToast('업종을 저장했습니다.', true);
+        if (result.ok) arToast('설정을 저장했습니다.', true);
         else if (result.error) arToast(result.error);
       } finally {
         arIndustryPickerSaveState();
@@ -638,8 +720,8 @@
         <div class="ar-modal-card space-y-4" style="--mw:480px">
           <div class="ar-modal-head">
             <div>
-              <h3>업종 바꾸기</h3>
-              <p class="text-[#85858b]">업종을 고르고 세부 업종을 적으면 추천 주제가 달라집니다.</p>
+              <h3>제작 유형 바꾸기</h3>
+              <p class="text-[#85858b]">업종이나 개인 역할을 고르면 추천 주제가 달라집니다.</p>
             </div>
             <button type="button" onclick="document.getElementById('industryPickerModal').remove()" class="ar-modal-x" aria-label="닫기">×</button>
           </div>
@@ -662,7 +744,7 @@
         </div>`;
       const input = m.querySelector('#industrySpecialtyInput');
       input.value = arIndustrySpecialty();
-      input.placeholder = '예: ' + arSpecialtyExamples[IND.key];
+      arConfigureSpecialtyInput(input, IND.key);
       input.addEventListener('input', arIndustryPickerSaveState);
       m.querySelector('#industryPickerSave').addEventListener('click', () => arChangeAccountIndustry(arPickerChoice));
     }
@@ -672,7 +754,7 @@
       document.querySelectorAll('#industryPickerGrid [data-ind]').forEach((b) => b.classList.toggle('on', b.dataset.ind === key));
       const input = document.getElementById('industrySpecialtyInput');
       input.value = key === IND.key ? arIndustrySpecialty() : '';
-      input.placeholder = '예: ' + arSpecialtyExamples[key];
+      arConfigureSpecialtyInput(input, key);
       arIndustryPickerSaveState();
     }
     function arIndustryPickerSaveState() {
@@ -988,6 +1070,13 @@
 
     // 업종별 10개 기본 이미지 생성 (실제 사진 우선 로드 + 오프라인 시 테마 카드 폴백)
     function arIndustryPlaceholderPhotos() {
+      if (IND.key === 'personal') {
+        return ['오늘의 기록', '준비 과정', '기억할 장면', '한 줄 소감'].map((title, i) => {
+          const image = createThemedSceneImage('•', title, '내 사진으로 바꿔 보세요', ['#15202f', '#283e55'], `${i + 1}. ${title}`, i + 1);
+          image._dataUrl = image.src;
+          return image;
+        });
+      }
       const deck = AR_INDUSTRY_SCENE_DECKS[IND.key] || AR_INDUSTRY_SCENE_DECKS.restaurant;
       return deck.map(([icon, title, sub, grad], i) => {
         const label = `${i + 1}. ${title}`;
@@ -1083,7 +1172,8 @@
       clinic: ['환절기 비염 진료 안내 / 직장인 야간 진료 시간', '환절기 비염 진료 안내', '완치, 효과 보장, 최고, 할인'],
       fitness: ['PT 10회 등록 이벤트 / 3개월 바디프로필 챌린지', 'PT 10회 등록 이벤트', '무조건, 보장, 최저가'],
       shop: ['겨울 니트 신상 입고 / 첫 구매 무료배송 이벤트', '겨울 니트 신상 입고', '최저가, 1등, 정품 보장'],
-      interior: ['30평 아파트 전체 리모델링 / 주방 상판 교체 시공 사례', '30평 아파트 전체 리모델링', '최저가, 무료, 1등']
+      interior: ['30평 아파트 전체 리모델링 / 주방 상판 교체 시공 사례', '30평 아파트 전체 리모델링', '최저가, 무료, 1등'],
+      personal: ['수업이 끝난 뒤 공부 루틴 / 경기 전 준비 과정', '오늘 가장 기억에 남은 장면', '개인정보, 이름']
     };
     function arRenderAiPromptHints() {
       const h = AR_AI_PROMPT_HINTS[IND.key] || AR_AI_PROMPT_HINTS.auto;
