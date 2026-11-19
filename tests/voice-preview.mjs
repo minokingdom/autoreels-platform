@@ -111,9 +111,32 @@ try {
     assert.equal(await page.evaluate(() => localStorage.getItem('autoreels_tts_voice')), 'ko-KR-Wavenet-B');
     await page.evaluate(() => switchStudioTab('card'));
     assert.equal(await actions.isHidden(), true);
+    const info = page.getByLabel('단계 설명', { exact: true });
+    const tip = page.locator('#easyStepText');
+    for (const [index, key] of ['topic', 'script', 'photo', 'sound', 'card', 'publish'].entries()) {
+      await page.evaluate(key => { switchStudioTab(key); arToggleSheet(false); }, key);
+      assert.equal(await page.locator('#easyStepCount').textContent(), (index + 1) + ' / 6');
+      assert.equal(await tip.isHidden(), true);
+      await info.click();
+      assert.equal(await tip.isVisible(), true);
+      await tip.click({ trial: true });
+      assert.ok((await tip.textContent()).trim().length > 0);
+      if (key === 'sound') {
+        assert.match(await tip.textContent(), /성우 목소리와 배경음악/);
+        await info.click();
+        assert.equal(await tip.isHidden(), true);
+        await info.press('Enter');
+        assert.equal(await tip.isVisible(), true);
+        await page.keyboard.press('Escape');
+        assert.equal(await tip.isHidden(), true);
+        await info.click();
+        await page.locator('#easyStepCount').click();
+        assert.equal(await tip.isHidden(), true);
+      }
+    }
     await page.close();
   }
-  console.log('Google voice samples, selection, cancellation and legacy device settings OK');
+  console.log('Voice previews, compact audio controls and help for all six steps OK');
 } finally {
   await browser.close();
   server.closeAllConnections();

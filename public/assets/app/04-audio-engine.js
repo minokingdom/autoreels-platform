@@ -1613,7 +1613,7 @@
       const unlock = (ev) => {
         if (window.__arUserMuted || AudioEngine.enabled) return;
         const t = ev && ev.target;
-        if (t?.closest?.('#ttsVoiceSelect + .ig-select-row, #arOptionSheet[data-source-select="ttsVoiceSelect"]')) return;
+        if (t?.closest?.('#easyStepHelp, #ttsVoiceSelect + .ig-select-row, #arOptionSheet[data-source-select="ttsVoiceSelect"]')) return;
         if (t && typeof t.closest === 'function' && t.closest('#soundToggleBtn, #mobileDockSoundBtn, #arQuickBar [data-qb="sound"], #topicCards, #bgmRecommendRow, #arBgmSheet, #arSheetHandle')) return;
         toggleAudioMaster(true);
       };

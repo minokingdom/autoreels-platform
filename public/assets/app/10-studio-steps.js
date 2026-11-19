@@ -949,18 +949,31 @@
     // ==========================================================================
     // 단계별 제작 안내
     // ==========================================================================
+    document.addEventListener('click', (event) => {
+      const help = document.querySelector('#easyStepHelp[open]');
+      if (help && !help.contains(event.target)) help.open = false;
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      const help = document.querySelector('#easyStepHelp[open]');
+      if (!help) return;
+      help.open = false;
+      if (help.contains(document.activeElement)) help.querySelector('summary').focus();
+    });
+
     function arUpdateEasyGuide(key) {
       const steps = {
         topic: ['오늘의 주제', '오늘 올릴 주제를 골라 주세요. 고르면 그 주제로 AI가 대본 3안을 바로 만들어 드려요.'],
         script: ['대본 고르기', '영상 길이와 상품을 확인하고 대본을 고르세요. 바꾸고 싶으면 아래에 적어 [다시 쓰기]를 누르면 됩니다.'],
         photo: ['사진 넣기', '내 사진이나 영상을 올리세요. 올리지 않으면 기본 사진으로 만들어집니다.'],
-        sound: ['성우 · 배경음악', ''],
+        sound: ['성우 · 배경음악', '성우 목소리와 배경음악을 골라 보세요. 현재 컷의 대사를 듣거나 영상 처음부터 들어볼 수 있어요.'],
         card: ['엔딩 꾸미기', '영상 마지막에 나올 가게 정보와 로고를 넣고, 보일 항목만 켜 두세요.'],
         publish: ['완성본 확인 · SNS에 올리기', '배경음악과 성우가 들어간 완성본을 확인하고, 올릴 곳을 켜고 [공유하기]를 누르세요.']
       };
       const idx = STUDIO_TABS.indexOf(key);
       const step = steps[key];
       if (idx < 0 || !step) return;
+      document.getElementById('easyStepHelp').open = false;
       const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
       set('easyStepCount', `${idx + 1} / ${STUDIO_TABS.length}`);
       set('easyStepTitle', step[0]);
