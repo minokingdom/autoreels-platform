@@ -1161,28 +1161,26 @@
       if (typeof renderPresetDrawer === 'function') { try { renderPresetDrawer(); } catch (e) {} }
     }
 
-    // AI 대본 입력칸 예시: 업종에 맞는 상황 예시 (설명 문구의 짧은 예시도 함께)
+    // 업종별 다시 쓰기 예시와 제외 문구
     const AR_AI_PROMPT_HINTS = {
-      auto: ['30대 여성, 그랜저 하브 선점차 2대 즉시출고 / 법인 대표님 GV80 비용처리', '30대 여성, 그랜저', '견적, 최저가, 무료, 1등'],
-      restaurant: ['점심 한정 갈비탕 정식, 직장인 단골 / 주말 가족 외식 세트 예약', '점심 한정 갈비탕 정식', '최저가, 무료, 1등, 원조'],
-      cafe: ['가을 신메뉴 밤 라떼 출시 / 평일 오후 디저트 세트 할인', '가을 신메뉴 밤 라떼', '최저가, 무료, 1등'],
-      beauty: ['첫 방문 염색 20% 할인 / 웨딩 전 피부 관리 패키지', '첫 방문 염색 할인', '최저가, 무료, 효과 보장'],
-      realestate: ['역세권 신축 투룸 전세 / 신혼부부 추천 30평대 아파트', '역세권 신축 투룸 전세', '급매, 최저가, 무조건'],
-      academy: ['중2 수학 겨울방학 특강 / 고3 내신 대비 소수정예반', '중2 수학 겨울방학 특강', '성적 보장, 1등, 무조건'],
-      clinic: ['환절기 비염 진료 안내 / 직장인 야간 진료 시간', '환절기 비염 진료 안내', '완치, 효과 보장, 최고, 할인'],
-      fitness: ['PT 10회 등록 이벤트 / 3개월 바디프로필 챌린지', 'PT 10회 등록 이벤트', '무조건, 보장, 최저가'],
-      shop: ['겨울 니트 신상 입고 / 첫 구매 무료배송 이벤트', '겨울 니트 신상 입고', '최저가, 1등, 정품 보장'],
-      interior: ['30평 아파트 전체 리모델링 / 주방 상판 교체 시공 사례', '30평 아파트 전체 리모델링', '최저가, 무료, 1등'],
-      personal: ['수업이 끝난 뒤 공부 루틴 / 경기 전 준비 과정', '오늘 가장 기억에 남은 장면', '개인정보, 이름']
+      auto: ['30대 여성, 그랜저', '견적, 최저가, 무료, 1등'],
+      restaurant: ['점심 한정 갈비탕 정식', '최저가, 무료, 1등, 원조'],
+      cafe: ['가을 신메뉴 밤 라떼', '최저가, 무료, 1등'],
+      beauty: ['첫 방문 염색 할인', '최저가, 무료, 효과 보장'],
+      realestate: ['역세권 신축 투룸 전세', '급매, 최저가, 무조건'],
+      academy: ['중2 수학 겨울방학 특강', '성적 보장, 1등, 무조건'],
+      clinic: ['환절기 비염 진료 안내', '완치, 효과 보장, 최고, 할인'],
+      fitness: ['PT 10회 등록 이벤트', '무조건, 보장, 최저가'],
+      shop: ['겨울 니트 신상 입고', '최저가, 1등, 정품 보장'],
+      interior: ['30평 아파트 전체 리모델링', '최저가, 무료, 1등'],
+      personal: ['오늘 가장 기억에 남은 장면', '개인정보, 이름']
     };
     function arRenderAiPromptHints() {
       const h = AR_AI_PROMPT_HINTS[IND.key] || AR_AI_PROMPT_HINTS.auto;
       const promptEl = document.getElementById('aiPromptInput');
       if (promptEl) promptEl.setAttribute('placeholder', `예: ${h[0]}`);
-      const ex = document.getElementById('aiHowtoExample');
-      if (ex) ex.textContent = `"${h[1]}"`;
       const exEl = document.getElementById('aiExcludeInput');
-      if (exEl) exEl.setAttribute('placeholder', `예: ${h[2]} (쉼표로 구분 · AI 대본에서 자동 제외)`);
+      if (exEl) exEl.setAttribute('placeholder', `예: ${h[1]}`);
     }
 
     // 대본 템플릿 분류 버튼: 자동차가 아니면 자동차 전용 분류는 숨김

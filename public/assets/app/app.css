@@ -1396,6 +1396,16 @@ select.ig-select-src { display: none !important; }
 .ig-search-row { display: flex; align-items: center; gap: var(--astryx-spacing-1); padding: var(--astryx-spacing-1) var(--astryx-spacing-1) var(--astryx-spacing-1) 0; border-radius: var(--studio-panel); border: 1px solid var(--border); background: var(--raised); }
 .ig-search-row input { flex: 1; min-width: 0; background: transparent !important; border: 0 !important; }
 .ig-search-go { flex: 0 0 auto; height: 38px; padding: 0 var(--astryx-spacing-4); border-radius: var(--studio-control); border: 0; background: var(--primary); color: var(--primary-foreground); font-size: var(--astryx-font-size-base); font-weight: var(--astryx-font-weight-semibold); cursor: pointer; }
+#scriptRewritePanel { padding: 12px; }
+.rewrite-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.rewrite-heading label { font-size: 13px; font-weight: 600; }
+#scriptRewritePanel #aiGenBtn { min-height: 28px; padding: 3px 9px; border-radius: 7px; font-size: 12px; }
+#scriptRewritePanel .studio-input { display: block; box-sizing: border-box; width: 100%; padding: 6px 9px; font: inherit; font-size: 13px; line-height: 1.45; }
+#aiPromptInput { resize: vertical; }
+.rewrite-exclusions { margin-top: 6px; }
+.rewrite-exclusions summary { width: fit-content; padding-block: 4px; font-size: 12px; color: var(--secondary-foreground); cursor: pointer; }
+.rewrite-exclusions label { display: block; margin: 3px 0; font-size: 12px; color: var(--secondary-foreground); }
+#scriptRewritePanel #aiExcludeInput { min-height: 30px; }
 .ig-chip-row { display: flex; align-items: center; gap: 5px; }
 .ig-chip-row > .ig-ctx-chip {
   display: inline-flex;
@@ -1460,7 +1470,9 @@ body.ar-cut-editing #arQuickBar { display: none; }
   top: 50%;
   transform: translateY(-50%);
   display: grid;
-  grid-template-columns: repeat(4, auto);
+  grid-template-columns: repeat(2, auto);
+  max-height: min(212px, 40dvh);
+  overflow-y: auto;
   gap: 5px;
   padding: 8px;
   border: 1px solid var(--border-strong);

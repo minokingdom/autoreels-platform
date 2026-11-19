@@ -986,7 +986,7 @@
     function arUpdateEasyGuide(key) {
       const steps = {
         topic: ['오늘의 주제', '오늘 올릴 주제를 골라 주세요. 고르면 그 주제로 AI가 대본 3안을 바로 만들어 드려요.'],
-        script: ['대본 고르기', '영상 길이와 상품을 확인하고 대본을 고르세요. 바꾸고 싶으면 아래에 적어 [다시 쓰기]를 누르면 됩니다.'],
+        script: ['대본 고르기', '영상 길이와 상품을 확인하고 대본을 고르세요. 원하는 내용과 말투를 적고 ‘다시 쓰기’를 누르면 대본 세 가지가 나와요. 하나를 고르면 컷별 자막과 성우 대사에 반영돼요.'],
         photo: ['사진 넣기', '사진이나 영상을 올리지 않으면 기본 사진을 사용해요. 주제와 테마에 맞는 이미지도 만들 수 있어요. 썸네일을 누르면 해당 장면으로 이동해 사진·영상, 구도와 카메라 움직임을 바꿀 수 있어요.'],
         sound: ['성우 · 배경음악', '성우 목소리와 배경음악을 골라 보세요. 현재 컷의 대사를 듣거나 영상 처음부터 들어볼 수 있어요.'],
         card: ['엔딩 꾸미기', '영상 마지막에 나올 가게 정보와 로고를 넣고, 보일 항목만 켜 두세요.'],
@@ -2281,7 +2281,7 @@
         if (generationId === arScriptGenerationId) arSetScriptGenerating(false);
         if (btnEl && generationId === arScriptGenerationId) {
           btnEl.disabled = false;
-          btnEl.textContent = 'AI로 다시 만들기';
+          btnEl.textContent = '다시 쓰기';
         }
       }
 

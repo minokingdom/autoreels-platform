@@ -41,7 +41,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-topic-profile" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-rewrite-palette" />
   <link rel="stylesheet" href="/assets/app/splash.css?v=ko-wordmark" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -808,24 +808,16 @@
 
           </div>
 
-          <div id="scriptRewritePanel" class="studio-sub p-4 space-y-2">
-            <div class="text-[15px] font-semibold text-[#ededed]">다른 느낌으로 다시 쓰기</div>
-            <p class="text-[12px] text-[#85858b]">원하는 내용·말투를 적고 [다시 쓰기]를 누르면 3가지를 새로 써요.</p>
-            <div class="flex flex-col sm:flex-row gap-2">
-              <input id="aiPromptInput" type="text" placeholder="예: 30대 여성, 그랜저 하브 선점차 2대 즉시출고 / 법인 대표님 GV80 비용처리" class="studio-input flex-1 h-9 px-3 text-[13px]" />
-              <button type="button" id="aiGenBtn" onclick="generateStoryboardFromPrompt()" class="btn-primary h-9 px-4 text-[13px] cursor-pointer shrink-0">
-                다시 쓰기
-              </button>
+          <div id="scriptRewritePanel" class="studio-sub">
+            <div class="rewrite-heading">
+              <label for="aiPromptInput">대본 다시 쓰기</label>
+              <button type="button" id="aiGenBtn" onclick="generateStoryboardFromPrompt()" class="btn-primary">다시 쓰기</button>
             </div>
-            <div class="flex items-center gap-2">
-              <label for="aiExcludeInput" class="text-[11px] font-mono text-[#85858b] shrink-0">뺄 문구</label>
-              <input id="aiExcludeInput" type="text" placeholder="예: 견적, 최저가, 무료, 1등 (쉼표로 구분 · AI 대본에서 자동 제외)" class="studio-input flex-1 h-8 px-2.5 text-[12px] text-[#d4d4d8]" />
-            </div>
-            <!-- AI 대본으로 영상이 만들어지는 원리 안내 -->
-            <details class="fold rounded-[8px] bg-[#141415] border border-[var(--border)] text-[12px] text-[#a1a1a6] leading-relaxed">
-              <summary class="px-3 py-2 text-[12px] text-[#a1a1a6]">AI 대본으로 영상이 만들어지는 과정 보기</summary>
-              <!-- 업종을 바꾸면 arRenderAiPromptHints() 가 예시 문구를 바꿈 -->
-              <div class="px-3 pb-3"> 아래에 <code id="aiHowtoExample" class="text-[#ededed] font-mono">"30대 여성, 그랜저"</code>처럼 상황을 적고 [AI로 만들기]를 누르면 ① 대본 3안이 만들어지고, ② 설정된 영상 길이(4컷~10컷)에 맞춰 <strong class="text-[#ededed]">사진 컷 + 모션 그래픽 + 한국어 성우 음성 + 배경음악</strong>이 합성되어 바로 재생됩니다.</div>
+            <textarea id="aiPromptInput" rows="2" aria-label="원하는 내용과 말투" placeholder="원하는 내용과 말투" class="studio-input"></textarea>
+            <details class="rewrite-exclusions">
+              <summary>제외할 문구</summary>
+              <label for="aiExcludeInput">쉼표로 구분해 입력하세요.</label>
+              <input id="aiExcludeInput" type="text" aria-label="제외할 문구" placeholder="예: 최저가, 무료" class="studio-input" />
             </details>
           </div>
 
@@ -2120,7 +2112,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117r" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261119-quick-color"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261119-rewrite-palette"><\/script>');
     }
   </script>
   <!--
