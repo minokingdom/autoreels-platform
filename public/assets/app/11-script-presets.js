@@ -664,7 +664,7 @@
     let arExportBusy = false;
     let arPendingExport = null;
     function arRecordedFilename(blob, seconds) {
-      return `autoreels_dealer_${Math.round(seconds)}s.${String(blob.type).includes('mp4') ? 'mp4' : 'webm'}`;
+      return `autoreelsmaker_dealer_${Math.round(seconds)}s.${String(blob.type).includes('mp4') ? 'mp4' : 'webm'}`;
     }
     async function arValidateRecordedVideo(blob) {
       if (!blob || blob.size < 1000) throw new Error('영상 파일이 완성되지 않았습니다. 다시 만들어 주세요.');
@@ -805,7 +805,7 @@
       const notice = document.getElementById('saveStatusNotice');
       const blob = window.lastRecordedVideoBlob;
       const mime = window.lastRecordedMime || 'video/mp4';
-      const filename = window.lastRecordedFilename || 'autoreels_dealer_12s.mp4';
+      const filename = window.lastRecordedFilename || 'autoreelsmaker_dealer_12s.mp4';
       const d = getSelectedDealer();
       const caption = buildCaption(d);
 
@@ -918,7 +918,7 @@
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>AutoReels — 릴스 영상 다운로드</title>
+            <title>AutoReelsMaker — 릴스 영상 다운로드</title>
             <style>
               * { box-sizing: border-box; }
               body {

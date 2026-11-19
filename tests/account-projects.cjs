@@ -103,7 +103,7 @@ function load(file,deps={},env={},extra={}){const module={exports:{}};vm.runInNe
   const body=new URLSearchParams(opt.body);
   for(const [key,value] of Object.entries({key:env.ALIGO_API_KEY,user_id:env.ALIGO_USER_ID,sender:'0200000000',msg_type:'SMS',testmode_yn:'N'})) assert.equal(body.get(key),value);
   assert.match(body.get('receiver'),/^0100000000[1-3]$/);
-  assert.match(body.get('msg'),/^\[오토릴스\] (비밀번호 재설정|회원가입) 인증번호 \d{6} \(5분\)$/);
+  assert.match(body.get('msg'),/^\[오토릴스메이커\] (비밀번호 재설정|회원가입) 인증번호 \d{6} \(5분\)$/);
   sentCode=body.get('msg').match(/\d{6}/)[0];
   return {ok:true,json:async()=>smsReply};
  }});

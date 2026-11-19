@@ -851,7 +851,7 @@
         c.textAlign = 'left';
         c.fillStyle = '#ffffff';
         c.font = `700 ${Math.round(18 * sc)}px 'Pretendard', sans-serif`;
-        c.fillText((typeof IND !== 'undefined' && IND.label) ? `${IND.label} BGM` : 'AutoReels Mix', -bw / 2 + 70 * sc, -9 * sc);
+        c.fillText((typeof IND !== 'undefined' && IND.label) ? `${IND.label} BGM` : 'AutoReelsMaker Mix', -bw / 2 + 70 * sc, -9 * sc);
         c.fillStyle = '#a1a1aa';
         c.font = `500 ${Math.round(14 * sc)}px 'Pretendard', sans-serif`;
         c.fillText('Now Playing · 0:12', -bw / 2 + 70 * sc, 13 * sc);

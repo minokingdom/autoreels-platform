@@ -1,22 +1,22 @@
 <!doctype html>
 <html lang="ko"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>내 영상으로 쇼츠 만들기 · 오토릴스</title>
+<title>오토릴스메이커 · 내 영상으로 쇼츠 만들기</title>
 <link rel="stylesheet" href="/assets/app/astryx-tokens.css"><link rel="stylesheet" href="/assets/design-system.css"><link rel="stylesheet" href="screen.css">
 </head><body><main>
-<header><b>Auto<span>Reels</span></b><a href="/studio">스튜디오로 돌아가기</a></header>
+<header><b>Auto<span>ReelsMaker</span></b><a href="/studio">스튜디오로 돌아가기</a></header>
 <section class="stage" hidden><div id="frame"><video playsinline id="sourceVideo" hidden></video><canvas id="overlay" width="540" height="960" aria-label="영상 제목과 자막"></canvas><button id="play" hidden type="button" aria-label="선택 구간 재생">▶</button></div></section>
 <section class="sheet"><div class="handle"></div><div id="entry">
 <h1>내 영상으로 쇼츠 만들기</h1><p class="hint">한국어로 말하는 영상에서 쇼츠로 쓸 구간을 찾아요.</p>
 <label class="field" for="initialGuide">어떤 장면을 찾을까요? <small>선택</small></label>
 <input id="initialGuide" class="edit-input" maxlength="120" placeholder="예: 타격 자세를 바꾼 이유">
 <label class="entry" for="file"><span><strong>갤러리에서 영상 선택</strong><small>최대 10분 · 250MB</small></span><i>›</i></label><input id="file" type="file" accept="video/*" class="sr">
-<p class="hint">영상과 대사는 기기 안에서 처리해요. 첫 사용 시 음성 모델 약 60MB, 내용 분석 모델과 실행 파일 약 150MB를 받아요.</p></div>
+<p class="hint">처음 사용할 때 다운로드가 진행돼요.</p></div>
 <div id="work" hidden><div class="heading"><button id="back" type="button" aria-label="다른 영상 선택">‹</button><h1>내 영상으로 쇼츠 만들기</h1></div>
 <p id="status" role="status"></p><progress id="progress" max="1" value="0" aria-label="음성 분석 진행률"></progress>
 <form id="guideForm"><label class="field" for="guide">찾고 싶은 내용</label><div class="guide-row"><input class="edit-input" id="guide" maxlength="120" placeholder="비우면 핵심 발언을 추천해요"><button type="submit">적용</button></div></form>
 <p id="rankStatus" class="hint" role="status"></p><div id="clips" aria-label="추천 구간"></div>
 <details id="editor" hidden><summary>제목·자막 편집</summary><fieldset id="fields"><label class="field" for="clipTitle">영상 위 제목</label>
 <input class="edit-input" id="clipTitle" maxlength="52" placeholder="제목 입력"><label class="toggle"><input id="showCaptions" type="checkbox" checked> 대사 자막 표시</label><div id="lineFields"></div></fieldset></details>
-<button id="save" class="primary" type="button" disabled>선택한 구간 저장</button><a id="download" hidden download="오토릴스-쇼츠.mp4">완성된 MP4 다운로드</a></div>
+<button id="save" class="primary" type="button" disabled>선택한 구간 저장</button><a id="download" hidden download="오토릴스메이커-쇼츠.mp4">완성된 MP4 다운로드</a></div>
 </section></main><script src="shorts.js"></script><script src="editor.js"></script></body></html>

@@ -1988,7 +1988,7 @@
           if (statusEl) statusEl.textContent = '전용 Google Gemini 2.0 Flash 키가 연결되었습니다.';
           if (badgeEl) badgeEl.textContent = 'Gemini 2.0 Flash 전용 엔진';
         } else {
-          if (statusEl) statusEl.textContent = '현재 상태: AutoReels 기본 클라우드 LLM 엔진 활성';
+          if (statusEl) statusEl.textContent = '현재 상태: AutoReelsMaker 기본 클라우드 LLM 엔진 활성';
           if (badgeEl) badgeEl.textContent = '중앙 AI 엔진 활성';
         }
       } catch (e) {}

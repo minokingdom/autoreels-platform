@@ -786,7 +786,7 @@
           ctx.fillStyle = '#ffffff';
           ctx.font = '700 13px sans-serif';
           ctx.textAlign = 'left';
-          ctx.fillText(`AUTOREELS SHOWROOM · VOL. 0${currentCutSlot + 1}`, 36, 44);
+          ctx.fillText(`AUTOREELSMAKER SHOWROOM · VOL. 0${currentCutSlot + 1}`, 36, 44);
           ctx.textAlign = 'right';
           ctx.fillStyle = theme.accent;
           ctx.fillText('SPECIAL EDITION', W - 36, 44);
@@ -1807,7 +1807,7 @@
                           : lMode === 'MONACO_MARINE' ? `⚓ MONACO YACHT · ${campaign.vehicle.toUpperCase()}`
                           : lMode === 'BLACK_OBSIDIAN' ? `🖤 OBSIDIAN ALL-BLACK · ${campaign.vehicle.toUpperCase()}`
                           : lMode === 'VVIP_CONCIERGE' ? `👑 VVIP PRESIDENTIAL · ${campaign.vehicle.toUpperCase()}`
-                          : `AUTOREELS PRESTIGE · ${campaign.vehicle.toUpperCase()}`;
+                          : `AUTOREELSMAKER PRESTIGE · ${campaign.vehicle.toUpperCase()}`;
 
           const cineSub = lMode === 'CANNES_FILM' ? '황금종려상 시네마틱'
                         : lMode === 'MONACO_MARINE' ? '프라이빗 마린 요트'
@@ -1831,7 +1831,7 @@
           ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
           ctx.font = '700 11px monospace';
           ctx.textAlign = 'center';
-          ctx.fillText(`AUTOREELS PRESTIGE // ${campaign.vehicle.toUpperCase()}`, 0, 0);
+          ctx.fillText(`AUTOREELSMAKER PRESTIGE // ${campaign.vehicle.toUpperCase()}`, 0, 0);
           ctx.restore();
 
           // 하단 플로팅 럭셔리 자막 바 (Y: 822 ~ 868)
@@ -2798,7 +2798,7 @@
           ctx.fillStyle = '#22d3ee';
           ctx.font = 'bold 13px monospace';
           ctx.textAlign = 'center';
-          ctx.fillText(`[ TERMINAL 07 // AUTOREELS SECURE UPLINK AUTHORIZED ]`, 0, -cardH / 2 + 42);
+          ctx.fillText(`[ TERMINAL 07 // AUTOREELSMAKER SECURE UPLINK AUTHORIZED ]`, 0, -cardH / 2 + 42);
           ctx.fillStyle = '#67e8f9';
           ctx.font = '11px monospace';
           ctx.fillText('QUANTUM ENCRYPTION: ACTIVE // NODE: SEOUL-CENTRAL', 0, -cardH / 2 + 62);
@@ -2969,7 +2969,7 @@
           ctx.fillStyle = '#ffffff';
           ctx.font = '900 16px sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('🏁 2026 AUTOREELS RACING // PADDOCK PASS', 0, -cardH / 2 + 60);
+          ctx.fillText('🏁 2026 AUTOREELSMAKER RACING // PADDOCK PASS', 0, -cardH / 2 + 60);
 
           // 드라이버 프로필 영역 (Y: -330 ~ -160)
           ctx.fillStyle = 'rgba(20, 20, 28, 0.9)';
@@ -3096,7 +3096,7 @@
           drawFittedText(`• PILOT SNS @${d.snsAccounts?.ig || d.igUsername}`, -70, 310, 280, 13, 9);
           ctx.fillStyle = '#64748b';
           ctx.font = '10px monospace';
-          ctx.fillText('SCUDERIA AUTOREELS RACING DIVISION', -70, 358);
+          ctx.fillText('SCUDERIA AUTOREELSMAKER RACING DIVISION', -70, 358);
         }
 
         // ====================================================================
@@ -3299,7 +3299,7 @@
           drawFittedText(`• 인스타그램 @${d.snsAccounts?.ig || d.igUsername}`, -80, 340, 285, 12, 9);
           ctx.fillStyle = '#64748b';
           ctx.font = '11px sans-serif';
-          ctx.fillText('AUTOREELS CREATOR PARTNER NETWORK', -80, 385);
+          ctx.fillText('AUTOREELSMAKER CREATOR PARTNER NETWORK', -80, 385);
         }
 
         // ====================================================================
@@ -3509,7 +3509,7 @@
         ctx.fillStyle = '#ffffff';
         ctx.font = '900 26px "Pretendard Variable", sans-serif';
         ctx.fillText(
-          isTamper ? '🚨 전화번호 무단 변경 · 계정 공유 차단됨' : '🔒 AUTOREELS 미구독 · 만료 제한 모드',
+          isTamper ? '🚨 전화번호 무단 변경 · 계정 공유 차단됨' : '🔒 AUTOREELSMAKER 미구독 · 만료 제한 모드',
           0,
           -22
         );
@@ -3524,7 +3524,7 @@
         );
         ctx.font = '600 15px monospace';
         ctx.fillStyle = '#e2e8f0';
-        ctx.fillText('Protected by AutoReels Rust WebAssembly DRM v1.0', 0, 50);
+        ctx.fillText('Protected by AutoReelsMaker Rust WebAssembly DRM v1.0', 0, 50);
         ctx.restore();
       }
 

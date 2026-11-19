@@ -59,7 +59,7 @@ def notify_kakao(text: str) -> None:
             if token:
                 tpl = json.dumps({
                     "object_type": "text",
-                    "text": f"[AutoReels Kaggle 알림]\n{text[:900]}",
+                    "text": f"[AutoReelsMaker Kaggle 알림]\n{text[:900]}",
                     "link": {"web_url": "https://autoreels-studio.vercel.app", "mobile_web_url": "https://autoreels-studio.vercel.app"},
                     "button_title": "스튜디오 확인",
                 }, ensure_ascii=False)
@@ -76,7 +76,7 @@ def notify_kakao(text: str) -> None:
         try:
             wreq = urllib.request.Request(
                 webhook,
-                data=json.dumps({"text": f"[AutoReels Kaggle 알림]\n{text}"}).encode("utf-8"),
+                data=json.dumps({"text": f"[AutoReelsMaker Kaggle 알림]\n{text}"}).encode("utf-8"),
                 headers={"Content-Type": "application/json"},
             )
             urllib.request.urlopen(wreq, timeout=12).read()

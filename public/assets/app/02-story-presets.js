@@ -4073,7 +4073,7 @@ function renderStoryArchetypesUI() {
             <div class="mt-2 pt-2 border-t border-[var(--border)] flex items-center justify-between text-[10px] text-[#85858b]">
               <span class="truncate pr-1">${(arch.cutCaptions && arch.cutCaptions[0] ? arch.cutCaptions[0].replace(/^[^\s]+\s*/, '') : arch.hook)}</span>
               <div class="flex items-center gap-1 shrink-0">
-                <button type="button" onclick="togglePinnedArchetype(event, '${k}')" class="px-1.5 py-0.5 rounded text-[9px] font-mono transition-colors ${isPinned ? 'bg-[#facc15] text-[#0f172a] font-bold' : 'text-[#71717a] hover:text-[#ededed] hover:bg-[#27272a]'}" title="AutoReels 시작 시 항상 이 스타일로 고정">
+                <button type="button" onclick="togglePinnedArchetype(event, '${k}')" class="px-1.5 py-0.5 rounded text-[9px] font-mono transition-colors ${isPinned ? 'bg-[#facc15] text-[#0f172a] font-bold' : 'text-[#71717a] hover:text-[#ededed] hover:bg-[#27272a]'}" title="AutoReelsMaker 시작 시 항상 이 스타일로 고정">
                   ${isPinned ? '📌 해제' : '📌 시작고정'}
                 </button>
                 <span class="font-bold text-[#ededed] ml-1">선택 →</span>

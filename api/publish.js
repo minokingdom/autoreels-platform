@@ -18,7 +18,7 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== 'POST') {
     return res.status(200).json({
-      service: 'AutoReels Multi-SNS Publisher API (Vercel Serverless)',
+      service: 'AutoReelsMaker Multi-SNS Publisher API (Vercel Serverless)',
       status: 'READY',
       supportedChannels: ['instagram', 'youtube', 'tiktok', 'facebook']
     });

@@ -101,7 +101,7 @@ fileInput.addEventListener('change', async () => {
       node.buffer = decoded; node.connect(mono.destination); node.start(); s.audio = await mono.startRendering();
     }
     if (session !== s) return;
-    detail(s,'한국어 음성 모델 준비 중 · 처음 약 60MB');
+    detail(s,'준비 중…');
     s.engine = document.createElement('iframe'); s.engine.hidden = true; s.engine.title = '음성 분석'; s.engine.src = 'engine.html';
     document.body.append(s.engine); watchdog(s);
   } catch (err) {detail(s,err.message || '이 영상의 오디오를 읽을 수 없어요.');}

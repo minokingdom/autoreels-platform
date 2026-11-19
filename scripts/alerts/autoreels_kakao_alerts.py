@@ -127,7 +127,7 @@ def poll_once(state: dict) -> bool:
                     inds = len(fresh.get("industries") or {})
                     probs = fresh.get("problems") if isinstance(fresh.get("problems"), list) else []
                     msg = (
-                        f"[AutoReels 자동화 완료]\n"
+                        f"[AutoReelsMaker 자동화 완료]\n"
                         f"실행: #{num} ({started} ~ {ended})\n"
                         f"트렌드 기준일: {t_date} ({inds}개 업종, 오류 {len(probs)}건)\n"
                         f"확인: {r.get('html_url', '')}"
@@ -136,7 +136,7 @@ def poll_once(state: dict) -> bool:
                     print(f"[alert] sent workflow success #{num} -> HTTP {status}", flush=True)
                 else:
                     msg = (
-                        f"[AutoReels 새벽 자동화 실패]\n"
+                        f"[AutoReelsMaker 새벽 자동화 실패]\n"
                         f"실행: #{num} ({conclusion}, {started} ~ {ended})\n"
                         f"확인: {r.get('html_url', '')}"
                     )
@@ -163,7 +163,7 @@ def poll_once(state: dict) -> bool:
             changed = True
         problems = trends_data.get("problems") if isinstance(trends_data.get("problems"), list) else []
         if not first_init and problems and updated_at and updated_at != state.get("last_problem_at"):
-            msg = "[AutoReels 트렌드 점검 필요]\n- " + "\n- ".join(str(x) for x in problems[:8])
+            msg = "[AutoReelsMaker 트렌드 점검 필요]\n- " + "\n- ".join(str(x) for x in problems[:8])
             status = send_iris_text(ALERT_ROOM, msg)
             print(f"[alert] sent trends problems -> HTTP {status}", flush=True)
             state["last_problem_at"] = updated_at
@@ -185,7 +185,7 @@ def poll_once(state: dict) -> bool:
             else:
                 live_updated = fmt_kst(str(fresh.get("updatedAt") or state.get("last_trends_updated_at") or ""))
                 msg = (
-                    f"[AutoReels 새벽 자동화 미실행 알림]\n"
+                    f"[AutoReelsMaker 새벽 자동화 미실행 알림]\n"
                     f"기준 시간({DEADLINE_HOUR_KST:02d}:{DEADLINE_MINUTE_KST:02d} KST)이 지났는데 오늘({today_kst}) 갱신이 아직 없습니다.\n"
                     f"마지막 갱신: {live_date} ({live_updated})"
                 )
@@ -209,7 +209,7 @@ def main() -> int:
     if args.test:
         now = datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S KST")
         msg = (
-            f"[AutoReels 카카오톡 알림 테스트]\n"
+            f"[AutoReelsMaker 카카오톡 알림 테스트]\n"
             f"기존 Iris 카톡봇 연동 완료 ({now})\n"
             f"매일 새벽 자동화 완료·실패·미실행 상태를 이 방으로 알려드립니다."
         )

@@ -2747,7 +2747,7 @@
         dash(y0 + 384);
         c.fillStyle = '#111111';
         for (let i = 0; i < 44; i++) c.fillRect(x0 + 30 + i * 7.9, y0 + 410, (gHash('rc' + i) % 3) + 1.2, 70);
-        mono('THANK YOU · AUTO REELS', W / 2, y0 + 508, 12, 500, 'center', '#777777');
+        mono('THANK YOU · AUTOREELSMAKER', W / 2, y0 + 508, 12, 500, 'center', '#777777');
         gRoundRect(c, x0 + 24, y0 + 560, w - 48, 70, 6);
         c.fillStyle = gReadableAccent(col, true);
         c.fill();

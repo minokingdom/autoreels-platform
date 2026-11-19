@@ -473,7 +473,7 @@
         this.ttsFreeModel = free;
         if (this.ttsProvider === 'fish') this.setTtsProvider('fish');
         if (free) {
-          console.warn('[AutoReels] Fish Audio 유료 크레딧 부족: 무료 모델로 음성을 만들고 있습니다 (' + model + ')');
+          console.warn('[AutoReelsMaker] Fish Audio 유료 크레딧 부족: 무료 모델로 음성을 만들고 있습니다 (' + model + ')');
           if (!this.ttsFreeNotified && typeof isAdminMode !== 'undefined' && isAdminMode && typeof arToast === 'function') {
             this.ttsFreeNotified = true;
             arToast('Fish Audio 크레딧이 부족해 성우가 무료 모델(음질 낮음)로 바뀌었습니다. fish.audio에서 충전하면 바로 고품질로 돌아갑니다.');

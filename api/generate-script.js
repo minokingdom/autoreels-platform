@@ -724,7 +724,7 @@ async function handler(req, res) {
 
   if (req.method !== 'POST') {
     return res.status(200).json({
-      service: 'AutoReels Generative AI Scene Director Engine (방식 A)',
+      service: 'AutoReelsMaker Generative AI Scene Director Engine (방식 A)',
       status: 'READY',
       supportedThemes: VALID_THEMES.length,
       supportedWidgets: VALID_WIDGETS.length
@@ -1128,7 +1128,7 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
 
   // 기본 대본으로 대신 응답: 왜 AI를 못 썼는지 aiFallback 에 남김 (키 값은 넣지 않음)
   if (!aiDiag.kieKey && !aiDiag.openaiKey && !aiDiag.geminiKey) aiDiag.reason = 'AI 키가 설정되어 있지 않음 (KIE_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY)';
-  return respond(isOther || isPersonal ? 'AutoReels 기본 대본' : 'AutoReels AI Automotive Director', fallbackVariants, aiDiag);
+  return respond(isOther || isPersonal ? 'AutoReelsMaker 기본 대본' : 'AutoReelsMaker AI Automotive Director', fallbackVariants, aiDiag);
 };
 
 // 외부 API를 호출하는 생성과 진단은 모두 로그인 상태와 사용량을 먼저 확인합니다.

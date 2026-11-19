@@ -186,7 +186,7 @@ def process(job):
             existing=next((row for row in catalog if row['id']==sid),None)
             if existing:
                 require_live_style(sid,catalog_sha[:10])
-                result={'status':'done','message':f"이미 등록된 오토릴스 스타일입니다.\n{existing['name']}\n{SITE}/studio"}
+                result={'status':'done','message':f"이미 등록된 오토릴스메이커 스타일입니다.\n{existing['name']}\n{SITE}/studio"}
                 write(receipt,result)
                 return result
         frames,timeline=analyse(video,directory)
@@ -194,7 +194,7 @@ def process(job):
         pub=publish(style,source_url,directory)
         deployed(pub['sha'])
         require_live_style(pub['id'],pub['sha'][:10])
-        result={'status':'done','message':f"오토릴스 스타일 추가 완료\n{pub['name']}\n{style['summary']}\n스타일 목록에서 이름으로 선택하세요.\n{SITE}/studio?v={pub['sha'][:10]}\n음성 기준 길이·컷별 사진·엔딩 설정은 그대로 적용됩니다."}
+        result={'status':'done','message':f"오토릴스메이커 스타일 추가 완료\n{pub['name']}\n{style['summary']}\n스타일 목록에서 이름으로 선택하세요.\n{SITE}/studio?v={pub['sha'][:10]}\n음성 기준 길이·컷별 사진·엔딩 설정은 그대로 적용됩니다."}
     except Exception as exc:
         write(directory/'error.json',{'type':type(exc).__name__,'detail':str(exc)[:1500]})
         message=str(exc) if isinstance(exc,ValueError) else '다운로드·분석·배포 중 완료하지 못했습니다. 작업 기록을 확인해야 합니다.'

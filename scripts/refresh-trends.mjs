@@ -109,7 +109,7 @@ async function notifyKakaoProblem(text) {
       if (tk.access_token) {
         const template = {
           object_type: 'text',
-          text: `[AutoReels 알림]\n${String(text).slice(0, 900)}`,
+          text: `[AutoReelsMaker 알림]\n${String(text).slice(0, 900)}`,
           link: { web_url: 'https://autoreels-studio.vercel.app', mobile_web_url: 'https://autoreels-studio.vercel.app' },
           button_title: '스튜디오 확인'
         };
@@ -136,7 +136,7 @@ async function notifyKakaoProblem(text) {
       await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: `[AutoReels 알림]\n${text}` }),
+        body: JSON.stringify({ text: `[AutoReelsMaker 알림]\n${text}` }),
         signal: AbortSignal.timeout(10000)
       });
     } catch (e) {
