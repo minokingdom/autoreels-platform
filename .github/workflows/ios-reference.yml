@@ -1,45 +1,55 @@
 name: iPhone reference
 on:
   push:
-    paths: ['ios/**', '.github/workflows/ios-reference.yml']
+    paths: ['ios/**', '.github/workflows/ios-reference.yml', 'tests/fixtures/remix-spoken-ko.mp4']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   iphone:
     runs-on: macos-26-intel
-    timeout-minutes: 35
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: ios
     steps:
       - uses: actions/checkout@v4
       - name: Generate iOS project
-        working-directory: ios
         run: |
           command -v xcodegen || brew install xcodegen
           xcodegen generate
       - name: Build for iPhone
-        working-directory: ios
         run: |
           xcodebuild -project AutoReelsMaker.xcodeproj -scheme AutoReelsMaker -configuration Release -destination 'generic/platform=iOS' -derivedDataPath DerivedData CODE_SIGNING_ALLOWED=NO build
-      - name: Run simulator test
-        working-directory: ios
+      - name: Select iPhone simulator
         run: |
           DEVICE=$(xcodebuild -project AutoReelsMaker.xcodeproj -scheme AutoReelsMaker -showdestinations | python3 -c 'import re,sys; print(next(re.search(r"id:([0-9A-Fa-f-]{36})", line)[1] for line in sys.stdin if "platform:iOS Simulator" in line and "name:iPhone" in line and re.search(r"id:([0-9A-Fa-f-]{36})",line)))')
-          xcodebuild -project AutoReelsMaker.xcodeproj -scheme AutoReelsMaker -destination "id=$DEVICE" -derivedDataPath DerivedData -parallel-testing-enabled NO -resultBundlePath TestResult test
-      - name: Package simulator app
-        if: always()
-        working-directory: ios
+          echo "DEVICE=$DEVICE" >> "$GITHUB_ENV"
+          xcrun simctl boot "$DEVICE" || xcrun simctl bootstatus "$DEVICE"
+      - name: Build and package simulator app
         run: |
-          if test -d DerivedData/Build/Products/Debug-iphonesimulator/AutoReelsMaker.app; then
-            ditto -c -k --keepParent DerivedData/Build/Products/Debug-iphonesimulator/AutoReelsMaker.app AutoReelsMaker-iPhone-Simulator.zip
-          fi
+          xcodebuild -project AutoReelsMaker.xcodeproj -scheme AutoReelsMaker -destination "id=$DEVICE" -derivedDataPath DerivedData ONLY_ACTIVE_ARCH=NO 'ARCHS=arm64 x86_64' build-for-testing
+          APP=DerivedData/Build/Products/Debug-iphonesimulator/AutoReelsMaker.app
+          lipo "$APP/AutoReelsMaker" -verify_arch arm64 x86_64
+          ditto -c -k --keepParent "$APP" AutoReelsMaker-iPhone-Simulator.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iPhone-simulator
+          path: ios/AutoReelsMaker-iPhone-Simulator.zip
+          if-no-files-found: error
+      - name: Test on iPhone simulator
+        run: |
+          xcodebuild -project AutoReelsMaker.xcodeproj -scheme AutoReelsMaker -destination "id=$DEVICE" -derivedDataPath DerivedData -parallel-testing-enabled NO -resultBundlePath TestResult test-without-building
+      - name: Export test screenshots
+        if: always()
+        run: |
           if test -d TestResult.xcresult; then
-            xcrun xcresulttool export attachments --path TestResult.xcresult --output-path Attachments || true
+            xcrun xcresulttool export attachments --path TestResult.xcresult --output-path Attachments
           fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: iPhone-simulator
+          name: iPhone-test-results
           path: |
-            ios/AutoReelsMaker-iPhone-Simulator.zip
             ios/Attachments
             ios/TestResult.xcresult
