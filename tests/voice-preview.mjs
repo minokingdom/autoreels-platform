@@ -80,7 +80,7 @@ try {
     await play('ko-KR-Wavenet-B');
     assert.equal(synthesisCalls, 0);
     const player = await sheet.locator('audio').elementHandle();
-    await sheet.getByRole('button', { name: '완료' }).click();
+    await sheet.getByRole('button', { name: '적용', exact: true }).click();
     assert.equal(await player.evaluate(el => el.paused), true);
     assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'ko-KR-Wavenet-B');
     assert.equal(await page.evaluate(() => localStorage.getItem('autoreels_tts_voice')), 'ko-KR-Wavenet-B');

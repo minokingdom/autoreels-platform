@@ -986,7 +986,7 @@
     }
     function arShowVoiceChoices(el, sel) {
       el.innerHTML = `<div class="bgm-sheet" role="dialog" aria-modal="true" aria-label="성우 목소리">
-        <div class="bgm-head"><strong>성우 목소리</strong><button type="button" class="bgm-done">완료</button></div>
+        <div class="bgm-head"><strong>성우 목소리</strong><button type="button" class="bgm-done">적용</button></div>
         <div class="bgm-list"></div><audio preload="none"></audio>
       </div>`;
       const list = el.querySelector('.bgm-list');
