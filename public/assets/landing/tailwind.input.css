@@ -30,3 +30,115 @@ body {
 .landing-secondary:hover { border-color: var(--border-strong); }
 :where(a, button):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 html { scroll-behavior: smooth; }
+
+/* 히어로 9:16 3컷 자동 미리보기 인터랙션 */
+.lp-phone-bg {
+  transition: background 0.45s ease;
+}
+.lp-bars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+.lp-bar {
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  overflow: hidden;
+  display: block;
+}
+.lp-bar-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: #ffffff;
+  border-radius: inherit;
+}
+.lp-bar.is-done .lp-bar-fill {
+  width: 100%;
+}
+.lp-bar.is-active .lp-bar-fill {
+  animation: lp-bar-progress 3.4s linear forwards;
+}
+.lp-bar.is-active.is-paused .lp-bar-fill {
+  animation-play-state: paused;
+}
+@keyframes lp-bar-progress {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+.lp-play-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.42);
+  color: #ffffff;
+  font-size: 9px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.lp-play-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+@keyframes lp-cut-fade {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.lp-cut-enter {
+  animation: lp-cut-fade 0.28s ease-out;
+}
+.lp-quick-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 340px;
+  overflow-x: auto;
+  padding: 2px 2px 4px;
+  scrollbar-width: none;
+}
+.lp-quick-row::-webkit-scrollbar {
+  display: none;
+}
+.lp-quick-chip {
+  flex: 0 0 auto;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #141415;
+  color: #a1a1aa;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.lp-quick-chip:hover {
+  color: #ededed;
+  border-color: var(--border-strong);
+}
+.lp-quick-chip.is-active {
+  background: #ededed;
+  border-color: #ededed;
+  color: #09090b;
+  font-weight: 600;
+}
+.lp-new-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(76, 195, 138, 0.16);
+  border: 1px solid rgba(76, 195, 138, 0.35);
+  color: #4cc38a;
+  font-size: 11px;
+  font-weight: 600;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-bar.is-active .lp-bar-fill { animation: none; width: 100%; }
+  .lp-cut-enter { animation: none; }
+}
