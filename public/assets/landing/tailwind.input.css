@@ -245,6 +245,47 @@ html, body {
   color: transparent;
   -webkit-text-stroke: 1.5px rgba(245, 239, 226, 0.72);
 }
+
+/* 히어로 스크롤 핀 시네마스코프 레터박스 & 디렉터 2막 캡션 */
+.mn-cinema-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 9vh;
+  background: #060504;
+  z-index: 12;
+  pointer-events: none;
+  will-change: transform;
+}
+.mn-cinema-bar-top { top: 0; transform: translateY(-105%); border-bottom: 1px solid rgba(245, 239, 226, 0.08); }
+.mn-cinema-bar-bot { bottom: 0; transform: translateY(105%); border-top: 1px solid rgba(245, 239, 226, 0.08); }
+
+.mn-director-note {
+  position: absolute;
+  left: max(28px, calc(50% - 580px));
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 340px;
+  z-index: 8;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+@media (max-width: 1023px) { .mn-director-note { display: none; } }
+.mn-director-title {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.22;
+  letter-spacing: -0.025em;
+  color: var(--mn-cream);
+  margin-top: 10px;
+}
+.mn-director-sub {
+  font-size: 13.5px;
+  color: var(--mn-muted);
+  line-height: 1.65;
+  margin-top: 10px;
+}
 .mn-blueprint-grid {
   position: absolute;
   inset: 0;

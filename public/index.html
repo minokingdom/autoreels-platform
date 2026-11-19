@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120p" />
+  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120q" />
 </head>
 <body class="antialiased mn-body">
   <!-- 35mm 필름 그레인 글로벌 레이어 -->
@@ -87,6 +87,15 @@
     </div>
     <div class="mn-blueprint-grid" aria-hidden="true"></div>
     <canvas id="mnDustCanvas" class="mn-dust-canvas" aria-hidden="true"></canvas>
+    <!-- 스크롤 시 부드럽게 닫히는 영화관 2.39:1 시네마스코프 레터박스 -->
+    <div id="mnHeroBarTop" class="mn-cinema-bar mn-cinema-bar-top" aria-hidden="true"></div>
+    <div id="mnHeroBarBot" class="mn-cinema-bar mn-cinema-bar-bot" aria-hidden="true"></div>
+    <!-- 스크롤 2막 중앙 포커스 시 좌측에 떠오르는 시네마틱 디렉터 캡션 -->
+    <div id="mnHeroDirectorNote" class="mn-director-note" aria-hidden="true">
+      <div class="font-mono text-[11px] tracking-widest uppercase text-[#e07a4f]">DIRECTOR'S CUT · SCROLL SCRUB</div>
+      <div id="mnDirectorHeadline" class="mn-director-title">한 장의 사진이<br />3컷 릴스로 살아나는 순간</div>
+      <p id="mnDirectorDesc" class="mn-director-sub">스크롤에 맞춰 후킹 · AI 성우 대사 · 매장 엔딩까지 한 흐름으로 전환됩니다.</p>
+    </div>
 
     <!-- 코너 등록 마크 -->
     <div class="mn-corner-meta mn-corner-tl font-mono" aria-hidden="true">+ A1 · 9:16 MASTER STUDIO</div>
@@ -526,7 +535,7 @@
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
-  <script src="/assets/landing/industries.js?v=20261120p"></script>
-  <script src="/assets/landing/landing.js?v=20261120p"></script>
+  <script src="/assets/landing/industries.js?v=20261120q"></script>
+  <script src="/assets/landing/landing.js?v=20261120q"></script>
 </body>
 </html>

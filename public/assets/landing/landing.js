@@ -312,18 +312,64 @@
       document.fonts.ready.then(function () { ST.refresh(); }).catch(function () {});
     }
 
-    // 1) 히어로 입장 스태거 + 풀-블리드 시네마 KV 스크롤 줌인 패럴랙스
+    // 1) 히어로 입장 스태거 + 데스크톱 GSAP Pinned 시네마틱 스크롤 카메라 워크 (pin: true, scrub: 1.2)
     gsap.from('.mn-giant-line', { yPercent: 35, opacity: 0, duration: 0.9, stagger: 0.12, ease: 'power3.out', clearProps: 'transform,opacity' });
     gsap.from('.mn-hero-reel', { scale: 0.9, opacity: 0, duration: 0.85, delay: 0.18, ease: 'power3.out', clearProps: 'transform,opacity' });
-    if (document.getElementById('mnHeroKvImg')) {
+
+    if (window.innerWidth >= 960 && document.getElementById('mnHero')) {
+      var lastHeroCut = -1;
+      var directorHeadlines = [
+        '한 장의 사진이<br />3컷 릴스로 살아나는 순간',
+        'AI 구어체 대본과 성우가<br />영상 길이에 맞춰 자동 싱크',
+        '매장 로고·혜택 엔딩까지<br />9:16 1080p MP4 완성'
+      ];
+      var heroTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: '#mnHero',
+          start: 'top top',
+          end: '+=210%',
+          pin: true,
+          scrub: 1.2,
+          anticipatePin: 1,
+          onUpdate: function (self) {
+            var p = self.progress;
+            if (p > 0.12 && p < 0.96) {
+              var cut = p < 0.42 ? 0 : (p < 0.70 ? 1 : 2);
+              if (cut !== lastHeroCut) {
+                lastHeroCut = cut;
+                var ind = INDS[current] || INDS.auto;
+                if (ind && cut !== currentCut) {
+                  renderCut(ind, cut);
+                  scheduleNextCut();
+                }
+                var dh = document.getElementById('mnDirectorHeadline');
+                if (dh) dh.innerHTML = directorHeadlines[cut] || directorHeadlines[0];
+              }
+            }
+          }
+        }
+      });
+
+      // Phase 1 (0 -> 0.42): 시네마 카메라 씬 돌리 인 + 거대 타이포 좌우 파팅 + 좌측 카피 퇴장 + 레터박스 클로즈
+      heroTl
+        .to('#mnHeroKvImg', { scale: 1.24, xPercent: -5, yPercent: 3, ease: 'none', duration: 1 }, 0)
+        .to('.mn-giant-line:first-child', { xPercent: -18, opacity: 0.08, ease: 'none', duration: 0.42 }, 0)
+        .to('.mn-giant-line:last-child', { xPercent: 18, opacity: 0.06, ease: 'none', duration: 0.42 }, 0)
+        .to('#mnHeroGiantType > :not(.mn-giant-stack)', { y: -28, opacity: 0, ease: 'none', duration: 0.34 }, 0)
+        .to('#mnHeroBarTop', { yPercent: 105, ease: 'none', duration: 0.32 }, 0.08)
+        .to('#mnHeroBarBot', { yPercent: -105, ease: 'none', duration: 0.32 }, 0.08)
+        // Phase 2 (0.14 -> 0.52): 9:16 라이브 릴스가 정중앙으로 유유히 이동하며 1.18배 시네마 포커스 + 디렉터 캡션 등장
+        .to('#landingPhoneStage', { x: function () { return -Math.min(180, window.innerWidth * 0.13); }, scale: 1.16, ease: 'none', duration: 0.42 }, 0.12)
+        .fromTo('#mnHeroDirectorNote', { opacity: 0, y: 24 }, { opacity: 1, y: 0, ease: 'none', duration: 0.24 }, 0.32)
+        // Phase 3 (0.78 -> 1.0): 레터박스 오픈 & 릴스/디렉터 캡션 시네마틱 페이드아웃 -> CH 02 성명문으로 연결
+        .to('#mnHeroDirectorNote', { opacity: 0, y: -20, ease: 'none', duration: 0.18 }, 0.80)
+        .to('#mnHeroBarTop', { yPercent: 0, ease: 'none', duration: 0.2 }, 0.80)
+        .to('#mnHeroBarBot', { yPercent: 0, ease: 'none', duration: 0.2 }, 0.80)
+        .to('#landingPhoneStage', { scale: 1.24, opacity: 0.82, ease: 'none', duration: 0.2 }, 0.80);
+    } else if (document.getElementById('mnHeroKvImg')) {
       gsap.fromTo('#mnHeroKvImg',
         { scale: 1.03, yPercent: 0 },
-        {
-          scale: 1.15,
-          yPercent: 7,
-          ease: 'none',
-          scrollTrigger: { trigger: '#mnHero', start: 'top top', end: 'bottom top', scrub: 1.1 }
-        }
+        { scale: 1.14, yPercent: 6, ease: 'none', scrollTrigger: { trigger: '#mnHero', start: 'top top', end: 'bottom top', scrub: 1.1 } }
       );
     }
 
