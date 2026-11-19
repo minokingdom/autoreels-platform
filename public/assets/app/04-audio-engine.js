@@ -1582,12 +1582,14 @@
     }
 
     const arDeviceVoiceIds = ['F', 'M'].flatMap(sex => [1, 2, 3, 4, 5].map(i => 'device-' + sex + i));
-    const arIsDeviceVoice = voice => arDeviceVoiceIds.includes(voice);
+    const arVoxVoice = 'device-voxcpm2';
+    const arIsDeviceVoice = voice => voice === arVoxVoice || arDeviceVoiceIds.includes(voice);
     const arDeviceVoiceLabel = id => '휴대폰 성우 · ' + (id[7] === 'F' ? '여성 ' : '남성 ') + id[8];
     const arDeviceModule = () => import('/assets/device-voice/model.mjs');
     let arDeviceInstalled = false;
     let arDeviceInstalling = false;
     let arDeviceWorker = null;
+    let arDeviceWorkerModel;
     let arDeviceIdleTimer;
     let arDeviceQueue = Promise.resolve();
 
@@ -1598,7 +1600,9 @@
 
     function arShowDeviceVoices() {
       const select = document.getElementById('ttsVoiceSelect');
-      select.querySelectorAll('[data-device-missing]').forEach(option => option.remove());
+      select.querySelectorAll('[data-device-missing]').forEach(option => {
+        if (arDeviceVoiceIds.includes(option.value)) option.remove();
+      });
       if (!select.querySelector('[data-device-voices]')) {
         const group = document.createElement('optgroup');
         group.dataset.deviceVoices = '';
@@ -1613,10 +1617,11 @@
       const panel = document.getElementById('deviceVoiceControls');
       if (!panel || !arHasGenerationAccount()) return;
       panel.hidden = false;
+      arRefreshVoxVoice().catch(() => {});
       const audition = document.getElementById('deviceAuditionSelect');
       if (!audition.options.length) {
         audition.append(...arDeviceVoiceIds.map(id => new Option(arDeviceVoiceLabel(id), id)));
-        if (arIsDeviceVoice(AudioEngine.ttsVoice)) audition.value = AudioEngine.ttsVoice;
+        if (arDeviceVoiceIds.includes(AudioEngine.ttsVoice)) audition.value = AudioEngine.ttsVoice;
         arLoadVoiceSample();
         arSyncIgSelects(panel);
       }
@@ -1682,16 +1687,143 @@
       try { return await navigator.wakeLock?.request('screen'); } catch { return null; }
     }
 
+    const arVoxModel = () => import('/assets/device-voice/vox-model.mjs');
+    const arVoxProofKey = 'autoreels_voxcpm2_device_test_v1';
+    function arVoxStatus(message) { document.getElementById('voxVoiceStatus').textContent = message; }
+    async function arRefreshVoxVoice() {
+      const button = document.getElementById('voxVoiceInstall');
+      if (!(window.isSecureContext && window.Worker && navigator.gpu && navigator.storage?.getDirectory)) {
+        button.disabled = true;
+        arVoxStatus('이 브라우저에서는 VoxCPM2를 실행할 수 없습니다.');
+        return;
+      }
+      const installed = await (await arVoxModel()).isInstalled();
+      button.hidden = installed;
+      const ready = installed && localStorage.getItem(arVoxProofKey) === 'ok';
+      document.getElementById('voxVoiceApply').hidden = !ready;
+      const testButton = document.getElementById('voxVoiceTest');
+      testButton.hidden = !installed || ready;
+      if (!ready) {
+        if (!installed) localStorage.removeItem(arVoxProofKey);
+        const info = await navigator.userAgentData?.getHighEntropyValues(['model']).catch(() => null);
+        if (info?.model === 'SM-G977N') {
+          testButton.hidden = true;
+          arVoxStatus((installed ? '모델 저장 완료. ' : '') + '갤럭시 S10 5G에서는 메모리 부족으로 VoxCPM2 음성 합성을 지원하지 않습니다.');
+        } else if (installed) arVoxStatus('모델 저장 완료 · 이 휴대폰에서 짧은 예문을 만들어 실행을 확인해 주세요.');
+        return;
+      }
+      const select = document.getElementById('ttsVoiceSelect');
+      const missing = select.querySelector('[data-device-missing][value="' + arVoxVoice + '"]');
+      missing?.remove();
+      if (!Array.from(select.options).some(o => o.value === arVoxVoice)) {
+        select.add(new Option('VoxCPM2 · 휴대폰', arVoxVoice), select.querySelector('[value="off"]'));
+      }
+      if (AudioEngine.ttsVoice === arVoxVoice) select.value = arVoxVoice;
+      arSyncIgSelects(select.parentElement);
+      arVoxStatus(AudioEngine.ttsVoice === arVoxVoice ? 'VoxCPM2 적용됨' : '다운로드 완료 · 대본을 읽을 수 있습니다.');
+    }
+    document.getElementById('voxVoiceApply')?.addEventListener('click', () => {
+      if (!arHasGenerationAccount() || localStorage.getItem(arVoxProofKey) !== 'ok') return;
+      const select = document.getElementById('ttsVoiceSelect');
+      select.value = arVoxVoice;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      arVoxStatus('VoxCPM2 적용됨');
+    });
+    document.getElementById('voxVoiceTest')?.addEventListener('click', async function () {
+      if (!arHasGenerationAccount() || this.disabled) return;
+      this.disabled = true;
+      arPauseForStudioEdit();
+      const ctx = AudioEngine.ensureContext();
+      const resumed = ctx?.resume().catch(() => {});
+      const activity = arBeginGeneration('voice', '휴대폰에서 예문 생성 중…');
+      const lock = await arDeviceScreenLock();
+      let worker, timer;
+      try {
+        const result = await new Promise((resolve, reject) => {
+          const timeout = () => { clearTimeout(timer); timer = setTimeout(() => reject(new Error('device_timeout')), 240000); };
+          timeout();
+          worker = new Worker('/assets/device-voice/vox-worker.mjs', { type: 'module' });
+          worker.onerror = () => reject(new Error('device_worker'));
+          worker.onmessage = ({ data }) => {
+            if (data.status) { timeout(); arVoxStatus(data.status); activity.update(data.status); }
+            else if (data.clips?.[0]?.length) resolve(data);
+            else reject(new Error(data.error));
+          };
+          worker.postMessage({ lines: ['안녕하세요.'], speed: 1 });
+        });
+        await resumed;
+        const buffer = ctx.createBuffer(1, result.clips[0].length, result.sampleRate);
+        buffer.copyToChannel(result.clips[0], 0);
+        const sample = ctx.createBufferSource();
+        sample.buffer = buffer;
+        sample.connect(ctx.destination);
+        sample.start();
+        localStorage.setItem(arVoxProofKey, 'ok');
+        await arRefreshVoxVoice();
+        arVoxStatus('이 기기에서 음성 확인 완료 · 대본에 적용할 수 있습니다.');
+        activity.end();
+      } catch {
+        const message = '모델은 저장됐지만 이 기기에서 예문을 만들지 못했습니다.';
+        arVoxStatus(message);
+        activity.fail(message);
+      } finally {
+        clearTimeout(timer);
+        worker?.terminate();
+        this.disabled = false;
+        await lock?.release().catch(() => {});
+      }
+    });
+    document.getElementById('voxVoiceInstall')?.addEventListener('click', async function () {
+      if (!arHasGenerationAccount() || this.disabled) return;
+      this.disabled = true;
+      const activity = arBeginGeneration('download', 'VoxCPM2 준비 중…');
+      const lock = await arDeviceScreenLock();
+      let worker;
+      try {
+        await new Promise((resolve, reject) => {
+          worker = new Worker('/assets/device-voice/vox-worker.mjs', { type: 'module' });
+          worker.onerror = () => reject(new Error('device_worker'));
+          worker.onmessage = ({ data }) => {
+            if (data.status) { arVoxStatus(data.status); activity.update(data.status); }
+            else if (data.installed) resolve();
+            else reject(new Error(data.error));
+          };
+          worker.postMessage({ install: true });
+        });
+        await arRefreshVoxVoice();
+        activity.end();
+      } catch (error) {
+        const message = error.message === 'device_gpu' ? '이 휴대폰의 GPU에서는 VoxCPM2를 실행할 수 없습니다.'
+          : error.message === 'device_space' ? '휴대폰 저장 공간을 확보한 뒤 다시 눌러 주세요.'
+          : '다운로드가 멈췄습니다. 다시 누르면 받은 부분부터 이어집니다.';
+        arVoxStatus(message);
+        activity.fail(message);
+      } finally {
+        worker?.terminate();
+        this.disabled = false;
+        await lock?.release().catch(() => {});
+      }
+    });
+
     function arDeviceNarration(ctx, voice, lines, speed, activity) {
       const job = arDeviceQueue.then(async () => {
         if (!arHasGenerationAccount()) throw new Error('device_login_required');
-        if (!arDeviceInstalled && !await (await arDeviceModule()).isInstalled()) throw new Error('device_model_missing');
+        const vox = voice === arVoxVoice;
+        if (vox && localStorage.getItem(arVoxProofKey) !== 'ok') throw new Error('device_test_required');
+        if (vox ? !await (await arVoxModel()).isInstalled() : !arDeviceInstalled && !await (await arDeviceModule()).isInstalled()) throw new Error('device_model_missing');
         if (AudioEngine.ttsVoice !== voice || AudioEngine.masterWantKey !== AudioEngine.scriptKeyFor(lines)) throw new Error('device_voice_changed');
-        arDeviceStatus('이 기기에서 대본을 읽고 있습니다…');
+        const status = vox ? arVoxStatus : arDeviceStatus;
+        status('이 기기에서 대본을 읽고 있습니다…');
         clearTimeout(arDeviceIdleTimer);
         const lock = await arDeviceScreenLock();
         const result = await new Promise((resolve, reject) => {
-          const worker = arDeviceWorker ||= new Worker('/assets/device-voice/worker.mjs', { type: 'module' });
+          const model = vox ? 'vox-worker' : 'worker';
+          if (arDeviceWorker && arDeviceWorkerModel !== model) {
+            arDeviceWorker.terminate();
+            arDeviceWorker = null;
+          }
+          arDeviceWorkerModel = model;
+          const worker = arDeviceWorker ||= new Worker('/assets/device-voice/' + model + '.mjs', { type: 'module' });
           const fail = reason => {
             clearTimeout(timer);
             worker.terminate();
@@ -1704,13 +1836,16 @@
             if (data.status) {
               clearTimeout(timer);
               timer = setTimeout(() => fail('device_timeout'), 240000);
-              arDeviceStatus(data.status);
+              status(data.status);
               activity.update(data.status);
               return;
             }
             if (data.error) return fail(data.error);
             clearTimeout(timer);
-            arDeviceIdleTimer = setTimeout(() => {
+            if (vox) {
+              worker.terminate();
+              arDeviceWorker = null;
+            } else arDeviceIdleTimer = setTimeout(() => {
               worker.terminate();
               arDeviceWorker = null;
             }, 60000);
@@ -1727,11 +1862,11 @@
           offset += clip.length;
           bounds.push(offset / result.sampleRate);
         }
-        arDeviceStatus('휴대폰 음성이 준비됐습니다.');
+        status('휴대폰 음성이 준비됐습니다.');
         return { full, bounds };
       });
       arDeviceQueue = job.catch(error => {
-        if (error.message !== 'device_voice_changed') arDeviceStatus('휴대폰 음성을 만들지 못했습니다. 저장 공간을 확인하거나 다른 성우를 선택해 주세요.');
+        if (error.message !== 'device_voice_changed') (voice === arVoxVoice ? arVoxStatus : arDeviceStatus)('휴대폰 음성을 만들지 못했습니다. 저장 공간을 확인하거나 다른 성우를 선택해 주세요.');
       });
       return job;
     }

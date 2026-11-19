@@ -1523,7 +1523,7 @@ body.ar-cut-editing #arQuickBar { display: none; }
   font-size: .82rem;
   pointer-events: none;
 }
-.ar-generation-status[hidden], #deviceVoiceApply[hidden] { display: none; }
+.ar-generation-status[hidden], #deviceVoiceControls [hidden] { display: none; }
 .ar-generation-status i {
   flex: 0 0 1em;
   height: 1em;

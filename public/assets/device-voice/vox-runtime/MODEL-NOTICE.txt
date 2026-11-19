@@ -1,0 +1,11 @@
+VoxCPM2 by OpenBMB is available under Apache License 2.0.
+https://huggingface.co/openbmb/VoxCPM2
+
+The browser downloads shi3z's Q8 checkpoint with the AudioVAE included.
+https://huggingface.co/shi3z/VoxCPM2-q8/tree/7678fd25ae7672430e62c70dcc3168affad464d4
+
+The F32 WebGPU runtime (voxcpm_rs.js and voxcpm_rs_bg.wasm) is an
+unmodified build of shi3z/voxcpm2web, based on voxcpm-rs by nipah.
+https://github.com/shi3z/voxcpm2web
+https://shi3z.github.io/voxcpm2web/pkg/
+See LICENSE.txt for the Apache License 2.0.

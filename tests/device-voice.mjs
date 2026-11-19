@@ -11,12 +11,25 @@ import { buildApp } from '../scripts/build-app.mjs';
 const samples = process.argv.includes('--samples');
 const real = samples || process.argv.includes('--android') || process.argv.includes('--real');
 const android = process.argv.includes('--android');
+const vox = process.argv.includes('--vox');
+const ranges = [];
+let interrupted = false;
 const root = path.resolve('public');
 buildApp(path.resolve('.'));
 let downloads = 0, paid = 0;
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://localhost');
+    if (vox && url.pathname.startsWith('/vox-fixture/')) {
+      downloads++;
+      if (!req.headers.range) return res.end('1234');
+      const [, first, last] = /^bytes=(\d+)-(\d+)$/.exec(req.headers.range);
+      ranges.push(+first);
+      if (+first === 16 && !interrupted) { interrupted = true; res.writeHead(503).end(); return; }
+      res.writeHead(206, { 'Content-Range': 'bytes ' + first + '-' + last + '/35' });
+      res.end(Buffer.alloc(+last - +first + 1, 1));
+      return;
+    }
     if (url.pathname.startsWith('/fixture/')) {
       downloads++;
       if (!real) { res.end('fixture'); return; }
@@ -40,7 +53,27 @@ const server = http.createServer(async (req, res) => {
     if (!file.startsWith(root + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) { res.writeHead(404).end(); return; }
     const mime = { '.html': 'text/html', '.mjs': 'text/javascript', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
     res.setHeader('Content-Type', mime[path.extname(file)] || 'application/octet-stream');
-    if (url.pathname.endsWith('/model.mjs')) {
+    if (vox && url.pathname.endsWith('/vox-model.mjs')) {
+      res.end(fs.readFileSync(file, 'utf8')
+        .replace(/const base = .*?;/, "const base = '/vox-fixture';")
+        .replace('16 * 1024 * 1024', '16').replace('4336', '4').replace('3676772', '4').replace('2629105078', '35'));
+    } else if (vox && url.pathname.endsWith('/vox-runtime/voxcpm_rs.js')) {
+      res.end(`export default async function initWasm() {}
+        export function init() {}
+        export async function webgpu_self_test() {}
+        export async function load_model(sources) {
+          const url = JSON.parse(sources).base + 'model.safetensors';
+          const reply = await fetch(new Request(url, { headers: { Range: 'bytes=12-28' } }));
+          if (reply.status !== 206 || (await reply.arrayBuffer()).byteLength !== 17) throw Error('weights_range');
+          return { sample_rate: 48000, generate_streaming: async text => {
+            if (text.includes('1,150')) throw Error('numeric_speech');
+            return new Float32Array(48000).fill(.1);
+          } };
+        }`);
+    } else if (vox && url.pathname.endsWith('/vox-worker.mjs')) {
+      res.end(fs.readFileSync(file, 'utf8').replace('await navigator.gpu?.requestAdapter()', '({})')
+        .replace('weights = await weightsForLines(data.lines);', ''));
+    } else if (url.pathname.endsWith('/model.mjs')) {
       res.end(fs.readFileSync(file, 'utf8').replace('wasm :', "'/fixture/runtime' :").replaceAll('base + name', "location.origin + '/fixture/' + name"));
     } else if (!real && url.pathname.endsWith('/worker.mjs')) {
       res.end('onmessage=e=>postMessage({sampleRate:24000,clips:e.data.lines.map(()=>new Float32Array(24000).fill(.1))})');
@@ -64,6 +97,33 @@ try {
   assert.equal(await page.locator('#deviceAuditionSelect option').count(), 10);
   assert.equal(await page.evaluate(() => window.__koSpeech('최대 1,150만원')), '최대 천백오십만 원');
   await page.evaluate(() => document.getElementById('studioTabBtn_sound').click());
+  if (vox) {
+    const install = page.locator('#voxVoiceInstall');
+    await install.click();
+    await page.waitForFunction(() => document.getElementById('voxVoiceStatus').textContent.includes('멈췄습니다'));
+    await install.click();
+    await page.locator('#voxVoiceTest').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('#voxVoiceApply').isHidden(), true);
+    assert.deepEqual(ranges, [0, 16, 16, 32]);
+    const transferCount = downloads;
+    await page.reload();
+    await login();
+    await page.evaluate(() => document.getElementById('studioTabBtn_sound').click());
+    await page.locator('#voxVoiceTest').click();
+    await page.locator('#voxVoiceApply').click();
+    assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'device-voxcpm2');
+    const bounds = await page.evaluate(async () => {
+      const lines = ['1,150만 원입니다.', '반갑습니다.'];
+      const key = AudioEngine.masterWantKey = AudioEngine.scriptKeyFor(lines);
+      await AudioEngine.fetchScriptNarration(lines);
+      return AudioEngine.scriptMasters.get(key).bounds;
+    });
+    assert.equal(bounds.length, 3);
+    assert.ok(bounds[2] > bounds[1] && bounds[1] > 0);
+    assert.equal(downloads, transferCount);
+    assert.equal(paid, 0);
+    console.log('VoxCPM2 login, resume, persistent install, voice selection and local narration OK');
+  } else {
   await page.locator('#deviceAuditionSelect + .ig-select-row').click();
   await page.locator('#arOptionSheet [data-v="device-M5"]').click();
   assert.match(await page.locator('#deviceAuditionPlayer').getAttribute('src'), /M5\.mp3$/);
@@ -127,6 +187,7 @@ try {
         '-codec:a', 'libmp3lame', '-b:a', '96k', path.join(dir, id + '.mp3')], { input: Buffer.from(audio.pcm, 'base64') });
       console.log('sample', id);
     }
+  }
   }
 } finally {
   await page.close();
