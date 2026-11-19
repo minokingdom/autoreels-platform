@@ -241,6 +241,19 @@ try {
   await refreshDaily();
   assert.equal(await daily.getByRole('button').count(),0);
   assert.equal(await cloud.locator('#storeTopicHeading').textContent(),'우리 가게 추천 주제');
+  await cloud.evaluate(()=>{
+    campaign.vehicleEntered=false;
+    campaign.vehicle='메르세데스 벤츠';
+    window.arTodayTopic={title:'AI 부정행위 논란'};
+    arFinishScriptApply(4);
+  });
+  const productName=cloud.locator('#studioPanel_script .ar-product-name');
+  assert.equal(await productName.textContent(),'상품 선택');
+  await openProduct.click();
+  assert.equal(await product.locator('#inputVehicle').inputValue(),'');
+  await product.locator('#inputVehicle').fill('두부김치');
+  await product.getByRole('button',{name:'닫기'}).click();
+  assert.equal(await productName.textContent(),'두부김치');
  }
  assert.deepEqual(errors,[]);console.log('local image browser OK');
 } finally {await browser.close();await new Promise(r=>server.close(r));}

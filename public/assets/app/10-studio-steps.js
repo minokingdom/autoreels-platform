@@ -544,9 +544,10 @@
       if (chip) chip.textContent = (window.arTodayTopic && window.arTodayTopic.title) || '고르기';
       if (personal) return;
       arSyncProductPreset();
-      const name = String((typeof campaign !== 'undefined' && campaign.vehicle) || (document.getElementById('inputVehicle') || {}).value || '').trim() || '내 상품';
-      const sub = String((document.getElementById('inputDiscount') || {}).value || '').trim();
-      const num = Number((document.getElementById('inputDiscountNum') || {}).value || 0);
+      const confirmed = arHasEnteredVehicle();
+      const name = confirmed ? campaign.vehicle.trim() : '상품 선택';
+      const sub = confirmed ? String(campaign.discount || '').trim() : '';
+      const num = confirmed ? Number(campaign.discountNum || 0) : 0;
       document.querySelectorAll('.ar-product-name').forEach((el) => { el.textContent = name; });
       document.querySelectorAll('.ar-product-sub').forEach((el) => { el.textContent = [num > 0 && typeof IND !== 'undefined' && IND.key === 'auto' ? `최대 ${num}만원 할인` : '', sub].filter(Boolean).join(' · ') || '무엇을 알릴지 정해 두면 대본에 들어가요'; });
       const photoSrc = arProductPhoto(name);
@@ -562,6 +563,11 @@
       const el = document.getElementById('productSheet');
       if (!el) return;
       arWatchEditSheet(el);
+      if (!arHasEnteredVehicle()) {
+        document.getElementById('inputVehicle').value = '';
+        document.getElementById('inputDiscount').value = '';
+        document.getElementById('inputDiscountNum').value = 0;
+      }
       arProductSnap = arProductKey();
       el.classList.remove('hidden');
       el.style.display = 'flex';
@@ -573,6 +579,11 @@
       if (!el) return;
       el.classList.add('hidden');
       el.style.display = 'none';
+      if (!arHasEnteredVehicle() && arProductKey() === arProductSnap) {
+        document.getElementById('inputVehicle').value = campaign.vehicle || '';
+        document.getElementById('inputDiscount').value = campaign.discount || '';
+        document.getElementById('inputDiscountNum').value = campaign.discountNum || 0;
+      }
       arSyncProductRows();
       if (arProductKey() !== arProductSnap && arHasEnteredVehicle()) saveAiScriptPrefs();
     }
@@ -585,7 +596,7 @@
         arToast(`${IND.product} 이름을 입력해 주세요.`);
         return;
       }
-      if (IND.key === 'auto') campaign.vehicleEntered = true;
+      campaign.vehicleEntered = true;
       arCloseProductSheet();
       if (!arRequireAiAccess()) return;
       arResumeAfterEditSheets = false;

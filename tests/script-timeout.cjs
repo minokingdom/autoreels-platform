@@ -104,7 +104,7 @@ const res={statusCode:200,status(n){this.statusCode=n;return this},json(b){this.
  const originalRequire = ctx.require;
  ctx.require = n => n === '../public/daily-keywords.json' ? {previousIssues:[{term:'AI 부정행위 논란',publisher:'연합뉴스',day:'2026-11-19',headline:'시험 마친 수험생들, 끝나서 후련'}]} : originalRequire(n);
  await moduleObj.exports(verifiedRequest,res);
- assert.match(input,/시청자 맥락.*호프집/);
+ assert.match(input,/시청자 맥락.*퇴근 후 친구나 동료를 만나는 성인/);
  assert.match(input,/확인된 자료.*시험 마친 수험생들, 끝나서 후련/);
  assert.match(input,/마지막 컷에서 처음의 질문에 직접 답/);
  ctx.fetch=timedOutFetch;

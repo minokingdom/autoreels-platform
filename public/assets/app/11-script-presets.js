@@ -274,6 +274,7 @@
         if (Array.isArray(s.bullets) && s.bullets.length) campaign.bullets = [...s.bullets];
         if (s.priceTag !== undefined) campaign.priceTag = s.priceTag;
         const vEl = document.getElementById('inputVehicle'); if (vEl) vEl.value = campaign.vehicle;
+        arSyncProductRows();
         const dnEl = document.getElementById('inputDiscountNum'); if (dnEl) dnEl.value = campaign.discountNum;
         const dEl = document.getElementById('inputDiscount'); if (dEl) dEl.value = campaign.discount;
         const pEl = document.getElementById('aiPromptInput'); if (pEl && s.rawPrompt) pEl.value = s.rawPrompt;
@@ -299,6 +300,7 @@
       document.getElementById('inputVehicle').value = campaign.vehicle;
       document.getElementById('inputDiscountNum').value = campaign.discountNum;
       document.getElementById('inputDiscount').value = campaign.discount;
+      arSyncProductRows();
       syncPreviewPanel();
       syncTechPanel();
 
@@ -607,14 +609,14 @@
     }
 
     function arHasEnteredVehicle() {
-      return IND.key === 'auto' && campaign.vehicleEntered === true && Boolean(campaign.vehicle?.trim());
+      return IND.key !== 'personal' && campaign.vehicleEntered === true && Boolean(campaign.vehicle?.trim());
     }
 
     function updateCampaignFromInputs(event) {
       setTimeout(() => { if (typeof arSyncProductRows === 'function') arSyncProductRows(); }, 0);
       const field = event?.target?.id;
-      if (IND.key === 'auto' && ['inputVehicle', 'inputDiscountNum', 'inputDiscount'].includes(field)) {
-        if (!campaign.vehicleEntered) {
+      if (IND.key !== 'personal' && ['inputVehicle', 'inputDiscountNum', 'inputDiscount'].includes(field)) {
+        if (IND.key === 'auto' && !campaign.vehicleEntered) {
           // 처음 직접 입력할 때 기본 차량 예시의 혜택이 따라가지 않게 합니다.
           if (field !== 'inputDiscountNum') document.getElementById('inputDiscountNum').value = 0;
           if (field !== 'inputDiscount') document.getElementById('inputDiscount').value = '';

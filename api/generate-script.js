@@ -996,7 +996,7 @@ JSON 스키마:
       : '';
     const issueBrief = topicOnly ? `한국어 릴스 대본을 작성하세요. 시청자는 아래 업종의 손님 또는 해당 활동에 관심 있는 사람입니다.
 한 편에 한 사람, 한 장면, 한 가지 선택만 담으세요. 첫 컷에서 질문이나 고민을 열고, 확인된 사실 하나가 왜 그 사람의 일상과 관계있는지 보여 주세요. 이어서 그 사람이 할 수 있는 행동과 그 이유를 말하고, 마지막 컷에서 처음의 질문에 직접 답하세요.
-가게 손님이 등장할 때는 가상의 상황임이 분명하게 제안형으로 쓰세요. 호프집이면 성인 손님의 관점에서 쓰세요. 업종과 접점이 약하면 매장 방문을 억지로 권하지 말고 그 손님이 일상에서 실제로 해 볼 말이나 선택으로 닫으세요.
+시청자의 직업이나 업종을 광고하지 마세요. 확인된 상품이 없으므로 매장 방문·음식 주문·음주 권유로 넘어가는 컷은 쓰지 마세요. 손님이 일상에서 누군가에게 건넬 구체적인 말이나 행동 하나만 택하세요. 도입에서 '뭐라고 말할까요?'라고 물으면 결말은 실제로 건넬 한 문장이 되어야 합니다. 각 중간 컷은 그 답을 고른 이유나 바로 앞 행동의 결과여야 합니다.
 입력 자료의 기사 제목이 증명하는 범위까지만 사건을 언급하세요. 논란·우려를 적발 사실로 바꾸거나, 숫자·전문가 발언·정책·매장 혜택을 만들어 내지 마세요. 날짜·언론사 이름을 읽으며 컷을 채우지 마세요.
 마지막에 '윤리 의식이 필요합니다', '대책이 시급합니다'처럼 책임 주체와 행동이 없는 결론을 쓰지 마세요. 컷을 이어 읽었을 때 같은 말을 반복하면 그 컷을 장면·이유·실천 중 빠진 내용으로 고치세요.
 세 대본의 순서는 ${angles.map(a => a.guide).join(' / ')}입니다. {"variants":[...]} JSON으로만 출력하세요. 각 대본에 vehicle(키워드), hook, cutCaptions와 ttsLines(각각 정확히 ${cutCount}개), discount(""), bullets([])를 포함하세요. 각 컷의 자막과 성우 문장은 같은 의미, 한 호흡으로 쓰세요.${excludeRule}` : '';
@@ -1013,7 +1013,10 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
     const issueEvidence = verifiedIssue ? '[확인된 자료] ' + JSON.stringify({date:verifiedIssue.day, source:verifiedIssue.publisher, kind:verifiedIssue.kind, title:verifiedIssue.headline || verifiedIssue.term}) : '';
     const userMessage = [
       topicOnly ? `[입력 주제]: ${JSON.stringify(prompt)}` : userMessageBase,
-      topicOnly ? '[시청자 맥락] ' + JSON.stringify({industry:I?.name || body.industry, specialty}) : '',
+      topicOnly ? '[시청자 맥락] ' + JSON.stringify(/호프|주점|술집|맥주/.test(specialty)
+        ? {audience:'퇴근 후 친구나 동료를 만나는 성인', purpose:'저녁 모임에서 나눌 대화'}
+        : {industry:I?.name || body.industry, specialty}) : '',
+      topicOnly && verifiedIssue?.editorialAngle ? '[이 대본에서 풀 질문과 마지막 행동] ' + JSON.stringify(verifiedIssue.editorialAngle) : '',
       issueEvidence,
       topic ? `[오늘의 주제]: ${topicTitle} — ${topicWhy}` : '',
       productLocked ? `[직접 입력한 혜택]: ${enteredOffer || '제공된 판매 조건 없음'}` : '',
@@ -1022,6 +1025,18 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
 
     let aiResult = null;
     let providerUsed = '';
+    const usableVariants = result => {
+      const variants = extractAiVariants(result);
+      if (!topicOnly) return variants;
+      return variants.filter(v => {
+        const lines = v.ttsLines;
+        if (!Array.isArray(lines) || lines.length !== cutCount || !lines.every(s => typeof s === 'string' && s.trim()) ||
+            !Array.isArray(v.cutCaptions) || v.cutCaptions.length !== cutCount) return false;
+        const script = [...lines, ...v.cutCaptions].join(' ');
+        const unrelatedDrink = !/맥주|음주|주류|술집/.test(topicTitle) && /맥주\s*(?:한\s*잔|를?\s*주문)|잔을\s*비워|한잔으로\s*마무리/.test(script);
+        return !unrelatedDrink && !/(?:대책|대응|보완|확립|조성)[이가은는]?\s*(?:시급|필요|요구)/.test(lines.at(-1));
+      });
+    };
     // Bound all AI attempts inside the server function deadline.
     const scriptDeadline = Date.now() + 42000;
     const remainingScriptMs = (cap) => Math.max(0, Math.min(cap, scriptDeadline - Date.now()));
@@ -1057,7 +1072,7 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
             const data = await resp.json();
             const rawText = (data?.candidates?.[0]?.content?.parts || []).filter(part => !part.thought).map(part => part.text || '').join('');
             const parsed = parseJsonLoose(rawText);
-            if (parsed && extractAiVariants(parsed).length > 0) {
+            if (parsed && usableVariants(parsed).length > 0) {
               aiResult = parsed;
               providerUsed = `Google ${gModel} Director`;
             } else {
@@ -1105,7 +1120,7 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
             const { text, data } = await readKieStream(resp);
             if (typeof text === 'string' && text.trim()) {
               const parsed = parseJsonLoose(text);
-              if (parsed && extractAiVariants(parsed).length) {
+              if (parsed && usableVariants(parsed).length) {
                 aiResult = parsed;
                 providerUsed = `kie.ai ${model} Director`;
               } else {
@@ -1154,10 +1169,10 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
     }
     if (aiResult && !extractAiVariants(aiResult).length) aiDiag.parse = 'AI 응답에 쓸 수 있는 대본이 없음';
 
-    const aiVariants = extractAiVariants(aiResult).slice(0, angles.length);
+    const aiVariants = usableVariants(aiResult).slice(0, angles.length);
     if (aiVariants.length > 0) {
       // AI가 3개보다 적게 주면 모자란 칸은 기본 대본으로 채웁니다.
-      const merged = angles.map((_, i) => {
+      const merged = (topicOnly ? aiVariants : angles).map((_, i) => {
         const fb = fallbackVariants[i] || fallback;
         const v = aiVariants[i];
         if (!v) return fb;
