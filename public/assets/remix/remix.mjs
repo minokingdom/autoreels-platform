@@ -1,4 +1,5 @@
-import {analyzeReference, mediaEvent} from './analysis.mjs';
+import {mediaEvent} from './analysis.mjs';
+import {linkedFile,analyzeOnPhone,rewriteOnPhone} from './on-phone.mjs';
 
 const byId = id => document.getElementById(id);
 const preview = byId('preview');
@@ -105,12 +106,9 @@ function showScenes() {
   byId('stage').hidden = byId('actions').hidden = !photos.length || !scenes.length;
   showFrame();
 }
-const jobKey = 'ar_private_remix_pending';
-const draftKey = 'ar_private_remix_draft';
-let sourceId = '';
-function clearDraftId() {try {sessionStorage.removeItem(draftKey);} catch {}}
-function showStory(id,context) {
-  sourceId = id; byId('referenceStory').hidden = false;
+let storyContext;
+function showStory(context) {
+  byId('referenceStory').hidden = false;
   byId('sourceTopic').textContent = context?.topic || context?.title || '확인된 주제 없음';
   byId('sourceLines').replaceChildren(...scenes.map(scene=>{
     const item = document.createElement('li');
@@ -122,8 +120,6 @@ function showStory(id,context) {
     item.append(time,screen,speech); return item;
   }));
 }
-function rememberJob(id) { try { sessionStorage.setItem(jobKey,id); } catch {} }
-function forgetJob() { try { sessionStorage.removeItem(jobKey); } catch {} }
 function linkFeedback(message = '', pending = false) {
   byId('linkFeedback').hidden = !message;
   byId('linkProgress').hidden = !pending;
@@ -135,139 +131,65 @@ function startReference() {
   linkFeedback();
   status('');
   analysis?.abort(); analysis = new AbortController();
-  sourceId = ''; byId('referenceStory').hidden = true; byId('sourceDetails').open = false; byId('adaptChange').value = '';
+  storyContext=null; byId('adaptStatus').textContent=''; byId('referenceStory').hidden = true; byId('sourceDetails').open = false; byId('adaptChange').value = '';
   byId('urlSubmit').disabled = false; byId('loginHelp').hidden = true;
   stopPreview(); resetDownload(); selected = 0; photoVersion++;
   releaseMedia(photos); photos = []; scenes = []; byId('photos').value = ''; byId('arrange').hidden = true; showScenes();
   return analysis;
 }
-async function privateRequest(action, signal, data) {
-  const response = await fetch('/api/account?action='+action, {
-    method:data ? 'POST':'GET', credentials:'same-origin', cache:'no-store', signal,
-    ...(data && {headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
-  });
-  const result = await response.json();
-  if (!response.ok || !result.ok) {
-    const err = Error(result.message || '분석 상태를 확인하지 못했어요.');
-    err.status = response.status;
-    throw err;
-  }
-  return result;
+const localKey='ar_remix_phone_story_v1';
+function rememberStory(){
+  try {sessionStorage.setItem(localKey,JSON.stringify({scenes,context:storyContext,expires:Date.now()+3600000}));} catch {}
 }
-function waitForPoll(signal, ms) {
-  return new Promise((resolve,reject) => {
+async function runReference(input,isLink){
+  if(busy)return;
+  const controller=startReference(),{signal}=controller;
+  try {sessionStorage.removeItem(localKey);} catch {}
+  byId('urlSubmit').disabled=true;
+  const update=msg=>{if(!signal.aborted)linkFeedback(msg,true);};
+  update(isLink?'휴대폰에서 링크를 확인하고 있어요.':'휴대폰에서 참고 영상을 열고 있어요.');
+  try{
+    const {file,title}=isLink?await linkedFile(input,signal,update):{file:input,title:''};
     signal.throwIfAborted();
-    const abort = () => {clearTimeout(timer); reject(signal.reason);};
-    const timer = setTimeout(() => {signal.removeEventListener('abort',abort); resolve();},ms);
-    signal.addEventListener('abort',abort,{once:true});
-  });
+    const result=await analyzeOnPhone(file,title,signal,update);signal.throwIfAborted();
+    scenes=result.scenes;storyContext=result.context;
+    byId('arrange').hidden=false;showScenes();showStory(storyContext);rememberStory();
+    const warning=result.warnings.length?' · '+result.warnings.join('·')+' 인식 미완료':'';
+    linkFeedback('휴대폰 분석 완료 · '+scenes.length+'개 장면'+warning);
+  }catch(error){
+    if(signal.aborted)return;
+    byId('loginHelp').hidden=error.status!==401;
+    linkFeedback(error instanceof TypeError?'휴대폰에서 영상에 접근할 수 없어요. 갤러리에서 참고 영상을 선택해 주세요.':error.message);
+  }finally{if(!signal.aborted)byId('urlSubmit').disabled=false;}
 }
-async function loadPrivateJob(url, previousId) {
-  if (busy) return;
-  const controller = startReference();
-  const {signal} = controller;
-  const button = byId('urlSubmit'); button.disabled = true;
-  byId('refName').textContent = '최대 90초 · 250MB';
-  linkFeedback(previousId ? '이전 링크의 분석 상태를 확인하고 있어요.' : '링크를 접수하고 있어요.', true);
-  let id = previousId || crypto.randomUUID();
-  try {
-    if (!previousId) {
-      clearDraftId();
-      const job = await privateRequest('remix-url',signal,{url,id});
-      signal.throwIfAborted();
-      id = job.id;
-      rememberJob(id);
-      if (job.status === 'queued') linkFeedback('분석 대기 중이에요.', true);
-    }
-    let errors = 0;
-    for (;;) {
-      let result;
-      try {result = await privateRequest('remix-status&id='+encodeURIComponent(id),signal);}
-      catch (err) {
-        if (signal.aborted || (err.status && err.status < 500) || ++errors >= 4) throw err;
-        linkFeedback('연결을 다시 확인하고 있어요.', true); await waitForPoll(signal,5000); continue;
-      }
-      signal.throwIfAborted(); errors = 0;
-      if (result.status === 'done') {
-        scenes = result.scenes; byId('arrange').hidden = false; showScenes(); showStory(id,result.context);
-        linkFeedback('분석 완료 · '+scenes.length+'개 장면을 찾았어요.');
-        if (previousId) {
-          let pendingDraft; try {pendingDraft=sessionStorage.getItem(draftKey);} catch {}
-          if (pendingDraft) await adaptStory('',pendingDraft);
-        }
-        break;
-      }
-      if (result.status === 'failed') {
-        forgetJob(); throw Error('공개 영상을 읽지 못했어요. 90초 이내의 공개 링크를 확인하거나 갤러리에서 선택해 주세요.');
-      }
-      linkFeedback(result.status === 'running' ? '영상의 주제·화면 문구·대사를 분석하고 있어요.' : '분석 대기 중이에요.', true);
-      await waitForPoll(signal,5000);
-    }
-  } catch (err) {
-    if (!signal.aborted) {
-      if (err.status === 401 || err.status === 404) forgetJob();
-      byId('loginHelp').hidden = err.status !== 401;
-      linkFeedback(err.status === 401 ? '링크를 분석하려면 스튜디오에서 로그인해 주세요.' : err instanceof TypeError || err instanceof SyntaxError ? '연결을 확인하고 링크 분석을 다시 눌러 주세요.' : err.message || '링크 분석에 실패했어요. 다시 시도해 주세요.');
-    }
-  } finally {if (controller === analysis) button.disabled = false;}
-}
-async function adaptStory(change, previousId) {
-  if (!sourceId || busy) return;
-  const signal = analysis.signal;
-  busy = true; stopPreview(); byId('inputs').disabled = true;
-  try {
-    const id = previousId || (await privateRequest('remix-url',signal,{id:crypto.randomUUID(),sourceId,change})).id;
-    try {sessionStorage.setItem(draftKey,id);} catch {}
-    for (;;) {
-      const result = await privateRequest('remix-status&id='+encodeURIComponent(id),signal);
-      if (result.source_id !== sourceId) throw Error('현재 영상에 맞는 대본을 찾지 못했어요.');
-      if (result.status === 'done') {
-        if (!Array.isArray(result.draft) || result.draft.length !== scenes.length) throw Error('장면 수를 확인하고 다시 시도해 주세요.');
-        scenes.forEach((scene,i)=>{scene.caption=result.draft[i];});
-        selected=0;resetDownload();showScenes();status('원본 흐름에 맞춰 대본을 바꿨어요. 장면별 문구를 눌러 고칠 수 있어요.');
-        break;
-      }
-      if (result.status === 'failed') throw Error('대본을 완성하지 못했어요. 기존 문구를 확인하고 다시 시도해 주세요.');
-      status('원본의 흐름에 맞춰 장면별 대본을 바꾸고 있어요…');
-      await waitForPoll(signal,4000);
-    }
-    // 새로고침하면 계정 소유권을 다시 확인한 뒤 같은 결과를 복구합니다.
-  } catch (err) {
-    if (err.status === 404 || err.status === 401 || !err.status && !(err instanceof TypeError)) clearDraftId();
-    if (!signal.aborted) status(err.message);
-  } finally {busy=false;byId('inputs').disabled=false;}
-}
-byId('adaptForm').addEventListener('submit',e=>{
-  e.preventDefault();
-  const change=byId('adaptChange').value.trim();
-  if(change) adaptStory(change);
+byId('adaptForm').addEventListener('submit',async e=>{
+  e.preventDefault();const change=byId('adaptChange').value.trim();
+  if(busy||!scenes.length||!change)return;
+  busy=true;stopPreview();byId('inputs').disabled=true;
+  const msg=byId('adaptStatus');msg.textContent='휴대폰에서 대본을 바꾸고 있어요.';
+  try{
+    const draft=await rewriteOnPhone(scenes,change,analysis.signal,text=>{msg.textContent=text;});
+    scenes.forEach((s,i)=>s.caption=draft[i]);resetDownload();showScenes();rememberStory();msg.textContent='장면별 대본을 바꿨어요.';
+  }catch(error){msg.textContent=error.message;}
+  finally{busy=false;byId('inputs').disabled=false;}
 });
-byId('urlForm').addEventListener('submit',event => {
-  event.preventDefault();
-  const url = byId('referenceUrl').value.trim();
-  if (url) loadPrivateJob(url);
+byId('urlForm').addEventListener('submit',e=>{
+  e.preventDefault();const url=byId('referenceUrl').value.trim();if(url)runReference(url,true);
 });
-byId('urlSubmit').disabled = false;
-async function readSelectedReference() {
-  const input = byId('reference');
-  const file = input.files[0]; if (!file) return;
-  forgetJob(); clearDraftId(); byId('referenceUrl').value = '';
-  const controller = startReference();
-  byId('refName').textContent = file.name; status('장면 전환을 찾고 있어요…');
-  try {
-    const next = await analyzeReference(file, controller.signal, pct => status('장면 전환을 찾고 있어요 · '+pct+'%'));
-    if (controller !== analysis) return;
-    scenes = next; byId('arrange').hidden = false; showScenes();
-    status(scenes.length+'개 장면을 찾았어요. 내 영상이나 사진을 선택해 주세요.');
-  } catch (err) { if (!controller.signal.aborted) status(err.message); }
-  finally { if (controller === analysis) input.value = ''; }
+byId('urlSubmit').disabled=false;
+function readSelectedReference(){
+  const input=byId('reference'),file=input.files[0];if(!file)return;
+  input.value='';byId('refName').textContent=file.name;runReference(file,false);
 }
-byId('reference').addEventListener('change', readSelectedReference);
-// 모듈이 내려오는 동안 먼저 고른 파일도 처리합니다.
-if (byId('reference').files.length) readSelectedReference();
-else {
-  try { const pending = sessionStorage.getItem(jobKey); if (pending) loadPrivateJob('',pending); } catch {}
-}
+byId('reference').addEventListener('change',readSelectedReference);
+if(byId('reference').files.length)readSelectedReference();
+else try {
+  const saved=JSON.parse(sessionStorage.getItem(localKey));
+  if(saved?.expires>Date.now() && Array.isArray(saved.scenes)&&saved.scenes.length){
+    startReference();scenes=saved.scenes;storyContext=saved.context;
+    byId('arrange').hidden=false;showScenes();showStory(storyContext);linkFeedback('이 휴대폰에서 분석한 장면을 불러왔어요.');
+  }
+}catch{}
 async function openPhoto(file) {
   const url = URL.createObjectURL(file);
   const image = new Image();

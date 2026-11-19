@@ -225,6 +225,10 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'me') return send(res, 200, await mePayload(user));
+    if (action === 'remix-source' && req.method === 'POST') {
+      const body = await readBody(req);
+      return send(res,200,{ok:true,...await require('../lib/server/remix-source').sourceLink(body.url)});
+    }
     if (action === 'remix-url' && req.method === 'POST') {
       const b = await readBody(req);
       return send(res,200,{ok:true,...await require('../lib/server/private-remix').submit(user,b.url,b.id,b.sourceId,b.change)});

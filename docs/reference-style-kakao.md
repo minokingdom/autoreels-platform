@@ -36,10 +36,8 @@
 
 ## 스튜디오의 개인 참고 영상
 
-스튜디오의 ‘참고 쇼츠·릴스로 재구성하기’에서 로그인한 회원이 공개 영상 URL을 입력합니다. 계정 API는 사용자 ID와 요청 ID로 원본·대본을 조회합니다. 공용 카탈로그·GitHub·카톡 전송은 호출하지 않습니다. 원본 파일은 분석 중 작업기 임시 폴더에만 두며 완료 후 지웁니다. 링크는 처리 완료 시 비우고 서버 분석 결과는 1시간 후 만료됩니다.
+갤러리 영상과 브라우저에서 읽을 수 있는 영상 파일 링크는 휴대폰에서 컷, 한국어 화면 문구와 대사를 분석합니다. CapCut 공유 링크는 로그인 후 계정 API가 공개 미리보기의 주소·제목을 찾고, 휴대폰이 해당 CDN에서 영상을 직접 받습니다. 유튜브 쇼츠·인스타그램·틱톡 공유 페이지의 영상 바이트는 갤러리 파일로 제공해야 합니다.
 
-Windows 예약 작업 `AutoReels-PrivateRemix`가 `D:\AutoReelsLocal\StyleLab\private-remix\start-private-remix.ps1`를 실행합니다. 같은 디렉터리에 저장소의 `private_remix_worker.py`, `private_remix_content.py`, `style_worker.py`, `autoreels_style_commands.py`를 둡니다. PC가 쉴 때는 대기 상태로 표시됩니다. `StyleLab/remix-worker-credential.xml`은 해당 Windows 사용자의 DPAPI로 보호되며 서버에는 토큰의 SHA-256 검증값만 있습니다. 인증 파일은 커밋하지 않습니다.
+각 휴대폰 탭은 자체 분석 및 대본 수정을 실행합니다. 명시한 단어는 기기에서 교체하며 자유로운 수정은 로컬 대본 모델을 처음 사용할 때 내려받습니다. 사용 중인 탭에는 분석 결과를 1시간 동안 복원할 수 있습니다. 운영자 카카오톡 스타일 등록은 기존 작업기를 사용합니다. 이전 스튜디오 버전의 대기 요청은 기존 회원 전용 API로 처리합니다.
 
-작업기는 기존 rea-video 컷 분석기, Windows 한국어 OCR, faster-whisper small CPU int8을 사용합니다. `.venv`에 `faster-whisper`, `winrt-Windows.Media.Ocr`, `winrt-Windows.Graphics.Imaging`, `winrt-Windows.Globalization`, `winrt-Windows.Foundation`과 기존 OpenCV/NumPy가 필요합니다. Whisper 모델을 미리 내려받아 오프라인에서 엽니다. 주제 요약은 대표 프레임·화면 글자·인식한 대사를 함께 보고, 재작성은 원본 주제와 컷별 근거·요청한 변경 사항을 사용합니다. 두 단계 모두 작업기에서 실행합니다. 음성 합성은 수행하지 않습니다.
-
-`StyleLab/models/remix-vlm`에 ggml-org/Qwen2.5-VL-3B-Instruct-GGUF의 Q4_K_M과 mmproj Q8_0, `llama/`에 llama.cpp b12541 Windows x64 배포본을 둡니다. 운영 PC는 큰 두 모델 파일을 SSD의 `%LOCALAPPDATA%/AutoReelsMaker/Models/reference-vlm`에서 우선 읽습니다. 모델 서버는 작업기가 필요할 때 임의의 루프백 포트와 임시 인증키로 시작하고, 유휴 상태가 되면 메모리를 반환합니다. 운영 점검은 `node tests/private-remix.cjs`로 계정 격리와 원본·대본 연결을 확인하고, 공개 영상 및 알려진 문구·음성 파일로 작업기의 실측 결과를 점검합니다.
+검증은 `node tests/private-remix-browser.mjs`로 직접 링크와 실제 한국어 OCR, 로딩바, 대본 수정, 새로고침 복구, 서버 대기열 미사용을 확인합니다.
