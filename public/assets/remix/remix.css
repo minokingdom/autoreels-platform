@@ -3,3 +3,10 @@
 .url-row{display:flex;gap:8px;align-items:stretch}.url-row input{flex:1;min-width:0}.url-row button{flex:none;border:0;border-radius:9px;padding:0 14px;background:#1671e8;color:white;font-size:14px;font-family:inherit;font-weight:600;min-height:44px}.url-row button:disabled{opacity:.6}#loginHelp{font-size:14px;color:#9dc9ff}
 
 #referenceStory{padding:16px 0;border-block:1px solid #343942}#sourceTopic{margin:6px 0 12px}#sourceDetails summary{display:inline-block;font-size:13px}#sourceLines{padding-inline-start:22px}#sourceLines li{margin-block:10px}#sourceLines p{font-size:13px;color:#bcc1cb;overflow-wrap:anywhere}
+
+#linkFeedback { margin: 10px 0; }
+#linkMessage { margin: 0; color: #c9dfff; font-size: 14px; line-height: 1.5; }
+#linkProgress { height: 5px; margin-top: 7px; background: #2b3d58; border-radius: 4px; overflow: hidden; }
+#linkProgress::after { content: ''; display: block; width: 38%; height: 100%; background: #70adff; border-radius: inherit; animation: remix-scan 1.4s ease-in-out infinite alternate; }
+@keyframes remix-scan { to { transform: translateX(163%); } }
+@media (prefers-reduced-motion: reduce) { #linkProgress::after { animation: none; margin-inline: auto; } }

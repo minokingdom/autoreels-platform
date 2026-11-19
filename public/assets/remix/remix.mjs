@@ -81,7 +81,16 @@ function showStory(id,context) {
 }
 function rememberJob(id) { try { sessionStorage.setItem(jobKey,id); } catch {} }
 function forgetJob() { try { sessionStorage.removeItem(jobKey); } catch {} }
+function linkFeedback(message = '', pending = false) {
+  byId('linkFeedback').hidden = !message;
+  byId('linkProgress').hidden = !pending;
+  const label = byId('linkMessage');
+  if (label.textContent !== message) label.textContent = message;
+  byId('urlSubmit').textContent = pending ? '분석 중…' : '링크 분석';
+}
 function startReference() {
+  linkFeedback();
+  status('');
   analysis?.abort(); analysis = new AbortController();
   sourceId = ''; byId('referenceStory').hidden = true; byId('sourceDetails').open = false; byId('adaptChange').value = '';
   byId('urlSubmit').disabled = false; byId('loginHelp').hidden = true;
@@ -116,15 +125,16 @@ async function loadPrivateJob(url, previousId) {
   const {signal} = controller;
   const button = byId('urlSubmit'); button.disabled = true;
   byId('refName').textContent = '최대 90초 · 250MB';
+  linkFeedback(previousId ? '이전 링크의 분석 상태를 확인하고 있어요.' : '링크를 접수하고 있어요.', true);
   let id = previousId || crypto.randomUUID();
   try {
     if (!previousId) {
       clearDraftId();
-      status('링크를 접수하고 있어요…');
       const job = await privateRequest('remix-url',signal,{url,id});
       signal.throwIfAborted();
       id = job.id;
       rememberJob(id);
+      if (job.status === 'queued') linkFeedback('분석 대기 중이에요.', true);
     }
     let errors = 0;
     for (;;) {
@@ -132,12 +142,12 @@ async function loadPrivateJob(url, previousId) {
       try {result = await privateRequest('remix-status&id='+encodeURIComponent(id),signal);}
       catch (err) {
         if (signal.aborted || (err.status && err.status < 500) || ++errors >= 4) throw err;
-        status('연결을 다시 확인하고 있어요…'); await waitForPoll(signal,5000); continue;
+        linkFeedback('연결을 다시 확인하고 있어요.', true); await waitForPoll(signal,5000); continue;
       }
       signal.throwIfAborted(); errors = 0;
       if (result.status === 'done') {
         scenes = result.scenes; byId('arrange').hidden = false; showScenes(); showStory(id,result.context);
-        status(scenes.length+'개 장면을 찾았어요. 원본 대본을 확인하고 바꿀 내용을 적어 주세요.');
+        linkFeedback('분석 완료 · '+scenes.length+'개 장면을 찾았어요.');
         if (previousId) {
           let pendingDraft; try {pendingDraft=sessionStorage.getItem(draftKey);} catch {}
           if (pendingDraft) await adaptStory('',pendingDraft);
@@ -147,14 +157,14 @@ async function loadPrivateJob(url, previousId) {
       if (result.status === 'failed') {
         forgetJob(); throw Error('공개 영상을 읽지 못했어요. 90초 이내의 공개 링크를 확인하거나 갤러리에서 선택해 주세요.');
       }
-      status(result.status === 'running' ? '참고 영상의 주제·화면 문구·대사를 읽고 있어요…' : '분석을 기다리고 있어요. 완료되면 여기에 장면이 표시돼요.');
+      linkFeedback(result.status === 'running' ? '영상의 주제·화면 문구·대사를 분석하고 있어요.' : '분석 대기 중이에요.', true);
       await waitForPoll(signal,5000);
     }
   } catch (err) {
     if (!signal.aborted) {
       if (err.status === 401 || err.status === 404) forgetJob();
       byId('loginHelp').hidden = err.status !== 401;
-      status(err.status === 401 ? '내 영상에 적용하려면 스튜디오에서 로그인해 주세요.' : err.message || '분석에 연결하지 못했어요.');
+      linkFeedback(err.status === 401 ? '링크를 분석하려면 스튜디오에서 로그인해 주세요.' : err instanceof TypeError || err instanceof SyntaxError ? '연결을 확인하고 링크 분석을 다시 눌러 주세요.' : err.message || '링크 분석에 실패했어요. 다시 시도해 주세요.');
     }
   } finally {if (controller === analysis) button.disabled = false;}
 }
