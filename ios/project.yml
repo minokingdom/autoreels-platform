@@ -1,0 +1,44 @@
+name: AutoReelsMaker
+options:
+  deploymentTarget:
+    iOS: "18.4"
+packages:
+  YouTubeKit:
+    url: https://github.com/alexeichhorn/YouTubeKit.git
+    exactVersion: 0.4.10
+targets:
+  AutoReelsMaker:
+    type: application
+    platform: iOS
+    sources: [AutoReelsMaker]
+    dependencies:
+      - package: YouTubeKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: kr.autoreelsmaker.mobile
+        PRODUCT_NAME: AutoReelsMaker
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 1
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: 오토릴스메이커
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        SWIFT_VERSION: 5.0
+        TARGETED_DEVICE_FAMILY: "1,2"
+  AutoReelsMakerUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: AutoReelsMaker
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: kr.autoreelsmaker.mobile.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: AutoReelsMaker
+schemes:
+  AutoReelsMaker:
+    build:
+      targets:
+        AutoReelsMaker: all
+    test:
+      targets: [AutoReelsMakerUITests]
