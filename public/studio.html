@@ -41,7 +41,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-script-chips" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261119-topic-profile" />
   <link rel="stylesheet" href="/assets/app/splash.css" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -748,7 +748,6 @@
             <div class="text-[16px] font-semibold text-[#ededed]">오늘은 어떤 내용으로 올릴까요?</div>
             <p id="topicDateLine" class="text-[12px] text-[#85858b] mt-1"></p>
           </div>
-          <button type="button" id="topicProfileBtn" class="btn-secondary px-3 h-8 text-[12px] cursor-pointer">제작 유형</button>
           <button type="button" class="bgm-now" data-business-product onclick="arOpenProductSheet()">
             <span class="bgm-cover ar-product-cover"><img class="ar-product-photo" alt="" /></span>
             <span class="bgm-now-txt"><strong class="ar-product-name">내 상품</strong><small class="ar-product-sub">무엇을 알릴지 정해 두면 대본에 들어가요</small></span>
@@ -1089,10 +1088,6 @@
               <div id="trendSwapStatus" class="hidden text-[11px] text-[#fb923c]"></div>
             </div>
             </details>
-            <div class="pt-2 border-t border-[var(--border)] space-y-1.5">
-              <div class="text-[12px] text-[#a1a1a6]">색상 <span class="text-[#85858b]">— 어떤 디자인에나 적용됩니다</span></div>
-              <div id="designColorSwatches" class="flex items-center gap-1.5 flex-wrap"></div>
-            </div>
           </div>
 
           <div class="flex items-center justify-between gap-2 pt-1">
@@ -2125,7 +2120,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261117r" title="AutoReelsMaker 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261119-brand-name"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261119-quick-color"><\/script>');
     }
   </script>
   <!--

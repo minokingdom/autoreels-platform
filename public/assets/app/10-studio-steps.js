@@ -411,9 +411,6 @@
     }
     function arSyncProductRows() {
       const personal = IND.key === 'personal';
-      const role = personal && arIndustrySpecialty();
-      const profileBtn = document.getElementById('topicProfileBtn');
-      if (profileBtn) profileBtn.textContent = [IND.name, role].filter(Boolean).join(' · ') + ' ▾';
       const custom = document.getElementById('topicCustomInput');
       if (custom) custom.placeholder = personal ? '오늘 올릴 내용 적기 (예: 경기 전 루틴)' : '오늘 올릴 내용 적기 (예: 신메뉴 출시, 오늘만 할인)';
       document.querySelectorAll('[data-business-product]').forEach(el => { el.hidden = personal; });
@@ -432,7 +429,6 @@
         img.alt = name;
       });
     }
-    document.getElementById('topicProfileBtn')?.addEventListener('click', openIndustryPicker);
     document.addEventListener('change', (e) => {
       if (e.target && e.target.id === 'presetSelect') setTimeout(arSyncProductRows, 60);
     });
@@ -820,6 +816,7 @@
 
     // ★ 미리보기 옆 바로 누르는 버튼: 소리 · 섞기 · 성우 · 처음부터 (어느 단계에서든)
     const AR_QB_ICONS = {
+      color: '<path d="M12 3C7 3 3 6.8 3 12a9 9 0 0 0 9 9h1a2 2 0 0 0 1.4-3.4 1.5 1.5 0 0 1 1.1-2.6H17a4 4 0 0 0 4-4c0-4.6-4.1-8-9-8Z"/><circle cx="7.5" cy="11" r=".8"/><circle cx="11" cy="7.5" r=".8"/><circle cx="16" cy="8.5" r=".8"/>',
       sound: '<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M19 6a8 8 0 0 1 0 12"/>',
       mute: '<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M22 9l-6 6"/><path d="M16 9l6 6"/>',
       design: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
@@ -840,9 +837,34 @@
       qb.setAttribute('role', 'group');
       qb.setAttribute('aria-label', '미리보기 바로 조작');
       qb.innerHTML = ['sound', 'voice', 'shuffle', 'design', 'restart', 'settings'].map((k) => `<button type="button" class="aq-btn" data-qb="${k}"><span class="aq-dot">${arQbSvg(k === 'sound' ? 'mute' : k)}</span><span class="aq-label"></span></button>`).join('');
+      const colors = document.createElement('details');
+      colors.id = 'arQuickColors';
+      colors.innerHTML = `<summary class="aq-btn"><span class="aq-dot">${arQbSvg('color')}</span><span class="aq-label">색상</span></summary>
+        <div id="designColorSwatches" role="group" aria-label="디자인 색상"></div>`;
+      qb.querySelector('[data-qb="design"]').after(colors);
+      const colorToggle = colors.querySelector('summary');
+      colors.addEventListener('toggle', () => {
+        if (colors.open) renderColorPalettePicker();
+      });
+      colors.addEventListener('click', (event) => {
+        if (event.target.closest('.color-swatch')) {
+          colors.open = false;
+          colorToggle.focus({ preventScroll: true });
+        }
+      });
+      document.addEventListener('pointerdown', (event) => {
+        if (colors.open && !colors.contains(event.target)) colors.open = false;
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && colors.open) {
+          colors.open = false;
+          colorToggle.focus({ preventScroll: true });
+        }
+      });
       qb.addEventListener('click', (e) => {
         const b = e.target.closest('[data-qb]');
         if (!b) return;
+        colors.open = false;
         e.stopPropagation();
         arQuickAction(b.getAttribute('data-qb'));
       });
