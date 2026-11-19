@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: refresh-trends
+  cancel-in-progress: false
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -40,6 +43,10 @@ jobs:
           git commit -m "chore: 오늘의 인기 키워드 갱신"
           git pull --rebase origin main
           git push origin main
+      - name: Prepare today's topics and image prompts
+        env:
+          NIGHTLY_MEDIA_TOKEN: ${{ secrets.NIGHTLY_MEDIA_TOKEN }}
+        run: python3 scripts/kaggle/nightly_media.py --prepare "$RUNNER_TEMP/autoreels-kaggle/nightly_media.py"
       - name: Run Kaggle GPU nightly media worker and commit generated bundle
         env:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
@@ -67,9 +74,8 @@ jobs:
             printf '{"username":"%s","key":"%s"}\n' "$KAGGLE_USERNAME" "$KAGGLE_KEY" > ~/.kaggle/kaggle.json
             chmod 600 ~/.kaggle/kaggle.json
           fi
-          KAGGLE_USERNAME="$KAGGLE_USERNAME" python3 -c 'import os,pathlib; p=pathlib.Path("scripts/kaggle/kernel-metadata.json"); p.write_text(p.read_text().replace("__KAGGLE_USERNAME__", os.environ["KAGGLE_USERNAME"]))'
-          kaggle kernels push -p scripts/kaggle
-          git checkout -- scripts/kaggle/kernel-metadata.json
+          KAGGLE_USERNAME="$KAGGLE_USERNAME" python3 -c 'import os,pathlib; source=pathlib.Path("scripts/kaggle/kernel-metadata.json"); out=pathlib.Path(os.environ["RUNNER_TEMP"]) / "autoreels-kaggle" / source.name; out.write_text(source.read_text().replace("__KAGGLE_USERNAME__", os.environ["KAGGLE_USERNAME"]))'
+          kaggle kernels push -p "$RUNNER_TEMP/autoreels-kaggle"
 
           KERNEL_SLUG="$KAGGLE_USERNAME/autoreels-nightly-media-worker"
           echo "Waiting for Kaggle GPU kernel $KERNEL_SLUG..."
@@ -87,7 +93,7 @@ jobs:
             req.add_header("Authorization", "Basic " + auth)
           print(json.loads(urllib.request.urlopen(req, timeout=20).read()).get("status", "unknown"))
           ')
-            echo "[$i/60] Kaggle status: $STATUS"
+            echo "[$i/85] Kaggle status: $STATUS"
             if [ "$STATUS" = "complete" ]; then break; fi
             if [ "$STATUS" = "error" ] || [ "$STATUS" = "cancelAcknowledged" ]; then
               node scripts/refresh-trends.mjs --notify "캐글 GPU 야간 배치 실패 (status=$STATUS): https://www.kaggle.com/code/$KERNEL_SLUG" || true
@@ -104,7 +110,7 @@ jobs:
           rm -rf /tmp/kaggle_out && mkdir -p /tmp/kaggle_out
           kaggle kernels output "$KERNEL_SLUG" -p /tmp/kaggle_out
           if [ -f /tmp/kaggle_out/autoreels_nightly_bundle.zip ]; then
-            python3 -m zipfile -e /tmp/kaggle_out/autoreels_nightly_bundle.zip .
+            python3 scripts/kaggle/nightly_media.py --unpack /tmp/kaggle_out/autoreels_nightly_bundle.zip
           else
             echo "Bundle zip not found in Kaggle output; listing files:"
             ls -la /tmp/kaggle_out

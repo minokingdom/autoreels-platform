@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """
 AutoReels Nightly Kaggle GPU Worker (runs headless in Kaggle T4/P100 while PC is off).
-1. Clones minokingdom/autoreels-platform (public read or authenticated via optional GITHUB_TOKEN).
-2. Reads public/trends-today.json; fetches 10 fresh Korean topics + English 1:1 icon prompts per industry if missing/stale.
-3. Generates 1:1 topic icons on Kaggle GPU via Lykon/dreamshaper-xl-v2-turbo ($0 compute cost).
-4. Packages /kaggle/working/autoreels_nightly_bundle.zip for GitHub Actions pickup (and pushes directly if GITHUB_TOKEN is set).
-5. Sends KakaoTalk Memo / webhook alert if any step fails.
+GitHub Actions에서 주제와 프롬프트를 준비합니다. Kaggle은 이미지를 생성해
+번들만 반환하며 GitHub Actions가 결과를 커밋합니다.
 """
+import base64
 import datetime
+import http.client
 import json
 import os
 import re
@@ -18,6 +17,9 @@ import urllib.parse
 import urllib.request
 import zipfile
 from pathlib import Path
+
+
+NIGHTLY_BATCH = None
 
 
 def strip_surrogates(text: str) -> str:
@@ -82,22 +84,28 @@ def notify_kakao(text: str) -> None:
             print("webhook notify failed:", e)
 
 
-def post_json(url: str, payload: dict) -> dict:
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json", "Origin": "https://autoreels-studio.vercel.app"},
-    )
-    with urllib.request.urlopen(req, timeout=45) as r:
-        return json.loads(r.read().decode("utf-8"))
+def post_nightly(payload: dict, token: str) -> dict:
+    conn = http.client.HTTPSConnection("autoreelsmaker.kr", timeout=95)
+    try:
+        conn.request("POST", "/api/generate-script", json.dumps(payload).encode("utf-8"), {
+            "Content-Type": "application/json",
+            "Origin": "https://autoreelsmaker.kr",
+            "X-Autoreels-Nightly-Token": token,
+        })
+        response = conn.getresponse()
+        if response.status != 200:
+            raise RuntimeError(f"{payload['industry']} {payload['mode']}: HTTP {response.status}")
+        return json.loads(response.read())
+    finally:
+        conn.close()
 
 
-def get_kst_date_context(date_str: str) -> dict:
+def get_kst_date_context() -> dict:
     kst = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
     weekdays = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"]
     m = kst.month
     season = "봄" if m in (3, 4, 5) else ("여름" if m in (6, 7, 8) else ("가을" if m in (9, 10, 11) else "겨울"))
-    return {"dateStr": date_str or kst.strftime("%Y-%m-%d"), "weekday": weekdays[kst.weekday()], "season": season}
+    return {"dateStr": kst.strftime("%Y-%m-%d"), "weekday": weekdays[kst.weekday()], "season": season}
 
 
 INDUSTRY_INFO = {
@@ -212,20 +220,61 @@ def load_diffusers():
         return torch, AutoencoderKL, AutoPipelineForText2Image, DPMSolverMultistepScheduler
 
 
+def prepare_kernel(destination: Path) -> None:
+    token = os.environ.get("NIGHTLY_MEDIA_TOKEN", "")
+    if not re.fullmatch(r"[0-9a-f]{64}", token):
+        raise RuntimeError("NIGHTLY_MEDIA_TOKEN 설정이 필요합니다.")
+    data = json.loads(Path("public/trends-today.json").read_text(encoding="utf-8"))
+    date_ctx = get_kst_date_context()
+    date_str = date_ctx["dateStr"]
+    if data.get("date") != date_str:
+        raise RuntimeError(f"{date_str} 키워드 파일이 준비되지 않았습니다.")
+    prompts_by_industry = {}
+    for industry, info in INDUSTRY_INFO.items():
+        row = data["industries"][industry]
+        result = post_nightly({
+            "mode": "nightly-topics",
+            "industry": industry,
+            "industryInfo": info,
+            "dateContext": date_ctx,
+            "trends": row.get("keywords", [])[:8],
+        }, token)
+        topics = result.get("topics")
+        if not result.get("ok") or not isinstance(topics, list) or len(topics) != 10:
+            raise RuntimeError(f"{industry}: 주제 10개를 생성하지 못했습니다.")
+        prompts = post_nightly({
+            "mode": "nightly-scene-prompts",
+            "industry": industry,
+            "industryInfo": info,
+            "topicsList": [{"title": topic["title"], "why": topic["why"]} for topic in topics],
+        }, token).get("prompts")
+        if not isinstance(prompts, list) or len(prompts) != 10 or not all(
+            isinstance(prompt, str) and prompt.strip() for prompt in prompts
+        ):
+            raise RuntimeError(f"{industry}: 이미지 프롬프트 10개를 생성하지 못했습니다.")
+        row.update(topics=topics, topicsDate=date_str)
+        prompts_by_industry[industry] = prompts
+        print(f"[ready] {industry}: topics={len(topics)} prompts={len(prompts)}", flush=True)
+    batch = json.dumps({"trends": data, "prompts": prompts_by_industry}, ensure_ascii=True)
+    encoded = base64.b64encode(batch.encode("ascii")).decode("ascii")
+    source = Path(__file__).read_text(encoding="utf-8")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(source.replace("NIGHTLY_BATCH = None", f"NIGHTLY_BATCH = {encoded!r}", 1), encoding="utf-8")
+
+
 def run_worker() -> None:
-    gh_token = get_secret("GITHUB_TOKEN")
-    gh_repo = get_secret("GITHUB_REPO", "minokingdom/autoreels-platform")
+    if not NIGHTLY_BATCH:
+        raise RuntimeError("GitHub Actions에서 준비한 야간 생성 자료가 없습니다.")
+    batch = json.loads(base64.b64decode(NIGHTLY_BATCH))
+    data = batch["trends"]
 
     work_dir = Path("/tmp/autoreels_repo")
     if work_dir.exists():
         subprocess.run(["rm", "-rf", str(work_dir)], check=True)
-    remote = f"https://x-access-token:{gh_token}@github.com/{gh_repo}.git" if gh_token else f"https://github.com/{gh_repo}.git"
-    subprocess.run(["git", "clone", "--depth", "1", remote, str(work_dir)], check=True)
+    subprocess.run(["git", "clone", "--depth", "1", "https://github.com/minokingdom/autoreels-platform.git", str(work_dir)], check=True)
 
     trends_path = work_dir / "public" / "trends-today.json"
-    data = json.loads(trends_path.read_text(encoding="utf-8"))
-    date_ctx = get_kst_date_context(data.get("date", ""))
-    date_str = date_ctx["dateStr"]
+    date_str = data["date"]
     topics_dir = work_dir / "public" / "assets" / "topics"
 
     torch, AutoencoderKL, AutoPipelineForText2Image, DPMSolverMultistepScheduler = load_diffusers()
@@ -238,48 +287,15 @@ def run_worker() -> None:
     )
     neg = "human face, portrait, headshot, passport photo, person standing, hands, fingers, extra fingers, deformed fingers, mutated hands, text, typography, letters, words, watermark, logo, signature, blurry, ugly, low quality, collage"
 
-    for ind, info in INDUSTRY_INFO.items():
-        row = data.setdefault("industries", {}).setdefault(ind, {})
-        keywords = row.get("keywords", [])[:8]
-        if row.get("topicsDate") != date_str or not isinstance(row.get("topics"), list) or len(row["topics"]) < 10:
-            try:
-                res = post_json("https://autoreels-studio.vercel.app/api/generate-script", {
-                    "mode": "topics",
-                    "industry": ind,
-                    "industryInfo": info,
-                    "dateContext": date_ctx,
-                    "trends": keywords,
-                })
-                if res.get("ok") and isinstance(res.get("topics"), list) and len(res["topics"]) >= 5:
-                    row["topics"] = res["topics"][:10]
-                    row["topicsDate"] = date_str
-            except Exception as e:
-                print(f"[topics] {ind} err:", e)
-
-        topics = row.get("topics") or []
-        if not topics:
-            continue
-
-        prompts = []
-        try:
-            pres = post_json("https://autoreels-studio.vercel.app/api/generate-script", {
-                "mode": "scene-prompts",
-                "isIcon": True,
-                "industry": ind,
-                "industryInfo": info,
-                "topicsList": [{"title": t.get("title", ""), "why": t.get("why", "")} for t in topics],
-                "count": len(topics),
-            })
-            if pres.get("ok") and isinstance(pres.get("prompts"), list):
-                prompts = pres["prompts"]
-        except Exception as e:
-            print(f"[prompts] {ind} err:", e)
+    for ind in INDUSTRY_INFO:
+        topics = data["industries"][ind]["topics"]
+        prompts = batch["prompts"][ind]
 
         out_ind = topics_dir / ind
         out_ind.mkdir(parents=True, exist_ok=True)
         hint = IND_VISUAL_HINT.get(ind, ind)
         for idx, t in enumerate(topics):
-            p_raw = prompts[idx] if idx < len(prompts) else ""
+            p_raw = prompts[idx]
             has_ko = any("\uac00" <= ch <= "\ud7a3" for ch in p_raw)
             prompt = p_raw if (p_raw and not has_ko) else f"clean square 1:1 editorial object photography, {hint}, variation {idx + 1}, centered crisp subject, soft studio lighting"
             gen = torch.Generator("cuda").manual_seed(1100 + idx * 17 + sum(ord(c) for c in ind))
@@ -290,12 +306,13 @@ def run_worker() -> None:
             t["iconUrl"] = f"/assets/topics/{ind}/{idx + 1}.jpg"
             print(f"[ok] {ind}/{idx + 1}.jpg")
 
+    data["updatedAt"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
     trends_payload = strip_surrogates(json.dumps(data, ensure_ascii=False, indent=1) + "\n")
     trends_path.write_text(trends_payload, encoding="utf-8")
 
     # Generate missing 9:16 vertical scene slots (11..15) + 1 rotating scene slot per night per industry
     scenes_dir = work_dir / "public" / "assets" / "scenes"
-    kst_now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+    kst_now = datetime.date.fromisoformat(date_str)
     rot_slot = 11 + (kst_now.timetuple().tm_yday % 5)
     for ind, scene_prompts in EXTRA_SCENE_PROMPTS.items():
         scene_ind = scenes_dir / ind
@@ -320,25 +337,47 @@ def run_worker() -> None:
             zf.write(jpg, str(jpg.relative_to(work_dir)).replace("\\", "/"))
     print(f"Created {bundle_path} ({bundle_path.stat().st_size} bytes)")
 
-    if gh_token:
-        subprocess.run(["git", "-C", str(work_dir), "config", "user.name", "autoreels-kaggle-bot"], check=True)
-        subprocess.run(["git", "-C", str(work_dir), "config", "user.email", "actions@users.noreply.github.com"], check=True)
-        subprocess.run(["git", "-C", str(work_dir), "add", "public/trends-today.json", "public/assets/topics/", "public/assets/scenes/"], check=True)
-        diff = subprocess.run(["git", "-C", str(work_dir), "diff", "--cached", "--quiet"])
-        if diff.returncode != 0:
-            subprocess.run(["git", "-C", str(work_dir), "commit", "-m", f"chore(kaggle): nightly topics & 100 topic icons ({date_str})"], check=True)
-            subprocess.run(["git", "-C", str(work_dir), "pull", "--rebase", "origin", "main"], check=True)
-            subprocess.run(["git", "-C", str(work_dir), "push", "origin", "main"], check=True)
-            print("Pushed updated topics and icons directly to GitHub!")
-    else:
-        print("No GITHUB_TOKEN in Kaggle Secrets; bundle saved for GitHub Actions download.")
+
+def unpack_bundle(archive_path: Path) -> None:
+    batch_date = json.loads(Path("public/trends-today.json").read_text(encoding="utf-8"))["date"]
+    with zipfile.ZipFile(archive_path) as archive:
+        trends_path = "public/trends-today.json"
+        data = json.loads(archive.read(trends_path))
+        topic_images = []
+        if data.get("date") != batch_date:
+            raise RuntimeError(f"Kaggle 번들의 날짜가 {batch_date}와 일치하지 않습니다.")
+        for industry in INDUSTRY_INFO:
+            row = data["industries"][industry]
+            expected = [f"/assets/topics/{industry}/{slot}.jpg" for slot in range(1, 11)]
+            if row.get("topicsDate") != batch_date or [
+                topic.get("iconUrl") for topic in row.get("topics", [])
+            ] != expected:
+                raise RuntimeError(f"{industry}: 오늘 주제 10개와 썸네일 경로가 필요합니다.")
+            topic_images.extend(f"public{path}" for path in expected)
+        rotate_slot = 11 + (datetime.date.fromisoformat(batch_date).timetuple().tm_yday % 5)
+        scene_images = [f"public/assets/scenes/{industry}/{rotate_slot}.jpg" for industry in INDUSTRY_INFO]
+        # 전체 필수 결과를 확인한 뒤 파일을 덮어씁니다.
+        for name in [*topic_images, *scene_images]:
+            with archive.open(name) as image:
+                if image.read(2) != b"\xff\xd8":
+                    raise RuntimeError(f"JPEG 이미지가 아닙니다: {name}")
+        scenes = (name for name in archive.namelist() if re.fullmatch(
+            r"public/assets/scenes/[a-z]+/1[1-5]\.jpg", name
+        ))
+        archive.extractall(members=[trends_path, *topic_images, *scenes])
+    print(f"검증 완료: {batch_date} 업종 {len(INDUSTRY_INFO)}개, 주제와 썸네일 100개, 세로 장면 10개")
 
 
 if __name__ == "__main__":
-    try:
-        run_worker()
-    except Exception:
-        err = traceback.format_exc()
-        print(err, file=sys.stderr)
-        notify_kakao(f"새벽 캐글 자동 생성 실패:\n{err[-500:]}")
-        raise
+    if len(sys.argv) == 3 and sys.argv[1] == "--prepare":
+        prepare_kernel(Path(sys.argv[2]))
+    elif len(sys.argv) == 3 and sys.argv[1] == "--unpack":
+        unpack_bundle(Path(sys.argv[2]))
+    else:
+        try:
+            run_worker()
+        except Exception:
+            err = traceback.format_exc()
+            print(err, file=sys.stderr)
+            notify_kakao(f"새벽 캐글 자동 생성 실패:\n{err[-500:]}")
+            raise

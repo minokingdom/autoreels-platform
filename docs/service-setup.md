@@ -52,6 +52,12 @@ Vercel Production에 충분히 긴 임의 `CRON_SECRET`와 `SNS_SCHEDULING_ENABL
 
 확인 절차: 테스트 계정의 SNS에 짧은 영상 예약 → 브라우저 종료 → 지정 시각 이후 내역 확인 → 실제 SNS 게시 확인 → 시작 전 취소/워커 중단/저장소 실패 확인. 이 실발행 검증 전에는 전체 자동 발행 검증 완료로 보고하지 않습니다.
 
+## 야간 추천 주제와 이미지
+
+`refresh-trends` 작업은 GitHub Actions에서 오늘의 주제와 이미지 프롬프트를 준비한 뒤 Kaggle GPU에 전달합니다. 32바이트 무작위 값을 64자리 소문자 16진수로 만들어 GitHub Actions Secret과 Vercel Production의 민감 환경변수 `NIGHTLY_MEDIA_TOKEN`에 같은 값으로 설정합니다. 프로바이더 키와 이 토큰은 Kaggle에 전달하지 않습니다.
+
+토큰은 야간 주제·프롬프트 생성 API에만 사용할 수 있습니다. 요청은 한국 시간 일일 40회 한도와 서비스 전체 예산에 함께 집계됩니다. 환경변수 값을 바꾼 뒤에는 Vercel을 재배포합니다. 수동 실행은 Actions의 `refresh-trends`에서 시작하며, 업종별 오늘 주제 10개와 썸네일 10개가 모두 검증되어야 미디어 반영이 완료됩니다.
+
 ## 검증 범위 및 남은 운영 작업
 
 PGlite 테스트는 실제 PostgreSQL SQL·트랜잭션을 사용하지만 단일 연결이라 advisory lock 경쟁 검증은 별도 운영 DB 부하 테스트가 필요합니다. 브라우저 프로젝트 테스트는 저장 API 응답을 모의 처리합니다. 실제 SMS 전달·SNS OAuth 및 게시·모바일 기기 검증은 서비스 연결 후 진행합니다.

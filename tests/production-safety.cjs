@@ -63,7 +63,8 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
   throw Error(sql);
  };
  const db={query,tx:async fn=>{const before=new Map(balances),prior=structuredClone(receipts);try{return await fn({query})}catch(e){balances=before;receipts=prior;throw e}}};
- const usage=load('lib/server/usage.js',{'./db':db,'./config':{readiness:()=>({serverMode:true})},'./session':{readSession:req=>req.testSession},'./plans':{FREE_TRIAL_DAYS:7,limits:()=>({standard:{aiScripts:5,ttsChars:10,exportPublishLimit:2},pro:{aiScripts:1,ttsChars:10,exportPublishLimit:null}})},'./comp-pro':comp},{AI_DAILY_UNIT_CAP:'3',AI_MONTHLY_UNIT_CAP:'3'});
+ const nightlyToken = 'a'.repeat(64);
+ const usage=load('lib/server/usage.js',{'./db':db,'./config':{readiness:()=>({serverMode:true})},'./session':{readSession:req=>req.testSession},'./plans':{FREE_TRIAL_DAYS:7,limits:()=>({standard:{aiScripts:5,ttsChars:10,exportPublishLimit:2},pro:{aiScripts:1,ttsChars:10,exportPublishLimit:null}})},'./comp-pro':comp},{AI_DAILY_UNIT_CAP:'3',AI_MONTHLY_UNIT_CAP:'3',NIGHTLY_MEDIA_TOKEN:nightlyToken});
  assert.equal((await usage.resolveSubject({testSession:{uid:'42',v:1}})).tier,'pro');
  assert.equal((await usage.resolveSubject({testSession:{uid:'42',v:2}})).kind,'anonymous');
  const unlimited={testSession:{uid:'42',v:1}};
@@ -93,6 +94,37 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
    GEMINI_API_KEY:'test', KIE_API_KEY:'test', FISH_API_KEY:'test', BLOB_READ_WRITE_TOKEN:'test'
  }, {fetch:()=>{providerCalls++; throw Error('unexpected_provider_request')}});
  const scriptApi = guardedApi('generate-script');
+ const batchTopics = Array.from({length:10}, (_, i) => ({ title: `오늘의 주제 ${i + 1}`, why: '오늘 키워드', prompt: '오늘의 대본 방향' }));
+ const batchPrompts = Array.from({length:10}, (_, i) => `Clean square thumbnail for scene ${i + 1}`);
+ let batchProviderCalls = 0;
+ const batchApi = load('api/generate-script.js', deps, { GEMINI_API_KEY:'test' }, {
+   AbortSignal,
+   fetch: async () => {
+     const answer = batchProviderCalls++ === 1 ? batchPrompts : { topics: batchTopics };
+     return new Response(JSON.stringify({candidates:[{content:{parts:[{text:JSON.stringify(answer)}]}}]}));
+   }
+ });
+ const sendBatch = async (body, token, origin = 'https://app.test') => {
+   const headers = { host:'app.test', origin };
+   if (token !== undefined) headers['x-autoreels-nightly-token'] = token;
+   const result = response();
+   await batchApi({ method:'POST', headers, body }, result);
+   return result;
+ };
+ const batchRequest = { mode:'nightly-topics', industry:'auto' };
+ assert.equal((await sendBatch(batchRequest)).body.error,'nightly_media_forbidden');
+ assert.equal((await sendBatch(batchRequest,'b'.repeat(64))).statusCode,403);
+ assert.equal((await sendBatch(batchRequest,nightlyToken,'https://other.test')).body.error,'forbidden_origin');
+ assert.equal((await sendBatch({mode:'scene-images',count:10},nightlyToken)).body.error,'login_required');
+ assert.equal(batchProviderCalls,0);
+ assert.equal((await sendBatch(JSON.stringify(batchRequest),nightlyToken)).body.topics.length,10);
+ const sceneRequest = { mode:'nightly-scene-prompts', industry:'auto', topicsList:batchTopics };
+ assert.equal((await sendBatch(sceneRequest,nightlyToken)).body.prompts.length,10);
+ assert.equal((await sendBatch(batchRequest,nightlyToken)).body.ok,true);
+ assert.equal((await sendBatch(batchRequest,nightlyToken)).body.error,'service_budget_exceeded');
+ assert.equal(batchProviderCalls,3);
+ assert.ok(Array.from(balances.keys()).some(key=>key.startsWith('nightly:media|d:')));
+ balances.clear();
  const cases = [
    ...['script','topics','scene-prompts','scene-image','scene-images','reference-style']
      .map(mode=>[scriptApi,{method:'POST',body:{mode,prompt:'sample',count:4}}]),

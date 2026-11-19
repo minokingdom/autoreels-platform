@@ -411,7 +411,7 @@ async function geminiDiagnose() {
 
 const { normalizeSpecialty } = require('../lib/business-specialty.cjs');
 
-async function handleTopics(body, res) {
+async function handleTopics(body, res, minTopics = 3) {
   res.setHeader('Cache-Control', 'no-store');
   const geminiKey = String(process.env.GEMINI_API_KEY || '').trim();
   const kieKey = String(process.env.KIE_API_KEY || '').trim();
@@ -480,7 +480,7 @@ JSON으로만 출력: {"topics":[{"title":"","why":"","prompt":""}]}`;
           .map((x) => ({ title: clip(x && x.title, 20), why: clip(x && x.why, 40), prompt: clip(x && x.prompt, 80) }))
           .filter((x) => x.title && x.prompt)
           .slice(0, 10);
-        if (topics.length >= 3) return res.status(200).json({ ok: true, provider: `Google ${model}`, topics });
+        if (topics.length >= minTopics) return res.status(200).json({ ok: true, provider: `Google ${model}`, topics });
         t.error = 'topics 부족';
       } catch (err) {
         t.error = String(err && (err.name === 'TimeoutError' ? 'timeout' : err.message) || err).slice(0, 120);
@@ -520,7 +520,7 @@ JSON으로만 출력: {"topics":[{"title":"","why":"","prompt":""}]}`;
           .map((x) => ({ title: clip(x && x.title, 20), why: clip(x && x.why, 40), prompt: clip(x && x.prompt, 80) }))
           .filter((x) => x.title && x.prompt)
           .slice(0, 10);
-        if (topics.length >= 3) return res.status(200).json({ ok: true, provider: `kie.ai ${model}`, topics });
+        if (topics.length >= minTopics) return res.status(200).json({ ok: true, provider: `kie.ai ${model}`, topics });
         t.error = 'topics 부족';
       } catch (err) {
         t.error = String(err && (err.name === 'TimeoutError' ? 'timeout' : err.message) || err).slice(0, 120);
@@ -695,7 +695,7 @@ async function handleSceneImages(body, res) {
   return res.status(200).json({ ok: images.length > 0, images, error: images.length ? undefined : results[0]?.error });
 }
 
-const { isSameSiteRequest } = require('../lib/server/usage');
+const { isSameSiteRequest, consumeNightlyMedia } = require('../lib/server/usage');
 
 async function handler(req, res) {
   if (!isSameSiteRequest(req)) {
@@ -1107,7 +1107,7 @@ ${speakerLine}${prompt ? '' : `\n[지금 ${I.product}]: ${currentVehicle} / ${bo
 
 // 외부 API를 호출하는 생성과 진단은 모두 로그인 상태와 사용량을 먼저 확인합니다.
 const { withMeter } = require('../lib/server/meter');
-module.exports = withMeter(handler, 'ai', (req) => {
+const studio = withMeter(handler, 'ai', (req) => {
   if (req.method === 'GET' && ['kie', 'gemini'].includes(req.query?.diag)) return 1;
   if (req.method !== 'POST') return 0;
   try {
@@ -1117,3 +1117,30 @@ module.exports = withMeter(handler, 'ai', (req) => {
   } catch (e) {}
   return 1;
 });
+
+const nightlyMedia = withMeter(async (req, res) => {
+  const { mode, industry, industryInfo, dateContext, trends, topicsList } = req.body;
+  res.setHeader('Cache-Control', 'no-store');
+  if (!['auto', 'restaurant', 'cafe', 'beauty', 'realestate', 'academy', 'clinic', 'fitness', 'shop', 'interior'].includes(industry)) {
+    return res.status(400).json({ ok: false, error: 'invalid_nightly_industry' });
+  }
+  if (mode === 'nightly-topics') return handleTopics({ industry, industryInfo, dateContext, trends }, res, 10);
+  if (!Array.isArray(topicsList) || topicsList.length !== 10 ||
+      topicsList.some(t => typeof t?.title !== 'string' || !t.title.trim() || t.title.length > 20 ||
+        typeof t.why !== 'string' || t.why.length > 40)) {
+    return res.status(400).json({ ok: false, error: 'invalid_nightly_topics' });
+  }
+  return handleSceneImages({ mode: 'scene-prompts', isIcon: true, industry, industryInfo, topicsList, count: 10 }, res);
+}, 'ai', () => 1, consumeNightlyMedia);
+
+module.exports = (req, res) => {
+  if (req.method === 'POST') {
+    let body;
+    try { body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body; } catch {}
+    if (['nightly-topics', 'nightly-scene-prompts'].includes(body?.mode)) {
+      req.body = body;
+      return nightlyMedia(req, res);
+    }
+  }
+  return studio(req, res);
+};
