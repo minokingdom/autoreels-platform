@@ -33,3 +33,5 @@
 - `tests/smoke-render.mjs`: 실제 브라우저로 페이지를 열어 모든 디자인을 5개 업종 × 5개 시점으로 그려 보고, 버튼에 걸린 함수가 모두 있는지, 단계 탭이 열리는지 확인합니다. 오류가 하나라도 있으면 실패합니다.
   - 로컬: `npm i --no-save playwright@1.48.2 && npx playwright install chromium && node tests/smoke-render.mjs`
 - GitHub Actions `smoke` 워크플로가 main에 올라올 때마다 같은 검사를 돌립니다.
+
+- 모바일 쇼츠 제작 화면은 `public/assets/shorts/`에 있습니다. 주제 화면에서 열며, 전용 경로에만 브라우저 격리 헤더를 적용합니다. Whisper가 음성을 받아쓰고 MiniLM이 입력 주제와 실제 대사를 기기 안에서 비교합니다. 제목과 자막은 미리보기·MP4가 같은 함수로 그립니다. 저장 확인 시 기존 계정 API에 요청 ID만 보냅니다.
