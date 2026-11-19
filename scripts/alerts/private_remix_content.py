@@ -229,6 +229,9 @@ def rewrite(source, scenes, change, directory):
     original = [re.sub(r'[\W_]','',s.get(k,'')) for s in scenes for k in ('speech','screen')]
     pairs = re.findall(r'([가-힣A-Za-z0-9]+?)(?:와|과|랑)\s+([가-힣A-Za-z0-9]+?)(?=\s*중|\s*비교|(?:으로|로)\s*(?:바꿔|변경))',target)
     target_pair = pairs[-1] if pairs and not re.search(r'빼|제외|삭제|없애|대신',target[target.rfind(pairs[-1][1]):]) else ()
+    question = len(groups)==1 and (groups[0]['text'].endswith('?') or '묻는' in target)
+    if question:
+        prompt += '\n첫 장면에서 시청자에게 직접 물어본다. 물음표로 끝나는 실제 질문을 써라.'
     for attempt in range(2):
         if target_pair:
             prompt += '\n결과 문구에 그대로 포함할 두 소재: '+', '.join(target_pair)
@@ -238,7 +241,11 @@ def rewrite(source, scenes, change, directory):
             if (isinstance(lines,list) and len(lines)==len(groups)
                     and all(isinstance(t,str) and re.search(r'[가-힣]',t) and len(t)<=56 for t in lines)):
                 normalized = [re.sub(r'[\W_]','',line) for line in lines]
-                if (len(set(normalized))==len(lines) and all(w in ' '.join(lines) for w in target_pair)
+                copy = ' '.join(lines)
+                meta = re.search(r'(?:묻는|물어보는|보여주는|설명하는)\s*(?:내용|문구|자막|장면)',copy)
+                invented_number = any(n not in change and all(n not in g['text'] for g in groups) for n in re.findall(r'\d+',copy))
+                if (not meta and not invented_number and (not question or lines[0].rstrip().endswith('?'))
+                        and len(set(normalized))==len(lines) and all(w in ' '.join(lines) for w in target_pair)
                         and any(line not in original for line in normalized)):
                     draft = ['']*len(scenes)
                     for line,group in zip(lines,groups):
@@ -248,6 +255,8 @@ def rewrite(source, scenes, change, directory):
         except ValueError:
             pass
         prompt += '\n다시 작성: 모든 문장을 한글로만 출력한다. 소재가 정확해야 하며 같은 문장을 반복하지 않는다. 각 문장은 25자 이내로 짧게.'
+    if question and target_pair:
+        return [f'{target_pair[0]}, {target_pair[1]} 중 어떤 걸 고르실래요?' if i in groups[0]['indices'] else '' for i in range(len(scenes))]
     if silent and replacement and re.search(r'[가-힣]',target):
         opening = re.sub(r'[을를]\s*만드는\s*(?:장면|과정)(?:\s*순서)?$', ' 만들기', target).strip()
         return [single_line(opening,56)]+['']*(len(scenes)-1)
