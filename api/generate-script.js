@@ -415,6 +415,7 @@ async function geminiDiagnose() {
 }
 
 const { normalizeSpecialty } = require('../lib/business-specialty.cjs');
+const { isCustomerReference } = require('../lib/topic-references.cjs');
 
 async function handleTopics(body, res, minTopics = 3) {
   res.setHeader('Cache-Control', 'no-store');
@@ -429,7 +430,8 @@ async function handleTopics(body, res, minTopics = 3) {
   const product = specialty || clip(info.product || '상품', 20);
   const dc = body.dateContext && typeof body.dateContext === 'object' ? body.dateContext : {};
   const events = (Array.isArray(dc.events) ? dc.events : []).slice(0, 6).map((e) => clip(e, 40)).filter(Boolean);
-  const trends = (Array.isArray(body.trends) ? body.trends : []).slice(0, 8).map((t) => clip(t, 60)).filter(Boolean);
+  const trends = (Array.isArray(body.trends) ? body.trends : []).map(t => clip(t, 100))
+    .filter(isCustomerReference).slice(0, 8);
   const storeHint = clip(body.storeHint, 60);
   const excludeTitles = Array.isArray(body.excludeTitles)
     ? body.excludeTitles.map((x) => clip(x, 30)).filter(Boolean).slice(0, 12)
@@ -442,10 +444,11 @@ async function handleTopics(body, res, minTopics = 3) {
     ? '\n- 정확한 진료과에 맞춘 내원 준비나 일반 건강 정보 위주로 쓰고, 환자 사례·효과 보장·가격·할인·비포애프터는 제안하지 마세요.'
     : '';
   const system = `당신은 대한민국 ${indName} 업종 사장님을 돕는 숏폼(릴스·쇼츠) 기획자입니다.
-오늘 날짜 정보와 요즘 인기 키워드를 보고, 오늘 올리기 좋은 영상 주제 10개를 고르세요.
+날짜 정보와 업종 참고 자료를 보고 손님이 보고 싶을 매장 영상 주제 10개를 고르세요. 검색 순위나 오늘의 유행으로 소개하지 마세요.
+- 자료에 없는 날씨·수요 변화·매장 일정·할인을 단정하지 마세요. 청소나 준비는 매일 쓸 수 있는 아이디어로 제안하고, 가게에서 알려 주지 않은 일을 오늘 한다고 쓰지 마세요. 마케팅 강의나 영상 제작 광고는 손님 관심사에서 제외하세요.
 - 주제마다 방향이 서로 달라야 합니다 (예: 이용 안내, 시즌, 준비 과정, 고르는 법, 자주 묻는 질문).${specialtyRule}${clinicRule}
 - title: 화면 카드에 쓸 주제 이름, 공백 포함 14자 이내.
-- why: 왜 오늘 이 주제인지 한 줄, 25자 이내 (예: "금요일 저녁 외식 수요", "수능 D-5").
+- why: 손님에게 유용한 이유를 25자 이내로 쓰세요. 날짜와 관련이 없으면 요일이나 기념일을 억지로 붙이지 마세요.
 - prompt: 이 주제로 대본을 만들 때 AI에 넣을 상황 한 줄, 50자 이내. "계기 → 손님의 마음·필요 → 우리 ${product}이(가) 채워 줌"이 한 줄에 이어지게 쓰세요.
   ${product}에 없는 메뉴·서비스를 지어내지 마세요.
 - 가게 이름·주소·가격·후기·통계는 지어내지 마세요. 인기 키워드는 업종과 어울릴 때만 쓰세요.
@@ -454,7 +457,7 @@ JSON으로만 출력: {"topics":[{"title":"","why":"","prompt":""}]}`;
   const user = `[업종]: ${indName} / 화자: ${role}${specialty ? '\n[세부 업종]: ' + JSON.stringify(specialty) : ''}
 [오늘]: ${clip(dc.dateStr, 30)} ${clip(dc.weekday, 10)} · 계절 ${clip(dc.season, 10)}${dc.timeOfDay ? ` · ${clip(dc.timeOfDay, 10)}` : ''}
 [다가오는 날]: ${events.length ? events.join(', ') : '없음'}
-[요즘 인기 키워드·영상 제목]: ${trends.length ? trends.join(' / ') : '없음'}${storeHint ? `\n[가게 정보]: ${storeHint}` : ''}${excludeTitles.length ? `\n[이미 보여준 주제 (겹치지 않게 완전히 새로운 10개 추천)]: ${excludeTitles.join(', ')}` : ''}`;
+[업종 참고 영상 제목]: ${trends.length ? trends.join(' / ') : '없음'}${storeHint ? `\n[가게 정보]: ${storeHint}` : ''}${excludeTitles.length ? `\n[이미 보여준 주제 (겹치지 않게 완전히 새로운 10개 추천)]: ${excludeTitles.join(', ')}` : ''}`;
 
   const tries = [];
 

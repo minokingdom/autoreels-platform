@@ -23,8 +23,11 @@
       [y, y + 1].forEach((yy) => {
         fixed.forEach(([m, d, n]) => list.push([new Date(yy, m, d), n]));
         (lunar[yy] || []).forEach(([m, d, n]) => list.push([new Date(yy, m, d), n]));
-        list.push([arNthWeekday(yy, 10, 4, 3), '수능']); // 11월 셋째 목요일
-        list.push([arNthWeekday(yy, 10, 5, 4), '블랙프라이데이']); // 11월 넷째 금요일
+        // 교육부 수능 시행일 발표(보도자료 100526, 103512, 106921). 미발표 연도는 추정하지 않습니다.
+        const examDay = { 2026: 19, 2027: 18, 2028: 16 }[yy];
+        if (examDay) list.push([new Date(yy, 10, examDay), '수능']);
+        const thanksgiving = arNthWeekday(yy, 10, 4, 4);
+        list.push([new Date(yy, 10, thanksgiving.getDate() + 1), '블랙프라이데이']);
       });
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       return list
@@ -61,16 +64,16 @@
         out.push({ title: '출고 현장 보여주기', why: '신뢰를 주는 현장 영상', prompt: '오늘 출고 현장과 꼼꼼한 검수 과정' });
       } else {
         out.push({ title: `오늘의 추천 ${P}`, why: `${dc.weekday} ${dc.timeOfDay} 추천`, prompt: `오늘 꼭 소개하고 싶은 추천 ${P}` });
-        out.push({ title: dc.weekend ? '주말 방문 혜택' : '평일 한정 혜택', why: dc.weekend ? '주말 나들이 수요' : `${dc.weekday} 한산한 시간 공략`, prompt: dc.weekend ? `주말에 방문하면 받는 ${P} 혜택` : `평일에만 드리는 ${P} 혜택` });
+        out.push({ title: '처음 방문하는 손님께', why: '첫 방문 전에 궁금한 점', prompt: `처음 방문할 때 참고할 ${P} 선택 기준` });
         out.push({ title: '준비 과정 보여주기', why: '정성과 신뢰를 보여 주기', prompt: `${P}을(를) 준비하는 과정과 정성` });
       }
-      out.push({ title: `${dc.season} 시즌 추천`, why: `${dc.season}에 찾는 사람이 많음`, prompt: `${dc.season}에 딱 맞는 ${P} 추천` });
+      out.push({ title: `${dc.season} 시즌 추천`, why: `${dc.season}에 어울리는 선택`, prompt: `${dc.season}에 어울리는 ${P} 추천` });
       out.push({ title: '자주 묻는 질문 답하기', why: '문의를 줄이고 신뢰를 높임', prompt: `손님들이 자주 묻는 ${P} 질문에 답하기` });
       out.push({ title: '비포 · 애프터 비교', why: '변화를 한눈에 보여 주기', prompt: `${P} 진행 전후 차이와 달라지는 점` });
       out.push({ title: '초보자가 많이 하는 실수', why: '저장·공유율이 높은 정보형', prompt: `${P} 고를 때 실패하지 않는 기준 3가지` });
       out.push({ title: '예약 · 방문 전 체크', why: '노쇼·오해를 줄이는 안내', prompt: `${P} 방문 전 미리 알면 좋은 꿀팁` });
       out.push({ title: '손님 후기 · 만족 포인트', why: '재방문이 많은 이유 소개', prompt: `실제로 찾은 분들이 가장 만족하는 ${P} 포인트` });
-      out.push({ title: '이번 주 마감 임박 안내', why: '망설이는 고객에게 계기 주기', prompt: `이번 주 예약·혜택 마감 전 챙겨야 할 ${P}` });
+      out.push({ title: '선택 기준 비교', why: '손님이 직접 비교할 수 있게', prompt: `${P} 선택 전에 살펴볼 차이점` });
       return out.slice(0, 10);
     }
     let arTopicsLoading = 0;
@@ -208,7 +211,7 @@
     }
     async function arLoadSpecialtyTopics(force, dc, industry, specialty, job) {
       const accountId = window.AR_SERVER?.me?.user?.id;
-      const cacheKey = `ar_specialty_topics_${accountId || 'preview'}_${industry}_${specialty}_${dc.dateKey}`;
+      const cacheKey = `ar_specialty_ideas_v2_${accountId || 'preview'}_${industry}_${specialty}_${dc.dateKey}`;
       const stillCurrent = () => job === arTopicsLoading && industry === IND.key && specialty === arIndustrySpecialty();
       const prevTitles = force ? (window.__arTopics || []).map(t => t.title).slice(0, 12) : [];
       const ideas = IND.key === 'clinic'
@@ -273,7 +276,63 @@
         prompt: `${role ? role + '의 관점에서 ' : ''}${title}. 공개 가능한 실제 경험을 한 장면으로 소개하기.`
       }));
     }
+    const arKstDay = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' });
+    const arKstTime = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+    let arKeywordDay = '';
+    let arKeywordTimer;
+    async function arLoadDailyKeywords() {
+      const panel = document.getElementById('dailyKeywords');
+      const now = new Date();
+      const day = arKstDay.format(now);
+      if (!panel || arKeywordDay === day) return;
+      arKeywordDay = day;
+      panel.hidden = true;
+      panel.open = false;
+      clearTimeout(arKeywordTimer);
+      arKeywordTimer = setTimeout(arLoadDailyKeywords, Date.parse(day + 'T00:00:00+09:00') + 86400000 - now.getTime() + 50);
+      try {
+        const response = await fetch('/daily-keywords.json', { cache: 'no-store' });
+        if (!response.ok) throw new Error('키워드 수집 파일 없음');
+        const data = await response.json();
+        if (arKeywordDay !== day) return;
+        const collected = Date.parse(data.collectedAt);
+        if (data.source !== panel.querySelector('a').href || !Number.isFinite(collected) || collected > Date.now() ||
+            arKstDay.format(collected) !== day || !Array.isArray(data.items)) {
+          arKeywordDay = '';
+          return;
+        }
+        const list = panel.querySelector('.daily-keyword-list');
+        list.replaceChildren();
+        for (const item of data.items) {
+          const started = Date.parse(item?.startedAt);
+          if (typeof item?.term !== 'string' || !item.term.trim() || !Number.isFinite(started) ||
+              started > collected || arKstDay.format(started) !== day) continue;
+          const button = document.createElement('button');
+          button.type = 'button';
+          const title = document.createElement('span');
+          title.textContent = item.term;
+          const detail = document.createElement('small');
+          detail.textContent = '급상승 시작 ' + arKstTime.format(started) + (item.traffic ? ' · 검색량 ' + item.traffic : '');
+          button.append(title, detail);
+          button.addEventListener('click', () => {
+            const input = document.getElementById('topicCustomInput');
+            input.value = item.term;
+            input.focus();
+          });
+          list.append(button);
+        }
+        const time = panel.querySelector('time');
+        time.dateTime = data.collectedAt;
+        time.textContent = day + ' ' + arKstTime.format(collected) + ' (한국시간)';
+        panel.hidden = !list.childElementCount;
+      } catch {
+        if (arKeywordDay === day) arKeywordDay = '';
+      }
+    }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) arLoadDailyKeywords(); });
     async function arLoadTopics(force) {
+      arLoadDailyKeywords();
+      document.getElementById('storeTopicHeading').textContent = IND.key === 'personal' ? '내 추천 주제' : '우리 가게 추천 주제';
       const myJob = ++arTopicsLoading;
       const dc = arDateContext();
       const line = document.getElementById('topicDateLine');
@@ -295,7 +354,7 @@
       }
       if (specialty) return arLoadSpecialtyTopics(force, dc, IND.key, specialty, myJob);
       const industry = IND.key;
-      const cacheKey = `ar_topics_v4_${IND.key}_${dc.dateKey}`;
+      const cacheKey = `ar_topic_ideas_v5_${IND.key}_${dc.dateKey}`;
       let pre = null;
       let trends = [];
       if (window.location.protocol.startsWith('http')) {
@@ -320,10 +379,10 @@
         const serverTopics = pre && pre.industries && pre.industries[IND.key] && Array.isArray(pre.industries[IND.key].topics)
           ? pre.industries[IND.key].topics
           : null;
-        if (serverTopics && serverTopics.length) {
+        if (serverTopics?.length && pre.industries[IND.key].topicsDate === dc.dateKey) {
           try { localStorage.setItem(cacheKey, JSON.stringify({ topics: serverTopics, at: Date.now(), trendsAt: serverUpdatedAt })); } catch (e) {}
           const status = arCanUseAi() ? '하나를 누르면 대본을 바로 만들어요.' : arAiAccessNotice();
-          arRenderTopics(serverTopics, '오늘 날짜와 요즘 인기 키워드로 준비한 주제예요. ' + status, false);
+          arRenderTopics(serverTopics, status, false);
           return;
         }
       }
@@ -332,7 +391,7 @@
         return;
       }
       // 먼저 기본 주제를 바로 보여 주고, AI 추천이 오면 바꿈
-      arRenderTopics(arFallbackTopics(dc), '오늘 요일·계절·인기 키워드로 주제를 고르는 중… (10초 정도)');
+      arRenderTopics(arFallbackTopics(dc), '업종에 맞는 릴스 주제를 고르는 중…');
       if (!window.location.protocol.startsWith('http')) return;
       if (!trends.length) try {
         const ctrl = new AbortController();
@@ -367,7 +426,7 @@
         if (myJob !== arTopicsLoading || industry !== IND.key || arIndustrySpecialty()) return;
         if (res && res.ok && Array.isArray(res.topics) && res.topics.length) {
           try { localStorage.setItem(cacheKey, JSON.stringify({ topics: res.topics, at: Date.now(), trendsAt: serverUpdatedAt })); } catch (e) {}
-          arRenderTopics(res.topics, `오늘 날짜${trends.length ? '와 요즘 인기 키워드' : ''}로 고른 주제예요. 하나를 누르면 대본을 바로 만들어요.`, false);
+          arRenderTopics(res.topics, '하나를 누르면 대본을 바로 만들어요.', false);
           return;
         }
       } catch (e) {}

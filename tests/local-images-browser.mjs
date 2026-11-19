@@ -193,6 +193,31 @@ try {
   assert.equal(chipRects[0].height,28);
   assert.deepEqual(chipRects[0],chipRects[1]);
   console.log('topic photos, product-to-script button and aligned chips verified');
+  const collectedAt = new Date().toISOString();
+  const old = new Date(Date.now() - 86400000).toISOString();
+  const feed = {
+    source: 'https://trends.google.com/trending/rss?geo=KR', collectedAt,
+    items: [{ term:'테스트 검색어', startedAt:collectedAt, traffic:'200+' }, { term:'지난 검색어', startedAt:old }]
+  };
+  await cloud.route('**/daily-keywords.json', route => route.fulfill({json:feed}));
+  await cloud.evaluate(async () => {
+    switchStudioTab('topic'); arToggleSheet(false);
+    arKeywordDay = ''; await arLoadDailyKeywords();
+  });
+  const daily = cloud.locator('#dailyKeywords');
+  await daily.locator('summary').click();
+  assert.equal(await daily.getByRole('button').count(),1);
+  await daily.getByRole('button',{name:/테스트 검색어.*200\+/}).click();
+  assert.equal(await cloud.locator('#topicCustomInput').inputValue(),'테스트 검색어');
+  const refreshDaily = () => cloud.evaluate(async () => { arKeywordDay = ''; await arLoadDailyKeywords(); });
+  feed.collectedAt = old;
+  await refreshDaily();
+  assert.equal(await daily.isHidden(),true);
+  feed.collectedAt = collectedAt;
+  feed.source = 'unverified';
+  await refreshDaily();
+  assert.equal(await daily.isHidden(),true);
+  assert.equal(await cloud.locator('#storeTopicHeading').textContent(),'우리 가게 추천 주제');
  }
  assert.deepEqual(errors,[]);console.log('local image browser OK');
 } finally {await browser.close();await new Promise(r=>server.close(r));}

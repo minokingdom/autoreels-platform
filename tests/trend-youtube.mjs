@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import topicReferences from '../lib/topic-references.cjs';
+assert.equal(topicReferences.isCustomerReference('천만뷰 맛집 릴스 찍는 법 공짜 강의'), false);
+assert.equal(topicReferences.isCustomerReference('퇴근 후 찾는 생맥주 안주 추천'), true);
 import { extractVideosFromYtHtml, fetchPublicYoutube } from '../scripts/trend-youtube.mjs';
 const data={contents:{twoColumnSearchResultsRenderer:{primaryContents:{sectionListRenderer:{contents:[{itemSectionRenderer:{contents:[{videoRenderer:{videoId:'video123',title:{runs:[{text:'Fresh result'}]}}}]}}]}}}}};
 const html='var ytInitialData = '+JSON.stringify(data)+';</script>';

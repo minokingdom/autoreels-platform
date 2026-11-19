@@ -54,7 +54,9 @@ jobs:
           node tests/z-image.cjs
           node tests/local-images-browser.mjs
       - name: Free trend fallback
-        run: node tests/trend-youtube.mjs
+        run: |
+          node tests/trend-youtube.mjs
+          python3 -m unittest discover -s tests -p test_daily_keywords.py
       - name: Reference style ingestion
         run: |
           python3 scripts/alerts/test_style_commands.py

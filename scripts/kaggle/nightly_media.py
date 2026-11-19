@@ -237,7 +237,7 @@ def prepare_kernel(destination: Path) -> None:
             "industry": industry,
             "industryInfo": info,
             "dateContext": date_ctx,
-            "trends": row.get("keywords", [])[:8],
+            "trends": [] if row.get("stale") else row.get("keywords", [])[:8],
         }, token)
         topics = result.get("topics")
         if not result.get("ok") or not isinstance(topics, list) or len(topics) != 10:

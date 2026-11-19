@@ -12,7 +12,7 @@ const { Pool } = require('pg');
 
 const INDUSTRY_QUERIES = {
   auto: { yt: '신차 중고차 출고 릴스 쇼츠', ig: '자동차' },
-  restaurant: { yt: '맛집 음식점 홍보 릴스 쇼츠', ig: '맛집추천' },
+  restaurant: { yt: '맛집 메뉴 웨이팅 외식 추천', ig: '맛집추천' },
   cafe: { yt: '카페 디저트 신메뉴 릴스 쇼츠', ig: '카페추천' },
   beauty: { yt: '미용실 네일샵 릴스 쇼츠', ig: '미용실' },
   realestate: { yt: '부동산 매물 투어 릴스 쇼츠', ig: '부동산' },
@@ -327,7 +327,7 @@ async function fetchTrendsForIndustry(indKey, customQ = '', { publicOnly = false
   // ig 는 해시태그 하나(문자열) 또는 여러 개(배열)
   const igTags = customQ ? [customQ.replace(/\s+/g, '')] : (Array.isArray(conf.ig) ? conf.ig : [conf.ig]);
   const igTag = igTags[0];
-  const ytQuery = customQ ? `${customQ} 릴스 쇼츠` : conf.yt;
+  const ytQuery = customQ || conf.yt;
   const apifyOpts = { motion: Boolean(conf.motion), limit: conf.limit || 6 };
 
   let source = 'empty';

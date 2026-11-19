@@ -9,6 +9,7 @@ import { promisify } from 'node:util';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fetchPublicYoutube } from './trend-youtube.mjs';
+import topicReferences from '../lib/topic-references.cjs';
 
 const execFileAsync = promisify(execFile);
 const args = process.argv.slice(2);
@@ -75,7 +76,7 @@ async function fetchViaTreg(ind) {
     const title = cleanTrendTitle(raw);
     const tags = (raw.match(/#[가-힣a-zA-Z0-9_]+/g) || []).slice(0, 4).join(' ');
     const line = [title, tags].join(' ').trim();
-    if (!title || title.length < 4 || seen.has(title)) continue;
+    if (!topicReferences.isCustomerReference(raw) || title.length < 4 || seen.has(title)) continue;
     seen.add(title);
     clean.push(line);
     if (clean.length >= 8) break;
@@ -173,13 +174,13 @@ for (const ind of INDUSTRIES) {
             const title = cleanTrendTitle(it.title || (it.theme && it.theme.hookCaption) || '');
             const tags = (String(it.fullCaption || it.title || '').match(/#[\uAC00-\uD7A3a-zA-Z0-9_]+/g) || []).slice(0, 4).join(' ');
             return [title, tags].join(' ').trim();
-          }).filter(Boolean).slice(0, 8);
+          }).filter(topicReferences.isCustomerReference).slice(0, 8);
       }
     } catch (e) { console.log(ind, 'primary_error', e.name || 'error'); }
     if (!items.length) {
       try {
         const direct = await fetchPublicYoutube(TREG_QUERIES[ind] || ind);
-        items = direct.map((v) => cleanTrendTitle(v.title)).filter(Boolean).slice(0, 8);
+        items = direct.filter(v => topicReferences.isCustomerReference(v.title)).map(v => cleanTrendTitle(v.title)).filter(Boolean).slice(0, 8);
         if (items.length) source = 'youtube_public_fallback';
       } catch (e) { console.log(ind, 'public_fallback_error', e.name || 'error'); }
     }

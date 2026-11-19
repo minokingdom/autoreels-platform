@@ -19,6 +19,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Collect verified Korean trending searches
+        continue-on-error: true
+        run: python3 scripts/refresh_daily_keywords.py
       - name: Refresh daily trends (with treg if configured, else /api/trends)
         env:
           TREG_TOKEN: ${{ secrets.TREG_TOKEN }}
@@ -36,10 +39,10 @@ jobs:
           fi
       - name: Commit trends if changed
         run: |
-          if git diff --quiet -- public/trends-today.json; then echo "no change"; exit 0; fi
+          git add public/trends-today.json public/daily-keywords.json
+          if git diff --cached --quiet; then echo "no change"; exit 0; fi
           git config user.name "autoreels-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add public/trends-today.json
           git commit -m "chore: 오늘의 인기 키워드 갱신"
           git pull --rebase origin main
           git push origin main

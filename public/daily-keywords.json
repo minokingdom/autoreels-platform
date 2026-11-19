@@ -1,0 +1,56 @@
+{
+  "source": "https://trends.google.com/trending/rss?geo=KR",
+  "collectedAt": "2026-11-19T22:56:59.085667+09:00",
+  "items": [
+    {
+      "term": "변상일",
+      "startedAt": "2026-11-19T04:30:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "금오산",
+      "startedAt": "2026-11-19T04:20:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "필리버스터",
+      "startedAt": "2026-11-19T04:10:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "하나로마트",
+      "startedAt": "2026-11-19T03:50:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "cuaca besok",
+      "startedAt": "2026-11-19T03:40:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "thời tiết ngày mai",
+      "startedAt": "2026-11-19T03:40:00-08:00",
+      "traffic": "5000+"
+    },
+    {
+      "term": "정부24",
+      "startedAt": "2026-11-19T03:20:00-08:00",
+      "traffic": "1000+"
+    },
+    {
+      "term": "야구 경기장",
+      "startedAt": "2026-11-19T03:10:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "이재시",
+      "startedAt": "2026-11-19T03:00:00-08:00",
+      "traffic": "1000+"
+    },
+    {
+      "term": "푸틴",
+      "startedAt": "2026-11-19T03:00:00-08:00",
+      "traffic": "100+"
+    }
+  ]
+}

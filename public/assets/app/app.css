@@ -1413,6 +1413,15 @@ select.ig-select-src { display: none !important; }
 .rewrite-exclusions summary { width: fit-content; padding-block: 4px; font-size: 12px; color: var(--secondary-foreground); cursor: pointer; }
 .rewrite-exclusions label { display: block; margin: 3px 0; font-size: 12px; color: var(--secondary-foreground); }
 #scriptRewritePanel #aiExcludeInput { min-height: 30px; }
+.daily-keywords { padding: 10px 12px; }
+.daily-keywords[hidden] { display: none; }
+.daily-keywords summary { font-size: 13px; font-weight: 600; cursor: pointer; }
+.daily-keywords summary span, .daily-keywords p, .daily-keyword-list small { font-size: 12px; color: var(--secondary-foreground); font-weight: normal; }
+.daily-keywords summary span { margin-left: 4px; }
+.daily-keywords p { margin: 6px 0; }
+.daily-keywords a { text-decoration: underline; }
+.daily-keyword-list { display: grid; gap: 4px; }
+.daily-keyword-list button { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; text-align: left; padding: 5px 8px; border-radius: 6px; background: var(--raised); color: var(--foreground); cursor: pointer; }
 .ig-chip-row { display: flex; align-items: center; gap: 5px; }
 .ig-chip-row > .ig-ctx-chip {
   display: inline-flex;
