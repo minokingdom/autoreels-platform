@@ -701,6 +701,8 @@
         arToast('이 브라우저는 영상 저장을 지원하지 않습니다. 최신 Chrome 또는 Safari에서 열어 주세요.'); return;
       }
       const candidates = [
+        'video/mp4;codecs="avc1.640028,mp4a.40.2"',
+        'video/mp4;codecs=avc1.640028,mp4a.40.2',
         'video/mp4;codecs="avc1.42E01E,mp4a.40.2"',
         'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
         'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'
@@ -734,14 +736,16 @@
           }
           refitDurationToNarration();
           await effectsReady;
+          if (typeof window.__arPinnedCut === 'number' && window.__arPinnedCut >= 0) window.__arPinnedCut = -1;
           canvas.width = 1080; canvas.height = 1920;
           window.__exportingVideo = true;
+          window.__exportStartedAt = 0;
           window.__timelines.main.seek(0);
           canvasStream = canvas.captureStream(30);
           const tracks = [...canvasStream.getVideoTracks(), ...(AudioEngine.streamDest ? AudioEngine.streamDest.stream.getAudioTracks() : [])];
           recorder = new MediaRecorder(new MediaStream(tracks), { mimeType, videoBitsPerSecond: 8000000 });
           const cleanMime = recorder.mimeType.includes('mp4') ? 'video/mp4' : 'video/webm';
-          const seconds = TOTAL_DURATION, chunks = [];
+          const seconds = Math.max(4, Number(TOTAL_DURATION) || 12), chunks = [];
           const blob = await new Promise((resolve, reject) => {
             let stopped = false;
             const fail = message => {
@@ -755,6 +759,7 @@
             recorder.onerror = () => fail('영상 저장 중 오류가 발생했습니다. 이용 횟수는 차감하지 않았습니다.');
             recorder.onstop = () => { if (!stopped) { stopped = true; resolve(new Blob(chunks, { type: cleanMime })); } };
             const started = performance.now();
+            window.__exportStartedAt = started;
             recorder.start(200);
             AudioEngine.lastSfxSlot = -2;
             AudioEngine.lastSfxTime = -1;
@@ -798,7 +803,7 @@
         if (onVisibility) document.removeEventListener('visibilitychange', onVisibility);
         if (recorder && recorder.state !== 'inactive') recorder.stop();
         if (canvasStream) canvasStream.getTracks().forEach(track => track.stop());
-        window.__exportingVideo = false; isPlaying = false;
+        window.__exportingVideo = false; window.__exportStartedAt = 0; isPlaying = false;
         pauseAllCutVideos(); AudioEngine.onPlayStateChange(false);
         canvas.width = width; canvas.height = height;
         window.__timelines.main.seek(0);

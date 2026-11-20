@@ -802,8 +802,10 @@
           : null;
 
         // 전체 음성이 기준: 엔딩 없으면 본문 끝, 있으면 엔딩 멘트 끝에 영상도 종료.
+        // 단, 음성이 선택한 기본 길이(BASE_DURATION)보다 지나치게 짧을 때(예: 3초) 영상이 3초로 줄어들지 않도록 최소 길이 보장
         const voiceDuration = AudioEngine.masterBuffer && AudioEngine.masterBuffer.duration;
-        if (bounds && Number.isFinite(voiceDuration) && voiceDuration > 0) {
+        const minSafeTotal = Math.max(6, BASE_DURATION - 1.5);
+        if (bounds && Number.isFinite(voiceDuration) && voiceDuration >= minSafeTotal) {
           const mainEnd = arCardEmpty() ? voiceDuration : Math.min(voiceDuration, bounds[cuts]);
           const voiceLengths = [];
           let previous = 0;

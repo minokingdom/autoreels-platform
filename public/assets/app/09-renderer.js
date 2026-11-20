@@ -3552,7 +3552,9 @@
 
       if (isPlaying) {
         const tl = window.__timelines['main'];
-        let nextT = tl.currentTime + dt;
+        let nextT = (window.__exportingVideo && window.__exportStartedAt)
+          ? Math.max(0, (now - window.__exportStartedAt) / 1000)
+          : (tl.currentTime + dt);
         if (nextT >= tl.duration) {
           // 녹화 중에는 마지막 화면에서 멈춰, 첫 컷 음성이 영상 끝에 섞여 들어가지 않게 함
           nextT = window.__exportingVideo ? Math.max(0, tl.duration - 0.001) : 0;
