@@ -539,14 +539,72 @@ JSON으로만 출력: {"topics":[{"title":"","why":"","prompt":""}]}`;
 }
 
 // 주제 맞춤 9:16 씬 이미지 생성 ({ mode: 'scene-prompts' | 'scene-image' | 'scene-images' })
+const NO_TEXT_IMAGE_GUARD = 'pure text-free editorial photography, completely blank unlabeled surfaces, shallow depth of field bokeh background, NO text, NO letters, NO Korean Hangul, NO Chinese or Japanese characters, NO numbers, NO signboards, NO menu boards, NO posters, NO banners, NO price tags, NO product labels, NO readable license plates, NO logos, NO watermarks';
+const ENGLISH_INDUSTRY_HINTS = {
+  auto: 'modern luxury car showroom and sleek automobile exterior/interior',
+  dining: 'upscale restaurant plating and warm ambient dining table',
+  cafe: 'artisan specialty coffee bar, espresso crema and sunlit wood table',
+  beauty: 'minimalist luxury skincare salon, glass dropper serum and soft studio light',
+  realestate: 'bright modern apartment living room with floor-to-ceiling windows and architectural lines',
+  academy: 'clean warm study desk, sunlit modern classroom interior with soft bokeh',
+  clinic: 'calm serene minimalist medical clinic lounge with warm architectural lighting',
+  fitness: 'sleek modern gym studio with dramatic lighting and athletic equipment',
+  shop: 'editorial boutique display with curated minimalist products and clean studio shadows',
+  interior: 'refined contemporary architectural interior with natural stone, wood, and soft daylight'
+};
+
+function sanitizeNoTextImagePrompt(rawPrompt, industryKey = '') {
+  let clean = String(rawPrompt || '').trim();
+  // z-image는 한글 문자열이 들어가면 깨진 한글/외계어를 그리므로 잔여 한글 토큰을 제거
+  clean = clean.replace(/[가-힣ㄱ-ㅎㅏ-ㅣ]+/g, ' ').replace(/\s+/g, ' ').replace(/^[,.\-:\s]+|[,.\-:\s]+$/g, '').trim();
+  if (clean.length < 18) {
+    const indScene = ENGLISH_INDUSTRY_HINTS[industryKey] || 'clean modern commercial studio photography';
+    clean = `Vertical 9:16 editorial commercial photograph of ${indScene}, natural cinematic lighting`;
+  }
+  const suffix = `, ${NO_TEXT_IMAGE_GUARD}`;
+  const maxBase = Math.max(120, 1000 - suffix.length);
+  if (clean.toLowerCase().includes('no korean hangul')) return clean.slice(0, 1000);
+  return `${clean.slice(0, maxBase)}${suffix}`;
+}
+
+async function translateSingleKoreanImagePrompt(rawPrompt, geminiKey, industryKey = '') {
+  const text = String(rawPrompt || '').trim();
+  if (!/[가-힣]/.test(text) || !geminiKey) return sanitizeNoTextImagePrompt(text, industryKey);
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(geminiKey)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(8000),
+      body: JSON.stringify({
+        contents: [{
+          role: 'user',
+          parts: [{
+            text: `Convert this Korean image request into ONE concise English 9:16 commercial photography prompt.
+NEVER include any signs, signboards, menus, posters, banners, books, documents, whiteboards, screens, product labels, or readable license plates. Keep every surface blank/unlabeled and use shallow depth of field. Output ONLY the English prompt sentence.
+Request: ${text}`
+          }]
+        }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 200 }
+      })
+    });
+    if (r.ok) {
+      const j = await r.json();
+      const translated = String(j?.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+      if (translated) return sanitizeNoTextImagePrompt(translated, industryKey);
+    }
+  } catch (_) {}
+  return sanitizeNoTextImagePrompt(text, industryKey);
+}
+
 async function buildTopicScenePrompts(body, apiKey, count) {
   const topicText = String(body.prompt || body.topic?.title || body.vehicle || '').trim();
   const vehicle = body.industry === 'auto' ? String(body.vehicle || '').trim().slice(0, 100) : '';
-  const vehicleRule = vehicle ? `Main vehicle: ${vehicle}. Keep that make and model in every scene, with no substitute vehicle.` : '';
+  const vehicleRule = vehicle ? `Main vehicle: ${vehicle}. Keep that make and model in every scene, with no substitute vehicle, and keep license plates blank dark metallic or out of frame.` : '';
   const captions = Array.isArray(body.captions) ? body.captions.slice(0, count).map((c) => String(c || '').trim()) : [];
   const topicsList = Array.isArray(body.topicsList) ? body.topicsList.slice(0, count) : [];
   const isIcon = Boolean(body.isIcon);
-  const indName = (body.industryInfo && body.industryInfo.name) ? String(body.industryInfo.name) : (body.industry || '비즈니스');
+  const indKey = String(body.industry || '').trim();
+  const indName = (body.industryInfo && body.industryInfo.name) ? String(body.industryInfo.name) : (indKey || '비즈니스');
   const th = body.themeInfo && typeof body.themeInfo === 'object' ? body.themeInfo : {};
   const themeDesc = [
     th.designName ? `Design Style: ${th.designName}` : '',
@@ -564,15 +622,15 @@ async function buildTopicScenePrompts(body, apiKey, count) {
 
 Return ONLY a JSON array of ${topicsList.length} concise English square 1:1 thumbnail icon prompts (one per topic in exact order).
 Each icon must feature a clear, unmistakable central visual subject depicting THAT specific topic in "${indName}" context, harmonized with the design mood (${themeDesc || 'clean modern editorial'}), readable even at 52x52px thumbnail size.
-Rules: clean centered studio photography or 3D editorial object, shallow depth of field, NO text, NO typography, NO letters, NO numbers, NO watermarks, NO logos.`
+STRICT TEXT-FREE RULES: NEVER include signs, labels, menus, posters, banners, documents, screens, or any readable surfaces. Use pure unlabeled objects/materials, shallow depth of field, NO text, NO typography, NO letters, NO numbers, NO watermarks, NO logos.`
       : `Topic / Product: ${topicText}
 ${vehicleRule}
 Cut captions (${count}): ${captions.join(' | ') || topicText}
 
 Return ONLY a JSON array of ${count} concise English photography prompts (one per cut) for vertical 9:16 Reels backgrounds that:
-1) Directly depict the topic "${topicText}" in real-world "${indName}" context, matching each cut caption.
-2) Visually harmonize with the active design & theme (${themeDesc || 'modern editorial'}) — match its background brightness (dark/moody vs bright/cream/pastel), color grading, and accent tone, and leave clean uncluttered space for overlay Korean text.
-Rules: cohesive visual series across all ${count} cuts, photorealistic editorial photography, natural lighting, shallow depth of field, NO text, NO typography, NO watermarks, NO logos, NO UI.`;
+1) Directly depict the topic "${topicText}" in real-world "${indName}" context, matching each cut caption purely through visual storytelling (objects, hands, lighting, spaces, textures).
+2) Visually harmonize with the active design & theme (${themeDesc || 'modern editorial'}) — match its background brightness (dark/moody vs bright/cream/pastel), color grading, and accent tone, and leave clean uncluttered negative space for overlay Korean typography added later.
+3) STRICT TEXT-FREE RULES (CRITICAL): NEVER depict storefronts with signs, street signboards, menu boards, price tags, banners, posters, flyers, whiteboards, blackboards, books, newspapers, documents, phone/laptop screens, branded bottle labels, or readable car license plates. Every background surface must be completely blank/unlabeled or softly blurred with shallow depth of field. NO text, NO typography, NO Korean/English/Asian characters, NO numbers, NO watermarks, NO logos, NO UI.`;
 
     const promptReq = {
       contents: [{
@@ -614,8 +672,8 @@ ${instruction}`
             content: [{
               type: 'text',
               text: isIcon && topicsList.length
-                ? `Industry: ${indName}\nTopics:\n${topicsList.map((t, i) => `${i + 1}. ${t.title || ''} (${t.why || ''})`).join('\n')}\nOutput ONLY a JSON array of ${topicsList.length} vivid English 1:1 visual object/scene photography prompts (no Korean text, no portrait headshots unless necessary, no text/letters/watermarks).`
-                : `Industry: ${indName}, Topic: ${topicText}, Captions: ${captions.join(' | ')}\n${vehicleRule}\nOutput ONLY a JSON array of ${count} English 9:16 photography prompts (no Korean text, no text/watermarks).`
+                ? `Industry: ${indName}\nTopics:\n${topicsList.map((t, i) => `${i + 1}. ${t.title || ''} (${t.why || ''})`).join('\n')}\nOutput ONLY a JSON array of ${topicsList.length} vivid English 1:1 visual object/scene photography prompts (pure unlabeled objects, zero signs/menus/labels/documents/screens, no text/letters/numbers/watermarks).`
+                : `Industry: ${indName}, Topic: ${topicText}, Captions: ${captions.join(' | ')}\n${vehicleRule}\nOutput ONLY a JSON array of ${count} English 9:16 photography prompts (pure visual scenes with completely blank unlabeled surfaces; strictly avoid signs, signboards, menus, banners, posters, documents, whiteboards, screens, product labels, or readable license plates; no text/letters/numbers/watermarks).`
             }]
           }]
         })
@@ -628,28 +686,30 @@ ${instruction}`
     } catch (e) {}
   }
   if (!prompts.length) {
-    const toneHint = themeDesc ? `, harmonized with ${themeDesc}` : '';
+    const indScene = ENGLISH_INDUSTRY_HINTS[indKey] || 'clean modern commercial studio photography';
+    const shotAngles = ['close-up detail shot', 'medium editorial angle', 'atmospheric wide interior shot', 'cinematic lifestyle perspective', 'minimalist overhead composition', 'soft natural light portrait angle'];
     if (isIcon && topicsList.length) {
-      prompts = topicsList.map((t, i) => (
-        `Square 1:1 studio editorial thumbnail for "${t.title || topicText}" (${indName})${toneHint}, centered clear subject, clean background, no text, no watermark, scene ${i + 1}`
+      prompts = topicsList.map((_, i) => (
+        `Square 1:1 studio editorial photograph of ${indScene}, ${shotAngles[i % shotAngles.length]}, centered clear unlabeled subject, clean background, ${NO_TEXT_IMAGE_GUARD}`
       ));
     } else {
       prompts = Array.from({ length: count }, (_, i) => (
-        `${vehicleRule ? vehicleRule + ' ' : ''}Vertical 9:16 editorial commercial photography for "${topicText}" (${indName})${toneHint}, scene ${i + 1}, crisp lighting, clean space for typography, photorealistic, no text, no watermark, no logos`
+        `${vehicleRule ? vehicleRule + ' ' : ''}Vertical 9:16 editorial commercial photograph of ${indScene}, ${shotAngles[i % shotAngles.length]}, crisp natural lighting, clean negative space, ${NO_TEXT_IMAGE_GUARD}`
       ));
     }
   }
-  return prompts;
+  return prompts.map((p) => sanitizeNoTextImagePrompt(p, indKey));
 }
 
-async function generateSingleKieSceneImage(apiKey, promptText, idx, aspectRatio = '9:16') {
+async function generateSingleKieSceneImage(apiKey, promptText, idx, aspectRatio = '9:16', industryKey = '') {
   const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
   const fail = (code) => ({ error: code });
   const mapCode = (code) => Number(code) === 402 ? 'kie_insufficient_credits' : Number(code) === 401 ? 'kie_invalid_key' : Number(code) === 429 ? 'kie_rate_limited' : 'kie_image_failed';
+  const safePrompt = sanitizeNoTextImagePrompt(promptText, industryKey);
   try {
     const created = await fetch('https://api.kie.ai/api/v1/jobs/createTask', {
       method: 'POST', headers, signal: AbortSignal.timeout(10000),
-      body: JSON.stringify({ model: 'z-image', input: { prompt: String(promptText).slice(0, 1000), aspect_ratio: aspectRatio === '1:1' ? '1:1' : '9:16', nsfw_checker: true } })
+      body: JSON.stringify({ model: 'z-image', input: { prompt: safePrompt, aspect_ratio: aspectRatio === '1:1' ? '1:1' : '9:16', nsfw_checker: true } })
     });
     const task = await created.json();
     if (!created.ok || Number(task.code) !== 200 || !task.data?.taskId) return fail(mapCode(task.code || created.status));
@@ -686,9 +746,10 @@ async function handleSceneImages(body, res) {
   const kieKey = String(process.env.KIE_API_KEY || '').trim();
   if (body.mode === 'scene-image') {
     if (!kieKey) return res.status(200).json({ ok: false, error: 'missing_kie_key', image: null });
-    const imagePrompt = String(body.imagePrompt || body.prompt || '').trim();
-    if (!imagePrompt) return res.status(200).json({ ok: false, error: 'missing_prompt', image: null });
-    const result = await generateSingleKieSceneImage(kieKey, imagePrompt, Number(body.index) || 0, body.aspectRatio || '9:16');
+    const rawImagePrompt = String(body.imagePrompt || body.prompt || '').trim();
+    if (!rawImagePrompt) return res.status(200).json({ ok: false, error: 'missing_prompt', image: null });
+    const safeImagePrompt = await translateSingleKoreanImagePrompt(rawImagePrompt, geminiKey, String(body.industry || ''));
+    const result = await generateSingleKieSceneImage(kieKey, safeImagePrompt, Number(body.index) || 0, body.aspectRatio || '9:16', String(body.industry || ''));
     return res.status(200).json({ ok: Boolean(result.image), image: result.image || null, error: result.error });
   }
   const hasTopics = Array.isArray(body.topicsList) && body.topicsList.length > 0;
@@ -698,7 +759,7 @@ async function handleSceneImages(body, res) {
   const count = sceneImageCount(body);
   const prompts = await buildTopicScenePrompts(body, geminiKey, count);
   if (body.mode === 'scene-prompts') return res.status(200).json({ ok: prompts.length > 0, prompts });
-  const results = await Promise.all(prompts.map((p, idx) => generateSingleKieSceneImage(kieKey, p, idx, body.aspectRatio || '9:16')));
+  const results = await Promise.all(prompts.map((p, idx) => generateSingleKieSceneImage(kieKey, p, idx, body.aspectRatio || '9:16', String(body.industry || ''))));
   const images = results.map((r) => r.image).filter(Boolean);
   return res.status(200).json({ ok: images.length > 0, images, error: images.length ? undefined : results[0]?.error });
 }
