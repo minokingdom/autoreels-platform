@@ -3597,6 +3597,9 @@
       }
       document.getElementById('playPauseBtn').textContent = isPlaying ? '⏸ 일시정지' : '▶️ 재생';
       if (!isPlaying) pauseAllCutVideos();
+      if (isPlaying && AudioEngine.enabled && AudioEngine.ttsVoice !== 'off' && (AudioEngine.ttsDirty || !AudioEngine.masterBuffer) && !AudioEngine.scriptPending) {
+        AudioEngine.prefetchTtsBuffers(true);
+      }
       AudioEngine.onPlayStateChange(isPlaying);
       arShowPlaybackFeedback();
     }

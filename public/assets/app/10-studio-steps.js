@@ -803,7 +803,7 @@
       arSetFinalPreviewStatus('완성본 준비 중… 성우가 대본을 한 번에 녹음하고 있어요 (10초 정도)');
       AudioEngine.stopTts();
       // 녹음이 끝나면 처음부터 배경음악과 함께 재생
-      Promise.resolve(AudioEngine.scriptPending || AudioEngine.prefetchTtsBuffers()).then(() => {
+      Promise.resolve(AudioEngine.scriptPending || AudioEngine.prefetchTtsBuffers(true)).then(() => {
         if (arPreviewPausedForEdit || arPendingPreviewPlay || document.getElementById('studioPanel_publish').classList.contains('hidden')) return;
         triggerFullAudioPreview();
         arSetFinalPreviewStatus(AudioEngine.masterBuffer
@@ -1935,7 +1935,8 @@
       }
       if (!arPreviewPausedForEdit) return false;
       if (arEndingTabActive()) updateCurrentDealerFromPreview();
-      const pending = AudioEngine.scriptPending || (AudioEngine.ttsPrefetchTimer ? AudioEngine.prefetchTtsBuffers() : null);
+      const needsVoice = AudioEngine.enabled && AudioEngine.ttsVoice !== 'off' && (AudioEngine.ttsDirty || !AudioEngine.masterBuffer);
+      const pending = AudioEngine.scriptPending || (needsVoice ? AudioEngine.prefetchTtsBuffers(true) : null);
       arPreviewPausedForEdit = false;
       if (!pending) return false;
       arPendingPreviewPlay = pending;

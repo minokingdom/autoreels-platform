@@ -904,17 +904,24 @@
       },
 
       // 모든 컷 + 마지막 명함 멘트 음성을 미리 받아 두고, 받은 길이에 맞춰 영상 길이를 조정
+      // 편집 중(재생 일시정지 상태)에는 크레딧/속도 낭비를 막기 위해 자동 호출하지 않고 재생·발행·내보내기(force) 시 1회만 생성
       prefetchTtsBuffers(force) {
         if (!arCanUseAi()) {
           this.setTtsProvider('browser');
           refitDurationToNarration();
           return Promise.resolve([]);
         }
-        // 소리를 켠 사람에게만 성우 녹음을 받음 (소리 꺼 둔 방문자마다 녹음하면 크레딧 낭비). 영상 내보내기는 force
+        // 소리를 켠 사람에게만 성우 녹음을 받음 (소리 꺼 둔 방문자마다 녹음하면 크레딧 낭비). 영상 내보내기·재생 시작은 force
         if (this.ttsVoice === 'off' || !arVoiceAllowed() || (!this.enabled && !force)) {
           refitDurationToNarration();
           return Promise.resolve([]);
         }
+        if (!force && (typeof isPlaying === 'undefined' || !isPlaying || (typeof arPreviewPausedForEdit !== 'undefined' && arPreviewPausedForEdit))) {
+          this.ttsDirty = true;
+          refitDurationToNarration();
+          return Promise.resolve([]);
+        }
+        this.ttsDirty = false;
         if (this.defaultVoicePending) return this.loadVoiceList().then(() => this.prefetchTtsBuffers(force));
         const totalCuts = getTargetCutCount();
         const lines = [];
@@ -959,14 +966,11 @@
         return job;
       },
 
-      // 대본을 타이핑하는 동안에는 받지 않고, 입력이 멈춘 뒤 한 번만 받음 (크레딧 낭비 방지)
-      schedulePrefetch(delayMs = 1500) {
-        if (this.ttsPrefetchTimer) clearTimeout(this.ttsPrefetchTimer);
-        this.ttsPrefetchTimer = setTimeout(() => {
-          this.ttsPrefetchTimer = null;
-          if (!this.enabled) return;
-          this.prefetchTtsBuffers();
-        }, delayMs);
+      // 대본을 편집하는 동안에는 음성을 자동 생성하지 않고 dirty 표시만 해 둠 (재생·발행·내보내기 시 1회 생성)
+      schedulePrefetch() {
+        if (this.ttsPrefetchTimer) { clearTimeout(this.ttsPrefetchTimer); this.ttsPrefetchTimer = null; }
+        this.ttsDirty = true;
+        refitDurationToNarration();
       },
 
       shouldUseCutSyncedPlayback() {
@@ -1608,13 +1612,12 @@
       AudioEngine.masterDuration = 0;
       AudioEngine.lastSpokenCut = -1;
       AudioEngine.scriptPending = null;
-      if (immediate) {
-        if (AudioEngine.ttsPrefetchTimer) clearTimeout(AudioEngine.ttsPrefetchTimer);
-        AudioEngine.ttsPrefetchTimer = null;
-        return AudioEngine.prefetchTtsBuffers();
-      }
-      if (AudioEngine.enabled) {
-        AudioEngine.schedulePrefetch(900);
+      AudioEngine.ttsDirty = true;
+      if (AudioEngine.ttsPrefetchTimer) { clearTimeout(AudioEngine.ttsPrefetchTimer); AudioEngine.ttsPrefetchTimer = null; }
+      refitDurationToNarration();
+      // 편집 중에는 음성을 자동 호출하지 않음 (명시적 'play' 요청 시에만 1회 생성)
+      if (immediate === 'play') {
+        return AudioEngine.prefetchTtsBuffers(true);
       }
     }
 
@@ -1646,7 +1649,7 @@
         AudioEngine.lastSpokenCut = -1;
         AudioEngine.startBgmLoop();
         AudioEngine.loadVoiceList();
-        AudioEngine.prefetchTtsBuffers();
+        if (typeof isPlaying !== 'undefined' && isPlaying) AudioEngine.prefetchTtsBuffers(true);
         AudioEngine.syncWithTimeline(window.__timelines['main'].currentTime);
         if (dot) dot.className = 'w-1.5 h-1.5 rounded-full bg-[#4cc38a]';
         if (lbl) lbl.textContent = '사운드 켜짐';
