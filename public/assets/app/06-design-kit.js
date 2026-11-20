@@ -3863,11 +3863,17 @@
     }
 
     // 지금 업종에서 보여 줄 디자인: 업종 전용 테마 + 공통 테마 (자동차 전용 고전 테마·테크는 자동차에서만)
-    // 2026-11-14 정리: 핀터레스트 인스타 감성 기준으로 서로 비슷하거나(도형 전환 6종·어두운 사진+굵은 자막 상자 4종)
-    // 유행이 지난 모션(블롭·터널·이퀄라이저·큐브·하프톤·터미널)은 목록에서 뺌
-    const AR_RETIRED_DESIGNS = new Set(['g_diamond', 'g_hex', 'g_blocks', 'g_ringpop', 'g_diagshape', 'g_cardhex',
-      's_shoplive', 'b_sale', 'u_compare', 'k2_stack', 'ev_terminal', 'mo_blob', 'mo_tunnel', 'mo_eq', 'mo_cube', 'mo_dots', 'in_cal',
-      'r1', 'c2', 'a1', 'tr_acad_camp']);
+    // 2026-11 큐레이션 정리: 구시대 도형 전환·컨페티·글리치·네온·전단지 띠지·보케·도장·듀오톤 등 촌스러운 스타일은 신규 선택/추천 목록에서 제외
+    // (기존 저장 프로젝트 호환성을 위해 arFindDesign()에서는 그대로 유지됨)
+    const AR_RETIRED_DESIGNS = new Set([
+      'g_diamond', 'g_hex', 'g_blocks', 'g_ringpop', 'g_diagshape', 'g_cardhex',
+      'g_iris', 'g_duosweep', 'g_griddia', 'c_spotlight', 'g_check',
+      's_shoplive', 'b_sale', 'u_compare', 'k2_stack', 'ev_terminal', 's_datapanel',
+      'k_neonnight', 'k_popbubble', 'a_popart', 'd_coupon', 'k_redband', 'd_speed', 'k_approved',
+      'mo_blob', 'mo_tunnel', 'mo_eq', 'mo_cube', 'mo_dots', 'mo_vhs', 'mo_bokeh', 'mo_glow',
+      'mo_ribbon', 'mo_strips', 'mo_circle', 'mo_sweep', 'ig_poll', 'ed_duotone',
+      'in_cal', 'r1', 'c2', 'a1', 'tr_acad_camp'
+    ]);
     // 사진을 위 58%에만 두고 자막은 아래 단색 바탕에 두는 모션 스타일 — 자동차 외 업종에서는 숨김 (촌스럽다는 의견, 2026-11)
     const AR_SPLIT_MOTION_IDS = new Set(['mo_tiles', 'mo_cards', 'mo_aurora', 'mo_number', 'mo_bounce', 'mo_neon']);
     function arDesignVisible(ds) {

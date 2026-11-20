@@ -82,24 +82,24 @@
       ['ba_flash', '비포→애프터 전환', 'ba_flash', 'dohyeon', '#111111', '#1c1917', '#fb923c', '#ffffff', false],
       ['ba_polaroid', '스냅 비교 카드', 'ba_polaroid', 'maru', '#f4efe8', '#ebe3d7', '#c2603f', '#2b2622', true],
       // script-to-motion 스타일 4종 (감성 시네마틱 룩 · 절제된 키네틱 타이포)
-      ['stm_kinetic', '✦ 시네마 키네틱', 'stm_kinetic', 'maru', '#0c0b0a', '#171411', '#e8d5bc', '#ffffff', false],
-      ['stm_cinema', '🎬 시네마틱 룩', 'stm_cinema', 'gowun', '#09090b', '#141210', '#e6ccb2', '#ffffff', false],
-      ['stm_sonar', '◎ 소나 핑 모션', 'stm_sonar', 'pretL', '#090d12', '#111822', '#cbd5e1', '#ffffff', false],
-      ['stm_glint', '✨ 글로우 스파크', 'stm_glint', 'maruL', '#0d0b0a', '#1a1613', '#f3e5ab', '#ffffff', false],
+      ['stm_kinetic', '시네마 키네틱', 'stm_kinetic', 'maru', '#0c0b0a', '#171411', '#e8d5bc', '#ffffff', false],
+      ['stm_cinema', '시네마틱 룩', 'stm_cinema', 'gowun', '#09090b', '#141210', '#e6ccb2', '#ffffff', false],
+      ['stm_sonar', '미니멀 펄스', 'stm_sonar', 'pretL', '#090d12', '#111822', '#cbd5e1', '#ffffff', false],
+      ['stm_glint', '웜 필름 글로우', 'stm_glint', 'maruL', '#0d0b0a', '#1a1613', '#f3e5ab', '#ffffff', false],
       ['in_card_news', '한 장씩, 카드뉴스', 'in_card_news', 'sans', '#f6f1e7', '#efe7da', '#655644', '#29241e', true],
       // 카드뉴스 · 트렌드 릴스 6종 (2026-11 로컬 확장)
       ['cn_deck', '카드뉴스 · 스택 덱', 'cn_deck', 'pretM', '#f5f1ea', '#ebe4d8', '#1f2937', '#111827', true],
       ['cn_summary', '카드뉴스 · 핵심 요약', 'cn_summary', 'sans', '#0f172a', '#1e293b', '#38bdf8', '#ffffff', false],
       ['cn_boldquote', '카드뉴스 · 매거진 표지', 'cn_boldquote', 'maru', '#111215', '#1b1d22', '#e8d5bc', '#ffffff', false],
       ['cn_splitbar', '카드뉴스 · 컬러 배너', 'cn_splitbar', 'dohyeon', '#18181b', '#27272a', '#f97316', '#ffffff', false],
-      ['stm_split', '✦ 모던 스플릿 프레임', 'stm_split', 'maruL', '#101012', '#1a1a1e', '#e5d4b7', '#ffffff', false],
-      ['stm_ticket', '🎫 미니 바우처 티켓', 'stm_ticket', 'pretM', '#0b0d11', '#141820', '#4cc38a', '#ffffff', false],
+      ['stm_split', '모던 스플릿 프레임', 'stm_split', 'maruL', '#101012', '#1a1a1e', '#e5d4b7', '#ffffff', false],
+      ['stm_ticket', '미니 바우처 티켓', 'stm_ticket', 'pretM', '#0b0d11', '#141820', '#4cc38a', '#ffffff', false],
       ['cn_timeline', '카드뉴스 · 4단계 타임라인', 'cn_timeline', 'sans', '#0f172a', '#1e293b', '#38bdf8', '#ffffff', false],
       ['cn_qna', '카드뉴스 · Q&A 가이드', 'cn_qna', 'pretM', '#faf7f2', '#f1ebe1', '#0ea5e9', '#0f172a', true],
       ['cn_compare', '카드뉴스 · 체크 포인트', 'cn_compare', 'sans', '#0b1612', '#11221c', '#10b981', '#ffffff', false],
       ['cn_receipt', '카드뉴스 · 클린 영수증', 'cn_receipt', 'pretM', '#f5f2eb', '#e8e2d5', '#18181b', '#18181b', true],
       ['cn_polaroid_duo', '카드뉴스 · 투컷 앨범', 'cn_polaroid_duo', 'maru', '#f3ede3', '#e7ded0', '#c2603f', '#292524', true],
-      ['stm_glassbar', '💎 글래스 네온 바', 'stm_glassbar', 'pretM', '#0b0e14', '#131924', '#38bdf8', '#ffffff', false],
+      ['stm_glassbar', '글래스 캡션 바', 'stm_glassbar', 'pretM', '#0b0e14', '#131924', '#38bdf8', '#ffffff', false],
       // Prompt Motion 연구에서 착안한 자체 Canvas 연출. 런타임 생성 API 없음.
       ['ty_mask', '마스크 리빌', 'ty_mask', 'sans', '#111214', '#1d1d20', '#e9e1d3', '#ffffff', false],
       ['ty_focus', '워드 포커스', 'ty_focus', 'sans', '#111214', '#1d1d20', '#d5f185', '#ffffff', false],
@@ -108,6 +108,12 @@
       ['in_brush_seal', '붓끝 낙관', 'in_brush_seal', 'brush', '#211c17', '#372b23', '#ae3126', '#f8f1e5', false],
       ['in_brush_letter', '여백에 쓴 편지', 'in_brush_letter', 'brush', '#201d18', '#383328', '#963629', '#fff6e3', false],
       ['in_brush_postcard', '한 폭의 엽서', 'in_brush_postcard', 'brush', '#ede4d4', '#d0c5b0', '#a92c21', '#fff8ea', true],
+      // 2026 하이엔드 에디토리얼 큐레이션 5종 (옵시디언 · 웜 아이보리 · 라이카 · 키노트 · 아틀리에)
+      ['ed_obsidian', '옵시디언 에디토리얼', 'ed_vogue', 'maru', '#080808', '#141311', '#f4f0e8', '#ffffff', false],
+      ['ed_ivory_note', '웜 아이보리 노트', 'in_letter', 'pretL', '#f2ede4', '#e8e0d3', '#141210', '#2b2622', true],
+      ['ed_leica_sub', '라이카 시네마 자막', 'in_g_sub', 'gowun', '#0b0a09', '#161310', '#e6d5b8', '#f4f0e8', false],
+      ['ed_keynote_mask', '키노트 타이포 마스크', 'ty_mask', 'sans', '#0a0a0b', '#161618', '#f5f5f4', '#ffffff', false],
+      ['ed_aesop_arch', '아틀리에 아치', 'ed_arch', 'maru', '#ede6da', '#e2d8c7', '#2c2621', '#2c2621', true],
     ];
     // 모션 디자인도 별도 분류를 만들지 않고 기존 분류에 넣음
     const MOTION_CAT = {
@@ -127,6 +133,7 @@
       in_y_chat: '브이로그', 
       in_y_torn: '감성', in_y_mosaic: '브이로그',
       ed_vogue: '고급', ed_glasspill: '브이로그', ed_kinetic: '타이포', ed_arch: '감성', ed_duotone: '타이포',
+      ed_obsidian: '고급', ed_ivory_note: '감성', ed_leica_sub: '고급', ed_keynote_mask: '타이포', ed_aesop_arch: '감성',
       stm_kinetic: '타이포', stm_cinema: '고급', stm_sonar: '테크', stm_glint: '고급',
       cn_deck: '카드뉴스', cn_summary: '카드뉴스', cn_boldquote: '카드뉴스', cn_splitbar: '카드뉴스',
       cn_timeline: '카드뉴스', cn_qna: '카드뉴스', cn_compare: '카드뉴스', cn_receipt: '카드뉴스', cn_polaroid_duo: '카드뉴스',
@@ -135,12 +142,13 @@
     };
     const AR_MOTION_ADDED_AT = {"ed_vogue": "2026-11-14T06:25:59Z", "ed_glasspill": "2026-11-14T06:25:59Z", "ed_kinetic": "2026-11-14T06:25:59Z", "ed_arch": "2026-11-14T06:25:59Z", "ed_duotone": "2026-11-14T06:25:59Z", "stm_kinetic": "2026-11-14T17:02:21Z", "stm_cinema": "2026-11-14T17:02:21Z", "stm_sonar": "2026-11-14T17:02:21Z", "stm_glint": "2026-11-14T17:02:21Z", "stm_split": "2026-11-17T05:14:07Z", "stm_ticket": "2026-11-17T05:14:07Z", "stm_glassbar": "2026-11-17T05:14:07Z",
       in_brush_seal: '2026-11-19T09:41:00Z', in_brush_letter: '2026-11-19T09:41:00Z', in_brush_postcard: '2026-11-19T09:41:00Z',
-      in_lookbook_still: "2026-11-18T15:53:11Z"
+      in_lookbook_still: "2026-11-18T15:53:11Z",
+      ed_obsidian: "2026-11-20T07:30:00Z", ed_ivory_note: "2026-11-20T07:30:00Z", ed_leica_sub: "2026-11-20T07:30:00Z", ed_keynote_mask: "2026-11-20T07:30:00Z", ed_aesop_arch: "2026-11-20T07:30:00Z"
     };
     const MOTION_DESIGNS = MOTION_ROWS.map((r, i) => ({
       id: r[0], name: r[1], addedAt: AR_MOTION_ADDED_AT[r[0]], cat: MOTION_CAT[r[0]] || '재미', engine: 'motion', mstyle: r[2], font: r[3],
       bg1: r[4], bg2: r[5], accent: r[6], accent2: r[7], light: r[8], seed: 900 + i, genre: 'motion', grade: 'none', label: r[1],
-      insta: String(r[0]).startsWith('in_'), // 인스타 감성: 배경색을 업종 색으로 바꾸지 않고, 엔딩도 크림 카드로
+      insta: String(r[0]).startsWith('in_') || ['ed_obsidian', 'ed_ivory_note', 'ed_leica_sub', 'ed_keynote_mask', 'ed_aesop_arch'].includes(r[0]), // 인스타·에디토리얼 감성: 큐레이션 팔레트 유지
       desc: r[2] === 'in_lookbook_still' ? '한 컷 동안 사진과 문구 고정 · 컷 경계에서 바로 전환' : `모션그래픽 · ${r[1]}`
     }));
     DESIGN_STYLES.push(...MOTION_DESIGNS);
