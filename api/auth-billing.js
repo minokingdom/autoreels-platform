@@ -32,10 +32,9 @@ function computeWasmLicenseSignature(phoneLast8, expiryYmd) {
 }
 
 module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
+  if ((process.env.VERCEL === '1' || process.env.NODE_ENV === 'production') && process.env.ALLOW_LEGACY_DEMO_API !== '1') {
+    return res.status(410).json({ ok: false, error: 'deprecated_endpoint' });
+  }
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }

@@ -155,7 +155,15 @@
         phone.open = !available;
       }
       const link = document.getElementById('arKakaoLoginBtn');
-      link.href = (production ? 'https://autoreelsmaker.kr' : '') + '/api/account?action=kakao-start';
+      const curInd = (typeof IND !== 'undefined' && IND && IND.key) ? IND.key : 'auto';
+      link.href = (production ? 'https://autoreelsmaker.kr' : '') + '/api/account?action=kakao-start&ind=' + encodeURIComponent(curInd);
+      if (!link.dataset.indBound) {
+        link.dataset.indBound = '1';
+        link.addEventListener('click', () => {
+          const liveInd = (typeof IND !== 'undefined' && IND && IND.key) ? IND.key : 'auto';
+          link.href = (arIsProductionHost() ? 'https://autoreelsmaker.kr' : '') + '/api/account?action=kakao-start&ind=' + encodeURIComponent(liveInd);
+        });
+      }
       document.getElementById('authDemoSection').classList.toggle('hidden', production || Boolean(AR_SERVER.cfg?.serverMode));
     }
 
@@ -1630,3 +1638,71 @@ async function arRestoreLastProject(){
   try{const r=await arProjectCall('project-load',{id});if(arProjectInteracted)return;await arRestoreProject(r.project);arToast('저장한 프로젝트를 복구했습니다.',true);}
   catch(e){arToast('저장 프로젝트를 자동 복구하지 못했습니다. 내 프로젝트에서 다시 불러와 주세요.');}
 }
+
+// 비로그인 게스트 작업 중 자동 임시저장(Draft) & 새로고침 시 원클릭 이어하기 (최대 24시간 보관)
+(function initGuestAutoDraft() {
+  const DRAFT_KEY = 'autoreels_working_draft_v1';
+  let saveTimer = null;
+  function saveDraft() {
+    try {
+      if (typeof campaign === 'undefined' || !campaign) return;
+      const payload = {
+        savedAt: Date.now(),
+        industry: (typeof IND !== 'undefined' && IND?.key) ? IND.key : 'auto',
+        topic: campaign.topic || '',
+        hook: campaign.hook || '',
+        cutScripts: Array.isArray(campaign.cutScripts) ? campaign.cutScripts.slice(0, 8) : [],
+        cutCaptions: Array.isArray(campaign.cutCaptions) ? campaign.cutCaptions.slice(0, 8) : [],
+        ttsLines: Array.isArray(campaign.ttsLines) ? campaign.ttsLines.slice(0, 8) : [],
+        designStyle: campaign.designStyle || ''
+      };
+      if (!payload.hook && !payload.topic && !payload.cutScripts.some(Boolean)) return;
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
+    } catch (e) {}
+  }
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.closest && e.target.closest('#dealerAuthModal, #billingCheckoutModal, #adminAuthModal')) return;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveDraft, 1500);
+  }, true);
+  window.addEventListener('pagehide', saveDraft);
+
+  setTimeout(() => {
+    try {
+      if (typeof arProjectUser === 'function' && arProjectUser()) return;
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw || typeof campaign === 'undefined') return;
+      const d = JSON.parse(raw);
+      if (!d || !d.savedAt || Date.now() - d.savedAt > 24 * 3600 * 1000) return;
+      if (!d.hook && !(d.cutScripts && d.cutScripts.some(Boolean))) return;
+      if (d.hook === campaign.hook && JSON.stringify(d.cutScripts || []) === JSON.stringify(campaign.cutScripts || [])) return;
+      const bar = document.createElement('div');
+      bar.id = 'arDraftRestoreBar';
+      bar.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9000;background:#141311;color:#f4f0e8;border:1px solid rgba(244,240,232,0.22);border-radius:999px;padding:8px 14px;display:flex;align-items:center;gap:10px;font-size:12.5px;box-shadow:0 12px 32px rgba(0,0,0,0.6);max-width:calc(100vw - 24px);';
+      bar.innerHTML = '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">이전 편집 초안이 남아 있어요</span>' +
+        '<button type="button" id="arDraftRestoreBtn" style="background:#f4f0e8;color:#080808;border:0;border-radius:999px;padding:4px 12px;font-weight:600;cursor:pointer;white-space:nowrap;">이어하기</button>' +
+        '<button type="button" id="arDraftDismissBtn" aria-label="닫기" style="background:transparent;color:#a8a299;border:0;font-size:15px;cursor:pointer;padding:0 4px;">×</button>';
+      document.body.appendChild(bar);
+      document.getElementById('arDraftRestoreBtn').addEventListener('click', () => {
+        try {
+          if (d.industry && typeof setIndustry === 'function' && typeof AR_INDUSTRIES !== 'undefined' && AR_INDUSTRIES[d.industry]) {
+            setIndustry(d.industry);
+          }
+          if (d.topic) campaign.topic = d.topic;
+          if (d.hook) campaign.hook = d.hook;
+          if (Array.isArray(d.cutScripts) && d.cutScripts.length) campaign.cutScripts = d.cutScripts;
+          if (Array.isArray(d.cutCaptions) && d.cutCaptions.length) campaign.cutCaptions = d.cutCaptions;
+          if (Array.isArray(d.ttsLines) && d.ttsLines.length) campaign.ttsLines = d.ttsLines;
+          if (d.designStyle) campaign.designStyle = d.designStyle;
+          if (typeof syncPreviewPanel === 'function') syncPreviewPanel();
+          if (typeof arToast === 'function') arToast('이전 편집 초안을 불러왔습니다.', true);
+        } catch (err) {}
+        bar.remove();
+      });
+      document.getElementById('arDraftDismissBtn').addEventListener('click', () => {
+        try { localStorage.removeItem(DRAFT_KEY); } catch (err) {}
+        bar.remove();
+      });
+    } catch (e) {}
+  }, 2400);
+})();

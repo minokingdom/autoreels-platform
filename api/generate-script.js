@@ -717,12 +717,13 @@ async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // 진단: GET /api/generate-script?diag=kie 또는 ?diag=gemini
-  if (req.method === 'GET' && String((req.query && req.query.diag) || '') === 'kie') {
-    return res.status(200).json(await kieDiagnose());
-  }
-  if (req.method === 'GET' && String((req.query && req.query.diag) || '') === 'gemini') {
-    return res.status(200).json(await geminiDiagnose());
+  // 진단: GET /api/generate-script?diag=kie 또는 ?diag=gemini (운영 환경 기본 차단)
+  if (req.method === 'GET' && ['kie', 'gemini'].includes(String((req.query && req.query.diag) || ''))) {
+    if (process.env.ALLOW_DIAG_ENDPOINT !== '1') {
+      return res.status(403).json({ ok: false, error: 'forbidden' });
+    }
+    const diagKind = String(req.query.diag);
+    return res.status(200).json(diagKind === 'kie' ? await kieDiagnose() : await geminiDiagnose());
   }
 
   if (req.method !== 'POST') {
