@@ -235,7 +235,9 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  await currentVoiceApi({method:'GET',query:{v:'2'}},oldList);
  assert.equal(oldList.body.voices.length,7);
  assert.ok(chirpVoices.every(voice=>google.isGoogleVoice(voice.id) && voice.title && voice.group));
- const chirpRequest = {method:'POST',headers:{host:'app.test'},body:{ref:catalog[0].id,speed:1.1,lines:['4대','1:1 시승','4대']}};
+ const chirpRequest = {method:'POST',headers:{host:'app.test'},body:{ref:catalog[0].id,speed:1.1,lines:[
+   'BMW 3시리즈 vs 5시리즈, 뭘 사야 할까요', '1:1 시승을 신청하세요', 'BMW 3시리즈 대 5시리즈, 뭘 사야 할까요?'
+ ]}};
  const chirpResult = response();
  const priorGoogleCalls = googleCalls.length;
  await googleScript(chirpRequest,chirpResult);
@@ -243,7 +245,7 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  assert.equal(chirpResult.body.model,'google-chirp3-hd');
  assert.equal(chirpResult.body.clips_base64.length,3);
  const chirpCalls=googleCalls.slice(priorGoogleCalls);
- assert.deepEqual(chirpCalls.map(call=>call.body.input.text),['네 대','일대일 시승']);
+ assert.deepEqual(chirpCalls.map(call=>call.body.input.text),['BMW 삼시리즈 대 오시리즈, 뭘 사야 할까요?','일대일 시승을 신청하세요.']);
  assert.ok(chirpCalls.every(call=>call.url.endsWith('/v1/text:synthesize') && !call.body.enableTimePointing &&
    call.body.audioConfig.speakingRate===1.1 && call.body.voice.name===catalog[0].id));
 

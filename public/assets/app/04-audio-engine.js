@@ -612,12 +612,33 @@
       decodeNarration(ctx, encoded) {
         return ctx.decodeAudioData(Uint8Array.from(atob(encoded), (char) => char.charCodeAt(0)).buffer);
       },
-      async renderNarrationClips(ctx, clips, speed) {
+      chirpClipRange(clip) {
+        const channels = Array.from({ length: clip.numberOfChannels }, (_, i) => clip.getChannelData(i));
+        const block = Math.max(1, Math.round(clip.sampleRate * 0.01));
+        const quiet = (start, end) => channels.every((samples) => {
+          for (let i = start; i < end; i++) {
+            if (Math.abs(samples[i]) > 0.001) return false;
+          }
+          return true;
+        });
+        let start = 0;
+        let end = clip.length;
+        while (end - start >= block && quiet(start, start + block)) start += block;
+        while (end - start >= block && quiet(end - block, end)) end -= block;
+        if (end - start < block) return { start: 0, end: clip.length };
+        // 말머리와 말끝을 보호하면서 컷 경계의 긴 무음만 줄입니다.
+        return {
+          start: Math.max(0, start - Math.round(clip.sampleRate * 0.05)),
+          end: Math.min(clip.length, end + Math.round(clip.sampleRate * 0.10))
+        };
+      },
+      async renderNarrationClips(ctx, clips, speed, trimChirp = false) {
         const sampleRate = ctx.sampleRate;
         const rate = speed >= 0.8 && speed <= 1.5 ? Number(speed) : 1.1;
         const offsets = [0];
-        for (const clip of clips) {
-          offsets.push(offsets[offsets.length - 1] + Math.max(1, Math.round(clip.length / rate)));
+        const ranges = clips.map((clip) => trimChirp ? this.chirpClipRange(clip) : { start: 0, end: clip.length });
+        for (const { start, end } of ranges) {
+          offsets.push(offsets[offsets.length - 1] + Math.max(1, Math.round((end - start) / rate)));
         }
         const channels = Math.max(...clips.map((clip) => clip.numberOfChannels));
         const output = new OfflineAudioContext(channels, offsets[offsets.length - 1], sampleRate);
@@ -627,7 +648,7 @@
           source.playbackRate.value = rate;
           source.connect(output.destination);
           const duration = (offsets[i + 1] - offsets[i]) / sampleRate;
-          source.start(offsets[i] / sampleRate, 0, duration * rate);
+          source.start(offsets[i] / sampleRate, ranges[i].start / clip.sampleRate, duration * rate);
         });
         return { full: await output.startRendering(), bounds: offsets.map((frame) => frame / sampleRate) };
       },
@@ -700,7 +721,7 @@
             try {
               const clips = await Promise.all(body.clips_base64.map((clip) => this.decodeNarration(ctx, clip)));
               // Chirp는 서버에서 말하기 속도를 적용해 오디오를 반환합니다.
-              ({ full, bounds: exactBounds } = await this.renderNarrationClips(ctx, clips, chirp ? 1 : speed));
+              ({ full, bounds: exactBounds } = await this.renderNarrationClips(ctx, clips, chirp ? 1 : speed, chirp));
             } catch (error) { throw new Error(audioError); }
           } else {
             this.noteTtsModel(body && body.model);
@@ -820,7 +841,8 @@
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
           // v: 서버의 읽기 규칙이 바뀌면 올려서, 예전에 저장된 음성 대신 새 음성을 받게 함
-          const url = `/api/tts?v=11&speed=${speed}` + (voice !== 'auto' ? `&ref=${encodeURIComponent(voice)}` : '') + `&text=${encodeURIComponent(text)}`;
+          const version = voice.includes('-Chirp3-HD-') ? 12 : 11;
+          const url = `/api/tts?v=${version}&speed=${speed}` + (voice !== 'auto' ? `&ref=${encodeURIComponent(voice)}` : '') + `&text=${encodeURIComponent(text)}`;
           let res = await this.runTtsRequest(() => fetch(url));
           if (!res.ok && (res.status === 429 || res.status >= 500) && res.status !== 503) {
             await new Promise((r) => setTimeout(r, 900));

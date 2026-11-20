@@ -20,7 +20,7 @@
 const { isValidVoiceId, CURATED_VOICE_IDS } = require('../lib/fish-voices');
 const { normalizeKoreanNumbers } = require('../lib/korean-numbers');
 const { MODEL: AIRY_MODEL, usesAiry, synthesizeAiry, sendAiryError } = require('../lib/airy-tts');
-const { googleVoiceModel, isGoogleVoice, synthesizeGoogleLine, sendGoogleTtsError } = require('../lib/google-tts');
+const { CHIRP_MODEL, googleVoiceModel, isGoogleVoice, chirpNarrationText, synthesizeGoogleLine, sendGoogleTtsError } = require('../lib/google-tts');
 // 유료 크레딧이 없을 때 쓰는 Fish Audio 무료 모델
 const FREE_MODEL = (process.env.FISH_TTS_FREE_MODEL || 's2.1-pro-free').trim();
 
@@ -204,5 +204,6 @@ module.exports = withMeter(handler, 'tts', (req) => {
   if (!['GET', 'POST'].includes(req.method)) return 0;
   const input = ttsInput(req);
   const text = ttsText(input);
+  if (googleVoiceModel(input.ref) === CHIRP_MODEL) return chirpNarrationText(text).length;
   return isGoogleVoice(input.ref) ? normalizeKoreanNumbers(text).length : text.length;
 });

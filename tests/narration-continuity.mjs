@@ -14,6 +14,16 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const timing=fs.readFileSync('public/assets/app/03-campaign-timing.js','utf8');
 const audio=fs.readFileSync('public/assets/app/04-audio-engine.js','utf8');
+const clipRangeSource=audio.match(/^      chirpClipRange\([^]*?^      \},?\r?$/m)[0];
+const {chirpClipRange}=vm.runInNewContext('({' + clipRangeSource + '})');
+const paddedVoice=new Float32Array(1000);
+paddedVoice.fill(0.002,200,700);
+const clipRange=samples=>JSON.parse(JSON.stringify(chirpClipRange({
+ numberOfChannels:1,sampleRate:1000,length:samples.length,getChannelData:()=>samples
+})));
+assert.deepEqual(clipRange(paddedVoice),{start:150,end:800});
+assert.deepEqual(clipRange(new Float32Array(1000)),{start:0,end:1000});
+assert.deepEqual(clipRange(new Float32Array(1000).fill(0.01)),{start:0,end:1000});
 const methods=['shouldUseCutSyncedPlayback','playMasterAt','stopMasterSource','stopTts','syncWithTimeline','onPlayStateChange'].map(name=>{
  const m=audio.match(new RegExp('^      '+name+'\\([^]*?^      \\},?\\r?$','m'));
  assert.ok(m,name); return m[0].trimEnd().replace(/,$/, '');
