@@ -2808,6 +2808,38 @@
         };
       }) : [];
 
+      if (typeof window.arQuickDeleteOverlay !== 'function') {
+        window.arQuickDeleteOverlay = function (cIdx, oIdx) {
+          pushCutOverlayUndo();
+          const arr = getCutOverlayList(cIdx);
+          if (oIdx >= 0 && oIdx < arr.length) arr.splice(oIdx, 1);
+          window.__arSelectedOverlayIdx = -1;
+          window.__arActiveCutElKey = 'caption';
+          saveCutOverlays();
+          if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+          renderPreviewCutPinBar();
+          if (typeof arToast === 'function') arToast('요소를 삭제했습니다.', true);
+        };
+      }
+      if (!window.__arCutKeyDeleteBound) {
+        window.__arCutKeyDeleteBound = true;
+        window.addEventListener('keydown', (ev) => {
+          if (ev.key !== 'Delete' && ev.key !== 'Backspace') return;
+          if (window.__arPinnedCut < 0) return;
+          const ae = document.activeElement;
+          if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT' || ae.isContentEditable)) return;
+          if (window.__arSelectedOverlayIdx >= 0) {
+            ev.preventDefault();
+            window.arQuickDeleteOverlay(window.__arPinnedCut, window.__arSelectedOverlayIdx);
+          } else if (window.__arActiveCutElKey && window.__arActiveCutElKey !== 'photo' && !String(window.__arActiveCutElKey).startsWith('overlay:')) {
+            ev.preventDefault();
+            updateCutElementOverride(window.__arPinnedCut, window.__arActiveCutElKey, 'hidden', true, true);
+            if (typeof arToast === 'function') arToast('요소를 숨겼습니다.', true);
+          }
+        });
+      }
+
+      const stopEv = 'event.stopPropagation()';
       const baseBoxesHtml = baseBoxes.map((b) => {
         const isSel = activeKey === b.key;
         const leftPct = (b.x * 100).toFixed(2);
@@ -2823,11 +2855,20 @@
                class="absolute cursor-move rounded-[10px] ${isSel ? 'active' : ''}">
             ${isSel ? `
               <button type="button"
-                      onpointerdown="event.stopPropagation()"
+                      onmousedown="${stopEv}" ontouchstart="${stopEv}" onpointerdown="${stopEv}"
                       onclick="event.stopPropagation();openCanvasDirectTextEdit(${cutIdx}, '${b.key}')"
-                      style="position:absolute;left:50%;top:-26px;transform:translateX(-50%);white-space:nowrap;z-index:20;"
-                      class="px-2.5 py-0.5 rounded-full bg-[#10b981] text-[#052e16] text-[10.5px] font-extrabold shadow-md cursor-pointer hover:bg-[#34d399]">
-                ✏️ ${labelShort} 수정
+                      style="position:absolute;left:50%;top:-30px;transform:translateX(-50%);white-space:nowrap;z-index:25;"
+                      class="h-6 px-2.5 rounded-full bg-[#f4f0e8] text-[#080808] text-[10.5px] font-bold shadow-lg cursor-pointer hover:bg-white">
+                ${labelShort} 수정
+              </button>
+              <button type="button"
+                      aria-label="${labelShort} 삭제"
+                      title="삭제(숨김)"
+                      onmousedown="${stopEv}" ontouchstart="${stopEv}" onpointerdown="${stopEv}"
+                      onclick="event.stopPropagation();updateCutElementOverride(${cutIdx}, '${b.key}', 'hidden', true, true);if(typeof arToast==='function')arToast('요소를 삭제(숨김)했습니다.', true);"
+                      style="position:absolute;right:-11px;top:-11px;width:24px;height:24px;z-index:26;"
+                      class="rounded-full bg-[#e5484d] text-white text-[14px] font-bold leading-none flex items-center justify-center shadow-lg border border-white/80 cursor-pointer hover:scale-110 transition-transform">
+                ×
               </button>
             ` : ''}
           </div>
@@ -2839,7 +2880,7 @@
         : '';
 
       const hintHtml = (!window.__arInlineEditActive && directMode)
-        ? `<div class="ar-el-canvas-hint pointer-events-none">${activeKey === 'photo' ? '드래그하여 사진 구도 이동' : '자막 탭하면 직접 수정 · 드래그로 이동'}</div>`
+        ? `<div class="ar-el-canvas-hint pointer-events-none">${activeKey === 'photo' ? '드래그하여 사진 구도 이동' : '수정 · × 버튼으로 바로 편집·삭제 · 드래그로 이동'}</div>`
         : '';
 
       layer.innerHTML = `
@@ -2859,7 +2900,27 @@
           <div data-ov-idx="${ii}"
                ondblclick="event.stopPropagation();if(${it.type === 'text' ? 'true' : 'false'})openCanvasDirectTextEdit(${cutIdx}, 'overlay:${ii}')"
                style="left:${leftPct}%;top:${topPct}%;width:${boxW}px;height:${boxH}px;transform:translate(-50%,-50%) rotate(${it.rot || 0}deg);touch-action:none;"
-               class="absolute cursor-move rounded-[10px] ${sel ? 'active ring-1 ring-white/85 bg-white/5' : ''}">
+               class="absolute cursor-move rounded-[10px] ${sel ? 'active ring-1 ring-white/90 bg-white/5' : ''}">
+            ${sel && it.type === 'text' ? `
+              <button type="button"
+                      onmousedown="${stopEv}" ontouchstart="${stopEv}" onpointerdown="${stopEv}"
+                      onclick="event.stopPropagation();openCanvasDirectTextEdit(${cutIdx}, 'overlay:${ii}')"
+                      style="position:absolute;left:50%;top:-30px;transform:translateX(-50%);white-space:nowrap;z-index:25;"
+                      class="h-6 px-2.5 rounded-full bg-[#f4f0e8] text-[#080808] text-[10.5px] font-bold shadow-lg cursor-pointer hover:bg-white">
+                글자 수정
+              </button>
+            ` : ''}
+            ${sel ? `
+              <button type="button"
+                      aria-label="요소 삭제"
+                      title="삭제"
+                      onmousedown="${stopEv}" ontouchstart="${stopEv}" onpointerdown="${stopEv}"
+                      onclick="event.stopPropagation();window.arQuickDeleteOverlay(${cutIdx}, ${ii})"
+                      style="position:absolute;right:-11px;top:-11px;width:24px;height:24px;z-index:26;"
+                      class="rounded-full bg-[#e5484d] text-white text-[14px] font-bold leading-none flex items-center justify-center shadow-lg border border-white/80 cursor-pointer hover:scale-110 transition-transform">
+                ×
+              </button>
+            ` : ''}
           </div>
         `;
       }).join('');
