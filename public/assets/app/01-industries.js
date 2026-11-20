@@ -1147,8 +1147,11 @@
       if ((changed || opts.force) && typeof arVisibleDesigns === 'function' && typeof selectDesignStyle === 'function') {
         const vis = arVisibleDesigns();
         const cur = typeof getActiveDesign === 'function' ? getActiveDesign() : null;
-        if (!cur?.custom && IND.key !== 'auto' && vis[0] && vis[0].industry) { campaign.designCat = '전체'; selectDesignStyle(vis[0].id); }
-        else if (cur && !arDesignVisible(cur) && vis[0]) selectDesignStyle(vis[0].id);
+        const freshPick = typeof arPickFreshDesignForContext === 'function'
+          ? arPickFreshDesignForContext(`${IND.name} ${IND.product || ''} ${(IND.hashtags || []).join(' ')}`)
+          : (vis[Math.floor(Math.random() * Math.min(8, vis.length))] || vis[0]);
+        if (!cur?.custom && IND.key !== 'auto' && freshPick) { campaign.designCat = '전체'; selectDesignStyle(freshPick.id); }
+        else if (cur && !arDesignVisible(cur) && freshPick) selectDesignStyle(freshPick.id);
         if (typeof renderDesignStylePicker === 'function') { try { renderDesignStylePicker(); } catch (e) {} }
       }
       if (changed || opts.force) {

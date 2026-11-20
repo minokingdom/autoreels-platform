@@ -4257,6 +4257,19 @@
       if (arCustomOpenSource?.isConnected) arCustomOpenSource.focus();
     });
 
+    function arPickFreshDesignForContext(seedText = '') {
+      const vis = typeof arVisibleDesigns === 'function' ? arVisibleDesigns() : DESIGN_STYLES;
+      if (!vis || !vis.length) return DESIGN_STYLES[0];
+      if (typeof arDesignForTopic === 'function') {
+        const ctx = seedText || (typeof IND !== 'undefined' ? `${IND.name} ${IND.product || ''} ${(IND.hashtags || []).join(' ')}` : '');
+        const picked = arDesignForTopic(ctx);
+        if (picked) return picked;
+      }
+      const indOnly = vis.filter((d) => d.industry);
+      const pool = indOnly.length >= 3 ? indOnly : vis;
+      return pool[Math.floor(Math.random() * pool.length)] || vis[0];
+    }
+
     function loadDesignPrefs() {
       arLoadCustomStyles();
       try {
@@ -4268,7 +4281,10 @@
         if (s && arFindDesign(s)) campaign.designStyle = s;
         if (c && COLOR_PALETTES.some((p) => p.id === c)) campaign.colorKey = c;
       } catch (e) {}
-      if (!campaign.designStyle || !arFindDesign(campaign.designStyle)) campaign.designStyle = DESIGN_STYLES[0].id;
+      if (!campaign.designStyle || !arFindDesign(campaign.designStyle)) {
+        const fresh = arPickFreshDesignForContext();
+        campaign.designStyle = (fresh && fresh.id) ? fresh.id : DESIGN_STYLES[0].id;
+      }
       if (!campaign.colorKey) campaign.colorKey = 'default';
     }
     function getActiveDesign() {

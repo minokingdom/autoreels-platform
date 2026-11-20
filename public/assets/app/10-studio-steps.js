@@ -628,17 +628,23 @@
         });
       }
     }
-    // 주제 문구의 분위기(특가·변신·계절 감성·정보·유행·바쁜 일상)를 읽어 맞는 디자인을 고름
+    // 주제 문구·키워드의 분위기(특가·변신·계절·정보·유행·일상·럭셔리·카페·미식·뷰티·공간·후기)를 폭넓게 읽어 맞는 디자인을 섞어 고름
     const AR_TOPIC_MOODS = [
-      { t: /블프|블랙\s*프라이|세일|할인|특가|혜택|이벤트|쿠폰|오픈|1\+1|%|가격|무료/, d: /특가|세일|할인|혜택|이벤트|가격|SALE|ticket|band|impact|vivid|mo_number/i },
-      { t: /수능|변신|비포|애프터|전후|before|after|달라|바뀐|새로워/i, d: /비포|애프터|변신|전후|before|after|split|wipe/i },
-      { t: /가을|겨울|봄|여름|날씨|비 오는|눈 오는|크리스마스|연말|새해|감성|따뜻|추위|쌀쌀|건조|선선/, d: /감성|warm|sepia|film|polaroid|write|pen|손글씨|노트|편지|일기|필름|in_film|in_mood|in_letter|in_diary/i },
-      { t: /비법|방법|팁|관리|주의|체크|정리|가이드|이유|고르는|차이|알아/, d: /상담|정보|news|kicker|headline|카드뉴스|체크|신문|chalk|메뉴판|card_news/i },
-      { t: /인기|요즘|유행|트렌드|핫한|잘 나가|화제|난리/, d: /인기|🔥|트렌드|브이로그|vlog|handheld|POV|재미|ig_/i },
-      { t: /빠른|바쁜|퇴근|점심|출근|짬|시간 없/, d: /브이로그|handheld|timestamp|vsub|타이포|zoom|주방|새벽/i }
+      { t: /블프|블랙\s*프라이|세일|할인|특가|혜택|이벤트|쿠폰|오픈|1\+1|%|가격|무료|최저가|프로모션/, d: /특가|세일|할인|혜택|이벤트|가격|SALE|ticket|band|impact|vivid|mo_number/i },
+      { t: /수능|변신|비포|애프터|전후|before|after|달라|바뀐|새로워|시술|리모델링|시공/, d: /비포|애프터|변신|전후|before|after|split|wipe|compare/i },
+      { t: /가을|겨울|봄|여름|날씨|비 오는|눈 오는|크리스마스|연말|새해|감성|따뜻|추위|쌀쌀|건조|선선|오후|햇살/, d: /감성|warm|sepia|film|polaroid|write|pen|손글씨|노트|편지|일기|필름|in_film|in_mood|in_letter|in_diary|cream/i },
+      { t: /비법|방법|팁|관리|주의|체크|정리|가이드|이유|고르는|차이|알아|추천|비교|궁금/, d: /상담|정보|news|kicker|headline|카드뉴스|체크|신문|chalk|메뉴판|card_news|minimal|clean/i },
+      { t: /인기|요즘|유행|트렌드|핫한|잘 나가|화제|난리|대란|품절|베스트|신상|신메뉴/, d: /인기|🔥|트렌드|브이로그|vlog|handheld|POV|재미|ig_|kinetic|dump/i },
+      { t: /빠른|바쁜|퇴근|점심|출근|짬|시간 없|출고|후기|리뷰|방문|브이로그|일상|하루/, d: /브이로그|handheld|timestamp|vsub|타이포|zoom|주방|새벽|vlog|story|ig_/i },
+      { t: /프리미엄|고급|럭셔리|하이엔드|시그니처|명품|전시장|야경|블랙|모던|클래식|에디토리얼/, d: /고급|에디토리얼|vogue|cinema|시네마|serif|명조|luxury|gold|금|매거진|magazine|noir|obsidian/i },
+      { t: /카페|커피|라떼|에스프레소|디저트|베이커리|브런치|케이크|빵|티타임/, d: /감성|warm|cream|film|polaroid|linen|arch|cafe|카페|in_|손글씨|노트/i },
+      { t: /맛집|고기|스테이크|오마카세|파스타|초밥|국밥|식당|음식|요리|셰프|안주|와인/, d: /주방|메뉴|식당|warm|film|vivid|impact|vlog|handheld|cinema|dining/i },
+      { t: /헤어|네일|피부|리프팅|속눈썹|에스테틱|메이크업|뷰티|살롱|클리닉|시술/, d: /감성|깔끔|미니멀|minimal|glass|유리|serif|vogue|magazine|cream|soft|beauty/i },
+      { t: /인테리어|공간|거실|주방|아파트|매물|전세|월세|분양|건축|조명|가구/, d: /미니멀|minimal|깔끔|전시|plaque|magazine|에디토리얼|arch|linen|clean|serif/i },
+      { t: /운동|헬스|필라테스|다이어트|체형|근력|러닝|PT|바디|건강/, d: /키네틱|kinetic|impact|vivid|zoom|타이포|sport|bold|band|clean/i }
     ];
     // ★ 분위기·컨셉 추천 (인스타 템플릿 추천처럼): 지금 주제·대본 문구를 읽어 어울리는 스타일을 이유와 함께 고름
-    const AR_TOPIC_MOOD_LABELS = ['특가 강조', '변신 전후', '계절 감성', '알려 주는 정보', '요즘 유행', '바쁜 일상'];
+    const AR_TOPIC_MOOD_LABELS = ['특가 강조', '변신 전후', '계절 감성', '알려 주는 정보', '요즘 유행', '바쁜 일상', '프리미엄 무드', '카페 감성', '미식 무드', '뷰티 에디토리얼', '공간 미니멀', '다이내믹'];
     const AR_DESIGN_MOODS = [
       { id: 'soft', label: '감성', re: /감성|film|필름|sepia|손글씨|pen|gowun|maru|in_|polaroid|엽서|편지|일기|다이어리/i },
       { id: 'clean', label: '깔끔', re: /미니멀|minimal|깔끔|레터|letter|카드|glass|유리|화이트|white|plaque|전시/i },
@@ -686,22 +692,40 @@
       return out;
     }
     function arDesignForTopic(topic) {
-      if (!topic || typeof arVisibleDesigns !== 'function') return null;
-      const text = [topic.title, topic.why, topic.prompt].filter(Boolean).join(' ');
-      const moods = AR_TOPIC_MOODS.filter((m) => m.t.test(text));
-      if (!moods.length) return null;
+      if (typeof arVisibleDesigns !== 'function') return null;
+      const vis = arVisibleDesigns();
+      if (!vis.length) return null;
+      const text = typeof topic === 'string'
+        ? topic
+        : [topic && topic.title, topic && topic.why, topic && topic.prompt].filter(Boolean).join(' ');
+      const moods = text ? AR_TOPIC_MOODS.filter((m) => m.t.test(text)) : [];
+      const season = (typeof arDateContext === 'function' && arDateContext().season) || '';
       const cur = typeof getActiveDesign === 'function' ? getActiveDesign() : null;
-      let best = 0, pool = [];
-      arVisibleDesigns().forEach((d) => {
-        const hay = [d.id, d.name, d.label, d.cat, d.outro, d.cap, d.layout, d.grade].filter(Boolean).join(' ');
-        // 앞쪽(주제를 가장 잘 나타내는) 분위기일수록 가중치를 크게, 업종 전용 테마는 조금 더
-        let sc = moods.reduce((a, m, i) => a + (m.d.test(hay) ? 3 - Math.min(i, 2) * 0.5 : 0), 0);
-        if (!sc) return;
-        if (d.industry) sc += 0.5;
-        if (sc > best) { best = sc; pool = [d]; } else if (sc === best) pool.push(d);
-      });
-      if (pool.length > 1 && cur) pool = pool.filter((d) => d.id !== cur.id);
-      return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+      const recent = new Set(Array.isArray(window.__arRecentDesignIds) ? window.__arRecentDesignIds : []);
+      if (cur && cur.id) recent.add(cur.id);
+
+      const scored = vis.map((d) => {
+        const hay = arDesignHay(d);
+        let sc = 0;
+        moods.forEach((m, i) => {
+          if (m.d.test(hay)) sc += (3.2 - Math.min(i, 3) * 0.45);
+        });
+        if (!moods.length && season && /가을|겨울/.test(season) && /감성|warm|sepia|film|cinema|serif/i.test(hay)) sc += 1.0;
+        if (d.industry) sc += 0.9;
+        if (d.isTrend) sc += 0.5;
+        if (recent.has(d.id)) sc -= 3.5; // 방금 썼던 스타일 반복 방지
+        sc += Math.random() * 1.65;      // 매번 순차 반복되지 않도록 충분한 다양성 부여
+        return { d, sc };
+      }).sort((a, b) => b.sc - a.sc);
+
+      const topK = scored.slice(0, Math.min(8, scored.length));
+      const picked = topK[Math.floor(Math.random() * topK.length)]?.d || vis[Math.floor(Math.random() * vis.length)];
+      if (picked && picked.id) {
+        if (!Array.isArray(window.__arRecentDesignIds)) window.__arRecentDesignIds = [];
+        window.__arRecentDesignIds.push(picked.id);
+        if (window.__arRecentDesignIds.length > 8) window.__arRecentDesignIds.shift();
+      }
+      return picked;
     }
     function arScriptFallbackNotice(diag) {
       const tries = [...(diag.geminiTries || []), ...(diag.kieTries || [])];
@@ -2344,6 +2368,15 @@
         campaign.discountNum = parsedLocal.matchedCar.discountNum;
         campaign.discount = parsedLocal.matchedCar.discount;
       }
+
+      // 직접 키워드/프롬프트를 입력해 대본을 만들 때도 키워드 분위기에 맞는 디자인을 자동 매칭 (유지 잠금이 아닐 때)
+      try {
+        const keepLocked = typeof getShuffleIncludeCats === 'function' && getShuffleIncludeCats().includes('__keep__');
+        if (!keepLocked && raw && (!window.arTodayTopic || window.arTodayTopic.prompt !== raw)) {
+          const matchedDs = arDesignForTopic(raw);
+          if (matchedDs && typeof selectDesignStyle === 'function') selectDesignStyle(matchedDs.id);
+        }
+      } catch (_) {}
 
       if (btnEl) {
         btnEl.disabled = true;
