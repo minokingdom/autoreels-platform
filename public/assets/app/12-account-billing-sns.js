@@ -402,6 +402,10 @@
 
     async function executeSubscriptionPayment() {
       if (window.AR_SERVER && AR_SERVER.mode) return arServerPay();
+      if (typeof arIsProductionHost === 'function' && arIsProductionHost()) {
+        arToast('결제 서버 연결을 확인하고 있습니다. 잠시 후 다시 시도해 주세요.');
+        return;
+      }
       const d = getSelectedDealer();
       const plan = BILLING_PLANS[selectedPlanKey];
       const btn = document.getElementById('executePayBtn');
@@ -1377,7 +1381,9 @@
       }
       // 랜딩(/)의 버튼에서 넘어온 경우: /studio?ind=업종 · /studio?plan=요금제
       const indKey = sp.get('ind');
-      const planKey = sp.get('plan');
+      const rawPlanKey = sp.get('plan');
+      const planAlias = { standard: 'standard_29900', pro: 'pro_59000' };
+      const planKey = planAlias[rawPlanKey] || rawPlanKey;
       if (!showLanding && (indKey || planKey)) {
         if (indKey && typeof AR_INDUSTRIES !== 'undefined' && AR_INDUSTRIES[indKey] && typeof setIndustry === 'function') setIndustry(indKey);
         if (planKey && typeof BILLING_PLANS !== 'undefined' && BILLING_PLANS[planKey] && typeof openBillingCheckoutModal === 'function') {
@@ -1386,6 +1392,38 @@
         }
         try { history.replaceState({ arView: 'studio' }, '', '/studio' + (window.location.hash || '')); } catch (e) {}
       }
+
+      // 카카오톡 · 인스타그램 · 네이버 인앱 브라우저 감지 시 외부 브라우저 안내 배너 표시 (MP4 저장 안정화)
+      try {
+        const ua = navigator.userAgent || '';
+        const isInApp = /KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(|Line\//i.test(ua);
+        if (isInApp && !sessionStorage.getItem('ar_inapp_dismissed')) {
+          const bar = document.createElement('div');
+          bar.id = 'arInAppBrowserBanner';
+          bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#141311;color:#f4f0e8;border-bottom:1px solid rgba(244,240,232,0.18);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;line-height:1.4;';
+          const isAndroid = /Android/i.test(ua);
+          const openBtnHtml = isAndroid
+            ? `<a href="intent://${location.host}${location.pathname}${location.search}#Intent;scheme=https;package=com.android.chrome;end" style="background:#f4f0e8;color:#080808;padding:6px 10px;border-radius:999px;font-weight:600;white-space:nowrap;text-decoration:none;">Chrome 열기</a>`
+            : `<button type="button" id="arInAppCopyBtn" style="background:#f4f0e8;color:#080808;padding:6px 10px;border-radius:999px;font-weight:600;white-space:nowrap;border:0;cursor:pointer;">링크 복사</button>`;
+          bar.innerHTML = `<div style="min-width:0;">인앱 브라우저에서는 MP4 저장이 제한될 수 있어요. <b>Safari / Chrome</b>으로 열어 주세요.</div><div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">${openBtnHtml}<button type="button" id="arInAppCloseBtn" aria-label="닫기" style="background:transparent;color:#a8a299;border:0;font-size:16px;padding:2px 6px;cursor:pointer;">×</button></div>`;
+          document.body.appendChild(bar);
+          const copyBtn = document.getElementById('arInAppCopyBtn');
+          if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(location.href).then(() => { copyBtn.textContent = '복사됨'; }).catch(() => {});
+              }
+            });
+          }
+          const closeBtn = document.getElementById('arInAppCloseBtn');
+          if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+              sessionStorage.setItem('ar_inapp_dismissed', '1');
+              bar.remove();
+            });
+          }
+        }
+      } catch (e) {}
     })();
 
 // 계정별 프로젝트: 사진은 DB에 비공개 저장하고 라이선스·토큰은 저장하지 않습니다.

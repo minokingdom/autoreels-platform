@@ -35,7 +35,7 @@
   <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120u" />
+  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261120v" />
 </head>
 <body class="ed-body antialiased">
 
@@ -152,9 +152,9 @@
 
         <article class="ed-engine-item ed-reveal">
           <div class="ed-engine-num ed-mono">02</div>
-          <h3 class="ed-engine-title">참고 영상 링크 재구성</h3>
-          <p class="ed-engine-desc">마음에 드는 인스타그램·유튜브·틱톡 링크를 붙여 넣으면 컷 길이와 리듬을 분석해 내 매장 버전으로 바꿉니다.</p>
-          <a href="/assets/remix/index.html" class="ed-text-link">링크 분석 열기 →</a>
+          <h3 class="ed-engine-title">참고 영상 · 링크 재구성</h3>
+          <p class="ed-engine-desc">참고 영상 파일이나 CapCut 링크(iOS 앱은 유튜브 쇼츠 지원)를 넣으면 컷 길이와 리듬을 분석해 내 매장 버전으로 재구성합니다.</p>
+          <a href="/assets/remix/index.html" class="ed-text-link">참고 영상 재구성 열기 →</a>
         </article>
 
         <article class="ed-engine-item ed-reveal">
@@ -254,25 +254,25 @@
                 <span class="text-[12px] text-[#6d665c]">상업적 사용 가능</span>
               </div>
               <div class="ed-bgm-list">
-                <button type="button" data-bgm-src="/assets/bgm/pack/cafe_citypop_01.mp3" class="ed-bgm-row">
+                <button type="button" data-bgm-src="/assets/bgm/pack/cafe.mp3" class="ed-bgm-row">
                   <span class="ed-bgm-idx ed-mono">01</span>
-                  <span class="ed-bgm-name">카페 시티팝</span>
-                  <span class="ed-bgm-mood">감성 브이로그 · 로파이</span>
+                  <span class="ed-bgm-name">카페 로파이</span>
+                  <span class="ed-bgm-mood">감성 브이로그 · 카페 무드</span>
                   <span class="ed-bgm-play ed-mono">PLAY</span>
                 </button>
-                <button type="button" data-bgm-src="/assets/bgm/pack/auto_cinematic_01.mp3" class="ed-bgm-row">
+                <button type="button" data-bgm-src="/assets/bgm/pack/cinema.mp3" class="ed-bgm-row">
                   <span class="ed-bgm-idx ed-mono">02</span>
                   <span class="ed-bgm-name">시네마틱 드라이브</span>
                   <span class="ed-bgm-mood">전시장 · 하이엔드 무드</span>
                   <span class="ed-bgm-play ed-mono">PLAY</span>
                 </button>
-                <button type="button" data-bgm-src="/assets/bgm/pack/beauty_lounge_01.mp3" class="ed-bgm-row">
+                <button type="button" data-bgm-src="/assets/bgm/pack/beauty.mp3" class="ed-bgm-row">
                   <span class="ed-bgm-idx ed-mono">03</span>
                   <span class="ed-bgm-name">라운지 앰비언트</span>
                   <span class="ed-bgm-mood">뷰티 · 공간 에디토리얼</span>
                   <span class="ed-bgm-play ed-mono">PLAY</span>
                 </button>
-                <button type="button" data-bgm-src="/assets/bgm/pack/restaurant_groove_01.mp3" class="ed-bgm-row">
+                <button type="button" data-bgm-src="/assets/bgm/pack/funk.mp3" class="ed-bgm-row">
                   <span class="ed-bgm-idx ed-mono">04</span>
                   <span class="ed-bgm-name">키친 그루브</span>
                   <span class="ed-bgm-mood">다이닝 · 리드미컬 컷</span>
@@ -311,12 +311,12 @@
             <h3 class="text-[22px] font-semibold mt-2">스탠다드</h3>
             <div class="ed-plan-price">29,900원 <span class="text-[13px] font-normal opacity-65">/ 월</span></div>
             <ul class="ed-plan-list">
-              <li>워터마크 없는 1080p MP4 월 30회</li>
-              <li>참고 링크 재구성 · 하이라이트 추출</li>
+              <li>제작 무제한 · 워터마크 없는 1080p MP4 월 20회</li>
+              <li>참고 영상 재구성 · 하이라이트 추출</li>
               <li>AI 성우 · 오리지널 BGM 전체 이용</li>
               <li>인스타그램 · 유튜브 · 틱톡 발행</li>
             </ul>
-            <button type="button" data-go="/studio?plan=standard" class="ed-btn-ivory w-full mt-8">스탠다드 시작하기</button>
+            <button type="button" data-go="/studio?plan=standard_29900" class="ed-btn-ivory w-full mt-8">스탠다드 시작하기</button>
           </article>
 
           <article class="ed-plan">
@@ -329,7 +329,7 @@
               <li>다계정 · 대행사 대량 제작 최적화</li>
               <li>우선 렌더링 및 고객 지원</li>
             </ul>
-            <button type="button" data-go="/studio?plan=pro" class="ed-btn-dark-outline w-full mt-8">프로 시작하기</button>
+            <button type="button" data-go="/studio?plan=pro_59000" class="ed-btn-dark-outline w-full mt-8">프로 시작하기</button>
           </article>
         </div>
       </div>
@@ -420,7 +420,7 @@
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.18/dist/lenis.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js"></script>
-  <script src="/assets/landing/industries.js?v=20261120u"></script>
-  <script src="/assets/landing/landing.js?v=20261120u"></script>
+  <script src="/assets/landing/industries.js?v=20261120v"></script>
+  <script src="/assets/landing/landing.js?v=20261120v"></script>
 </body>
 </html>

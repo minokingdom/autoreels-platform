@@ -4,6 +4,9 @@
   "buildCommand": "node scripts/build-app.mjs",
   "outputDirectory": "public",
   "functions": {
+    "api/tts.js": {
+      "maxDuration": 60
+    },
     "api/tts-script.js": {
       "maxDuration": 60
     },

@@ -331,11 +331,15 @@
       return out;
     }
 
-    // 지금 업종
+    // 지금 업종 (URL ?ind= 우선, 없으면 localStorage)
     let IND = AR_INDUSTRIES.auto;
     try {
-      const saved = localStorage.getItem('autoreels_industry');
-      if (saved && AR_INDUSTRIES[saved]) IND = AR_INDUSTRIES[saved];
+      const urlInd = new URLSearchParams(window.location.search || '').get('ind');
+      const saved = (urlInd && AR_INDUSTRIES[urlInd]) ? urlInd : localStorage.getItem('autoreels_industry');
+      if (saved && AR_INDUSTRIES[saved]) {
+        IND = AR_INDUSTRIES[saved];
+        if (urlInd && AR_INDUSTRIES[urlInd]) localStorage.setItem('autoreels_industry', urlInd);
+      }
     } catch (e) {}
 
     // 자동차 낱말 → 지금 업종 낱말
