@@ -152,7 +152,9 @@
       ['pro_punch_hook', '0.2초 펀치 컷 · 키네틱', 'pro_punch_hook', 'sans', '#080809', '#141518', '#facc15', '#ffffff', false, '타이포', '빠른 줌 펀치 · 줄별 마스크 슬라이드 · 라이브 진행 바'],
       ['pro_editorial_center', '매거진 센터 타이포', 'pro_editorial_center', 'maru', '#080808', '#131210', '#f4f0e8', '#ffffff', false, '고급', '풀스크린 중앙 명조 타이포 · 1px 헤어라인 에디토리얼'],
       ['pro_pov_caption', '인스타 감성 POV 자막', 'pro_pov_caption', 'pretM', '#0b0b0c', '#161618', '#f4f0e8', '#ffffff', false, '브이로그', '네이티브 릴스 글래스 캡슐 · 핸드헬드 미세 호흡'],
-      ['pro_split_reveal', '커튼 와이프 · 컷 전환', 'pro_split_reveal', 'pretM', '#090a0c', '#15171c', '#f4f0e8', '#ffffff', false, '비포·애프터', '이전 컷 위로 미끄러지는 커튼 와이프 · 좌하단 안전 자막']
+      ['pro_split_reveal', '커튼 와이프 · 컷 전환', 'pro_split_reveal', 'pretM', '#090a0c', '#15171c', '#f4f0e8', '#ffffff', false, '비포·애프터', '이전 컷 위로 미끄러지는 커튼 와이프 · 좌하단 안전 자막'],
+      ['pro_handwrite', '감성 손글씨 · 필름 드로잉', 'pro_handwrite', 'pen', '#0c0a09', '#191512', '#e8d5bc', '#f8f3ea', false, '손글씨', '풀스크린 35mm 필름 위 써 내려가는 손글씨 · 드로잉 밑줄'],
+      ['pro_trend_sticker', '트렌디 감성 · 타임스탬프', 'pro_trend_sticker', 'gowun', '#0a0a09', '#171513', '#f2e4cc', '#ffffff', false, '감성', '2026 인스타 릴스 감성 날짜 스탬프 · 부드러운 자막 플로트']
     ];
     // 모션 디자인도 별도 분류를 만들지 않고 기존 분류에 넣음
     const MOTION_CAT = {
@@ -3406,6 +3408,17 @@
           c.fillStyle = 'rgba(244,240,232,0.85)';
           c.fillRect(splitX - 2, 0, 3, H);
         }
+      } else if (M === 'pro_handwrite') {
+        const zoom = 1.02 + lp * 0.06;
+        const driftX = Math.sin(t * 0.8) * 4;
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.34);
+        inWarm(c, 0, 0, W, H, 0.55);
+        inGrain(c, W, H, t, 0.05);
+      } else if (M === 'pro_trend_sticker') {
+        const zoom = 1.03 + lp * 0.05;
+        const driftY = Math.cos(t * 0.9) * 3;
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.28);
+        inGrain(c, W, H, t, 0.04);
       }
 
       // 2) 풀스크린 가독성 보호 그라데이션 스크림
@@ -3602,6 +3615,86 @@
         c.shadowColor = 'rgba(0,0,0,0.82)';
         c.shadowBlur = 16;
         r.lines.forEach((ln, li) => c.fillText(ln, leftX + (1 - alpha) * -14, baseY + li * r.lh));
+        c.restore();
+      } else if (M === 'pro_handwrite') {
+        // 감성 손글씨: 왼쪽에서 오른쪽으로 써 내려가는 클립 리빌 + 손그림 곡선 밑줄 (Safe Zone: y = 0.65H)
+        const writeP = easeOutExpo(local / 0.52);
+        const r = mFit(c, caption, W * 0.78, 3, Math.round(W * 0.068), Math.round(W * 0.044), sp.font);
+        const baseY = H * 0.655 - ((r.lines.length - 1) * r.lh) / 2;
+        c.save();
+        c.font = `500 ${r.size}px ${F.f}`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.shadowColor = 'rgba(0,0,0,0.72)';
+        c.shadowBlur = 18;
+        c.fillStyle = '#f8f3ea';
+        let widest = 0;
+        r.lines.forEach((ln) => { widest = Math.max(widest, c.measureText(ln).width); });
+        r.lines.forEach((ln, li) => {
+          const lineP = easeOutExpo((local - li * 0.12) / 0.44);
+          const ly = baseY + li * r.lh;
+          c.save();
+          const lw = c.measureText(ln).width + 24;
+          const lx = W / 2 - lw / 2;
+          c.beginPath();
+          c.rect(lx, ly - r.lh * 0.7, lw * lineP, r.lh * 1.4);
+          c.clip();
+          c.fillText(ln, W / 2, ly);
+          c.restore();
+        });
+        // 마지막 줄 아래에 손으로 그은 듯한 부드러운 곡선 밑줄
+        const ulW = Math.min(W * 0.54, widest * 0.72);
+        const ulY = baseY + (r.lines.length - 1) * r.lh + r.lh * 0.56;
+        const ulP = easeOutExpo((local - 0.18) / 0.42);
+        if (ulP > 0.02) {
+          c.save();
+          c.beginPath();
+          c.rect(W / 2 - ulW / 2 - 6, ulY - 14, (ulW + 12) * ulP, 28);
+          c.clip();
+          c.strokeStyle = sp.accent || '#e8d5bc';
+          c.lineWidth = 3.2;
+          c.lineCap = 'round';
+          c.beginPath();
+          c.moveTo(W / 2 - ulW / 2, ulY + 3);
+          c.quadraticCurveTo(W / 2, ulY - 5, W / 2 + ulW / 2, ulY + 2);
+          c.stroke();
+          c.restore();
+        }
+        c.restore();
+      } else if (M === 'pro_trend_sticker') {
+        // 2026 트렌디 감성: 상단 좌측 필름 타임스탬프 + Safe Zone 감성 자막 플로트
+        const now = new Date();
+        const stamp = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} · SCENE ${String(cutIdx + 1).padStart(2, '0')}`;
+        c.save();
+        c.font = `500 ${Math.round(W * 0.024)}px 'JetBrains Mono', monospace`;
+        const sw = c.measureText(stamp).width + 26;
+        c.fillStyle = 'rgba(12,11,10,0.52)';
+        gRoundRect(c, W * 0.07, H * 0.085, sw, 30, 999);
+        c.fill();
+        c.strokeStyle = 'rgba(242,228,204,0.28)';
+        c.lineWidth = 1;
+        c.stroke();
+        c.fillStyle = '#f2e4cc';
+        c.textAlign = 'left';
+        c.textBaseline = 'middle';
+        c.fillText(stamp, W * 0.07 + 13, H * 0.085 + 15);
+        c.restore();
+
+        const pop = easeOutBack(local / 0.28);
+        const alpha = mClamp(local / 0.22);
+        const r = mFit(c, caption, safeW, 3, Math.round(W * 0.056), Math.round(W * 0.038), sp.font);
+        const baseY = H * 0.68 - ((r.lines.length - 1) * r.lh) / 2;
+        c.save();
+        c.globalAlpha = alpha;
+        c.translate(W / 2, baseY);
+        c.scale(0.95 + 0.05 * pop, 0.95 + 0.05 * pop);
+        c.font = `600 ${r.size}px ${F.f}`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.shadowColor = 'rgba(0,0,0,0.82)';
+        c.shadowBlur = 20;
+        c.fillStyle = '#ffffff';
+        r.lines.forEach((ln, li) => c.fillText(ln, 0, li * r.lh));
         c.restore();
       }
       c.restore();

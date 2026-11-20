@@ -1391,6 +1391,7 @@ POST https://graph.facebook.com/v19.0/${d.igUsername.replace('@', '')}/media
         if (!campaign.scenePlan[cutIdx]) campaign.scenePlan[cutIdx] = {};
         campaign.scenePlan[cutIdx].photoIdx = cutIdx;
         renderPhotoThumbnailsGrid();
+        if (typeof window.arVaultSaveImages === 'function') window.arVaultSaveImages(campaign.uploadedPhotos, 'upload');
         if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
         if (typeof renderCutEditorPanel === 'function') renderCutEditorPanel();
         if (typeof renderInlineQuickEditBar === 'function') renderInlineQuickEditBar();

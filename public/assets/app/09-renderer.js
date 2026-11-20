@@ -3821,6 +3821,7 @@
       campaign.hasCustomVideo = false;
       campaign.uploadedPhotos.forEach(arReleasePhoto);
       campaign.uploadedPhotos = items;
+      if (typeof window.arVaultSaveImages === 'function') window.arVaultSaveImages(items, 'upload');
       if (Array.isArray(campaign.scenePlan)) campaign.scenePlan.forEach((p) => { if (p) { delete p.photoIdx; delete p.photoManual; } });
       if (finished && items.length > 1) {
         campaign.cutCountOverride = items.length;

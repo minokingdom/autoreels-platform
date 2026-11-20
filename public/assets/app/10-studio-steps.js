@@ -2614,6 +2614,7 @@
         if (stillCurrent()) {
           campaign.uploadedPhotos = campaign.uploadedPhotos.slice(0, total);
           if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+          if (typeof window.arVaultSaveImages === 'function') window.arVaultSaveImages(campaign.uploadedPhotos, 'ai');
           if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
           if (noticeEl) noticeEl.textContent = `주제 [${payload.prompt}] · 이미지 ${completed}장이 각 컷에 적용되었습니다.`;
           if (typeof arToast === 'function') arToast(`이미지 ${completed}장이 각 컷에 적용됐어요`);
@@ -2711,6 +2712,7 @@
           if (!campaign.scenePlan[slot]) campaign.scenePlan[slot] = {};
           campaign.scenePlan[slot].photoIdx = slot;
           if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+          if (typeof window.arVaultSaveImages === 'function') window.arVaultSaveImages(campaign.uploadedPhotos, 'ai');
           if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
           if (typeof renderCutEditorPanel === 'function') renderCutEditorPanel();
           if (typeof renderInlineQuickEditBar === 'function') renderInlineQuickEditBar();

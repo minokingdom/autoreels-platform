@@ -1936,3 +1936,245 @@ async function arRestoreLastProject(){
     } catch (_) {}
   }, isReturningFromJump ? 900 : 2200);
 })();
+
+// =========================================================================
+// 내 사진 · AI 생성 이미지 자동 보관함 (IndexedDB: ar_media_vault_v1)
+// 다시 로그인/재방문 시 기본 BMW 예시 대신 내 이미지 자동 재사용 + 원클릭 적용
+// =========================================================================
+(function initMediaVault() {
+  const VAULT_DB = 'ar_media_vault_v1';
+  const VAULT_STORE = 'items';
+  const MAX_ITEMS = 36;
+
+  function openVault() {
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) return reject(new Error('no_idb'));
+      const req = indexedDB.open(VAULT_DB, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(VAULT_STORE)) db.createObjectStore(VAULT_STORE, { keyPath: 'id' });
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error || new Error('vault_open_failed'));
+    });
+  }
+
+  async function vaultAll() {
+    const db = await openVault();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(VAULT_STORE, 'readonly');
+      const req = tx.objectStore(VAULT_STORE).getAll();
+      req.onsuccess = () => {
+        db.close();
+        const rows = Array.isArray(req.result) ? req.result : [];
+        rows.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        resolve(rows);
+      };
+      req.onerror = () => { db.close(); reject(req.error); };
+    });
+  }
+
+  async function vaultPutMany(entries) {
+    const db = await openVault();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(VAULT_STORE, 'readwrite');
+      const st = tx.objectStore(VAULT_STORE);
+      entries.forEach((it) => st.put(it));
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); reject(tx.error); };
+    });
+    // 최대 개수 초과 시 오래된 항목 정리
+    const all = await vaultAll();
+    if (all.length > MAX_ITEMS) {
+      const drop = all.slice(MAX_ITEMS);
+      const db2 = await openVault();
+      await new Promise((resolve) => {
+        const tx = db2.transaction(VAULT_STORE, 'readwrite');
+        const st = tx.objectStore(VAULT_STORE);
+        drop.forEach((it) => st.delete(it.id));
+        tx.oncomplete = tx.onerror = () => { db2.close(); resolve(); };
+      });
+    }
+  }
+
+  async function vaultDelete(id) {
+    try {
+      const db = await openVault();
+      await new Promise((resolve) => {
+        const tx = db.transaction(VAULT_STORE, 'readwrite');
+        tx.objectStore(VAULT_STORE).delete(id);
+        tx.oncomplete = tx.onerror = () => { db.close(); resolve(); };
+      });
+    } catch (_) {}
+  }
+
+  function fpOf(src) {
+    const s = String(src || '');
+    return s.length + ':' + s.slice(0, 64) + ':' + s.slice(-48);
+  }
+
+  function isStockSceneUrl(src) {
+    const s = String(src || '');
+    return /^\/assets\/(scenes|topics|landing)\//.test(s) || /\/assets\/(scenes|topics|landing)\//.test(s);
+  }
+
+  async function decodeVaultImg(item) {
+    const img = new Image();
+    img.src = item.src;
+    img._dataUrl = item.src;
+    img._label = item.source === 'ai' ? 'AI 보관함' : '내 사진 보관함';
+    img._sceneTitle = item.label || '';
+    await Promise.race([img.decode(), new Promise((_, rej) => setTimeout(() => rej(new Error('decode_timeout')), 8000))]);
+    return img;
+  }
+
+  window.arVaultSaveImages = async function (imgList, source = 'upload') {
+    try {
+      if (!Array.isArray(imgList) || !imgList.length) return;
+      const ind = (typeof IND !== 'undefined' && IND?.key) ? IND.key : 'auto';
+      const existing = await vaultAll();
+      const seen = new Set(existing.map((x) => x.fp));
+      const toAdd = [];
+      for (const img of imgList) {
+        if (!img || img._isVideo) continue;
+        const rawSrc = img._dataUrl || img.src || '';
+        if (!rawSrc || isStockSceneUrl(rawSrc)) continue;
+        let dataUrl = rawSrc;
+        if (!rawSrc.startsWith('data:image/')) {
+          try { dataUrl = await arProjectImage(rawSrc, 1080); } catch (_) { continue; }
+        }
+        const fp = fpOf(dataUrl);
+        if (seen.has(fp)) continue;
+        seen.add(fp);
+        toAdd.push({
+          id: 'v_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+          fp,
+          industry: ind,
+          source: source === 'ai' ? 'ai' : 'upload',
+          label: String(img._sceneTitle || img._label || (source === 'ai' ? 'AI 이미지' : '내 사진')).slice(0, 32),
+          src: dataUrl,
+          createdAt: Date.now()
+        });
+      }
+      if (toAdd.length) {
+        await vaultPutMany(toAdd);
+        window.arRenderMediaVault();
+      }
+    } catch (_) {}
+  };
+
+  async function applyVaultListToReel(items, silent = false) {
+    if (!Array.isArray(items) || !items.length || typeof campaign === 'undefined') return false;
+    const total = Math.max(4, typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4);
+    const chosen = items.slice(0, total);
+    const imgs = [];
+    for (const it of chosen) {
+      try { imgs.push(await decodeVaultImg(it)); } catch (_) {}
+    }
+    if (!imgs.length) return false;
+    (campaign.uploadedPhotos || []).forEach(arReleasePhoto);
+    campaign.uploadedPhotos = imgs;
+    campaign.isUserCustomPhotos = true;
+    campaign.hasCustomVideo = false;
+    if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+    if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+    if (typeof syncPreviewPanel === 'function') syncPreviewPanel();
+    if (window.__timelines?.main) window.__timelines.main.seek(window.__timelines.main.currentTime || 0);
+    if (!silent && typeof arToast === 'function') {
+      arToast(`보관함의 내 이미지 ${imgs.length}장을 바로 적용했습니다.`, true);
+    }
+    return true;
+  }
+
+  window.arRenderMediaVault = async function () {
+    const box = document.getElementById('arMediaVaultBox');
+    const listEl = document.getElementById('arMediaVaultList');
+    const cntEl = document.getElementById('arMediaVaultCount');
+    if (!box || !listEl) return;
+    try {
+      const all = await vaultAll();
+      const curInd = (typeof IND !== 'undefined' && IND?.key) ? IND.key : 'auto';
+      // 현재 업종 이미지를 맨 앞으로 정렬
+      const sorted = all.slice().sort((a, b) => {
+        const am = a.industry === curInd ? 1 : 0;
+        const bm = b.industry === curInd ? 1 : 0;
+        if (am !== bm) return bm - am;
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      });
+      if (!sorted.length) {
+        box.classList.add('hidden');
+        return;
+      }
+      box.classList.remove('hidden');
+      if (cntEl) cntEl.textContent = `${sorted.length}장`;
+      listEl.replaceChildren();
+      sorted.forEach((item) => {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;flex:0 0 auto;width:62px;height:86px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.14);background:#141415;cursor:pointer;';
+        wrap.title = `${item.source === 'ai' ? 'AI 생성' : '내 사진'} — 눌러서 현재 컷에 적용`;
+        const img = document.createElement('img');
+        img.src = item.src;
+        img.alt = item.label || '';
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+        const tag = document.createElement('span');
+        tag.textContent = item.source === 'ai' ? 'AI' : '내 사진';
+        tag.style.cssText = 'position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,0.72);color:#f4f0e8;font-size:9px;padding:1px 5px;border-radius:4px;pointer-events:none;';
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.textContent = '×';
+        del.setAttribute('aria-label', '보관함에서 삭제');
+        del.style.cssText = 'position:absolute;right:2px;top:2px;width:18px;height:18px;border-radius:999px;background:rgba(0,0,0,0.72);color:#d4d4d8;border:0;font-size:12px;line-height:1;cursor:pointer;';
+        del.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          await vaultDelete(item.id);
+          window.arRenderMediaVault();
+        });
+        wrap.addEventListener('click', async () => {
+          try {
+            const loaded = await decodeVaultImg(item);
+            const curT = window.__timelines?.main?.currentTime || 0;
+            const cutIdx = typeof getCutIndexAt === 'function' ? Math.max(0, getCutIndexAt(curT)) : 0;
+            if (!Array.isArray(campaign.uploadedPhotos)) campaign.uploadedPhotos = [];
+            while (campaign.uploadedPhotos.length <= cutIdx) campaign.uploadedPhotos.push(loaded);
+            campaign.uploadedPhotos[cutIdx] = loaded;
+            campaign.isUserCustomPhotos = true;
+            if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+            if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+            if (window.__timelines?.main) window.__timelines.main.seek(curT);
+            if (typeof arToast === 'function') arToast(`${cutIdx + 1}컷에 보관함 이미지를 적용했습니다.`, true);
+          } catch (_) {}
+        });
+        wrap.append(img, tag, del);
+        listEl.appendChild(wrap);
+      });
+
+      const applyAllBtn = document.getElementById('arMediaVaultApplyAll');
+      if (applyAllBtn && !applyAllBtn.dataset.bound) {
+        applyAllBtn.dataset.bound = '1';
+        applyAllBtn.addEventListener('click', async () => {
+          const latest = await vaultAll();
+          const indNow = (typeof IND !== 'undefined' && IND?.key) ? IND.key : 'auto';
+          const indFirst = latest.filter((x) => x.industry === indNow);
+          await applyVaultListToReel(indFirst.length ? indFirst : latest, false);
+        });
+      }
+    } catch (_) {}
+  };
+
+  // 초기 진입/재로그인 시: 기본 예시(BMW 등) 대신 이전에 올리거나 생성한 내 업종 이미지가 있으면 자동 재사용
+  setTimeout(async () => {
+    try {
+      await window.arRenderMediaVault();
+      if (window.__arRestoredLocalSnapshot || arProjectInteracted) return;
+      if (typeof campaign === 'undefined' || campaign.isUserCustomPhotos) return;
+      const all = await vaultAll();
+      const curInd = (typeof IND !== 'undefined' && IND?.key) ? IND.key : 'auto';
+      const mine = all.filter((x) => x.industry === curInd);
+      if (!mine.length) return;
+      const ok = await applyVaultListToReel(mine, true);
+      if (ok && typeof arToast === 'function') {
+        arToast(`이전에 사용한 내 이미지 ${Math.min(mine.length, getTargetCutCount())}장을 자동으로 불러왔습니다.`, true);
+      }
+    } catch (_) {}
+  }, 1700);
+})();
