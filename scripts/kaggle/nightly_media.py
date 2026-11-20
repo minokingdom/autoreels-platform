@@ -338,24 +338,42 @@ def run_worker() -> None:
     print(f"Created {bundle_path} ({bundle_path.stat().st_size} bytes)")
 
 
+def required_batch_images(data: dict, batch_date: str) -> tuple[list[str], list[str]]:
+    if data.get("date") != batch_date:
+        raise RuntimeError(f"Kaggle 번들의 날짜가 {batch_date}와 일치하지 않습니다.")
+    topic_images = []
+    for industry in INDUSTRY_INFO:
+        row = data["industries"][industry]
+        expected = [f"/assets/topics/{industry}/{slot}.jpg" for slot in range(1, 11)]
+        if row.get("topicsDate") != batch_date or [
+            topic.get("iconUrl") for topic in row.get("topics", [])
+        ] != expected:
+            raise RuntimeError(f"{industry}: 오늘 주제 10개와 썸네일 경로가 필요합니다.")
+        topic_images.extend(f"public{path}" for path in expected)
+    rotate_slot = 11 + (datetime.date.fromisoformat(batch_date).timetuple().tm_yday % 5)
+    scene_images = [f"public/assets/scenes/{industry}/{rotate_slot}.jpg" for industry in INDUSTRY_INFO]
+    return topic_images, scene_images
+
+
+def has_current_batch() -> bool:
+    try:
+        data = json.loads(Path("public/trends-today.json").read_text(encoding="utf-8"))
+        topic_images, scene_images = required_batch_images(data, get_kst_date_context()["dateStr"])
+        for name in [*topic_images, *scene_images]:
+            with Path(name).open("rb") as image:
+                if image.read(2) != b"\xff\xd8":
+                    return False
+        return True
+    except (OSError, ValueError, AttributeError, KeyError, TypeError, RuntimeError):
+        return False
+
+
 def unpack_bundle(archive_path: Path) -> None:
     batch_date = json.loads(Path("public/trends-today.json").read_text(encoding="utf-8"))["date"]
     with zipfile.ZipFile(archive_path) as archive:
         trends_path = "public/trends-today.json"
         data = json.loads(archive.read(trends_path))
-        topic_images = []
-        if data.get("date") != batch_date:
-            raise RuntimeError(f"Kaggle 번들의 날짜가 {batch_date}와 일치하지 않습니다.")
-        for industry in INDUSTRY_INFO:
-            row = data["industries"][industry]
-            expected = [f"/assets/topics/{industry}/{slot}.jpg" for slot in range(1, 11)]
-            if row.get("topicsDate") != batch_date or [
-                topic.get("iconUrl") for topic in row.get("topics", [])
-            ] != expected:
-                raise RuntimeError(f"{industry}: 오늘 주제 10개와 썸네일 경로가 필요합니다.")
-            topic_images.extend(f"public{path}" for path in expected)
-        rotate_slot = 11 + (datetime.date.fromisoformat(batch_date).timetuple().tm_yday % 5)
-        scene_images = [f"public/assets/scenes/{industry}/{rotate_slot}.jpg" for industry in INDUSTRY_INFO]
+        topic_images, scene_images = required_batch_images(data, batch_date)
         # 전체 필수 결과를 확인한 뒤 파일을 덮어씁니다.
         for name in [*topic_images, *scene_images]:
             with archive.open(name) as image:
@@ -369,7 +387,9 @@ def unpack_bundle(archive_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 3 and sys.argv[1] == "--prepare":
+    if sys.argv[1:] == ["--is-current"]:
+        sys.exit(0 if has_current_batch() else 1)
+    elif len(sys.argv) == 3 and sys.argv[1] == "--prepare":
         prepare_kernel(Path(sys.argv[2]))
     elif len(sys.argv) == 3 and sys.argv[1] == "--unpack":
         unpack_bundle(Path(sys.argv[2]))

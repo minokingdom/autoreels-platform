@@ -1,8 +1,9 @@
-# 매일 한국 시간 새벽 4시 13분(UTC 19시 13분, 정각 혼잡 회피)에 업종별 인기 키워드를 받아 public/trends-today.json 으로 저장·배포
+# 한국 시간 00:43에 시작하고 04:13에 미완료분을 재시도합니다.
 # + KAGGLE_API_TOKEN 시크릿이 있으면 PC가 꺼져 있어도 캐글 무료 GPU 노트북을 원격 실행하고 결과 번들을 자동 커밋
 name: refresh-trends
 on:
   schedule:
+    - cron: '43 15 * * *'
     - cron: '13 19 * * *'
   workflow_dispatch:
 permissions:
@@ -16,10 +17,23 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Check whether today's media is already complete
+        id: batch
+        run: |
+          if python3 scripts/kaggle/nightly_media.py --is-current; then
+            echo "Today's media is already complete."
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@v4
+        if: steps.batch.outputs.needed == 'true'
         with:
           node-version: '20'
       - name: Refresh daily trends (with treg if configured, else /api/trends)
+        if: steps.batch.outputs.needed == 'true'
         env:
           TREG_TOKEN: ${{ secrets.TREG_TOKEN }}
           KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
@@ -34,20 +48,13 @@ jobs:
           else
             node scripts/refresh-trends.mjs
           fi
-      - name: Commit trends if changed
-        run: |
-          git add public/trends-today.json
-          if git diff --cached --quiet; then echo "no change"; exit 0; fi
-          git config user.name "autoreels-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git commit -m "chore: 오늘의 인기 키워드 갱신"
-          git pull --rebase origin main
-          git push origin main
       - name: Prepare today's topics and image prompts
+        if: steps.batch.outputs.needed == 'true'
         env:
           NIGHTLY_MEDIA_TOKEN: ${{ secrets.NIGHTLY_MEDIA_TOKEN }}
         run: python3 scripts/kaggle/nightly_media.py --prepare "$RUNNER_TEMP/autoreels-kaggle/nightly_media.py"
       - name: Run Kaggle GPU nightly media worker and commit generated bundle
+        if: steps.batch.outputs.needed == 'true'
         env:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
@@ -58,8 +65,8 @@ jobs:
           KAKAO_ALERT_WEBHOOK: ${{ secrets.KAKAO_ALERT_WEBHOOK }}
         run: |
           if [ -z "$KAGGLE_API_TOKEN" ] && { [ -z "$KAGGLE_USERNAME" ] || [ -z "$KAGGLE_KEY" ]; }; then
-            echo "Kaggle secret not set; skipping Kaggle GPU worker."
-            exit 0
+            echo "Kaggle 인증 설정이 없어 야간 미디어를 생성할 수 없습니다."
+            exit 1
           fi
           python3 -m pip install -q -U kaggle
           mkdir -p ~/.kaggle
