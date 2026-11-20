@@ -2119,6 +2119,24 @@ async function arRestoreLastProject(){
         const tag = document.createElement('span');
         tag.textContent = item.source === 'ai' ? 'AI' : '내 사진';
         tag.style.cssText = 'position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,0.72);color:#f4f0e8;font-size:9px;padding:1px 5px;border-radius:4px;pointer-events:none;';
+        const dl = document.createElement('button');
+        dl.type = 'button';
+        dl.textContent = '↓';
+        dl.setAttribute('aria-label', '내 기기에 이미지 저장');
+        dl.title = '내 폰/PC에 저장';
+        dl.style.cssText = 'position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:999px;background:rgba(0,0,0,0.72);color:#f4f0e8;border:0;font-size:11px;line-height:1;cursor:pointer;';
+        dl.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          try {
+            const a = document.createElement('a');
+            a.href = item.src;
+            a.download = `autoreels_${item.source === 'ai' ? 'ai' : 'photo'}_${item.industry || 'media'}.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            if (typeof arToast === 'function') arToast('이미지를 내 기기에 저장했습니다.', true);
+          } catch (_) {}
+        });
         const del = document.createElement('button');
         del.type = 'button';
         del.textContent = '×';
@@ -2144,7 +2162,7 @@ async function arRestoreLastProject(){
             if (typeof arToast === 'function') arToast(`${cutIdx + 1}컷에 보관함 이미지를 적용했습니다.`, true);
           } catch (_) {}
         });
-        wrap.append(img, tag, del);
+        wrap.append(img, tag, dl, del);
         listEl.appendChild(wrap);
       });
 
