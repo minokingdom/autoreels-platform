@@ -1,55 +1,55 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-20T10:14:44.836272+09:00",
+  "collectedAt": "2026-11-20T20:27:13.491764+09:00",
   "items": [
     {
-      "term": "논현동",
-      "startedAt": "2026-11-19T16:10:00-08:00",
+      "term": "2027 수능 만점자",
+      "startedAt": "2026-11-20T02:10:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "ind-a vs nep",
+      "startedAt": "2026-11-20T02:00:00-08:00",
+      "traffic": "1000+"
+    },
+    {
+      "term": "초과근무",
+      "startedAt": "2026-11-20T02:00:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "전북특별자치도지사",
+      "startedAt": "2026-11-20T02:00:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "벼",
+      "startedAt": "2026-11-20T01:50:00-08:00",
+      "traffic": "1000+"
+    },
+    {
+      "term": "스타벅스",
+      "startedAt": "2026-11-20T01:40:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "토마스 뮐러",
+      "startedAt": "2026-11-20T01:40:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "굿파트너2",
+      "startedAt": "2026-11-20T01:40:00-08:00",
+      "traffic": "1000+"
+    },
+    {
+      "term": "김장",
+      "startedAt": "2026-11-20T01:30:00-08:00",
       "traffic": "2000+"
     },
     {
-      "term": "이의리",
-      "startedAt": "2026-11-19T16:10:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "유니클로",
-      "startedAt": "2026-11-19T16:10:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "h&m",
-      "startedAt": "2026-11-19T16:00:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "php 취약점",
-      "startedAt": "2026-11-19T15:50:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "전북특별자치도교육청",
-      "startedAt": "2026-11-19T15:50:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "lpga",
-      "startedAt": "2026-11-19T15:40:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "2호선",
-      "startedAt": "2026-11-19T15:20:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "새만금",
-      "startedAt": "2026-11-19T15:10:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "오상욱",
-      "startedAt": "2026-11-19T15:00:00-08:00",
+      "term": "이더리움",
+      "startedAt": "2026-11-20T01:30:00-08:00",
       "traffic": "200+"
     }
   ],
@@ -59,72 +59,72 @@
       "day": "2026-11-20",
       "kind": "보도",
       "publisher": "연합뉴스",
-      "url": "https://www.yna.co.kr/view/AKR20261120057100054",
-      "publishedAt": "2026-11-20T10:09:27+09:00",
-      "headline": "[전남광주소식] 교육청, 수능 후 청소년 유해행위 예방 캠페인"
+      "url": "https://www.yna.co.kr/view/AKR20261120160600530",
+      "publishedAt": "2026-11-20T17:59:33+09:00",
+      "headline": "\"수능 공정성 믿어도 되나요\"…'AI 커닝'에 입시설명회도 '술렁'"
     },
     {
-      "term": "남양주서 60대 남성",
+      "term": "AI 부정행위 논란",
+      "day": "2026-11-20",
+      "kind": "보도",
+      "publisher": "연합뉴스",
+      "url": "https://www.yna.co.kr/view/AKR20261120160600530",
+      "publishedAt": "2026-11-20T17:59:33+09:00",
+      "headline": "\"수능 공정성 믿어도 되나요\"…'AI 커닝'에 입시설명회도 '술렁'"
+    },
+    {
+      "term": "윤호중 행안부 장관",
       "day": "2026-11-20",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008855314",
-      "publishedAt": "2026-11-20T10:09:00+09:00",
-      "headline": "남양주서 60대 남성 고소 작업 중 2m 아래로 추락해 사망"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856356",
+      "publishedAt": "2026-11-20T18:14:00+09:00",
+      "headline": "윤호중 행안부 장관, 도로 살얼음 안전점검…재난특교세 90억 원 추가 지원"
     },
     {
-      "term": "50대 남성 공소청",
+      "term": "박지윤 악플러 정체",
       "day": "2026-11-20",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008855076",
-      "publishedAt": "2026-11-20T09:56:00+09:00",
-      "headline": "'아들 성범죄 피해자 살해' 50대 남성 공소청 구속송치"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856086",
+      "publishedAt": "2026-11-20T17:37:00+09:00",
+      "headline": "박지윤 악플러 정체 최동석이었다…명예훼손 혐의 송치"
     },
     {
-      "term": "지하철 2호선 성수지선",
+      "term": "세 번 만난",
       "day": "2026-11-20",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008855259",
-      "publishedAt": "2026-11-20T09:54:00+09:00",
-      "headline": "'선로전환기 장애' 지하철 2호선 성수지선 양방향 3시간 만에 운행 재개"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856269",
+      "publishedAt": "2026-11-20T17:26:00+09:00",
+      "headline": "세 번 만난 일본인 여성 살해 30대 구속기소"
     },
     {
-      "term": "발목에 전자발찌",
+      "term": "수원중수청",
       "day": "2026-11-20",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008855269",
-      "publishedAt": "2026-11-20T09:53:00+09:00",
-      "headline": "발목에 전자발찌…'아동 성폭력' 70대 주거 침입하다 체포"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856267",
+      "publishedAt": "2026-11-20T17:23:00+09:00",
+      "headline": "수원중수청, 김승원 '경기도당 회계부정' 의혹 경찰 이첩"
     },
     {
-      "term": "한라산 탐방 통제",
+      "term": "노쇼 사기 조직원",
       "day": "2026-11-20",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008855166",
-      "publishedAt": "2026-11-20T09:23:00+09:00",
-      "headline": "'삼각봉 14.5㎝ 눈' 한라산 탐방 통제…곳곳 강풍 피해도"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856174",
+      "publishedAt": "2026-11-20T16:36:00+09:00",
+      "headline": "'서울중수청 1호 보이스피싱 수사' 노쇼 사기 조직원 재판행"
     },
     {
-      "term": "전북 최대",
+      "term": "여순사건 희생자",
       "day": "2026-11-20",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008855098",
-      "publishedAt": "2026-11-20T09:03:00+09:00",
-      "headline": "전북 최대 14.8㎝ 눈…전북소방, 안전조치 35건 진행"
-    },
-    {
-      "term": "당장 이번 주말",
-      "day": "2026-11-20",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008855127",
-      "publishedAt": "2026-11-20T09:02:00+09:00",
-      "headline": "당장 이번 주말…주요 대학 논술시험 앞두고 '혼란'"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856128",
+      "publishedAt": "2026-11-20T16:14:00+09:00",
+      "headline": "여순사건 희생자, 첫 특별 재심서 78년 만에 무죄"
     }
   ],
   "previousIssues": [
