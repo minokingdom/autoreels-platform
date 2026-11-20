@@ -123,8 +123,9 @@ async function handler(req, res) {
   // 대본을 하나의 글로 합쳐 처음부터 끝까지 이어 읽게 함
   //   (예전에는 문장마다 [happy] 지시어와 [pause]를 넣어 문장마다 새로 읽기 시작하는 것처럼 끊겨 들렸음)
   //   말투 지시어는 맨 앞에 한 번만, 문장 끝 부호가 없는 자막 조각은 쉼표로 이어 자연스럽게 숨만 쉬게 함
+  // 각 컷 문장 사이에 자연스러운 마침표 호흡을 두어 숨 가쁘게 이어 읽는 기계적 느낌을 줄임
   const fullText = (toneTag ? `${toneTag} ` : '') + spoken
-    .map((l, i) => (/[.!?~…。]$/.test(l) ? l : l + (i < spoken.length - 1 ? ',' : '.')))
+    .map((l) => (/[.!?~…。]$/.test(l) ? l : `${l}.`))
     .join(' ');
 
   const callFish = (model) =>
@@ -139,8 +140,13 @@ async function handler(req, res) {
         text: fullText,
         reference_id: referenceId,
         format: 'mp3',
+        mp3_bitrate: 192,
+        normalize: true,
+        chunk_length: 200,
+        temperature: 0.72,
+        top_p: 0.78,
         latency: 'normal',
-        prosody: { speed }
+        prosody: { speed, volume: 0 }
       })
     });
   try {

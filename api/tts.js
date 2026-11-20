@@ -135,8 +135,13 @@ async function handler(req, res) {
     // "4대"를 "네 대"로 읽도록 숫자 읽기를 보정한 뒤 말투 지시어를 붙임
     text: (toneTag ? `${toneTag} ` : '') + normalizeKoreanNumbers(text),
     format: 'mp3',
+    mp3_bitrate: 192,
+    normalize: true,
+    chunk_length: 200,
+    temperature: 0.72,
+    top_p: 0.78,
     latency: 'normal',
-    prosody: { speed }
+    prosody: { speed, volume: 0 }
   };
   payload.reference_id = referenceId;
 

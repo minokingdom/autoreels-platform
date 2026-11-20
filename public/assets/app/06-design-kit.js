@@ -3872,27 +3872,36 @@
       'k_neonnight', 'k_popbubble', 'a_popart', 'd_coupon', 'k_redband', 'd_speed', 'k_approved',
       'mo_blob', 'mo_tunnel', 'mo_eq', 'mo_cube', 'mo_dots', 'mo_vhs', 'mo_bokeh', 'mo_glow',
       'mo_ribbon', 'mo_strips', 'mo_circle', 'mo_sweep', 'ig_poll', 'ed_duotone',
+      'mo_tiles', 'mo_cards', 'mo_aurora', 'mo_number', 'mo_bounce', 'mo_neon',
+      'mo_doors', 'mo_punch', 'mo_credits', 'mo_scrap', 'ig_story', 'ig_feed',
+      'in_memo', 'in_lock', 'cn_splitbar', 'ba_diagonal', 'ba_flash',
       'in_cal', 'r1', 'c2', 'a1', 'tr_acad_camp'
     ]);
-    // 사진을 위 58%에만 두고 자막은 아래 단색 바탕에 두는 모션 스타일 — 자동차 외 업종에서는 숨김 (촌스럽다는 의견, 2026-11)
+    // 2026-11 품질 큐레이션: 구시대 2024 정적 classic/kit 템플릿은 신규 선택·셔플에서 숨기고
+    // 검증된 최신 모션·에디토리얼·1군 풀스크린 엔진과 사용자 커스텀 스타일만 노출 (기존 저장본은 arFindDesign으로 100% 호환)
     const AR_SPLIT_MOTION_IDS = new Set(['mo_tiles', 'mo_cards', 'mo_aurora', 'mo_number', 'mo_bounce', 'mo_neon']);
     function arDesignVisible(ds) {
+      if (!ds) return false;
+      if (ds.custom) return true;
       if (AR_RETIRED_DESIGNS.has(ds.id)) return false;
+      if (AR_SPLIT_MOTION_IDS.has(ds.id)) return false;
+      if (ds.engine !== 'motion') return false;
       const key = typeof IND !== 'undefined' ? IND.key : 'auto';
-      if (key !== 'auto' && AR_SPLIT_MOTION_IDS.has(ds.id)) return false;
       if (ds.industry) return ds.industry === key;
-      // 자동차가 아닌 업종: 그 업종 전용 테마 + 업종 색으로 물드는 모션 템플릿만 (자동차 판매용 공통 디자인은 숨김)
-      if (key !== 'auto') return ds.engine === 'motion';
       return true;
     }
     // ★ 세부 편집이 다 되는 디자인 (자막·위 라벨·아래 이름을 컷 편집에서 모두 골라 바꿀 수 있음)
     //   kit 디자인은 전부, motion 디자인은 아래 목록 (2026-11-16 전 디자인을 그려 확인)
     const AR_FINE_EDIT_MOTION = new Set(['in_film', 'in_mood', 'in_letter', 'in_vlog', 'in_collage', 'in_h_plaque', 'in_h_panes', 'in_h_double', 'in_h_vinyl', 'in_g_sub', 'in_g_arch', 'in_g_strip', 'in_g_postcard', 'in_g_cam', 'in_g_bookmark', 'ed_vogue', 'ed_arch', 'stm_kinetic', 'stm_cinema', 'stm_sonar', 'stm_glint', 'cn_deck', 'cn_summary', 'cn_boldquote', 'cn_splitbar', 'stm_split', 'stm_ticket', 'cn_timeline', 'cn_qna', 'cn_compare', 'cn_receipt', 'cn_polaroid_duo', 'stm_glassbar']);
-    function arDesignFineEdit(d) { return !!d && (d.engine === 'kit' || AR_FINE_EDIT_MOTION.has(d.id)); }
+    function arDesignFineEdit(d) { return !!d && (d.engine === 'kit' || d.isProReels || AR_FINE_EDIT_MOTION.has(d.id)); }
     const AR_FINE_BADGE = '<span class="fine-edit-badge" title="자막·위 라벨·아래 이름을 컷마다 세세하게 바꿀 수 있어요">세부 편집</span>';
     function arVisibleDesigns() {
       const list = DESIGN_STYLES.filter(arDesignVisible);
-      return list.filter((d) => d.industry).concat(list.filter((d) => !d.industry));
+      // 1군 풀스크린 프로 엔진 -> 2026 에디토리얼 -> 나머지 최신 모션/커스텀 순으로 최상단 정렬
+      const pro = list.filter((d) => d.isProReels);
+      const ed = list.filter((d) => !d.isProReels && String(d.id || '').startsWith('ed_'));
+      const rest = list.filter((d) => !d.isProReels && !String(d.id || '').startsWith('ed_'));
+      return pro.concat(ed, rest);
     }
     // 신규는 대표 분류와 함께 표시하는 모음입니다. 카테고리를 옮기거나 복제하지 않습니다.
     const AR_NEW_STYLE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
