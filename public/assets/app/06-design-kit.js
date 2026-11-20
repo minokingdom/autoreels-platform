@@ -4263,12 +4263,12 @@
       if (arCustomOpenSource?.isConnected) arCustomOpenSource.focus();
     });
 
-    function arPickFreshDesignForContext(seedText = '') {
+    function arPickFreshDesignForContext(seedText) {
       const vis = typeof arVisibleDesigns === 'function' ? arVisibleDesigns() : DESIGN_STYLES;
       if (!vis || !vis.length) return DESIGN_STYLES[0];
-      if (typeof arDesignForTopic === 'function') {
-        const ctx = seedText || (typeof IND !== 'undefined' ? `${IND.name} ${IND.product || ''} ${(IND.hashtags || []).join(' ')}` : '');
-        const picked = arDesignForTopic(ctx);
+      // 첫 로딩에서는 주제별 디자인 코드가 아직 초기화되지 않았습니다.
+      if (seedText && typeof arDesignForTopic === 'function') {
+        const picked = arDesignForTopic(seedText);
         if (picked) return picked;
       }
       const indOnly = vis.filter((d) => d.industry);

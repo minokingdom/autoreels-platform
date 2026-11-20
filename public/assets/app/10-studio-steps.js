@@ -605,7 +605,7 @@
     });
 
     function arPickTopic(topic) {
-      if (!topic || !topic.prompt) return;
+      if (!topic || !topic.prompt || window.__arScriptGenerating) return;
       const promptEl = document.getElementById('aiPromptInput');
       if (promptEl) promptEl.value = topic.prompt;
       if (!arRequireAiAccess()) return;
@@ -2293,7 +2293,6 @@
 
     let arScriptGenerationId = 0;
     function arSuspendScriptNarration() {
-      window.__arScriptGenerating = true;
       if (typeof AudioEngine === 'undefined') return;
       AudioEngine.stopTts();
       AudioEngine.masterWantKey = '';
@@ -2307,8 +2306,8 @@
       AudioEngine.ttsPrefetchTimer = null;
     }
     function arSetScriptGenerating(loading) {
+      window.__arScriptGenerating = loading;
       if (loading) arSuspendScriptNarration();
-      else window.__arScriptGenerating = false;
       const panel = document.getElementById('studioPanel_script');
       if (panel) panel.setAttribute('aria-busy', loading ? 'true' : 'false');
       const status = document.getElementById('scriptGeneratingStatus');
