@@ -1,19 +1,132 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-20T01:44:42.861371+09:00",
+  "collectedAt": "2026-11-20T10:14:44.836272+09:00",
   "items": [
     {
-      "term": "플라비오 코볼리",
-      "startedAt": "2026-11-19T07:40:00-08:00",
+      "term": "논현동",
+      "startedAt": "2026-11-19T16:10:00-08:00",
+      "traffic": "2000+"
+    },
+    {
+      "term": "이의리",
+      "startedAt": "2026-11-19T16:10:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "유니클로",
+      "startedAt": "2026-11-19T16:10:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "h&m",
+      "startedAt": "2026-11-19T16:00:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "엔화",
-      "startedAt": "2026-11-19T07:00:00-08:00",
+      "term": "php 취약점",
+      "startedAt": "2026-11-19T15:50:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "전북특별자치도교육청",
+      "startedAt": "2026-11-19T15:50:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "lpga",
+      "startedAt": "2026-11-19T15:40:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "2호선",
+      "startedAt": "2026-11-19T15:20:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "새만금",
+      "startedAt": "2026-11-19T15:10:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "오상욱",
+      "startedAt": "2026-11-19T15:00:00-08:00",
       "traffic": "200+"
     }
   ],
-  "issues": [],
+  "issues": [
+    {
+      "term": "수능",
+      "day": "2026-11-20",
+      "kind": "보도",
+      "publisher": "연합뉴스",
+      "url": "https://www.yna.co.kr/view/AKR20261120057100054",
+      "publishedAt": "2026-11-20T10:09:27+09:00",
+      "headline": "[전남광주소식] 교육청, 수능 후 청소년 유해행위 예방 캠페인"
+    },
+    {
+      "term": "남양주서 60대 남성",
+      "day": "2026-11-20",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008855314",
+      "publishedAt": "2026-11-20T10:09:00+09:00",
+      "headline": "남양주서 60대 남성 고소 작업 중 2m 아래로 추락해 사망"
+    },
+    {
+      "term": "50대 남성 공소청",
+      "day": "2026-11-20",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008855076",
+      "publishedAt": "2026-11-20T09:56:00+09:00",
+      "headline": "'아들 성범죄 피해자 살해' 50대 남성 공소청 구속송치"
+    },
+    {
+      "term": "지하철 2호선 성수지선",
+      "day": "2026-11-20",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008855259",
+      "publishedAt": "2026-11-20T09:54:00+09:00",
+      "headline": "'선로전환기 장애' 지하철 2호선 성수지선 양방향 3시간 만에 운행 재개"
+    },
+    {
+      "term": "발목에 전자발찌",
+      "day": "2026-11-20",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008855269",
+      "publishedAt": "2026-11-20T09:53:00+09:00",
+      "headline": "발목에 전자발찌…'아동 성폭력' 70대 주거 침입하다 체포"
+    },
+    {
+      "term": "한라산 탐방 통제",
+      "day": "2026-11-20",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008855166",
+      "publishedAt": "2026-11-20T09:23:00+09:00",
+      "headline": "'삼각봉 14.5㎝ 눈' 한라산 탐방 통제…곳곳 강풍 피해도"
+    },
+    {
+      "term": "전북 최대",
+      "day": "2026-11-20",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008855098",
+      "publishedAt": "2026-11-20T09:03:00+09:00",
+      "headline": "전북 최대 14.8㎝ 눈…전북소방, 안전조치 35건 진행"
+    },
+    {
+      "term": "당장 이번 주말",
+      "day": "2026-11-20",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008855127",
+      "publishedAt": "2026-11-20T09:02:00+09:00",
+      "headline": "당장 이번 주말…주요 대학 논술시험 앞두고 '혼란'"
+    }
+  ],
   "previousIssues": [
     {
       "term": "수능",
