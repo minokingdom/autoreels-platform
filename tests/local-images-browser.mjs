@@ -195,9 +195,13 @@ try {
   console.log('topic photos, product-to-script button and aligned chips verified');
   const collectedAt = new Date().toISOString();
   const old = new Date(Date.now() - 86400000).toISOString();
+  const kstDate = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'});
+  const day = kstDate.format(new Date(collectedAt));
+  const yesterday = kstDate.format(new Date(old));
   const feed = {
     source: 'https://trends.google.com/trending/rss?geo=KR', collectedAt,
-    items: [{ term:'변상일', startedAt:collectedAt, traffic:'200+' }, { term:'생맥주', startedAt:collectedAt, traffic:'200+' }, { term:'치킨', startedAt:old }]
+    items: [{ term:'변상일', startedAt:collectedAt, traffic:'200+' }, { term:'생맥주', startedAt:collectedAt, traffic:'200+' }, { term:'치킨', startedAt:old }],
+    previousIssues: [{term:'어제 이슈', day:yesterday, kind:'보도', publisher:'SBS', url:'https://news.sbs.co.kr/test', publishedAt:old}]
   };
   await cloud.route('**/daily-keywords.json', route => route.fulfill({json:feed}));
   await cloud.evaluate(async () => {
@@ -211,10 +215,13 @@ try {
   await daily.getByRole('button',{name:/생맥주.*200\+/}).click();
   assert.equal(await cloud.locator('#topicCustomInput').inputValue(),'생맥주');
   await cloud.evaluate(async () => { setIndustry('auto'); await arLoadDailyKeywords(); });
-  assert.equal(await daily.getByRole('button').count(),0);
+  await daily.getByRole('button',{name:/변상일/}).waitFor();
+  assert.equal(await daily.getByRole('button').count(),2);
+  assert.equal(await daily.getByRole('heading').textContent(),'오늘의 키워드');
+  assert.match(await daily.getByRole('status').textContent(),new RegExp(day));
+  assert.equal(await daily.getByRole('button',{name:/어제 이슈|치킨/}).count(),0);
   await cloud.evaluate(async () => { setIndustry('restaurant'); await arLoadDailyKeywords(); });
   const refreshDaily = () => cloud.evaluate(async () => { arKeywordDay = ''; await arLoadDailyKeywords(); });
-  const day = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date(collectedAt));
   feed.issues = [
     {term:'수능', day, kind:'일정', publisher:'교육부', url:'https://www.moe.go.kr/boardCnts/viewRenew.do?boardSeq=100526'},
     {term:'시험과 AI 부정행위 논란', day, kind:'보도', publisher:'연합뉴스', url:'https://www.yna.co.kr/view/test', publishedAt:collectedAt}
@@ -225,7 +232,6 @@ try {
   assert.equal(await cloud.locator('#topicCustomInput').inputValue(),'시험과 AI 부정행위 논란');
   assert.equal(await daily.getByRole('link',{name:'수능 출처 · 교육부'}).count(),1);
   feed.collectedAt = old;
-  const yesterday = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date(old));
   feed.issues = feed.issues.map(issue=>({...issue,day:yesterday,publishedAt:old}));
   await refreshDaily();
   assert.equal(await daily.getByRole('button').count(),2);

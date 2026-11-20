@@ -374,14 +374,20 @@
           }
         }
         if (feedDay === day) showIssues(data.issues, day);
-        for (const item of feedDay === day ? data.items : []) {
+        const todayTrends = (feedDay === day ? data.items : []).filter((item) => {
           const started = Date.parse(item?.startedAt);
-          if (typeof item?.term !== 'string' || !item.term.trim() || !Number.isFinite(started) ||
-              started > collected || arKstDay.format(started) !== day) continue;
-          if (shown.has(item.term) || !phrases.includes(arKeywordMatchText(item.term))) continue;
-          arDailyKeywordRow(list, item.term, '급상승 시작 ' + arKstTime.format(started) + (item.traffic ? ' · 검색량 ' + item.traffic : ''), 'Google 트렌드', data.source);
-          shown.add(item.term);
+          return typeof item?.term === 'string' && item.term.trim() && Number.isFinite(started) &&
+            started <= collected && arKstDay.format(started) === day;
+        });
+        function showTrends(items) {
+          for (const item of items) {
+            if (shown.has(item.term)) continue;
+            arDailyKeywordRow(list, item.term, '급상승 시작 ' + arKstTime.format(Date.parse(item.startedAt)) + (item.traffic ? ' · 검색량 ' + item.traffic : ''), 'Google 트렌드', data.source);
+            shown.add(item.term);
+          }
         }
+        showTrends(todayTrends.filter((item) => phrases.includes(arKeywordMatchText(item.term))));
+        if (!shown.size) showTrends(todayTrends);
         if (shown.size) {
           status.textContent = day + ' ' + arKstTime.format(collected) + ' 수집';
         } else {
