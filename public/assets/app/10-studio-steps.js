@@ -711,6 +711,7 @@
           if (m.d.test(hay)) sc += (3.2 - Math.min(i, 3) * 0.45);
         });
         if (!moods.length && season && /가을|겨울/.test(season) && /감성|warm|sepia|film|cinema|serif/i.test(hay)) sc += 1.0;
+        if (d.isProReels) sc += 1.3;
         if (d.industry) sc += 0.9;
         if (d.isTrend) sc += 0.5;
         if (recent.has(d.id)) sc -= 3.5; // 방금 썼던 스타일 반복 방지

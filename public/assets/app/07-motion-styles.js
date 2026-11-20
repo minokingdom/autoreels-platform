@@ -145,6 +145,15 @@
       ['ed_clean_slider', '클린 비포·애프터', 'ba_slider', 'pretM', '#0b0c0e', '#16181c', '#e8e4dc', '#ffffff', false],
       ['ed_ink_seal', '먹빛 캘리 낙관', 'in_brush_seal', 'brush', '#181614', '#26221e', '#c04632', '#f5efe2', false],
     ];
+    // ★ 2026 1군 풀스크린 릴스 전용 모션 엔진 6종 (9:16 풀스크린 · 모션 물리 · 인스타/쇼츠 Safe Zone 준수)
+    const PRO_REELS_ROWS = [
+      ['pro_karaoke', '단어 하이라이트 · 훅 자막', 'pro_karaoke', 'sans', '#080808', '#141414', '#f4f0e8', '#ffffff', false, '타이포', '말하는 단어에 맞춰 실시간 하이라이트 · 0.18초 펀치 컷'],
+      ['pro_film_sub', '시네마 풀스크린 자막', 'pro_film_sub', 'gowun', '#090908', '#141311', '#e6d5b8', '#f4f0e8', false, '고급', '풀스크린 35mm 필름 그레인 · 안전 영역 명조 자막'],
+      ['pro_punch_hook', '0.2초 펀치 컷 · 키네틱', 'pro_punch_hook', 'sans', '#080809', '#141518', '#facc15', '#ffffff', false, '타이포', '빠른 줌 펀치 · 줄별 마스크 슬라이드 · 라이브 진행 바'],
+      ['pro_editorial_center', '매거진 센터 타이포', 'pro_editorial_center', 'maru', '#080808', '#131210', '#f4f0e8', '#ffffff', false, '고급', '풀스크린 중앙 명조 타이포 · 1px 헤어라인 에디토리얼'],
+      ['pro_pov_caption', '인스타 감성 POV 자막', 'pro_pov_caption', 'pretM', '#0b0b0c', '#161618', '#f4f0e8', '#ffffff', false, '브이로그', '네이티브 릴스 글래스 캡슐 · 핸드헬드 미세 호흡'],
+      ['pro_split_reveal', '커튼 와이프 · 컷 전환', 'pro_split_reveal', 'pretM', '#090a0c', '#15171c', '#f4f0e8', '#ffffff', false, '비포·애프터', '이전 컷 위로 미끄러지는 커튼 와이프 · 좌하단 안전 자막']
+    ];
     // 모션 디자인도 별도 분류를 만들지 않고 기존 분류에 넣음
     const MOTION_CAT = {
       in_brush_seal: '손글씨', in_brush_letter: '손글씨', in_brush_postcard: '손글씨',
@@ -191,6 +200,13 @@
       insta: String(r[0]).startsWith('in_') || String(r[0]).startsWith('ed_'), // 인스타·2026 에디토리얼 큐레이션 팔레트 유지
       desc: r[2] === 'in_lookbook_still' ? '한 컷 동안 사진과 문구 고정 · 컷 경계에서 바로 전환' : `모션그래픽 · ${r[1]}`
     }));
+    const PRO_REELS_DESIGNS = PRO_REELS_ROWS.map((r, i) => ({
+      id: r[0], name: r[1], addedAt: '2026-11-20T07:55:00Z', cat: r[9] || '고급', engine: 'motion', mstyle: r[2], font: r[3],
+      bg1: r[4], bg2: r[5], accent: r[6], accent2: r[7], light: r[8], seed: 1800 + i, genre: 'motion', grade: 'none', label: r[1],
+      insta: true, isTrend: true, isProReels: true, desc: r[10] || r[1]
+    }));
+    // 1군 풀스크린 릴스 엔진 6종을 디자인 목록 최상단에 배치
+    DESIGN_STYLES.unshift(...PRO_REELS_DESIGNS);
     DESIGN_STYLES.push(...MOTION_DESIGNS);
 
     const mClamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -705,6 +721,10 @@
         return;
       }
       if (spec.referenceStyle) { arRenderReferenceFrame(c, W, H, t, mainDuration, totalCuts, d, spec); return; }
+      if (String(spec.mstyle || '').startsWith('pro_')) {
+        arRenderProReelsFrame(c, W, H, t, mainDuration, totalCuts, d, sp);
+        return;
+      }
       const cutDur = mainDuration / totalCuts;
       const cutIdx = Math.min(totalCuts - 1, Math.floor(t / cutDur));
       const local = t - cutIdx * cutDur;
@@ -3319,4 +3339,270 @@
       c.fillRect(W / 2 - 60, H - 104, 120, 1);
       c.globalAlpha = 1;
       inGrain(c, W, H, t, 0.07);
+    }
+
+    // =========================================================================
+    // 2026 1군 풀스크린 릴스 전용 6대 캔버스 모션 엔진 (Safe Zone 준수 · 물리 모션)
+    // =========================================================================
+    function arRenderProReelsFrame(c, W, H, t, mainDuration, totalCuts, d, sp) {
+      const cutDur = Math.max(0.5, mainDuration / Math.max(1, totalCuts));
+      const cutIdx = Math.min(totalCuts - 1, Math.floor(t / cutDur));
+      const local = Math.max(0, t - cutIdx * cutDur);
+      const lp = mClamp(local / cutDur);
+      const M = sp.mstyle;
+      const S = kitScene(t, mainDuration, false);
+      const rawCap = (campaign.cutCaptions && campaign.cutCaptions[cutIdx]) || campaign.hook || '';
+      const caption = gCleanCaption(rawCap);
+      const F = KIT_FONTS[sp.font] || KIT_FONTS.sans;
+      const easeOutExpo = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * mClamp(x)));
+      const easeOutBack = (x) => { const v = mClamp(x) - 1; return 1 + 2.4 * v * v * v + 1.4 * v * v; };
+
+      c.save();
+      c.fillStyle = sp.bg1 || '#080808';
+      c.fillRect(0, 0, W, H);
+
+      // 1) 9:16 풀스크린 카메라 모션 & 컷 전환 물리
+      if (M === 'pro_karaoke') {
+        const punch = 1 - easeOutExpo(local / 0.22);
+        const zoom = 1.03 + punch * 0.14 + lp * 0.035;
+        const driftX = Math.sin(t * 1.1) * 4;
+        const driftY = Math.cos(t * 0.85) * 3;
+        mPhoto(c, S, 0, 0, 0, W, H, zoom, driftX, driftY);
+        if (local < 0.14 && cutIdx > 0) {
+          c.fillStyle = `rgba(255,255,255,${((1 - local / 0.14) * 0.26).toFixed(3)})`;
+          c.fillRect(0, 0, W, H);
+        }
+      } else if (M === 'pro_film_sub') {
+        const zoom = 1.01 + lp * 0.065;
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.32);
+        inGrain(c, W, H, t, 0.045);
+      } else if (M === 'pro_punch_hook') {
+        const punch = 1 - easeOutExpo(local / 0.16);
+        const zoom = 1.04 + punch * 0.16 + lp * 0.04;
+        const panX = punch * (cutIdx % 2 === 0 ? 28 : -28);
+        mPhoto(c, S, 0, 0, 0, W, H, zoom, panX, 0);
+      } else if (M === 'pro_editorial_center') {
+        const zoom = 1.10 - lp * 0.075;
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.36);
+        inGrain(c, W, H, t, 0.032);
+      } else if (M === 'pro_pov_caption') {
+        const zoom = 1.04 + lp * 0.03;
+        const swayX = Math.sin(t * 1.35) * 5;
+        const swayY = Math.cos(t * 0.95) * 4;
+        mPhoto(c, S, 0, 0, 0, W, H, zoom, swayX, swayY);
+      } else if (M === 'pro_split_reveal') {
+        const wipe = easeOutExpo(local / 0.34);
+        if (cutIdx > 0 && wipe < 0.995) {
+          mPhoto(c, S, -1, 0, 0, W, H, 1.05, 0, 0);
+        }
+        const splitX = Math.round(W * wipe);
+        c.save();
+        c.beginPath();
+        c.rect(0, 0, cutIdx > 0 ? splitX : W, H);
+        c.clip();
+        mPhoto(c, S, 0, 0, 0, W, H, 1.02 + lp * 0.05, 0, 0);
+        c.restore();
+        if (cutIdx > 0 && wipe > 0.02 && wipe < 0.98) {
+          c.fillStyle = 'rgba(244,240,232,0.85)';
+          c.fillRect(splitX - 2, 0, 3, H);
+        }
+      }
+
+      // 2) 풀스크린 가독성 보호 그라데이션 스크림
+      const scTop = c.createLinearGradient(0, 0, 0, H * 0.24);
+      scTop.addColorStop(0, 'rgba(6,6,6,0.42)');
+      scTop.addColorStop(1, 'rgba(6,6,6,0)');
+      c.fillStyle = scTop;
+      c.fillRect(0, 0, W, H * 0.24);
+
+      const scBot = c.createLinearGradient(0, H * 0.44, 0, H);
+      scBot.addColorStop(0, 'rgba(6,6,6,0)');
+      scBot.addColorStop(0.58, M === 'pro_editorial_center' ? 'rgba(6,6,6,0.46)' : 'rgba(6,6,6,0.62)');
+      scBot.addColorStop(1, 'rgba(6,6,6,0.84)');
+      c.fillStyle = scBot;
+      c.fillRect(0, H * 0.44, W, H * 0.56);
+
+      // 3) 각 1군 포맷별 시그니처 타이포그래피 (인스타/쇼츠 Safe Zone 준수)
+      const safeW = W * 0.80;
+      const numTag = `${String(cutIdx + 1).padStart(2, '0')} / ${String(totalCuts).padStart(2, '0')}`;
+
+      if (M === 'pro_karaoke') {
+        const words = caption.replace(/\n+/g, ' ').split(/\s+/).filter(Boolean);
+        if (words.length) {
+          const activeWord = Math.min(words.length - 1, Math.floor(lp * words.length * 1.06));
+          const fontSize = Math.round(W * 0.068);
+          c.font = `800 ${fontSize}px ${F.f}`;
+          c.textBaseline = 'middle';
+          c.textAlign = 'left';
+          const padX = Math.round(fontSize * 0.28), padY = Math.round(fontSize * 0.16);
+          const spaceW = Math.round(fontSize * 0.34);
+          const lines = [[]];
+          let lineW = 0;
+          words.forEach((w, wi) => {
+            const tw = c.measureText(w).width + padX * 2;
+            if (lines[lines.length - 1].length && lineW + spaceW + tw > safeW && lines.length < 3) {
+              lines.push([]);
+              lineW = 0;
+            }
+            lines[lines.length - 1].push({ w, wi, tw });
+            lineW += (lines[lines.length - 1].length > 1 ? spaceW : 0) + tw;
+          });
+          const lh = Math.round(fontSize * 1.48);
+          const startY = H * 0.665 - ((lines.length - 1) * lh) / 2;
+          const entryPop = easeOutBack(local / 0.22);
+          lines.forEach((ln, li) => {
+            const totalW = ln.reduce((s, item, idx2) => s + item.tw + (idx2 ? spaceW : 0), 0);
+            let cx = (W - totalW) / 2;
+            const cy = startY + li * lh;
+            ln.forEach((item) => {
+              const isAct = item.wi === activeWord;
+              c.save();
+              const midX = cx + item.tw / 2;
+              c.translate(midX, cy);
+              const sc = isAct ? 1.06 * Math.min(1.04, entryPop) : 1;
+              c.scale(sc, sc);
+              if (isAct) {
+                c.fillStyle = sp.accent || '#f4f0e8';
+                gRoundRect(c, -item.tw / 2, -(fontSize / 2 + padY), item.tw, fontSize + padY * 2, 12);
+                c.fill();
+                c.fillStyle = '#080808';
+              } else {
+                c.shadowColor = 'rgba(0,0,0,0.82)';
+                c.shadowBlur = 16;
+                c.shadowOffsetY = 3;
+                c.fillStyle = item.wi < activeWord ? 'rgba(255,255,255,0.96)' : 'rgba(255,255,255,0.72)';
+              }
+              c.fillText(item.w, -item.tw / 2 + padX, 1);
+              c.restore();
+              cx += item.tw + spaceW;
+            });
+          });
+        }
+      } else if (M === 'pro_film_sub') {
+        c.save();
+        c.font = `500 ${Math.round(W * 0.025)}px 'JetBrains Mono', monospace`;
+        c.fillStyle = 'rgba(244,240,232,0.68)';
+        c.textAlign = 'left';
+        c.textBaseline = 'top';
+        c.fillText(numTag, W * 0.075, H * 0.085);
+        c.restore();
+        const alpha = easeOutExpo(local / 0.32);
+        const rise = (1 - alpha) * 14;
+        const r = mFit(c, caption, safeW, 2, Math.round(W * 0.052), Math.round(W * 0.036), sp.font);
+        c.save();
+        c.globalAlpha = alpha;
+        c.font = `500 ${r.size}px ${F.f}`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.shadowColor = 'rgba(0,0,0,0.88)';
+        c.shadowBlur = 18;
+        c.shadowOffsetY = 2;
+        c.fillStyle = '#f4f0e8';
+        const baseY = H * 0.725 - ((r.lines.length - 1) * r.lh) / 2 + rise;
+        r.lines.forEach((ln, li) => c.fillText(ln, W / 2, baseY + li * r.lh));
+        c.restore();
+      } else if (M === 'pro_punch_hook') {
+        const r = mFit(c, caption, safeW, 3, Math.round(W * 0.068), Math.round(W * 0.044), sp.font);
+        const blockH = r.lines.length * r.lh;
+        const startY = H * 0.64 - blockH / 2;
+        const barW = W * 0.28;
+        const barX = (W - barW) / 2;
+        c.fillStyle = 'rgba(255,255,255,0.22)';
+        c.fillRect(barX, startY - 26, barW, 3);
+        c.fillStyle = sp.accent || '#facc15';
+        c.fillRect(barX, startY - 26, barW * lp, 3);
+        c.save();
+        c.font = `800 ${r.size}px ${F.f}`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.shadowColor = 'rgba(0,0,0,0.78)';
+        c.shadowBlur = 14;
+        r.lines.forEach((ln, li) => {
+          const lineP = easeOutExpo((local - li * 0.07) / 0.22);
+          const ly = startY + li * r.lh + r.lh / 2;
+          c.save();
+          c.beginPath();
+          c.rect(0, ly - r.lh * 0.55, W, r.lh * 1.1);
+          c.clip();
+          c.globalAlpha = lineP;
+          c.fillStyle = li === 0 ? '#ffffff' : (sp.accent || '#facc15');
+          c.fillText(ln, W / 2, ly + (1 - lineP) * r.lh * 0.75);
+          c.restore();
+        });
+        c.restore();
+      } else if (M === 'pro_editorial_center') {
+        const alpha = easeOutExpo(local / 0.36);
+        const r = mFit(c, caption, W * 0.76, 3, Math.round(W * 0.060), Math.round(W * 0.040), sp.font);
+        const blockH = r.lines.length * r.lh;
+        const centerY = H * 0.49;
+        c.save();
+        c.globalAlpha = alpha;
+        c.fillStyle = 'rgba(244,240,232,0.45)';
+        c.fillRect(W / 2 - 28, centerY - blockH / 2 - 28, 56, 1);
+        c.fillRect(W / 2 - 28, centerY + blockH / 2 + 28, 56, 1);
+        c.font = `500 ${Math.round(W * 0.023)}px 'JetBrains Mono', monospace`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillStyle = 'rgba(244,240,232,0.68)';
+        c.fillText(numTag.replace('/', '—'), W / 2, centerY - blockH / 2 - 46);
+        c.font = `500 ${r.size}px ${F.f}`;
+        c.fillStyle = '#f4f0e8';
+        c.shadowColor = 'rgba(0,0,0,0.65)';
+        c.shadowBlur = 20;
+        const topY = centerY - ((r.lines.length - 1) * r.lh) / 2 + (1 - alpha) * 10;
+        r.lines.forEach((ln, li) => c.fillText(ln, W / 2, topY + li * r.lh));
+        c.restore();
+      } else if (M === 'pro_pov_caption') {
+        const pop = easeOutBack(local / 0.24);
+        const r = mFit(c, caption, W * 0.72, 3, Math.round(W * 0.044), Math.round(W * 0.032), sp.font);
+        c.font = `600 ${r.size}px ${F.f}`;
+        let maxW = 0;
+        r.lines.forEach((ln) => { maxW = Math.max(maxW, c.measureText(ln).width); });
+        const boxW = Math.min(W * 0.84, maxW + 52);
+        const boxH = r.lines.length * r.lh + 34;
+        const cx = W / 2, cy = H * 0.24;
+        c.save();
+        c.translate(cx, cy);
+        c.scale(0.92 + 0.08 * pop, 0.92 + 0.08 * pop);
+        c.globalAlpha = mClamp(local / 0.16);
+        c.fillStyle = 'rgba(14,14,16,0.64)';
+        gRoundRect(c, -boxW / 2, -boxH / 2, boxW, boxH, 20);
+        c.fill();
+        c.strokeStyle = 'rgba(255,255,255,0.20)';
+        c.lineWidth = 1.5;
+        c.stroke();
+        c.fillStyle = '#f4f0e8';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        const topY = -((r.lines.length - 1) * r.lh) / 2;
+        r.lines.forEach((ln, li) => c.fillText(ln, 0, topY + li * r.lh));
+        c.restore();
+      } else if (M === 'pro_split_reveal') {
+        const alpha = easeOutExpo(local / 0.28);
+        const leftX = W * 0.075;
+        const maxLeftW = W * 0.72;
+        const r = mFit(c, caption, maxLeftW, 3, Math.round(W * 0.056), Math.round(W * 0.038), sp.font);
+        const baseY = H * 0.67 - ((r.lines.length - 1) * r.lh) / 2;
+        c.save();
+        c.globalAlpha = alpha;
+        const pillText = `CUT ${String(cutIdx + 1).padStart(2, '0')}`;
+        c.font = `600 ${Math.round(W * 0.024)}px 'JetBrains Mono', monospace`;
+        const pw = c.measureText(pillText).width + 24;
+        c.fillStyle = 'rgba(244,240,232,0.16)';
+        gRoundRect(c, leftX, baseY - r.lh / 2 - 42, pw, 28, 999);
+        c.fill();
+        c.strokeStyle = 'rgba(244,240,232,0.35)';
+        c.lineWidth = 1;
+        c.stroke();
+        c.fillStyle = '#f4f0e8';
+        c.textAlign = 'left';
+        c.textBaseline = 'middle';
+        c.fillText(pillText, leftX + 12, baseY - r.lh / 2 - 28);
+        c.font = `700 ${r.size}px ${F.f}`;
+        c.shadowColor = 'rgba(0,0,0,0.82)';
+        c.shadowBlur = 16;
+        r.lines.forEach((ln, li) => c.fillText(ln, leftX + (1 - alpha) * -14, baseY + li * r.lh));
+        c.restore();
+      }
+      c.restore();
     }
