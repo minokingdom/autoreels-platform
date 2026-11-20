@@ -664,7 +664,7 @@
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
           let body, full, exactBounds;
-          const url = `/api/tts-script?v=11&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
+          const url = `/api/tts-script?v=12&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
           const res = await this.runTtsRequest(() => this.isGoogleVoice(voice) ? fetch('/api/tts-script', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -820,7 +820,7 @@
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
           // v: 서버의 읽기 규칙이 바뀌면 올려서, 예전에 저장된 음성 대신 새 음성을 받게 함
-          const url = `/api/tts?v=10&speed=${speed}` + (voice !== 'auto' ? `&ref=${encodeURIComponent(voice)}` : '') + `&text=${encodeURIComponent(text)}`;
+          const url = `/api/tts?v=11&speed=${speed}` + (voice !== 'auto' ? `&ref=${encodeURIComponent(voice)}` : '') + `&text=${encodeURIComponent(text)}`;
           let res = await this.runTtsRequest(() => fetch(url));
           if (!res.ok && (res.status === 429 || res.status >= 500) && res.status !== 503) {
             await new Promise((r) => setTimeout(r, 900));
