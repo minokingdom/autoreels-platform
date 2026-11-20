@@ -3435,7 +3435,12 @@
       c.fillStyle = scBot;
       c.fillRect(0, H * 0.44, W, H * 0.56);
 
-      // 3) 각 1군 포맷별 시그니처 타이포그래피 (인스타/쇼츠 Safe Zone 준수)
+      // 3) 각 1군 포맷별 시그니처 타이포그래피 (인스타/쇼츠 Safe Zone 준수 · 컷 자막 숨김(쓰레기통 삭제) 반영)
+      const _proOv = typeof getCutElementOverride === 'function' ? getCutElementOverride(cutIdx) : null;
+      if (_proOv && _proOv.caption && _proOv.caption.hidden) {
+        c.restore();
+        return;
+      }
       const safeW = W * 0.80;
       const numTag = `${String(cutIdx + 1).padStart(2, '0')} / ${String(totalCuts).padStart(2, '0')}`;
 

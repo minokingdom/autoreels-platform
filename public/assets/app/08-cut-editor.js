@@ -2957,9 +2957,22 @@
           const rect = layer.getBoundingClientRect();
           if (!rect.width || !rect.height) return;
           const pt = ev.touches ? ev.touches[0] : ev;
+          if (!pt) return;
           if (Math.hypot(pt.clientX - startX, pt.clientY - startY) > 4) moved = true;
           const dx = (pt.clientX - startX) / rect.width;
           const dy = (pt.clientY - startY) / rect.height;
+          const isOverTrashHit = (p, cx, cy, trashEl) => {
+            if (!moved) return false;
+            if (trashEl && !trashEl.classList.contains('hidden')) {
+              const tr = trashEl.getBoundingClientRect();
+              const pad = 30;
+              if (p.clientX >= tr.left - pad && p.clientX <= tr.right + pad &&
+                  p.clientY >= tr.top - pad && p.clientY <= tr.bottom + pad) {
+                return true;
+              }
+            }
+            return cy > 0.82 && Math.abs(cx - 0.5) < 0.24;
+          };
 
           if (dragElKey) {
             const curOv = getCutElementOverride(window.__arPinnedCut);
@@ -2979,7 +2992,7 @@
                 if (inlineBar) { inlineBar.style.opacity = '0'; inlineBar.style.pointerEvents = 'none'; }
                 if (trash) trash.classList.remove('hidden');
               }
-              overTrash = moved && ny > 0.87 && Math.abs(nx - 0.5) < 0.14;
+              overTrash = isOverTrashHit(pt, nx, ny, trash);
               if (trash) {
                 trash.style.transform = overTrash ? 'translateX(-50%) scale(1.16)' : 'translateX(-50%) scale(1)';
                 trash.style.backgroundColor = overTrash ? 'rgba(229,72,77,0.94)' : 'rgba(0,0,0,0.82)';
@@ -3019,7 +3032,7 @@
             if (selBar) selBar.classList.add('hidden');
             if (trash) trash.classList.remove('hidden');
           }
-          overTrash = moved && ny > 0.87 && Math.abs(nx - 0.5) < 0.14;
+          overTrash = isOverTrashHit(pt, nx, ny, trash);
           if (trash) {
             trash.style.transform = overTrash ? 'translateX(-50%) scale(1.16)' : 'translateX(-50%) scale(1)';
             trash.style.backgroundColor = overTrash ? 'rgba(229,72,77,0.94)' : 'rgba(0,0,0,0.82)';
@@ -3067,6 +3080,7 @@
             if (inlineBar) { inlineBar.style.opacity = ''; inlineBar.style.pointerEvents = ''; }
             if (wasTrash && finishedKey !== 'photo') {
               updateCutElementOverride(window.__arPinnedCut, finishedKey, 'hidden', true, true);
+              if (typeof arToast === 'function') arToast('요소를 삭제(숨김)했습니다.', true);
               return;
             }
             renderPreviewCutPinBar();
@@ -3102,6 +3116,7 @@
               window.__arSelectedOverlayIdx = -1;
               window.__arActiveCutElKey = 'caption';
               if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+              if (typeof arToast === 'function') arToast('요소를 삭제했습니다.', true);
             } else if (!wasMoved && wasAlready && typeof openCanvasDirectTextEdit === 'function') {
               const it = getCutOverlayList(window.__arPinnedCut)[finishedIdx];
               if (it && it.type === 'text') {
