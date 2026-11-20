@@ -3716,7 +3716,11 @@
     }
 
     function arReleasePhoto(img) {
-      if (img && img._arObjectUrl) { URL.revokeObjectURL(img._arObjectUrl); img._arObjectUrl = null; }
+      if (!img) return;
+      if (img._isVideo) {
+        try { img.pause(); img.removeAttribute('src'); img.load(); } catch (_) {}
+      }
+      if (img._arObjectUrl) { URL.revokeObjectURL(img._arObjectUrl); img._arObjectUrl = null; }
     }
 
     async function arWithPhotoImport(input, action) {
@@ -3750,6 +3754,7 @@
         vid.loop = true;
         vid.preload = 'auto';
         vid._isVideo = true;
+        vid._arObjectUrl = url;
         vid._label = `${order}. 내 영상`;
         let done = false;
         const finish = (ok) => {
@@ -3862,7 +3867,10 @@
       const file = event.target.files && event.target.files[0];
       if (!file) return;
       const vid = document.getElementById('hiddenCustomVideo');
-      vid.src = URL.createObjectURL(file);
+      if (vid._arObjectUrl) { URL.revokeObjectURL(vid._arObjectUrl); vid._arObjectUrl = null; }
+      const url = URL.createObjectURL(file);
+      vid._arObjectUrl = url;
+      vid.src = url;
       vid.play();
       campaign.hasCustomVideo = true;
       campaign.uploadedPhotos.forEach(arReleasePhoto);

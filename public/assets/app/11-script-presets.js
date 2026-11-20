@@ -642,10 +642,14 @@
         d.variation.hook = campaign.hook;
         d.variation.bullets = [...campaign.bullets];
       }
-      syncPreviewPanel();
-      syncTechPanel();
-      if (typeof arResetAndRebuildNarration === 'function') arResetAndRebuildNarration();
-      window.__timelines['main'].seek(0);
+      clearTimeout(window._arCampaignInputDebounce);
+      window._arCampaignInputDebounce = setTimeout(() => {
+        const capEl = document.getElementById('dlrCaptionTextarea');
+        if (capEl && document.activeElement !== capEl) capEl.value = buildCaption(d);
+        syncTechPanel();
+        if (typeof arResetAndRebuildNarration === 'function') arResetAndRebuildNarration();
+        if (window.__timelines?.main) window.__timelines['main'].seek(window.__timelines['main'].currentTime || 0);
+      }, 220);
     }
 
     function batchGenerateToStaging() {
@@ -912,7 +916,8 @@
       }
       const durSec = Math.round(TOTAL_DURATION || 12);
       const safeFilename = window.lastRecordedFilename || arRecordedFilename(blob, durSec);
-      const url = URL.createObjectURL(blob);
+      const url = window.lastRecordedVideoUrl || URL.createObjectURL(blob);
+      if (!window.lastRecordedVideoUrl) window.lastRecordedVideoUrl = url;
 
       const win = window.open('', '_blank');
       if (win) {
@@ -1404,7 +1409,9 @@ POST https://graph.facebook.com/v19.0/${d.igUsername.replace('@', '')}/media
         vid.preload = 'auto';
         vid._isVideo = true;
         vid._label = `${cutIdx + 1}. ${cutIdx + 1}컷 내 영상`;
-        vid.src = URL.createObjectURL(file);
+        const vidUrl = URL.createObjectURL(file);
+        vid._arObjectUrl = vidUrl;
+        vid.src = vidUrl;
         vid.addEventListener('loadeddata', () => {
           if (typeof seekToTime === 'function' && typeof getCutStart === 'function') {
             seekToTime(getCutStart(cutIdx) + 0.1);

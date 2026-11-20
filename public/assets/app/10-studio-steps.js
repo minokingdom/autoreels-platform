@@ -865,9 +865,9 @@
         window.__timelines['main'].seek(window.__timelines['main'].currentTime);
       }
 
-      // 탭을 바꾸면 패널 맨 위가 보이도록 (긴 화면에서 아래쪽에 머무는 것 방지)
+      // 탭을 바꾸면 패널 맨 위가 보이도록 (모바일 시트 모드에서는 배경 스크롤 점프 방지)
       const bar = document.querySelector('.studio-tablist');
-      if (bar && bar.getBoundingClientRect().top < 0) {
+      if (bar && !arUsesWorkflowSheet() && bar.getBoundingClientRect().top < 0) {
         bar.scrollIntoView({ block: 'start', behavior: 'smooth' });
       }
       arUpdateEasyGuide(key);
@@ -1121,9 +1121,11 @@
       nb.onclick = !next ? null : () => {
         if (key === 'topic' && !window.arTodayTopic && (window.__arTopics || []).length) {
           arPickTopic(window.__arTopics[0]);
-          const panel = document.getElementById('studioPanel_script');
-          const top = panel ? panel.getBoundingClientRect().top + window.scrollY - 150 : 0;
-          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+          if (!document.body.classList.contains('ar-sheet')) {
+            const panel = document.getElementById('studioPanel_script');
+            const top = panel ? panel.getBoundingClientRect().top + window.scrollY - 150 : 0;
+            window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+          }
           return;
         }
         go(next)();
@@ -1502,9 +1504,9 @@
       document.getElementById('dlrCaptionTextarea').value = buildCaption(d);
 
       const hookInput = document.getElementById('inputHook');
-      if (hookInput) hookInput.value = v.hook || campaign.hook;
+      if (hookInput && document.activeElement !== hookInput) hookInput.value = v.hook || campaign.hook;
       const bulletsInput = document.getElementById('inputBullets');
-      if (bulletsInput && v.bullets) bulletsInput.value = v.bullets.join('\n');
+      if (bulletsInput && v.bullets && document.activeElement !== bulletsInput) bulletsInput.value = v.bullets.join('\n');
 
       const totalCuts = getTargetCutCount();
       renderDynamicCutCardsUI(totalCuts);
@@ -2158,6 +2160,7 @@
       window.__timelines['main'].seek((window.__timelines['main'].currentTime + mainDur / totalCuts) % mainDur);
     }
 
+    let _arCutCaptionDebounce = null;
     function updateCustomCutCaptions() {
       const totalCuts = getTargetCutCount();
       if (!Array.isArray(campaign.ttsLines)) campaign.ttsLines = [];
@@ -2168,15 +2171,18 @@
         const ttsEl = document.getElementById(`cutTts${i}`);
         if (ttsEl) campaign.ttsLines[i] = ttsEl.value;
       }
-      if (typeof arResetAndRebuildNarration === 'function') {
-        arResetAndRebuildNarration();
-      } else {
-        AudioEngine.masterBuffer = null;
-        AudioEngine.masterDuration = 0;
-        if (AudioEngine.enabled) AudioEngine.schedulePrefetch();
-      }
-      if (typeof renderVisualStoryboardTrack === 'function') renderVisualStoryboardTrack();
-      window.__timelines.main.seek(window.__timelines.main.currentTime);
+      clearTimeout(_arCutCaptionDebounce);
+      _arCutCaptionDebounce = setTimeout(() => {
+        if (typeof arResetAndRebuildNarration === 'function') {
+          arResetAndRebuildNarration();
+        } else {
+          AudioEngine.masterBuffer = null;
+          AudioEngine.masterDuration = 0;
+          AudioEngine.ttsDirty = true;
+        }
+        if (typeof renderVisualStoryboardTrack === 'function') renderVisualStoryboardTrack();
+        if (window.__timelines?.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+      }, 200);
     }
 
     function saveAdminAiKeys() {
@@ -2289,6 +2295,7 @@
     }
 
     async function generateStoryboardFromPrompt({ useCurrentProduct = false } = {}) {
+      if (window.__arScriptGenerating) return;
       if (!arRequireAiAccess()) return;
       arPauseForStudioEdit();
       const generationId = ++arScriptGenerationId;
@@ -2317,12 +2324,8 @@
       const totalCuts = getTargetCutCount();
       let aiUsedFallback = false;
 
-      // 사용자 클릭 제스처 시점에 오디오/TTS 엔진을 즉시 활성화하여 음성이 100% 나오도록 보장
-      if (!AudioEngine.enabled) {
-        toggleAudioMaster(true);
-      } else {
-        AudioEngine.ensureContext();
-      }
+      // 대본 생성 중에는 배경음악을 임의로 켜지 않고 오디오 컨텍스트만 준비
+      if (AudioEngine.enabled) AudioEngine.ensureContext();
 
       const industryAtRequest = IND.key;
       const specialtyAtRequest = arIndustrySpecialty();
