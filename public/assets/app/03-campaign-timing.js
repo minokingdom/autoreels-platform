@@ -567,19 +567,38 @@
         `;
       }
       {
-        // 모바일은 대본 카드도 옆으로 넘기므로, 다시 그려도 보던 컷 위치를 유지
-        const keepX = container.scrollLeft;
-        container.innerHTML = html;
-        container.scrollLeft = keepX;
-        arRenderCutJumpBar('cutScriptJumpBar', container, 'script', targetCuts);
-        let hint = document.getElementById('cutScriptSwipeHint');
-        if (!hint) {
-          hint = document.createElement('p');
-          hint.id = 'cutScriptSwipeHint';
-          hint.className = 'lg:hidden text-[11px] text-[#85858b] mb-1';
-          container.parentNode.insertBefore(hint, document.getElementById('cutScriptJumpBar') || container);
+        const activeEl = document.activeElement;
+        const existingCards = container.querySelectorAll('[data-cut-card]').length;
+        const editingScriptInput = Boolean(
+          activeEl && container.contains(activeEl) &&
+          /^(cutSub|cutTts)\d+$/.test(activeEl.id) &&
+          existingCards === targetCuts
+        );
+        if (editingScriptInput) {
+          // 사용자가 화면 자막·성우 대사(발음)를 입력 중이면 input DOM을 파괴하지 않고 시간 라벨만 갱신 (포커스·키보드 튕김 방지)
+          for (let i = 0; i < targetCuts; i++) {
+            const lbl = document.getElementById(`cutTimeLabel${i}`);
+            if (lbl) {
+              const s = getCutStart(i).toFixed(1).replace(/\.0$/, '');
+              const e = (getCutStart(i) + getCutLengths()[i]).toFixed(1).replace(/\.0$/, '');
+              lbl.textContent = `CUT ${i + 1} (${s}~${e}초)`;
+            }
+          }
+        } else {
+          // 모바일은 대본 카드도 옆으로 넘기므로, 다시 그려도 보던 컷 위치를 유지
+          const keepX = container.scrollLeft;
+          container.innerHTML = html;
+          container.scrollLeft = keepX;
+          arRenderCutJumpBar('cutScriptJumpBar', container, 'script', targetCuts);
+          let hint = document.getElementById('cutScriptSwipeHint');
+          if (!hint) {
+            hint = document.createElement('p');
+            hint.id = 'cutScriptSwipeHint';
+            hint.className = 'lg:hidden text-[11px] text-[#85858b] mb-1';
+            container.parentNode.insertBefore(hint, document.getElementById('cutScriptJumpBar') || container);
+          }
+          hint.textContent = `컷 ${targetCuts}개 · 번호를 누르거나 옆으로 넘겨 고쳐요`;
         }
-        hint.textContent = `컷 ${targetCuts}개 · 번호를 누르거나 옆으로 넘겨 고쳐요`;
       }
       const mediaBox = document.getElementById('cutMediaCardsContainer');
       if (mediaBox) {
