@@ -877,8 +877,8 @@
           btn.textContent = '연결 해제';
           btn.disabled = false;
         } else {
-          handle.textContent = info.note || '연결 안 됨';
-          btn.textContent = '연결하기';
+          handle.textContent = t === 'instagram' && info.directLoginReady ? '릴스를 게시할 프로페셔널 계정 하나를 선택하세요' : info.note || '연결 안 됨';
+          btn.textContent = t === 'instagram' && info.directLoginReady ? '내 인스타 연결' : '연결하기';
           btn.disabled = false;
         }
         if (chk) {
@@ -887,6 +887,12 @@
           chk.disabled = !can;
         }
       });
+      const commentSwitch = document.getElementById('snsIgFirstComment');
+      if (commentSwitch) {
+        commentSwitch.disabled = Boolean(st?.targets?.instagram?.direct);
+        if (commentSwitch.disabled) commentSwitch.checked = false;
+        commentSwitch.closest('label')?.toggleAttribute('hidden', commentSwitch.disabled);
+      }
       // 페이스북 페이지가 여러 개면 고르는 목록
       let pick = document.getElementById('snsPagePicker');
       const fbRow = document.getElementById('snsStatusBtn_fb');
@@ -925,7 +931,7 @@
       if (!AR_SERVER.me) return openDealerAuthModal();
       const info = AR_SNS_STATE && AR_SNS_STATE.targets ? AR_SNS_STATE.targets[target] : null;
       if (info && info.connected) {
-        const both = target === 'instagram' || target === 'facebook';
+        const both = target === 'facebook' && AR_SNS_STATE?.targets?.instagram?.connected && !AR_SNS_STATE.targets.instagram.direct;
         if (!confirm(`${AR_SNS_NAMES[target]} 연결을 해제할까요?${both ? '\n(인스타그램과 페이스북은 메타 계정 하나로 연결되어 함께 해제됩니다)' : ''}`)) return;
         const r = await arSnsApi('disconnect', { target });
         if (r.ok) { AR_SNS_STATE = r.body; arSnsRender(); }

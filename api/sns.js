@@ -10,7 +10,7 @@
 //   POST ?action=publish           {targets, videoUrl, caption, title}
 //   POST ?action=jobs              {ids} → 발행 진행 상황
 const db = require('../lib/server/db');
-const { readiness, siteUrl } = require('../lib/server/config');
+const { readiness } = require('../lib/server/config');
 const { readSession, sameOrigin } = require('../lib/server/session');
 const { getSubscription } = require('../lib/server/billing');
 const { isActive, consume, refundUsage } = require('../lib/server/usage');
@@ -46,7 +46,7 @@ async function currentUser(req) {
 function backTo(res, params) {
   const q = new URLSearchParams(params).toString();
   res.statusCode = 302;
-  res.setHeader('Location', `${siteUrl()}/studio?${q}#publish`);
+  res.setHeader('Location', `/studio?${q}#publish`);
   res.setHeader('Cache-Control', 'no-store');
   res.end();
 }
@@ -65,7 +65,7 @@ module.exports = async function handler(req, res) {
   if (!action && req.method === 'GET' && (q.state || q.error)) {
     if (q.error) return backTo(res, { sns: 'error', reason: String(q.error_reason || q.error).slice(0, 60) });
     try {
-      const out = await sns.finishAuth(String(q.state), String(q.code || ''));
+      const out = await sns.finishAuth(String(q.state), String(q.code || ''), readSession(req)?.uid);
       return backTo(res, { sns: 'connected', provider: out.provider });
     } catch (e) {
       return backTo(res, { sns: 'error', reason: String(e.code || 'failed').slice(0, 40), msg: String(e.message || '').slice(0, 120) });
@@ -85,7 +85,7 @@ module.exports = async function handler(req, res) {
     const b = await readBody(req);
 
     if (action === 'connect') {
-      return send(res, 200, { ok: true, url: await sns.startAuth(user, String(b.target || '')) });
+      return send(res, 200, { ok: true, url: await sns.startAuth(user, String(b.target || ''), req.headers.host) });
     }
     if (action === 'disconnect') {
       await sns.disconnect(user, String(b.target || ''));

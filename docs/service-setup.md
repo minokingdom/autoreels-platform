@@ -29,6 +29,14 @@
 
 공식 안내 [알리고 문자 API](https://smartsms.aligo.in/smsapi.html) · [Vercel 고정 IP](https://vercel.com/docs/connectivity/static-ips)
 
+## 인스타그램 릴스 발행
+
+스튜디오 발행 화면의 ‘내 인스타 연결’은 Instagram Login Compatible 구성을 사용합니다. 회원은 비즈니스 또는 크리에이터 계정 하나를 선택하고 게시를 허용합니다. 인스타그램 선택 경로에서 페이스북 페이지를 조회하지 않습니다.
+
+운영 앱의 공개 구성 ID는 `instagramConfigId`에 있습니다. 다른 Meta 앱을 사용하는 환경에서는 해당 앱의 `META_APP_ID`, `META_APP_SECRET`, `META_INSTAGRAM_CONFIG_ID`를 사용합니다. Meta 설정에 스튜디오 도메인의 `/api/sns`를 HTTPS 리디렉션 주소로 등록합니다. 계정 확인과 릴스 게시 권한은 `instagram_basic`, `instagram_content_publish`입니다. 연결을 해제하거나 Meta가 접근을 철회하면 다시 연결해야 합니다.
+
+개발 모드에서는 앱 역할이 있는 계정으로 테스트합니다. 일반 고객에게 공개하기 전에 Meta의 권한 심사와 라이브 전환, 실제 릴스 게시를 확인합니다.
+
 ## 1분 예약 실행
 
 현재 저장소의 Vercel 기본 크론은 하루 한 번입니다. 이를 정시 예약용으로 사용하지 않습니다. Vercel 요금제를 임의로 바꾸거나 외부 서비스를 결제하지 않습니다.
