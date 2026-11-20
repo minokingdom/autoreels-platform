@@ -108,12 +108,42 @@
       ['in_brush_seal', '붓끝 낙관', 'in_brush_seal', 'brush', '#211c17', '#372b23', '#ae3126', '#f8f1e5', false],
       ['in_brush_letter', '여백에 쓴 편지', 'in_brush_letter', 'brush', '#201d18', '#383328', '#963629', '#fff6e3', false],
       ['in_brush_postcard', '한 폭의 엽서', 'in_brush_postcard', 'brush', '#ede4d4', '#d0c5b0', '#a92c21', '#fff8ea', true],
-      // 2026 하이엔드 에디토리얼 큐레이션 5종 (옵시디언 · 웜 아이보리 · 라이카 · 키노트 · 아틀리에)
+      // 2026 하이엔드 에디토리얼 큐레이션 30종 (고급·감성·브이로그·타이포·카드뉴스·비포애프터·손글씨)
       ['ed_obsidian', '옵시디언 에디토리얼', 'ed_vogue', 'maru', '#080808', '#141311', '#f4f0e8', '#ffffff', false],
       ['ed_ivory_note', '웜 아이보리 노트', 'in_letter', 'pretL', '#f2ede4', '#e8e0d3', '#141210', '#2b2622', true],
       ['ed_leica_sub', '라이카 시네마 자막', 'in_g_sub', 'gowun', '#0b0a09', '#161310', '#e6d5b8', '#f4f0e8', false],
       ['ed_keynote_mask', '키노트 타이포 마스크', 'ty_mask', 'sans', '#0a0a0b', '#161618', '#f5f5f4', '#ffffff', false],
       ['ed_aesop_arch', '아틀리에 아치', 'ed_arch', 'maru', '#ede6da', '#e2d8c7', '#2c2621', '#2c2621', true],
+      // 고급 · 럭셔리 · 시네마 5종
+      ['ed_monolith', '모노리스 블랙', 'stm_cinema', 'maru', '#060606', '#121212', '#e8e4dc', '#ffffff', false],
+      ['ed_champagne_cover', '샴페인 매거진', 'in_x_cover', 'maruL', '#171411', '#241f1a', '#d9c29c', '#faf5ec', false],
+      ['ed_noir_double', '누아르 이중노출', 'in_h_double', 'gowun', '#0b0c0e', '#15171b', '#d8d4cc', '#f5f5f4', false],
+      ['ed_gallery_plaque', '갤러리 모노 캡션', 'in_h_plaque', 'pretL', '#f3f1ec', '#e7e4dc', '#1c1b19', '#6e6a63', true],
+      ['ed_velvet_quote', '벨벳 에디토리얼', 'cn_boldquote', 'maru', '#120e10', '#1e171a', '#e5ccb8', '#faf4ef', false],
+      // 감성 · 카페 · 필름 · 공간 6종
+      ['ed_kodak_film', '코닥 35mm 필름', 'in_film', 'gowun', '#efe6d8', '#e4d7c3', '#8f5c38', '#261f1a', true],
+      ['ed_kyoto_window', '교토 창가 오후', 'in_x_window', 'maruL', '#e8e2d5', '#dcd3c2', '#6b5b47', '#2f2a24', true],
+      ['ed_seoul_postcard', '성수 엽서 무드', 'in_g_postcard', 'pen', '#f5efe4', '#eae0cf', '#9c563a', '#2c241e', true],
+      ['ed_matcha_linen', '말차 리넨 노트', 'in_letter', 'pretL', '#eef0e8', '#e2e6da', '#4a5d43', '#22291f', true],
+      ['ed_espresso_mood', '에스프레소 다크', 'in_mood', 'maru', '#140f0c', '#211813', '#d4b08c', '#f7f0e6', false],
+      ['ed_vinyl_lounge', '재즈 바이닐 라운지', 'in_h_vinyl', 'gowun', '#1b1613', '#28201b', '#dfb88a', '#f5ece0', false],
+      // 브이로그 · 일상 · 다이닝 · 뷰티 5종
+      ['ed_seoul_vlog', '서울 데일리 브이로그', 'in_vlog', 'pretM', '#0f1012', '#1a1c20', '#e8dfc8', '#ffffff', false],
+      ['ed_strip_35mm', '35mm 시네마 스트립', 'in_g_strip', 'pretL', '#121110', '#1d1b19', '#e0d3be', '#f5f0e8', false],
+      ['ed_glass_pov', '클린 글래스 POV', 'ed_glasspill', 'pretM', '#0c1116', '#151e26', '#e2e8f0', '#ffffff', false],
+      ['ed_triple_frame', '쓰리컷 룩북', 'in_h_panes', 'maru', '#f4efe7', '#e9e1d4', '#38322c', '#7d7267', true],
+      ['ed_arch_salon', '살롱 소프트 아치', 'in_g_arch', 'maruL', '#f7f2ec', '#ede4da', '#8f6f58', '#2c2520', true],
+      // 타이포 · 키네틱 · 모던 스위스 4종
+      ['ed_swiss_focus', '스위스 워드 포커스', 'ty_focus', 'sans', '#0a0a0a', '#171717', '#f4f0e8', '#ffffff', false],
+      ['ed_kinetic_mono', '모노 키네틱 컷', 'stm_kinetic', 'sans', '#09090b', '#16161a', '#e4e4e7', '#ffffff', false],
+      ['ed_spring_cream', '크림 스프링 타이포', 'ty_spring', 'pretM', '#f4efe6', '#eae2d4', '#181715', '#181715', true],
+      ['ed_split_studio', '스튜디오 스플릿', 'stm_split', 'pretL', '#0e0d0c', '#191715', '#dfd3c0', '#f5f0e8', false],
+      // 카드뉴스 · 정보 · 비포애프터 · 손글씨 5종
+      ['ed_editorial_deck', '에디토리얼 카드 덱', 'cn_deck', 'maru', '#f6f2eb', '#ebe4d8', '#1c1917', '#1c1917', true],
+      ['ed_cafe_receipt', '성수 영수증 카드', 'cn_receipt', 'pretM', '#f7f4ee', '#ebe5d9', '#292524', '#292524', true],
+      ['ed_duo_lookbook', '투컷 필름 앨범', 'cn_polaroid_duo', 'gowun', '#f2ece2', '#e6ddd0', '#8a5a44', '#2b241f', true],
+      ['ed_clean_slider', '클린 비포·애프터', 'ba_slider', 'pretM', '#0b0c0e', '#16181c', '#e8e4dc', '#ffffff', false],
+      ['ed_ink_seal', '먹빛 캘리 낙관', 'in_brush_seal', 'brush', '#181614', '#26221e', '#c04632', '#f5efe2', false],
     ];
     // 모션 디자인도 별도 분류를 만들지 않고 기존 분류에 넣음
     const MOTION_CAT = {
@@ -134,6 +164,11 @@
       in_y_torn: '감성', in_y_mosaic: '브이로그',
       ed_vogue: '고급', ed_glasspill: '브이로그', ed_kinetic: '타이포', ed_arch: '감성', ed_duotone: '타이포',
       ed_obsidian: '고급', ed_ivory_note: '감성', ed_leica_sub: '고급', ed_keynote_mask: '타이포', ed_aesop_arch: '감성',
+      ed_monolith: '고급', ed_champagne_cover: '고급', ed_noir_double: '고급', ed_gallery_plaque: '고급', ed_velvet_quote: '고급',
+      ed_kodak_film: '감성', ed_kyoto_window: '감성', ed_seoul_postcard: '감성', ed_matcha_linen: '감성', ed_espresso_mood: '감성', ed_vinyl_lounge: '감성',
+      ed_seoul_vlog: '브이로그', ed_strip_35mm: '브이로그', ed_glass_pov: '브이로그', ed_triple_frame: '브이로그', ed_arch_salon: '감성',
+      ed_swiss_focus: '타이포', ed_kinetic_mono: '타이포', ed_spring_cream: '타이포', ed_split_studio: '카드뉴스',
+      ed_editorial_deck: '카드뉴스', ed_cafe_receipt: '카드뉴스', ed_duo_lookbook: '카드뉴스', ed_clean_slider: '비포·애프터', ed_ink_seal: '손글씨',
       stm_kinetic: '타이포', stm_cinema: '고급', stm_sonar: '테크', stm_glint: '고급',
       cn_deck: '카드뉴스', cn_summary: '카드뉴스', cn_boldquote: '카드뉴스', cn_splitbar: '카드뉴스',
       cn_timeline: '카드뉴스', cn_qna: '카드뉴스', cn_compare: '카드뉴스', cn_receipt: '카드뉴스', cn_polaroid_duo: '카드뉴스',
@@ -143,12 +178,17 @@
     const AR_MOTION_ADDED_AT = {"ed_vogue": "2026-11-14T06:25:59Z", "ed_glasspill": "2026-11-14T06:25:59Z", "ed_kinetic": "2026-11-14T06:25:59Z", "ed_arch": "2026-11-14T06:25:59Z", "ed_duotone": "2026-11-14T06:25:59Z", "stm_kinetic": "2026-11-14T17:02:21Z", "stm_cinema": "2026-11-14T17:02:21Z", "stm_sonar": "2026-11-14T17:02:21Z", "stm_glint": "2026-11-14T17:02:21Z", "stm_split": "2026-11-17T05:14:07Z", "stm_ticket": "2026-11-17T05:14:07Z", "stm_glassbar": "2026-11-17T05:14:07Z",
       in_brush_seal: '2026-11-19T09:41:00Z', in_brush_letter: '2026-11-19T09:41:00Z', in_brush_postcard: '2026-11-19T09:41:00Z',
       in_lookbook_still: "2026-11-18T15:53:11Z",
-      ed_obsidian: "2026-11-20T07:30:00Z", ed_ivory_note: "2026-11-20T07:30:00Z", ed_leica_sub: "2026-11-20T07:30:00Z", ed_keynote_mask: "2026-11-20T07:30:00Z", ed_aesop_arch: "2026-11-20T07:30:00Z"
+      ed_obsidian: "2026-11-20T07:30:00Z", ed_ivory_note: "2026-11-20T07:30:00Z", ed_leica_sub: "2026-11-20T07:30:00Z", ed_keynote_mask: "2026-11-20T07:30:00Z", ed_aesop_arch: "2026-11-20T07:30:00Z",
+      ed_monolith: "2026-11-20T07:38:00Z", ed_champagne_cover: "2026-11-20T07:38:00Z", ed_noir_double: "2026-11-20T07:38:00Z", ed_gallery_plaque: "2026-11-20T07:38:00Z", ed_velvet_quote: "2026-11-20T07:38:00Z",
+      ed_kodak_film: "2026-11-20T07:38:00Z", ed_kyoto_window: "2026-11-20T07:38:00Z", ed_seoul_postcard: "2026-11-20T07:38:00Z", ed_matcha_linen: "2026-11-20T07:38:00Z", ed_espresso_mood: "2026-11-20T07:38:00Z", ed_vinyl_lounge: "2026-11-20T07:38:00Z",
+      ed_seoul_vlog: "2026-11-20T07:38:00Z", ed_strip_35mm: "2026-11-20T07:38:00Z", ed_glass_pov: "2026-11-20T07:38:00Z", ed_triple_frame: "2026-11-20T07:38:00Z", ed_arch_salon: "2026-11-20T07:38:00Z",
+      ed_swiss_focus: "2026-11-20T07:38:00Z", ed_kinetic_mono: "2026-11-20T07:38:00Z", ed_spring_cream: "2026-11-20T07:38:00Z", ed_split_studio: "2026-11-20T07:38:00Z",
+      ed_editorial_deck: "2026-11-20T07:38:00Z", ed_cafe_receipt: "2026-11-20T07:38:00Z", ed_duo_lookbook: "2026-11-20T07:38:00Z", ed_clean_slider: "2026-11-20T07:38:00Z", ed_ink_seal: "2026-11-20T07:38:00Z"
     };
     const MOTION_DESIGNS = MOTION_ROWS.map((r, i) => ({
       id: r[0], name: r[1], addedAt: AR_MOTION_ADDED_AT[r[0]], cat: MOTION_CAT[r[0]] || '재미', engine: 'motion', mstyle: r[2], font: r[3],
       bg1: r[4], bg2: r[5], accent: r[6], accent2: r[7], light: r[8], seed: 900 + i, genre: 'motion', grade: 'none', label: r[1],
-      insta: String(r[0]).startsWith('in_') || ['ed_obsidian', 'ed_ivory_note', 'ed_leica_sub', 'ed_keynote_mask', 'ed_aesop_arch'].includes(r[0]), // 인스타·에디토리얼 감성: 큐레이션 팔레트 유지
+      insta: String(r[0]).startsWith('in_') || String(r[0]).startsWith('ed_'), // 인스타·2026 에디토리얼 큐레이션 팔레트 유지
       desc: r[2] === 'in_lookbook_still' ? '한 컷 동안 사진과 문구 고정 · 컷 경계에서 바로 전환' : `모션그래픽 · ${r[1]}`
     }));
     DESIGN_STYLES.push(...MOTION_DESIGNS);
