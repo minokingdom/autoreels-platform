@@ -159,9 +159,14 @@
       link.href = (production ? 'https://autoreelsmaker.kr' : '') + '/api/account?action=kakao-start&ind=' + encodeURIComponent(curInd);
       if (!link.dataset.indBound) {
         link.dataset.indBound = '1';
-        link.addEventListener('click', () => {
+        link.addEventListener('click', async (ev) => {
+          ev.preventDefault();
           const liveInd = (typeof IND !== 'undefined' && IND && IND.key) ? IND.key : 'auto';
-          link.href = (arIsProductionHost() ? 'https://autoreelsmaker.kr' : '') + '/api/account?action=kakao-start&ind=' + encodeURIComponent(liveInd);
+          const dest = (arIsProductionHost() ? 'https://autoreelsmaker.kr' : '') + '/api/account?action=kakao-start&ind=' + encodeURIComponent(liveInd);
+          if (typeof window.arSaveLocalSnapshot === 'function') {
+            try { await Promise.race([window.arSaveLocalSnapshot(true), new Promise((r) => setTimeout(r, 900))]); } catch (_) {}
+          }
+          window.location.href = dest;
         });
       }
       document.getElementById('authDemoSection').classList.toggle('hidden', production || Boolean(AR_SERVER.cfg?.serverMode));
@@ -950,7 +955,12 @@
         return;
       }
       const r = await arSnsApi('connect', { target });
-      if (r.ok && r.body.url) window.location.href = r.body.url;
+      if (r.ok && r.body.url) {
+        if (typeof window.arSaveLocalSnapshot === 'function') {
+          try { await window.arSaveLocalSnapshot(true); } catch (_) {}
+        }
+        window.location.href = r.body.url;
+      }
       else arToast(r.body.message || '연결을 시작하지 못했습니다.');
     }
 
@@ -1632,77 +1642,297 @@ let arProjectInteracted=false,arProjectRestoredUser=null;
 document.addEventListener('pointerdown',()=>{arProjectInteracted=true;},{once:true,capture:true});
 document.addEventListener('keydown',()=>{arProjectInteracted=true;},{once:true,capture:true});
 async function arRestoreLastProject(){
+  if(window.__arRestoredLocalSnapshot || sessionStorage.getItem('ar_return_restore')==='1') return;
   const uid=arProjectUser();if(!uid||arProjectRestoredUser===uid)return;arProjectRestoredUser=uid;
   let id;try{id=localStorage.getItem('ar_project_last_'+uid);}catch(_){}
   if(!id||arProjectInteracted)return;
-  try{const r=await arProjectCall('project-load',{id});if(arProjectInteracted)return;await arRestoreProject(r.project);arToast('저장한 프로젝트를 복구했습니다.',true);}
+  try{const r=await arProjectCall('project-load',{id});if(arProjectInteracted||window.__arRestoredLocalSnapshot)return;await arRestoreProject(r.project);arToast('저장한 프로젝트를 복구했습니다.',true);}
   catch(e){arToast('저장 프로젝트를 자동 복구하지 못했습니다. 내 프로젝트에서 다시 불러와 주세요.');}
 }
 
-// 비로그인 게스트 작업 중 자동 임시저장(Draft) & 새로고침 시 원클릭 이어하기 (최대 24시간 보관)
-(function initGuestAutoDraft() {
-  const DRAFT_KEY = 'autoreels_working_draft_v1';
+// =========================================================================
+// IndexedDB 자동 스냅샷 저장 & 복구 (사진·대본·자막·스타일·성우·BGM 전체 보존)
+// 카카오 로그인 / SNS OAuth / 참고 영상·쇼츠 도구 이동 시 유실 ZERO
+// =========================================================================
+(function initFullAutoSnapshot() {
+  const DB_NAME = 'ar_local_autosave_v1';
+  const STORE = 'snapshots';
+  const KEY = 'latest';
   let saveTimer = null;
-  function saveDraft() {
-    try {
-      if (typeof campaign === 'undefined' || !campaign) return;
-      const payload = {
-        savedAt: Date.now(),
-        industry: (typeof IND !== 'undefined' && IND?.key) ? IND.key : 'auto',
-        topic: campaign.topic || '',
-        hook: campaign.hook || '',
-        cutScripts: Array.isArray(campaign.cutScripts) ? campaign.cutScripts.slice(0, 8) : [],
-        cutCaptions: Array.isArray(campaign.cutCaptions) ? campaign.cutCaptions.slice(0, 8) : [],
-        ttsLines: Array.isArray(campaign.ttsLines) ? campaign.ttsLines.slice(0, 8) : [],
-        designStyle: campaign.designStyle || ''
+  let userDirty = false;
+  let savingPromise = null;
+
+  function openIdb() {
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) return reject(new Error('no_idb'));
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
       };
-      if (!payload.hook && !payload.topic && !payload.cutScripts.some(Boolean)) return;
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
-    } catch (e) {}
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error || new Error('idb_open_failed'));
+    });
   }
+
+  async function idbPut(val) {
+    const db = await openIdb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).put(val, KEY);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); reject(tx.error); };
+    });
+  }
+
+  async function idbGet() {
+    const db = await openIdb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readonly');
+      const req = tx.objectStore(STORE).get(KEY);
+      req.onsuccess = () => { db.close(); resolve(req.result || null); };
+      req.onerror = () => { db.close(); reject(req.error); };
+    });
+  }
+
+  async function idbDel() {
+    try {
+      const db = await openIdb();
+      await new Promise((resolve) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).delete(KEY);
+        tx.oncomplete = tx.onerror = () => { db.close(); resolve(); };
+      });
+    } catch (_) {}
+  }
+
+  async function captureLocalSafe() {
+    if (typeof campaign === 'undefined' || !campaign || typeof IND === 'undefined') return null;
+    let packPath = '';
+    if (AudioEngine.bgmStyle === 'custom_mp3' && AudioEngine.customBgmAudioEl?.src) {
+      try {
+        const u = new URL(AudioEngine.customBgmAudioEl.src, location.href);
+        if (u.origin === location.origin && /^\/assets\/bgm\/pack\/[a-zA-Z0-9_-]+\.mp3$/.test(u.pathname)) packPath = u.pathname;
+      } catch (_) {}
+    }
+    const data = {};
+    for (const k of AR_PROJECT_FIELDS) {
+      if (campaign[k] !== undefined) data[k] = JSON.parse(JSON.stringify(campaign[k]));
+    }
+    const designIds = new Set([data.designStyle, ...[].concat(data.cutDesigns || [])]);
+    const customStyles = [...designIds].map((id) => (typeof arFindDesign === 'function' ? arFindDesign(id)?.custom : null)).filter(Boolean);
+    const photos = [];
+    for (const img of (campaign.uploadedPhotos || [])) {
+      try {
+        photos.push({ src: await arProjectImage(img._dataUrl || img.src, 1080), label: img._label || '', title: img._sceneTitle || '' });
+      } catch (_) {}
+    }
+    for (const row of (data.cutOverlays || [])) {
+      for (const overlay of (row || [])) {
+        if (overlay && overlay.photoSrc) {
+          try { overlay.photoSrc = await arProjectImage(overlay.photoSrc, 480); } catch (_) {}
+        }
+      }
+    }
+    const d = typeof getSelectedDealer === 'function' ? getSelectedDealer() : {};
+    const card = {};
+    for (const k of ['name', 'title', 'branch', 'promoTag', 'cardHide', 'accentColor']) {
+      if (d[k] !== undefined) card[k] = JSON.parse(JSON.stringify(d[k]));
+    }
+    if (d.logoImg && d.logoImg.src) {
+      try { card.logo = await arProjectImage(d.logoImg.src, 480); } catch (_) {}
+    }
+    return {
+      version: 1,
+      industry: IND.key,
+      campaign: data,
+      photos,
+      card,
+      customStyles,
+      duration: typeof BASE_DURATION !== 'undefined' ? BASE_DURATION : 12,
+      prompt: document.getElementById('aiPromptInput')?.value || '',
+      audio: {
+        voice: AudioEngine.ttsVoice,
+        speed: AudioEngine.ttsSpeed,
+        bgm: document.getElementById('bgmStyleSelect')?.value || AudioEngine.bgmStyle,
+        packPath
+      }
+    };
+  }
+
+  async function restoreLocalSafe(s) {
+    if (!s || s.version !== 1) return false;
+    if (s.industry && s.industry !== IND.key && typeof setIndustry === 'function' && typeof AR_INDUSTRIES !== 'undefined' && AR_INDUSTRIES[s.industry]) {
+      try { setIndustry(s.industry); } catch (_) {}
+    }
+    const photos = [];
+    for (const ph of (s.photos || [])) {
+      try {
+        const img = new Image();
+        img.src = ph.src;
+        img._dataUrl = ph.src;
+        img._label = ph.label || '';
+        img._sceneTitle = ph.title || '';
+        await Promise.race([img.decode(), new Promise((_, rej) => setTimeout(() => rej(new Error('decode_timeout')), 8000))]);
+        photos.push(img);
+      } catch (_) {}
+    }
+    let logo = null;
+    if (s.card?.logo) {
+      try { logo = new Image(); logo.src = s.card.logo; await logo.decode(); } catch (_) { logo = null; }
+    }
+    if (typeof arCustomLoadRequest !== 'undefined' && arCustomLoadRequest) {
+      try { await arCustomLoadRequest; } catch (_) {}
+    }
+    const designIds = new Set([s.campaign.designStyle, ...[].concat(s.campaign.cutDesigns || [])]);
+    const projectStyles = Array.isArray(s.customStyles) ? s.customStyles : (typeof arReadBrowserStyles === 'function' ? arReadBrowserStyles() : []);
+    if (typeof arSetProjectCustomStyles === 'function') {
+      try { await arSetProjectCustomStyles(projectStyles.filter((st) => designIds.has(st?.id))); } catch (_) {}
+    }
+    isPlaying = false;
+    if (typeof pauseAllCutVideos === 'function') pauseAllCutVideos();
+    AudioEngine.stopBgmLoop();
+    AudioEngine.stopTts();
+    for (const k of AR_PROJECT_FIELDS) {
+      if (s.campaign[k] !== undefined) campaign[k] = s.campaign[k];
+      else delete campaign[k];
+    }
+    if (s.campaign.vehicleEntered === undefined) campaign.vehicleEntered = IND.key === 'auto' && Boolean(campaign.vehicle);
+    cutElementOverrides = Array.isArray(campaign.cutElementOverrides) ? campaign.cutElementOverrides : [];
+    window.cutElementOverrides = campaign.cutElementOverrides = cutElementOverrides;
+    if (photos.length) {
+      (campaign.uploadedPhotos || []).forEach(arReleasePhoto);
+      campaign.uploadedPhotos = photos;
+      campaign.hasCustomVideo = false;
+      campaign.cutVideos = [];
+      campaign.cutVideoUrls = [];
+    }
+    const d = typeof getSelectedDealer === 'function' ? getSelectedDealer() : null;
+    if (d) {
+      for (const k of ['name', 'title', 'branch', 'promoTag', 'cardHide', 'accentColor']) {
+        if (s.card?.[k] !== undefined) d[k] = s.card[k];
+      }
+      if (logo) d.logoImg = logo;
+      if (typeof arSyncEndingContactCopy === 'function') arSyncEndingContactCopy();
+    }
+    AudioEngine.masterBuffer = null;
+    AudioEngine.masterCutBounds = [];
+    AudioEngine.masterWantKey = '';
+    AudioEngine.masterDuration = 0;
+    AudioEngine.ttsCache.clear();
+    for (const [id, value] of [['bgmStyleSelect', s.audio?.bgm], ['ttsSpeedSelect', s.audio?.speed], ['inputVehicle', campaign.vehicle], ['inputDiscount', campaign.discount], ['inputDiscountNum', campaign.discountNum], ['aiPromptInput', s.prompt]]) {
+      const e = document.getElementById(id);
+      if (e && value != null) e.value = String(value);
+    }
+    AudioEngine.restoreVoice(s.audio?.voice || 'off');
+    AudioEngine.ttsSpeed = Number(s.audio?.speed) || 1.1;
+    AudioEngine.bgmStyle = s.audio?.bgm || 'off';
+    if (/^\/assets\/bgm\/pack\/[a-zA-Z0-9_-]+\.mp3$/.test(s.audio?.packPath || '')) {
+      AudioEngine.loadRemoteBgmUrl(s.audio.packPath, '저장한 배경음악', false);
+    }
+    BASE_DURATION = Math.max(6, Math.min(90, Number(s.duration) || 12));
+    if (typeof applyVideoDurations === 'function') applyVideoDurations();
+    if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+    if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+    if (typeof syncPreviewPanel === 'function') syncPreviewPanel();
+    if (typeof arSyncProductRows === 'function') arSyncProductRows();
+    if (window.__timelines?.main) window.__timelines.main.seek(0);
+    if (AudioEngine.enabled && AudioEngine.ttsVoice !== 'off') AudioEngine.schedulePrefetch(900);
+    return true;
+  }
+
+  window.arSaveLocalSnapshot = async function (markReturnJump = false) {
+    if (markReturnJump) {
+      try { sessionStorage.setItem('ar_return_restore', '1'); } catch (_) {}
+    }
+    if (savingPromise) return savingPromise;
+    savingPromise = (async () => {
+      try {
+        const snapshot = await captureLocalSafe();
+        if (!snapshot) return;
+        await idbPut({ savedAt: Date.now(), snapshot });
+      } catch (_) {}
+      finally { savingPromise = null; }
+    })();
+    return savingPromise;
+  };
+
+  function scheduleSnapshot() {
+    userDirty = true;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { window.arSaveLocalSnapshot(false); }, 1800);
+  }
+
+  // 편집 입력·파일 선택·스타일/BGM 변경 감지
   document.addEventListener('input', (e) => {
     if (e.target && e.target.closest && e.target.closest('#dealerAuthModal, #billingCheckoutModal, #adminAuthModal')) return;
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(saveDraft, 1500);
+    scheduleSnapshot();
   }, true);
-  window.addEventListener('pagehide', saveDraft);
+  document.addEventListener('change', (e) => {
+    if (e.target && e.target.closest && e.target.closest('#dealerAuthModal, #billingCheckoutModal, #adminAuthModal')) return;
+    scheduleSnapshot();
+  }, true);
 
-  setTimeout(() => {
+  // 참고 영상 재구성(/assets/remix) · 쇼츠 추출(/assets/shorts) 도구 이동 직전 자동 스냅샷 저장
+  document.addEventListener('click', async (e) => {
+    const toolLink = e.target && e.target.closest ? e.target.closest('a[data-studio-tool]') : null;
+    if (!toolLink) return;
+    const href = toolLink.getAttribute('href');
+    if (!href) return;
+    e.preventDefault();
+    try { await Promise.race([window.arSaveLocalSnapshot(true), new Promise((r) => setTimeout(r, 900))]); } catch (_) {}
+    window.location.href = href;
+  }, true);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && userDirty) window.arSaveLocalSnapshot(false);
+  });
+  window.addEventListener('pagehide', () => {
+    if (userDirty) window.arSaveLocalSnapshot(false);
+  });
+
+  // 복귀 자동 복원 (카카오 로그인 / SNS OAuth / 쇼츠·리믹스 도구 복귀) 또는 새로고침 시 이어하기 안내
+  const spBoot = new URLSearchParams(window.location.search || '');
+  const isReturningFromJump =
+    sessionStorage.getItem('ar_return_restore') === '1' ||
+    spBoot.get('kakao') === 'success' ||
+    spBoot.get('sns') === 'connected' ||
+    spBoot.get('from') === 'shorts';
+
+  setTimeout(async () => {
     try {
-      if (typeof arProjectUser === 'function' && arProjectUser()) return;
-      const raw = localStorage.getItem(DRAFT_KEY);
-      if (!raw || typeof campaign === 'undefined') return;
-      const d = JSON.parse(raw);
-      if (!d || !d.savedAt || Date.now() - d.savedAt > 24 * 3600 * 1000) return;
-      if (!d.hook && !(d.cutScripts && d.cutScripts.some(Boolean))) return;
-      if (d.hook === campaign.hook && JSON.stringify(d.cutScripts || []) === JSON.stringify(campaign.cutScripts || [])) return;
+      const rec = await idbGet();
+      if (!rec || !rec.snapshot || !rec.savedAt || Date.now() - rec.savedAt > 24 * 3600 * 1000) return;
+
+      if (isReturningFromJump) {
+        try { sessionStorage.removeItem('ar_return_restore'); } catch (_) {}
+        window.__arRestoredLocalSnapshot = true;
+        const ok = await restoreLocalSafe(rec.snapshot);
+        if (ok && typeof arToast === 'function') {
+          arToast('방금 편집하던 사진·대본·설정을 그대로 복구했습니다.', true);
+        }
+        return;
+      }
+
+      // 일반 새로고침: 이미 사용자가 조작을 시작했으면 방해하지 않음
+      if (arProjectInteracted || window.__arRestoredLocalSnapshot) return;
       const bar = document.createElement('div');
       bar.id = 'arDraftRestoreBar';
       bar.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9000;background:#141311;color:#f4f0e8;border:1px solid rgba(244,240,232,0.22);border-radius:999px;padding:8px 14px;display:flex;align-items:center;gap:10px;font-size:12.5px;box-shadow:0 12px 32px rgba(0,0,0,0.6);max-width:calc(100vw - 24px);';
-      bar.innerHTML = '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">이전 편집 초안이 남아 있어요</span>' +
+      bar.innerHTML = '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">이전 작업(사진·대본·설정)이 남아 있어요</span>' +
         '<button type="button" id="arDraftRestoreBtn" style="background:#f4f0e8;color:#080808;border:0;border-radius:999px;padding:4px 12px;font-weight:600;cursor:pointer;white-space:nowrap;">이어하기</button>' +
         '<button type="button" id="arDraftDismissBtn" aria-label="닫기" style="background:transparent;color:#a8a299;border:0;font-size:15px;cursor:pointer;padding:0 4px;">×</button>';
       document.body.appendChild(bar);
-      document.getElementById('arDraftRestoreBtn').addEventListener('click', () => {
-        try {
-          if (d.industry && typeof setIndustry === 'function' && typeof AR_INDUSTRIES !== 'undefined' && AR_INDUSTRIES[d.industry]) {
-            setIndustry(d.industry);
-          }
-          if (d.topic) campaign.topic = d.topic;
-          if (d.hook) campaign.hook = d.hook;
-          if (Array.isArray(d.cutScripts) && d.cutScripts.length) campaign.cutScripts = d.cutScripts;
-          if (Array.isArray(d.cutCaptions) && d.cutCaptions.length) campaign.cutCaptions = d.cutCaptions;
-          if (Array.isArray(d.ttsLines) && d.ttsLines.length) campaign.ttsLines = d.ttsLines;
-          if (d.designStyle) campaign.designStyle = d.designStyle;
-          if (typeof syncPreviewPanel === 'function') syncPreviewPanel();
-          if (typeof arToast === 'function') arToast('이전 편집 초안을 불러왔습니다.', true);
-        } catch (err) {}
+      document.getElementById('arDraftRestoreBtn').addEventListener('click', async () => {
         bar.remove();
+        window.__arRestoredLocalSnapshot = true;
+        const ok = await restoreLocalSafe(rec.snapshot);
+        if (ok && typeof arToast === 'function') arToast('이전 작업(사진·대본·설정)을 불러왔습니다.', true);
       });
       document.getElementById('arDraftDismissBtn').addEventListener('click', () => {
-        try { localStorage.removeItem(DRAFT_KEY); } catch (err) {}
+        idbDel();
         bar.remove();
       });
-    } catch (e) {}
-  }, 2400);
+    } catch (_) {}
+  }, isReturningFromJump ? 900 : 2200);
 })();
