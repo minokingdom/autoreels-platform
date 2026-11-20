@@ -5141,8 +5141,8 @@
             const nextFont = (capOv && capOv.font) || fontKey;
             const nextCol = (capOv && capOv.color) || color;
             if (!window.__arInsideMotionCaptionCard) {
-              const W = (c && c.canvas && c.canvas.width) || 540;
-              const H = (c && c.canvas && c.canvas.height) || 960;
+              const W = 540;
+              const H = 960;
               let defCx = align === 'left' ? x + maxW * 0.45 : align === 'right' ? x - maxW * 0.45 : x;
               let defCy = y + maxH / 2;
               let defW = Math.min(W - 40, Math.max(220, maxW));
@@ -5206,8 +5206,8 @@
               if (window.__arInsideMotionCaptionCard || !window.__arLastDetectedBadgeText[rIdx]) {
                 window.__arLastDetectedBadgeText[rIdx] = text;
               }
-              const W = (c && c.canvas && c.canvas.width) || 540;
-              const H = (c && c.canvas && c.canvas.height) || 960;
+              const W = 540;
+              const H = 960;
               const defCx = align === 'left' ? x + 85 : align === 'right' ? x - 85 : x;
               const defCy = y;
               if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
@@ -5260,8 +5260,8 @@
       const wrapChipFn = (origFn, defaultCxRatio, defaultCyRatio) => {
         return function (c, d, W, H, ...rest) {
           const rIdx = window.__arActiveRenderCutIdx;
-          const cw = typeof W === 'number' && W > 100 ? W : ((c && c.canvas && c.canvas.width) || 540);
-          const ch = typeof H === 'number' && H > 100 ? H : ((c && c.canvas && c.canvas.height) || 960);
+          const cw = typeof W === 'number' && W > 100 ? W : 540;
+          const ch = typeof H === 'number' && H > 100 ? H : 960;
           if (typeof rIdx === 'number' && rIdx >= 0) {
             const defCx = cw * defaultCxRatio;
             const defCy = ch * defaultCyRatio;
@@ -5321,8 +5321,8 @@
         inSign = function (c, d, x, y, color, align = 'right', size = 18) {
           const rIdx = window.__arActiveRenderCutIdx;
           if (typeof rIdx === 'number' && rIdx >= 0) {
-            const W = (c && c.canvas && c.canvas.width) || 540;
-            const H = (c && c.canvas && c.canvas.height) || 960;
+            const W = 540;
+            const H = 960;
             const defCx = align === 'right' ? x - 80 : align === 'left' ? x + 80 : x;
             const defCy = y;
             if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
@@ -5588,8 +5588,10 @@
 
     function renderGenreFrame(t, mainDuration, totalCuts, d) {
       const c = ctx;
-      const W = canvas.width;
-      const H = canvas.height;
+      // 09-renderer.js에서 ctx.setTransform(canvas.width/540, 0, 0, canvas.height/960, 0, 0)으로
+      // 논리 좌표계를 540×960에 고정하므로, 1080×1920 내보내기 중에도 항상 논리 크기(540×960)를 사용해야 2배 확대 잘림이 발생하지 않음
+      const W = 540;
+      const H = 960;
       const cutDur = mainDuration / totalCuts;
       const activeCutIdx = t < mainDuration ? Math.min(totalCuts - 1, Math.floor(t / cutDur)) : -1;
       // 컷마다 섞기: 이 컷에 정한 디자인으로 그림 (엔딩은 대표 디자인)
