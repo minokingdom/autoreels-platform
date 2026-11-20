@@ -743,7 +743,8 @@
           window.__timelines.main.seek(0);
           canvasStream = canvas.captureStream(30);
           const tracks = [...canvasStream.getVideoTracks(), ...(AudioEngine.streamDest ? AudioEngine.streamDest.stream.getAudioTracks() : [])];
-          recorder = new MediaRecorder(new MediaStream(tracks), { mimeType, videoBitsPerSecond: 8000000 });
+          const isMobileExport = (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 768px)').matches) || (typeof navigator !== 'undefined' && (navigator.maxTouchPoints || 0) > 0);
+          recorder = new MediaRecorder(new MediaStream(tracks), { mimeType, videoBitsPerSecond: isMobileExport ? 5000000 : 8000000 });
           const cleanMime = recorder.mimeType.includes('mp4') ? 'video/mp4' : 'video/webm';
           const seconds = Math.max(4, Number(TOTAL_DURATION) || 12), chunks = [];
           const blob = await new Promise((resolve, reject) => {
@@ -760,7 +761,8 @@
             recorder.onstop = () => { if (!stopped) { stopped = true; resolve(new Blob(chunks, { type: cleanMime })); } };
             const started = performance.now();
             window.__exportStartedAt = started;
-            recorder.start(200);
+            // timeslice(200) 없이 단일 컨테이너로 녹화해야 인스타 스토리·갤러리에서 2~3초로 잘려 인식되는 프래그먼트 MP4 문제를 방지함
+            recorder.start();
             AudioEngine.lastSfxSlot = -2;
             AudioEngine.lastSfxTime = -1;
             isPlaying = true;
