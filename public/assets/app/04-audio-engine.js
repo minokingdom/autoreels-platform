@@ -545,7 +545,26 @@
             }
             const off = select.querySelector('option[value="off"]');
             select.replaceChildren(options, off);
-            const preferred = this.defaultVoicePending && voices.find((voice) => voice.preferred);
+            const hasChirp = voices.some((v) => v.id && v.id.startsWith('ko-KR-Chirp3-HD-'));
+            const indKey = (typeof IND !== 'undefined' && IND && IND.key) ? IND.key : 'auto';
+            const indChirpMap = {
+              auto: 'ko-KR-Chirp3-HD-Puck',
+              dining: 'ko-KR-Chirp3-HD-Laomedeia',
+              cafe: 'ko-KR-Chirp3-HD-Aoede',
+              beauty: 'ko-KR-Chirp3-HD-Leda',
+              realestate: 'ko-KR-Chirp3-HD-Charon',
+              academy: 'ko-KR-Chirp3-HD-Kore',
+              clinic: 'ko-KR-Chirp3-HD-Sulafat',
+              fitness: 'ko-KR-Chirp3-HD-Fenrir',
+              shop: 'ko-KR-Chirp3-HD-Zephyr',
+              interior: 'ko-KR-Chirp3-HD-Algieba'
+            };
+            const indPreferredId = hasChirp ? (indChirpMap[indKey] || 'ko-KR-Chirp3-HD-Puck') : '';
+            const curInList = voices.some((v) => v.id === this.ttsVoice);
+            const shouldUsePreferred = (this.defaultVoicePending || (hasChirp && this.ttsVoice !== 'off' && !curInList));
+            const preferred = shouldUsePreferred
+              ? (voices.find((v) => v.id === indPreferredId) || voices.find((voice) => voice.preferred) || voices[0])
+              : null;
             this.restoreVoice(preferred?.id || this.ttsVoice);
             this.voiceListLoaded = true;
             if (select.__igRow) arSyncIgSelects(select.parentElement);
@@ -1820,6 +1839,49 @@
       AudioEngine.startBgmLoop();
       if (voiceChanged) {
         arResetAndRebuildNarration();
+      }
+    }
+
+    // 선택한 성우(Chirp 3 HD 등) 1문장 즉시 미리 듣기 (캐시 재사용)
+    const arVoicePreviewCache = new Map();
+    let arVoicePreviewAudio = null;
+    async function arPreviewSelectedTtsVoice() {
+      const btn = document.getElementById('ttsVoicePreviewBtn');
+      const sel = document.getElementById('ttsVoiceSelect');
+      const voice = (sel && sel.value) || AudioEngine.ttsVoice;
+      if (!voice || voice === 'off') {
+        if (typeof arToast === 'function') arToast('성우를 먼저 선택해 주세요.');
+        return;
+      }
+      const speed = Number(AudioEngine.ttsSpeed) || 1.1;
+      const sampleLine = (typeof campaign !== 'undefined' && Array.isArray(campaign.cutCaptions) && campaign.cutCaptions[0] && String(campaign.cutCaptions[0]).trim().length >= 6)
+        ? String(campaign.cutCaptions[0]).trim().slice(0, 60)
+        : '안녕하세요, 오늘 준비한 특별한 소식을 가장 깔끔하게 전해드릴게요.';
+      const cacheKey = `${voice}@${speed}|${sampleLine}`;
+      if (arVoicePreviewAudio) {
+        try { arVoicePreviewAudio.pause(); } catch (_) {}
+        arVoicePreviewAudio = null;
+      }
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ 불러오는 중…'; }
+      try {
+        let blobUrl = arVoicePreviewCache.get(cacheKey);
+        if (!blobUrl) {
+          const qs = new URLSearchParams({ text: sampleLine, ref: voice, speed: String(speed) });
+          const res = await fetch('/api/tts?' + qs.toString(), { signal: AbortSignal.timeout(15000) });
+          if (!res.ok) throw new Error('미리 듣기를 불러오지 못했습니다.');
+          const blob = await res.blob();
+          blobUrl = URL.createObjectURL(blob);
+          arVoicePreviewCache.set(cacheKey, blobUrl);
+        }
+        const audio = new Audio(blobUrl);
+        arVoicePreviewAudio = audio;
+        if (btn) btn.textContent = '🔊 재생 중…';
+        audio.onended = () => { if (btn) { btn.disabled = false; btn.textContent = '🎧 미리 듣기'; } };
+        audio.onerror = () => { if (btn) { btn.disabled = false; btn.textContent = '🎧 미리 듣기'; } };
+        await audio.play();
+      } catch (e) {
+        if (typeof arToast === 'function') arToast(e.message || '미리 듣기에 실패했습니다.');
+        if (btn) { btn.disabled = false; btn.textContent = '🎧 미리 듣기'; }
       }
     }
 
