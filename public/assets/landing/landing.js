@@ -24,35 +24,35 @@
   // =========================================================================
   var REELS = {
     auto: {
-      label: '자동차 영업', img: '/assets/landing/ed-auto.jpg', bgm: '/assets/bgm/pack/cinema.mp3',
+      label: '자동차 영업', noun: '전시장', who: '카마스터의', accent: '#e6aa5c', img: '/assets/landing/ed-auto.jpg', bgm: '/assets/bgm/pack/cinema.mp3',
       name: '오토 공식전시장', avatar: '차', likes: '1,284', comments: '96',
       music: '시네마틱 드라이브 · 오토릴스 오리지널',
       caption: '신차 견적은 댓글에 ‘견적’이라고 남겨 주세요 #신차견적 #즉시출고',
       subs: ['이번 달 바로 출고,\n딱 세 대 남았어요', '전시장 조명 아래서 보면\n색이 또 달라요', '궁금하면 댓글에\n‘견적’ 남겨 주세요']
     },
     restaurant: {
-      label: '음식점', img: '/assets/landing/ed-dining.jpg', bgm: '/assets/bgm/pack/funk.mp3',
+      label: '음식점', noun: '가게', who: '음식점 사장님의', accent: '#f08a5d', img: '/assets/landing/ed-dining.jpg', bgm: '/assets/bgm/pack/funk.mp3',
       name: '오늘의 한상', avatar: '한', likes: '3,072', comments: '214',
       music: '키친 그루브 · 오토릴스 오리지널',
       caption: '이번 주말 단체 예약 받습니다 #동네맛집 #오늘뭐먹지',
       subs: ['오늘 들어온 한우,\n스무 접시만 준비했어요', '겉은 바삭하게,\n속은 촉촉하게 구웠습니다', '주말 예약은\n댓글로 남겨 주세요']
     },
     cafe: {
-      label: '카페', img: '/assets/landing/ed-cafe.jpg', bgm: '/assets/bgm/pack/cafe.mp3',
+      label: '카페', noun: '카페', who: '카페 사장님의', accent: '#e8c48f', img: '/assets/landing/ed-cafe.jpg', bgm: '/assets/bgm/pack/cafe.mp3',
       name: '골목 로스터리', avatar: '골', likes: '2,418', comments: '131',
       music: '카페 로파이 · 오토릴스 오리지널',
       caption: '프로필 링크에서 첫 방문 쿠폰 받아 가세요 #카페추천 #핸드드립',
       subs: ['아침 첫 잔은\n매일 제가 직접 내려요', '크레마가 살아 있을 때\n한 모금 드셔 보세요', '첫 방문 쿠폰은\n프로필 링크에 있어요']
     },
     beauty: {
-      label: '뷰티', img: '/assets/landing/ed-beauty.jpg', bgm: '/assets/bgm/pack/beauty.mp3',
+      label: '뷰티', noun: '샵', who: '뷰티샵 원장님의', accent: '#e9a7b4', img: '/assets/landing/ed-beauty.jpg', bgm: '/assets/bgm/pack/beauty.mp3',
       name: '결 스킨랩', avatar: '결', likes: '1,960', comments: '88',
       music: '라운지 앰비언트 · 오토릴스 오리지널',
       caption: '관리 예약은 댓글 ‘예약’으로 받아요 #피부관리 #홈케어',
       subs: ['바르는 순간\n결이 달라지는 세럼이에요', '집에서 관리하는 법도\n같이 알려 드려요', '예약은 댓글에\n‘예약’이라고 남겨 주세요']
     },
     interior: {
-      label: '인테리어', img: '/assets/landing/ed-interior.jpg', bgm: '/assets/bgm/pack/bright.mp3',
+      label: '인테리어', noun: '시공 현장', who: '인테리어 대표님의', accent: '#b8c99f', img: '/assets/landing/ed-interior.jpg', bgm: '/assets/bgm/pack/bright.mp3',
       name: '오후 인테리어', avatar: '오', likes: '2,105', comments: '172',
       music: '브라이트 데이 · 오토릴스 오리지널',
       caption: '30평 아파트 시공 사례 더 보기는 프로필에서 #거실인테리어 #시공사례',
@@ -120,10 +120,80 @@
       b.classList.toggle('is-on', on);
       b.setAttribute('aria-checked', on ? 'true' : 'false');
     });
+    applyTheme(key);
     if (soundOn) playBgm(r.bgm, null);
     showCut(0);
     schedule();
   }
+
+  // =========================================================================
+  // 1-1. 업종 테마 (장면 색감·강조색·제목·모아보기) + 시간대 조명
+  // =========================================================================
+  var TOD = (function () {
+    var h = new Date().getHours();
+    var key = h >= 6 && h < 11 ? 'morning' : h >= 11 && h < 14 ? 'noon' : h >= 14 && h < 18 ? 'afternoon' : h >= 18 && h < 22 ? 'evening' : 'night';
+    var word = { morning: '아침', noon: '점심', afternoon: '오후', evening: '저녁', night: '밤' }[key];
+    var ampm = h < 12 ? '오전' : '오후';
+    var hh = h % 12 === 0 ? 12 : h % 12;
+    return { key: key, word: word, clock: ampm + ' ' + hh + '시' };
+  })();
+  // 시간대에 맞는 첫 업종: 아침 카페 → 점심 음식점 → 오후 뷰티 → 늦은 오후 인테리어 → 저녁·밤 자동차
+  function themeForTime() {
+    var h = new Date().getHours();
+    if (h >= 6 && h < 11) return 'cafe';
+    if (h >= 11 && h < 14) return 'restaurant';
+    if (h >= 14 && h < 16) return 'beauty';
+    if (h >= 16 && h < 19) return 'interior';
+    return 'auto';
+  }
+  function pickInitialTheme() {
+    var keys = Object.keys(REELS);
+    try {
+      var q = new URLSearchParams(location.search).get('theme');
+      if (q && REELS[q]) return q;
+    } catch (e) {}
+    var last = null;
+    try { last = localStorage.getItem('ar_lp_theme'); } catch (e) {}
+    // 다시 온 사람은 지난번 다음 업종, 처음 온 사람은 시간대에 맞는 업종
+    if (last && REELS[last]) return keys[(keys.indexOf(last) + 1) % keys.length];
+    return themeForTime();
+  }
+  var tintFront = 'A';
+  function applyTheme(key) {
+    var r = REELS[key];
+    var root = document.documentElement;
+    root.setAttribute('data-theme', key);
+    root.setAttribute('data-tod', TOD.key);
+    setText('lpH1a', r.noun + ' 사진 몇 장이면');
+    setText('lpHeroTime', TOD.clock + ' · ' + r.who + ' ' + TOD.word + ' 릴스');
+    // 장면 색감: 두 장을 번갈아 겹쳐 부드럽게 바꿈
+    var a = $('lpTint' + tintFront), b = $('lpTint' + (tintFront === 'A' ? 'B' : 'A'));
+    if (a && b && a.getAttribute('src') !== r.img) {
+      b.setAttribute('src', r.img);
+      b.classList.add('is-on'); a.classList.remove('is-on');
+      tintFront = tintFront === 'A' ? 'B' : 'A';
+    } else if (a) { a.classList.add('is-on'); }
+    document.querySelectorAll('[data-gal]').forEach(function (g) {
+      var on = g.getAttribute('data-gal') === key;
+      g.classList.toggle('is-on', on);
+      g.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+    root.style.setProperty('--lp-final-img', 'url(' + r.img + ')');
+    try { localStorage.setItem('ar_lp_theme', key); } catch (e) {}
+  }
+  function renderGallery() {
+    var row = $('lpGalleryRow');
+    if (!row) return;
+    row.innerHTML = Object.keys(REELS).map(function (k) {
+      var r = REELS[k];
+      return '<button type="button" role="radio" aria-checked="false" class="lp-gal" data-gal="' + k + '" data-reel="' + k + '" style="--gal-accent:' + r.accent + '">' +
+        '<span class="lp-gal-media"><img src="' + r.img + '" alt="" loading="lazy" /></span>' +
+        '<span class="lp-gal-sub">' + esc(r.subs[0]) + '</span>' +
+        '<span class="lp-gal-meta"><b>' + esc(r.label) + '</b><i>' + esc(r.name) + '</i></span>' +
+      '</button>';
+    }).join('');
+  }
+  renderGallery();
 
   // 다른 업종 사진은 미리 받아 둠 (전환 때 깜빡임 방지)
   window.addEventListener('load', function () {
@@ -440,5 +510,5 @@
     });
   }
 
-  setReel('auto');
+  setReel(pickInitialTheme());
 })();

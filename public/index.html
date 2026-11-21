@@ -30,10 +30,8 @@
   </script>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <link rel="stylesheet" crossorigin href="https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/variable/woff2/SUIT-Variable.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600&display=swap" />
-  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261121b" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="/assets/landing/fonts/maruburi-sb.woff2" />
+  <link rel="stylesheet" href="/assets/landing/landing.css?v=20261121c" />
   <link rel="preload" as="image" href="/assets/landing/hero-cinema-kv.jpg" />
   <link rel="preload" as="image" href="/assets/landing/ed-auto.jpg" />
 </head>
@@ -59,10 +57,13 @@
   <section id="lpHero" class="lp-hero">
    <div class="lp-hero-pin" id="lpHeroPin">
     <div class="lp-hero-scene" id="lpHeroScene" aria-hidden="true"><img src="/assets/landing/hero-cinema-kv.jpg" alt="" /></div>
+    <div class="lp-hero-tint" aria-hidden="true"><img id="lpTintA" src="/assets/landing/ed-auto.jpg" alt="" /><img id="lpTintB" alt="" /></div>
+    <div class="lp-hero-wash" aria-hidden="true"></div>
     <div class="lp-hero-dim" id="lpHeroDim" aria-hidden="true"></div>
     <div class="lp-wrap lp-hero-grid" id="lpHeroGrid">
       <div class="lp-hero-copy">
-        <h1 class="lp-h1"><span>매장 사진 몇 장이면</span> <span>오늘 올릴 릴스가 나옵니다</span></h1>
+        <p class="lp-hero-time" id="lpHeroTime" aria-live="polite">지금 자동차 영업 릴스를 보고 있어요</p>
+        <h1 class="lp-h1"><span id="lpH1a">전시장 사진 몇 장이면</span> <span>오늘 올릴 릴스가 나옵니다</span></h1>
         <p class="lp-lead">업종만 고르면 대본, 자막, AI 성우, 배경음악까지 맞춰서 9:16 MP4로 저장합니다. 편집 프로그램은 없어도 됩니다.</p>
       </div>
 
@@ -150,6 +151,17 @@
       <p class="lp-full-hint" id="lpFullHint" aria-hidden="true">스크롤하면 다음 컷</p>
     </div>
    </div>
+  </section>
+
+  <!-- 업종별 예시 릴스 모아보기 — 누르면 페이지 전체 테마가 그 업종으로 바뀜 -->
+  <section id="lpGallery" class="lp-sec lp-gallery">
+    <div class="lp-wrap">
+      <div class="lp-gallery-head">
+        <h2 class="lp-h2">테마 스타일을 골라 보세요</h2>
+        <p class="lp-body">누르면 페이지 분위기와 예시 릴스가 그 테마로 바뀌어요</p>
+      </div>
+    </div>
+    <div class="lp-gallery-row" id="lpGalleryRow" role="radiogroup" aria-label="테마 스타일 고르기"></div>
   </section>
 
   <!-- 만드는 순서 (실제 순서라 번호를 씁니다) -->
@@ -244,7 +256,7 @@
   <!-- 요금제 -->
   <section id="lpPricing" class="lp-sec lp-sec-line">
     <div class="lp-wrap">
-      <h2 class="lp-h2">무료로 먼저 만들어 보고<br />필요할 때 올리세요</h2>
+      <h2 class="lp-h2">무료로 먼저 만들어 보고<br />마음에 들면 그때 결제하세요</h2>
       <div class="lp-plans">
         <article class="lp-plan">
           <h3>무료 체험</h3>
@@ -358,7 +370,7 @@
     }
   </script>
 
-  <script src="/assets/landing/industries.js?v=20261121b"></script>
-  <script src="/assets/landing/landing.js?v=20261121b"></script>
+  <script src="/assets/landing/industries.js?v=20261121c"></script>
+  <script src="/assets/landing/landing.js?v=20261121c"></script>
 </body>
 </html>

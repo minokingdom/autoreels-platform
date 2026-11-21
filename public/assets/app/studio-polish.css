@@ -1,0 +1,35 @@
+/* 제작 화면 정리 (2026-11-21, unslop 가벼운 정리)
+ * 무채색 바탕은 그대로 두고, 연하늘색 주 버튼과 파란 선택 칩만 랜딩과 같은 밝은 흰색 버튼으로 맞춥니다.
+ * readability.css 뒤에 불러와 앞선 값을 덮습니다. */
+:root {
+  --primary: #ededed;
+  --primary-foreground: #141415;
+}
+
+/* 주 버튼: 밝은 흰색 + 어두운 글자, 위쪽에 아주 옅은 밝은 선 */
+.btn-primary,
+.ig-search-go {
+  background: #ededed;
+  color: #141415;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5);
+}
+.btn-primary:hover,
+.ig-search-go:hover { background: #ffffff; color: #141415; }
+
+/* 마크업에 직접 적힌 파란 버튼·배지도 같은 버튼으로 */
+.bg-\[\#3b82f6\].text-white {
+  background-color: #ededed !important;
+  color: #141415 !important;
+}
+.hover\:bg-\[\#2563eb\]:hover { background-color: #ffffff !important; }
+
+/* 로고: 타일 없이 단색 표시만 */
+.studio-brand-mark {
+  background: transparent;
+  border: 0;
+  color: #ededed;
+}
+
+/* 아이콘과 글자를 함께 쓰는 버튼의 아이콘 정렬 */
+.btn-primary svg,
+.btn-secondary svg { flex: none; }

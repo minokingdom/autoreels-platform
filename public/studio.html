@@ -274,7 +274,7 @@
     <div id="adminTopBanner" class="hidden rounded-[10px] bg-gradient-to-r from-[#d97706]/20 via-[#b45309]/15 to-transparent border border-[#d97706]/40 px-4 py-2.5 flex items-center justify-between gap-3 text-xs flex-wrap">
       <div class="flex items-center gap-2.5 text-[#fbbf24] font-medium">
         <span class="w-2.5 h-2.5 rounded-full bg-[#fbbf24] animate-pulse shrink-0"></span>
-        <span>🔒 본사 대표님 관리자 콘솔 활성화 (전체 카마스터 제어 · DRM 정책 시뮬레이터 · 매출 본부 관리)</span>
+        <span>본사 대표님 관리자 콘솔 활성화 (전체 카마스터 제어 · DRM 정책 시뮬레이터 · 매출 본부 관리)</span>
       </div>
       <div class="flex items-center gap-3">
         <span class="text-[#a8a29e] font-mono text-[11px] hidden sm:inline">단축키: Ctrl + Shift + A</span>
@@ -288,9 +288,7 @@
     <header class="studio-card studio-topbar px-5 py-3.5 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
       <div class="flex items-center justify-between gap-3 w-full xl:w-auto">
         <div class="flex items-center gap-3">
-          <div class="studio-brand-mark w-8 h-8 flex items-center justify-center text-xs shrink-0">
-            AR
-          </div>
+          <div class="studio-brand-mark w-8 h-8 flex items-center justify-center text-xs shrink-0"><svg viewBox="0 0 20 28" width="13" height="18" aria-hidden="true"><rect x="1" y="1" width="18" height="26" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10.5v7l5.5-3.5z" fill="currentColor"/></svg></div>
           <div class="flex items-baseline gap-2.5 flex-wrap">
             <h1 class="studio-brand-name leading-none">
               오토릴스메이커
@@ -301,10 +299,10 @@
 
         <!-- 상단 통합 설정 버튼 (구독상태 · 업종 · 명함은 설정창에서 한 번에 관리) -->
         <div class="flex items-center gap-2">
-          <a href="/studio?mobile=1" class="hidden lg:inline-flex btn-secondary h-8 px-2.5 text-[12px] items-center gap-1" title="넓은 PC 창에서 390×844 모바일 화면으로 보기">📱 모바일</a>
+          <a href="/studio?mobile=1" class="hidden lg:inline-flex btn-secondary h-8 px-2.5 text-[12px] items-center gap-1" title="넓은 PC 창에서 390×844 모바일 화면으로 보기">모바일</a>
           <button type="button" id="headerSettingsBtn" onclick="openStudioSettingsModal()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer flex items-center gap-2" title="구독 상태 · 제작 유형">
             <span id="headerDrmDot" class="w-2 h-2 rounded-full bg-[#4cc38a] shrink-0"></span>
-            <span>⚙️ 설정</span>
+            <span>설정</span>
           </button>
         </div>
 
@@ -374,7 +372,7 @@
           </div>
         </div>
         <button type="button" onclick="togglePlayPause()" class="w-10 h-10 rounded-[10px] bg-[#232325] text-[#ededed] text-[15px] flex items-center justify-center shrink-0 active:scale-95" id="mobileDockPlayBtn" aria-label="재생/일시정지">⏸</button>
-        <button type="button" onclick="toggleAudioMaster()" class="w-10 h-10 rounded-[10px] bg-[#232325] text-[#ededed] text-[15px] flex items-center justify-center shrink-0 active:scale-95" id="mobileDockSoundBtn" aria-label="소리 켜기/끄기">🔇</button>
+        <button type="button" onclick="toggleAudioMaster()" class="w-10 h-10 rounded-[10px] bg-[#232325] text-[#ededed] text-[15px] flex items-center justify-center shrink-0 active:scale-95" id="mobileDockSoundBtn" aria-label="소리 켜기/끄기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M22 9l-6 6"/><path d="M16 9l6 6"/></svg></button>
       </div>
       <!-- 모바일 8종 색상 칩 -->
       <div class="mt-2 pt-2 border-t border-white/10 flex items-center justify-between gap-2">
@@ -395,7 +393,7 @@
             <!-- 스타일 섞기는 미리보기 아래 큰 버튼으로 옮겨 여기서는 숨김 -->
             <button type="button" id="previewRandomDesignBtn" onclick="randomizePreviewDesignOnly()" class="hidden items-center gap-1.5 px-2.5 py-1 rounded-[6px] bg-[#1e293b] hover:bg-[#3b82f6] border border-[#38bdf8]/40 text-[12px] font-semibold text-[#38bdf8] hover:text-white cursor-pointer transition shrink-0" title="현재 대본·업종은 그대로 두고 디자인 스타일·색상·모션만 랜덤으로 섞습니다">
               <span class="w-1.5 h-1.5 rounded-full bg-[#4cc38a]"></span>
-              🎲 스타일 섞기
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/></svg> 스타일 섞기
             </button>
             <span id="activeClipBadge" class="font-mono text-[11px] text-[#85858b] truncate">
               0~3초 · 오프닝 훅
@@ -428,7 +426,7 @@
                   </div>
                 </div>
                 <div id="igToolRow" class="pointer-events-auto ar-swipe scrollbar-none" role="group" aria-label="컷 편집 도구">
-                  <button type="button" onclick="openCutEditor(window.__arPinnedCut, window.__arActiveCutElKey || 'caption')" class="w-8 h-8 rounded-full bg-[#2563eb]/85 hover:bg-[#2563eb] backdrop-blur-md border border-white/25 text-white text-[13px] flex items-center justify-center cursor-pointer active:scale-90 transition" title="컷 디자인 요소별 상세 편집 (자막·카드·배지·구도·전환)">🎛️</button>
+                  <button type="button" onclick="openCutEditor(window.__arPinnedCut, window.__arActiveCutElKey || 'caption')" class="w-8 h-8 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/25 text-white text-[13px] flex items-center justify-center cursor-pointer active:scale-90 transition" title="컷 디자인 요소별 상세 편집 (자막·카드·배지·구도·전환)" aria-label="컷 상세 편집"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></svg></button>
                   <button type="button" onclick="openIgTextCompose(-1)" class="w-8 h-8 rounded-full bg-black/55 hover:bg-black/80 backdrop-blur-md border border-white/15 text-white text-[13px] font-bold flex items-center justify-center cursor-pointer active:scale-90 transition" title="글씨 넣기">Aa</button>
                   <button type="button" onclick="openIgDrawMode()" class="w-8 h-8 rounded-full bg-black/55 hover:bg-black/80 backdrop-blur-md border border-white/15 text-white flex items-center justify-center cursor-pointer active:scale-90 transition" title="그리기 (펜·형광펜)">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
@@ -539,7 +537,7 @@
               <div id="pdCats" class="pd-cats"></div>
               <div class="pd-popular px-2.5 py-1.5 border-b border-[var(--border)] bg-[#141416] space-y-1.5">
                 <div class="flex items-center justify-between gap-1">
-                  <span class="text-[10px] font-semibold text-[#fb923c]">🔥 이 업종 인기 템플릿</span>
+                  <span class="text-[10px] font-semibold text-[#fb923c]">이 업종 인기 템플릿</span>
                   <button type="button" onclick="importAllPopularTrends()" class="px-2 py-0.5 rounded-[5px] bg-[#ea580c]/20 hover:bg-[#ea580c] text-[#fb923c] hover:text-white border border-[#ea580c]/40 text-[10px] font-semibold cursor-pointer transition">한 번에 담기</button>
                 </div>
                 <p class="pd-section-help">원하는 이름을 누르면 디자인이 적용돼요</p>
@@ -548,7 +546,7 @@
                   <input id="pdTrendThemeQuery" type="text" placeholder="직접 키워드 입력 (예: 비포애프터, 오픈런)"
                     onkeydown="if(event.key==='Enter'){event.preventDefault();searchAndSwapTrendTheme(true);}"
                     class="flex-1 min-w-0 h-7 px-2 rounded-[6px] bg-[#0f0f11] border border-[var(--border)] text-[11px] text-[#ededed] placeholder-[#6e6e73] focus:outline-none focus:border-[#f97316]" />
-                  <button type="button" onclick="searchAndSwapTrendTheme(true)" class="h-7 px-2 rounded-[6px] bg-[#ea580c] hover:bg-[#f97316] text-white text-[11px] font-semibold shrink-0 cursor-pointer" title="키워드 맞춤 유행 테마를 추가합니다">🔥 추가</button>
+                  <button type="button" onclick="searchAndSwapTrendTheme(true)" class="h-7 px-2 rounded-[6px] bg-[#ea580c] hover:bg-[#f97316] text-white text-[11px] font-semibold shrink-0 cursor-pointer" title="키워드 맞춤 유행 테마를 추가합니다">추가</button>
                   <button id="pdTrendSwapResetBtn" type="button" onclick="resetTrendSwaps()" class="hidden h-7 px-1.5 rounded-[6px] border border-[var(--border)] text-[10px] text-[#a1a1a6] hover:text-white shrink-0 cursor-pointer" title="추가한 유행 테마 비우기">↺</button>
                 </div>
                 <div id="pdTrendSwapStatus" class="hidden text-[10px] text-[#fb923c] truncate"></div>
@@ -572,7 +570,7 @@
           <div class="space-y-2 pt-1">
             <!-- 영상 만들기는 완성본을 확인하는 발행 단계로 옮기고, 이 자리는 스타일 섞기 -->
             <button type="button" id="previewRandomDesignBtnMain" onclick="randomizePreviewDesignOnly()" class="btn-primary w-full h-10 px-4 text-[13px] flex items-center justify-center gap-2 cursor-pointer" title="현재 대본·업종은 그대로 두고 설정한 카테고리 안에서 디자인을 랜덤으로 섞습니다">
-              🎲 스타일 섞기
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/></svg> 스타일 섞기
             </button>
             <div class="grid grid-cols-3 gap-1.5">
               <button type="button" id="soundToggleBtn" onclick="toggleAudioMaster()" class="btn-secondary h-9 px-2 text-[12px] cursor-pointer flex items-center justify-center gap-1.5">
@@ -583,13 +581,13 @@
                 ⏸ 일시정지
               </button>
               <button type="button" id="shuffleFilterBtn" onclick="toggleShuffleFilterPanel()" class="btn-secondary h-9 px-2 text-[12px] flex items-center justify-center gap-1 cursor-pointer" title="스타일 섞기에 포함할 카테고리 및 제외 스타일 설정">
-                ⚙ 섞기 범위
+                섞기 범위
               </button>
             </div>
             <div id="shuffleFilterPanel" class="hidden fixed inset-0 z-[85] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onclick="if (event.target === this) toggleShuffleFilterPanel(false)">
               <div class="w-full max-w-[380px] rounded-[16px] bg-[#14161d] border border-white/15 p-4 space-y-3 shadow-2xl">
                 <div class="flex items-center justify-between gap-2 text-[12px]">
-                  <span class="text-[#ededed] font-semibold">⚙️ 스타일 섞기 설정</span>
+                  <span class="text-[#ededed] font-semibold">스타일 섞기 설정</span>
                   <div class="flex items-center gap-1">
                     <button type="button" id="shufflePresetAllBtn" onclick="setShuffleIncludeCats([])" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[#ededed] text-[11px] cursor-pointer">전체</button>
                     <button type="button" id="shufflePresetNewBtn" onclick="setShuffleIncludeCats(['신규'])" class="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[#ededed] text-[11px] cursor-pointer">신규만</button>
@@ -657,7 +655,7 @@
           <div class="hidden space-y-1.5 pt-2 border-t border-[var(--border)]">
             <div class="flex items-center justify-between text-[12px]">
               <span class="flex items-center gap-1.5 text-[#ededed] font-medium">
-                <span>🎨</span> 색상
+                색상
               </span>
               <span id="desktopActiveThemeName" class="text-[11px] font-mono text-[#facc15] font-semibold">로얄 골드</span>
             </div>
@@ -681,7 +679,7 @@
               <div class="flex items-center justify-between sm:justify-start gap-1 w-full sm:w-auto bg-[#141415] px-2 py-1 rounded-[9px] border border-[var(--border)]">
                 <span class="hidden sm:inline text-[11px] text-[#85858b] px-1">길이</span>
                 <button type="button" id="topDurBtn_8" onclick="setVideoTotalDuration(8)" class="h-6 px-1.5 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer">8초</button>
-                <button type="button" id="topDurBtn_12" onclick="setVideoTotalDuration(12)" class="h-6 px-1.5 rounded-[5px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer">12초</button>
+                <button type="button" id="topDurBtn_12" onclick="setVideoTotalDuration(12)" class="h-6 px-1.5 rounded-[5px] text-[11px] font-mono bg-[#ededed] text-[#141415] font-semibold cursor-pointer">12초</button>
                 <button type="button" id="topDurBtn_15" onclick="setVideoTotalDuration(15)" class="h-6 px-1.5 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer">15초</button>
                 <button type="button" id="topDurBtn_20" onclick="setVideoTotalDuration(20)" class="h-6 px-1.5 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer">20초</button>
                 <button type="button" id="topDurBtn_30" onclick="setVideoTotalDuration(30)" class="h-6 px-1.5 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer">30초</button>
@@ -837,7 +835,7 @@
           </div>
 
           <details id="scriptTemplateFold" class="fold rounded-[12px] border border-[var(--border)] bg-[#111113]">
-            <summary class="px-4 py-3 text-[13px] font-medium text-[#ededed]">📝 대본 템플릿 더 보기 <span class="text-[12px] text-[#85858b] font-normal">상황별 문구 모음 · 고르면 문구만 바뀌어요</span></summary>
+            <summary class="px-4 py-3 text-[13px] font-medium text-[#ededed]">대본 템플릿 더 보기 <span class="text-[12px] text-[#85858b] font-normal">상황별 문구 모음 · 고르면 문구만 바뀌어요</span></summary>
             <div class="px-2 pb-2">
           <!-- ================================================================= -->
           <!-- ★ [루틴 완전 탈피] 12대 프로 세일즈 아키타입 & AI 무한 씬 믹서 (4,213,440+ 조합 엔진) -->
@@ -846,20 +844,20 @@
             <div class="flex items-center justify-between flex-wrap gap-2">
               <div>
                 <h3 class="text-[13px] font-semibold text-[#ededed] flex items-center gap-1.5">
-                  <span>📝</span> 대본 템플릿
+                  대본 템플릿
                   <span class="tag-chip px-2 py-0.5 text-[10px] font-mono text-[#a1a1a6]">문구 96종</span>
                 </h3>
                 <p class="text-[11px] text-[#85858b] mt-0.5">상황별 홍보 문구·성우 대본 모음입니다. 고르면 대본만 바뀌고 디자인과 색상은 그대로입니다.</p>
               </div>
               <div class="flex items-center gap-1.5 flex-wrap justify-end">
                 <button type="button" onclick="randomizeCustomStyle()" class="btn-secondary h-7 px-3 text-[11px] text-[#38bdf8] border-[#38bdf8]/40 hover:bg-[#38bdf8]/10 cursor-pointer flex items-center gap-1.5 font-bold shadow-sm">
-                  <span>🎲</span> 문구 무작위 조합
+                  문구 무작위 조합
                 </button>
                 <button type="button" onclick="generateBatchCustomArchetypes(10)" class="h-7 px-2.5 rounded-[6px] text-[11px] bg-[#1e293b] hover:bg-[#334155] text-[#38bdf8] border border-[#38bdf8]/40 flex items-center gap-1 shrink-0 font-medium transition-colors cursor-pointer" title="AI가 즉석에서 10가지 완전히 새로운 스타일을 합성하여 라이브러리에 추가합니다">
-                  <span>⚡</span> 문구 10종 생성
+                  문구 10종 생성
                 </button>
                 <span id="activeArchetypeBadge" class="tag-chip px-2.5 py-1 text-[11px] font-mono text-[#4cc38a] border-[#4cc38a]/40 truncate max-w-[200px]">
-                  ⚡ 긴급 한정특판형
+                  긴급 한정특판형
                 </span>
               </div>
             </div>
@@ -867,12 +865,12 @@
             <!-- 무한 조합 상세 스펙 정보 바 (시드 및 고유 순열 번호 실시간 표시 + 영구 저장 버튼) -->
             <div id="aiMixerRecipeInfo" class="hidden text-[11px] font-mono text-[#38bdf8] bg-[#0c1322] px-3 py-1.5 rounded-[8px] border border-[#38bdf8]/30 items-center justify-between flex-wrap gap-2">
               <span id="aiMixerSeedText" class="font-bold flex items-center gap-1">
-                <span>🎲</span> <span>시드 #--</span>
+                <span>시드 #--</span>
               </span>
               <span id="aiMixerPermText" class="text-[10px] text-[#93c5fd]">4,213,440 조합 중 #--</span>
               <span id="aiMixerRecipeText" class="text-[10px] text-[#ededed] truncate max-w-[340px]">테마: -- | 4컷: --</span>
               <button type="button" onclick="saveCurrentAiMixerStyle()" class="h-6 px-2.5 rounded-[5px] text-[11px] bg-[#3b82f6] hover:bg-[#2563eb] text-white font-bold transition-colors flex items-center gap-1 cursor-pointer">
-                💾 이 문구 저장
+                이 문구 저장
               </button>
             </div>
 
@@ -882,31 +880,31 @@
                 전체 (<span id="catCount_all">96</span>)
               </button>
               <button type="button" onclick="filterArchetypeCategory('favorite')" id="archCatBtn_favorite" class="h-6 px-2.5 rounded-[5px] text-[#facc15] hover:text-[#fde047] shrink-0 flex items-center gap-1 font-semibold">
-                <span>⭐</span> 즐겨찾기 <span id="favTabCount" class="text-[10px] opacity-80">(0)</span>
+                즐겨찾기 <span id="favTabCount" class="text-[10px] opacity-80">(0)</span>
               </button>
               <button type="button" onclick="filterArchetypeCategory('vlog')" id="archCatBtn_vlog" class="h-6 px-2.5 rounded-[5px] text-[#a1a1a6] hover:text-[#ededed] shrink-0">
-                🎬 출고 브이로그 (<span id="catCount_vlog">8</span>)
+                출고 브이로그 (<span id="catCount_vlog">8</span>)
               </button>
               <button type="button" onclick="filterArchetypeCategory('special')" id="archCatBtn_special" class="h-6 px-2.5 rounded-[5px] text-[#a1a1a6] hover:text-[#ededed] shrink-0">
-                ⚡ 특판·즉시 (<span id="catCount_special">16</span>)
+                특판·즉시 (<span id="catCount_special">16</span>)
               </button>
               <button type="button" onclick="filterArchetypeCategory('luxury')" id="archCatBtn_luxury" class="h-6 px-2.5 rounded-[5px] text-[#a1a1a6] hover:text-[#ededed] shrink-0">
-                🎬 럭셔리 (<span id="catCount_luxury">16</span>)
+                럭셔리 (<span id="catCount_luxury">16</span>)
               </button>
               <button type="button" onclick="filterArchetypeCategory('ev_tech')" id="archCatBtn_ev_tech" class="h-6 px-2.5 rounded-[5px] text-[#a1a1a6] hover:text-[#ededed] shrink-0">
-                🛸 EV·테크 (<span id="catCount_ev_tech">16</span>)
+                EV·테크 (<span id="catCount_ev_tech">16</span>)
               </button>
               <button type="button" onclick="filterArchetypeCategory('sports')" id="archCatBtn_sports" class="h-6 px-2.5 rounded-[5px] text-[#a1a1a6] hover:text-[#ededed] shrink-0">
-                🏎️ 스포츠 (<span id="catCount_sports">16</span>)
+                스포츠 (<span id="catCount_sports">16</span>)
               </button>
               <button type="button" onclick="filterArchetypeCategory('finance')" id="archCatBtn_finance" class="h-6 px-2.5 rounded-[5px] text-[#a1a1a6] hover:text-[#ededed] shrink-0">
-                💳 금융·0원 (<span id="catCount_finance">16</span>)
+                금융·0원 (<span id="catCount_finance">16</span>)
               </button>
               <button type="button" onclick="filterArchetypeCategory('trust')" id="archCatBtn_trust" class="h-6 px-2.5 rounded-[5px] text-[#a1a1a6] hover:text-[#ededed] shrink-0">
-                🛡️ 신뢰·패밀리 (<span id="catCount_trust">16</span>)
+                신뢰·패밀리 (<span id="catCount_trust">16</span>)
               </button>
               <button type="button" onclick="filterArchetypeCategory('custom')" id="archCatBtn_custom" class="h-6 px-2.5 rounded-[5px] text-[#38bdf8] hover:text-[#7dd3fc] shrink-0 flex items-center gap-1 font-semibold">
-                <span>✨</span> 내 AI 커스텀 <span id="customTabCount" class="text-[10px] opacity-80">(0)</span>
+                내 AI 커스텀 <span id="customTabCount" class="text-[10px] opacity-80">(0)</span>
               </button>
             </div>
 
@@ -920,7 +918,7 @@
           </details>
 
           <details id="storyboardFold" class="fold rounded-[12px] border border-[var(--border)] bg-[#111113]">
-            <summary class="px-4 py-3 text-[13px] font-medium text-[#ededed]">🎬 컷 구성 · 추천 문구 칩 <span class="text-[12px] text-[#85858b] font-normal">컷별 시간 확인, 문구 한 번에 넣기</span></summary>
+            <summary class="px-4 py-3 text-[13px] font-medium text-[#ededed]">컷 구성 · 추천 문구 칩 <span class="text-[12px] text-[#85858b] font-normal">컷별 시간 확인, 문구 한 번에 넣기</span></summary>
             <div class="px-2 pb-2">
           <!-- ================================================================= -->
           <!-- ★ 인터랙티브 컷 스토리보드 타임라인 트랙 & 킬러 카피 인젝터 -->
@@ -928,7 +926,7 @@
           <div class="studio-sub p-3.5 space-y-2.5 border border-[var(--border)] rounded-[12px] bg-[#121214]">
             <div class="flex items-center justify-between text-[12px]">
               <span class="font-medium text-[#ededed] flex items-center gap-1.5">
-                <span>🎬</span> 스토리보드 컷 트랙 (탭하여 해당 구간 즉시 확인·수정)
+                스토리보드 컷 트랙 (탭하여 해당 구간 즉시 확인·수정)
               </span>
               <span class="text-[11px] font-mono text-[#85858b]" id="storyboardTrackTotalBadge">총 4컷 · 12초 구성</span>
             </div>
@@ -940,7 +938,7 @@
             <!-- 실전 킬러 세일즈 카피 원클릭 인젝터 -->
             <div class="pt-1.5 border-t border-[var(--border)] space-y-1.5">
               <div class="flex items-center justify-between text-[11px] text-[#a1a1a6]">
-                <span class="flex items-center gap-1 font-medium text-[#ededed]">🔥 실전 킬러 카피 칩 (터치 시 대본에 즉시 주입)</span>
+                <span class="flex items-center gap-1 font-medium text-[#ededed]">실전 킬러 카피 칩 (터치 시 대본에 즉시 주입)</span>
                 <span class="text-[#85858b]">원클릭 완성</span>
               </div>
               <div class="flex items-center gap-1.5 flex-wrap" id="killerCopyChipsContainer">
@@ -1069,7 +1067,7 @@
                 <span class="bgm-now-txt"><strong id="activeDesignName"></strong><small id="activeDesignDesc"></small></span>
                 <span class="bgm-now-go">바꾸기 ›</span>
               </button>
-              <button type="button" onclick="pickRandomTheme(false)" class="ig-round-btn" title="디자인과 색을 무작위로" aria-label="랜덤 디자인">🎲</button>
+              <button type="button" onclick="pickRandomTheme(false)" class="ig-round-btn" title="디자인과 색을 무작위로" aria-label="랜덤 디자인"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/></svg></button>
             </div>
             <div class="hidden"><span id="designStyleCount"></span></div>
             <!-- 컷마다 다른 디자인으로 섞기 -->
@@ -1082,13 +1080,13 @@
             </div>
             <p class="text-[11px] text-[#6e6e73]">미리보기 화면을 옆으로 밀어도 디자인 목록이 열립니다.</p>
             <details class="fold pt-2 border-t border-[var(--border)]">
-              <summary class="py-1.5 text-[12px] text-[#a1a1a6]">🔥 인기 릴스 스타일 가져오기 · 키워드로 찾기</summary>
+              <summary class="py-1.5 text-[12px] text-[#a1a1a6]">인기 릴스 스타일 가져오기 · 키워드로 찾기</summary>
             <div class="pt-2 space-y-2">
               <div class="flex items-center justify-between gap-2">
-                <span class="text-[11px] text-[#fb923c] font-medium">🔥 이 업종 인기 템플릿 <span class="text-[#85858b] font-normal">(클릭 한 번으로 바로 적용)</span></span>
+                <span class="text-[11px] text-[#fb923c] font-medium">이 업종 인기 템플릿 <span class="text-[#85858b] font-normal">(클릭 한 번으로 바로 적용)</span></span>
                 <div class="flex items-center gap-1.5 flex-wrap justify-end">
-                  <button id="liveTrendsBtn" type="button" onclick="fetchLiveReelsTrends()" class="px-2 py-0.5 rounded-[5px] bg-[#0ea5e9]/15 hover:bg-[#0ea5e9] text-[#38bdf8] hover:text-white border border-[#0ea5e9]/40 text-[10px] font-semibold cursor-pointer transition">📡 실시간 릴스 가져오기</button>
-                  <button type="button" onclick="importAllPopularTrends()" class="px-2 py-0.5 rounded-[5px] bg-[#ea580c]/20 hover:bg-[#ea580c] text-[#fb923c] hover:text-white border border-[#ea580c]/40 text-[10px] font-semibold cursor-pointer transition">✨ 인기 5종 한 번에 가져오기</button>
+                  <button id="liveTrendsBtn" type="button" onclick="fetchLiveReelsTrends()" class="px-2 py-0.5 rounded-[5px] bg-[#0ea5e9]/15 hover:bg-[#0ea5e9] text-[#38bdf8] hover:text-white border border-[#0ea5e9]/40 text-[10px] font-semibold cursor-pointer transition">실시간 릴스 가져오기</button>
+                  <button type="button" onclick="importAllPopularTrends()" class="px-2 py-0.5 rounded-[5px] bg-[#ea580c]/20 hover:bg-[#ea580c] text-[#fb923c] hover:text-white border border-[#ea580c]/40 text-[10px] font-semibold cursor-pointer transition">인기 5종 한 번에 가져오기</button>
                   <button id="trendSwapResetBtn" type="button" onclick="resetTrendSwaps()" class="hidden text-[10px] text-[#a1a1a6] hover:text-white underline cursor-pointer">↺ 추가분 비우기</button>
                 </div>
               </div>
@@ -1098,7 +1096,7 @@
                 <input id="trendThemeQuery" type="text" placeholder="원하는 키워드 직접 검색·생성 (예: 비포애프터, 오픈런...)"
                   onkeydown="if(event.key==='Enter'){event.preventDefault();searchAndSwapTrendTheme(false);}"
                   class="flex-1 min-w-0 h-8 px-2.5 rounded-[7px] bg-[#0f0f11] border border-[var(--border)] text-[12px] text-[#ededed] placeholder-[#6e6e73] focus:outline-none focus:border-[#f97316]" />
-                <button type="button" onclick="searchAndSwapTrendTheme(false)" class="h-8 px-3 rounded-[7px] bg-[#ea580c] hover:bg-[#f97316] text-white text-[12px] font-semibold shrink-0 cursor-pointer">🔥 키워드 추가</button>
+                <button type="button" onclick="searchAndSwapTrendTheme(false)" class="h-8 px-3 rounded-[7px] bg-[#ea580c] hover:bg-[#f97316] text-white text-[12px] font-semibold shrink-0 cursor-pointer">키워드 추가</button>
               </div>
               <div id="trendSwapStatus" class="hidden text-[11px] text-[#fb923c]"></div>
             </div>
@@ -1119,7 +1117,7 @@
                 <div class="flex items-center justify-between mb-1">
                   <label for="ttsVoiceSelect" class="text-[12px] text-[#a1a1a6]">성우 목소리</label>
                   <button type="button" id="ttsVoicePreviewBtn" onclick="arPreviewSelectedTtsVoice()" class="text-[11px] font-mono text-[#60a5fa] hover:underline cursor-pointer">
-                    🎧 미리 듣기
+                    미리 듣기
                   </button>
                 </div>
                 <select id="ttsVoiceSelect" onchange="onAudioConfigChange()" class="studio-input w-full h-9 px-2.5 text-[12px] cursor-pointer">
@@ -1259,7 +1257,7 @@
                   </div>
                   <label for="dealerLogoInput" class="cut-upload" id="dealerLogoLabel">
                     <img id="dealerLogoPreview" alt="" class="hidden h-7 max-w-[120px] object-contain mr-2" />
-                    <span id="dealerLogoLabelText">🏷️ 가게·회사 로고 올리기 (배경 없는 PNG가 좋아요)</span>
+                    <span id="dealerLogoLabelText">가게·회사 로고 올리기 (배경 없는 PNG가 좋아요)</span>
                     <input type="file" id="dealerLogoInput" accept="image/*" class="hidden" />
                   </label>
                 </div>
@@ -1553,14 +1551,14 @@
         </button>
         <div class="grid grid-cols-2 gap-2">
           <button type="button" id="shareVideoBtn" onclick="shareRecordedVideoMobile()" class="btn-secondary w-full h-9 px-3 text-[12px] cursor-pointer flex items-center justify-center gap-1">
-            <span>📱</span> 앱으로 공유
+            앱으로 공유
           </button>
           <button type="button" onclick="copyDealerCaption()" class="btn-secondary w-full h-9 px-3 text-[12px] cursor-pointer flex items-center justify-center gap-1">
-            <span>📋</span> 본문 복사
+            본문 복사
           </button>
         </div>
         <p id="saveStatusNotice" class="text-[12px] text-[#85858b] text-center leading-relaxed pt-1">
-          💡 스마트폰에서는 위 영상을 길게 누르거나, [새 창에서 열기]를 눌러 갤러리에 바로 저장할 수 있습니다.
+          스마트폰에서는 위 영상을 길게 누르거나, [새 창에서 열기]를 눌러 갤러리에 바로 저장할 수 있습니다.
         </p>
       </div>
     </div>
@@ -2139,7 +2137,7 @@
     if (window.__AR_MOBILE_SHELL) {
       document.head.innerHTML = '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>오토릴스메이커 — 모바일 보기 (390×844)</title><style>*{box-sizing:border-box}html,body{margin:0;height:100%;background:#09090b;color:#ededed;font-family:Pretendard,system-ui,sans-serif;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px}.bar{display:flex;align-items:center;justify-content:space-between;width:394px;max-width:100%;font-size:12px;color:#a1a1a6}.bar a{color:#ededed;text-decoration:none;padding:5px 10px;border-radius:8px;background:#232325;border:1px solid rgba(255,255,255,.14)}.frame{width:394px;height:min(848px,calc(100dvh - 54px));border-radius:26px;overflow:hidden;border:2px solid rgba(255,255,255,.16);box-shadow:0 24px 64px rgba(0,0,0,.75);background:#0f0f10}iframe{width:100%;height:100%;border:0;display:block}</style>';
       document.body.className = '';
-      document.body.innerHTML = '<div class="bar"><span>📱 모바일 화면 (390×844)</span><a href="/studio">🖥 PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
+      document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
       document.write('<script src="/assets/app/app.js?v=20261121-pro-voice-chip"><\/script>');
     }
@@ -2151,5 +2149,6 @@
     - 원래 클래스는 그대로 두었으니, 이 블록만 지우면 이전 모양으로 돌아갑니다.
   -->
   <link rel="stylesheet" href="/assets/app/readability.css" id="ar-readability" />
+  <link rel="stylesheet" href="/assets/app/studio-polish.css?v=20261121a" />
 </body>
 </html>

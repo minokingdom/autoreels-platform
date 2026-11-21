@@ -986,13 +986,13 @@
         const btn = document.getElementById(`durBtn_${dVal}`);
         if (btn) {
           btn.className = isActive
-            ? 'h-6 px-2 rounded-[5px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer'
+            ? 'h-6 px-2 rounded-[5px] text-[11px] font-mono bg-[#ededed] text-[#141415] font-semibold cursor-pointer'
             : 'h-6 px-2 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer';
         }
         const topBtn = document.getElementById(`topDurBtn_${dVal}`);
         if (topBtn) {
           topBtn.className = isActive
-            ? 'h-6 px-1.5 rounded-[5px] text-[11px] font-mono bg-[#3b82f6] text-white cursor-pointer'
+            ? 'h-6 px-1.5 rounded-[5px] text-[11px] font-mono bg-[#ededed] text-[#141415] font-semibold cursor-pointer'
             : 'h-6 px-1.5 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer';
         }
       });

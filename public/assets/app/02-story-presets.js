@@ -4252,7 +4252,10 @@ function renderStoryArchetypesUI() {
 
       const soundBtn = document.getElementById('mobileDockSoundBtn');
       if (soundBtn) {
-        soundBtn.textContent = (AudioEngine && AudioEngine.enabled) ? '🔊' : '🔇';
+        // 이모지 대신 선 아이콘 (켜짐: 소리, 꺼짐: 음소거)
+        const svgOn = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M19 6a8 8 0 0 1 0 12"/></svg>';
+        const svgOff = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M22 9l-6 6"/><path d="M16 9l6 6"/></svg>';
+        soundBtn.innerHTML = (AudioEngine && AudioEngine.enabled) ? svgOn : svgOff;
         soundBtn.style.color = (AudioEngine && AudioEngine.enabled) ? '#4cc38a' : '#ededed';
       }
     }
