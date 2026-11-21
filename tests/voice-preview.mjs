@@ -4,6 +4,7 @@ import http from 'node:http';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import google from '../lib/google-tts.js';
+import fish from '../lib/fish-voices.js';
 import { buildApp } from '../scripts/build-app.mjs';
 
 const root = path.resolve('public');
@@ -11,13 +12,22 @@ buildApp(path.resolve('.'));
 process.env.GOOGLE_TTS_API_KEY = 'fixture';
 const voices = google.listGoogleVoices(3);
 const previewDir = path.join(root, 'assets/voice-previews');
-assert.deepEqual(fs.readdirSync(previewDir).sort(), voices.map(v => v.id + '.mp3').sort());
+assert.ok(voices.every(v => fs.existsSync(path.join(previewDir, v.id + '.mp3'))));
 
 let synthesisCalls = 0;
+let pro = false;
+const premium = fish.PRO_FISH_VOICES[0];
 const server = http.createServer((req, res) => {
-  const { pathname } = new URL(req.url, 'http://localhost');
+  const { pathname, searchParams } = new URL(req.url, 'http://localhost');
   if (pathname === '/api/tts-voices') {
-    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ voices }));
+    if (searchParams.get('action') === 'voice-preview') {
+      res.writeHead(200, { 'Content-Type': 'audio/mpeg' });
+      fs.createReadStream(path.join(previewDir, 'ko-KR-Chirp3-HD-Puck.mp3')).pipe(res);
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({
+      voices: [{...premium, group:'Fish Audio · 프로', locked:!pro, preferred:pro}, ...voices]
+    }));
     return;
   }
   if (/^\/api\/tts(?:-script)?$/.test(pathname)) synthesisCalls++;
@@ -35,6 +45,7 @@ const origin = process.argv[2] || 'http://127.0.0.1:' + server.address().port;
 const browser = await chromium.launch();
 try {
   for (const width of [393, 1280]) {
+    pro = false;
     const page = await browser.newPage({ viewport: { width, height: 860 } });
     await page.route('**/*', route => {
       const url = new URL(route.request().url());
@@ -96,34 +107,55 @@ try {
     };
     synthesisCalls = 0;
     await open.click();
+    const fishRow = option(premium.id);
+    await fishRow.getByText('프로 전용').waitFor();
+    await fishRow.click();
+    await page.waitForFunction(() => {
+      const audio = document.querySelector('#arOptionSheet audio');
+      return audio && audio.currentSrc.includes('action=voice-preview') && !audio.paused && audio.currentTime > 0;
+    });
+    assert.equal(await fishRow.getAttribute('aria-pressed'),null);
+    await sheet.getByRole('button', { name: '적용', exact: true }).click();
+    assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'off');
+    assert.equal(synthesisCalls,0);
+    await open.click();
     await play('ko-KR-Chirp3-HD-Puck');
     await speedOption('1.2').check();
     assert.ok(Math.abs(await sheet.locator('audio').evaluate(el => el.playbackRate) - 1.2 / 1.1) < 0.001);
-    await play('ko-KR-Wavenet-A');
+    await play('ko-KR-Chirp3-HD-Kore');
     assert.equal(await page.evaluate(() => AudioEngine.ttsSpeed), 1.1);
     assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'off');
     assert.equal(synthesisCalls, 0);
-    await option('ko-KR-Wavenet-A').click();
+    await option('ko-KR-Chirp3-HD-Kore').click();
     assert.equal(await sheet.locator('audio').evaluate(el => el.paused), true);
     await sheet.click({ position: { x: 2, y: 2 } });
     assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'off');
     await open.click();
     assert.equal(await speedOption('1.1').isChecked(), true);
     await speedOption('1').check();
-    await play('ko-KR-Wavenet-B');
+    await play('ko-KR-Chirp3-HD-Charon');
     assert.equal(synthesisCalls, 0);
     const player = await sheet.locator('audio').elementHandle();
     await sheet.getByRole('button', { name: '적용', exact: true }).click();
     assert.equal(await player.evaluate(el => el.paused), true);
-    assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'ko-KR-Wavenet-B');
+    assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'ko-KR-Chirp3-HD-Charon');
     assert.equal(await page.evaluate(() => AudioEngine.ttsSpeed), 1);
     await open.click();
     assert.equal(await speedOption('1').isChecked(), true);
     await speedOption('1.2').check();
     await sheet.getByRole('button', { name: '적용', exact: true }).click();
     assert.equal(await page.evaluate(() => AudioEngine.ttsSpeed), 1.2);
-    assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'ko-KR-Wavenet-B');
-    assert.equal(await page.evaluate(() => localStorage.getItem('autoreels_tts_voice')), 'ko-KR-Wavenet-B');
+    assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'ko-KR-Chirp3-HD-Charon');
+    assert.equal(await page.evaluate(() => localStorage.getItem('autoreels_tts_voice')), 'ko-KR-Chirp3-HD-Charon');
+    if (!process.argv[2]) {
+      pro = true;
+      await page.evaluate(() => { AudioEngine.voiceListLoaded = false; });
+      await open.click();
+      await sheet.locator('[data-v="' + premium.id + '"][aria-pressed]').waitFor();
+      await fishRow.click();
+      await sheet.getByRole('button', { name: '적용', exact: true }).click();
+      assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), premium.id);
+    }
     await page.evaluate(() => switchStudioTab('card'));
     assert.equal(await actions.isHidden(), true);
     const info = page.getByLabel('단계 설명', { exact: true });

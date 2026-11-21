@@ -1254,6 +1254,7 @@ body:has(#cutEditorPanel:not(.hidden)) #previewCutPinBar { display: none !import
 .bgm-row:hover { background: var(--studio-hover); }
 .bgm-row-state { flex: 0 0 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #d4d4d8; font-size: 13px; }
 .bgm-row.on .bgm-row-state { color: var(--primary); font-size: 16px; }
+.voice-pro-tag { display: inline-block; margin-inline-start: 7px; color: var(--primary); font-size: 10px; font-weight: 600; white-space: nowrap; }
 .bgm-row.on strong { color: var(--primary); }
 .bgm-cover-make { width: 48px; height: 48px; background: #232327 !important; font-size: 20px; }
 .bgm-make strong { color: #ededed; }

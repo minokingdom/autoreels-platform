@@ -15,7 +15,6 @@ const {
   CHIRP_MODEL, googleVoiceModel, googleScriptSections, chirpNarrationText, synthesizeGoogleScript, synthesizeChirpScript, sendGoogleTtsError
 } = require('../lib/google-tts');
 // 유료 크레딧이 없을 때 쓰는 Fish Audio 무료 모델
-const FREE_MODEL = (process.env.FISH_TTS_FREE_MODEL || 's2.1-pro-free').trim();
 
 const FISH_TS_URL = 'https://api.fish.audio/v1/tts/stream/with-timestamp';
 const TONE_TAGS = { bright: '[happy]', excited: '[excited]', plain: '' };
@@ -65,7 +64,7 @@ async function handler(req, res) {
     return res.status(403).json({ ok: false, error: 'forbidden_origin' });
   }
   const apiKey = (process.env.FISH_API_KEY || '').trim();
-  const airy = usesAiry();
+  const airy = usesAiry(input.provider);
   if (!google && airy && !(Number(req.query?.v) >= 10)) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(409).json({
@@ -150,12 +149,8 @@ async function handler(req, res) {
       })
     });
   try {
-    let modelUsed = (process.env.FISH_TTS_MODEL || 's2-pro').trim();
-    let upstream = await callFish(modelUsed);
-    if (upstream.status === 402) {
-      modelUsed = FREE_MODEL;
-      upstream = await callFish(FREE_MODEL);
-    }
+    const modelUsed = process.env.FISH_TTS_MODEL === 's2-pro' ? 's2-pro' : 's2.1-pro';
+    const upstream = await callFish(modelUsed);
     res.setHeader('X-TTS-Model', modelUsed);
     if (!upstream.ok) {
       let detail = '';
@@ -231,15 +226,11 @@ async function handler(req, res) {
       return res.status(502).json({ ok: false, error: 'fish_alignment_mismatch', lines: out, segments: segments.length });
     }
 
-    // model: 실제로 쓴 Fish Audio 모델 (유료 크레딧이 떨어지면 무료 모델 이름이 나옴)
     const body = { ok: true, model: modelUsed, duration: segments[segments.length - 1].end, lines: out, audio_base64: audio.toString('base64') };
     if (input.debug === '1') {
       body.debug = { eventCount, segments, spoken, fullText };
-      res.setHeader('Cache-Control', 'no-store');
-    } else {
-      // 무료 모델(크레딧 부족) 음성은 CDN에 저장하지 않음
-    res.setHeader('Cache-Control', modelUsed === FREE_MODEL ? 'no-store' : 'private, max-age=86400');
     }
+    res.setHeader('Cache-Control', 'private, no-store');
     return res.status(200).json(body);
   } catch (err) {
     res.setHeader('Cache-Control', 'no-store');
@@ -249,6 +240,7 @@ async function handler(req, res) {
 
 // 사용량 계산·한도 (회원 서버가 켜져 있을 때만 동작)
 const { withMeter } = require('../lib/server/meter');
+const { consume } = require('../lib/server/usage');
 module.exports = withMeter(handler, 'tts', (req) => {
   const input = scriptInput(req);
   const rawLines = readScriptLines(input);
@@ -263,4 +255,7 @@ module.exports = withMeter(handler, 'tts', (req) => {
     return googleScriptSections(lines).reduce((total, section) => total + section.units, 0);
   }
   return req.method === 'GET' ? rawLines.join('').replace(/\s+/g, ' ').length : 0;
+}, (req, kind, units) => {
+  const input = scriptInput(req);
+  return consume(req, kind, units, { requirePro: !googleVoiceModel(input.ref) && !usesAiry(input.provider) });
 });

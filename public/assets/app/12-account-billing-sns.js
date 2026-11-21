@@ -547,6 +547,7 @@
     // 서버 회원 정보 → 스튜디오의 카마스터 프로필/라이선스에 반영
     function arApplyMe(me) {
       const newAccount = AR_SERVER.me?.user?.id !== me.user.id;
+      const planChanged = !newAccount && AR_SERVER.me?.entitlement?.tier !== me.entitlement?.tier;
       AR_SERVER.me = me;
       const u = me.user;
       arLoadAccountCustomStyles(u.id);
@@ -573,6 +574,13 @@
         btn.setAttribute('onclick', 'arOpenAccount()');
       }
       syncDrmAndSnsUI();
+      if (newAccount || planChanged) {
+        AudioEngine.voiceListRevision++;
+        AudioEngine.voiceListLoaded = false;
+        AudioEngine.voiceListRequest = null;
+        if (planChanged && AudioEngine.ttsVoice !== 'off') AudioEngine.defaultVoicePending = true;
+        AudioEngine.loadVoiceList();
+      }
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
     }
 

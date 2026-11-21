@@ -4,10 +4,10 @@
  *  - GET  ?action=bgm-list: 구글 Lyria AI BGM 팩 목록 + Vercel Blob 캐시 URL
  *  - POST ?action=generate-bgm: 구글 Lyria(lyria-3-clip-preview)로 30초 BGM 생성 후 Blob 캐시
  */
-const { listCuratedVoices } = require('../lib/fish-voices');
+const { PRO_FISH_VOICES, fishProPreviewUrl } = require('../lib/fish-voices');
 const { usesAiry, listAiryVoices } = require('../lib/airy-tts');
 const { listGoogleVoices } = require('../lib/google-tts');
-const { isSameSiteRequest, consume, refundUsage } = require('../lib/server/usage');
+const { isSameSiteRequest, consume, refundUsage, resolveSubject } = require('../lib/server/usage');
 
 const LYRIA_BGM_PACK = [
   { id: 'lyria_showroom', label: '쇼룸 일렉트로닉 하우스', prompt: 'Instrumental only, no vocals. Sleek modern luxury car showroom chill house beat, 118 BPM, warm analog bass, crisp hi-hats, clean commercial background music.' },
@@ -112,6 +112,23 @@ async function callGeminiLyria(prompt, apiKey) {
 module.exports = async function handler(req, res) {
   const action = String((req.query && req.query.action) || '').trim();
 
+  if (action === 'voice-preview') {
+    if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'method_not_allowed' });
+    if (!PRO_FISH_VOICES.some(voice => voice.id === req.query.ref)) {
+      return res.status(404).json({ ok: false, error: 'voice_preview_not_found' });
+    }
+    try {
+      const url = await fishProPreviewUrl(req.query.ref);
+      if (url) {
+        res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=300');
+        res.setHeader('Location', url);
+        return res.status(302).end();
+      }
+    } catch (_) {}
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(503).json({ ok: false, error: 'voice_preview_unavailable' });
+  }
+
   if (action === 'bgm-list') {
     if (req.method !== 'GET') return res.status(405).json({ ok: false, error: 'method_not_allowed' });
     const cachedMap = await listCachedBgmUrls();
@@ -204,9 +221,9 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ ok: false, error: 'method_not_allowed' });
   }
-  const version = Number(req.query?.v);
+  const version = Number(req.query?.v) || 0;
   const googleVoices = listGoogleVoices(version);
-  if (usesAiry()) {
+  if (version < 4 && usesAiry()) {
     res.setHeader('Cache-Control', 'no-store');
     const voices = version >= 3 && googleVoices.length
       ? googleVoices
@@ -214,16 +231,18 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({ ok: true, voices });
   }
   const apiKey = (process.env.FISH_API_KEY || '').trim();
-  if (!apiKey) {
-    res.setHeader('Cache-Control', 'no-store');
-    if (googleVoices.length) return res.status(200).json({ ok: true, voices: googleVoices });
-    return res.status(503).json({ ok: false, error: 'fish_api_key_missing' });
-  }
+  res.setHeader('Cache-Control', 'private, no-store');
   try {
-    const voices = await listCuratedVoices(apiKey);
-    const allNamed = voices.every((v) => v.named);
-    res.setHeader('Cache-Control', allNamed ? 'public, max-age=600, s-maxage=3600' : 'no-store');
-    return res.status(200).json({ ok: true, voices: [...voices, ...googleVoices] });
+    const subject = apiKey ? await resolveSubject(req) : null;
+    const locked = subject?.tier !== 'pro';
+    if (version < 4 && locked) return res.status(200).json({ ok: true, voices: googleVoices });
+    const voices = PRO_FISH_VOICES.map((voice, index) => ({
+      id: voice.id, title: voice.title + ' · Fish Audio', group: 'Fish Audio · 프로',
+      locked, preferred: !locked && index === 0
+    }));
+    return res.status(200).json({ ok: true, fishConfigured: Boolean(apiKey), voices: [
+      ...voices, ...googleVoices.map(voice => ({ ...voice, preferred: locked && voice.preferred }))
+    ] });
   } catch (err) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(502).json({ ok: false, error: 'fish_voice_list_failed', detail: String(err && err.message) });

@@ -32,10 +32,11 @@
       streamDest: null,
       enabled: false,
       bgmStyle: 'showroom',
-      ttsVoice: '4e118bfbb83e401c84699c09b5f08257', // Fish Audio 보이스 ID | 'off'
+      ttsVoice: 'ko-KR-Chirp3-HD-Puck',
       ttsSpeed: 1.1,
       voiceListLoaded: false,
       voiceListRequest: null,
+      voiceListRevision: 0,
       defaultVoicePending: true,
       bgmTimer: null,
       stepIndex: 0,
@@ -498,6 +499,9 @@
       isGoogleVoice(voice) {
         return /^ko-KR-(?:Wavenet-[A-D]|Chirp3-HD-[A-Za-z]+)$/.test(voice);
       },
+      isFishVoice(voice) {
+        return /^[a-f0-9]{16,64}$/i.test(voice);
+      },
       isTtsServiceError(code) {
         return /^(airy|google)_/.test(code);
       },
@@ -523,29 +527,37 @@
       },
       // 한국어 성우 목록을 받아 선택 상자에 채움 (한 번만)
       loadVoiceList() {
-        if (this.voiceListLoaded || !arCanUseAi()) return Promise.resolve();
+        if (this.voiceListLoaded) return Promise.resolve();
         if (this.voiceListRequest) return this.voiceListRequest;
+        const revision = this.voiceListRevision;
         this.voiceListRequest = (async () => {
           try {
-            const response = await fetch('/api/tts-voices?v=3', { signal: AbortSignal.timeout(5000) });
+            const response = await fetch('/api/tts-voices?v=4', { signal: AbortSignal.timeout(5000), cache: 'no-store' });
             if (!response.ok) return;
             const { voices } = await response.json();
+            if (revision !== this.voiceListRevision) return;
             const select = document.getElementById('ttsVoiceSelect');
             if (!select || !Array.isArray(voices) || voices.length === 0) return;
             const options = document.createDocumentFragment();
             const groups = new Map();
-            for (const { id, title, group } of voices) {
+            for (const { id, title, group, locked } of voices) {
               if (group && !groups.has(group)) {
                 const parent = document.createElement('optgroup');
                 parent.label = group;
                 groups.set(group, parent);
                 options.append(parent);
               }
-              (groups.get(group) || options).append(new Option(title, id));
+              const option = new Option(title, id);
+              if (locked) {
+                option.disabled = true;
+                option.dataset.proLocked = '1';
+              }
+              (groups.get(group) || options).append(option);
             }
             const off = select.querySelector('option[value="off"]');
             select.replaceChildren(options, off);
-            const hasChirp = voices.some((v) => v.id && v.id.startsWith('ko-KR-Chirp3-HD-'));
+            const selectable = voices.filter(v => !v.locked);
+            const hasChirp = selectable.some((v) => v.id && v.id.startsWith('ko-KR-Chirp3-HD-'));
             const indKey = (typeof IND !== 'undefined' && IND && IND.key) ? IND.key : 'auto';
             const indChirpMap = {
               auto: 'ko-KR-Chirp3-HD-Puck',
@@ -560,19 +572,22 @@
               interior: 'ko-KR-Chirp3-HD-Algieba'
             };
             const indPreferredId = hasChirp ? (indChirpMap[indKey] || 'ko-KR-Chirp3-HD-Puck') : '';
-            const curInList = voices.some((v) => v.id === this.ttsVoice);
-            const shouldUsePreferred = (this.defaultVoicePending || (hasChirp && this.ttsVoice !== 'off' && !curInList));
+            const curInList = selectable.some((v) => v.id === this.ttsVoice);
+            const shouldUsePreferred = this.ttsVoice !== 'off' && (this.defaultVoicePending || !curInList);
+            const premium = selectable.find(v => v.preferred && this.isFishVoice(v.id));
             const preferred = shouldUsePreferred
-              ? (voices.find((v) => v.id === indPreferredId) || voices.find((voice) => voice.preferred) || voices[0])
+              ? (premium || selectable.find((v) => v.id === indPreferredId) || selectable.find((voice) => voice.preferred) || selectable[0])
               : null;
-            this.restoreVoice(preferred?.id || this.ttsVoice);
+            this.restoreVoice(preferred?.id || (curInList ? this.ttsVoice : 'off'));
             this.voiceListLoaded = true;
             if (select.__igRow) arSyncIgSelects(select.parentElement);
           } catch (error) {
             // 목록을 받지 못했으면 현재 성우를 사용하고, 다음에 목록을 다시 조회합니다.
           } finally {
-            this.defaultVoicePending = false;
-            this.voiceListRequest = null;
+            if (revision === this.voiceListRevision) {
+              this.defaultVoicePending = false;
+              this.voiceListRequest = null;
+            }
           }
         })();
         return this.voiceListRequest;
@@ -596,7 +611,7 @@
       // 문장 하나의 Fish Audio 음성을 받아 AudioBuffer로 디코딩 (성우·문장별 캐시)
       async fetchTtsBuffer(text) {
         if (!arVoiceAllowed()) throw new Error('voice_locked');
-        if (this.defaultVoicePending && arCanUseAi()) await this.loadVoiceList();
+        if (this.defaultVoicePending || this.voiceListRequest) await this.loadVoiceList();
         const key = this.ttsKey(text);
         if (this.ttsCache.has(key)) return this.ttsCache.get(key);
         // 대본 전체 녹음이 아직 시작 전이면(대본을 고친 직후 등) 문장별로 따로 녹음하지 않고 전체 녹음을 먼저 시작함
@@ -704,7 +719,7 @@
           if (!ctx) throw new Error('no_audio_context');
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
           let body, full, exactBounds;
-          const url = `/api/tts-script?v=12&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
+          const url = `/api/tts-script?v=13&provider=fish&speed=${speed}&ref=${encodeURIComponent(voice)}&lines=${encodeURIComponent(JSON.stringify(lines))}`;
           const res = await this.runTtsRequest(() => this.isGoogleVoice(voice) ? fetch('/api/tts-script', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -861,7 +876,8 @@
           if (!window.location.protocol.startsWith('http')) throw new Error('offline');
           // v: 서버의 읽기 규칙이 바뀌면 올려서, 예전에 저장된 음성 대신 새 음성을 받게 함
           const version = voice.includes('-Chirp3-HD-') ? 12 : 11;
-          const url = `/api/tts?v=${version}&speed=${speed}` + (voice !== 'auto' ? `&ref=${encodeURIComponent(voice)}` : '') + `&text=${encodeURIComponent(text)}`;
+          const providerParam = this.isFishVoice(voice) ? '&provider=fish' : '';
+          const url = `/api/tts?v=${version}&speed=${speed}` + providerParam + (voice !== 'auto' ? `&ref=${encodeURIComponent(voice)}` : '') + `&text=${encodeURIComponent(text)}`;
           let res = await this.runTtsRequest(() => fetch(url));
           if (!res.ok && (res.status === 429 || res.status >= 500) && res.status !== 503) {
             await new Promise((r) => setTimeout(r, 900));
@@ -963,7 +979,7 @@
           return Promise.resolve([]);
         }
         this.ttsDirty = false;
-        if (this.defaultVoicePending) return this.loadVoiceList().then(() => this.prefetchTtsBuffers(force));
+        if (this.defaultVoicePending || this.voiceListRequest) return this.loadVoiceList().then(() => this.prefetchTtsBuffers(force));
         const totalCuts = getTargetCutCount();
         const lines = [];
         // 본편 컷들(0..totalCuts-1) + 마지막 엔딩 명함 멘트(totalCuts)
@@ -1603,7 +1619,7 @@
     try {
       const savedVoice = localStorage.getItem('autoreels_tts_voice');
       const voiceSel = document.getElementById('ttsVoiceSelect');
-      if (savedVoice && (arIsLegacyDeviceVoice(savedVoice) || AudioEngine.isGoogleVoice(savedVoice) || Array.from(voiceSel?.options || []).some((o) => o.value === savedVoice))) {
+      if (savedVoice && (arIsLegacyDeviceVoice(savedVoice) || AudioEngine.isGoogleVoice(savedVoice) || AudioEngine.isFishVoice(savedVoice) || Array.from(voiceSel?.options || []).some((o) => o.value === savedVoice))) {
         AudioEngine.restoreVoice(savedVoice);
       }
     } catch (e) {}
@@ -1867,6 +1883,7 @@
         let blobUrl = arVoicePreviewCache.get(cacheKey);
         if (!blobUrl) {
           const qs = new URLSearchParams({ text: sampleLine, ref: voice, speed: String(speed) });
+          if (AudioEngine.isFishVoice(voice)) qs.set('provider', 'fish');
           const res = await fetch('/api/tts?' + qs.toString(), { signal: AbortSignal.timeout(15000) });
           if (!res.ok) throw new Error('미리 듣기를 불러오지 못했습니다.');
           const blob = await res.blob();

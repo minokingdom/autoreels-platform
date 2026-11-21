@@ -129,7 +129,7 @@ try {
   assert.equal(await page.locator('#audioEngineBadge, #ttsProviderBadge').count(), 0);
   assert.equal(airy.audioTracks,1);
   assert.ok(airy.exportSize>1000);
-  await page.route('**/api/tts-voices?v=3',route=>route.fulfill({json:{ok:true,voices:[
+  await page.route('**/api/tts-voices?v=4',route=>route.fulfill({json:{ok:true,voices:[
     {id:'ko-KR-Chirp3-HD-Puck',title:'경쾌한 오프닝 · 남성',group:'Chirp 3 HD · 경쾌한 릴스',preferred:true},
     {id:'ko-KR-Wavenet-C',title:'또렷한 정보 전달 · 남성',group:'Google WaveNet'}
   ]}}));

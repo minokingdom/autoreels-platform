@@ -1259,15 +1259,24 @@
       function render() {
         list.replaceChildren();
         for (const opt of sel.options) {
-          if (opt.hidden || opt.disabled || opt.classList.contains('hidden')) continue;
+          const locked = opt.dataset.proLocked === '1';
+          if (opt.hidden || (opt.disabled && !locked) || opt.classList.contains('hidden')) continue;
           const row = document.createElement('button');
           row.type = 'button';
+          if (locked) row.dataset.previewOnly = '1';
           row.className = 'bgm-row' + (opt.value === choice ? ' on' : '');
           row.dataset.v = opt.value;
-          row.setAttribute('aria-pressed', String(opt.value === choice));
+          if (locked) row.setAttribute('aria-label', opt.textContent + ' · 프로 전용 미리듣기');
+          else row.setAttribute('aria-pressed', String(opt.value === choice));
           const name = document.createElement('strong');
           name.className = 'bgm-row-txt';
           name.textContent = opt.textContent;
+          if (locked) {
+            const tag = document.createElement('small');
+            tag.className = 'voice-pro-tag';
+            tag.textContent = '프로 전용';
+            name.append(tag);
+          }
           const state = document.createElement('span');
           state.className = 'bgm-row-state';
           state.textContent = opt.value === 'off' ? '' : '▶';
@@ -1292,17 +1301,21 @@
         if (!row) return;
         const wasPlaying = currentRow === row;
         stopSample();
-        choice = row.dataset.v;
-        hasChosen = true;
-        for (const item of list.children) {
-          item.classList.toggle('on', item === row);
-          item.setAttribute('aria-pressed', String(item === row));
+        const voice = row.dataset.v;
+        if (row.dataset.previewOnly !== '1') {
+          choice = voice;
+          hasChosen = true;
+          for (const item of list.children) {
+            if (item.dataset.previewOnly === '1') continue;
+            item.classList.toggle('on', item === row);
+            item.setAttribute('aria-pressed', String(item === row));
+          }
         }
-        if (choice === 'off' || wasPlaying) return;
+        if (voice === 'off' || wasPlaying) return;
         currentRow = row;
-        const file = encodeURIComponent(choice);
-        player.src = AudioEngine.isGoogleVoice(choice) ? '/assets/voice-previews/' + file + '.mp3'
-          : '/api/tts?' + new URLSearchParams({ ref: choice, speed: '1.1', text: '오늘은 어떤 릴스를 만들어 볼까요? 오토릴스메이커와 함께 사진 한 장으로 시작해 보세요.' });
+        const file = encodeURIComponent(voice);
+        player.src = AudioEngine.isGoogleVoice(voice) ? '/assets/voice-previews/' + file + '.mp3'
+          : '/api/tts-voices?action=voice-preview&ref=' + file;
         row.lastElementChild.textContent = 'Ⅱ';
         player.play().catch(error => {
           if (currentRow !== row || error.name === 'AbortError') return;
@@ -1317,7 +1330,7 @@
         sel.dispatchEvent(new Event('change', { bubbles: true }));
       };
       render();
-      if (!AudioEngine.voiceListLoaded && arCanUseAi()) {
+      if (!AudioEngine.voiceListLoaded) {
         AudioEngine.loadVoiceList().then(() => {
           if (!list.isConnected || currentRow) return;
           if (!hasChosen) choice = sel.value;

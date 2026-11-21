@@ -129,9 +129,9 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
    ...['script','topics','scene-prompts','scene-image','scene-images','reference-style']
      .map(mode=>[scriptApi,{method:'POST',body:{mode,prompt:'sample',count:4}}]),
    ...['kie','gemini'].map(diag=>[scriptApi,{method:'GET',query:{diag}}]),
-   [guardedApi('tts'),{method:'GET',query:{text:'sample'}}],
-   [guardedApi('tts'),{method:'POST',body:'{}',query:{text:'sample'}}],
-   [guardedApi('tts-script'),{method:'GET',query:{lines:JSON.stringify(['sample'])}}],
+   [guardedApi('tts'),{method:'GET',query:{text:'sample',ref:'ko-KR-Wavenet-A'}}],
+   [guardedApi('tts'),{method:'POST',body:'{}',query:{text:'sample',ref:'ko-KR-Wavenet-A'}}],
+   [guardedApi('tts-script'),{method:'GET',query:{lines:JSON.stringify(['sample']),ref:'ko-KR-Wavenet-A'}}],
    [guardedApi('tts-voices'),{method:'POST',query:{action:'generate-bgm'},body:{prompt:'sample'}}]
  ];
  for(const [api,request] of cases){
@@ -160,7 +160,7 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
    return new Response(airyStatus===200 ? Buffer.from('audio') : null,{status:airyStatus,headers:{'content-type':'audio/mpeg'}});
  }});
  const airyMeter = load('lib/server/meter.js',{'./usage':dependencies});
- const airyScript = load('api/tts-script.js', {...deps,'../lib/airy-tts':airy,'../lib/server/meter':airyMeter},airyEnv);
+ const airyScript = load('api/tts-script.js', {...deps,'../lib/airy-tts':airy,'../lib/server/meter':airyMeter,'../lib/server/usage':dependencies},airyEnv);
  const airyRequest = {method:'GET',headers:{host:'app.test'},query:{v:'10',lines:JSON.stringify(['첫 컷','다음 컷','첫 컷']),ref:airyDeps['./fish-voices'].CURATED_VOICE_IDS[1]}};
  assert.equal(airy.usesAiry(),true);
  const oldAiryScript=response();
@@ -176,7 +176,7 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  assert.equal(airyCalls.length,2);
  assert.deepEqual(airyCalls.map(call=>call.input),['첫 컷','다음 컷']);
  assert.ok(airyCalls.every(call=>call.language==='ko' && call.voice==='bdb7de5e2cdd3324' && call.authorization==='Bearer test-key'));
- const airyApi=load('api/tts.js',{...deps,'../lib/airy-tts':airy,'../lib/server/meter':airyMeter},airyEnv);
+ const airyApi=load('api/tts.js',{...deps,'../lib/airy-tts':airy,'../lib/server/meter':airyMeter,'../lib/server/usage':dependencies},airyEnv);
  const oldAiryLine=response();
  await airyApi({method:'GET',headers:{host:'app.test'},query:{v:'8',text:'네 대'}},oldAiryLine);
  assert.equal(oldAiryLine.statusCode,200);
@@ -199,7 +199,7 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
    googleCalls.push({url,body:JSON.parse(options.body),headers:options.headers});
    return new Response(JSON.stringify({audioContent:'YXVkaW8=',timepoints:[{markName:'cut_1',timeSeconds:1.25}]}));
  }});
- const googleScript = load('api/tts-script.js', {...deps,'../lib/google-tts':google,'../lib/server/meter':airyMeter},googleEnv);
+ const googleScript = load('api/tts-script.js', {...deps,'../lib/google-tts':google,'../lib/server/meter':airyMeter,'../lib/server/usage':dependencies},googleEnv);
  const googleRequest = {method:'POST',headers:{host:'app.test'},body:{ref:'ko-KR-Wavenet-C',speed:1.2,lines:['BMW 7시리즈 & 4대','1:1 혜택 -20%']}};
  const googleResult=response();
  await googleScript(googleRequest,googleResult);
@@ -229,7 +229,7 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  const currentVoiceApi=load('api/tts-voices.js',{...deps,'../lib/airy-tts':airy,'../lib/google-tts':google},airyEnv);
  const currentList=response();
  await currentVoiceApi({method:'GET',query:{v:'3'}},currentList);
- assert.equal(currentList.body.voices.length,34);
+ assert.equal(currentList.body.voices.length,30);
  assert.ok(currentList.body.voices.every(voice=>google.isGoogleVoice(voice.id)));
  const oldList=response();
  await currentVoiceApi({method:'GET',query:{v:'2'}},oldList);
@@ -249,6 +249,55 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  assert.ok(chirpCalls.every(call=>call.url.endsWith('/v1/text:synthesize') && !call.body.enableTimePointing &&
    call.body.audioConfig.speakingRate===1.1 && call.body.voice.name===catalog[0].id));
 
+ const fish = deps['../lib/fish-voices'];
+ const ref = fish.PRO_FISH_VOICES[0].id;
+ const fishEnv = { FISH_API_KEY:'fish-test-key' };
+ const fishCalls = [];
+ const standardSession = { uid:'1', v:1 };
+ const proSession = { uid:'42', v:1 };
+ const fishDeps = {...deps,'../lib/airy-tts':airy,'../lib/google-tts':google};
+ const premiumVoiceApi = load('api/tts-voices.js',{
+   ...fishDeps,'../lib/fish-voices': {...fish,fishProPreviewUrl:async id => {
+     assert.equal(id,ref);
+     return 'https://fixture.example/preview.mp3';
+   }}
+ },fishEnv);
+ for (const [testSession, locked] of [[undefined,true],[standardSession,true],[proSession,false]]) {
+   const catalogResult = response();
+   await premiumVoiceApi({method:'GET',headers:{},query:{v:'4'},testSession},catalogResult);
+   assert.equal(catalogResult.body.voices.filter(v=>v.group==='Fish Audio · 프로'&&v.locked===locked).length,fish.PRO_FISH_VOICES.length);
+   assert.equal(catalogResult.body.voices.find(v=>v.id===ref).preferred,!locked);
+ }
+ const previewHeaders = {};
+ const preview = {...response(),setHeader(k,v){previewHeaders[k]=v},end(){return this}};
+ await premiumVoiceApi({method:'GET',headers:{},query:{action:'voice-preview',ref}},preview);
+ assert.equal(preview.statusCode,302);
+ assert.equal(previewHeaders.Location,'https://fixture.example/preview.mp3');
+ const invalidPreview=response();
+ await premiumVoiceApi({method:'GET',headers:{},query:{action:'voice-preview',ref:'unlisted'}},invalidPreview);
+ assert.equal(invalidPreview.statusCode,404);
+ const mockFish = {fetch:async(url,opts)=>{
+   fishCalls.push({url, model:opts.headers.model, input:JSON.parse(opts.body)});
+   const sse = {audio_base64:'YXVkaW8=',alignment:{segments:[{text:'한 컷',start:0,end:1}]}};
+   return url.includes('with-timestamp') ? new Response('data: '+JSON.stringify(sse)) : new Response('audio');
+ }};
+ for (const [file, query] of [['tts',{text:'한 컷'}],['tts-script',{lines:'["한 컷"]'}]]) {
+   const api = load('api/'+file+'.js',fishDeps,fishEnv,mockFish);
+   const req = {method:'GET',headers:{host:'app.test'},query:{...query,provider:'fish',ref}};
+   const callsBefore = fishCalls.length;
+   const denied = response();
+   await api({...req,testSession:standardSession},denied);
+   assert.equal(denied.statusCode,403);
+   assert.equal(denied.body.error,'fish_pro_required');
+   assert.equal(fishCalls.length,callsBefore);
+   const accepted = response();
+   await api({...req,testSession:proSession},accepted);
+   assert.equal(accepted.statusCode,200);
+   assert.equal(fishCalls.length,callsBefore+1);
+   assert.equal(fishCalls.at(-1).model,'s2.1-pro');
+   assert.equal(fishCalls.at(-1).input.reference_id,ref);
+ }
+ balances.clear();
 
  assert.equal(balances.size,0);
  const publicUrls=[];

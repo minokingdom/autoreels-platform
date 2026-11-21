@@ -22,7 +22,6 @@ const { normalizeKoreanNumbers } = require('../lib/korean-numbers');
 const { MODEL: AIRY_MODEL, usesAiry, synthesizeAiry, sendAiryError } = require('../lib/airy-tts');
 const { CHIRP_MODEL, googleVoiceModel, isGoogleVoice, chirpNarrationText, synthesizeGoogleLine, sendGoogleTtsError } = require('../lib/google-tts');
 // 유료 크레딧이 없을 때 쓰는 Fish Audio 무료 모델
-const FREE_MODEL = (process.env.FISH_TTS_FREE_MODEL || 's2.1-pro-free').trim();
 
 // 말투: S2 모델은 문장 앞의 [대괄호] 지시어로 감정을 조절합니다. 기본은 밝은 톤
 const TONE_TAGS = { bright: '[happy]', excited: '[excited]', plain: '' };
@@ -83,7 +82,7 @@ async function handler(req, res) {
   const input = ttsInput(req);
   const apiKey = (process.env.FISH_API_KEY || '').trim();
   const google = googleVoiceModel(input.ref);
-  const airy = usesAiry();
+  const airy = usesAiry(input.provider);
   if (!google && !airy && !apiKey) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(503).json({
@@ -157,13 +156,8 @@ async function handler(req, res) {
       body: JSON.stringify(payload)
     });
   try {
-    let modelUsed = (process.env.FISH_TTS_MODEL || 's2-pro').trim();
-    let upstream = await callFish(modelUsed);
-    if (upstream.status === 402) {
-      modelUsed = FREE_MODEL;
-      upstream = await callFish(FREE_MODEL);
-    }
-    // 어떤 모델로 만들었는지 알려 줌 (유료 크레딧이 떨어져 무료 모델로 바뀌었는지 확인용)
+    const modelUsed = process.env.FISH_TTS_MODEL === 's2-pro' ? 's2-pro' : 's2.1-pro';
+    const upstream = await callFish(modelUsed);
     res.setHeader('X-TTS-Model', modelUsed);
 
     if (!upstream.ok) {
@@ -188,9 +182,7 @@ async function handler(req, res) {
     }
 
     res.setHeader('Content-Type', 'audio/mpeg');
-    // 같은 문장·같은 성우는 CDN에서 7일간 재사용해 크레딧 소모를 줄입니다.
-    // 단, 무료 모델(크레딧 부족) 음성은 저장하지 않음 — 충전 후에도 저음질 음성이 7일간 남지 않도록
-    res.setHeader('Cache-Control', modelUsed === FREE_MODEL ? 'no-store' : 'private, max-age=86400');
+    res.setHeader('Cache-Control', 'private, no-store');
     return res.status(200).send(buffer);
   } catch (err) {
     res.setHeader('Cache-Control', 'no-store');
@@ -200,10 +192,14 @@ async function handler(req, res) {
 
 // 사용량 계산·한도 (회원 서버가 켜져 있을 때만 동작)
 const { withMeter } = require('../lib/server/meter');
+const { consume } = require('../lib/server/usage');
 module.exports = withMeter(handler, 'tts', (req) => {
   if (!['GET', 'POST'].includes(req.method)) return 0;
   const input = ttsInput(req);
   const text = ttsText(input);
   if (googleVoiceModel(input.ref) === CHIRP_MODEL) return chirpNarrationText(text).length;
   return isGoogleVoice(input.ref) ? normalizeKoreanNumbers(text).length : text.length;
+}, (req, kind, units) => {
+  const input = ttsInput(req);
+  return consume(req, kind, units, { requirePro: !isGoogleVoice(input.ref) && !usesAiry(input.provider) });
 });
