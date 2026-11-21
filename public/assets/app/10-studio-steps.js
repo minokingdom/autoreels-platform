@@ -373,7 +373,6 @@
             shown.add(issue.term);
           }
         }
-        if (feedDay === day) showIssues(data.issues, day);
         const todayTrends = (feedDay === day ? data.items : []).filter((item) => {
           const started = Date.parse(item?.startedAt);
           return typeof item?.term === 'string' && item.term.trim() && Number.isFinite(started) &&
@@ -386,8 +385,9 @@
             shown.add(item.term);
           }
         }
-        showTrends(todayTrends.filter((item) => phrases.includes(arKeywordMatchText(item.term))));
-        if (!shown.size) showTrends(todayTrends);
+        const matchingTrends = todayTrends.filter((item) => phrases.includes(arKeywordMatchText(item.term)));
+        showTrends(matchingTrends.length ? matchingTrends : todayTrends);
+        if (feedDay === day) showIssues(data.issues, day);
         if (shown.size) {
           status.textContent = day + ' ' + arKstTime.format(collected) + ' 수집';
         } else {

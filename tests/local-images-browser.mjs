@@ -231,6 +231,9 @@ try {
   await daily.getByRole('button',{name:/시험과 AI 부정행위 논란/}).click();
   assert.equal(await cloud.locator('#topicCustomInput').inputValue(),'시험과 AI 부정행위 논란');
   assert.equal(await daily.getByRole('link',{name:'수능 출처 · 교육부'}).count(),1);
+  await cloud.evaluate(async () => { setIndustry('auto'); await arLoadDailyKeywords(); });
+  await daily.getByRole('button',{name:/변상일/}).waitFor();
+  assert.equal(await daily.getByRole('button').count(),4);
   feed.collectedAt = old;
   feed.issues = feed.issues.map(issue=>({...issue,day:yesterday,publishedAt:old}));
   await refreshDaily();

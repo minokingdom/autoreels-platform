@@ -67,6 +67,7 @@ def headline_keyword(title):
 def keyword_issues(rows):
     result = []
     seen = set()
+    seen_subjects = set()
     for issue in rows:
         term = issue["term"]
         if term == "시험과 AI 부정행위 논란":
@@ -75,6 +76,15 @@ def keyword_issues(rows):
             title = issue.get("headline") or issue["term"]
             term = headline_keyword(title)
             issue = {**issue, "headline": title}
+            # 속보와 후속 보도에서 부제와 장소 조사만 달라진 경우 한 번만 싣습니다.
+            lead = re.split(r"…|\.{2,}|[,!?]", re.sub(r"^(?:\[[^\]]+\]\s*)+", "", title), maxsplit=1)[0]
+            words = tuple(re.sub(r"(역|항|공항|도로)(?:에서|서)$", r"\1", word)
+                          for word in re.findall(r"[가-힣A-Za-z0-9]+", lead.lower()))
+            if term and len(words) >= 4:
+                subject = (issue.get("day"), words)
+                if subject in seen_subjects:
+                    continue
+                seen_subjects.add(subject)
         if term and term not in seen:
             result.append({**issue, "term": term})
             seen.add(term)

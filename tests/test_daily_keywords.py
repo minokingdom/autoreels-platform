@@ -30,6 +30,13 @@ class DailyKeywordsTest(unittest.TestCase):
         self.assertEqual([i["term"] for i in issues], ["김건희 징역 4년 확정", "한덕수 파기환송", "김명수 징역 15년 구형"])
         self.assertEqual(keyword_issues(issues), issues)
 
+    def test_followups_share_one_keyword(self):
+        titles = ['경부선 소정리역 화물열차 탈선…"일반 열차 운행 중지"',
+                  '경부선 소정리역서 화물열차 탈선…전차선 단전',
+                  '경부선 서울역 화물열차 탈선…긴급 복구']
+        issues = keyword_issues({"kind": "보도", "term": title} for title in titles)
+        self.assertEqual([issue["headline"] for issue in issues], [titles[0], titles[2]])
+
     def test_kst_midnight_future_and_missing_dates(self):
         collected = datetime.fromisoformat("2026-11-19T00:02:00+09:00")
         rows = [
