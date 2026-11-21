@@ -147,6 +147,8 @@
     ];
     // ★ 2026 1군 풀스크린 릴스 전용 모션 엔진 6종 (9:16 풀스크린 · 모션 물리 · 인스타/쇼츠 Safe Zone 준수)
     const PRO_REELS_ROWS = [
+      ['pro_rhythm_editorial', '프로 리듬 · 4단 구도 변화', 'pro_rhythm_editorial', 'maru', '#09090b', '#141418', '#e8d5bc', '#ffffff', false, '고급', '컷마다 풀스크린 → 블러 액자 → 2분할 스플릿 → 와이드 시네마로 구도 전환 + 렌즈 포커스 풀'],
+      ['pro_focus_cinema', '포커스 풀 · 시네마 리듬', 'pro_focus_cinema', 'gowun', '#0b0a09', '#171512', '#f2e4cc', '#ffffff', false, '감성', '렌즈 초점 포커스 풀 + 컷별 액자·스플릿 구도 변화 + 35mm 필름 그레인'],
       ['pro_karaoke', '단어 하이라이트 · 훅 자막', 'pro_karaoke', 'sans', '#080808', '#141414', '#f4f0e8', '#ffffff', false, '타이포', '말하는 단어에 맞춰 실시간 하이라이트 · 0.18초 펀치 컷'],
       ['pro_film_sub', '시네마 풀스크린 자막', 'pro_film_sub', 'gowun', '#090908', '#141311', '#e6d5b8', '#f4f0e8', false, '고급', '풀스크린 35mm 필름 그레인 · 안전 영역 명조 자막'],
       ['pro_punch_hook', '0.2초 펀치 컷 · 키네틱', 'pro_punch_hook', 'sans', '#080809', '#141518', '#facc15', '#ffffff', false, '타이포', '빠른 줌 펀치 · 줄별 마스크 슬라이드 · 라이브 진행 바'],
@@ -3490,17 +3492,147 @@
         }
       };
 
-      if (M === 'pro_karaoke') {
+      // ★ 렌즈 포커스 풀 + 4단 구도 리듬 컴포지션 (흔들림 0% · 구도 변화로 시선 유지)
+      const drawWithFocusPull = (fn, maxBlur = 4.5, dur = 0.28) => {
+        const img = kitImg(S, 0);
+        const isVid = !!(img && img._isVideo);
+        const b = (!isVid && local < dur) ? (1 - easeOutCubic(local / dur)) * maxBlur : 0;
+        if (b > 0.25) {
+          c.save();
+          try { c.filter = `blur(${b.toFixed(1)}px) brightness(${(1 + (b / maxBlur) * 0.08).toFixed(2)})`; } catch (_) {}
+          fn();
+          c.restore();
+        } else {
+          fn();
+        }
+      };
+
+      const drawRhythmComposition = (warmAmt = 0, borderCol = 'rgba(255,255,255,0.22)') => {
+        const beat = cutIdx % 4;
+        const img = kitImg(S, 0);
+        const isVid = !!(img && img._isVideo);
+        const p = easeOutQuart(local / 0.36);
+        const rem = 1 - p;
+        const slowZoom = isVid ? 1.03 : (1.05 + lp * 0.07);
+        const slowPanX = isVid ? 0 : (lp - 0.5) * 26 * dir;
+
+        if (beat === 0) {
+          // Beat 0: 풀스크린 시네마 히어로 + 스피드 램프 + 렌즈 포커스 풀
+          drawWithFocusPull(() => {
+            drawDynamicPhoto(slowZoom + rem * 0.06, slowPanX, 0, 0.34, 0, warmAmt > 0 ? 0.16 : 0);
+          }, 4.5, 0.28);
+        } else if (beat === 1) {
+          // Beat 1: 블러 배경 위 플로팅 4:5 에디토리얼 액자 카드 (하단 Safe Zone 자막 공간 확보)
+          c.save();
+          try { c.filter = 'blur(16px) brightness(0.45)'; } catch (_) {}
+          mPhoto(c, S, 0, -20, -20, W + 40, H + 40, 1.16, 0, 0);
+          c.restore();
+          c.fillStyle = 'rgba(8,8,10,0.34)';
+          c.fillRect(0, 0, W, H);
+
+          const cw = W - 84, ch = 490;
+          const cx = 42, cy = 122 + rem * 26;
+          c.save();
+          c.globalAlpha = easeOutCubic(local / 0.24);
+          c.shadowColor = 'rgba(0,0,0,0.55)';
+          c.shadowBlur = 32;
+          c.shadowOffsetY = 14;
+          gRoundRect(c, cx, cy, cw, ch, 22);
+          c.fillStyle = '#111114';
+          c.fill();
+          c.restore();
+
+          c.save();
+          c.globalAlpha = easeOutCubic(local / 0.24);
+          gRoundRect(c, cx, cy, cw, ch, 22);
+          c.clip();
+          drawWithFocusPull(() => {
+            mPhoto(c, S, 0, cx, cy, cw, ch, isVid ? 1.02 : (1.06 + lp * 0.07), slowPanX * 0.7, 0);
+          }, 3.5, 0.24);
+          c.restore();
+
+          c.save();
+          c.globalAlpha = easeOutCubic(local / 0.28);
+          gRoundRect(c, cx, cy, cw, ch, 22);
+          c.strokeStyle = borderCol;
+          c.lineWidth = 1.2;
+          c.stroke();
+          c.restore();
+        } else if (beat === 2) {
+          // Beat 2: 상하 2분할 다이나믹 스플릿 (상단 풀뷰 + 하단 디테일 클로즈업)
+          const splitY = Math.round(H * 0.48);
+          c.save();
+          c.beginPath();
+          c.rect(0, 0, W, splitY - 2);
+          c.clip();
+          mPhoto(c, S, 0, Math.round(rem * 42 * dir), 0, W, splitY, isVid ? 1.03 : (1.07 + lp * 0.06), slowPanX, 0);
+          c.restore();
+
+          c.save();
+          c.beginPath();
+          c.rect(0, splitY + 2, W, H - splitY - 2);
+          c.clip();
+          mPhoto(c, S, cutIdx > 0 ? -1 : 0, Math.round(-rem * 42 * dir), splitY, W, H - splitY, isVid ? 1.04 : (1.18 - lp * 0.06), -slowPanX * 0.8, 0);
+          c.fillStyle = 'rgba(8,8,10,0.32)';
+          c.fillRect(0, splitY + 2, W, H - splitY - 2);
+          c.restore();
+
+          c.fillStyle = borderCol;
+          c.fillRect(0, splitY - 1, W, 2);
+        } else {
+          // Beat 3: 와이드 시네마 레터박스 프레임 + 포커스 풀
+          c.save();
+          try { c.filter = 'blur(18px) brightness(0.36)'; } catch (_) {}
+          mPhoto(c, S, 0, -20, -20, W + 40, H + 40, 1.18, 0, 0);
+          c.restore();
+          c.fillStyle = 'rgba(6,6,8,0.44)';
+          c.fillRect(0, 0, W, H);
+
+          const cw = W - 44, ch = 396;
+          const cx = 22, cy = 176 + rem * 18;
+          c.save();
+          c.globalAlpha = easeOutCubic(local / 0.26);
+          gRoundRect(c, cx, cy, cw, ch, 16);
+          c.clip();
+          drawWithFocusPull(() => {
+            mPhoto(c, S, 0, cx, cy, cw, ch, isVid ? 1.02 : (1.05 + lp * 0.09), slowPanX * 0.9, 0);
+          }, 4.0, 0.26);
+          c.restore();
+
+          c.save();
+          c.globalAlpha = easeOutCubic(local / 0.30);
+          gRoundRect(c, cx, cy, cw, ch, 16);
+          c.strokeStyle = borderCol;
+          c.lineWidth = 1;
+          c.stroke();
+          c.restore();
+        }
+        if (warmAmt > 0) inWarm(c, 0, 0, W, H, warmAmt);
+      };
+
+      if (M === 'pro_rhythm_editorial') {
+        drawRhythmComposition(0, 'rgba(232,213,188,0.36)');
+        inGrain(c, W, H, t, 0.032);
+      } else if (M === 'pro_focus_cinema') {
+        drawRhythmComposition(0.45, 'rgba(242,228,204,0.34)');
+        inGrain(c, W, H, t, 0.048);
+      } else if (M === 'pro_karaoke') {
         const snap = 1 - easeOutQuart(local / 0.30);
-        drawDynamicPhoto(1.08 + snap * 0.10 + lp * 0.06, (lp - 0.5) * 32 * dir, 0, 0.28, 0.16, 0);
+        drawWithFocusPull(() => {
+          drawDynamicPhoto(1.08 + snap * 0.10 + lp * 0.06, (lp - 0.5) * 32 * dir, 0, 0.28, 0.16, 0);
+        }, 3.0, 0.20);
       } else if (M === 'pro_film_sub') {
-        drawDynamicPhoto(1.07 + lp * 0.10, (lp - 0.5) * 34 * dir, (lp - 0.5) * 16 * dirY, 0.36, 0, 0.18);
+        drawWithFocusPull(() => {
+          drawDynamicPhoto(1.07 + lp * 0.10, (lp - 0.5) * 34 * dir, (lp - 0.5) * 16 * dirY, 0.36, 0, 0.18);
+        }, 4.5, 0.28);
         inGrain(c, W, H, t, 0.045);
       } else if (M === 'pro_punch_hook') {
         const snap = 1 - easeOutQuart(local / 0.26);
         drawDynamicPhoto(1.08 + snap * 0.14 + lp * 0.06, (lp - 0.5) * 30 * dir, 0, 0.26, 0.16, 0);
       } else if (M === 'pro_editorial_center') {
-        drawDynamicPhoto(1.18 - lp * 0.11, (lp - 0.5) * 18 * dir, (0.5 - lp) * 28 * dirY, 0.36, 0, 0.12);
+        drawWithFocusPull(() => {
+          drawDynamicPhoto(1.18 - lp * 0.11, (lp - 0.5) * 18 * dir, (0.5 - lp) * 28 * dirY, 0.36, 0, 0.12);
+        }, 4.0, 0.26);
         inGrain(c, W, H, t, 0.032);
       } else if (M === 'pro_pov_caption') {
         drawDynamicPhoto(1.08 + lp * 0.08, (lp - 0.5) * 30 * dir, (0.5 - lp) * 14, 0.32, 0, 0);
@@ -3521,25 +3653,26 @@
           c.fillRect(splitX - 2, 0, 3, H);
         }
       } else if (M === 'pro_handwrite') {
-        drawDynamicPhoto(1.10 + lp * 0.07, (lp - 0.5) * 38 * dir, 0, 0.36, 0, 0.22);
+        drawWithFocusPull(() => {
+          drawDynamicPhoto(1.10 + lp * 0.07, (lp - 0.5) * 38 * dir, 0, 0.36, 0, 0.22);
+        }, 4.0, 0.26);
         inWarm(c, 0, 0, W, H, 0.55);
         inGrain(c, W, H, t, 0.05);
       } else if (M === 'pro_trend_sticker') {
-        drawDynamicPhoto(1.08 + lp * 0.09, (lp - 0.5) * 30 * dir, (0.5 - lp) * 18 * dirY, 0.32, 0, 0.14);
+        drawRhythmComposition(0.18, 'rgba(242,228,204,0.32)');
         inGrain(c, W, H, t, 0.04);
       } else if (M === 'pro_glass_card') {
-        drawDynamicPhoto(1.08 + lp * 0.08, (lp - 0.5) * 24 * dir, (0.5 - lp) * 22, 0.34, 0, 0);
+        drawRhythmComposition(0, 'rgba(255,255,255,0.22)');
       } else if (M === 'pro_neon_pulse') {
         const snap = 1 - easeOutQuart(local / 0.28);
         drawDynamicPhoto(1.08 + snap * 0.11 + lp * 0.06, (lp - 0.5) * 32 * dir, 0, 0.28, 0.14, 0);
         c.fillStyle = 'rgba(6,10,18,0.20)';
         c.fillRect(0, 0, W, H);
       } else if (M === 'pro_magazine_cover') {
-        drawDynamicPhoto(1.07 + lp * 0.12, (lp - 0.5) * 32 * dir, (lp - 0.5) * 18 * dirY, 0.36, 0, 0.15);
+        drawRhythmComposition(0, 'rgba(232,213,188,0.34)');
         inGrain(c, W, H, t, 0.035);
       } else if (M === 'pro_warm_diary') {
-        drawDynamicPhoto(1.10 + lp * 0.07, (lp - 0.5) * 36 * dir, 0, 0.36, 0, 0.20);
-        inWarm(c, 0, 0, W, H, 0.62);
+        drawRhythmComposition(0.50, 'rgba(248,243,234,0.36)');
         inGrain(c, W, H, t, 0.04);
       } else if (M === 'pro_bold_badge') {
         const snap = 1 - easeOutQuart(local / 0.26);
@@ -3969,27 +4102,35 @@
           c.restore();
         });
         c.restore();
-      } else if (M === 'pro_minimal_mono') {
-        // 라이카 모노크롬 미니멀 흑백: 넓은 자간 느낌의 정갈한 명조 + 하단 1px 진행 바
-        const alpha = mClamp(local / 0.30);
-        const r = mFit(c, caption, safeW, 3, Math.round(W * 0.052), Math.round(W * 0.036), sp.font);
-        const baseY = H * 0.70 - ((r.lines.length - 1) * r.lh) / 2;
+      } else if (M === 'pro_minimal_mono' || M === 'pro_rhythm_editorial' || M === 'pro_focus_cinema') {
+        // 프로 리듬 / 포커스 시네마 / 모노크롬: 하단 Safe Zone 정갈한 명조 + 미니멀 씬 진행 바
+        const rise = (1 - easeOutQuart(local / 0.28)) * 14;
+        const alpha = mClamp(local / 0.24);
+        const r = mFit(c, caption, safeW, 3, Math.round(W * 0.055), Math.round(W * 0.038), sp.font);
+        const baseY = H * 0.72 - ((r.lines.length - 1) * r.lh) / 2 + rise;
         c.save();
         c.globalAlpha = alpha;
-        c.font = `500 ${r.size}px ${F.f}`;
+        if (M !== 'pro_minimal_mono') {
+          // 상단 미니멀 씬 번호 & 헤어라인
+          c.font = `500 ${Math.round(W * 0.023)}px 'JetBrains Mono', monospace`;
+          c.fillStyle = M === 'pro_focus_cinema' ? '#f2e4cc' : '#e8d5bc';
+          c.textAlign = 'center';
+          c.fillText(`0${cutIdx + 1} / 0${totalCuts}`, W / 2, H * 0.088);
+        }
+        c.font = `600 ${r.size}px ${F.f}`;
         c.textAlign = 'center';
         c.textBaseline = 'middle';
         c.shadowColor = 'rgba(0,0,0,0.88)';
-        c.shadowBlur = 20;
-        c.fillStyle = '#ffffff';
+        c.shadowBlur = 22;
+        c.fillStyle = M === 'pro_focus_cinema' ? '#f8f3ea' : '#ffffff';
         r.lines.forEach((ln, li) => c.fillText(ln, W / 2, baseY + li * r.lh));
         // 하단 미니멀 진행 바
         const barW = W * 0.56;
         const barX = (W - barW) / 2;
-        const barY = H * 0.79;
+        const barY = H * 0.805;
         c.fillStyle = 'rgba(255,255,255,0.22)';
         c.fillRect(barX, barY, barW, 2);
-        c.fillStyle = '#ffffff';
+        c.fillStyle = M === 'pro_minimal_mono' ? '#ffffff' : accent;
         c.fillRect(barX, barY, barW * mClamp(t / Math.max(0.1, mainDuration)), 2);
         c.restore();
       }
