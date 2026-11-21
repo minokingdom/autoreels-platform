@@ -436,11 +436,101 @@
     }
     // 컷이 바뀔 때 앞 사진에서 부드럽게 겹쳐 바뀜
     function inPhotoFade(c, S, cutIdx, local, x, y, w, h, scale, warm = 1) {
-      const fade = cutIdx > 0 ? mEase(local / 0.5) : 1;
-      if (fade < 1) mPhoto(c, S, -1, x, y, w, h, scale);
+      const img = kitImg(S, 0);
+      const isVid = !!(img && img._isVideo);
+      const easeExpo = (v) => (v >= 1 ? 1 : 1 - Math.pow(2, -10 * mClamp(v)));
+      const easeCubic = (v) => 1 - Math.pow(1 - mClamp(v), 3);
+      const dir = cutIdx % 2 === 0 ? 1 : -1;
+      const lp = mClamp(local / 2.6);
+      const baseScale = isVid ? Math.min(1.05, Math.max(1.0, scale || 1.02)) : Math.max(1.09, (scale || 1.04) + 0.05);
+      // 컷 진행 중 지속적인 방향성 카메라 패닝 (단조로운 정적 줌 탈피)
+      const panX = isVid ? 0 : (lp - 0.5) * Math.min(48, w * 0.095) * dir;
+      const panY = isVid ? 0 : (lp - 0.5) * Math.min(28, h * 0.045) * (cutIdx % 3 === 0 ? 1 : -1);
+      const mode = cutIdx % 6;
+
       c.save();
-      c.globalAlpha = fade;
-      mPhoto(c, S, 0, x, y, w, h, scale);
+      c.beginPath();
+      c.rect(x, y, w, h);
+      c.clip();
+
+      if (cutIdx === 0) {
+        // 첫 컷: 0.34초 임팩트 줌-펀치 착지 + 부드러운 패닝
+        const p = 1 - easeExpo(local / 0.34);
+        const z = isVid ? baseScale : baseScale + p * 0.16;
+        mPhoto(c, S, 0, x, y, w, h, z, panX + p * 22 * dir, panY);
+      } else if (mode === 1 && local < 0.42) {
+        // 1) 슬라이드 푸시 전환: 이전 사진이 밀려나고 새 사진이 탄력 있게 진입
+        const p = easeExpo(local / 0.42);
+        const shift = Math.round(w * (1 - p)) * dir;
+        mPhoto(c, S, -1, x - Math.round(w * p * 0.42) * dir, y, w, h, baseScale, 0, 0);
+        mPhoto(c, S, 0, x + shift, y, w, h, baseScale + (1 - p) * 0.08, panX, panY);
+      } else if (mode === 2 && local < 0.42) {
+        // 2) 수직 마스크 와이프 리빌 + 줌아웃
+        const p = easeExpo(local / 0.42);
+        mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+        const revH = Math.round(h * p);
+        c.save();
+        c.beginPath();
+        c.rect(x, y + (h - revH), w, revH);
+        c.clip();
+        mPhoto(c, S, 0, x, y, w, h, baseScale + (1 - p) * 0.14, panX, panY + (1 - p) * 26);
+        c.restore();
+        if (p > 0.03 && p < 0.97) {
+          c.fillStyle = 'rgba(255,250,240,0.65)';
+          c.fillRect(x, y + (h - revH) - 1, w, 2);
+        }
+      } else if (mode === 3 && local < 0.36) {
+        // 3) 셔터 플래시 + 틸트 스냅 착지
+        const p = easeExpo(local / 0.36);
+        const rot = isVid ? 0 : ((1 - p) * 2.6 * dir * Math.PI) / 180;
+        if (p < 0.45) mPhoto(c, S, -1, x, y, w, h, baseScale + p * 0.14, 0, 0);
+        c.save();
+        c.globalAlpha = easeCubic(local / 0.22);
+        c.translate(x + w / 2, y + h / 2);
+        c.rotate(rot);
+        c.translate(-(x + w / 2), -(y + h / 2));
+        mPhoto(c, S, 0, x, y, w, h, baseScale + (1 - p) * 0.18, panX, panY);
+        c.restore();
+        if (local < 0.16) {
+          c.fillStyle = `rgba(255,252,245,${((1 - local / 0.16) * 0.32).toFixed(3)})`;
+          c.fillRect(x, y, w, h);
+        }
+      } else if (mode === 4 && local < 0.42) {
+        // 4) 중앙 커튼 확장 리빌
+        const p = easeExpo(local / 0.42);
+        mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+        const cw = Math.round(w * p);
+        c.save();
+        c.beginPath();
+        c.rect(x + (w - cw) / 2, y, cw, h);
+        c.clip();
+        mPhoto(c, S, 0, x, y, w, h, baseScale + (1 - p) * 0.12, panX, panY);
+        c.restore();
+      } else if (mode === 5 && local < 0.40) {
+        // 5) 딥 줌 쓰루 전환 (이전 사진 확 당겨지며 사라지고 새 사진 펀치 진입)
+        const p = easeCubic(local / 0.40);
+        mPhoto(c, S, -1, x, y, w, h, baseScale + p * 0.32, 0, 0);
+        c.save();
+        c.globalAlpha = easeCubic(local / 0.28);
+        mPhoto(c, S, 0, x, y, w, h, baseScale + (1 - p) * 0.22, panX, panY);
+        c.restore();
+      } else {
+        // 기본/전환 완료 구간: 0.26초 펀치 착지 + 지속적인 Ken Burns 패닝·미세 틸트
+        const punch = cutIdx > 0 && local < 0.26 ? (1 - easeExpo(local / 0.26)) : 0;
+        const rot = isVid ? 0 : (((lp - 0.5) * 0.8 + punch * 1.4) * dir * Math.PI) / 180;
+        if (cutIdx > 0 && local < 0.22) {
+          mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+        }
+        c.save();
+        if (cutIdx > 0 && local < 0.22) c.globalAlpha = easeCubic(local / 0.22);
+        if (Math.abs(rot) > 0.0005) {
+          c.translate(x + w / 2, y + h / 2);
+          c.rotate(rot);
+          c.translate(-(x + w / 2), -(y + h / 2));
+        }
+        mPhoto(c, S, 0, x, y, w, h, baseScale + punch * 0.16, panX, panY);
+        c.restore();
+      }
       c.restore();
       if (warm) inWarm(c, x, y, w, h, warm);
     }
@@ -3381,21 +3471,70 @@
         const safePx = isVid ? px * 0.2 : px;
         const safePy = isVid ? py * 0.2 : py;
         const safeRot = isVid ? 0 : (rotDeg * Math.PI) / 180;
-        const fade = (cutIdx > 0 && fadeDur > 0 && local < fadeDur) ? easeOutCubic(local / fadeDur) : 1;
-        if (fade < 0.995 && cutIdx > 0) {
+        // 컷 번호별 5종 CapCut급 전환 연출 (슬라이드 푸시 / 수직 와이프 / 딥 줌 쓰루 / 중앙 커튼 / 휩-플래시)
+        const transKind = cutIdx % 5;
+        const tDur = Math.max(0.28, fadeDur);
+        if (cutIdx > 0 && local < tDur) {
+          const p = easeOutExpo(local / tDur);
+          if (transKind === 1) {
+            // 슬라이드 푸시
+            mPhoto(c, S, -1, -Math.round(W * p * 0.45) * dir, 0, W, H, 1.08, 0, 0);
+            mPhoto(c, S, 0, Math.round(W * (1 - p)) * dir, 0, W, H, safeZoom + (1 - p) * 0.08, safePx, safePy);
+          } else if (transKind === 2) {
+            // 수직 마스크 와이프 리빌
+            mPhoto(c, S, -1, 0, 0, W, H, 1.08, 0, 0);
+            const revH = Math.round(H * p);
+            c.save();
+            c.beginPath();
+            c.rect(0, H - revH, W, revH);
+            c.clip();
+            mPhoto(c, S, 0, 0, 0, W, H, safeZoom + (1 - p) * 0.12, safePx, safePy + (1 - p) * 28);
+            c.restore();
+            if (p > 0.03 && p < 0.97) {
+              c.fillStyle = 'rgba(255,250,240,0.7)';
+              c.fillRect(0, H - revH - 1, W, 2);
+            }
+          } else if (transKind === 3) {
+            // 중앙 커튼 확장 리빌
+            mPhoto(c, S, -1, 0, 0, W, H, 1.08, 0, 0);
+            const cw = Math.round(W * p);
+            c.save();
+            c.beginPath();
+            c.rect((W - cw) / 2, 0, cw, H);
+            c.clip();
+            mPhoto(c, S, 0, 0, 0, W, H, safeZoom + (1 - p) * 0.12, safePx, safePy);
+            c.restore();
+          } else if (transKind === 4) {
+            // 딥 줌 쓰루
+            const cp = easeOutCubic(local / tDur);
+            mPhoto(c, S, -1, 0, 0, W, H, 1.08 + cp * 0.34, 0, 0);
+            c.save();
+            c.globalAlpha = easeOutCubic(local / (tDur * 0.72));
+            mPhoto(c, S, 0, 0, 0, W, H, safeZoom + (1 - cp) * 0.22, safePx, safePy);
+            c.restore();
+          } else {
+            // 휩팬 + 틸트 크로스페이드
+            mPhoto(c, S, -1, 0, 0, W, H, 1.08, -safePx * 0.5, -safePy * 0.5);
+            c.save();
+            c.globalAlpha = easeOutCubic(local / (tDur * 0.75));
+            if (Math.abs(safeRot) > 0.0005) {
+              c.translate(W / 2, H / 2);
+              c.rotate(safeRot);
+              c.translate(-W / 2, -H / 2);
+            }
+            mPhoto(c, S, 0, 0, 0, W, H, safeZoom, safePx, safePy);
+            c.restore();
+          }
+        } else {
           c.save();
-          mPhoto(c, S, -1, 0, 0, W, H, 1.08, -safePx * 0.45, -safePy * 0.45);
+          if (Math.abs(safeRot) > 0.0005) {
+            c.translate(W / 2, H / 2);
+            c.rotate(safeRot);
+            c.translate(-W / 2, -H / 2);
+          }
+          mPhoto(c, S, 0, 0, 0, W, H, safeZoom, safePx, safePy);
           c.restore();
         }
-        c.save();
-        c.globalAlpha = fade;
-        if (Math.abs(safeRot) > 0.0005) {
-          c.translate(W / 2, H / 2);
-          c.rotate(safeRot);
-          c.translate(-W / 2, -H / 2);
-        }
-        mPhoto(c, S, 0, 0, 0, W, H, safeZoom, safePx, safePy);
-        c.restore();
         if (flashAmt > 0 && local < 0.16 && cutIdx > 0) {
           c.fillStyle = `rgba(255,252,245,${((1 - local / 0.16) * flashAmt).toFixed(3)})`;
           c.fillRect(0, 0, W, H);
