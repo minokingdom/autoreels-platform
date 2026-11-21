@@ -968,17 +968,25 @@
     //   body.ar-sheet 일 때 CSS 가 미리보기를 위에, 단계 칸을 아래 시트(화면 약 절반)로 고정
     // ==========================================================================
     function arToggleSheet(force) {
-      const wasMin = document.body.classList.contains('ar-sheet-min');
-      const min = typeof force === 'boolean' ? force : !wasMin;
+      const classes = document.body.classList;
+      const wasMin = classes.contains('ar-sheet-min');
+      const wasFull = classes.contains('ar-sheet-full');
+      const min = force === true || (force === undefined && wasFull);
+      const full = force === 'full' || (force === undefined && !wasMin && !wasFull);
       const closing = !wasMin && min && arUsesWorkflowSheet();
       const savedEnding = closing && arEndingTabActive() && (updateCurrentDealerFromPreview() || arEndingSavedInSheet);
-      document.body.classList.toggle('ar-sheet-min', min);
-      if (wasMin && arWorkflowSheetExpanded()) {
-        arEndingSavedInSheet = false;
+      classes.toggle('ar-sheet-min', min);
+      classes.toggle('ar-sheet-full', full);
+      if (closing) document.getElementById('studioWorkflowColumn').scrollTop = 0;
+      if ((wasMin || (full && !wasFull)) && arWorkflowSheetExpanded()) {
+        if (wasMin) arEndingSavedInSheet = false;
         arPauseForStudioEdit();
       }
       const h = document.getElementById('arSheetHandle');
-      if (h) h.setAttribute('aria-expanded', min ? 'false' : 'true');
+      if (h) {
+        h.setAttribute('aria-expanded', String(!min));
+        h.setAttribute('aria-label', min ? '편집 시트 펼치기' : full ? '편집 시트 접기' : '편집 시트 전체화면으로 보기');
+      }
       if (savedEnding && !arEditSheetOpen && !isPlaying) togglePlayPause();
     }
     function arSetupSheetMode() {
@@ -999,21 +1007,29 @@
         const h = document.createElement('button');
         h.type = 'button';
         h.id = 'arSheetHandle';
-        h.setAttribute('aria-label', '아래 칸 접기·펼치기');
+        h.setAttribute('aria-label', '편집 시트 전체화면으로 보기');
         h.setAttribute('aria-expanded', 'true');
         h.innerHTML = '<span></span>';
-        // 누르면 접기·펼치기, 끌어내리면 접기, 끌어올리면 펼치기
+        // 탭은 세 높이를 순환하고, 드래그는 움직인 방향으로 한 단계 이동합니다.
         let y0 = null;
-        let moved = false;
-        h.addEventListener('pointerdown', (e) => { y0 = e.clientY; moved = false; });
-        h.addEventListener('pointermove', (e) => { if (y0 != null && Math.abs(e.clientY - y0) > 8) moved = true; });
+        let dragged = false;
+        h.addEventListener('pointerdown', (e) => {
+          if (!e.isPrimary || e.button !== 0) return;
+          y0 = e.clientY;
+          dragged = false;
+          h.setPointerCapture(e.pointerId);
+        });
+        h.addEventListener('pointercancel', () => { y0 = null; });
         h.addEventListener('pointerup', (e) => {
-          if (y0 == null) return;
+          if (!e.isPrimary || y0 == null) return;
           const dy = e.clientY - y0;
           y0 = null;
-          if (!moved) { arToggleSheet(); return; }
-          arToggleSheet(dy > 0);
+          dragged = Math.abs(dy) > 8;
+          if (!dragged) return;
+          if (dy > 0) arToggleSheet(!document.body.classList.contains('ar-sheet-full'));
+          else arToggleSheet(document.body.classList.contains('ar-sheet-min') ? false : 'full');
         });
+        h.addEventListener('click', (e) => { if (!dragged || e.detail === 0) arToggleSheet(); });
         wf.insertBefore(h, wf.firstChild);
       }
     }
@@ -1156,7 +1172,7 @@
         if (document.body.classList.contains('ar-sheet')) {
           const wf = document.getElementById('studioWorkflowColumn');
           if (wf) wf.scrollTop = 0;
-          arToggleSheet(false);
+          if (document.body.classList.contains('ar-sheet-min')) arToggleSheet(false);
           return;
         }
         // 새 단계는 맨 위(안내 문구)부터 보이게

@@ -1519,6 +1519,9 @@ body.ar-cut-editing #arQuickBar { display: none; }
 @media (max-width: 1023px) {
   body.ar-sheet { --ar-msb: 64px; --ar-sheet: calc(52dvh - var(--ar-msb)); overflow: hidden; overscroll-behavior: none; }
   body.ar-sheet.ar-sheet-min { --ar-sheet: 82px; }
+  body.ar-sheet.ar-sheet-full { --ar-sheet: calc(100dvh - var(--ar-msb)); --ar-handle-inset: env(safe-area-inset-top, 0px); }
+  body.ar-sheet.ar-sheet-full:not(.ar-cut-editing) #mainMonitorColumn:not(:has(#presetDrawer.open)) { visibility: hidden; }
+  body.ar-sheet.ar-sheet-full:not(.ar-cut-editing) #studioWorkflowColumn { border-radius: 0; }
   /* 접었을 때는 손잡이 + 단계 탭만 보이게 */
   body.ar-sheet.ar-sheet-min:not(.ar-cut-editing) #studioWorkflowColumn > .studio-card > div:first-child { display: none; }
   body.ar-sheet header,
@@ -1574,11 +1577,11 @@ body.ar-cut-editing #arQuickBar { display: none; }
   body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn > .studio-card > div:first-child { padding: 2px 12px 4px; }
   body.ar-sheet:not(.ar-cut-editing) #studioWorkflowColumn > .studio-card > div.sticky { padding-top: 8px; padding-bottom: 8px; }
   body.ar-sheet:not(.ar-cut-editing) #arSheetHandle {
-    display: flex; position: sticky; top: 0; z-index: 25; width: 100%; height: 30px; align-items: center; justify-content: center;
-    background: var(--card); border: 0; cursor: pointer; touch-action: none; padding: 0;
+    display: flex; position: sticky; top: 0; z-index: 25; width: 100%; align-items: center; justify-content: center;
+    background: var(--card); border: 0; cursor: pointer; touch-action: none; height: calc(30px + var(--ar-handle-inset, 0px)); padding: var(--ar-handle-inset, 0px) 0 0;
   }
   #arSheetHandle span { width: 42px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.34); display: block; }
-  body.ar-sheet:not(.ar-cut-editing) div.sticky:has(> .studio-tablist) { top: 30px !important; }
+  body.ar-sheet:not(.ar-cut-editing) div.sticky:has(> .studio-tablist) { top: calc(30px + var(--ar-handle-inset, 0px)) !important; }
   /* 모바일 바텀시트 스크롤 다이어트 + 주요 컨트롤 터치 영역(>=38px) 보강 */
   body.ar-sheet:not(.ar-cut-editing) .studio-panel {
     padding: 12px 12px 20px !important;

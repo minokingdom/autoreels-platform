@@ -387,6 +387,10 @@ try {
   await mobile.reload({ waitUntil: 'load', timeout: 90000 });
   await assertInitialPause();
   await mobile.locator('#arSheetHandle').tap();
+  await mobile.waitForFunction(() => document.getElementById('studioWorkflowColumn').getBoundingClientRect().top < 2);
+  assert.equal(await mobile.locator('#arSheetHandle').getAttribute('aria-label'), '편집 시트 접기');
+  assert.ok(await mobile.locator('#mobileStepBar').isVisible());
+  await mobile.locator('#arSheetHandle').tap();
   assert.equal(await mobile.locator('#arSheetHandle').getAttribute('aria-expanded'), 'false');
   assert.equal(await mobile.evaluate(() => isPlaying), false);
   await mobile.locator('#reelCanvas').tap();
@@ -398,6 +402,8 @@ try {
   await mobile.locator('#dlrInputName').fill('Mobile test name');
   assert.equal(await mobile.evaluate(() => isPlaying), false);
   await mobile.locator('#arApplyEndingBtn').tap();
+  assert.equal(await mobile.evaluate(() => isPlaying), false);
+  await mobile.locator('#arSheetHandle').tap();
   assert.equal(await mobile.evaluate(() => isPlaying), false);
   await mobile.locator('#arSheetHandle').tap();
   await mobile.waitForFunction(() => isPlaying);
