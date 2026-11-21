@@ -1,4 +1,4 @@
-function openQuickClip(s) {
+function openQuickClip(s,file) {
   const end = video.duration;
   const clip = {start:0,end,rate:1,keepAudio:true,music:'',style:'box',title:'',customTitle:true,
     showCaptions:true,lines:[{start:0,end,text:''}]};
@@ -13,6 +13,7 @@ function openQuickClip(s) {
   selected(s,clip,null);
   byId('editor').open = true;
   updateQuickTimes(clip);
+  startMontage(s,file);
 }
 function updateQuickTimes(clip) {
   for (const [key,control,output] of [['start','trimStart','startTime'],['end','trimEnd','endTime']]) {
@@ -20,7 +21,7 @@ function updateQuickTimes(clip) {
     byId(control).value = clip[key];
     byId(output).textContent = clip[key].toFixed(1) + '초';
   }
-  detail(session,'원본 ' + video.duration.toFixed(1) + '초 · 편집 후 ' + ((clip.end-clip.start)/clip.rate).toFixed(1) + '초');
+  detail(session,'원본 ' + video.duration.toFixed(1) + '초 · 편집 후 ' + editedSeconds(clip).toFixed(1) + '초');
 }
 async function prepareQuickMusic(context,dest,url,signal) {
   const response = await fetch(url,{signal});
@@ -33,7 +34,60 @@ async function prepareQuickMusic(context,dest,url,signal) {
   sound.connect(volume).connect(dest);
   return sound;
 }
+function setQuickMode(s,automatic) {
+  if (session !== s || s.exporting) return;
+  video.pause();
+  s.wantMontage = automatic;
+  s.clip.montage = automatic ? s.plan : null;
+  byId('useMontage').setAttribute('aria-pressed',String(automatic));
+  byId('useManual').setAttribute('aria-pressed',String(!automatic));
+  byId('manualTrim').hidden = automatic;
+  const waiting = automatic && !s.plan;
+  byId('montageProgress').hidden = !waiting;
+  save.disabled = play.disabled = waiting;
+  const notice = byId('montageStatus');
+  if (waiting) notice.textContent = '움직임과 컷을 고르는 중이에요.';
+  else if (automatic) notice.textContent = s.plan.length === 1 ? '짧은 원본에 부드러운 줌을 적용했어요.' : s.plan.length + '개 장면을 골라 원래 순서로 이었어요.';
+  else notice.textContent = '';
+  video.currentTime = clipRanges(s.clip)[0].start;
+  markEdited(); updateQuickTimes(s.clip); renderPreview();
+}
+async function startMontage(s,file) {
+  byId('useMontage').disabled = false;
+  byId('montageProgress').value = 0;
+  setQuickMode(s,true);
+  try {
+    const {buildMontage} = await import('./montage.mjs');
+    s.plan = await buildMontage(file,video.duration,s.controller.signal,pct => {
+      if (session === s) byId('montageProgress').value = pct;
+    });
+    if (session === s && s.wantMontage) setQuickMode(s,true);
+  } catch {
+    if (session !== s) return;
+    if (s.wantMontage) setQuickMode(s,false);
+    byId('useMontage').disabled = true;
+    byId('montageStatus').textContent = '장면 분석을 마치지 못했어요. 원본은 직접 편집할 수 있어요.';
+  }
+}
 if (quickEdit) {
+  byId('useMontage').addEventListener('click',() => setQuickMode(session,true));
+  byId('useManual').addEventListener('click',() => setQuickMode(session,false));
+  let previewFrame;
+  const advanceMontage = () => {
+    const plan = session?.clip?.montage;
+    if (!plan || video.paused) return;
+    const t = video.currentTime;
+    if (!video.seeking) {
+      const next = plan.find(r => t < r.end);
+      if (!next) { video.pause(); return; }
+      if (t < next.start) video.currentTime = next.start;
+      else renderPreview(t);
+    }
+    previewFrame = requestAnimationFrame(advanceMontage);
+  };
+  video.addEventListener('play',advanceMontage);
+  video.addEventListener('pause',() => cancelAnimationFrame(previewFrame));
+
   document.body.classList.add('quick-video');
   document.title = '오토릴스메이커 · 짧은 내 영상 바로 편집하기';
   document.querySelectorAll('h1').forEach(h => { h.textContent = '짧은 내 영상 바로 편집하기'; });
@@ -57,7 +111,8 @@ if (quickEdit) {
   const syncMusic = () => {
     const clip = session?.clip;
     if (!clip?.music || !(music.duration > 0)) return;
-    music.currentTime = (Math.max(0,video.currentTime-clip.start)/clip.rate) % music.duration;
+    const elapsed = clipRanges(clip).reduce((sum,r) => sum+Math.max(0,Math.min(r.end,video.currentTime)-r.start),0);
+    music.currentTime = (elapsed/clip.rate) % music.duration;
   };
   video.addEventListener('play',() => {
     if (session?.clip?.music) { syncMusic(); music.play().catch(() => {}); }

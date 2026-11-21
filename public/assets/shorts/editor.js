@@ -119,7 +119,8 @@ function drawTitles(ctx,clip,caption) {
 function renderPreview(at=video.currentTime) {
   const overlay=byId('overlay'),ctx=overlay.getContext('2d');
   ctx.clearRect(0,0,overlay.width,overlay.height);
-  drawTitles(ctx,session?.clip,activeCaption(session?.clip,at));
+  if (session?.clip?.montage && video.readyState >= 2) paintClip(ctx,video,activeCaption(session.clip,at));
+  else drawTitles(ctx,session?.clip,activeCaption(session?.clip,at));
 }
 video.addEventListener('seeked',() => renderPreview());
 async function confirmExport(s,clip,blob) {

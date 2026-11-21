@@ -32,6 +32,7 @@ try {
   await frame.locator('#quickControls').waitFor({timeout:15000});
   assert.equal(await frame.locator('#trimEnd').inputValue(),'1');
   assert.equal(await frame.locator('#guideForm').isVisible(),false);
+  await frame.locator('#useManual').click();
   await frame.locator('#trimStart').fill('0.2');
   await frame.locator('#speed').selectOption('1.25');
   await frame.locator('#sourceSound').uncheck();
@@ -54,6 +55,27 @@ try {
   await frame.getByText('스튜디오로 돌아가기').click();
   await page.locator('dialog.ar-video-editor').waitFor({state:'detached'});
   assert.deepEqual(await before(),original);
+  await page.locator('#quickShortVideoInput').setInputFiles(path.join(root,'assets/remix/fixtures/remix-spoken-ko.mp4'));
+  await frame.getByText('2개 장면을 골라 원래 순서로 이었어요.').waitFor();
+  const expected = await frame.locator('#sourceVideo').evaluate(el => el.duration*.62);
+  await frame.locator('#play').click();
+  const skipped = await frame.locator('#sourceVideo').evaluate(el => new Promise(resolve => {
+    const timer = setTimeout(() => resolve(false),6000);
+    el.addEventListener('seeking',() => {clearTimeout(timer);resolve(true);},{once:true});
+  }));
+  assert.equal(skipped,true);
+  await frame.locator('#save').click();
+  await frame.locator('#download').waitFor({timeout:20000});
+  const duration = await frame.locator('#download').evaluate(async el => {
+    const out = document.createElement('video'); out.playsInline = true; out.muted = true; out.src = el.href;
+    await out.play();
+    return new Promise((resolve,reject) => {
+      const timer = setTimeout(() => reject(Error('MP4 재생 시간 초과')),10000);
+      out.onended = () => {clearTimeout(timer);resolve(out.currentTime);};
+    });
+  });
+  assert.ok(Math.abs(duration-expected)<.6,'편집 후 길이 '+duration+' / '+expected);
+  console.log('자동 장면 선택·미리보기 컷 전환·완성 MP4 재생 확인',duration.toFixed(2)+'초');
   assert.deepEqual(errors,[]);
   console.log('Independent file, full duration, trim, rate, sound, caption, music, portrait MP4, original studio preserved');
 } finally { await browser.close(); }

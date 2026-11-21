@@ -97,7 +97,7 @@ async function openShortsFile(file) {
     video.src = s.url; await metadata; if (session !== s) return;
     if (!(video.duration > 0 && Number.isFinite(video.duration))) throw Error('이 영상의 길이를 읽을 수 없어요.');
     if (!quickEdit && video.duration > 600) throw Error('10분 이내 영상을 선택해 주세요.');
-    if (quickEdit) { openQuickClip(s); return; }
+    if (quickEdit) { openQuickClip(s,file); return; }
     detail(s,'기기에서 음성 준비 중…');
     const context = new OfflineAudioContext(1,1,16000);
     const decoded = await context.decodeAudioData(await file.arrayBuffer()); if (session !== s) return;
@@ -113,18 +113,21 @@ async function openShortsFile(file) {
   } catch (err) {detail(s,err.message || '이 영상의 오디오를 읽을 수 없어요.');}
 }
 byId('back').addEventListener('click',reset);
+function clipRanges(clip) { return clip.montage || [clip]; }
+function editedSeconds(clip) { return clipRanges(clip).reduce((total,r) => total+r.end-r.start,0)/(clip.rate||1); }
 function activeCaption(clip,t) {return clip?.lines.find(line => t >= line.start && t < line.end)?.text || '';}
 play.addEventListener('click',async () => {
   const s = session; if (!s?.clip || s.exporting) return;
   s.interacted = true;
   if (!video.paused) { video.pause(); return; }
-  if (video.currentTime < s.clip.start || video.currentTime >= s.clip.end - .15) video.currentTime = s.clip.start;
+  const ranges = clipRanges(s.clip);
+  if (!ranges.some(r => video.currentTime >= r.start && video.currentTime < r.end-.03)) video.currentTime = ranges[0].start;
   try { await video.play(); } catch { detail(s,'영상을 재생할 수 없어요.'); }
 });
 video.addEventListener('timeupdate',() => {
   const c = session?.clip; if (!c) return;
   renderPreview();
-  if (video.currentTime >= c.end && !video.paused) video.pause();
+  if (!c.montage && video.currentTime >= c.end && !video.paused) video.pause();
 });
 video.addEventListener('play',() => {play.textContent = 'Ⅱ'; play.setAttribute('aria-label','일시정지');});
 video.addEventListener('pause',() => {play.textContent = '▶'; play.setAttribute('aria-label','선택 구간 재생');});
@@ -132,7 +135,10 @@ function paintClip(ctx, source, text) {
   const w = ctx.canvas.width, h = ctx.canvas.height;
   if (quickEdit) {
     const fit = Math.min(w/source.videoWidth,h/source.videoHeight);
-    const width = source.videoWidth*fit, height = source.videoHeight*fit;
+    const take = session.clip.montage?.find(r => source.currentTime >= r.start-.01 && source.currentTime <= r.end+.02);
+    const position = take ? Math.max(0,Math.min(1,(source.currentTime-take.start)/(take.end-take.start))) : 0;
+    const zoom = 1 + .055*position;
+    const width = source.videoWidth*fit*zoom, height = source.videoHeight*fit*zoom;
     ctx.fillStyle = '#09090b'; ctx.fillRect(0,0,w,h);
     ctx.drawImage(source,(w-width)/2,(h-height)/2,width,height);
     drawTitles(ctx,session.clip,text); return;
@@ -162,9 +168,12 @@ save.addEventListener('click',async () => {
     await Promise.race([failure,new Promise((resolve,reject) => {
       source.onloadeddata = resolve; source.onerror = () => reject(Error('영상을 열 수 없어요.')); source.src = s.url;
     })]); await resume;
-    if (clip.start > 0) await Promise.race([failure,new Promise(resolve => {source.onseeked = resolve; source.currentTime = clip.start;})]);
+    const ranges = clipRanges(clip);
+    let takeIndex = 0;
+    const firstStart = ranges[0].start;
+    if (firstStart > 0) await Promise.race([failure,new Promise(resolve => {source.onseeked = resolve; source.currentTime = firstStart;})]);
     const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1920;
-    const ctx = canvas.getContext('2d',{alpha:false}); paintClip(ctx,source,activeCaption(clip,clip.start));
+    const ctx = canvas.getContext('2d',{alpha:false}); paintClip(ctx,source,activeCaption(clip,firstStart));
     stream = canvas.captureStream(30);
     const dest = context.createMediaStreamDestination(), node = context.createMediaElementSource(source);
     source.playbackRate = clip.rate || 1; source.muted = false;
@@ -178,11 +187,22 @@ save.addEventListener('click',async () => {
       recorder.onstop = () => resolve(new Blob(chunks,{type:'video/mp4'}));
     });
     const stop = () => { if (recorder.state !== 'inactive') recorder.stop(); source.pause(); };
-    const draw = () => {
-      paintClip(ctx,source,activeCaption(clip,source.currentTime));
-      if (source.currentTime >= clip.end || source.ended) stop(); else raf = requestAnimationFrame(draw);
+    const draw = async () => {
+      try {
+        if (source.currentTime >= ranges[takeIndex].end || source.ended) {
+          if (++takeIndex >= ranges.length) { stop(); return; }
+          recorder.pause(); source.pause();
+          await context.suspend();
+          await Promise.race([failure,new Promise(resolve => {
+            source.onseeked = resolve; source.currentTime = ranges[takeIndex].start;
+          })]);
+          paintClip(ctx,source,activeCaption(clip,source.currentTime));
+          await context.resume(); await source.play(); recorder.resume();
+        } else paintClip(ctx,source,activeCaption(clip,source.currentTime));
+        raf = requestAnimationFrame(draw);
+      } catch (error) { rejectRender(error); }
     };
-    source.onended = stop; timeout = setTimeout(s.stopExport,((clip.end-clip.start)/source.playbackRate+20)*1000);
+    timeout = setTimeout(s.stopExport,(editedSeconds(clip)+30)*1000);
     recorder.start(300); await source.play(); musicNode?.start(); draw();
     const blob = await Promise.race([done,failure]);
     if(session !== s || blob.size < 1000) throw Error('완성된 영상을 확인하지 못했어요.');
@@ -194,7 +214,7 @@ save.addEventListener('click',async () => {
   } catch (err) { if(session === s) statusLine.textContent = err.message || '저장 중 문제가 생겼어요.'; }
   finally {
     clearTimeout(timeout); cancelAnimationFrame(raf); document.removeEventListener('visibilitychange',visibility);
-    if (recorder?.state === 'recording') recorder.stop(); source.pause(); source.removeAttribute('src'); source.load();
+    if (recorder && recorder.state !== 'inactive') recorder.stop(); source.pause(); source.removeAttribute('src'); source.load();
     stream?.getTracks().forEach(t => t.stop()); if (musicNode) { try { musicNode.stop(); } catch {} }
     if(context) await context.close().catch(() => {});
     s.stopExport = null; s.exporting = false; if (session === s) { save.disabled = false; byId('quickControls').disabled = false; byId('fields').disabled = false; if (s.deferredRank) { applyRank(s,s.deferredRank); s.deferredRank = null; } }
