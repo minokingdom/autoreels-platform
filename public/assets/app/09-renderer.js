@@ -3648,8 +3648,35 @@
           return;
         }
         const dur = m.duration && isFinite(m.duration) ? m.duration : 0;
-        const want = dur > 0.2 ? localSec % dur : 0;
-        if (Math.abs(m.currentTime - want) > 0.4) {
+        let want = 0;
+        if (m._continuousVideo && dur > 0.2) {
+          const trimStart = Math.max(0, Math.min(dur - 0.5, Number(m._trimStart) || 0));
+          const trimEnd = (m._trimEnd && m._trimEnd > trimStart + 0.5) ? Math.min(dur, m._trimEnd) : dur;
+          const span = Math.max(0.5, trimEnd - trimStart);
+          const rate = Math.max(0.5, Math.min(2.0, Number(m._playRate) || 1));
+          if (Math.abs((m.playbackRate || 1) - rate) > 0.01) {
+            try { m.playbackRate = rate; } catch (e) {}
+          }
+          const globalT = Math.max(0, Number(window.__realTimelineT) || 0);
+          want = trimStart + ((globalT * rate) % span);
+          m.muted = !m._keepAudio;
+          if (m._keepAudio && typeof AudioEngine !== 'undefined' && AudioEngine.ctx && AudioEngine.streamDest && !m._arAudioNode) {
+            try {
+              m._arAudioNode = AudioEngine.ctx.createMediaElementSource(m);
+              m._arAudioGain = AudioEngine.ctx.createGain();
+              m._arAudioGain.gain.value = 0.85;
+              m._arAudioNode.connect(m._arAudioGain);
+              m._arAudioGain.connect(AudioEngine.ctx.destination);
+              m._arAudioGain.connect(AudioEngine.streamDest);
+            } catch (e) {}
+          }
+          if (m._arAudioGain) {
+            m._arAudioGain.gain.value = m._keepAudio ? 0.85 : 0;
+          }
+        } else {
+          want = dur > 0.2 ? localSec % dur : 0;
+        }
+        if (Math.abs(m.currentTime - want) > (m._continuousVideo ? 0.32 : 0.4)) {
           try { m.currentTime = want; } catch (e) {}
         }
         if (isPlaying) {
@@ -3658,6 +3685,138 @@
           m.pause();
         }
       });
+    }
+
+    // ★ 짧은 내 영상 바로 편집하기 (구간 자르기 · 배속 · 원본 소리 · 전 컷 연속 재생)
+    function arGetShortVideoMedia() {
+      const m = campaign && Array.isArray(campaign.uploadedPhotos) ? campaign.uploadedPhotos[0] : null;
+      return (m && m._isVideo && m._continuousVideo) ? m : null;
+    }
+
+    function arRenderShortVideoBar() {
+      const bar = document.getElementById('arShortVideoBar');
+      if (!bar) return;
+      const vid = arGetShortVideoMedia();
+      if (!vid) {
+        bar.classList.add('hidden');
+        return;
+      }
+      bar.classList.remove('hidden');
+      const dur = Math.max(1, (vid.duration && isFinite(vid.duration)) ? vid.duration : 12);
+      const trimStart = Math.max(0, Math.min(dur - 0.5, Number(vid._trimStart) || 0));
+      const trimEnd = Math.max(trimStart + 0.5, Math.min(dur, Number(vid._trimEnd) || dur));
+      const rate = Math.max(0.5, Math.min(2.0, Number(vid._playRate) || 1));
+      const effectiveDur = Math.max(1, (trimEnd - trimStart) / rate);
+
+      const sEl = document.getElementById('svTrimStart');
+      const eEl = document.getElementById('svTrimEnd');
+      if (sEl) { sEl.max = String(Math.max(0.5, +(dur - 0.5).toFixed(1))); sEl.value = String(+trimStart.toFixed(1)); }
+      if (eEl) { eEl.min = String(+(trimStart + 0.5).toFixed(1)); eEl.max = String(+dur.toFixed(1)); eEl.value = String(+trimEnd.toFixed(1)); }
+      const svEl = document.getElementById('svTrimStartVal');
+      const evEl = document.getElementById('svTrimEndVal');
+      if (svEl) svEl.textContent = `${trimStart.toFixed(1)}초`;
+      if (evEl) evEl.textContent = `${trimEnd.toFixed(1)}초`;
+      const badge = document.getElementById('svDurationBadge');
+      if (badge) badge.textContent = `원본 ${dur.toFixed(1)}초 → ${effectiveDur.toFixed(1)}초 (${rate}x)`;
+      const nameEl = document.getElementById('svFileName');
+      if (nameEl) nameEl.textContent = `${vid._origName || '내 짧은 영상'} · 전 컷에 끊김 없이 이어서 재생됩니다.`;
+
+      bar.querySelectorAll('[data-sv-rate]').forEach((btn) => {
+        const active = Math.abs(Number(btn.dataset.svRate) - rate) < 0.01;
+        btn.style.background = active ? '#2563eb' : '';
+        btn.style.color = active ? '#ffffff' : '';
+        btn.style.borderColor = active ? '#3b82f6' : '';
+      });
+      const audBtn = document.getElementById('svAudioToggleBtn');
+      if (audBtn) {
+        audBtn.textContent = vid._keepAudio ? '🔊 원본 소리 켬' : '🔇 원본 소리 끔';
+      }
+    }
+
+    function arUpdateShortVideoEdit(patch) {
+      const vid = arGetShortVideoMedia();
+      if (!vid) return;
+      const dur = Math.max(1, (vid.duration && isFinite(vid.duration)) ? vid.duration : 12);
+      if (typeof patch.trimStart === 'number') {
+        vid._trimStart = Math.max(0, Math.min(dur - 0.5, patch.trimStart));
+        if ((vid._trimEnd || dur) < vid._trimStart + 0.5) vid._trimEnd = Math.min(dur, vid._trimStart + 0.5);
+      }
+      if (typeof patch.trimEnd === 'number') {
+        vid._trimEnd = Math.max((vid._trimStart || 0) + 0.5, Math.min(dur, patch.trimEnd));
+      }
+      if (typeof patch.playRate === 'number') {
+        vid._playRate = Math.max(0.5, Math.min(2.0, patch.playRate));
+      }
+      if (patch.toggleAudio) {
+        vid._keepAudio = !vid._keepAudio;
+        vid.muted = !vid._keepAudio;
+      }
+      const span = Math.max(1, ((vid._trimEnd || dur) - (vid._trimStart || 0)) / (vid._playRate || 1));
+      const outroSec = (typeof arCardEmpty === 'function' && arCardEmpty()) ? 0 : 3;
+      const targetTotal = Math.max(6, Math.min(60, Math.round(span + outroSec)));
+      if (typeof setVideoTotalDuration === 'function') setVideoTotalDuration(targetTotal);
+      arRenderShortVideoBar();
+      if (window.__timelines && window.__timelines.main) {
+        try { vid.currentTime = vid._trimStart || 0; } catch (e) {}
+        window.__timelines.main.seek(0);
+      }
+    }
+
+    function arClearShortVideoMode() {
+      pauseAllCutVideos();
+      campaign.uploadedPhotos.forEach(arReleasePhoto);
+      campaign.uploadedPhotos = [];
+      campaign.isUserCustomPhotos = false;
+      arRenderShortVideoBar();
+      if (typeof arApplyIndustryPhotos === 'function') arApplyIndustryPhotos();
+      if (typeof renderUploadedPhotoThumbs === 'function') renderUploadedPhotoThumbs();
+      if (typeof arToast === 'function') arToast('단일 영상 편집 모드를 해제했습니다.');
+    }
+
+    async function arHandleQuickShortVideoUpload(event) {
+      const input = event && event.target;
+      const file = input && input.files && input.files[0];
+      if (!file) return;
+      if (!/^video\//.test(file.type) && !/\.(mp4|mov|webm|m4v|3gp)$/i.test(file.name)) {
+        if (typeof arToast === 'function') arToast('동영상 파일(MP4, MOV, WebM 등)을 선택해 주세요.');
+        return;
+      }
+      if (typeof arToast === 'function') arToast('짧은 영상을 불러오는 중…');
+      let vid = null;
+      try {
+        vid = await loadCutVideo(file, 1);
+      } catch (e) {}
+      if (input) input.value = '';
+      if (!vid) {
+        if (typeof arToast === 'function') arToast('영상을 열지 못했습니다. MP4/MOV 형식인지 확인해 주세요.');
+        return;
+      }
+      const dur = (vid.duration && isFinite(vid.duration) && vid.duration > 0.5) ? vid.duration : 12;
+      vid._continuousVideo = true;
+      vid._trimStart = 0;
+      vid._trimEnd = Math.min(dur, 45);
+      vid._playRate = 1;
+      vid._keepAudio = false;
+      vid._origName = file.name;
+
+      pauseAllCutVideos();
+      campaign.uploadedPhotos.forEach(arReleasePhoto);
+      campaign.uploadedPhotos = [vid];
+      campaign.isUserCustomPhotos = true;
+      campaign.hasCustomVideo = false;
+
+      const outroSec = (typeof arCardEmpty === 'function' && arCardEmpty()) ? 0 : 3;
+      const targetTotal = Math.max(6, Math.min(60, Math.round(vid._trimEnd + outroSec)));
+      if (typeof setVideoTotalDuration === 'function') setVideoTotalDuration(targetTotal);
+      arRenderShortVideoBar();
+      if (typeof renderUploadedPhotoThumbs === 'function') renderUploadedPhotoThumbs();
+      if (typeof switchStudioTab === 'function') switchStudioTab('photo');
+      if (window.__timelines && window.__timelines.main) {
+        window.__timelines.main.seek(0);
+      }
+      if (typeof arToast === 'function') {
+        arToast(`짧은 영상(${dur.toFixed(1)}초) 준비 완료! 구간 자르기·속도·자막·테마를 바로 편집해 보세요.`);
+      }
     }
 
     // 카메라 원본은 화면·HTML에 넣기 전에 축소한다. 여러 장도 한 장씩 디코딩한다.

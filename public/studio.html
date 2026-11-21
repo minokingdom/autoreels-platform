@@ -745,7 +745,15 @@
         </div>
         <!-- ★ 1단계 · 오늘의 주제: 요일·계절·다가오는 날·인기 키워드로 오늘 올릴 주제 후보를 보여 주고, 고르면 AI 대본을 바로 만듦 -->
         <div id="studioPanel_topic" role="tabpanel" aria-labelledby="studioTabBtn_topic" class="studio-panel p-5 sm:p-6 space-y-4">
-          <a class="bgm-now" data-studio-tool href="/assets/shorts/index.html"><span class="bgm-now-txt"><strong>내 영상으로 쇼츠 만들기</strong><small>갤러리 영상에서 핵심 발언 찾기</small></span><span class="bgm-now-go">열기 ›</span></a>
+          <label for="quickShortVideoInput" class="bgm-now cursor-pointer" style="border-color:rgba(96,165,250,0.45);background:linear-gradient(135deg,rgba(37,99,235,0.16),rgba(20,20,24,0.92))">
+            <span class="bgm-now-txt">
+              <strong>짧은 내 영상 바로 편집하기</strong>
+              <small>찍어 둔 짧은 영상에 자막 · 테마 · 구간 자르기 · 배속 · 음악 입히기</small>
+            </span>
+            <span class="bgm-now-go">영상 선택 ›</span>
+            <input type="file" id="quickShortVideoInput" accept="video/*" onchange="arHandleQuickShortVideoUpload(event)" class="hidden" />
+          </label>
+          <a class="bgm-now" data-studio-tool href="/assets/shorts/index.html"><span class="bgm-now-txt"><strong>내 영상으로 쇼츠 만들기</strong><small>긴 말하기 영상에서 핵심 발언 찾기</small></span><span class="bgm-now-go">열기 ›</span></a>
           <a class="bgm-now" data-studio-tool href="/assets/remix/index.html"><span class="bgm-now-txt"><strong>참고 쇼츠·릴스로 재구성하기</strong><small>참고 쇼츠의 컷 길이에 내 영상과 자막 맞추기</small></span><span class="bgm-now-go">열기 ›</span></a>
           <div>
             <div class="text-[16px] font-semibold text-[#ededed]">오늘은 어떤 내용으로 올릴까요?</div>
@@ -957,6 +965,49 @@
         </div>
 
         <div id="studioPanel_photo" role="tabpanel" aria-labelledby="studioTabBtn_photo" class="studio-panel hidden p-5 sm:p-6 space-y-5">
+          <!-- ★ 짧은 단일 영상 바로 편집 컨트롤 바 (연속 재생 · 구간 자르기 · 배속 · 원본 소리) -->
+          <section id="arShortVideoBar" class="hidden studio-sub p-4 space-y-3" style="border-color:rgba(96,165,250,0.42)" aria-label="짧은 영상 편집">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div class="min-w-0">
+                <div class="text-[13px] font-semibold text-[#ededed] flex items-center gap-1.5">
+                  <span>🎬 짧은 영상 편집 중</span>
+                  <span id="svDurationBadge" class="text-[11px] font-mono text-[#60a5fa]">0.0초</span>
+                </div>
+                <p id="svFileName" class="text-[11.5px] text-[#85858b] truncate mt-0.5">전체 컷에 끊김 없이 이어서 재생됩니다.</p>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <label for="quickShortVideoInput" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer flex items-center">영상 바꾸기</label>
+                <button type="button" onclick="arClearShortVideoMode()" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer text-[#fca5a5]">해제</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <div class="flex items-center justify-between text-[11.5px] text-[#a1a1a6] mb-1">
+                  <label for="svTrimStart">시작 지점</label>
+                  <span id="svTrimStartVal" class="font-mono text-[#ededed]">0.0초</span>
+                </div>
+                <input id="svTrimStart" type="range" min="0" max="10" step="0.1" value="0" oninput="arUpdateShortVideoEdit({trimStart:Number(this.value)})" class="w-full accent-[#60a5fa]" />
+              </div>
+              <div>
+                <div class="flex items-center justify-between text-[11.5px] text-[#a1a1a6] mb-1">
+                  <label for="svTrimEnd">끝 지점</label>
+                  <span id="svTrimEndVal" class="font-mono text-[#ededed]">10.0초</span>
+                </div>
+                <input id="svTrimEnd" type="range" min="1" max="10" step="0.1" value="10" oninput="arUpdateShortVideoEdit({trimEnd:Number(this.value)})" class="w-full accent-[#60a5fa]" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-2 flex-wrap pt-0.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-[11.5px] text-[#a1a1a6] mr-1">재생 속도</span>
+                <button type="button" data-sv-rate="0.8" onclick="arUpdateShortVideoEdit({playRate:0.8})" class="tag-chip text-[11px] cursor-pointer">0.8x</button>
+                <button type="button" data-sv-rate="1" onclick="arUpdateShortVideoEdit({playRate:1})" class="tag-chip text-[11px] cursor-pointer">1.0x</button>
+                <button type="button" data-sv-rate="1.25" onclick="arUpdateShortVideoEdit({playRate:1.25})" class="tag-chip text-[11px] cursor-pointer">1.25x</button>
+                <button type="button" data-sv-rate="1.5" onclick="arUpdateShortVideoEdit({playRate:1.5})" class="tag-chip text-[11px] cursor-pointer">1.5x</button>
+              </div>
+              <button type="button" id="svAudioToggleBtn" onclick="arUpdateShortVideoEdit({toggleAudio:true})" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer">🔇 원본 소리 끔</button>
+            </div>
+          </section>
+
           <!-- 사진 업로드 영역 -->
           <div class="grid grid-cols-1 gap-3">
             <label for="multiPhotoInput" class="flex flex-col items-start justify-center p-4 rounded-[12px] bg-[#141415] hover:bg-[#232325] border border-[var(--border)] cursor-pointer transition-colors">
@@ -2139,7 +2190,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261121-themes-v2"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261121-short-video-edit"><\/script>');
     }
   </script>
   <!--
