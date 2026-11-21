@@ -1,59 +1,60 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-21T19:54:49.159238+09:00",
+  "collectedAt": "2026-11-22T05:52:43.959527+09:00",
   "items": [
     {
-      "term": "강원 fc 대 대전 하나 시티즌 순위",
-      "startedAt": "2026-11-21T01:40:00-08:00",
-      "traffic": "1000+"
-    },
-    {
-      "term": "김종국",
-      "startedAt": "2026-11-21T01:40:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "파워리프팅",
-      "startedAt": "2026-11-21T01:30:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "k리그1",
-      "startedAt": "2026-11-21T01:20:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "삼성 엑시노스",
-      "startedAt": "2026-11-21T01:10:00-08:00",
+      "term": "입양",
+      "startedAt": "2026-11-21T11:40:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "중일 관계",
-      "startedAt": "2026-11-21T01:00:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "england vs australia",
-      "startedAt": "2026-11-21T01:00:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "성리",
-      "startedAt": "2026-11-21T00:30:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "굴",
-      "startedAt": "2026-11-21T00:20:00-08:00",
+      "term": "레알 마드리드 대 셀타 비고",
+      "startedAt": "2026-11-21T11:20:00-08:00",
       "traffic": "1000+"
     },
     {
-      "term": "멜라니아 트럼프",
-      "startedAt": "2026-11-21T00:20:00-08:00",
+      "term": "위기",
+      "startedAt": "2026-11-21T10:50:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "newcastle vs arsenal",
+      "startedAt": "2026-11-21T09:30:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "아스날",
+      "startedAt": "2026-11-21T09:20:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "psg",
+      "startedAt": "2026-11-21T09:20:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "샬케 대 슈투트가르트",
+      "startedAt": "2026-11-21T09:10:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "뉴캐슬 대 아스널",
+      "startedAt": "2026-11-21T08:40:00-08:00",
+      "traffic": "5000+"
+    },
+    {
+      "term": "nice vs psg",
+      "startedAt": "2026-11-21T08:40:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "เชลซี พบ ลีดส์",
+      "startedAt": "2026-11-21T08:10:00-08:00",
       "traffic": "100+"
     }
   ],
-  "issues": [
+  "issues": [],
+  "previousIssues": [
     {
       "term": "수능",
       "day": "2026-11-21",
@@ -116,80 +117,6 @@
       "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856873",
       "publishedAt": "2026-11-21T13:40:00+09:00",
       "headline": "걸그룹 여자친구 출신 3명, 차가원 회사와 전속계약 분쟁 1심 승소"
-    }
-  ],
-  "previousIssues": [
-    {
-      "term": "수능",
-      "day": "2026-11-20",
-      "kind": "보도",
-      "publisher": "연합뉴스",
-      "url": "https://www.yna.co.kr/view/AKR20261120160600530",
-      "publishedAt": "2026-11-20T17:59:33+09:00",
-      "headline": "\"수능 공정성 믿어도 되나요\"…'AI 커닝'에 입시설명회도 '술렁'"
-    },
-    {
-      "term": "AI 부정행위 논란",
-      "day": "2026-11-20",
-      "kind": "보도",
-      "publisher": "연합뉴스",
-      "url": "https://www.yna.co.kr/view/AKR20261120160600530",
-      "publishedAt": "2026-11-20T17:59:33+09:00",
-      "headline": "\"수능 공정성 믿어도 되나요\"…'AI 커닝'에 입시설명회도 '술렁'"
-    },
-    {
-      "term": "윤호중 행안부 장관",
-      "day": "2026-11-20",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856356",
-      "publishedAt": "2026-11-20T18:14:00+09:00",
-      "headline": "윤호중 행안부 장관, 도로 살얼음 안전점검…재난특교세 90억 원 추가 지원"
-    },
-    {
-      "term": "박지윤 악플러 정체",
-      "day": "2026-11-20",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856086",
-      "publishedAt": "2026-11-20T17:37:00+09:00",
-      "headline": "박지윤 악플러 정체 최동석이었다…명예훼손 혐의 송치"
-    },
-    {
-      "term": "세 번 만난",
-      "day": "2026-11-20",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856269",
-      "publishedAt": "2026-11-20T17:26:00+09:00",
-      "headline": "세 번 만난 일본인 여성 살해 30대 구속기소"
-    },
-    {
-      "term": "수원중수청",
-      "day": "2026-11-20",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856267",
-      "publishedAt": "2026-11-20T17:23:00+09:00",
-      "headline": "수원중수청, 김승원 '경기도당 회계부정' 의혹 경찰 이첩"
-    },
-    {
-      "term": "노쇼 사기 조직원",
-      "day": "2026-11-20",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856174",
-      "publishedAt": "2026-11-20T16:36:00+09:00",
-      "headline": "'서울중수청 1호 보이스피싱 수사' 노쇼 사기 조직원 재판행"
-    },
-    {
-      "term": "여순사건 희생자",
-      "day": "2026-11-20",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856128",
-      "publishedAt": "2026-11-20T16:14:00+09:00",
-      "headline": "여순사건 희생자, 첫 특별 재심서 78년 만에 무죄"
     }
   ]
 }
