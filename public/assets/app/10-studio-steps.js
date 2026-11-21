@@ -2748,6 +2748,13 @@
       const th = arBuildThemeContextForImages();
       if (btn) { btn.disabled = true; btn.textContent = '생성 중…'; }
       if (typeof arToast === 'function') arToast(`[${topicText}] · [${th.designName || '기본'} / ${th.themeName || '테마'}] 맞춤 이미지를 만들고 있어요`);
+      const isProPlan = (() => {
+        const me = window.AR_SERVER && AR_SERVER.mode ? AR_SERVER.me : null;
+        if (!me) return false;
+        const tier = String((me.entitlement && me.entitlement.tier) || (me.subscription && me.subscription.plan) || '').toLowerCase();
+        return tier === 'pro' || Boolean(me.subscription && me.subscription.comp) || (me.user && me.user.role === 'admin');
+      })();
+      const sceneImgCount = (arUseLocalSceneImages() || isProPlan) ? Math.min(10, totalCuts) : Math.min(4, totalCuts);
       return Promise.resolve(arApplyTopicSceneImages({
         prompt: rawPrompt || topicText,
         subjectLabel: topicText,
@@ -2757,8 +2764,9 @@
         industryInfo: IND.key === 'auto' ? null : { name: IND.name },
         themeInfo: th,
         captions: Array.isArray(campaign.cutCaptions) ? campaign.cutCaptions : [],
-        count: arUseLocalSceneImages() ? totalCuts : Math.min(4, totalCuts),
+        count: sceneImgCount,
         totalCuts,
+        isProPlan,
         adminGeminiKey: localStorage.getItem('autoreels_admin_gemini_key') || ''
       })).finally(() => {
         if (btn) { btn.disabled = false; btn.textContent = idleLabel; }
@@ -2854,36 +2862,48 @@
         let readyCount = 0;
         let failedCount = 0;
         let firstError = '';
-        await Promise.all(prompts.map(async (imagePrompt, idx) => {
-          if (!stillCurrent()) return;
-          try {
-            const imgRes = await fetch('/api/generate-script', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ mode: 'scene-image', imagePrompt: arScenePromptWithVehicle(imagePrompt, payload), index: idx })
-            });
-            const ij = await imgRes.json().catch(() => ({}));
+        // 프로 플랜(최대 10장) 생성 시에도 API 한도/타임아웃 없이 안정적으로 생성되도록 최대 4장 동시 병렬 배치
+        const CONCURRENCY = 4;
+        let nextIdx = 0;
+        const runWorker = async () => {
+          while (nextIdx < prompts.length) {
+            const idx = nextIdx++;
+            const imagePrompt = prompts[idx];
             if (!stillCurrent()) return;
-            if (!imgRes.ok || !ij.ok || !ij.image || !ij.image.dataUrl) { failedCount += 1; firstError = firstError || ij.message || ij.error || 'kie_image_failed'; return; }
-            const compactUrl = await arDownscaleSceneDataUrl(ij.image.dataUrl);
-            if (!stillCurrent()) return;
-            const applied = [];
-            for (let slot = idx; slot < totalCutsTarget; slot += prompts.length) {
-              applied.push(new Promise(resolve => applySlotImage(slot, compactUrl, resolve)));
-            }
-            const results = await Promise.all(applied);
-            readyCount += results.filter(Boolean).length;
-            activity.update(`컷 이미지 적용 중 · ${readyCount}/${totalCutsTarget}`);
-            if (results.includes(false)) { failedCount += 1; firstError ||= 'kie_image_download_failed'; }
-          } catch (e) { failedCount += 1; firstError = firstError || 'kie_image_failed'; }
-        }));
+            try {
+              const imgRes = await fetch('/api/generate-script', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode: 'scene-image', imagePrompt: arScenePromptWithVehicle(imagePrompt, payload), index: idx })
+              });
+              const ij = await imgRes.json().catch(() => ({}));
+              if (!stillCurrent()) return;
+              if (!imgRes.ok || !ij.ok || !ij.image || !ij.image.dataUrl) { failedCount += 1; firstError = firstError || ij.message || ij.error || 'kie_image_failed'; continue; }
+              const compactUrl = await arDownscaleSceneDataUrl(ij.image.dataUrl);
+              if (!stillCurrent()) return;
+              const applied = [];
+              for (let slot = idx; slot < totalCutsTarget; slot += prompts.length) {
+                applied.push(new Promise(resolve => applySlotImage(slot, compactUrl, resolve)));
+              }
+              const results = await Promise.all(applied);
+              readyCount += results.filter(Boolean).length;
+              activity.update(`컷 이미지 적용 중 · ${readyCount}/${totalCutsTarget}`);
+              if (results.includes(false)) { failedCount += 1; firstError ||= 'kie_image_download_failed'; }
+            } catch (e) { failedCount += 1; firstError = firstError || 'kie_image_failed'; }
+          }
+        };
+        await Promise.all(Array.from({ length: Math.min(CONCURRENCY, prompts.length) }, () => runWorker()));
         if (!stillCurrent()) return;
         if (readyCount === totalCutsTarget) {
           const replaced = campaign.uploadedPhotos.splice(totalCutsTarget);
           replaced.forEach(arReleasePhoto);
           renderPhotoThumbnailsGrid();
           renderDynamicCutCardsUI();
-          if (noticeEl) noticeEl.textContent = `[${label}] 이미지 ${prompts.length}장으로 ${readyCount}컷을 교체했어요.`;
+          if (noticeEl) {
+            noticeEl.textContent = prompts.length < totalCutsTarget
+              ? `[${label}] 스탠다드 기준 ${prompts.length}장으로 ${readyCount}컷에 순환 적용했어요. (프로 요금제는 전 컷 최대 10장 전부 다른 이미지 생성)`
+              : `[${label}] 전 컷 고유 이미지 ${prompts.length}장으로 ${readyCount}컷을 교체했어요.`;
+          }
         } else if (failedCount && noticeEl) {
           progressError = `이미지 ${readyCount}/${totalCutsTarget}컷 적용 · 사진 단계에서 확인해 주세요.`;
           const messages = { missing_kie_key: 'KIE API 키가 설정되지 않았습니다.', kie_insufficient_credits: 'KIE 크레딧이 부족합니다.', kie_invalid_key: 'KIE API 키를 확인해 주세요.', kie_rate_limited: '요청이 많습니다. 잠시 후 다시 시도해 주세요.', kie_image_timeout: '이미지 생성이 지연되고 있습니다. 잠시 후 확인해 주세요.', kie_image_download_failed: '생성된 이미지를 받지 못했습니다.', kie_image_failed: 'KIE 이미지 생성에 실패했습니다.' };
