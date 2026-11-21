@@ -1,3 +1,4 @@
+const quickEdit = new URLSearchParams(location.search).get('mode') === 'edit';
 const byId = id => document.getElementById(id);
 const fileInput = byId('file'), video = byId('sourceVideo'), play = byId('play');
 const statusLine = byId('status'), save = byId('save'), download = byId('download');
@@ -78,20 +79,25 @@ addEventListener('message', e => {
 });
 fileInput.addEventListener('change', async () => {
   const file = fileInput.files[0]; fileInput.value = ''; if (!file) return;
+  await openShortsFile(file);
+});
+async function openShortsFile(file) {
   reset();
   const s = session = {id:++sequence,url:URL.createObjectURL(file),pending:[],clips:[],rankVersion:0,guide:byId('initialGuide').value.trim(),offset:0,status:'',controller:new AbortController()};
   document.querySelector('.stage').hidden = false; byId('guide').value = s.guide;
   byId('entry').hidden = true; byId('work').hidden = false; byId('frame').classList.add('loaded');
   detail(s,'영상 여는 중…'); video.hidden = false;
   try {
-    if (!crossOriginIsolated) throw Error('기기 안에서 분석하려면 전용 미리보기 주소로 열어 주세요.');
-    if (file.size > 250 * 1024 * 1024) throw Error('250MB 이내 영상을 선택해 주세요.');
+    if (!quickEdit && !crossOriginIsolated) throw Error('기기 안에서 분석하려면 전용 미리보기 주소로 열어 주세요.');
+    if (!quickEdit && file.size > 250 * 1024 * 1024) throw Error('250MB 이내 영상을 선택해 주세요.');
     const metadata = new Promise((resolve,reject) => {
       video.addEventListener('loadedmetadata',resolve,{once:true,signal:s.controller.signal});
       video.addEventListener('error',() => reject(Error('이 영상 형식을 재생할 수 없어요.')),{once:true,signal:s.controller.signal});
     });
     video.src = s.url; await metadata; if (session !== s) return;
-    if (!(video.duration > 0 && video.duration <= 600)) throw Error('10분 이내 영상을 선택해 주세요.');
+    if (!(video.duration > 0 && Number.isFinite(video.duration))) throw Error('이 영상의 길이를 읽을 수 없어요.');
+    if (!quickEdit && video.duration > 600) throw Error('10분 이내 영상을 선택해 주세요.');
+    if (quickEdit) { openQuickClip(s); return; }
     detail(s,'기기에서 음성 준비 중…');
     const context = new OfflineAudioContext(1,1,16000);
     const decoded = await context.decodeAudioData(await file.arrayBuffer()); if (session !== s) return;
@@ -105,7 +111,7 @@ fileInput.addEventListener('change', async () => {
     s.engine = document.createElement('iframe'); s.engine.hidden = true; s.engine.title = '음성 분석'; s.engine.src = 'engine.html';
     document.body.append(s.engine); watchdog(s);
   } catch (err) {detail(s,err.message || '이 영상의 오디오를 읽을 수 없어요.');}
-});
+}
 byId('back').addEventListener('click',reset);
 function activeCaption(clip,t) {return clip?.lines.find(line => t >= line.start && t < line.end)?.text || '';}
 play.addEventListener('click',async () => {
@@ -124,6 +130,13 @@ video.addEventListener('play',() => {play.textContent = 'Ⅱ'; play.setAttribute
 video.addEventListener('pause',() => {play.textContent = '▶'; play.setAttribute('aria-label','선택 구간 재생');});
 function paintClip(ctx, source, text) {
   const w = ctx.canvas.width, h = ctx.canvas.height;
+  if (quickEdit) {
+    const fit = Math.min(w/source.videoWidth,h/source.videoHeight);
+    const width = source.videoWidth*fit, height = source.videoHeight*fit;
+    ctx.fillStyle = '#09090b'; ctx.fillRect(0,0,w,h);
+    ctx.drawImage(source,(w-width)/2,(h-height)/2,width,height);
+    drawTitles(ctx,session.clip,text); return;
+  }
   const scale = Math.max(w/source.videoWidth,h/source.videoHeight);
   const sw = w/scale, sh = h/scale;
   ctx.drawImage(source,(source.videoWidth-sw)/2,(source.videoHeight-sh)/2,sw,sh,0,0,w,h);
@@ -134,7 +147,8 @@ save.addEventListener('click',async () => {
   const mime = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'].find(t => window.MediaRecorder?.isTypeSupported(t));
   if (!mime || !HTMLCanvasElement.prototype.captureStream) {detail(s,'이 브라우저는 MP4 저장을 지원하지 않아요.'); return;}
   video.pause(); byId('fields').disabled = true; s.exporting = true; save.disabled = true; download.hidden = true;
-  statusLine.textContent = '선택 구간을 MP4로 만드는 중…'; let context, track, recorder, stream, raf, timeout;
+  byId('quickControls').disabled = true;
+  statusLine.textContent = '선택 구간을 MP4로 만드는 중…'; let musicNode, context, track, recorder, stream, raf, timeout;
   const source = document.createElement('video'); source.playsInline = true; source.muted = true;
   let rejectRender;
   const failure = new Promise((_,reject) => {rejectRender = reject;});
@@ -153,7 +167,10 @@ save.addEventListener('click',async () => {
     const ctx = canvas.getContext('2d',{alpha:false}); paintClip(ctx,source,activeCaption(clip,clip.start));
     stream = canvas.captureStream(30);
     const dest = context.createMediaStreamDestination(), node = context.createMediaElementSource(source);
-    source.muted = false; node.connect(dest); track = dest.stream.getAudioTracks()[0]; stream.addTrack(track);
+    source.playbackRate = clip.rate || 1; source.muted = false;
+    if (clip.keepAudio !== false) node.connect(dest);
+    if (clip.music) musicNode = await prepareQuickMusic(context,dest,clip.music,s.controller.signal);
+    track = dest.stream.getAudioTracks()[0]; stream.addTrack(track);
     recorder = new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6000000});
     const chunks = [], done = new Promise((resolve,reject) => {
       recorder.ondataavailable = e => {if(e.data.size) chunks.push(e.data);};
@@ -165,8 +182,8 @@ save.addEventListener('click',async () => {
       paintClip(ctx,source,activeCaption(clip,source.currentTime));
       if (source.currentTime >= clip.end || source.ended) stop(); else raf = requestAnimationFrame(draw);
     };
-    source.onended = stop; timeout = setTimeout(s.stopExport,(clip.end-clip.start+20)*1000);
-    recorder.start(300); await source.play(); draw();
+    source.onended = stop; timeout = setTimeout(s.stopExport,((clip.end-clip.start)/source.playbackRate+20)*1000);
+    recorder.start(300); await source.play(); musicNode?.start(); draw();
     const blob = await Promise.race([done,failure]);
     if(session !== s || blob.size < 1000) throw Error('완성된 영상을 확인하지 못했어요.');
     await confirmExport(s,clip,blob);
@@ -178,7 +195,8 @@ save.addEventListener('click',async () => {
   finally {
     clearTimeout(timeout); cancelAnimationFrame(raf); document.removeEventListener('visibilitychange',visibility);
     if (recorder?.state === 'recording') recorder.stop(); source.pause(); source.removeAttribute('src'); source.load();
-    stream?.getTracks().forEach(t => t.stop()); if(context) await context.close().catch(() => {});
-    s.stopExport = null; s.exporting = false; if (session === s) { save.disabled = false; byId('fields').disabled = false; if (s.deferredRank) { applyRank(s,s.deferredRank); s.deferredRank = null; } }
+    stream?.getTracks().forEach(t => t.stop()); if (musicNode) { try { musicNode.stop(); } catch {} }
+    if(context) await context.close().catch(() => {});
+    s.stopExport = null; s.exporting = false; if (session === s) { save.disabled = false; byId('quickControls').disabled = false; byId('fields').disabled = false; if (s.deferredRank) { applyRank(s,s.deferredRank); s.deferredRank = null; } }
   }
 });

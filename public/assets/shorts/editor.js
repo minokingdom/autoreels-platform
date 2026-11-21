@@ -57,11 +57,11 @@ function mountEditor(clip) {
   byId('showCaptions').checked = clip.showCaptions;
   const elements = clip.lines.map(line => {
     const label = document.createElement('label'), field = document.createElement('textarea');
-    label.className = 'edit-line'; label.textContent = clock(line.start) + ' – ' + clock(line.end);
+    label.className = 'edit-line'; label.textContent = quickEdit ? '영상 자막' : clock(line.start) + ' – ' + clock(line.end);
     field.rows = 2; field.maxLength = Math.max(240,line.text.length); field.className = 'edit-input'; field.value = line.text;
     field.addEventListener('input',() => {
       line.text = field.value; video.pause();
-      video.currentTime = line.start; markEdited(); renderPreview(line.start);
+      video.currentTime = quickEdit ? clip.start : line.start; markEdited(); renderPreview(video.currentTime);
     });
     label.append(field); return label;
   });
@@ -104,7 +104,10 @@ function drawTitles(ctx,clip,caption) {
     ctx.textAlign='center';ctx.textBaseline='middle';
     lines.forEach((line,i) => {
       const y=top+i*step, width=Math.min(limit,ctx.measureText(line).width)+w*.045;
-      ctx.fillStyle='rgba(12,14,18,.68)'; ctx.fillRect((w-width)/2,y,width,step);
+      if (clip.style === 'outline') {
+        ctx.lineJoin='round'; ctx.lineWidth=size*.12; ctx.strokeStyle='#161616';
+        ctx.strokeText(line,w/2,y+step*.52,limit);
+      } else { ctx.fillStyle='rgba(12,14,18,.68)'; ctx.fillRect((w-width)/2,y,width,step); }
       ctx.fillStyle='#fff';ctx.fillText(line,w/2,y+step*.52,limit);
     });
     ctx.restore();

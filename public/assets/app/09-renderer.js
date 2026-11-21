@@ -3773,52 +3773,6 @@
       if (typeof arToast === 'function') arToast('단일 영상 편집 모드를 해제했습니다.');
     }
 
-    async function arHandleQuickShortVideoUpload(event) {
-      const input = event && event.target;
-      const file = input && input.files && input.files[0];
-      if (!file) return;
-      if (!/^video\//.test(file.type) && !/\.(mp4|mov|webm|m4v|3gp)$/i.test(file.name)) {
-        if (typeof arToast === 'function') arToast('동영상 파일(MP4, MOV, WebM 등)을 선택해 주세요.');
-        return;
-      }
-      if (typeof arToast === 'function') arToast('짧은 영상을 불러오는 중…');
-      let vid = null;
-      try {
-        vid = await loadCutVideo(file, 1);
-      } catch (e) {}
-      if (input) input.value = '';
-      if (!vid) {
-        if (typeof arToast === 'function') arToast('영상을 열지 못했습니다. MP4/MOV 형식인지 확인해 주세요.');
-        return;
-      }
-      const dur = (vid.duration && isFinite(vid.duration) && vid.duration > 0.5) ? vid.duration : 12;
-      vid._continuousVideo = true;
-      vid._trimStart = 0;
-      vid._trimEnd = Math.min(dur, 45);
-      vid._playRate = 1;
-      vid._keepAudio = false;
-      vid._origName = file.name;
-
-      pauseAllCutVideos();
-      campaign.uploadedPhotos.forEach(arReleasePhoto);
-      campaign.uploadedPhotos = [vid];
-      campaign.isUserCustomPhotos = true;
-      campaign.hasCustomVideo = false;
-
-      const outroSec = (typeof arCardEmpty === 'function' && arCardEmpty()) ? 0 : 3;
-      const targetTotal = Math.max(6, Math.min(60, Math.round(vid._trimEnd + outroSec)));
-      if (typeof setVideoTotalDuration === 'function') setVideoTotalDuration(targetTotal);
-      arRenderShortVideoBar();
-      if (typeof renderUploadedPhotoThumbs === 'function') renderUploadedPhotoThumbs();
-      if (typeof switchStudioTab === 'function') switchStudioTab('photo');
-      if (window.__timelines && window.__timelines.main) {
-        window.__timelines.main.seek(0);
-      }
-      if (typeof arToast === 'function') {
-        arToast(`짧은 영상(${dur.toFixed(1)}초) 준비 완료! 구간 자르기·속도·자막·테마를 바로 편집해 보세요.`);
-      }
-    }
-
     // 카메라 원본은 화면·HTML에 넣기 전에 축소한다. 여러 장도 한 장씩 디코딩한다.
     function arImportPhoto(file, options = {}) {
       const run = async () => {

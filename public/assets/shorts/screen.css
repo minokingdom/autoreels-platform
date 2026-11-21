@@ -7,3 +7,5 @@
 #editor{margin:14px 0}#fields{margin:0;padding:0;border:0}.edit-line{display:block;margin:10px 0;color:#aeb4bf;font-size:12px}
 .edit-line textarea{display:block;resize:vertical;margin-top:4px}#work{padding-bottom:16px}.stage{position:sticky;top:0;z-index:1}
 @media(max-height:700px){#frame{height:25dvh}}
+
+.quick-video video{object-fit:contain}.quick-video #quickControls{border:0;padding:0;margin:16px 0}.quick-video legend{font-weight:700}.quick-video input[type=range]{width:100%;accent-color:#58a5ff;min-height:28px}.quick-video output{color:#aeb4bf;font-variant-numeric:tabular-nums}
