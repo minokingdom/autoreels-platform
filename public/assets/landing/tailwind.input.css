@@ -17,48 +17,10 @@
   /* 텅스텐 조명 한 가지 */
   --lp-ease: cubic-bezier(.22, 1, .36, 1);
   --lp-wrap: 1200px;
-  --lp-serif: 'MaruBuri LP', 'MaruBuri', 'Nanum Myeongjo', serif;
+  --lp-serif: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
   --lp-accent: #e6aa5c;
   --lp-accent-bright: #e6aa5c;
-  --lp-scene-bright: 1;
-  --lp-tint-op: .5;
-  --lp-scene-filter: none;
 }
-
-/* 마루부리 (네이버 무료 글꼴, 랜딩에 쓰는 글자만 남김 — scripts/subset_landing_font.py) */
-@font-face { font-family: 'MaruBuri LP'; src: url('/assets/landing/fonts/maruburi-sb.woff2') format('woff2'); font-weight: 600; font-display: swap; }
-@font-face { font-family: 'MaruBuri LP'; src: url('/assets/landing/fonts/maruburi-r.woff2') format('woff2'); font-weight: 400; font-display: swap; }
-
-/* 업종별 분위기 — 바탕 단계·글자색·강조색이 통째로 바뀜 */
-:root[data-theme="restaurant"] {
-  --lp-deep: #150f0c; --lp-bg: #1a1310; --lp-card: #221915; --lp-raised: #2d221c;
-  --lp-text: #f3e6dc; --lp-text-2: #b8a395; --lp-text-3: #937f71;
-  --lp-accent: #f08a5d; --lp-accent-bright: #f08a5d; --lp-tint-op: .6;
-  --lp-scene-filter: sepia(.35) saturate(1.5) hue-rotate(-14deg);
-}
-:root[data-theme="cafe"] {
-  --lp-deep: #efe5d7; --lp-bg: #f7f1e8; --lp-card: #fffaf2; --lp-raised: #ebe0d1;
-  --lp-text: #2a2018; --lp-text-2: #66574a; --lp-text-3: #857565;
-  --lp-accent: #9a6a34; --lp-accent-bright: #f0cf98; --lp-tint-op: .6;
-  --lp-scene-filter: sepia(.25) saturate(.9) brightness(1.18) contrast(.92);
-}
-:root[data-theme="beauty"] {
-  --lp-deep: #f2e6e7; --lp-bg: #faf3f3; --lp-card: #fffafa; --lp-raised: #eedfe1;
-  --lp-text: #2d1f24; --lp-text-2: #6c575e; --lp-text-3: #8c767d;
-  --lp-accent: #ad4f68; --lp-accent-bright: #f0a9bb; --lp-tint-op: .6;
-  --lp-scene-filter: sepia(.3) hue-rotate(-28deg) saturate(1.1) brightness(1.1);
-}
-:root[data-theme="interior"] {
-  --lp-deep: #e9ebe2; --lp-bg: #f4f5ef; --lp-card: #fcfcf8; --lp-raised: #e3e7da;
-  --lp-text: #1f241c; --lp-text-2: #586150; --lp-text-3: #778070;
-  --lp-accent: #56713f; --lp-accent-bright: #c4d6a8; --lp-tint-op: .55;
-  --lp-scene-filter: sepia(.2) hue-rotate(28deg) saturate(.7) brightness(1.12);
-}
-/* 시간대 조명: 아침은 밝고, 밤은 깊게 */
-:root[data-tod="morning"] { --lp-scene-bright: 1.12; }
-:root[data-tod="noon"] { --lp-scene-bright: 1.06; }
-:root[data-tod="evening"] { --lp-scene-bright: .92; }
-:root[data-tod="night"] { --lp-scene-bright: .8; }
 
 /* 히어로와 제작 화면 띠는 어떤 업종이든 어두운 장면 그대로 */
 .lp-hero, .lp-sec-ink, .lp-final {
@@ -76,7 +38,7 @@ body.lp {
   margin: 0;
   background: var(--lp-bg);
   color: var(--lp-text);
-  font-family: 'SUIT Variable', 'SUIT', 'Pretendard Variable', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 16px;
   line-height: 1.6;
   word-break: keep-all;
@@ -93,9 +55,9 @@ body.lp {
   margin: 0;
   font-family: var(--lp-serif);
   font-size: clamp(28px, 7.2vw, 56px);
-  line-height: 1.24;
-  font-weight: 500;
-  letter-spacing: -0.03em;
+  line-height: 1.22;
+  font-weight: 700;
+  letter-spacing: -0.04em;
 }
 .lp-h1 span { display: inline-block; }
 .lp-h2 {
@@ -103,8 +65,8 @@ body.lp {
   font-family: var(--lp-serif);
   font-size: clamp(28px, 3.2vw, 40px);
   line-height: 1.3;
-  font-weight: 500;
-  letter-spacing: -0.025em;
+  font-weight: 700;
+  letter-spacing: -0.035em;
   text-wrap: balance;
 }
 .lp-h3 { margin: 0; font-size: 18px; line-height: 1.45; font-weight: 600; letter-spacing: -0.01em; }
@@ -151,11 +113,7 @@ body.lp {
 .lp-hero { position: relative; height: 330svh; background: var(--lp-deep); }
 .lp-hero-pin { position: sticky; top: 0; height: 100svh; overflow: hidden; isolation: isolate; display: flex; flex-direction: column; justify-content: flex-end; }
 .lp-hero-scene { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
-.lp-hero-scene img { width: 100%; height: 100%; object-fit: cover; object-position: 72% 50%; display: block; transform-origin: 62% 62%; will-change: transform; filter: var(--lp-scene-filter) brightness(var(--lp-scene-bright)); transition: filter 900ms var(--lp-ease); }
-.lp-hero-tint { position: absolute; inset: -40px; z-index: -2; pointer-events: none; mix-blend-mode: overlay; opacity: var(--lp-tint-op); }
-.lp-hero-tint img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(28px) saturate(1.3) brightness(var(--lp-scene-bright)); opacity: 0; transition: opacity 900ms var(--lp-ease); }
-.lp-hero-tint img.is-on { opacity: 1; }
-.lp-hero-wash { position: absolute; inset: 0; z-index: -2; pointer-events: none; background: radial-gradient(60% 70% at 78% 30%, color-mix(in srgb, var(--lp-accent-bright) 34%, transparent) 0%, transparent 72%); mix-blend-mode: screen; transition: background 900ms var(--lp-ease); }
+.lp-hero-scene img { width: 100%; height: 100%; object-fit: cover; object-position: 72% 50%; display: block; transform-origin: 62% 62%; will-change: transform; }
 .lp-hero-time { margin: 0 0 16px; font-size: 14px; color: var(--lp-accent-bright); }
 .lp-hero-scene::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(18,17,15,.86) 0%, rgba(18,17,15,.55) 38%, rgba(18,17,15,0) 70%); }
 .lp-hero-dim { position: absolute; inset: 0; z-index: -1; background: var(--lp-deep); opacity: 0; pointer-events: none; }
@@ -403,7 +361,7 @@ body.lp {
 .lp-final::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--lp-final-img, url('/assets/landing/hero-cinema-kv.jpg')) 70% 40% / cover no-repeat; opacity: .4; transition: background-image 400ms var(--lp-ease); }
 .lp-final::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, var(--lp-bg) 20%, color-mix(in srgb, var(--lp-bg) 40%, transparent) 100%); }
 .lp-final-in { display: flex; flex-direction: column; align-items: flex-start; gap: 32px; }
-.lp-final-h { margin: 0; font-family: var(--lp-serif); font-size: clamp(30px, 3.8vw, 48px); line-height: 1.25; font-weight: 500; letter-spacing: -0.03em; text-wrap: balance; }
+.lp-final-h { margin: 0; font-family: var(--lp-serif); font-size: clamp(30px, 3.8vw, 48px); line-height: 1.25; font-weight: 700; letter-spacing: -0.04em; text-wrap: balance; }
 .lp-final-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
 .lp-foot { background: var(--lp-deep); color: var(--lp-text-3); font-size: 13px; border-top: 1px solid var(--lp-line); }
 .lp-foot-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; padding-top: 28px; padding-bottom: 32px; }

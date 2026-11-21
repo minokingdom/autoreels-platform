@@ -127,7 +127,7 @@
   }
 
   // =========================================================================
-  // 1-1. 업종 테마 (장면 색감·강조색·제목·모아보기) + 시간대 조명
+  // 1-1. 업종 로테이션 (릴스·제목·안내 줄·모아보기만 바뀌고 분위기는 하나로 유지)
   // =========================================================================
   var TOD = (function () {
     var h = new Date().getHours();
@@ -158,21 +158,11 @@
     if (last && REELS[last]) return keys[(keys.indexOf(last) + 1) % keys.length];
     return themeForTime();
   }
-  var tintFront = 'A';
   function applyTheme(key) {
     var r = REELS[key];
     var root = document.documentElement;
-    root.setAttribute('data-theme', key);
-    root.setAttribute('data-tod', TOD.key);
     setText('lpH1a', r.noun + ' 사진 몇 장이면');
     setText('lpHeroTime', TOD.clock + ' · ' + r.who + ' ' + TOD.word + ' 릴스');
-    // 장면 색감: 두 장을 번갈아 겹쳐 부드럽게 바꿈
-    var a = $('lpTint' + tintFront), b = $('lpTint' + (tintFront === 'A' ? 'B' : 'A'));
-    if (a && b && a.getAttribute('src') !== r.img) {
-      b.setAttribute('src', r.img);
-      b.classList.add('is-on'); a.classList.remove('is-on');
-      tintFront = tintFront === 'A' ? 'B' : 'A';
-    } else if (a) { a.classList.add('is-on'); }
     document.querySelectorAll('[data-gal]').forEach(function (g) {
       var on = g.getAttribute('data-gal') === key;
       g.classList.toggle('is-on', on);
