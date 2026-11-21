@@ -50,33 +50,14 @@
         events: arUpcomingEvents(now)
       };
     }
-    // AI가 안 될 때 쓰는 기본 주제 (날짜·업종 단어로 만듦)
     function arFallbackTopics(dc) {
-      const P = IND.product || '상품';
-      const out = [];
-      if (dc.events[0]) {
-        const ev = dc.events[0].replace(/ D-\d+$|^오늘 /g, '');
-        out.push({ title: `${ev} 맞이 ${P}`, why: dc.events[0], prompt: `${ev}에 어울리는 ${P} 추천과 혜택` });
-      }
-      if (IND.key === 'auto') {
-        out.push({ title: '즉시출고 재고 안내', why: '바로 받을 수 있는 차 찾는 고객', prompt: '이번 주 즉시출고 가능한 재고 안내' });
-        out.push({ title: '이달의 프로모션', why: `${dc.dateStr.split(' ')[0]} 조건 정리`, prompt: '이달 할인·금리 프로모션 핵심 정리' });
-        out.push({ title: '출고 현장 보여주기', why: '신뢰를 주는 현장 영상', prompt: '오늘 출고 현장과 꼼꼼한 검수 과정' });
-      } else {
-        out.push({ title: `오늘의 추천 ${P}`, why: `${dc.weekday} ${dc.timeOfDay} 추천`, prompt: `오늘 꼭 소개하고 싶은 추천 ${P}` });
-        out.push({ title: '처음 방문하는 손님께', why: '첫 방문 전에 궁금한 점', prompt: `처음 방문할 때 참고할 ${P} 선택 기준` });
-        out.push({ title: '준비 과정 보여주기', why: '정성과 신뢰를 보여 주기', prompt: `${P}을(를) 준비하는 과정과 정성` });
-      }
-      out.push({ title: `${dc.season} 시즌 추천`, why: `${dc.season}에 어울리는 선택`, prompt: `${dc.season}에 어울리는 ${P} 추천` });
-      out.push({ title: '자주 묻는 질문 답하기', why: '문의를 줄이고 신뢰를 높임', prompt: `손님들이 자주 묻는 ${P} 질문에 답하기` });
-      out.push({ title: '비포 · 애프터 비교', why: '변화를 한눈에 보여 주기', prompt: `${P} 진행 전후 차이와 달라지는 점` });
-      out.push({ title: '초보자가 많이 하는 실수', why: '저장·공유율이 높은 정보형', prompt: `${P} 고를 때 실패하지 않는 기준 3가지` });
-      out.push({ title: '예약 · 방문 전 체크', why: '노쇼·오해를 줄이는 안내', prompt: `${P} 방문 전 미리 알면 좋은 꿀팁` });
-      out.push({ title: '손님 후기 · 만족 포인트', why: '재방문이 많은 이유 소개', prompt: `실제로 찾은 분들이 가장 만족하는 ${P} 포인트` });
-      out.push({ title: '선택 기준 비교', why: '손님이 직접 비교할 수 있게', prompt: `${P} 선택 전에 살펴볼 차이점` });
-      return out.slice(0, 10);
+      return arStoreTopicIdeas(IND.key, IND.product || '상품', '', dc.dateKey);
     }
     let arTopicsLoading = 0;
+    let arLastTopicProduct;
+    function arTopicProductKey() {
+      return JSON.stringify([IND.key, ...(arHasEnteredVehicle() ? [campaign.vehicle.trim(), campaign.discount, campaign.discountNum] : [])]);
+    }
     // 주제는 한 화면에 5개씩만 (나머지는 다음 페이지)
     const AR_TOPICS_PER_PAGE = 5;
     let arTopicPage = 0;
@@ -194,7 +175,7 @@
         return `
         <button type="button" data-topic-idx="${i}" class="bgm-row topic-row ${curTopic === t.title ? 'on' : ''}">
           ${cover}
-          <span class="bgm-row-txt"><strong>${esc(t.title)}</strong><small><b>${esc(t.why)}</b>${t.prompt ? ' · ' + esc(t.prompt) : ''}</small></span>
+          <span class="bgm-row-txt"><strong>${esc(t.title)}</strong><small><b>${esc(t.why)}</b>${t.prompt && !t.filmingIdea ? ' · ' + esc(t.prompt) : ''}</small></span>
           <span class="bgm-row-state">${curTopic === t.title ? '✓' : '›'}</span>        </button>`;
       }).join('') + pager;
       box.querySelectorAll('img[data-fallback]').forEach(img => {
@@ -209,23 +190,56 @@
         arHydrateTopicIcons(topics, cacheInfo.cacheKey, cacheInfo.serverUpdatedAt);
       }
     }
-    async function arLoadSpecialtyTopics(force, dc, industry, specialty, job) {
-      const accountId = window.AR_SERVER?.me?.user?.id;
-      const cacheKey = `ar_specialty_ideas_v2_${accountId || 'preview'}_${industry}_${specialty}_${dc.dateKey}`;
-      const stillCurrent = () => job === arTopicsLoading && industry === IND.key && specialty === arIndustrySpecialty();
-      const prevTitles = force ? (window.__arTopics || []).map(t => t.title).slice(0, 12) : [];
-      const ideas = IND.key === 'clinic'
-        ? ['첫 방문 준비', '예약 방법', '진료 전 자주 묻는 질문', '상담 때 확인할 점', '접수부터 진료까지']
-        : ['처음 고르는 법', '실제 준비 과정', '자주 묻는 질문', '방문 전 확인', dc.season + ' 추천'];
-      const fallback = ideas.map(idea => ({
-        title: specialty + ' ' + idea,
-        why: specialty,
-        prompt: specialty + ' 손님을 위한 ' + idea + ' 안내. 확인된 내용만 소개하기.'
+    function arStoreTopicOrder(topics, previous) {
+      const first = topics.findIndex(t => t.title === previous[0]);
+      const offset = first < 0 ? 0 : (first + AR_TOPICS_PER_PAGE) % topics.length;
+      return topics.slice(offset).concat(topics.slice(0, offset));
+    }
+    function arStoreTopicIdeas(industry, subject, detail, dateKey) {
+      const angles = {
+        restaurant: ['첫입에 어떤 맛일까?', '음식이 상에 오르기 직전', '한 접시에 얼마나 담길까?'],
+        cafe: ['처음 맛보면 어떤 느낌일까?', '주문하면 어떻게 나올까?', '테이블에서 본 실제 크기'],
+        auto: ['운전석에 앉으면 보이는 것', '뒷자리에 직접 앉아보기', '트렁크 입구부터 안쪽까지'],
+        beauty: ['상담할 때 보여줄 사진', '시작 전 원하는 느낌 전하기', '집에서 관리할 때 물어볼 점'],
+        clinic: ['처음 내원할 때 챙길 것', '접수할 때 무엇을 물어볼까?', '상담 전에 적어둘 질문'],
+        fitness: ['첫날 어떤 복장으로 갈까?', '첫 동작을 시작하는 장면', '내 수준을 어떻게 말할까?'],
+        academy: ['첫 수업 전에 묻고 싶은 것', '한 문제를 함께 푸는 과정', '수업 자료 한 장 들여다보기'],
+        interior: ['샘플을 빛에 비춰 보면?', '시공 전에 재어 볼 곳', '마감 가까이 들여다보기'],
+        realestate: ['현장에서 먼저 확인할 곳', '방문 전에 준비할 질문', '현관에서 안쪽까지 걸어보기'],
+        shop: ['손에 들면 어떤 크기일까?', '가까이서 보는 소재와 마감', '실제로 사용하는 한 장면']
+      };
+      const questions = [...(angles[industry] || []), '처음이라면 어디부터 볼까?', '사진 한 장에 담기 어려운 부분',
+        '결정하기 전에 묻고 싶은 한 가지', '직접 볼 때 확인할 점', '손님 눈높이에서 본 첫 장면',
+        '두 가지 선택지를 비교하는 법', '방문 전에 미리 알아둘 점'];
+      const shots = ['손님이 가장 먼저 볼 부분을 가까이 담기', '준비하거나 설명하는 손동작 담기', '손님 자리에서 보이는 모습 담기',
+        '처음 온 손님의 시선으로 시작하기', '사진에서 잘 안 보이는 곳을 가까이 찍기', '질문 하나에 짧게 답하기',
+        '눈으로 확인할 부분을 짚어 주기', '입구에서부터 손님 시선 따라가기', '같은 기준으로 차이를 설명하기', '방문 전 알아둘 내용 하나 알려주기'];
+      const cards = questions.map((question, i) => ({
+        title: subject + ' · ' + question,
+        filmingIdea: true,
+        why: shots[i],
+        prompt: subject + '에 대한 “' + question + '”에 답해주세요. ' + shots[i] + '.' +
+          (i === 0 && detail ? ' 매장에서 입력한 정보: ' + detail : '')
       }));
-      arRenderTopics(fallback, specialty + ' 추천 주제예요.');
+      // 업종별 세 장을 먼저 보여 주고 나머지 촬영 주제도 날짜별로 순환합니다.
+      const day = Math.floor(Date.parse(dateKey) / 86400000);
+      const rotate = group => group.slice(day % group.length).concat(group.slice(0, day % group.length));
+      const specificCount = angles[industry]?.length || 0;
+      return (specificCount ? rotate(cards.slice(0, specificCount)) : []).concat(rotate(cards.slice(specificCount)));
+    }
+    async function arLoadSpecialtyTopics(force, dc, industry, specialty, job, product, detail) {
+      const accountId = window.AR_SERVER?.me?.user?.id;
+      const subject = product || specialty;
+      const cacheKey = 'ar_store_ideas_v3_' + JSON.stringify([accountId, industry, specialty, product, detail, dc.dateKey]);
+      const productKey = arTopicProductKey();
+      const stillCurrent = () => job === arTopicsLoading && productKey === arTopicProductKey() && specialty === arIndustrySpecialty();
+      const prevTitles = force ? (window.__arTopics || []).map(t => t.title).slice(0, 12) : [];
+      const fallback = arStoreTopicOrder(arStoreTopicIdeas(industry, subject, detail, dc.dateKey), prevTitles);
+      const status = subject + ' 추천 주제예요.';
+      arRenderTopics(fallback, status);
       if (!accountId || !arCanUseAi()) return;
       let batch = null;
-      try {
+      if (specialty) try {
         const r = await fetch('/api/account?action=specialty-trends', { cache: 'no-store', signal: AbortSignal.timeout(5000) });
         if (r.ok) {
           const data = await r.json();
@@ -238,10 +252,11 @@
         try {
           const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
           if (cached?.trendsAt === trendsAt && Array.isArray(cached.topics) && cached.topics.length) {
-            arRenderTopics(cached.topics, specialty + ' 추천 주제예요.');
+            arRenderTopics(cached.topics, status);
             return;
           }
         } catch (_) {}
+        if (product && !specialty) return;
       }
       try {
         const r = await fetch('/api/generate-script', {
@@ -249,14 +264,14 @@
           body: JSON.stringify({
             mode: 'topics', industry, specialty, dateContext: dc, trends: batch?.keywords || [],
             industryInfo: { name: IND.name, role: IND.role, product: specialty, aiRole: IND.aiRole },
-            excludeTitles: prevTitles
+            confirmedProduct: product, productDetail: detail, excludeTitles: prevTitles
           })
         });
         if (!r.ok || !stillCurrent()) return;
         const data = await r.json();
         if (!stillCurrent() || !data.ok || !Array.isArray(data.topics) || !data.topics.length) return;
         try { localStorage.setItem(cacheKey, JSON.stringify({ topics: data.topics, trendsAt })); } catch (_) {}
-        arRenderTopics(data.topics, specialty + ' 추천 주제예요.');
+        arRenderTopics(data.topics, status);
       } catch (_) {}
     }
     const AR_PERSONAL_TOPIC_IDEAS = {
@@ -407,6 +422,7 @@
       arLoadDailyKeywords();
       document.getElementById('storeTopicHeading').textContent = IND.key === 'personal' ? '내 추천 주제' : '우리 가게 추천 주제';
       const myJob = ++arTopicsLoading;
+      arLastTopicProduct = arTopicProductKey();
       const dc = arDateContext();
       const line = document.getElementById('topicDateLine');
       if (line) line.textContent = `${dc.dateStr} ${dc.weekday} · ${dc.season}${dc.events.length ? ' · ' + dc.events.slice(0, 2).join(' · ') : ''}`;
@@ -425,8 +441,11 @@
         const offset = first < 0 ? 0 : (first + 5) % topics.length;
         return arRenderTopics([...topics.slice(offset), ...topics.slice(0, offset)], `${specialty || '개인'} 추천 주제예요.`);
       }
-      if (specialty) return arLoadSpecialtyTopics(force, dc, IND.key, specialty, myJob);
+      const product = arHasEnteredVehicle() ? campaign.vehicle.trim() : '';
+      const detail = product ? [IND.key === 'auto' && campaign.discountNum > 0 ? '최대 ' + campaign.discountNum + '만원 할인' : '', campaign.discount].filter(Boolean).join(' · ') : '';
+      if (specialty || product) return arLoadSpecialtyTopics(force, dc, IND.key, specialty, myJob, product, detail);
       const industry = IND.key;
+      const prevTitles = force ? (window.__arTopics || []).map(t => t.title).slice(0, 12) : [];
       const cacheKey = `ar_topic_ideas_v5_${IND.key}_${dc.dateKey}`;
       let pre = null;
       let trends = [];
@@ -440,11 +459,11 @@
       }
       const serverUpdatedAt = String((pre && pre.updatedAt) || '');
       if (myJob !== arTopicsLoading || industry !== IND.key || arIndustrySpecialty()) return;
-      if (!force) {
+      if (!force || !arCanUseAi()) {
         try {
           const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
           if (cached && Array.isArray(cached.topics) && cached.topics.length && (!serverUpdatedAt || cached.trendsAt === serverUpdatedAt)) {
-            arRenderTopics(cached.topics, '오늘의 추천 주제예요. 마음에 드는 게 없으면 [다른 주제 보기]를 눌러 보세요.', false);
+            arRenderTopics(arStoreTopicOrder(cached.topics, prevTitles), '오늘의 추천 주제예요.', false);
             return;
           }
         } catch (e) {}
@@ -455,16 +474,16 @@
         if (serverTopics?.length && pre.industries[IND.key].topicsDate === dc.dateKey) {
           try { localStorage.setItem(cacheKey, JSON.stringify({ topics: serverTopics, at: Date.now(), trendsAt: serverUpdatedAt })); } catch (e) {}
           const status = arCanUseAi() ? '하나를 누르면 대본을 바로 만들어요.' : arAiAccessNotice();
-          arRenderTopics(serverTopics, status, false);
+          arRenderTopics(arStoreTopicOrder(serverTopics, prevTitles), status, false);
           return;
         }
       }
       if (!arCanUseAi()) {
-        arRenderTopics(arFallbackTopics(dc), '기본 추천 주제예요. ' + arAiAccessNotice());
+        arRenderTopics(arStoreTopicOrder(arFallbackTopics(dc), prevTitles), '기본 추천 주제예요. ' + arAiAccessNotice());
         return;
       }
       // 먼저 기본 주제를 바로 보여 주고, AI 추천이 오면 바꿈
-      arRenderTopics(arFallbackTopics(dc), '업종에 맞는 릴스 주제를 고르는 중…');
+      arRenderTopics(arStoreTopicOrder(arFallbackTopics(dc), prevTitles), '업종에 맞는 릴스 주제를 고르는 중…');
       if (!window.location.protocol.startsWith('http')) return;
       if (!trends.length) try {
         const ctrl = new AbortController();
@@ -479,9 +498,6 @@
       try {
         const d = typeof getSelectedDealer === 'function' ? getSelectedDealer() : null;
         const copy = d && typeof arDealerForCopy === 'function' ? arDealerForCopy(d) : null;
-        const prevTitles = force && Array.isArray(window.__arTopics)
-          ? window.__arTopics.map((t) => t && t.title).filter(Boolean).slice(0, 12)
-          : [];
         const res = await fetch('/api/generate-script', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -542,6 +558,9 @@
       }
     }
     function arSyncProductRows() {
+      if (arLastTopicProduct && arLastTopicProduct !== arTopicProductKey() && document.getElementById('productSheet')?.classList.contains('hidden')) {
+        setTimeout(() => { if (arLastTopicProduct !== arTopicProductKey()) arLoadTopics(false); }, 0);
+      }
       const personal = IND.key === 'personal';
       const custom = document.getElementById('topicCustomInput');
       if (custom) custom.placeholder = personal ? '오늘 올릴 내용 적기 (예: 경기 전 루틴)' : '오늘 올릴 내용 적기 (예: 신메뉴 출시, 오늘만 할인)';
@@ -585,13 +604,17 @@
       if (!el) return;
       el.classList.add('hidden');
       el.style.display = 'none';
-      if (!arHasEnteredVehicle() && arProductKey() === arProductSnap) {
+      const changed = arProductKey() !== arProductSnap;
+      if (!arHasEnteredVehicle() && !changed) {
         document.getElementById('inputVehicle').value = campaign.vehicle || '';
         document.getElementById('inputDiscount').value = campaign.discount || '';
         document.getElementById('inputDiscountNum').value = campaign.discountNum || 0;
       }
       arSyncProductRows();
-      if (arProductKey() !== arProductSnap && arHasEnteredVehicle()) saveAiScriptPrefs();
+      if (changed) {
+        if (arHasEnteredVehicle()) saveAiScriptPrefs();
+        arLoadTopics(false);
+      }
     }
     document.getElementById('arProductCloseBtn').addEventListener('click', arCloseProductSheet);
     document.getElementById('arProductScriptBtn').addEventListener('click', () => {

@@ -163,6 +163,11 @@ try {
   });
   await product.getByRole('button',{name:'닫기'}).click();
   assert.equal(await cloud.evaluate(()=>arScriptGenerationId),beforeClose);
+  await topicCards.getByRole('button',{name:/현대 아이오닉 6.*운전석/}).waitFor();
+  const firstIdeas=await topicCards.locator('.topic-row strong').allTextContents();
+  await cloud.locator('#studioPanel_topic').getByRole('button',{name:/다른 주제/}).click();
+  await cloud.waitForFunction(title=>document.querySelector('#topicCards strong')?.textContent!==title,firstIdeas[0]);
+  assert.ok((await topicCards.locator('.topic-row strong').allTextContents()).every(title=>title.includes('현대 아이오닉 6')&&!firstIdeas.includes(title)));
   await cloud.evaluate(()=>{
    window.arTodayTopic=null;
    document.getElementById('aiPromptInput').value='BMW X5 하이브리드 소개';
