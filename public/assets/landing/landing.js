@@ -1,22 +1,15 @@
-// AutoReels Editorial 3D Arc Gallery — Physics Drag/Swipe + One-Way Fullscreen Scroll Expand
+// 오토릴스메이커 랜딩 — 히어로 릴스 재생기, 제작 화면 탭, 업종·배경음악 미리듣기
 (function () {
   var INDS = window.AR_LP_INDUSTRIES || {};
   var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // 해시 없는 기본 진입 시 항상 히어로 맨 위부터 시작
-  if (!location.hash) {
-    try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
-    window.scrollTo(0, 0);
-  }
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
-  function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
-  function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
-
+  function $(id) { return document.getElementById(id); }
+  function setText(id, v) { var el = $(id); if (el) el.textContent = v; }
   function josaRo(word) {
     var s = String(word || '').trim();
     if (!s) return '로';
@@ -27,313 +20,172 @@
   }
 
   // =========================================================================
-  // 1. 5장 하이엔드 에디토리얼 3D 아크 갤러리 (마우스 드래그 + 터치 스와이프 물리 관성)
+  // 1. 히어로 릴스 재생기 — 컷 3개 × 업종 5개 (자동차 영상에는 전화번호를 넣지 않음)
   // =========================================================================
-  var ITEMS = [
-    {
-      idx: 0, ind: 'cafe', num: '01 / 05',
-      kicker: '01 · CAFE & ROASTERY',
-      title: '카페·디저트 — 에스프레소 크레마가 흐르는 15초',
-      img: '/assets/landing/ed-cafe.jpg',
-      aura: 'radial-gradient(ellipse 56% 48% at 50% 56%, rgba(196, 146, 86, 0.14) 0%, rgba(8, 8, 8, 0) 70%)'
+  var REELS = {
+    auto: {
+      label: '자동차 영업', img: '/assets/landing/ed-auto.jpg', bgm: '/assets/bgm/pack/cinema.mp3',
+      name: '오토 공식전시장', avatar: '차', likes: '1,284', comments: '96',
+      music: '시네마틱 드라이브 · 오토릴스 오리지널',
+      caption: '신차 견적은 댓글에 ‘견적’이라고 남겨 주세요 #신차견적 #즉시출고',
+      subs: ['이번 달 바로 출고,\n딱 세 대 남았어요', '전시장 조명 아래서 보면\n색이 또 달라요', '궁금하면 댓글에\n‘견적’ 남겨 주세요']
     },
-    {
-      idx: 1, ind: 'beauty', num: '02 / 05',
-      kicker: '02 · BEAUTY & RITUAL',
-      title: '미용·뷰티 — 빛과 질감이 머무는 브랜드 무드',
-      img: '/assets/landing/ed-beauty.jpg',
-      aura: 'radial-gradient(ellipse 56% 48% at 50% 56%, rgba(214, 166, 108, 0.15) 0%, rgba(8, 8, 8, 0) 70%)'
+    restaurant: {
+      label: '음식점', img: '/assets/landing/ed-dining.jpg', bgm: '/assets/bgm/pack/funk.mp3',
+      name: '오늘의 한상', avatar: '한', likes: '3,072', comments: '214',
+      music: '키친 그루브 · 오토릴스 오리지널',
+      caption: '이번 주말 단체 예약 받습니다 #동네맛집 #오늘뭐먹지',
+      subs: ['오늘 들어온 한우,\n스무 접시만 준비했어요', '겉은 바삭하게,\n속은 촉촉하게 구웠습니다', '주말 예약은\n댓글로 남겨 주세요']
     },
-    {
-      idx: 2, ind: 'auto', num: '03 / 05',
-      kicker: '03 · AUTOMOTIVE GALLERY',
-      title: '자동차 영업 — 전시장의 실루엣이 한 편의 릴스로',
-      img: '/assets/landing/ed-auto.jpg',
-      aura: 'radial-gradient(ellipse 56% 48% at 50% 56%, rgba(206, 184, 152, 0.12) 0%, rgba(8, 8, 8, 0) 70%)'
+    cafe: {
+      label: '카페', img: '/assets/landing/ed-cafe.jpg', bgm: '/assets/bgm/pack/cafe.mp3',
+      name: '골목 로스터리', avatar: '골', likes: '2,418', comments: '131',
+      music: '카페 로파이 · 오토릴스 오리지널',
+      caption: '프로필 링크에서 첫 방문 쿠폰 받아 가세요 #카페추천 #핸드드립',
+      subs: ['아침 첫 잔은\n매일 제가 직접 내려요', '크레마가 살아 있을 때\n한 모금 드셔 보세요', '첫 방문 쿠폰은\n프로필 링크에 있어요']
     },
-    {
-      idx: 3, ind: 'restaurant', num: '04 / 05',
-      kicker: '04 · FINE DINING',
-      title: '음식점·다이닝 — 셰프의 온기와 풍미를 그대로',
-      img: '/assets/landing/ed-dining.jpg',
-      aura: 'radial-gradient(ellipse 56% 48% at 50% 56%, rgba(190, 128, 84, 0.14) 0%, rgba(8, 8, 8, 0) 70%)'
+    beauty: {
+      label: '뷰티', img: '/assets/landing/ed-beauty.jpg', bgm: '/assets/bgm/pack/beauty.mp3',
+      name: '결 스킨랩', avatar: '결', likes: '1,960', comments: '88',
+      music: '라운지 앰비언트 · 오토릴스 오리지널',
+      caption: '관리 예약은 댓글 ‘예약’으로 받아요 #피부관리 #홈케어',
+      subs: ['바르는 순간\n결이 달라지는 세럼이에요', '집에서 관리하는 법도\n같이 알려 드려요', '예약은 댓글에\n‘예약’이라고 남겨 주세요']
     },
-    {
-      idx: 4, ind: 'interior', num: '05 / 05',
-      kicker: '05 · ARCHITECTURE & SPACE',
-      title: '인테리어·공간 — 오후의 빛이 완성하는 비포·애프터',
-      img: '/assets/landing/ed-interior.jpg',
-      aura: 'radial-gradient(ellipse 56% 48% at 50% 56%, rgba(212, 188, 150, 0.13) 0%, rgba(8, 8, 8, 0) 70%)'
+    interior: {
+      label: '인테리어', img: '/assets/landing/ed-interior.jpg', bgm: '/assets/bgm/pack/bright.mp3',
+      name: '오후 인테리어', avatar: '오', likes: '2,105', comments: '172',
+      music: '브라이트 데이 · 오토릴스 오리지널',
+      caption: '30평 아파트 시공 사례 더 보기는 프로필에서 #거실인테리어 #시공사례',
+      subs: ['30평 거실,\n공사 전과 후예요', '오후 빛이 들어오게\n창을 넓혔어요', '견적 상담은\n댓글로 편하게 물어보세요']
     }
-  ];
+  };
+  var CUT_MS = 2900;
+  var reelKey = 'auto';
+  var cutIdx = 0;
+  var cutTimer = null;
+  var reelVisible = true;
+  var heroP = 0;          // 히어로 스크롤 진행도 0~1
+  var fullCut = -1;       // 전체 화면에서 보이는 컷
 
-  var stageEl = document.getElementById('edArcStage');
-  var cardEls = Array.prototype.slice.call(document.querySelectorAll('.ed-arc-card'));
-  var arcPos = 2.0;      // 현재 아크 실수 위치 (0 ~ 4)
-  var arcTarget = 2.0;   // 스냅 목표 위치
-  var arcVel = 0;        // 드래그/스와이프 관성 속도
-  var isDragging = false;
-  var dragStartX = 0;
-  var dragLastX = 0;
-  var dragMoved = 0;
-  var activeIdx = 2;
-  var scrollExpandProgress = 0; // 0(아크) -> 1(풀스크린 확장)
+  var reelEl = $('lpReel');
+  var imgEl = $('lpReelImg');
+  var subEl = $('lpReelSub');
+  var progEl = $('lpReelProgress');
 
-  function syncActiveItem(idx) {
-    var it = ITEMS[idx] || ITEMS[2];
-    activeIdx = it.idx;
-    setText('edArcNum', it.num);
-    setText('edArcTitle', it.title);
-    setText('edExpandKicker', it.kicker);
-
-    var openLink = document.getElementById('edArcOpenLink');
-    if (openLink) openLink.setAttribute('href', '/studio?ind=' + it.ind);
-    var expCta = document.getElementById('edExpandCta');
-    if (expCta) expCta.setAttribute('href', '/studio?ind=' + it.ind);
-    var expImg = document.getElementById('edExpandImg');
-    if (expImg && expImg.getAttribute('src') !== it.img) expImg.setAttribute('src', it.img);
-    var aura = document.getElementById('edHeroAura');
-    if (aura) aura.style.background = it.aura;
-
-    cardEls.forEach(function (el, i) {
-      el.classList.toggle('is-active', i === activeIdx);
-    });
-  }
-
-  function layoutArcCards() {
-    var w = window.innerWidth || 1280;
-    var isMob = w < 768;
-    var spacing = isMob ? Math.min(138, w * 0.34) : Math.min(232, w * 0.175);
-    var arcDrop = isMob ? 18 : 26;
-    var zDepth = isMob ? 72 : 118;
-    var spreadBoost = 1 + scrollExpandProgress * 0.55;
-
-    for (var i = 0; i < cardEls.length; i++) {
-      var el = cardEls[i];
-      var rel = i - arcPos;
-      var absRel = Math.abs(rel);
-      var x = rel * spacing * spreadBoost;
-      var y = absRel * absRel * arcDrop;
-      var z = -absRel * zDepth;
-      var rotY = -rel * (isMob ? 14 : 17);
-      var rotZ = rel * (isMob ? 6.5 : 7.5);
-      var sc = Math.max(0.72, 1 - absRel * 0.095);
-      var op = Math.max(0.18, 1 - absRel * 0.24);
-
-      // 스크롤 풀스크린 확장 시 좌우 카드들은 자연스럽게 바깥으로 페이드아웃
-      if (scrollExpandProgress > 0.02 && i !== activeIdx) {
-        op *= Math.max(0, 1 - scrollExpandProgress * 2.2);
-      }
-
-      el.style.zIndex = String(10 - Math.round(absRel * 2));
-      el.style.opacity = op.toFixed(3);
-      el.style.transform =
-        'translate3d(' + x.toFixed(1) + 'px, ' + y.toFixed(1) + 'px, ' + z.toFixed(1) + 'px) ' +
-        'rotateY(' + rotY.toFixed(2) + 'deg) rotateZ(' + rotZ.toFixed(2) + 'deg) scale(' + sc.toFixed(3) + ')';
+  function showCut(i) {
+    var r = REELS[reelKey];
+    cutIdx = i % r.subs.length;
+    if (reelEl) {
+      reelEl.classList.remove('cut-0', 'cut-1', 'cut-2');
+      void reelEl.offsetWidth; // 애니메이션 다시 시작
+      reelEl.classList.add('cut-' + cutIdx);
+    }
+    if (subEl) subEl.textContent = r.subs[cutIdx];
+    if (progEl) {
+      progEl.style.transition = 'none';
+      progEl.style.width = (cutIdx / r.subs.length * 100) + '%';
+      void progEl.offsetWidth;
+      progEl.style.transition = 'width ' + CUT_MS + 'ms linear';
+      progEl.style.width = ((cutIdx + 1) / r.subs.length * 100) + '%';
     }
   }
-
-  function tickArc() {
-    if (!isDragging) {
-      if (Math.abs(arcVel) > 0.0012) {
-        arcPos += arcVel;
-        arcVel *= 0.90;
-        if (arcPos < -0.25) { arcPos = -0.25; arcVel = 0; }
-        if (arcPos > ITEMS.length - 0.75) { arcPos = ITEMS.length - 0.75; arcVel = 0; }
-        arcTarget = clamp(Math.round(arcPos), 0, ITEMS.length - 1);
-      } else {
-        arcVel = 0;
-        var diff = arcTarget - arcPos;
-        if (Math.abs(diff) > 0.0008) {
-          arcPos += diff * 0.13;
-        } else {
-          arcPos = arcTarget;
-        }
-      }
-    }
-
-    var nearest = clamp(Math.round(arcPos), 0, ITEMS.length - 1);
-    if (nearest !== activeIdx) syncActiveItem(nearest);
-    layoutArcCards();
-    requestAnimationFrame(tickArc);
+  function schedule() {
+    clearTimeout(cutTimer);
+    if (!reelVisible || document.hidden || heroP > 0.3) return;
+    cutTimer = setTimeout(function () { showCut(cutIdx + 1); schedule(); }, reducedMotion ? CUT_MS + 1500 : CUT_MS);
+  }
+  function setReel(key) {
+    var r = REELS[key];
+    if (!r) return;
+    reelKey = key;
+    if (imgEl) imgEl.setAttribute('src', r.img);
+    setText('lpReelName', r.name);
+    setText('lpReelAvatar', r.avatar);
+    setText('lpReelLikes', r.likes);
+    setText('lpReelComments', r.comments);
+    setText('lpReelCaption', r.caption.replace(/#/g, '#\u2060')); // 해시태그가 '#'만 남고 줄바꿈되지 않게
+    setText('lpReelMusic', r.music);
+    if (reelEl) reelEl.setAttribute('aria-label', r.label + ' 릴스 예시 재생 중');
+    var cta = $('lpHeroCta');
+    if (cta) cta.setAttribute('href', '/studio?ind=' + key);
+    var fcta = $('lpFullCta');
+    if (fcta) fcta.setAttribute('href', '/studio?ind=' + key);
+    var fimg = $('lpFullImg');
+    if (fimg) fimg.setAttribute('src', r.img);
+    setText('lpFullName', r.name);
+    setText('lpFullAvatar', r.avatar);
+    fullCut = -1;
+    document.querySelectorAll('[data-reel]').forEach(function (b) {
+      var on = b.getAttribute('data-reel') === key;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+    if (soundOn) playBgm(r.bgm, null);
+    showCut(0);
+    schedule();
   }
 
-  if (stageEl && cardEls.length) {
-    syncActiveItem(2);
-    layoutArcCards();
-    requestAnimationFrame(tickArc);
+  // 다른 업종 사진은 미리 받아 둠 (전환 때 깜빡임 방지)
+  window.addEventListener('load', function () {
+    Object.keys(REELS).forEach(function (k) { var im = new Image(); im.src = REELS[k].img; });
+  });
+  if (reelEl && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (ents) {
+      reelVisible = ents[0].isIntersecting;
+      if (reelVisible) schedule(); else clearTimeout(cutTimer);
+    }).observe(reelEl);
+  }
+  document.addEventListener('visibilitychange', schedule);
 
-    stageEl.addEventListener('pointerdown', function (e) {
-      if (scrollExpandProgress > 0.2) return;
-      isDragging = true;
-      dragStartX = e.clientX;
-      dragLastX = e.clientX;
-      dragMoved = 0;
-      arcVel = 0;
-      stageEl.classList.add('is-dragging');
-      try { stageEl.setPointerCapture(e.pointerId); } catch (err) {}
-    });
+  // =========================================================================
+  // 2. 배경음악 (히어로 소리 버튼 + 음악 목록 공용)
+  // =========================================================================
+  var bgmAudio = null;
+  var playingBgmBtn = null;
+  var soundOn = false;
+  var soundBtn = $('lpReelSound');
 
-    stageEl.addEventListener('pointermove', function (e) {
-      if (!isDragging) return;
-      var dx = e.clientX - dragLastX;
-      dragLastX = e.clientX;
-      dragMoved += Math.abs(dx);
-      var divisor = window.innerWidth < 768 ? 165 : 230;
-      var delta = -dx / divisor;
-      arcPos = clamp(arcPos + delta, -0.35, ITEMS.length - 0.65);
-      arcVel = delta * 0.85;
-      arcTarget = clamp(Math.round(arcPos), 0, ITEMS.length - 1);
-    });
-
-    function endDrag(e) {
-      if (!isDragging) return;
-      isDragging = false;
-      stageEl.classList.remove('is-dragging');
-      try { if (e && e.pointerId != null) stageEl.releasePointerCapture(e.pointerId); } catch (err) {}
-      if (Math.abs(arcVel) > 0.03) {
-        arcTarget = clamp(Math.round(arcPos + arcVel * 4.5), 0, ITEMS.length - 1);
-      } else {
-        arcTarget = clamp(Math.round(arcPos), 0, ITEMS.length - 1);
-      }
+  function resetRowBtn() {
+    if (playingBgmBtn) {
+      playingBgmBtn.classList.remove('is-playing');
+      var st = playingBgmBtn.querySelector('.lp-bgm-state');
+      if (st) st.textContent = '재생';
+      playingBgmBtn = null;
     }
-    stageEl.addEventListener('pointerup', endDrag);
-    stageEl.addEventListener('pointercancel', endDrag);
-
-    // 카드 클릭 시 해당 카드로 부드럽게 회전 (드래그 직후 오작동 방지)
-    cardEls.forEach(function (el, idx) {
-      el.addEventListener('click', function () {
-        if (dragMoved > 10 || scrollExpandProgress > 0.2) return;
-        arcVel = 0;
-        arcTarget = idx;
-      });
-    });
-
-    var prevBtn = document.getElementById('edArcPrev');
-    var nextBtn = document.getElementById('edArcNext');
-    if (prevBtn) prevBtn.addEventListener('click', function () { arcVel = 0; arcTarget = clamp(activeIdx - 1, 0, ITEMS.length - 1); });
-    if (nextBtn) nextBtn.addEventListener('click', function () { arcVel = 0; arcTarget = clamp(activeIdx + 1, 0, ITEMS.length - 1); });
-
-    window.addEventListener('keydown', function (e) {
-      if (window.scrollY > window.innerHeight * 0.5) return;
-      if (e.key === 'ArrowLeft') { arcVel = 0; arcTarget = clamp(activeIdx - 1, 0, ITEMS.length - 1); }
-      if (e.key === 'ArrowRight') { arcVel = 0; arcTarget = clamp(activeIdx + 1, 0, ITEMS.length - 1); }
+  }
+  function setSound(on) {
+    soundOn = on;
+    if (soundBtn) {
+      soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      soundBtn.setAttribute('aria-label', on ? '배경음악 끄기' : '배경음악 듣기');
+    }
+  }
+  function stopBgm() {
+    if (bgmAudio) { try { bgmAudio.pause(); bgmAudio.currentTime = 0; } catch (e) {} }
+    resetRowBtn();
+    setSound(false);
+  }
+  function playBgm(src, rowBtn) {
+    try {
+      if (!bgmAudio) bgmAudio = new Audio();
+      if (bgmAudio.getAttribute('src') !== src) bgmAudio.src = src;
+      bgmAudio.volume = 0.6;
+      bgmAudio.loop = !rowBtn;
+      bgmAudio.play().catch(function () {});
+      bgmAudio.onended = stopBgm;
+    } catch (err) {}
+  }
+  if (soundBtn) {
+    soundBtn.addEventListener('click', function () {
+      if (soundOn) { stopBgm(); return; }
+      resetRowBtn();
+      setSound(true);
+      playBgm(REELS[reelKey].bgm, null);
     });
   }
 
   // =========================================================================
-  // 2. Lenis + GSAP 3 + ScrollTrigger (단방향 풀스크린 시네마 익스팬드 — PC & 모바일)
-  // =========================================================================
-  function initMotion() {
-    var gsap = window.gsap;
-    var ST = window.ScrollTrigger;
-    if (gsap && ST) {
-      gsap.registerPlugin(ST);
-      ST.config({ ignoreMobileResize: true });
-    }
-
-    // 데스크톱 관성 스크롤 (쫀쫀한 반응성)
-    if (window.Lenis && !reducedMotion && window.innerWidth >= 960) {
-      var lenis = new window.Lenis({
-        duration: 1.0,
-        lerp: 0.11,
-        smoothWheel: true,
-        wheelMultiplier: 1.0
-      });
-      if (ST) lenis.on('scroll', ST.update);
-      lenis.on('scroll', syncNavPolarity);
-      if (gsap && gsap.ticker) {
-        gsap.ticker.add(function (time) { lenis.raf(time * 1000); });
-        gsap.ticker.lagSmoothing(0);
-      }
-    }
-
-    if (!gsap || !ST || reducedMotion) return;
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(function () { ST.refresh(); }).catch(function () {});
-    }
-
-    // CH 01 히어로 단방향 풀스크린 시네마 익스팬드 (PC & 모바일 동일 작동, 되돌림 ZERO)
-    var heroEl = document.getElementById('edHero');
-    var expLayer = document.getElementById('edExpandLayer');
-    if (heroEl && expLayer) {
-      var isMob = window.innerWidth < 768;
-      var startInset = isMob ? 'inset(26% 22% 16% 22% round 14px)' : 'inset(23% 39% 16% 39% round 14px)';
-      gsap.set(expLayer, { clipPath: startInset, opacity: 0 });
-      gsap.set('#edExpandImg', { scale: 1.12 });
-      gsap.set('#edExpandCopy', { opacity: 0, y: 28 });
-
-      var heroTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: '#edHero',
-          start: 'top top',
-          end: isMob ? '+=135%' : '+=155%',
-          pin: true,
-          scrub: isMob ? 0.22 : 0.35,
-          anticipatePin: 1,
-          onUpdate: function (self) {
-            scrollExpandProgress = self.progress;
-            expLayer.classList.toggle('is-interactive', self.progress > 0.48);
-          }
-        }
-      });
-
-      heroTl
-        .to('#edHeroHeader', { y: -36, opacity: 0, ease: 'power2.in', duration: 0.32 }, 0)
-        .to('#edHeroFooter', { y: 24, opacity: 0, ease: 'power2.in', duration: 0.28 }, 0)
-        .to(expLayer, { opacity: 1, ease: 'power1.out', duration: 0.14 }, 0.06)
-        .to(expLayer, { clipPath: 'inset(0% 0% 0% 0% round 0px)', ease: 'power2.inOut', duration: 0.52 }, 0.10)
-        .to('#edExpandImg', { scale: 1.0, ease: 'power2.out', duration: 0.65 }, 0.10)
-        .to('#edExpandCopy', { opacity: 1, y: 0, ease: 'power2.out', duration: 0.32 }, 0.56);
-    }
-
-    // CH 02 매니페스토 구절별 스크롤 점등
-    var spans = document.querySelectorAll('#edManifesto span');
-    if (spans.length) {
-      ST.create({
-        trigger: '#edManifesto',
-        start: 'top 80%',
-        end: 'bottom 45%',
-        scrub: 0.3,
-        onUpdate: function (self) {
-          var litIdx = Math.floor(self.progress * (spans.length + 0.5));
-          spans.forEach(function (sp, idx) { sp.classList.toggle('is-lit', idx <= litIdx); });
-        }
-      });
-    }
-
-    // CH 02 4대 엔진 & 섹션 리빌
-    gsap.utils.toArray('.ed-reveal').forEach(function (el, idx) {
-      gsap.from(el, {
-        y: 24, opacity: 0, duration: 0.7, delay: (idx % 4) * 0.06, ease: 'power3.out',
-        scrollTrigger: { trigger: el, start: 'top 88%', once: true }
-      });
-    });
-
-    // CH 03 맥북 + 아이폰 3D 언폴드
-    var hwStage = document.getElementById('edHardwareStage');
-    if (hwStage) {
-      gsap.fromTo(hwStage,
-        { rotateX: 12, y: 32, opacity: 0.7 },
-        { rotateX: 0, y: 0, opacity: 1, ease: 'none', scrollTrigger: { trigger: hwStage, start: 'top 86%', end: 'top 32%', scrub: 0.6 } }
-      );
-    }
-  }
-
-  // 상단 네비게이션 라이트/다크 자동 극성 반전
-  var navEl = document.getElementById('edNav');
-  var lightZoneEl = document.getElementById('edLightZone');
-  function syncNavPolarity() {
-    if (!navEl || !lightZoneEl) return;
-    var r = lightZoneEl.getBoundingClientRect();
-    var isLight = r.top <= 56 && r.bottom >= 56;
-    navEl.classList.toggle('is-light', isLight);
-  }
-  window.addEventListener('scroll', syncNavPolarity, { passive: true });
-  window.addEventListener('resize', syncNavPolarity, { passive: true });
-
-  // =========================================================================
-  // 3. 실제 /studio 화면 탭 전환
+  // 3. 제작 화면 탭
   // =========================================================================
   var APP_VIEWS = {
     edit: {
@@ -344,80 +196,69 @@
     design: {
       desktop: '/assets/landing/studio-desktop-design.jpg',
       mobile: '/assets/landing/studio-mobile-main.jpg',
-      caption: '747종 스타일 프리셋과 나만의 브랜드 색·폰트 조합을 즉시 적용합니다.'
+      caption: '747가지 스타일을 미리보기로 바로 바꿔 보고, 브랜드 색과 글꼴도 정할 수 있습니다.'
     },
     cutedit: {
       desktop: '/assets/landing/studio-desktop-main.jpg',
       mobile: '/assets/landing/studio-mobile-cutedit.jpg',
-      caption: '모바일에서도 컷별 이동·사진 교체·자막 편집과 1080p MP4 저장까지 바로 이어집니다.'
+      caption: '휴대폰에서도 컷별 사진 교체·자막 편집과 1080p MP4 저장까지 이어집니다.'
     }
   };
-  document.querySelectorAll('[data-app-view]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var k = btn.getAttribute('data-app-view');
-      var v = APP_VIEWS[k];
-      if (!v) return;
-      document.querySelectorAll('[data-app-view]').forEach(function (b) { b.classList.toggle('is-active', b === btn); });
-      var dImg = document.getElementById('lpAppDesktopImg');
-      var mImg = document.getElementById('lpAppMobileImg');
-      if (dImg) dImg.setAttribute('src', v.desktop);
-      if (mImg) mImg.setAttribute('src', v.mobile);
-      setText('lpAppCaption', v.caption);
-    });
-  });
 
   // =========================================================================
-  // 4. 11개 업종 선택 & 4곡 오리지널 BGM 미리듣기
+  // 4. 업종 목록
   // =========================================================================
   var selectedInd = 'auto';
   function renderIndustryGrid() {
-    var grid = document.getElementById('edIndustryGrid');
+    var grid = $('edIndustryGrid');
     if (!grid) return;
     var keys = Object.keys(INDS);
     if (!keys.length) return;
     grid.innerHTML = keys.map(function (k) {
       var it = INDS[k];
       var on = it.key === selectedInd;
-      return '<button type="button" data-ind="' + esc(it.key) + '" class="ed-ind-chip' + (on ? ' is-active' : '') + '">' + esc(it.name) + '</button>';
+      return '<button type="button" data-ind="' + esc(it.key) + '" aria-pressed="' + on + '" class="lp-chip' + (on ? ' is-on' : '') + '">' + esc(it.name) + '</button>';
     }).join('');
     var cur = INDS[selectedInd] || INDS.auto;
-    var btn = document.getElementById('edStartIndustryBtn');
+    var btn = $('edStartIndustryBtn');
     if (btn && cur) {
       btn.setAttribute('data-go', '/studio?ind=' + cur.key);
-      btn.textContent = cur.name + josaRo(cur.name) + ' 시작하기 →';
+      btn.textContent = cur.name + josaRo(cur.name) + ' 시작하기';
     }
   }
   renderIndustryGrid();
 
-  var bgmAudio = null;
-  var playingBgmBtn = null;
-  function stopBgm() {
-    if (bgmAudio) { try { bgmAudio.pause(); bgmAudio.currentTime = 0; } catch (e) {} }
-    if (playingBgmBtn) {
-      playingBgmBtn.classList.remove('is-playing');
-      var pl = playingBgmBtn.querySelector('.ed-bgm-play');
-      if (pl) pl.textContent = 'PLAY';
-      playingBgmBtn = null;
-    }
-  }
-
+  // =========================================================================
+  // 5. 클릭 처리
+  // =========================================================================
   document.addEventListener('click', function (e) {
+    var pick = e.target.closest('[data-reel]');
+    if (pick) { setReel(pick.getAttribute('data-reel')); return; }
+
+    var tab = e.target.closest('[data-app-view]');
+    if (tab) {
+      var v = APP_VIEWS[tab.getAttribute('data-app-view')];
+      if (!v) return;
+      document.querySelectorAll('[data-app-view]').forEach(function (b) {
+        b.classList.toggle('is-on', b === tab);
+        b.setAttribute('aria-selected', b === tab ? 'true' : 'false');
+      });
+      var dImg = $('lpAppDesktopImg'), mImg = $('lpAppMobileImg');
+      if (dImg) dImg.setAttribute('src', v.desktop);
+      if (mImg) mImg.setAttribute('src', v.mobile);
+      setText('lpAppCaption', v.caption);
+      return;
+    }
+
     var bgmBtn = e.target.closest('[data-bgm-src]');
     if (bgmBtn) {
-      var src = bgmBtn.getAttribute('data-bgm-src');
       if (playingBgmBtn === bgmBtn) { stopBgm(); return; }
       stopBgm();
-      try {
-        if (!bgmAudio) bgmAudio = new Audio();
-        bgmAudio.src = src;
-        bgmAudio.volume = 0.6;
-        bgmAudio.play().catch(function () {});
-        bgmAudio.onended = stopBgm;
-        playingBgmBtn = bgmBtn;
-        bgmBtn.classList.add('is-playing');
-        var pl = bgmBtn.querySelector('.ed-bgm-play');
-        if (pl) pl.textContent = 'STOP';
-      } catch (err) {}
+      playBgm(bgmBtn.getAttribute('data-bgm-src'), bgmBtn);
+      playingBgmBtn = bgmBtn;
+      bgmBtn.classList.add('is-playing');
+      var st = bgmBtn.querySelector('.lp-bgm-state');
+      if (st) st.textContent = '정지';
       return;
     }
 
@@ -435,6 +276,169 @@
     }
   });
 
-  initMotion();
-  syncNavPolarity();
+  // 스크롤하면 상단 메뉴에 밑줄
+  var navEl = $('lpNav');
+  function syncNav() { if (navEl) navEl.classList.toggle('is-scrolled', window.scrollY > 8); }
+  window.addEventListener('scroll', syncNav, { passive: true });
+  syncNav();
+
+  // =========================================================================
+  // 6. 히어로 스크롤 연출 + 마우스 기울기 + 휴대폰 밀어서 업종 바꾸기
+  // =========================================================================
+  var heroEl = $('lpHero');
+  var pinEl = $('lpHeroPin');
+  var phoneEl = $('lpPhone');
+  var sceneImg = document.querySelector('#lpHeroScene img');
+  var dimEl = $('lpHeroDim');
+  var fullEl = $('lpFull');
+  var fullImg = $('lpFullImg');
+  var fullSub = $('lpFullSub');
+  var fullEnd = $('lpFullEnd');
+  var fullHint = $('lpFullHint');
+  var fullBars = fullEl ? fullEl.querySelectorAll('.lp-full-bars b') : [];
+  var fadeEls = ['.lp-hero-copy', '.lp-picker', '.lp-hero-actions'].map(function (q) { return document.querySelector(q); });
+  var base = null;       // 휴대폰 원래 위치(고정 영역 기준)
+  var tiltX = 0, tiltY = 0, tiltTX = 0, tiltTY = 0;
+  var heroOn = true;
+
+  function clamp01(v) { return v < 0 ? 0 : (v > 1 ? 1 : v); }
+  function seg(p, a, b) { return clamp01((p - a) / (b - a)); }
+  function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  // 컷별 화면 구도 (휴대폰 미리보기와 같은 움직임을 스크롤로)
+  var CUT_FRAMES = [
+    [1.16, 0, 0, 1.04, 0, 0],
+    [1.5, 9, 4, 1.42, 4, 2],
+    [1.32, -6, -6, 1.48, -7, -8]
+  ];
+
+  function measure() {
+    if (!phoneEl || !pinEl) return;
+    var old = phoneEl.style.transform;
+    phoneEl.style.transform = 'none';
+    var pr = pinEl.getBoundingClientRect();
+    var r = phoneEl.getBoundingClientRect();
+    phoneEl.style.transform = old;
+    base = { x: r.left - pr.left, y: r.top - pr.top, w: r.width, h: r.height, W: pr.width, H: pr.height };
+  }
+
+  function applyHero() {
+    if (!heroEl || !base) return;
+    var rect = heroEl.getBoundingClientRect();
+    var span = heroEl.offsetHeight - window.innerHeight;
+    var p = span > 0 ? clamp01(-rect.top / span) : 0;
+    heroP = p;
+
+    var e1 = ease(seg(p, 0, 0.14));     // 제목 빠짐
+    var e2 = ease(seg(p, 0.04, 0.34));  // 휴대폰 가운데로, 카메라 다가감
+    var e3 = ease(seg(p, 0.34, 0.54));  // 릴스가 화면 전체로
+    var e4 = seg(p, 0.58, 0.94);        // 스크롤로 컷 넘김
+    var e5 = ease(seg(p, 0.9, 0.98));   // 마지막 버튼
+
+    fadeEls.forEach(function (el, i) {
+      if (!el) return;
+      el.style.opacity = String(1 - e1);
+      el.style.transform = 'translate3d(0,' + (-48 * e1 - i * 10 * e1).toFixed(1) + 'px,0)';
+      el.style.visibility = e1 >= 1 ? 'hidden' : '';
+    });
+    if (sceneImg) sceneImg.style.transform = 'scale(' + (1 + 0.22 * e2 + 0.1 * e3).toFixed(4) + ') translate3d(' + (-tiltX * 10).toFixed(1) + 'px,' + (-tiltY * 8).toFixed(1) + 'px,0)';
+    if (dimEl) dimEl.style.opacity = (0.35 * e2 + 0.5 * e3).toFixed(3);
+
+    // 휴대폰: 원래 자리 → 화면 가운데, 조금 커짐
+    var targetH = base.H * 0.82;
+    var sc = lerp(1, Math.max(1, targetH / base.h), e2);
+    var cx0 = base.x + base.w / 2, cy0 = base.y + base.h / 2;
+    var dx = (base.W / 2 - cx0) * e2, dy = (base.H / 2 - cy0) * e2;
+    var tilt = 1 - e2;
+    if (phoneEl) {
+      phoneEl.style.transform = 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) scale(' + sc.toFixed(4) + ') perspective(900px) rotateY(' + (tiltX * 7 * tilt).toFixed(2) + 'deg) rotateX(' + (-tiltY * 5 * tilt).toFixed(2) + 'deg)';
+      phoneEl.style.opacity = String(1 - clamp01((e3 - 0.1) * 5));
+    }
+
+    // 전체 화면 레이어: 휴대폰 화면 크기에서 시작해 화면 끝까지 펼쳐짐
+    if (fullEl) {
+      var pad = 8 * sc;
+      var cw = base.w * sc, ch = base.h * sc;
+      var left = cx0 + dx - cw / 2 + pad, top = cy0 + dy - ch / 2 + pad;
+      var right = base.W - (left + cw - 2 * pad), bottom = base.H - (top + ch - 2 * pad);
+      var k = 1 - e3;
+      var rad = 36 * sc * k;
+      fullEl.style.clipPath = 'inset(' + (top * k).toFixed(1) + 'px ' + (right * k).toFixed(1) + 'px ' + (bottom * k).toFixed(1) + 'px ' + (left * k).toFixed(1) + 'px round ' + rad.toFixed(1) + 'px)';
+      fullEl.style.opacity = String(clamp01(e3 * 5));
+      var live = e3 > 0.6;
+      fullEl.classList.toggle('is-live', live);
+      if (live) fullEl.removeAttribute('inert'); else fullEl.setAttribute('inert', '');
+
+      // 스크롤 위치로 컷 고르기
+      var r = REELS[reelKey];
+      var n = r.subs.length;
+      var pos = Math.min(n - 0.0001, e4 * n);
+      var ci = Math.floor(pos), lt = pos - ci;
+      if (ci !== fullCut) {
+        fullCut = ci;
+        if (fullSub) {
+          fullSub.textContent = r.subs[ci];
+          fullSub.classList.remove('is-in'); void fullSub.offsetWidth; fullSub.classList.add('is-in');
+        }
+      }
+      var f = CUT_FRAMES[ci % CUT_FRAMES.length];
+      if (fullImg) fullImg.style.transform = 'scale(' + lerp(f[0], f[3], lt).toFixed(4) + ') translate(' + lerp(f[1], f[4], lt).toFixed(2) + '%,' + lerp(f[2], f[5], lt).toFixed(2) + '%)';
+      for (var b = 0; b < fullBars.length; b++) {
+        fullBars[b].style.width = (b < ci ? 100 : (b === ci ? lt * 100 : 0)).toFixed(1) + '%';
+      }
+      var ui = clamp01((e3 - 0.6) * 3); // 화면이 거의 다 펼쳐진 뒤에 글자·막대 표시
+      fullEl.style.setProperty('--ui', ui.toFixed(3));
+      if (fullSub) fullSub.style.opacity = String(ui * (1 - e5 * 0.85));
+      if (fullEnd) { fullEnd.style.opacity = String(e5); fullEnd.style.transform = 'translate(-50%,' + (16 * (1 - e5)).toFixed(1) + 'px)'; fullEnd.style.visibility = e5 > 0.02 ? '' : 'hidden'; }
+      if (fullHint) fullHint.style.opacity = String(clamp01((e3 - 0.7) * 4) * (1 - seg(p, 0.62, 0.7)));
+    }
+  }
+
+  function heroLoop() {
+    if (!heroOn) return;
+    tiltX += (tiltTX - tiltX) * 0.08;
+    tiltY += (tiltTY - tiltY) * 0.08;
+    applyHero();
+    requestAnimationFrame(heroLoop);
+  }
+
+  if (heroEl && pinEl && phoneEl && !reducedMotion) {
+    measure();
+    window.addEventListener('resize', function () { measure(); });
+    window.addEventListener('load', function () { measure(); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure).catch(function () {});
+    requestAnimationFrame(heroLoop);
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (ents) {
+        var was = heroOn; heroOn = ents[0].isIntersecting;
+        if (heroOn && !was) requestAnimationFrame(heroLoop);
+      }).observe(heroEl);
+    }
+    // 마우스 위치에 따라 장면과 휴대폰이 살짝 기욺
+    if (window.matchMedia('(pointer: fine)').matches) {
+      pinEl.addEventListener('pointermove', function (e) {
+        var r = pinEl.getBoundingClientRect();
+        tiltTX = ((e.clientX - r.left) / r.width - 0.5) * 2;
+        tiltTY = ((e.clientY - r.top) / r.height - 0.5) * 2;
+      });
+      pinEl.addEventListener('pointerleave', function () { tiltTX = 0; tiltTY = 0; });
+    }
+  }
+
+  // 휴대폰을 좌우로 밀면 업종이 바뀜
+  if (phoneEl) {
+    var keys = Object.keys(REELS);
+    var sx = null, sy = 0;
+    phoneEl.addEventListener('pointerdown', function (e) { if (e.target.closest('button')) return; sx = e.clientX; sy = e.clientY; });
+    window.addEventListener('pointerup', function (e) {
+      if (sx == null) return;
+      var ddx = e.clientX - sx, ddy = e.clientY - sy; sx = null;
+      if (Math.abs(ddx) < 40 || Math.abs(ddx) < Math.abs(ddy)) return;
+      var i = keys.indexOf(reelKey);
+      setReel(keys[(i + (ddx < 0 ? 1 : -1) + keys.length) % keys.length]);
+    });
+  }
+
+  setReel('auto');
 })();
