@@ -154,7 +154,13 @@
       ['pro_pov_caption', '인스타 감성 POV 자막', 'pro_pov_caption', 'pretM', '#0b0b0c', '#161618', '#f4f0e8', '#ffffff', false, '브이로그', '네이티브 릴스 글래스 캡슐 · 핸드헬드 미세 호흡'],
       ['pro_split_reveal', '커튼 와이프 · 컷 전환', 'pro_split_reveal', 'pretM', '#090a0c', '#15171c', '#f4f0e8', '#ffffff', false, '비포·애프터', '이전 컷 위로 미끄러지는 커튼 와이프 · 좌하단 안전 자막'],
       ['pro_handwrite', '감성 손글씨 · 필름 드로잉', 'pro_handwrite', 'pen', '#0c0a09', '#191512', '#e8d5bc', '#f8f3ea', false, '손글씨', '풀스크린 35mm 필름 위 써 내려가는 손글씨 · 드로잉 밑줄'],
-      ['pro_trend_sticker', '트렌디 감성 · 타임스탬프', 'pro_trend_sticker', 'gowun', '#0a0a09', '#171513', '#f2e4cc', '#ffffff', false, '감성', '2026 인스타 릴스 감성 날짜 스탬프 · 부드러운 자막 플로트']
+      ['pro_trend_sticker', '트렌디 감성 · 타임스탬프', 'pro_trend_sticker', 'gowun', '#0a0a09', '#171513', '#f2e4cc', '#ffffff', false, '감성', '2026 인스타 릴스 감성 날짜 스탬프 · 부드러운 자막 플로트'],
+      ['pro_glass_card', '글래스모피즘 · 모던 카드', 'pro_glass_card', 'pretM', '#090a0f', '#151822', '#e2e8f0', '#ffffff', false, '브이로그', '반투명 다크 글래스 플로팅 카드 · 1px 헤어라인 보더'],
+      ['pro_neon_pulse', '미드나잇 에디토리얼 · 포인트 바', 'pro_neon_pulse', 'sans', '#07080d', '#111420', '#38bdf8', '#ffffff', false, '타이포', '좌측 수직 포인트 바 · 고대비 에디토리얼 타이포'],
+      ['pro_magazine_cover', '보그 · 럭셔리 매거진 커버', 'pro_magazine_cover', 'maru', '#090807', '#161412', '#e8d5bc', '#f8f3ea', false, '고급', '상단 매거진 마스트헤드 라인 · 하단 명조 에디토리얼'],
+      ['pro_warm_diary', '따뜻한 브이로그 · 크림 일기', 'pro_warm_diary', 'gowun', '#120e0b', '#1f1914', '#f8f3ea', '#231b15', false, '감성', '따뜻한 필름 톤 · 크림 라운드 자막 캡슐'],
+      ['pro_bold_badge', '숏폼 임팩트 · 형광펜 강조', 'pro_bold_badge', 'sans', '#08080a', '#14151a', '#facc15', '#111111', false, '타이포', '핵심 문장 뒤 붓터치 형광펜 하이라이트 · 빠른 펀치 줌'],
+      ['pro_minimal_mono', '라이카 모노크롬 · 미니멀 흑백', 'pro_minimal_mono', 'maru', '#060606', '#141414', '#e5e5e5', '#ffffff', false, '고급', '고대비 흑백 시네마 필름 · 미니멀 자막과 얇은 진행 바']
     ];
     // 모션 디자인도 별도 분류를 만들지 않고 기존 분류에 넣음
     const MOTION_CAT = {
@@ -3419,6 +3425,33 @@
         const driftY = Math.cos(t * 0.9) * 3;
         inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.28);
         inGrain(c, W, H, t, 0.04);
+      } else if (M === 'pro_glass_card') {
+        const zoom = 1.02 + lp * 0.06;
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.26);
+      } else if (M === 'pro_neon_pulse') {
+        const punch = 1.09 - 0.07 * easeOutCubic(local / 0.24) + lp * 0.04;
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, punch, 0.16);
+        c.fillStyle = 'rgba(6,10,18,0.22)';
+        c.fillRect(0, 0, W, H);
+      } else if (M === 'pro_magazine_cover') {
+        const zoom = 1.01 + lp * 0.07;
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.34);
+        inGrain(c, W, H, t, 0.035);
+      } else if (M === 'pro_warm_diary') {
+        const zoom = 1.02 + lp * 0.05;
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.32);
+        inWarm(c, 0, 0, W, H, 0.62);
+        inGrain(c, W, H, t, 0.04);
+      } else if (M === 'pro_bold_badge') {
+        const punch = 1.12 - 0.10 * easeOutCubic(local / 0.20) + lp * 0.04;
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, punch, 0.14);
+      } else if (M === 'pro_minimal_mono') {
+        const zoom = 1.02 + lp * 0.06;
+        c.save();
+        try { c.filter = 'grayscale(100%) contrast(1.12)'; } catch (_) {}
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.32);
+        c.restore();
+        inGrain(c, W, H, t, 0.055);
       }
 
       // 2) 풀스크린 가독성 보호 그라데이션 스크림
@@ -3700,6 +3733,166 @@
         c.shadowBlur = 20;
         c.fillStyle = '#ffffff';
         r.lines.forEach((ln, li) => c.fillText(ln, 0, li * r.lh));
+        c.restore();
+      } else if (M === 'pro_glass_card') {
+        // 글래스모피즘 모던 카드: 하단 Safe Zone 반투명 다크 글래스 + 1px 스페큘러 보더
+        const rise = (1 - easeOutCubic(local / 0.30)) * 22;
+        const alpha = mClamp(local / 0.24);
+        const r = mFit(c, caption, safeW - 44, 3, Math.round(W * 0.052), Math.round(W * 0.036), sp.font);
+        const boxH = r.lines.length * r.lh + 36;
+        const boxW = safeW;
+        const bx = (W - boxW) / 2;
+        const by = H * 0.69 - boxH / 2 + rise;
+        c.save();
+        c.globalAlpha = alpha;
+        c.fillStyle = 'rgba(14, 16, 22, 0.62)';
+        gRoundRect(c, bx, by, boxW, boxH, 20);
+        c.fill();
+        c.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        c.lineWidth = 1.2;
+        c.stroke();
+        // 상단 미세 스페큘러 하이라이트
+        c.fillStyle = accent;
+        gRoundRect(c, bx + 20, by + 10, 28, 3, 2);
+        c.fill();
+        c.font = `600 ${r.size}px ${F.f}`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillStyle = '#ffffff';
+        const firstY = by + boxH / 2 - ((r.lines.length - 1) * r.lh) / 2 + 4;
+        r.lines.forEach((ln, li) => c.fillText(ln, W / 2, firstY + li * r.lh));
+        c.restore();
+      } else if (M === 'pro_neon_pulse') {
+        // 미드나잇 에디토리얼 포인트 바: 좌측 수직 액센트 바 + 고대비 좌정렬 타이포
+        const slide = (1 - easeOutCubic(local / 0.24)) * 28;
+        const alpha = mClamp(local / 0.20);
+        const r = mFit(c, caption, safeW - 26, 3, Math.round(W * 0.058), Math.round(W * 0.04), sp.font);
+        const totalH = r.lines.length * r.lh;
+        const startX = W * 0.11;
+        const topY = H * 0.67 - totalH / 2;
+        c.save();
+        c.globalAlpha = alpha;
+        // 상단 미니멀 씬 인디케이터
+        c.font = `600 ${Math.round(W * 0.024)}px 'JetBrains Mono', monospace`;
+        c.fillStyle = accent;
+        c.textAlign = 'left';
+        c.fillText(`● 0${cutIdx + 1} / 0${totalCuts}`, startX, H * 0.095);
+        // 좌측 수직 포인트 바
+        c.fillStyle = accent;
+        gRoundRect(c, startX, topY - 4, 5, totalH + 8, 3);
+        c.fill();
+        c.font = `800 ${r.size}px ${F.f}`;
+        c.textAlign = 'left';
+        c.textBaseline = 'middle';
+        c.shadowColor = 'rgba(0,0,0,0.85)';
+        c.shadowBlur = 18;
+        c.fillStyle = '#ffffff';
+        r.lines.forEach((ln, li) => c.fillText(ln, startX + 20 + slide, topY + r.lh / 2 + li * r.lh));
+        c.restore();
+      } else if (M === 'pro_magazine_cover') {
+        // 보그 럭셔리 매거진 커버: 상단 1px 마스트헤드 + 하단 명조 에디토리얼
+        const alpha = mClamp(local / 0.30);
+        c.save();
+        c.globalAlpha = alpha * 0.9;
+        c.strokeStyle = 'rgba(232,213,188,0.45)';
+        c.lineWidth = 1;
+        c.beginPath();
+        c.moveTo(W * 0.09, H * 0.095);
+        c.lineTo(W * 0.91, H * 0.095);
+        c.stroke();
+        c.font = `500 ${Math.round(W * 0.023)}px 'JetBrains Mono', monospace`;
+        c.fillStyle = '#e8d5bc';
+        c.textAlign = 'left';
+        c.fillText(`ISSUE NO.${String(cutIdx + 1).padStart(2, '0')}`, W * 0.09, H * 0.082);
+        c.textAlign = 'right';
+        c.fillText('EDITORIAL REEL', W * 0.91, H * 0.082);
+        c.restore();
+
+        const r = mFit(c, caption, safeW, 3, Math.round(W * 0.06), Math.round(W * 0.04), sp.font);
+        const baseY = H * 0.69 - ((r.lines.length - 1) * r.lh) / 2;
+        c.save();
+        c.globalAlpha = alpha;
+        c.font = `600 ${r.size}px ${F.f}`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.shadowColor = 'rgba(0,0,0,0.78)';
+        c.shadowBlur = 22;
+        c.fillStyle = '#f8f3ea';
+        r.lines.forEach((ln, li) => c.fillText(ln, W / 2, baseY + li * r.lh));
+        c.restore();
+      } else if (M === 'pro_warm_diary') {
+        // 따뜻한 브이로그 크림 일기: 웜 크림 캡슐 + 에스프레소 잉크 텍스트
+        const pop = easeOutCubic(local / 0.28);
+        const alpha = mClamp(local / 0.22);
+        const r = mFit(c, caption, safeW - 44, 3, Math.round(W * 0.05), Math.round(W * 0.036), sp.font);
+        c.save();
+        c.globalAlpha = alpha;
+        c.font = `600 ${r.size}px ${F.f}`;
+        let maxW = 0;
+        r.lines.forEach((ln) => { maxW = Math.max(maxW, c.measureText(ln).width); });
+        const boxW = Math.min(safeW, maxW + 46);
+        const boxH = r.lines.length * r.lh + 30;
+        const bx = (W - boxW) / 2;
+        const by = H * 0.69 - boxH / 2 + (1 - pop) * 16;
+        c.fillStyle = 'rgba(248, 243, 234, 0.93)';
+        gRoundRect(c, bx, by, boxW, boxH, 18);
+        c.fill();
+        c.fillStyle = '#231b15';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        const firstY = by + boxH / 2 - ((r.lines.length - 1) * r.lh) / 2;
+        r.lines.forEach((ln, li) => c.fillText(ln, W / 2, firstY + li * r.lh));
+        c.restore();
+      } else if (M === 'pro_bold_badge') {
+        // 숏폼 임팩트 형광펜 강조: 각 줄 뒤로 붓터치 하이라이트 리본 + 펀치 바운스
+        const pop = easeOutBack(local / 0.24);
+        const alpha = mClamp(local / 0.16);
+        const r = mFit(c, caption, safeW - 28, 3, Math.round(W * 0.062), Math.round(W * 0.042), sp.font);
+        const baseY = H * 0.67 - ((r.lines.length - 1) * (r.lh + 8)) / 2;
+        c.save();
+        c.globalAlpha = alpha;
+        c.font = `900 ${r.size}px ${F.f}`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        r.lines.forEach((ln, li) => {
+          const ly = baseY + li * (r.lh + 8);
+          const lw = c.measureText(ln).width + 28;
+          const lh = r.size + 14;
+          const isHi = li === r.lines.length - 1;
+          c.save();
+          c.translate(W / 2, ly);
+          c.scale(0.92 + 0.08 * pop, 0.92 + 0.08 * pop);
+          c.rotate(isHi ? -0.018 : 0.01);
+          c.fillStyle = isHi ? accent : 'rgba(12,12,15,0.86)';
+          gRoundRect(c, -lw / 2, -lh / 2, lw, lh, 10);
+          c.fill();
+          c.fillStyle = isHi ? (gLuminance(accent) > 0.45 ? '#111111' : '#ffffff') : '#ffffff';
+          c.fillText(ln, 0, 1);
+          c.restore();
+        });
+        c.restore();
+      } else if (M === 'pro_minimal_mono') {
+        // 라이카 모노크롬 미니멀 흑백: 넓은 자간 느낌의 정갈한 명조 + 하단 1px 진행 바
+        const alpha = mClamp(local / 0.30);
+        const r = mFit(c, caption, safeW, 3, Math.round(W * 0.052), Math.round(W * 0.036), sp.font);
+        const baseY = H * 0.70 - ((r.lines.length - 1) * r.lh) / 2;
+        c.save();
+        c.globalAlpha = alpha;
+        c.font = `500 ${r.size}px ${F.f}`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.shadowColor = 'rgba(0,0,0,0.88)';
+        c.shadowBlur = 20;
+        c.fillStyle = '#ffffff';
+        r.lines.forEach((ln, li) => c.fillText(ln, W / 2, baseY + li * r.lh));
+        // 하단 미니멀 진행 바
+        const barW = W * 0.56;
+        const barX = (W - barW) / 2;
+        const barY = H * 0.79;
+        c.fillStyle = 'rgba(255,255,255,0.22)';
+        c.fillRect(barX, barY, barW, 2);
+        c.fillStyle = '#ffffff';
+        c.fillRect(barX, barY, barW * mClamp(t / Math.max(0.1, mainDuration)), 2);
         c.restore();
       }
       c.restore();

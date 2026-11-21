@@ -22,6 +22,14 @@
     // 색상 — 어떤 디자인에도 적용되는 포인트 색 (디자인 수에 세지 않음)
     const COLOR_PALETTES = [
       { id: 'default', name: '디자인 기본색' },
+      { id: 'champagne', name: '샴페인 아이보리', accent: '#e8d5bc', accent2: '#f8f3ea' },
+      { id: 'espresso', name: '에스프레소 브라운', accent: '#c89f7c', accent2: '#f3e7da' },
+      { id: 'sage', name: '세이지 말차', accent: '#84a98c', accent2: '#e8f0ea' },
+      { id: 'terracotta', name: '테라코타 코랄', accent: '#e07a5f', accent2: '#fce8e1' },
+      { id: 'rosegold', name: '로즈골드 블러쉬', accent: '#e5a4a4', accent2: '#fdf0f0' },
+      { id: 'cobalt', name: '코발트 딥블루', accent: '#3b82f6', accent2: '#dbeafe' },
+      { id: 'lime', name: '일렉트릭 라임', accent: '#a3e635', accent2: '#ecfccb' },
+      { id: 'cream', name: '웜 크림', accent: '#f4f0e8', accent2: '#ffffff' },
       { id: 'red', name: '레드', accent: '#ef4444', accent2: '#fde047' },
       { id: 'orange', name: '오렌지', accent: '#f97316', accent2: '#fed7aa' },
       { id: 'gold', name: '골드', accent: '#d4af37', accent2: '#f5e6b8' },
