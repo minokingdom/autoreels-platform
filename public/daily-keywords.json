@@ -1,59 +1,87 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-21T07:14:11.276905+09:00",
+  "collectedAt": "2026-11-21T09:47:32.715057+09:00",
   "items": [
     {
-      "term": "박은정",
-      "startedAt": "2026-11-20T13:10:00-08:00",
-      "traffic": "100+"
+      "term": "공인회계사",
+      "startedAt": "2026-11-20T15:40:00-08:00",
+      "traffic": "200+"
     },
     {
-      "term": "비트코인",
-      "startedAt": "2026-11-20T13:00:00-08:00",
+      "term": "브루노 마스",
+      "startedAt": "2026-11-20T15:40:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "반도체",
+      "startedAt": "2026-11-20T15:30:00-08:00",
+      "traffic": "2000+"
+    },
+    {
+      "term": "데이터 센터",
+      "startedAt": "2026-11-20T15:30:00-08:00",
       "traffic": "500+"
     },
     {
-      "term": "포스코",
-      "startedAt": "2026-11-20T13:00:00-08:00",
+      "term": "문경시",
+      "startedAt": "2026-11-20T15:30:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "새마을금고",
-      "startedAt": "2026-11-20T13:00:00-08:00",
+      "term": "추성훈",
+      "startedAt": "2026-11-20T15:10:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "로보택시",
+      "startedAt": "2026-11-20T15:00:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "생계",
-      "startedAt": "2026-11-20T12:50:00-08:00",
-      "traffic": "2000+"
+      "term": "베냐민 네타냐후",
+      "startedAt": "2026-11-20T15:00:00-08:00",
+      "traffic": "100+"
     },
     {
-      "term": "김연경",
-      "startedAt": "2026-11-20T12:50:00-08:00",
-      "traffic": "2000+"
+      "term": "mu",
+      "startedAt": "2026-11-20T14:40:00-08:00",
+      "traffic": "100+"
     },
     {
-      "term": "조원태",
-      "startedAt": "2026-11-20T12:50:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "카리나",
-      "startedAt": "2026-11-20T12:40:00-08:00",
-      "traffic": "2000+"
-    },
-    {
-      "term": "빙하",
-      "startedAt": "2026-11-20T12:40:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "나스닥",
-      "startedAt": "2026-11-20T12:40:00-08:00",
+      "term": "경찰관",
+      "startedAt": "2026-11-20T14:20:00-08:00",
       "traffic": "200+"
     }
   ],
-  "issues": [],
+  "issues": [
+    {
+      "term": "용인 경부고속도로서 승용차가",
+      "day": "2026-11-21",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856752",
+      "publishedAt": "2026-11-21T09:31:00+09:00",
+      "headline": "용인 경부고속도로서 승용차가 화물차 추돌…운전자 1명 사망"
+    },
+    {
+      "term": "경부선 소정리역 화물열차",
+      "day": "2026-11-21",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856725",
+      "publishedAt": "2026-11-21T09:28:00+09:00",
+      "headline": "경부선 소정리역 화물열차 탈선…\"일반 열차 운행 중지\""
+    },
+    {
+      "term": "경부선 소정리역서 화물열차",
+      "day": "2026-11-21",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856641",
+      "publishedAt": "2026-11-21T08:53:00+09:00",
+      "headline": "경부선 소정리역서 화물열차 탈선…전차선 단전·일반열차 지연"
+    }
+  ],
   "previousIssues": [
     {
       "term": "수능",
