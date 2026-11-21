@@ -1247,14 +1247,14 @@
           <div class="voice-head-actions">
             <label class="ig-switch voice-pro-toggle" hidden>
               <span>Pro</span>
-              <input type="checkbox" role="switch" aria-controls="arProVoiceList" />
+              <input type="checkbox" role="switch" aria-controls="arProVoiceList" checked />
               <i aria-hidden="true"></i>
             </label>
             <button type="button" class="bgm-done">적용</button>
           </div>
         </div>
         <fieldset class="voice-speed-setting"><legend>말하는 속도</legend><div class="voice-speed-options"></div></fieldset>
-        <div class="bgm-list"><div id="arProVoiceList" hidden></div><div class="voice-standard-list"></div></div>
+        <div class="bgm-list"><div id="arProVoiceList"></div><div class="voice-standard-list"></div></div>
         <audio preload="none"></audio>
       </div>`;
       const list = el.querySelector('.bgm-list');
@@ -1292,10 +1292,6 @@
       let choice = sel.value;
       let hasChosen = false;
       let currentRow = null;
-      function showPro(show) {
-        proToggle.checked = show;
-        proList.hidden = !show;
-      }
       function render() {
         proList.replaceChildren();
         standardList.replaceChildren();
@@ -1310,20 +1306,22 @@
           row.dataset.v = opt.value;
           if (locked) row.setAttribute('aria-label', opt.textContent + ' · Pro 미리듣기');
           else row.setAttribute('aria-pressed', String(opt.value === choice));
+          const label = document.createElement('span');
+          label.className = 'bgm-row-txt voice-choice-label';
           const name = document.createElement('strong');
-          name.className = 'bgm-row-txt';
           name.textContent = opt.textContent;
+          label.append(name);
           if (isPro) {
-            const tag = document.createElement('small');
+            const tag = document.createElement('span');
             tag.className = 'voice-pro-tag';
             tag.textContent = 'Pro';
-            name.append(tag);
+            label.append(tag);
           }
           const state = document.createElement('span');
           state.className = 'bgm-row-state';
           state.textContent = opt.value === 'off' ? '' : '▶';
           state.setAttribute('aria-hidden', 'true');
-          row.append(name, state);
+          row.append(label, state);
           (isPro ? proList : standardList).append(row);
         }
         proToggle.closest('label').hidden = !proList.childElementCount;
@@ -1335,7 +1333,7 @@
       }
       proToggle.addEventListener('change', () => {
         if (!proToggle.checked && proList.contains(currentRow)) stopSample();
-        showPro(proToggle.checked);
+        proList.hidden = !proToggle.checked;
       });
       player.onended = stopSample;
       player.onerror = () => {
@@ -1375,15 +1373,11 @@
         sel.value = choice;
         sel.dispatchEvent(new Event('change', { bubbles: true }));
       };
-      showPro(sel.selectedOptions[0]?.dataset.voiceTier === 'pro');
       render();
       if (!AudioEngine.voiceListLoaded) {
         AudioEngine.loadVoiceList().then(() => {
           if (!list.isConnected || currentRow) return;
-          if (!hasChosen && choice !== sel.value) {
-            choice = sel.value;
-            if (sel.selectedOptions[0]?.dataset.voiceTier === 'pro') showPro(true);
-          }
+          if (!hasChosen) choice = sel.value;
           render();
         });
       }

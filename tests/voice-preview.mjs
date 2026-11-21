@@ -112,12 +112,16 @@ try {
     await open.click();
     const fishRow = option(premium.id);
     await proToggle.waitFor();
-    assert.equal(await proToggle.isChecked(), false);
-    assert.equal(await fishRow.isHidden(), true);
-    assert.equal(await option('ko-KR-Chirp3-HD-Puck').isVisible(), true);
-    await proSwitchLabel.click();
-    await fishRow.getByText('Pro', { exact: true }).waitFor();
     assert.equal(await proToggle.isChecked(), true);
+    const proChip = fishRow.getByText('Pro', { exact: true });
+    await proChip.waitFor();
+    await fishRow.evaluate(row => {
+      const name = row.querySelector('strong').getBoundingClientRect();
+      const chip = row.querySelector('.voice-pro-tag').getBoundingClientRect();
+      if (chip.left < name.right || Math.abs(chip.y + chip.height / 2 - name.y - name.height / 2) >= 2) {
+        throw new Error('Pro chip must align beside the voice name');
+      }
+    });
     assert.ok((await fishRow.textContent()).startsWith(premium.title));
     assert.doesNotMatch(await fishRow.textContent(), /Fish Audio/);
     await fishRow.click();
@@ -135,6 +139,7 @@ try {
     assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'off');
     assert.equal(synthesisCalls,0);
     await open.click();
+    assert.equal(await proToggle.isChecked(), true);
     await play('ko-KR-Chirp3-HD-Puck');
     await speedOption('1.2').check();
     assert.ok(Math.abs(await sheet.locator('audio').evaluate(el => el.playbackRate) - 1.2 / 1.1) < 0.001);
@@ -167,7 +172,6 @@ try {
       pro = true;
       await page.evaluate(() => { AudioEngine.voiceListLoaded = false; });
       await open.click();
-      await proSwitchLabel.click();
       await sheet.locator('[data-v="' + premium.id + '"][aria-pressed]').waitFor();
       await fishRow.click();
       await sheet.getByRole('button', { name: '적용', exact: true }).click();

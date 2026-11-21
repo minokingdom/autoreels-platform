@@ -1257,7 +1257,18 @@ body:has(#cutEditorPanel:not(.hidden)) #previewCutPinBar { display: none !import
 .voice-head-actions { display: flex; align-items: center; gap: 10px; }
 .voice-pro-toggle { display: flex; align-items: center; gap: 6px; min-height: 32px; font-size: 12px; font-weight: 600; color: var(--foreground); }
 .voice-pro-toggle[hidden] { display: none; }
-.voice-pro-tag { display: inline-block; margin-inline-start: 7px; color: var(--primary); font-size: 10px; font-weight: 600; white-space: nowrap; }
+.bgm-row-txt.voice-choice-label { flex-direction: row; align-items: center; gap: 6px; }
+.voice-pro-tag {
+  flex: none;
+  padding: 1px 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--studio-selected);
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 14px;
+}
 .bgm-row.on strong { color: var(--primary); }
 .bgm-cover-make { width: 48px; height: 48px; background: #232327 !important; font-size: 20px; }
 .bgm-make strong { color: #ededed; }
