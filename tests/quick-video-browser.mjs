@@ -118,6 +118,35 @@ try {
   });
   assert.ok(mixedFrames>=2,'완성 MP4에 두 장면이 섞인 프레임 '+mixedFrames);
   console.log('미리보기 전환 켜기·끄기 및 MP4 디졸브 확인',mixedFrames+' 프레임');
+  await frame.getByText('스튜디오로 돌아가기').click();
+  await page.locator('dialog.ar-video-editor').waitFor({state:'detached'});
+  const one=fileURLToPath(new URL('./fixtures/remix-caption.webm',import.meta.url));
+  const two=fileURLToPath(new URL('./fixtures/montage-transition.webm',import.meta.url));
+  await page.locator('#quickShortVideoInput').setInputFiles([one,two]);
+  try {await frame.getByText('2개 영상 · 이어붙인 길이 7.0초').waitFor({timeout:9000});} catch(err){throw Error(await frame.locator('#work').innerText()+' '+errors.join(', '),{cause:err});}
+  await frame.locator('.join-row').nth(1).getByText('앞으로').click();
+  assert.match(await frame.locator('.join-row').first().textContent(),/montage-transition/);
+  await frame.locator('#joinFiles').setInputFiles(one);
+  await frame.getByText('3개 영상 · 이어붙인 길이 8.0초').waitFor();
+  await frame.locator('.join-row').last().getByText('빼기').click();
+  await frame.locator('#play').click();
+  await frame.locator('#play[aria-label="이어붙인 영상 재생"]').waitFor({timeout:13000});
+  await frame.locator('#save').click();
+  await frame.locator('#download').waitFor({timeout:25000});
+  const samples=await frame.locator('#download').evaluate(async link=>{
+    const out=document.createElement('video'),c=document.createElement('canvas');
+    out.muted=true;out.playsInline=true;out.src=link.href;c.width=c.height=1;
+    const g=c.getContext('2d',{willReadFrequently:true}),colors=[];
+    const sample=()=>{g.drawImage(out,0,0,1,1);const [r,,b]=g.getImageData(0,0,1,1).data;
+      if (out.currentTime>.4 && out.currentTime<1.2 && r>180) colors[0]=true;
+      if (out.currentTime>4 && out.currentTime<5 && b>180) colors[1]=true;
+      if(!out.ended)out.requestVideoFrameCallback(sample);};
+    out.requestVideoFrameCallback(sample);await out.play();
+    await new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(Error('이어붙인 MP4 재생 오류')),12500);out.onended=()=>{clearTimeout(t);resolve();};});
+    return {duration:out.currentTime,colors};
+  });
+  assert.deepEqual(samples.colors,[true,true]);assert.ok(Math.abs(samples.duration-7)<.65);
+  console.log('여러 영상 선택·추가·순서 변경·삭제·전체 미리보기·MP4 실제 재생 확인',samples.duration);
   assert.deepEqual(errors,[]);
   console.log('Independent file, full duration, trim, rate, sound, caption, music, portrait MP4, original studio preserved');
 } finally { await browser.close(); }

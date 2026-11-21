@@ -117,6 +117,7 @@ function drawTitles(ctx,clip,caption) {
   if (clip.showCaptions) block(caption || '',false);
 }
 function renderPreview(at=video.currentTime) {
+  if (session?.joined) return;
   const overlay=byId('overlay'),ctx=overlay.getContext('2d');
   if (session?.clip?.montage && (video.seeking || video.readyState < 2)) return;
   ctx.clearRect(0,0,overlay.width,overlay.height);

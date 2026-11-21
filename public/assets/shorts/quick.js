@@ -1,4 +1,8 @@
-function openQuickClip(s,file) {
+function openQuickClip(s,file,fullSource=false) {
+  byId('joinFiles').disabled=false;
+  s.file=file;
+  s.filename=file.name || '현재 편집본';
+  byId('joinTools').hidden=false;
   const end = video.duration;
   const clip = {start:0,end,rate:1,keepAudio:true,transitions:true,music:'',style:'box',title:'',customTitle:true,
     showCaptions:true,lines:[{start:0,end,text:''}]};
@@ -14,7 +18,7 @@ function openQuickClip(s,file) {
   selected(s,clip,null);
   byId('editor').open = true;
   updateQuickTimes(clip);
-  startMontage(s,file);
+  if (fullSource) setQuickMode(s,false); else startMontage(s,file);
 }
 function updateQuickTimes(clip) {
   for (const [key,control,output] of [['start','trimStart','startTime'],['end','trimEnd','endTime']]) {
@@ -36,7 +40,7 @@ async function prepareQuickMusic(context,dest,url,signal) {
   return sound;
 }
 function setQuickMode(s,automatic) {
-  if (session !== s || s.exporting) return;
+  if (session !== s || s.exporting || s.joined) return;
   video.pause();
   s.wantMontage = automatic;
   s.clip.montage = automatic ? s.plan : null;
@@ -55,6 +59,7 @@ function setQuickMode(s,automatic) {
   markEdited(); updateQuickTimes(s.clip); renderPreview();
 }
 async function startMontage(s,file) {
+  s.analyzing=true;
   byId('useMontage').disabled = false;
   byId('montageProgress').value = 0;
   setQuickMode(s,true);
@@ -69,10 +74,13 @@ async function startMontage(s,file) {
     if (s.wantMontage) setQuickMode(s,false);
     byId('useMontage').disabled = true;
     byId('montageStatus').textContent = '장면 분석을 마치지 못했어요. 원본은 직접 편집할 수 있어요.';
-  }
+  } finally { s.analyzing=false; }
 }
 if (quickEdit) {
-  byId('useMontage').addEventListener('click',() => setQuickMode(session,true));
+  byId('useMontage').addEventListener('click',() => {
+    if (!session.plan && !session.analyzing) startMontage(session,session.file);
+    else setQuickMode(session,true);
+  });
   byId('useManual').addEventListener('click',() => setQuickMode(session,false));
   let previewFrame;
   const advanceMontage = () => {
@@ -90,6 +98,7 @@ if (quickEdit) {
   video.addEventListener('play',advanceMontage);
   video.addEventListener('pause',() => cancelAnimationFrame(previewFrame));
 
+  fileInput.multiple=true;
   document.body.classList.add('quick-video');
   document.title = '오토릴스메이커 · 짧은 내 영상 바로 편집하기';
   document.querySelectorAll('h1').forEach(h => { h.textContent = '짧은 내 영상 바로 편집하기'; });

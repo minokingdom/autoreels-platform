@@ -9,6 +9,7 @@ function reset() {
   const s = session;
   session = null;
   if (s) {
+    clearJoinedFiles(s);
     s.rankWorker?.terminate(); clearTimeout(s.rankTimer); s.controller.abort(); clearTimeout(s.timer); s.engine?.remove(); s.stopExport?.();
     URL.revokeObjectURL(s.url); if (s.saved) URL.revokeObjectURL(s.saved);
   }
@@ -78,10 +79,10 @@ addEventListener('message', e => {
   }
 });
 fileInput.addEventListener('change', async () => {
-  const file = fileInput.files[0]; fileInput.value = ''; if (!file) return;
-  await openShortsFile(file);
+  const files = Array.from(fileInput.files); fileInput.value = ''; if (!files.length) return;
+  if (quickEdit) await openQuickFiles(files); else await openShortsFile(files[0]);
 });
-async function openShortsFile(file) {
+async function openShortsFile(file,fullSource=false) {
   reset();
   const s = session = {id:++sequence,url:URL.createObjectURL(file),pending:[],clips:[],rankVersion:0,guide:byId('initialGuide').value.trim(),offset:0,status:'',controller:new AbortController()};
   document.querySelector('.stage').hidden = false; byId('guide').value = s.guide;
@@ -97,7 +98,7 @@ async function openShortsFile(file) {
     video.src = s.url; await metadata; if (session !== s) return;
     if (!(video.duration > 0 && Number.isFinite(video.duration))) throw Error('이 영상의 길이를 읽을 수 없어요.');
     if (!quickEdit && video.duration > 600) throw Error('10분 이내 영상을 선택해 주세요.');
-    if (quickEdit) { openQuickClip(s,file); return; }
+    if (quickEdit) { openQuickClip(s,file,fullSource); return; }
     detail(s,'기기에서 음성 준비 중…');
     const context = new OfflineAudioContext(1,1,16000);
     const decoded = await context.decodeAudioData(await file.arrayBuffer()); if (session !== s) return;
@@ -119,6 +120,7 @@ function activeCaption(clip,t) {return clip?.lines.find(line => t >= line.start 
 play.addEventListener('click',async () => {
   const s = session; if (!s?.clip || s.exporting) return;
   s.interacted = true;
+  if (s.joined) { await previewJoined(s); return; }
   if (!video.paused) { video.pause(); return; }
   const ranges = clipRanges(s.clip);
   if (!ranges.some(r => video.currentTime >= r.start && video.currentTime < r.end-.03)) video.currentTime = ranges[0].start;
@@ -169,11 +171,11 @@ function drawQuickScene(ctx,source,clip) {
   }
   drawQuickFrame(ctx,source,zoom);
 }
-function paintClip(ctx, source, text) {
+function paintClip(ctx, source, text, clip=session.clip) {
   const w = ctx.canvas.width, h = ctx.canvas.height;
   if (quickEdit) {
-    drawQuickScene(ctx,source,session.clip);
-    drawTitles(ctx,session.clip,text); return;
+    drawQuickScene(ctx,source,clip);
+    drawTitles(ctx,clip,text); return;
   }
   const scale = Math.max(w/source.videoWidth,h/source.videoHeight);
   const sw = w/scale, sh = h/scale;
@@ -181,11 +183,11 @@ function paintClip(ctx, source, text) {
   drawTitles(ctx,session.clip,text);
 }
 save.addEventListener('click',async () => {
-  const s = session, clip = s?.clip; if (!clip || s.exporting) return;
+  const s = session, clip = s?.clip; if (!clip || s.exporting || s.adding) return;
   const mime = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'].find(t => window.MediaRecorder?.isTypeSupported(t));
   if (!mime || !HTMLCanvasElement.prototype.captureStream) {detail(s,'이 브라우저는 MP4 저장을 지원하지 않아요.'); return;}
-  video.pause(); byId('fields').disabled = true; s.exporting = true; save.disabled = true; download.hidden = true;
-  byId('quickControls').disabled = true;
+  stopJoinedPreview(s); video.pause(); byId('fields').disabled = true; s.exporting = true; save.disabled = true; download.hidden = true;
+  byId('quickControls').disabled = true; byId('joinFiles').disabled=true;
   statusLine.textContent = '선택 구간을 MP4로 만드는 중…'; let musicNode, context, track, recorder, stream, raf, timeout;
   const source = document.createElement('video'); source.playsInline = true; source.muted = true;
   let rejectRender;
@@ -198,18 +200,19 @@ save.addEventListener('click',async () => {
     context = new AudioContext(); const resume = context.resume();
     await arCheckShortsAccess(s.controller.signal);
     await Promise.race([failure,new Promise((resolve,reject) => {
-      source.onloadeddata = resolve; source.onerror = () => reject(Error('영상을 열 수 없어요.')); source.src = s.url;
+      source.onloadeddata = resolve; source.onerror = () => reject(Error('영상을 열 수 없어요.')); source.src = sequenceTakes(s)[0].url;
     })]); await resume;
-    const ranges = clipRanges(clip);
+    const ranges = sequenceTakes(s);
     let takeIndex = 0;
     const firstStart = ranges[0].start;
-    if (firstStart > 0) await Promise.race([failure,new Promise(resolve => {source.onseeked = resolve; source.currentTime = firstStart;})]);
+    await Promise.race([failure,positionJoinedTake(source,ranges[0],s.controller.signal)]);
     const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1920;
-    const ctx = canvas.getContext('2d',{alpha:false}); paintClip(ctx,source,activeCaption(clip,firstStart));
+    const ctx = canvas.getContext('2d',{alpha:false}); paintClip(ctx,source,activeCaption(ranges[0].owner,firstStart),ranges[0].owner);
     stream = canvas.captureStream(30);
     const dest = context.createMediaStreamDestination(), node = context.createMediaElementSource(source);
-    source.playbackRate = clip.rate || 1; source.muted = false;
-    if (clip.keepAudio !== false) node.connect(dest);
+    source.muted = false;
+    const gain = context.createGain(); gain.gain.value = ranges[0].owner.keepAudio === false ? 0 : 1;
+    node.connect(gain).connect(dest);
     if (clip.music) musicNode = await prepareQuickMusic(context,dest,clip.music,s.controller.signal);
     track = dest.stream.getAudioTracks()[0]; stream.addTrack(track);
     recorder = new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6000000});
@@ -225,16 +228,16 @@ save.addEventListener('click',async () => {
           if (++takeIndex >= ranges.length) { stop(); return; }
           recorder.pause(); source.pause();
           await context.suspend();
-          await Promise.race([failure,new Promise(resolve => {
-            source.onseeked = resolve; source.currentTime = ranges[takeIndex].start;
-          })]);
-          paintClip(ctx,source,activeCaption(clip,source.currentTime));
+          const take = ranges[takeIndex];
+          await Promise.race([failure,positionJoinedTake(source,take,s.controller.signal)]);
+          gain.gain.value = take.owner.keepAudio === false ? 0 : 1;
+          paintClip(ctx,source,activeCaption(take.owner,source.currentTime),take.owner);
           await context.resume(); await source.play(); recorder.resume();
-        } else paintClip(ctx,source,activeCaption(clip,source.currentTime));
+        } else { const owner=ranges[takeIndex].owner; paintClip(ctx,source,activeCaption(owner,source.currentTime),owner); }
         raf = requestAnimationFrame(draw);
       } catch (error) { rejectRender(error); }
     };
-    timeout = setTimeout(s.stopExport,(editedSeconds(clip)+30)*1000);
+    timeout = setTimeout(s.stopExport,(sequenceDuration(ranges)+30)*1000);
     recorder.start(300); await source.play(); musicNode?.start(); draw();
     const blob = await Promise.race([done,failure]);
     if(session !== s || blob.size < 1000) throw Error('완성된 영상을 확인하지 못했어요.');
@@ -249,6 +252,6 @@ save.addEventListener('click',async () => {
     if (recorder && recorder.state !== 'inactive') recorder.stop(); source.pause(); source.removeAttribute('src'); source.load();
     stream?.getTracks().forEach(t => t.stop()); if (musicNode) { try { musicNode.stop(); } catch {} }
     if(context) await context.close().catch(() => {});
-    s.stopExport = null; s.exporting = false; if (session === s) { save.disabled = false; byId('quickControls').disabled = false; byId('fields').disabled = false; if (s.deferredRank) { applyRank(s,s.deferredRank); s.deferredRank = null; } }
+    s.stopExport = null; s.exporting = false; if (session === s) { save.disabled = false; byId('joinFiles').disabled=false; byId('quickControls').disabled = false; byId('fields').disabled = false; if (s.deferredRank) { applyRank(s,s.deferredRank); s.deferredRank = null; } }
   }
 });

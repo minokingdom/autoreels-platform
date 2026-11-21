@@ -9,3 +9,5 @@
 @media(max-height:700px){#frame{height:25dvh}}
 
 .quick-video #cutMode button[aria-pressed=true]{background:#213d68;border-color:#72aaff;color:white}.quick-video #cutMode{margin:10px 0}.quick-video video{object-fit:contain}.quick-video #quickControls{border:0;padding:0;margin:16px 0}.quick-video legend{font-weight:700}.quick-video input[type=range]{width:100%;accent-color:#58a5ff;min-height:28px}.quick-video output{color:#aeb4bf;font-variant-numeric:tabular-nums}
+
+.join-row{display:flex;gap:5px;align-items:center;border-bottom:1px solid #383b42;padding:8px 0}.join-row span{flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px}.join-row button{border:1px solid #495568;border-radius:7px;background:#262c37;color:#dce7ff;padding:8px 5px}.join-row button:disabled{opacity:.35}

@@ -1,5 +1,7 @@
-function arOpenQuickVideoEditor(file) {
-  if (!(file instanceof Blob) || document.querySelector('dialog.ar-video-editor')) return;
+function arOpenQuickVideoEditor(selection) {
+  const files = Array.isArray(selection) ? selection : [selection];
+  const file = files[0];
+  if (!(file instanceof Blob) || document.querySelector('dialog.ar-video-editor[open]')) return;
   arPauseForStudioEdit();
   const dialog = document.createElement('dialog');
   const frame = document.createElement('iframe');
@@ -8,7 +10,7 @@ function arOpenQuickVideoEditor(file) {
   dialog.setAttribute('aria-label', frame.title);
   frame.src = '/assets/shorts/index.html?mode=edit';
   frame.addEventListener('load', () => {
-    if (typeof frame.contentWindow.openShortsFile === 'function') frame.contentWindow.openShortsFile(file);
+    if (typeof frame.contentWindow.openQuickFiles === 'function') frame.contentWindow.openQuickFiles(files);
     else { dialog.close(); arToast('편집기를 열지 못했어요. 다시 시도해 주세요.'); }
   }, {once:true});
   const closeEditor = event => {
@@ -24,7 +26,7 @@ function arOpenQuickVideoEditor(file) {
   dialog.showModal();
 }
 document.getElementById('quickShortVideoInput')?.addEventListener('change', event => {
-  const file = event.target.files[0];
+  const files = Array.from(event.target.files);
   event.target.value = '';
-  if (file) arOpenQuickVideoEditor(file);
+  if (files.length) arOpenQuickVideoEditor(files);
 });
