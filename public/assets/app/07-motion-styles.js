@@ -449,10 +449,10 @@
       const steadyZoom = isVid ? baseScale : (cutIdx % 2 === 0 ? baseScale + lp * 0.08 : baseScale + (1 - lp) * 0.08);
       const steadyPx = isVid ? 0 : (lp - 0.5) * Math.min(34, w * 0.068) * dir;
       const steadyPy = isVid ? 0 : (lp - 0.5) * Math.min(16, h * 0.024) * (cutIdx % 3 === 0 ? 1 : -1);
-      const tDur = 0.36;
+      const tDur = 0.40;
       const p = cutIdx > 0 ? easeQuart(local / tDur) : 1;
       const rem = 1 - p; // tDur 경계에서 정확히 0.000으로 수렴 (끊김·튐 현상 0%)
-      const mode = cutIdx % 4;
+      const mode = cutIdx % 5;
 
       c.save();
       c.beginPath();
@@ -460,40 +460,68 @@
       c.clip();
 
       if (cutIdx === 0) {
-        const z0 = isVid ? steadyZoom : steadyZoom + (1 - easeCubic(local / 0.45)) * 0.06;
+        const z0 = isVid ? steadyZoom : steadyZoom + (1 - easeCubic(local / 0.42)) * 0.08;
         mPhoto(c, S, 0, x, y, w, h, z0, steadyPx, steadyPy);
       } else if (rem > 0.001) {
         if (mode === 1) {
-          // 1) 매끄러운 슬라이드 푸시
-          mPhoto(c, S, -1, x - Math.round(w * p * 0.35) * dir, y, w, h, baseScale + 0.04, 0, 0);
-          mPhoto(c, S, 0, x + Math.round(w * rem) * dir, y, w, h, steadyZoom + rem * 0.04, steadyPx, steadyPy);
+          // 1) 풀 슬라이드 푸시 (좌우 시원하게 밀어내기 + 경계 헤어라인)
+          const oldX = x - Math.round(w * p) * dir;
+          const newX = x + Math.round(w * rem) * dir;
+          mPhoto(c, S, -1, oldX, y, w, h, baseScale + 0.04, 0, 0);
+          mPhoto(c, S, 0, newX, y, w, h, steadyZoom + rem * 0.04, steadyPx, steadyPy);
+          c.fillStyle = 'rgba(255,255,255,0.55)';
+          c.fillRect(dir > 0 ? newX - 1 : newX + w - 1, y, 2, h);
         } else if (mode === 2) {
-          // 2) 하단→상단 와이프 리빌
+          // 2) 대각선 시네마 슬래시 와이프 (15° 사선 리빌)
           mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04, 0, 0);
-          const revH = Math.round(h * p);
+          const slant = Math.round(w * 0.28);
+          const edgeX = x - slant + (w + slant * 2) * p;
           c.save();
           c.beginPath();
-          c.rect(x, y + (h - revH), w, revH);
+          c.moveTo(x - slant, y);
+          c.lineTo(edgeX, y);
+          c.lineTo(edgeX - slant, y + h);
+          c.lineTo(x - slant, y + h);
+          c.closePath();
           c.clip();
-          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.06, steadyPx, steadyPy + rem * 18);
+          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.06, steadyPx, steadyPy);
           c.restore();
+          c.strokeStyle = 'rgba(255,250,240,0.75)';
+          c.lineWidth = 2;
+          c.beginPath();
+          c.moveTo(edgeX, y);
+          c.lineTo(edgeX - slant, y + h);
+          c.stroke();
         } else if (mode === 3) {
-          // 3) 중앙 커튼 확장 리빌
+          // 3) 상하 셔터 오픈 (중앙에서 위아래로 영화관 셔터 리빌)
           mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04, 0, 0);
-          const cw = Math.round(w * p);
+          const openH = Math.round(h * p);
+          const topY = y + Math.round((h - openH) / 2);
           c.save();
           c.beginPath();
-          c.rect(x + (w - cw) / 2, y, cw, h);
+          c.rect(x, topY, w, openH);
           c.clip();
-          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.05, steadyPx, steadyPy);
+          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.07, steadyPx, steadyPy);
           c.restore();
+        } else if (mode === 4) {
+          // 4) 수직 풀-업 슬라이드 (아래에서 위로 시원하게 밀어 올리기)
+          const oldY = y - Math.round(h * p * 0.55);
+          const newY = y + Math.round(h * rem);
+          mPhoto(c, S, -1, x, oldY, w, h, baseScale + 0.04, 0, 0);
+          mPhoto(c, S, 0, x, newY, w, h, steadyZoom + rem * 0.04, steadyPx, steadyPy);
+          c.fillStyle = 'rgba(255,255,255,0.5)';
+          c.fillRect(x, newY - 1, w, 2);
         } else {
-          // 0) 실키 줌 크로스 디졸브
-          mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04 + p * 0.08, 0, 0);
+          // 0) 크리스프 노출 줌-스냅 (속도감 있는 줌 착지 + 은은한 카메라 플래시)
+          mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04 + p * 0.14, 0, 0);
           c.save();
-          c.globalAlpha = easeCubic(local / tDur);
-          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.08, steadyPx, steadyPy);
+          c.globalAlpha = easeCubic(local / (tDur * 0.72));
+          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.14, steadyPx, steadyPy);
           c.restore();
+          if (local < 0.18) {
+            c.fillStyle = `rgba(255,252,245,${((1 - local / 0.18) * 0.28).toFixed(3)})`;
+            c.fillRect(x, y, w, h);
+          }
         }
       } else {
         mPhoto(c, S, 0, x, y, w, h, steadyZoom, steadyPx, steadyPy);
@@ -3438,42 +3466,68 @@
         const safeZoom = isVid ? Math.min(1.05, Math.max(1.0, zoom)) : zoom;
         const safePx = isVid ? px * 0.15 : px;
         const safePy = isVid ? py * 0.15 : py;
-        const tDur = Math.max(0.28, fadeDur);
+        const tDur = Math.max(0.36, fadeDur);
         const p = cutIdx > 0 ? easeOutQuart(local / tDur) : 1;
         const rem = 1 - p;
-        const transKind = cutIdx % 4;
+        const transKind = cutIdx % 5;
         if (cutIdx > 0 && rem > 0.001) {
           if (transKind === 1) {
-            // 슬라이드 푸시
-            mPhoto(c, S, -1, -Math.round(W * p * 0.36) * dir, 0, W, H, 1.08, 0, 0);
-            mPhoto(c, S, 0, Math.round(W * rem) * dir, 0, W, H, safeZoom + rem * 0.04, safePx, safePy);
+            // 1) 풀 슬라이드 푸시 (좌우 100% 밀어내기 + 경계 빛 라인)
+            const newX = Math.round(W * rem) * dir;
+            mPhoto(c, S, -1, -Math.round(W * p) * dir, 0, W, H, 1.08, 0, 0);
+            mPhoto(c, S, 0, newX, 0, W, H, safeZoom + rem * 0.04, safePx, safePy);
+            c.fillStyle = 'rgba(255,255,255,0.55)';
+            c.fillRect(dir > 0 ? newX - 1 : newX + W - 1, 0, 2, H);
           } else if (transKind === 2) {
-            // 수직 와이프 리빌
+            // 2) 대각선 시네마 슬래시 와이프
             mPhoto(c, S, -1, 0, 0, W, H, 1.08, 0, 0);
-            const revH = Math.round(H * p);
+            const slant = Math.round(W * 0.28);
+            const edgeX = -slant + (W + slant * 2) * p;
             c.save();
             c.beginPath();
-            c.rect(0, H - revH, W, revH);
+            c.moveTo(-slant, 0);
+            c.lineTo(edgeX, 0);
+            c.lineTo(edgeX - slant, H);
+            c.lineTo(-slant, H);
+            c.closePath();
             c.clip();
-            mPhoto(c, S, 0, 0, 0, W, H, safeZoom + rem * 0.06, safePx, safePy + rem * 20);
+            mPhoto(c, S, 0, 0, 0, W, H, safeZoom + rem * 0.06, safePx, safePy);
             c.restore();
+            c.strokeStyle = 'rgba(255,250,240,0.75)';
+            c.lineWidth = 2;
+            c.beginPath();
+            c.moveTo(edgeX, 0);
+            c.lineTo(edgeX - slant, H);
+            c.stroke();
           } else if (transKind === 3) {
-            // 중앙 커튼 확장 리빌
+            // 3) 상하 셔터 오픈 리빌
             mPhoto(c, S, -1, 0, 0, W, H, 1.08, 0, 0);
-            const cw = Math.round(W * p);
+            const openH = Math.round(H * p);
+            const topY = Math.round((H - openH) / 2);
             c.save();
             c.beginPath();
-            c.rect((W - cw) / 2, 0, cw, H);
+            c.rect(0, topY, W, openH);
             c.clip();
-            mPhoto(c, S, 0, 0, 0, W, H, safeZoom + rem * 0.05, safePx, safePy);
+            mPhoto(c, S, 0, 0, 0, W, H, safeZoom + rem * 0.07, safePx, safePy);
             c.restore();
+          } else if (transKind === 4) {
+            // 4) 수직 풀-업 슬라이드 푸시
+            const newY = Math.round(H * rem);
+            mPhoto(c, S, -1, 0, -Math.round(H * p * 0.55), W, H, 1.08, 0, 0);
+            mPhoto(c, S, 0, 0, newY, W, H, safeZoom + rem * 0.04, safePx, safePy);
+            c.fillStyle = 'rgba(255,255,255,0.5)';
+            c.fillRect(0, newY - 1, W, 2);
           } else {
-            // 실키 줌 크로스 디졸브
-            mPhoto(c, S, -1, 0, 0, W, H, 1.08 + p * 0.08, 0, 0);
+            // 0) 크리스프 노출 줌-스냅
+            mPhoto(c, S, -1, 0, 0, W, H, 1.08 + p * 0.14, 0, 0);
             c.save();
-            c.globalAlpha = easeOutCubic(local / tDur);
-            mPhoto(c, S, 0, 0, 0, W, H, safeZoom + rem * 0.08, safePx, safePy);
+            c.globalAlpha = easeOutCubic(local / (tDur * 0.72));
+            mPhoto(c, S, 0, 0, 0, W, H, safeZoom + rem * 0.14, safePx, safePy);
             c.restore();
+            if (local < 0.18) {
+              c.fillStyle = `rgba(255,252,245,${((1 - local / 0.18) * 0.28).toFixed(3)})`;
+              c.fillRect(0, 0, W, H);
+            }
           }
         } else {
           mPhoto(c, S, 0, 0, 0, W, H, safeZoom, safePx, safePy);
