@@ -13,7 +13,7 @@ try{
   campaign.cutCaptions=Array.from({length:8},(_,i)=>`서로 다른 사진과 자막 ${i+1}`);
   const canvas=document.createElement('canvas');canvas.width=540;canvas.height=960;const c=canvas.getContext('2d');let frames=0;
   const before=JSON.stringify(campaign.cutCaptions);
-  for(const layout of ['full','inset','polaroid','diagonal','type-cutout','stacked','type-echo','type-flow','editorial','news-marker','floating-type','type-rail','repeat-poster','chevron-type','brush-frame'])for(const textMotion of ['fade','rise','mask','focus'])for(const camera of ['still','zoom-in','zoom-out','pan-left','pan-right'])for(const transition of ['cut','fade']){
+  for(const layout of ['full','inset','polaroid','diagonal','diamond-reveal','type-cutout','stacked','type-echo','type-flow','editorial','news-marker','floating-type','type-rail','repeat-poster','chevron-type','brush-frame'])for(const textMotion of ['fade','rise','mask','focus'])for(const camera of ['still','zoom-in','zoom-out','pan-left','pan-right'])for(const transition of ['cut','fade']){
    const r={...base,layout,textMotion,camera,transition};
    for(const t of [.1,2.99,3.01,23.9]){arRenderReferenceFrame(c,540,960,t,24,8,{name:'카페'}, {referenceStyle:r});frames++;}
    if(c.getTransform().a!==1||c.globalAlpha!==1)throw Error('canvas state leaked');
@@ -83,9 +83,10 @@ try{
   await colorToggle.click();
   const swatches = palette.getByRole('button');
   await swatches.first().waitFor();
-  assert.equal(await swatches.count(),12);
+  const paletteCount=await page.evaluate(()=>COLOR_PALETTES.length);
+  assert.equal(await swatches.count(),paletteCount);
   const swatchBoxes = await swatches.evaluateAll(buttons=>buttons.map(b=>b.getBoundingClientRect().toJSON()));
-  assert.equal(new Set(swatchBoxes.map(b=>b.x)).size,12);
+  assert.equal(new Set(swatchBoxes.map(b=>b.x)).size,paletteCount);
   assert.equal(new Set(swatchBoxes.map(b=>b.y)).size,1);
   const previewBox = await page.locator('#previewViewport').boundingBox();
   assert.ok(swatchBoxes[0].y >= previewBox.y + previewBox.height - 1);

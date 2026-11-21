@@ -9,7 +9,27 @@ ROOM='380705904900190'
 OWNER='88899591'
 CAPCUT_HOSTS={'capcut.com','www.capcut.com'}
 CAPCUT_DETAIL=r'/template-detail/(?:[A-Za-z0-9%_~-]+/)?([0-9]{10,24})/?'
-HOSTS=CAPCUT_HOSTS | {'youtube.com','www.youtube.com','m.youtube.com','youtu.be','www.instagram.com','instagram.com','www.tiktok.com','tiktok.com','vm.tiktok.com','vt.tiktok.com','vimeo.com','www.vimeo.com','www.pinterest.com','pinterest.com','pin.it'}
+FACEBOOK_HOSTS={'www.facebook.com','facebook.com','m.facebook.com','web.facebook.com','fb.watch'}
+HOSTS=CAPCUT_HOSTS | FACEBOOK_HOSTS | {'youtube.com','www.youtube.com','m.youtube.com','youtu.be','www.instagram.com','instagram.com','www.tiktok.com','tiktok.com','vm.tiktok.com','vt.tiktok.com','vimeo.com','www.vimeo.com','www.pinterest.com','pinterest.com','pin.it'}
+
+def facebook_url(value):
+    u=urlsplit(value)
+    if u.scheme!='https' or u.hostname not in FACEBOOK_HOSTS or u.username is not None or u.password is not None or u.port not in (None,443):
+        raise ValueError('Facebook 공식 영상 링크를 확인해 주세요.')
+    if u.hostname=='fb.watch':
+        if re.fullmatch(r'/[A-Za-z0-9_-]{3,80}/?',u.path):
+            return 'https://fb.watch/'+u.path.strip('/')+'/'
+    else:
+        share=re.fullmatch(r'/share/([rv])/([A-Za-z0-9_-]{3,80})/?',u.path)
+        if share:
+            return f'https://www.facebook.com/share/{share[1]}/{share[2]}/'
+        video=re.fullmatch(r'/(?:reels?|(?:[\w.-]+/)?videos(?:/[^/]+)?)/([0-9]{1,24})/?',u.path)
+        vid=video[1] if video else ''
+        if u.path.rstrip('/') in ('/watch','/video.php','/video/video.php'):
+            vid=parse_qs(u.query).get('v',[''])[0]
+        if re.fullmatch(r'[0-9]{1,24}',vid):
+            return 'https://www.facebook.com/watch/?v='+vid
+    raise ValueError('Facebook 릴스 또는 동영상 하나의 공유 링크를 보내 주세요.')
 
 def extract_url(text):
     if not isinstance(text,str) or len(text)>5000 or not re.match(r'^!분석(?:\s|$)',text.strip()):
@@ -18,7 +38,9 @@ def extract_url(text):
     if len(urls)!=1: raise ValueError('분석할 영상 URL 하나만 붙여 주세요.')
     u=urlsplit(urls[0].rstrip('.,!?)]}〉》”’'))
     if u.scheme!='https' or u.hostname not in HOSTS or u.username or u.password or u.port not in (None,443):
-        raise ValueError('공개 YouTube·Instagram·TikTok·Vimeo·Pinterest 영상 또는 CapCut 템플릿 URL을 보내 주세요.')
+        raise ValueError('공개 Facebook·YouTube·Instagram·TikTok·Vimeo·Pinterest 영상 또는 CapCut 템플릿 URL을 보내 주세요.')
+    if u.hostname in FACEBOOK_HOSTS:
+        return facebook_url(u.geturl())
     if u.hostname in CAPCUT_HOSTS:
         detail=re.fullmatch(CAPCUT_DETAIL,u.path)
         if detail:

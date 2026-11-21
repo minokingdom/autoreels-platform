@@ -3,7 +3,7 @@ import argparse, base64, hashlib, json, os, shutil, subprocess, sys, time, urlli
 from pathlib import Path
 from urllib.error import URLError
 from urllib.parse import urlsplit
-from autoreels_style_commands import CAPCUT_HOSTS, extract_url
+from autoreels_style_commands import CAPCUT_HOSTS, FACEBOOK_HOSTS, extract_url, facebook_url
 
 ROOT=Path(os.environ.get('AUTOREELS_STYLE_ROOT',r'D:\AutoReelsLocal\StyleLab'))
 REPO=Path(os.environ.get('AUTOREELS_REPO',r'C:\Users\ektjt\.gemini\antigravity\scratch\dealer-reels-platform'))
@@ -83,18 +83,49 @@ def download_capcut_preview(meta,directory):
     finally:
         partial.unlink(missing_ok=True)
 
+class FacebookVideoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self,req,fp,code,msg,headers,newurl):
+        facebook_url(newurl)
+        return super().redirect_request(req,fp,code,msg,headers,newurl)
+
+def resolve_facebook_video(url):
+    if urlsplit(url).path=='/watch/':
+        return url
+    try:
+        request=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0'})
+        with urllib.request.build_opener(FacebookVideoRedirect()).open(request,timeout=15) as response:
+            target=facebook_url(response.geturl())
+            if urlsplit(target).path=='/watch/':
+                return target
+    except (URLError,TimeoutError,ValueError) as exc:
+        raise ValueError('Facebook 공유 링크에서 공개 영상을 열 수 없습니다. 공개 릴스의 원본 영상 주소를 보내 주세요.') from exc
+    raise ValueError('공유 링크의 원본 영상을 찾지 못했습니다. Facebook 영상에서 복사한 릴스 주소를 보내 주세요.')
+
 def download(url,directory,private=False):
     url=extract_url('!분석 '+url)
+    facebook=urlsplit(url).hostname in FACEBOOK_HOSTS
+    if facebook:
+        if private:
+            raise ValueError('이 작업은 Facebook 링크를 지원하지 않습니다.')
+        url=resolve_facebook_video(url)
     common=[sys.executable,'-m','yt_dlp','--ignore-config','--js-runtimes','node','--no-playlist','--no-warnings','--socket-timeout','20','--retries','1','--no-progress']
     if private:
         # 웹 요청에서는 등록된 플랫폼 추출기만 쓰고 범용 URL 추출기를 사용하지 않습니다.
         common += ['--use-extractors','youtube,instagram,tiktok,vm.tiktok','--no-cache-dir']
-    meta=json.loads(run(common+['--skip-download','--dump-single-json','--',url],timeout=90))
+    if facebook:
+        common += ['--use-extractors','facebook']
+    try:
+        meta=json.loads(run(common+['--skip-download','--dump-single-json','--',url],timeout=90))
+    except (RuntimeError,subprocess.TimeoutExpired) as exc:
+        if facebook:
+            raise ValueError('Facebook에서 영상 정보를 받지 못했습니다. 로그인 없이 재생되는 공개 영상인지 확인해 주세요.') from exc
+        raise
     if urlsplit(url).hostname in CAPCUT_HOSTS:
         return download_capcut_preview(meta,directory)
     if meta.get('_type') in ('playlist','multi_video') or meta.get('is_live') or not isinstance(meta.get('duration'),(int,float)) or not 1<=meta['duration']<=(90 if private else 180):
         raise ValueError('3분 이하의 공개 영상 하나만 분석할 수 있습니다. 라이브·목록·길이 미확인 영상은 제외합니다.')
-    run(common+['--max-filesize','200M','-f','bv*[height<=720]+ba/b[height<=720]','--merge-output-format','mp4','-o',directory/'source.%(ext)s','--',url],timeout=240)
+    fmt='bv[width<=720][height<=1280]+ba/b[width<=720][height<=1280]/b[height<=?720]' if facebook else 'bv*[height<=720]+ba/b[height<=720]'
+    run(common+['--max-filesize','200M','-f',fmt,'--merge-output-format','mp4','-o',directory/'source.%(ext)s','--',url],timeout=240)
     files=[p for p in directory.glob('source.*') if p.suffix.lower() in ('.mp4','.webm','.mkv','.mov')]
     if len(files)!=1 or files[0].stat().st_size>210_000_000:raise ValueError('영상 다운로드가 완료되지 않았습니다.')
     return files[0],str(meta.get('title') or '')[:160] if private else url
@@ -183,7 +214,7 @@ def process(job):
     mark.write_text(str(time.time()))
     try:
         video,source_url=download(job['url'],directory)
-        if urlsplit(source_url).hostname in CAPCUT_HOSTS:
+        if urlsplit(source_url).hostname in CAPCUT_HOSTS | FACEBOOK_HOSTS:
             catalog_sha,catalog=remote_catalog()
             sid=reference_id(source_url)
             existing=next((row for row in catalog if row['id']==sid),None)

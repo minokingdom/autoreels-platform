@@ -376,5 +376,26 @@
     "grain": 0.015,
     "entrySeconds": 0.28,
     "addedAt": "2026-11-18T12:09:20.238Z"
+  },
+  {
+    "id": "ref_0535582fae7bda81",
+    "category": "테크",
+    "layout": "diamond-reveal",
+    "font": "pretM",
+    "captionPosition": "middle",
+    "textMotion": "fade",
+    "camera": "zoom-in",
+    "transition": "cut",
+    "name": "시티 다이아 컷",
+    "summary": "어두운 바탕 위 세 개의 마름모 안에서 사진이 열립니다. 컷이 바뀌면 다음 사진이 전체 화면으로 펼쳐집니다.",
+    "background": "#101419",
+    "foreground": "#f5f9fa",
+    "accent": "#66c7ca",
+    "captionSize": 0.06,
+    "zoom": 0.045,
+    "shade": 0.18,
+    "grain": 0,
+    "entrySeconds": 0.45,
+    "addedAt": "2026-11-21T07:20:57Z"
   }
 ]

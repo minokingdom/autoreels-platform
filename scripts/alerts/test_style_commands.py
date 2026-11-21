@@ -13,6 +13,17 @@ class Tests(unittest.TestCase):
         self.assertEqual(extract_url('!분석 https://capcut.com/template-detail/mukbang-time/7709369971637357831?region=KR'), 'https://www.capcut.com/template-detail/7709369971637357831')
         for url in ('https://www.capcut.com/','https://capcut.com.example/tv2/ZSp7Ve5qA/','https://www.capcut.com/tv2/ZSp7Ve5qA/a'):
             with self.subTest(url=url),self.assertRaises(ValueError):extract_url('!분석 '+url)
+    def test_facebook_video_and_share(self):
+        canonical='https://www.facebook.com/watch/?v=123456789'
+        for url in ('https://m.facebook.com/reel/123456789/?mibextid=test',
+                    'https://facebook.com/watch?v=123456789&ref=share',
+                    'https://www.facebook.com/shop/videos/a-caption/123456789/'):
+            self.assertEqual(extract_url('!분석 공유한 릴스\n'+url),canonical)
+        for link in ('https://www.facebook.com/share/r/abc123/', 'https://www.facebook.com/share/v/abc123/', 'https://fb.watch/abc-123/'):
+            self.assertEqual(extract_url('!분석 '+link+'?tracking=1'),link)
+        for url in ('https://facebook.com/shop','https://www.facebook.com/login/?next=/reel/123',
+                    'https://facebook.com.example/reel/123','https://fb.watch/a/b','https://www.facebook.com/watch/?v=x'):
+            with self.assertRaises(ValueError):extract_url('!분석 '+url)
     def test_reject_bad_urls(self):
         for s in ['http://youtu.be/abcdefghijk','https://youtube.com.evil.test/watch?v=abcdefghijk','https://127.0.0.1/a.mp4','file:///tmp/a','https://user:pw@youtu.be/abcdefghijk','https://www.youtube.com/@channel','https://youtu.be/abcdefghijk https://youtu.be/lmnopqrstuv']:
             with self.subTest(s=s),self.assertRaises(ValueError):extract_url('!분석 '+s)

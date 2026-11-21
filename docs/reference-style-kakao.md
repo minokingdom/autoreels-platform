@@ -1,6 +1,6 @@
 # 카카오톡 URL → 오토릴스 스타일
 
-모비스 1:1 테스트방에서 운영자가 `!분석 https://...`를 보낸다. 공유 문구와 줄바꿈이 있어도 URL 하나만 추출한다. YouTube/Shorts, Instagram 게시물·릴스, TikTok, Vimeo, Pinterest의 공개 영상 또는 CapCut 템플릿 공개 미리보기 1개, 최대 180초/200MB를 받는다. 로그인·다운로드 차단은 우회하지 않는다.
+모비스 1:1 테스트방에서 운영자가 `!분석 https://...`를 보낸다. 공유 문구와 줄바꿈이 있어도 URL 하나만 추출한다. Facebook 릴스·동영상, YouTube/Shorts, Instagram 게시물·릴스, TikTok, Vimeo, Pinterest의 공개 영상 또는 CapCut 템플릿 공개 미리보기 1개, 최대 180초/200MB를 받는다. Facebook의 `/share/r/`, `/share/v/`, `fb.watch` 공유 링크는 작업기가 Facebook 공식 영상 주소로 이동해 영상 ID를 확인한다. 로그인·다운로드 차단은 우회하지 않는다.
 
 ## 실행 구성
 

@@ -3353,6 +3353,7 @@
     // 2026 1군 풀스크린 릴스 전용 6대 캔버스 모션 엔진 (Safe Zone 준수 · 물리 모션)
     // =========================================================================
     function arRenderProReelsFrame(c, W, H, t, mainDuration, totalCuts, d, sp) {
+      const accent = sp.accent || '#ffffff';
       const cutDur = Math.max(0.5, mainDuration / Math.max(1, totalCuts));
       const cutIdx = Math.min(totalCuts - 1, Math.floor(t / cutDur));
       const local = Math.max(0, t - cutIdx * cutDur);
