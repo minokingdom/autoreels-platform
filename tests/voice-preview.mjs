@@ -26,7 +26,7 @@ const server = http.createServer((req, res) => {
       return;
     }
     res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({
-      voices: [{...premium, group:'Fish Audio · 프로', locked:!pro, preferred:pro}, ...voices]
+      voices: [{...premium, group:'Pro', tier:'pro', locked:!pro, preferred:pro}, ...voices]
     }));
     return;
   }
@@ -92,7 +92,10 @@ try {
     await guide.evaluate(el => el.style.removeProperty('width'));
     assert.deepEqual(await page.locator('#studioPanel_sound select').evaluateAll(els => els.map(el => el.id)),
       ['ttsVoiceSelect', 'bgmStyleSelect', 'sfxModeSelect', 'ttsSpeedSelect']);
+    assert.equal(await page.locator('label[for="ttsVoiceSelect"]').textContent(), '성우 목소리');
     const sheet = page.locator('#arOptionSheet');
+    const proToggle = sheet.getByRole('switch', { name: 'Pro' });
+    const proSwitchLabel = sheet.locator('.voice-pro-toggle');
     const speed = sheet.getByRole('group', { name: '말하는 속도' });
     const speedOption = value => speed.locator('input[value="' + value + '"]');
     assert.equal(await page.locator('#ttsSpeedSelect').isHidden(), true);
@@ -108,13 +111,26 @@ try {
     synthesisCalls = 0;
     await open.click();
     const fishRow = option(premium.id);
-    await fishRow.getByText('프로 전용').waitFor();
+    await proToggle.waitFor();
+    assert.equal(await proToggle.isChecked(), false);
+    assert.equal(await fishRow.isHidden(), true);
+    assert.equal(await option('ko-KR-Chirp3-HD-Puck').isVisible(), true);
+    await proSwitchLabel.click();
+    await fishRow.getByText('Pro', { exact: true }).waitFor();
+    assert.equal(await proToggle.isChecked(), true);
+    assert.ok((await fishRow.textContent()).startsWith(premium.title));
+    assert.doesNotMatch(await fishRow.textContent(), /Fish Audio/);
     await fishRow.click();
     await page.waitForFunction(() => {
       const audio = document.querySelector('#arOptionSheet audio');
       return audio && audio.currentSrc.includes('action=voice-preview') && !audio.paused && audio.currentTime > 0;
     });
     assert.equal(await fishRow.getAttribute('aria-pressed'),null);
+    await proToggle.press('Space');
+    assert.equal(await proToggle.isChecked(), false);
+    assert.equal(await fishRow.isHidden(), true);
+    assert.equal(await sheet.locator('audio').evaluate(el => el.paused), true);
+    assert.equal(await option('ko-KR-Chirp3-HD-Puck').isVisible(), true);
     await sheet.getByRole('button', { name: '적용', exact: true }).click();
     assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), 'off');
     assert.equal(synthesisCalls,0);
@@ -151,8 +167,14 @@ try {
       pro = true;
       await page.evaluate(() => { AudioEngine.voiceListLoaded = false; });
       await open.click();
+      await proSwitchLabel.click();
       await sheet.locator('[data-v="' + premium.id + '"][aria-pressed]').waitFor();
       await fishRow.click();
+      await sheet.getByRole('button', { name: '적용', exact: true }).click();
+      assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), premium.id);
+      await open.click();
+      assert.equal(await proToggle.isChecked(), true);
+      await proSwitchLabel.click();
       await sheet.getByRole('button', { name: '적용', exact: true }).click();
       assert.equal(await page.evaluate(() => AudioEngine.ttsVoice), premium.id);
     }

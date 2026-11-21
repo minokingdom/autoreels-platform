@@ -265,7 +265,9 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  for (const [testSession, locked] of [[undefined,true],[standardSession,true],[proSession,false]]) {
    const catalogResult = response();
    await premiumVoiceApi({method:'GET',headers:{},query:{v:'4'},testSession},catalogResult);
-   assert.equal(catalogResult.body.voices.filter(v=>v.group==='Fish Audio · 프로'&&v.locked===locked).length,fish.PRO_FISH_VOICES.length);
+   const premiumVoices = catalogResult.body.voices.filter(v => v.tier === 'pro');
+   assert.deepEqual(Array.from(premiumVoices, ({id, title}) => ({id, title})), fish.PRO_FISH_VOICES);
+   assert.ok(premiumVoices.every(v => v.group === 'Pro' && v.locked === locked));
    assert.equal(catalogResult.body.voices.find(v=>v.id===ref).preferred,!locked);
  }
  const previewHeaders = {};

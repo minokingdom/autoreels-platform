@@ -237,7 +237,7 @@ module.exports = async function handler(req, res) {
     const locked = subject?.tier !== 'pro';
     if (version < 4 && locked) return res.status(200).json({ ok: true, voices: googleVoices });
     const voices = PRO_FISH_VOICES.map((voice, index) => ({
-      id: voice.id, title: voice.title + ' · Fish Audio', group: 'Fish Audio · 프로',
+      id: voice.id, title: voice.title, group: 'Pro', tier: 'pro',
       locked, preferred: !locked && index === 0
     }));
     return res.status(200).json({ ok: true, fishConfigured: Boolean(apiKey), voices: [

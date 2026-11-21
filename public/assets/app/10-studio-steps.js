@@ -1220,11 +1220,24 @@
     }
     function arShowVoiceChoices(el, sel) {
       el.innerHTML = `<div class="bgm-sheet" role="dialog" aria-modal="true" aria-label="성우 목소리">
-        <div class="bgm-head"><strong>성우 목소리</strong><button type="button" class="bgm-done">적용</button></div>
+        <div class="bgm-head"><strong>성우 목소리</strong>
+          <div class="voice-head-actions">
+            <label class="ig-switch voice-pro-toggle" hidden>
+              <span>Pro</span>
+              <input type="checkbox" role="switch" aria-controls="arProVoiceList" />
+              <i aria-hidden="true"></i>
+            </label>
+            <button type="button" class="bgm-done">적용</button>
+          </div>
+        </div>
         <fieldset class="voice-speed-setting"><legend>말하는 속도</legend><div class="voice-speed-options"></div></fieldset>
-        <div class="bgm-list"></div><audio preload="none"></audio>
+        <div class="bgm-list"><div id="arProVoiceList" hidden></div><div class="voice-standard-list"></div></div>
+        <audio preload="none"></audio>
       </div>`;
       const list = el.querySelector('.bgm-list');
+      const proList = el.querySelector('#arProVoiceList');
+      const standardList = el.querySelector('.voice-standard-list');
+      const proToggle = el.querySelector('.voice-pro-toggle input');
       const player = el.querySelector('audio');
       const speed = document.getElementById('ttsSpeedSelect');
       const speedOptions = el.querySelector('.voice-speed-options');
@@ -1256,25 +1269,31 @@
       let choice = sel.value;
       let hasChosen = false;
       let currentRow = null;
+      function showPro(show) {
+        proToggle.checked = show;
+        proList.hidden = !show;
+      }
       function render() {
-        list.replaceChildren();
+        proList.replaceChildren();
+        standardList.replaceChildren();
         for (const opt of sel.options) {
           const locked = opt.dataset.proLocked === '1';
           if (opt.hidden || (opt.disabled && !locked) || opt.classList.contains('hidden')) continue;
+          const isPro = opt.dataset.voiceTier === 'pro';
           const row = document.createElement('button');
           row.type = 'button';
           if (locked) row.dataset.previewOnly = '1';
           row.className = 'bgm-row' + (opt.value === choice ? ' on' : '');
           row.dataset.v = opt.value;
-          if (locked) row.setAttribute('aria-label', opt.textContent + ' · 프로 전용 미리듣기');
+          if (locked) row.setAttribute('aria-label', opt.textContent + ' · Pro 미리듣기');
           else row.setAttribute('aria-pressed', String(opt.value === choice));
           const name = document.createElement('strong');
           name.className = 'bgm-row-txt';
           name.textContent = opt.textContent;
-          if (locked) {
+          if (isPro) {
             const tag = document.createElement('small');
             tag.className = 'voice-pro-tag';
-            tag.textContent = '프로 전용';
+            tag.textContent = 'Pro';
             name.append(tag);
           }
           const state = document.createElement('span');
@@ -1282,14 +1301,19 @@
           state.textContent = opt.value === 'off' ? '' : '▶';
           state.setAttribute('aria-hidden', 'true');
           row.append(name, state);
-          list.append(row);
+          (isPro ? proList : standardList).append(row);
         }
+        proToggle.closest('label').hidden = !proList.childElementCount;
       }
       function stopSample() {
         player.pause();
         if (currentRow) currentRow.lastElementChild.textContent = '▶';
         currentRow = null;
       }
+      proToggle.addEventListener('change', () => {
+        if (!proToggle.checked && proList.contains(currentRow)) stopSample();
+        showPro(proToggle.checked);
+      });
       player.onended = stopSample;
       player.onerror = () => {
         if (!currentRow) return;
@@ -1305,8 +1329,7 @@
         if (row.dataset.previewOnly !== '1') {
           choice = voice;
           hasChosen = true;
-          for (const item of list.children) {
-            if (item.dataset.previewOnly === '1') continue;
+          for (const item of list.querySelectorAll('[aria-pressed]')) {
             item.classList.toggle('on', item === row);
             item.setAttribute('aria-pressed', String(item === row));
           }
@@ -1329,11 +1352,15 @@
         sel.value = choice;
         sel.dispatchEvent(new Event('change', { bubbles: true }));
       };
+      showPro(sel.selectedOptions[0]?.dataset.voiceTier === 'pro');
       render();
       if (!AudioEngine.voiceListLoaded) {
         AudioEngine.loadVoiceList().then(() => {
           if (!list.isConnected || currentRow) return;
-          if (!hasChosen) choice = sel.value;
+          if (!hasChosen && choice !== sel.value) {
+            choice = sel.value;
+            if (sel.selectedOptions[0]?.dataset.voiceTier === 'pro') showPro(true);
+          }
           render();
         });
       }

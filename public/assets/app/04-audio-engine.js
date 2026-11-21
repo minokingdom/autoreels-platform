@@ -513,8 +513,7 @@
         if (!sel) return;
         if (!Array.from(sel.options).some((option) => option.value === voice)) {
           if (this.isGoogleVoice(voice)) {
-            const label = voice.includes('Chirp3-HD') ? 'Google Chirp 3 HD' : 'Google WaveNet';
-            sel.add(new Option(label, voice), sel.querySelector('[value="off"]'));
+            sel.add(new Option('저장된 성우', voice), sel.querySelector('[value="off"]'));
           } else if (/^[a-f0-9]{16,64}$/i.test(voice)) {
             // 목록에서 숨긴 성우라도 기존 프로젝트의 선택값은 복원합니다.
             const saved = new Option('저장된 성우', voice);
@@ -540,7 +539,7 @@
             if (!select || !Array.isArray(voices) || voices.length === 0) return;
             const options = document.createDocumentFragment();
             const groups = new Map();
-            for (const { id, title, group, locked } of voices) {
+            for (const { id, title, group, tier, locked } of voices) {
               if (group && !groups.has(group)) {
                 const parent = document.createElement('optgroup');
                 parent.label = group;
@@ -548,6 +547,7 @@
                 options.append(parent);
               }
               const option = new Option(title, id);
+              if (tier === 'pro') option.dataset.voiceTier = tier;
               if (locked) {
                 option.disabled = true;
                 option.dataset.proLocked = '1';
