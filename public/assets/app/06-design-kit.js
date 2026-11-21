@@ -3728,8 +3728,12 @@
     }
 
     // 서버 DB 캐시(/api/trends)에서 이번 주 인기 캡컷·업종 릴스를 자동으로 디자인 스타일에 반영
+    // (2026 큐레이션 프로/모션 엔진 전환 이후 초기 로딩 속도 최적화를 위해 레거시 kit 트렌드 부팅 fetch 생략)
     window.__arWeeklyTrendKeys = window.__arWeeklyTrendKeys || {};
     async function arAutoLoadWeeklyTrendStyles(indKey) {
+      return;
+    }
+    async function _arLegacyAutoLoadWeeklyTrendStyles(indKey) {
       const k = indKey || (typeof IND !== 'undefined' ? IND.key : 'auto');
       if (!window.location.protocol.startsWith('http') || window.__arWeeklyTrendKeys[k]) return;
       window.__arWeeklyTrendKeys[k] = true;

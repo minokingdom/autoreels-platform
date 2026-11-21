@@ -360,9 +360,22 @@
       clearTimeout(arKeywordTimer);
       arKeywordTimer = setTimeout(arLoadDailyKeywords, 3600000 - now.getTime() % 3600000 + 50);
       try {
-        const response = await fetch('/daily-keywords.json', { cache: 'no-store' });
-        if (!response.ok) throw new Error('키워드 수집 파일 없음');
-        const data = await response.json();
+        let data = null;
+        try {
+          const cachedKw = JSON.parse(localStorage.getItem('ar_daily_kw_v1') || 'null');
+          if (cachedKw && cachedKw.at && (Date.now() - cachedKw.at) < 1800000 && cachedKw.data) {
+            data = cachedKw.data;
+          }
+        } catch (e) {}
+        if (!data) {
+          const ctrl = new AbortController();
+          const tmr = setTimeout(() => ctrl.abort(), 3000);
+          const response = await fetch('/daily-keywords.json', { cache: 'default', signal: ctrl.signal });
+          clearTimeout(tmr);
+          if (!response.ok) throw new Error('키워드 수집 파일 없음');
+          data = await response.json();
+          try { localStorage.setItem('ar_daily_kw_v1', JSON.stringify({ at: Date.now(), data })); } catch (e) {}
+        }
         if (arKeywordDay !== scope) return;
         const collected = Date.parse(data.collectedAt);
         if (data.source !== 'https://trends.google.com/trending/rss?geo=KR' || !Number.isFinite(collected) || collected > Date.now() ||
@@ -447,31 +460,39 @@
       const industry = IND.key;
       const prevTitles = force ? (window.__arTopics || []).map(t => t.title).slice(0, 12) : [];
       const cacheKey = `ar_topic_ideas_v5_${IND.key}_${dc.dateKey}`;
+      // ★ 0ms 즉시 표시: 네트워크(trends-today.json / /api/trends) 대기 전에 로컬 캐시 또는 기본 주제를 즉시 렌더링
+      if (!force) {
+        try {
+          const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+          if (cached && Array.isArray(cached.topics) && cached.topics.length) {
+            arRenderTopics(arStoreTopicOrder(cached.topics, prevTitles), '오늘의 추천 주제예요.', false);
+            return;
+          }
+        } catch (e) {}
+        arRenderTopics(arStoreTopicOrder(arFallbackTopics(dc), prevTitles), '하나를 누르면 대본을 바로 만들어요.', false);
+      }
       let pre = null;
       let trends = [];
+      let ageDays = 99;
       if (window.location.protocol.startsWith('http')) {
         try {
-          pre = await fetch('/trends-today.json', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null));
+          const preCtrl = new AbortController();
+          const preTimer = setTimeout(() => preCtrl.abort(), 2500);
+          pre = await fetch('/trends-today.json', { cache: 'default', signal: preCtrl.signal }).then((r) => (r.ok ? r.json() : null));
+          clearTimeout(preTimer);
           const row = pre && pre.industries && pre.industries[IND.key];
-          const ageDays = pre && pre.date ? (Date.now() - Date.parse(pre.date)) / 86400000 : 99;
+          ageDays = pre && pre.date ? (Date.now() - Date.parse(pre.date)) / 86400000 : 99;
           if (row && Array.isArray(row.keywords) && ageDays < 3) trends = row.keywords.slice(0, 8);
         } catch (e) {}
       }
       const serverUpdatedAt = String((pre && pre.updatedAt) || '');
       if (myJob !== arTopicsLoading || industry !== IND.key || arIndustrySpecialty()) return;
       if (!force || !arCanUseAi()) {
-        try {
-          const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-          if (cached && Array.isArray(cached.topics) && cached.topics.length && (!serverUpdatedAt || cached.trendsAt === serverUpdatedAt)) {
-            arRenderTopics(arStoreTopicOrder(cached.topics, prevTitles), '오늘의 추천 주제예요.', false);
-            return;
-          }
-        } catch (e) {}
-        // 서버(trends-today.json)에 미리 제작된 주제·이미지가 있으면 추가 AI 과금 없이 즉시 표시
+        // 서버(trends-today.json)에 미리 제작된 주제·이미지가 있으면 최근 3일 이내 데이터는 추가 AI 대기 없이 즉시 표시
         const serverTopics = pre && pre.industries && pre.industries[IND.key] && Array.isArray(pre.industries[IND.key].topics)
           ? pre.industries[IND.key].topics
           : null;
-        if (serverTopics?.length && pre.industries[IND.key].topicsDate === dc.dateKey) {
+        if (serverTopics?.length && ageDays < 4) {
           try { localStorage.setItem(cacheKey, JSON.stringify({ topics: serverTopics, at: Date.now(), trendsAt: serverUpdatedAt })); } catch (e) {}
           const status = arCanUseAi() ? '하나를 누르면 대본을 바로 만들어요.' : arAiAccessNotice();
           arRenderTopics(arStoreTopicOrder(serverTopics, prevTitles), status, false);
@@ -482,12 +503,12 @@
         arRenderTopics(arStoreTopicOrder(arFallbackTopics(dc), prevTitles), '기본 추천 주제예요. ' + arAiAccessNotice());
         return;
       }
-      // 먼저 기본 주제를 바로 보여 주고, AI 추천이 오면 바꿈
-      arRenderTopics(arStoreTopicOrder(arFallbackTopics(dc), prevTitles), '업종에 맞는 릴스 주제를 고르는 중…');
+      // 초기 진입에서는 이미 기본 주제가 표시되어 있으므로, 강제 새로고침(↻ 다른 주제) 때만 로딩 문구 노출
+      if (force) arRenderTopics(arStoreTopicOrder(arFallbackTopics(dc), prevTitles), '새 릴스 주제를 고르는 중…');
       if (!window.location.protocol.startsWith('http')) return;
       if (!trends.length) try {
         const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 6000);
+        const timer = setTimeout(() => ctrl.abort(), 2000);
         const tr = await fetch(`/api/trends?industry=${encodeURIComponent(IND.key)}`, { signal: ctrl.signal }).then((r) => r.json());
         clearTimeout(timer);
         trends = (tr && Array.isArray(tr.items) ? tr.items : [])

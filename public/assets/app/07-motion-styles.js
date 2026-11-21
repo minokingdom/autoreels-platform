@@ -3369,87 +3369,158 @@
       c.fillStyle = sp.bg1 || '#080808';
       c.fillRect(0, 0, W, H);
 
-      // 1) 9:16 풀스크린 카메라 모션 & 컷 전환 물리
-      if (M === 'pro_karaoke') {
-        const punch = 1 - easeOutExpo(local / 0.22);
-        const zoom = 1.03 + punch * 0.14 + lp * 0.035;
-        const driftX = Math.sin(t * 1.1) * 4;
-        const driftY = Math.cos(t * 0.85) * 3;
-        mPhoto(c, S, 0, 0, 0, W, H, zoom, driftX, driftY);
-        if (local < 0.14 && cutIdx > 0) {
-          c.fillStyle = `rgba(255,255,255,${((1 - local / 0.14) * 0.26).toFixed(3)})`;
+      // 1) 9:16 풀스크린 다이내믹 카메라 모션 & 컷 전환 물리 (8종 시그니처 무브 + 컷별 교차 방향)
+      const dir = cutIdx % 2 === 0 ? 1 : -1;
+      const dirY = cutIdx % 3 === 0 ? 1 : -1;
+      const easeOutCubic = (x) => 1 - Math.pow(1 - mClamp(x), 3);
+      const drawDynamicPhoto = (zoom, px, py, rotDeg = 0, fadeDur = 0.24, flashAmt = 0, leakAmt = 0) => {
+        const img = kitImg(S, 0);
+        const isVid = !!(img && img._isVideo);
+        const safeZoom = isVid ? Math.min(1.06, Math.max(1.0, zoom)) : zoom;
+        const safePx = isVid ? px * 0.2 : px;
+        const safePy = isVid ? py * 0.2 : py;
+        const safeRot = isVid ? 0 : (rotDeg * Math.PI) / 180;
+        const fade = (cutIdx > 0 && fadeDur > 0 && local < fadeDur) ? easeOutCubic(local / fadeDur) : 1;
+        if (fade < 0.995 && cutIdx > 0) {
+          c.save();
+          mPhoto(c, S, -1, 0, 0, W, H, 1.08, -safePx * 0.45, -safePy * 0.45);
+          c.restore();
+        }
+        c.save();
+        c.globalAlpha = fade;
+        if (Math.abs(safeRot) > 0.0005) {
+          c.translate(W / 2, H / 2);
+          c.rotate(safeRot);
+          c.translate(-W / 2, -H / 2);
+        }
+        mPhoto(c, S, 0, 0, 0, W, H, safeZoom, safePx, safePy);
+        c.restore();
+        if (flashAmt > 0 && local < 0.16 && cutIdx > 0) {
+          c.fillStyle = `rgba(255,252,245,${((1 - local / 0.16) * flashAmt).toFixed(3)})`;
           c.fillRect(0, 0, W, H);
         }
+        if (leakAmt > 0 && local < 0.42 && cutIdx > 0) {
+          const lkA = (1 - local / 0.42) * leakAmt;
+          const lg = c.createRadialGradient(W * (dir > 0 ? 0.15 : 0.85), H * 0.22, 10, W * 0.5, H * 0.4, W * 0.95);
+          lg.addColorStop(0, `rgba(255,188,120,${lkA.toFixed(3)})`);
+          lg.addColorStop(1, 'rgba(255,140,80,0)');
+          c.fillStyle = lg;
+          c.fillRect(0, 0, W, H);
+        }
+      };
+
+      if (M === 'pro_karaoke') {
+        // 스냅 휩팬 진입 + 반대 방향 슬로우 드리프트 + 플래시 컷
+        const whip = 1 - easeOutExpo(local / 0.24);
+        const zoom = 1.10 + whip * 0.14 + lp * 0.06;
+        const px = whip * 46 * dir - lp * 22 * dir;
+        const py = Math.sin(t * 1.4) * 5;
+        drawDynamicPhoto(zoom, px, py, whip * 1.4 * dir, 0.14, 0.26, 0);
       } else if (M === 'pro_film_sub') {
-        const zoom = 1.01 + lp * 0.065;
-        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.32);
+        // 시네마 돌리 인 + 대각선 교차 패닝 + 따뜻한 필름 라이트 릭
+        const zoom = 1.08 + lp * 0.12;
+        const px = (lp - 0.5) * 44 * dir;
+        const py = (lp - 0.5) * 24 * dirY;
+        drawDynamicPhoto(zoom, px, py, (lp - 0.5) * 0.9 * dir, 0.32, 0, 0.22);
         inGrain(c, W, H, t, 0.045);
       } else if (M === 'pro_punch_hook') {
-        const punch = 1 - easeOutExpo(local / 0.16);
-        const zoom = 1.04 + punch * 0.16 + lp * 0.04;
-        const panX = punch * (cutIdx % 2 === 0 ? 28 : -28);
-        mPhoto(c, S, 0, 0, 0, W, H, zoom, panX, 0);
+        // 0.2초 임팩트 펀치 줌 + 다이내믹 틸트 + 스냅 휩
+        const punch = 1 - easeOutExpo(local / 0.18);
+        const zoom = 1.09 + punch * 0.20 + lp * 0.06;
+        const px = punch * 48 * dir + (lp - 0.5) * 18 * -dir;
+        const rot = punch * 2.2 * dir;
+        drawDynamicPhoto(zoom, px, 0, rot, 0.12, 0.22, 0);
       } else if (M === 'pro_editorial_center') {
-        const zoom = 1.10 - lp * 0.075;
-        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.36);
+        // 웅장한 줌아웃 리빌 + 수직 패럴랙스 상승 패닝
+        const zoom = 1.22 - lp * 0.13;
+        const py = (0.5 - lp) * 40 * dirY;
+        const px = (lp - 0.5) * 20 * dir;
+        drawDynamicPhoto(zoom, px, py, 0, 0.34, 0, 0.14);
         inGrain(c, W, H, t, 0.032);
       } else if (M === 'pro_pov_caption') {
-        const zoom = 1.04 + lp * 0.03;
-        const swayX = Math.sin(t * 1.35) * 5;
-        const swayY = Math.cos(t * 0.95) * 4;
-        mPhoto(c, S, 0, 0, 0, W, H, zoom, swayX, swayY);
+        // 브이로그 핸드헬드 8자 호흡 + 유기적 패닝
+        const zoom = 1.12 + lp * 0.06;
+        const swayX = Math.sin(t * 1.65) * 14 + (lp - 0.5) * 22 * dir;
+        const swayY = Math.sin(t * 0.95) * 10 + Math.cos(t * 1.3) * 6;
+        const rot = Math.sin(t * 1.1) * 0.85;
+        drawDynamicPhoto(zoom, swayX, swayY, rot, 0.22, 0, 0);
       } else if (M === 'pro_split_reveal') {
-        const wipe = easeOutExpo(local / 0.34);
+        // 커튼 와이프 + 슬라이드 패럴랙스 줌아웃
+        const wipe = easeOutExpo(local / 0.36);
         if (cutIdx > 0 && wipe < 0.995) {
-          mPhoto(c, S, -1, 0, 0, W, H, 1.05, 0, 0);
+          mPhoto(c, S, -1, 0, 0, W, H, 1.10, -wipe * 36, 0);
         }
         const splitX = Math.round(W * wipe);
         c.save();
         c.beginPath();
         c.rect(0, 0, cutIdx > 0 ? splitX : W, H);
         c.clip();
-        mPhoto(c, S, 0, 0, 0, W, H, 1.02 + lp * 0.05, 0, 0);
+        mPhoto(c, S, 0, 0, 0, W, H, 1.16 - lp * 0.09, (1 - wipe) * 28 + (lp - 0.5) * 18 * dir, 0);
         c.restore();
         if (cutIdx > 0 && wipe > 0.02 && wipe < 0.98) {
-          c.fillStyle = 'rgba(244,240,232,0.85)';
+          c.fillStyle = 'rgba(244,240,232,0.88)';
           c.fillRect(splitX - 2, 0, 3, H);
         }
       } else if (M === 'pro_handwrite') {
-        const zoom = 1.02 + lp * 0.06;
-        const driftX = Math.sin(t * 0.8) * 4;
-        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.34);
+        // 35mm 필름 횡스크롤 패닝 + 웜 라이트 릭
+        const zoom = 1.14 + lp * 0.06;
+        const px = (lp - 0.5) * 52 * dir;
+        const py = Math.sin(t * 0.9) * 8;
+        drawDynamicPhoto(zoom, px, py, (lp - 0.5) * 1.1 * dir, 0.34, 0, 0.28);
         inWarm(c, 0, 0, W, H, 0.55);
         inGrain(c, W, H, t, 0.05);
       } else if (M === 'pro_trend_sticker') {
-        const zoom = 1.03 + lp * 0.05;
-        const driftY = Math.cos(t * 0.9) * 3;
-        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.28);
+        // 탄력 바운스 진입 + 대각선 플로트
+        const pop = 1 - easeOutBack(local / 0.30);
+        const zoom = 1.11 + Math.max(0, pop) * 0.10 + lp * 0.06;
+        const px = (lp - 0.5) * 34 * dir;
+        const py = (0.5 - lp) * 24 * dirY;
+        drawDynamicPhoto(zoom, px, py, Math.sin(t * 1.0) * 0.7, 0.24, 0, 0.16);
         inGrain(c, W, H, t, 0.04);
       } else if (M === 'pro_glass_card') {
-        const zoom = 1.02 + lp * 0.06;
-        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.26);
+        // 모던 글래스: 부드러운 수직 리프트 + 8자 호흡
+        const zoom = 1.11 + lp * 0.08;
+        const px = Math.sin(t * 1.2) * 12 + (lp - 0.5) * 24 * dir;
+        const py = (0.5 - lp) * 32;
+        drawDynamicPhoto(zoom, px, py, 0, 0.26, 0, 0);
       } else if (M === 'pro_neon_pulse') {
-        const punch = 1.09 - 0.07 * easeOutCubic(local / 0.24) + lp * 0.04;
-        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, punch, 0.16);
-        c.fillStyle = 'rgba(6,10,18,0.22)';
+        // 미드나잇 에디토리얼: 빠른 휩팬 + 펀치 줌 + 플래시
+        const whip = 1 - easeOutExpo(local / 0.22);
+        const zoom = 1.10 + whip * 0.15 + lp * 0.07;
+        const px = whip * 50 * dir - lp * 24 * dir;
+        drawDynamicPhoto(zoom, px, 0, whip * 1.6 * dir, 0.14, 0.18, 0);
+        c.fillStyle = 'rgba(6,10,18,0.20)';
         c.fillRect(0, 0, W, H);
       } else if (M === 'pro_magazine_cover') {
-        const zoom = 1.01 + lp * 0.07;
-        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.34);
+        // 보그 매거진: 웅장한 줌인 + 대각선 시네마 팬
+        const zoom = 1.08 + lp * 0.14;
+        const px = (lp - 0.5) * 40 * dir;
+        const py = (lp - 0.5) * 26 * dirY;
+        drawDynamicPhoto(zoom, px, py, 0, 0.34, 0, 0.18);
         inGrain(c, W, H, t, 0.035);
       } else if (M === 'pro_warm_diary') {
-        const zoom = 1.02 + lp * 0.05;
-        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.32);
+        // 따뜻한 크림 일기: 필름 횡스크롤 + 부드러운 흔들림 + 라이트 릭
+        const zoom = 1.13 + lp * 0.06;
+        const px = (lp - 0.5) * 48 * dir;
+        const py = Math.cos(t * 1.05) * 9;
+        drawDynamicPhoto(zoom, px, py, Math.sin(t * 0.8) * 0.7, 0.32, 0, 0.26);
         inWarm(c, 0, 0, W, H, 0.62);
         inGrain(c, W, H, t, 0.04);
       } else if (M === 'pro_bold_badge') {
-        const punch = 1.12 - 0.10 * easeOutCubic(local / 0.20) + lp * 0.04;
-        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, punch, 0.14);
+        // 숏폼 임팩트: 강한 펀치 줌 + 회전 스냅 + 플래시
+        const punch = 1 - easeOutExpo(local / 0.18);
+        const zoom = 1.10 + punch * 0.22 + lp * 0.06;
+        const px = punch * 44 * dir;
+        const rot = punch * 2.5 * dir;
+        drawDynamicPhoto(zoom, px, 0, rot, 0.12, 0.24, 0);
       } else if (M === 'pro_minimal_mono') {
-        const zoom = 1.02 + lp * 0.06;
+        // 라이카 모노크롬: 고대비 흑백 줌아웃 리빌 + 수직 패럴랙스
+        const zoom = 1.20 - lp * 0.12;
+        const px = (lp - 0.5) * 34 * dir;
+        const py = (0.5 - lp) * 30 * dirY;
         c.save();
-        try { c.filter = 'grayscale(100%) contrast(1.12)'; } catch (_) {}
-        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, zoom, 0.32);
+        try { c.filter = 'grayscale(100%) contrast(1.14)'; } catch (_) {}
+        drawDynamicPhoto(zoom, px, py, 0, 0.34, 0, 0);
         c.restore();
         inGrain(c, W, H, t, 0.055);
       }
