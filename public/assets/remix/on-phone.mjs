@@ -16,8 +16,8 @@ export async function linkedFile(input, signal, update) {
   if (/(^|\.)(youtube\.com|youtu\.be|instagram\.com|tiktok\.com)$/.test(url.hostname)) throw Error(galleryMessage);
   if (/(^|\.)capcut\.com$/.test(url.hostname)) {
     const response=await fetch('/api/account?action=remix-source',{method:'POST',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url.href})});
-    if(response.status===401) throw Object.assign(Error('CapCut 링크를 열려면 스튜디오에서 로그인해 주세요. 갤러리 영상은 바로 선택할 수 있어요.'),{status:401});
-    if(!response.ok) throw Error('CapCut 미리보기를 열지 못했어요. 갤러리에서 참고 영상을 선택해 주세요.');
+    if(response.status===401) throw Object.assign(Error('링크를 열려면 스튜디오에서 로그인해 주세요. 갤러리 영상은 바로 선택할 수 있어요.'),{status:401});
+    if(!response.ok) throw Error('참고 영상 미리보기를 열지 못했어요. 갤러리에서 참고 영상을 선택해 주세요.');
     const data=await response.json();
     if(!data.media) throw Error(galleryMessage);
     url=new URL(data.media); title=data.title||'';

@@ -3,7 +3,7 @@ import {linkedFile,analyzeOnPhone,rewriteOnPhone} from './on-phone.mjs';
 
 import {nativeYouTube} from './native-reference.mjs';
 if(nativeYouTube){
-  document.getElementById('sourceTypes').textContent='유튜브 쇼츠·CapCut·영상 파일 링크 지원';
+  document.getElementById('sourceTypes').textContent='유튜브 쇼츠·영상 파일·참고 링크 지원';
   document.getElementById('refName').textContent='휴대폰에 저장된 참고 영상 · 최대 250MB';
 }
 

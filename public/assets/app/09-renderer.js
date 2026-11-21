@@ -3524,7 +3524,7 @@
         );
         ctx.font = '600 15px monospace';
         ctx.fillStyle = '#e2e8f0';
-        ctx.fillText('Protected by AutoReelsMaker Rust WebAssembly DRM v1.0', 0, 50);
+        ctx.fillText('AutoReelsMaker', 0, 50);
         ctx.restore();
       }
 

@@ -2319,14 +2319,14 @@
         const statusEl = document.getElementById('adminAiKeyStatus');
         const badgeEl = document.getElementById('aiEngineStatusBadge');
         if (oa) {
-          if (statusEl) statusEl.textContent = '전용 OpenAI (GPT-4o-mini) 키가 연결되었습니다.';
-          if (badgeEl) badgeEl.textContent = 'OpenAI GPT-4o-mini 전용 엔진';
+          if (statusEl) statusEl.textContent = '전용 AI 키가 연결되었습니다.';
+          if (badgeEl) badgeEl.textContent = '';
         } else if (gm) {
-          if (statusEl) statusEl.textContent = '전용 Google Gemini 2.0 Flash 키가 연결되었습니다.';
-          if (badgeEl) badgeEl.textContent = 'Gemini 2.0 Flash 전용 엔진';
+          if (statusEl) statusEl.textContent = '전용 AI 키가 연결되었습니다.';
+          if (badgeEl) badgeEl.textContent = '';
         } else {
-          if (statusEl) statusEl.textContent = '현재 상태: AutoReelsMaker 기본 클라우드 LLM 엔진 활성';
-          if (badgeEl) badgeEl.textContent = '중앙 AI 엔진 활성';
+          if (statusEl) statusEl.textContent = '현재 상태: 기본 AI 자동 연결됨';
+          if (badgeEl) badgeEl.textContent = '';
         }
       } catch (e) {}
     }
@@ -2484,7 +2484,7 @@
       }
       if (noticeEl) {
         noticeEl.classList.remove('hidden');
-        noticeEl.textContent = `중앙 AI 엔진이 [${raw || campaign.vehicle}] 맞춤 ${totalCuts}컷 영상 대본·성우 음성·카톡 대화를 생성 중입니다...`;
+        noticeEl.textContent = `[${raw || campaign.vehicle}] 맞춤 ${totalCuts}컷 대본을 만들고 있어요...`;
       }
 
       const triggerTopicImages = () => {

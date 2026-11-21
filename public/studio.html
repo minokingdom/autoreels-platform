@@ -328,7 +328,7 @@
             구독 카마스터 · 매출 본부
           </button>
           <button id="tabBtnTech" onclick="switchMainTab('tech')" class="whitespace-nowrap h-7 px-3 rounded-[6px] text-[12px] font-normal transition-colors text-[#85858b] hover:text-[#ededed]">
-            렌더링 엔진 규격
+            제작 규격 안내
           </button>
         </nav>
 
@@ -806,9 +806,7 @@
             <div class="flex items-center justify-between flex-wrap gap-2">
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-[15px] font-semibold text-[#ededed]">대본 고르기</span>
-                <span id="aiEngineStatusBadge" class="tag-chip px-2 py-0.5 text-[12px] flex items-center gap-1.5">
-                  <span class="w-1.5 h-1.5 rounded-full bg-[#4cc38a]"></span>중앙 AI 엔진 활성
-                </span>
+                <span id="aiEngineStatusBadge" class="hidden tag-chip px-2 py-0.5 text-[12px]"></span>
                 <span id="activeSceneRecipeBadge" class="hidden tag-chip px-2 py-0.5 font-mono text-[12px]">테마: 로얄 골드 · 4컷 AI 위젯</span>
               </div>
             </div>
@@ -1466,22 +1464,22 @@
         <!-- 대표님 전용 중앙 AI 엔진 설정 패널 -->
         <div class="pt-5 border-t border-[var(--border)] space-y-3">
           <div class="flex items-center justify-between flex-wrap gap-1">
-            <h3 class="text-[14px] font-medium text-[#ededed]">방식 A · 중앙 AI 엔진 설정</h3>
-            <span class="tag-chip px-2 py-0.5 text-[11px]">카마스터 로그인 불필요</span>
+            <h3 class="text-[14px] font-medium text-[#ededed]">AI 연동 설정</h3>
+            <span class="tag-chip px-2 py-0.5 text-[11px]">기본 자동 연결</span>
           </div>
           <p class="text-[13px] text-[#a1a1a6] leading-relaxed">
-            카마스터들은 별도 로그인 없이 한 줄만 입력하면 됩니다. 기본 클라우드 LLM이 즉시 작동하며, 전용 유료 계정을 연결하려면 아래에 API 키를 저장하세요.
+            별도 설정 없이 한 줄만 입력하면 바로 작성됩니다. 전용 API 키를 연결할 때만 아래에 입력하세요.
           </p>
           <div class="space-y-2.5">
             <div>
-              <label class="block text-[12px] text-[#a1a1a6] mb-1">OpenAI API Key (선택 · GPT-4o-mini)</label>
+              <label class="block text-[12px] text-[#a1a1a6] mb-1">OpenAI API Key (선택)</label>
               <input id="adminOpenAiKeyInput" type="password" placeholder="sk-proj-..." oninput="saveAdminAiKeys()" class="studio-input w-full h-9 px-3 text-[12px] font-mono" />
             </div>
             <div>
-              <label class="block text-[12px] text-[#a1a1a6] mb-1">Google Gemini API Key (선택 · Gemini 2.0 Flash)</label>
+              <label class="block text-[12px] text-[#a1a1a6] mb-1">Google Gemini API Key (선택)</label>
               <input id="adminGeminiKeyInput" type="password" placeholder="AIzaSy..." oninput="saveAdminAiKeys()" class="studio-input w-full h-9 px-3 text-[12px] font-mono" />
             </div>
-            <p id="adminAiKeyStatus" class="text-[12px] text-[#4cc38a]">현재 상태: 기본 클라우드 LLM 엔진 활성</p>
+            <p id="adminAiKeyStatus" class="text-[12px] text-[#4cc38a]">현재 상태: 기본 AI 자동 연결됨</p>
           </div>
         </div>
       </div>
@@ -1501,18 +1499,18 @@
     <section id="viewTech" class="hidden space-y-4">
       <div class="studio-card p-6 space-y-4">
         <div>
-          <h2 class="text-[16px] font-medium text-[#ededed]">HyperFrames 타임라인(`window.__timelines`) 및 Rust Wasm 렌더러 규격</h2>
+          <h2 class="text-[16px] font-medium text-[#ededed]">영상 제작 및 해상도 규격</h2>
           <p class="text-[13px] text-[#85858b] mt-1">
-            결정론적 60fps 시킹 렌더러와 Rust WebAssembly 보안 코어(`autoreels_core.wasm`)가 연동되어 있습니다.
+            1080×1920 세로 9:16 릴스·쇼츠 표준 규격으로 제작됩니다.
           </p>
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div class="studio-sub p-4 space-y-2">
-            <div class="text-[13px] font-medium text-[#ededed]">1. HyperFrames HTML 클립 규격</div>
+            <div class="text-[13px] font-medium text-[#ededed]">1. 영상 구성 규격</div>
             <pre id="hfCodeBlock" class="text-[12px] font-mono overflow-x-auto whitespace-pre-wrap text-[#85858b] leading-relaxed"></pre>
           </div>
           <div class="studio-sub p-4 space-y-2">
-            <div class="text-[13px] font-medium text-[#ededed]">2. 60fps Seeking Renderer 및 배포 파이프라인</div>
+            <div class="text-[13px] font-medium text-[#ededed]">2. 내보내기 및 발행 안내</div>
             <pre id="igApiCodeBlock" class="text-[12px] font-mono overflow-x-auto whitespace-pre-wrap text-[#85858b] leading-relaxed"></pre>
           </div>
         </div>
@@ -1551,7 +1549,7 @@
           <input id="modalBranch" type="text" placeholder="예: OO자동차 공식전시장" class="studio-input w-full h-9 px-3 text-[13px]" />
         </div>
         <div>
-          <label class="block text-[12px] text-[#a1a1a6] mb-1">상담 연락처 (Rust Wasm DRM 바인딩 번호)</label>
+          <label class="block text-[12px] text-[#a1a1a6] mb-1">상담 연락처</label>
           <input id="modalPhone" type="text" placeholder="010-1234-5678" class="studio-input w-full h-9 px-3 text-[13px] font-mono" />
         </div>
         <div class="grid grid-cols-2 gap-3">
@@ -1871,7 +1869,7 @@
       <!-- 결제 완료 시 영수증/라이선스 발급 알림 -->
       <p id="billingErrorBox" class="hidden text-[12px] text-[#e5484d] text-center"></p>
       <div id="billingSuccessBox" class="hidden p-3.5 rounded-[10px] bg-[#141415] border border-[#4cc38a] space-y-1 text-[12px]">
-        <div class="font-medium text-[#4cc38a]">결제 승인 및 Rust Wasm 정품 라이선스 즉시 개통 완료!</div>
+        <div class="font-medium text-[#4cc38a]">결제 승인 및 구독 즉시 개통 완료!</div>
         <div id="billingReceiptDetail" class="font-mono text-[11px] text-[#a1a1a6]"></div>
       </div>
 
@@ -2190,7 +2188,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/app/app.js?v=20261121-independent-video"><\/script>');
+      document.write('<script src="/assets/app/app.js?v=20261122-clean-copy"><\/script>');
     }
   </script>
   <!--
