@@ -163,6 +163,19 @@
     var root = document.documentElement;
     setText('lpH1a', r.noun + ' 사진 몇 장이면');
     setText('lpHeroTime', TOD.clock + ' · ' + r.who + ' ' + TOD.word + ' 릴스');
+    // 히어로 배경: 업종 사진으로 바꿈 (두 장을 번갈아 겹쳐 부드럽게)
+    var sa = $('lpSceneA'), sb = $('lpSceneB');
+    if (sa && sb && !sa.getAttribute('src')) {
+      sa.setAttribute('src', r.img); // 첫 화면은 바로 그 업종 사진
+      sa.classList.add('is-on');
+    } else if (sa && sb) {
+      var front = sa.classList.contains('is-on') ? sa : sb, back = front === sa ? sb : sa;
+      if (front.getAttribute('src') !== r.img) {
+        back.setAttribute('src', r.img);
+        back.classList.add('is-on');
+        front.classList.remove('is-on');
+      }
+    }
     document.querySelectorAll('[data-gal]').forEach(function (g) {
       var on = g.getAttribute('data-gal') === key;
       g.classList.toggle('is-on', on);
@@ -348,7 +361,7 @@
   var heroEl = $('lpHero');
   var pinEl = $('lpHeroPin');
   var phoneEl = $('lpPhone');
-  var sceneImg = document.querySelector('#lpHeroScene img');
+  var sceneImg = $('lpHeroScene'); // 스크롤하면 장면 전체가 다가옴
   var dimEl = $('lpHeroDim');
   var fullEl = $('lpFull');
   var fullImg = $('lpFullImg');
