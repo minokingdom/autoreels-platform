@@ -1,76 +1,121 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-21T09:47:32.715057+09:00",
+  "collectedAt": "2026-11-21T19:54:49.159238+09:00",
   "items": [
     {
-      "term": "공인회계사",
-      "startedAt": "2026-11-20T15:40:00-08:00",
-      "traffic": "200+"
+      "term": "강원 fc 대 대전 하나 시티즌 순위",
+      "startedAt": "2026-11-21T01:40:00-08:00",
+      "traffic": "1000+"
     },
     {
-      "term": "브루노 마스",
-      "startedAt": "2026-11-20T15:40:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "반도체",
-      "startedAt": "2026-11-20T15:30:00-08:00",
-      "traffic": "2000+"
-    },
-    {
-      "term": "데이터 센터",
-      "startedAt": "2026-11-20T15:30:00-08:00",
+      "term": "김종국",
+      "startedAt": "2026-11-21T01:40:00-08:00",
       "traffic": "500+"
     },
     {
-      "term": "문경시",
-      "startedAt": "2026-11-20T15:30:00-08:00",
+      "term": "파워리프팅",
+      "startedAt": "2026-11-21T01:30:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "추성훈",
-      "startedAt": "2026-11-20T15:10:00-08:00",
+      "term": "k리그1",
+      "startedAt": "2026-11-21T01:20:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "삼성 엑시노스",
+      "startedAt": "2026-11-21T01:10:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "중일 관계",
+      "startedAt": "2026-11-21T01:00:00-08:00",
       "traffic": "500+"
     },
     {
-      "term": "로보택시",
-      "startedAt": "2026-11-20T15:00:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "베냐민 네타냐후",
-      "startedAt": "2026-11-20T15:00:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "mu",
-      "startedAt": "2026-11-20T14:40:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "경찰관",
-      "startedAt": "2026-11-20T14:20:00-08:00",
+      "term": "england vs australia",
+      "startedAt": "2026-11-21T01:00:00-08:00",
       "traffic": "200+"
+    },
+    {
+      "term": "성리",
+      "startedAt": "2026-11-21T00:30:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "굴",
+      "startedAt": "2026-11-21T00:20:00-08:00",
+      "traffic": "1000+"
+    },
+    {
+      "term": "멜라니아 트럼프",
+      "startedAt": "2026-11-21T00:20:00-08:00",
+      "traffic": "100+"
     }
   ],
   "issues": [
     {
-      "term": "용인 경부고속도로서 승용차가",
+      "term": "수능",
       "day": "2026-11-21",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856752",
-      "publishedAt": "2026-11-21T09:31:00+09:00",
-      "headline": "용인 경부고속도로서 승용차가 화물차 추돌…운전자 1명 사망"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856961",
+      "publishedAt": "2026-11-21T19:28:00+09:00",
+      "headline": "출소 반 년만 '1등급'?…리트 만점자 '수능 성적' 미스터리"
     },
     {
-      "term": "경부선 소정리역 화물열차",
+      "term": "AI 부정행위 논란",
+      "day": "2026-11-21",
+      "kind": "보도",
+      "publisher": "연합뉴스",
+      "url": "https://www.yna.co.kr/view/AKR20261121023800530",
+      "publishedAt": "2026-11-21T10:12:05+09:00",
+      "headline": "노동장관, 'AI 커닝' 사태 속 첫 국가자격시험 현장 점검"
+    },
+    {
+      "term": "탈선 여파 일반열차",
       "day": "2026-11-21",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856725",
-      "publishedAt": "2026-11-21T09:28:00+09:00",
-      "headline": "경부선 소정리역 화물열차 탈선…\"일반 열차 운행 중지\""
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856936",
+      "publishedAt": "2026-11-21T16:43:00+09:00",
+      "headline": "탈선 여파 일반열차 중단에 KTX·ITX-새마을 등 15대 임시 투입"
+    },
+    {
+      "term": "각하",
+      "day": "2026-11-21",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856877",
+      "publishedAt": "2026-11-21T16:15:00+09:00",
+      "headline": "'윤석열 영화비·특활비 공개 소송' 각하…\"대통령기록관 이관\""
+    },
+    {
+      "term": "보령 앞바다서 조업하던",
+      "day": "2026-11-21",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008857008",
+      "publishedAt": "2026-11-21T15:47:00+09:00",
+      "headline": "보령 앞바다서 조업하던 외국인 선원 양망기에 끼어 숨져"
+    },
+    {
+      "term": "강원 평창서 공기총",
+      "day": "2026-11-21",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856954",
+      "publishedAt": "2026-11-21T14:22:00+09:00",
+      "headline": "강원 평창서 공기총 손질 중 오발 사고…60대 1명 부상"
+    },
+    {
+      "term": "걸그룹 여자친구 출신",
+      "day": "2026-11-21",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856873",
+      "publishedAt": "2026-11-21T13:40:00+09:00",
+      "headline": "걸그룹 여자친구 출신 3명, 차가원 회사와 전속계약 분쟁 1심 승소"
     }
   ],
   "previousIssues": [
