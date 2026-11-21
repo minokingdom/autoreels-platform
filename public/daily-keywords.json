@@ -1,59 +1,96 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-22T05:52:43.959527+09:00",
+  "collectedAt": "2026-11-22T08:46:56.911029+09:00",
   "items": [
     {
-      "term": "입양",
-      "startedAt": "2026-11-21T11:40:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "레알 마드리드 대 셀타 비고",
-      "startedAt": "2026-11-21T11:20:00-08:00",
+      "term": "부동산",
+      "startedAt": "2026-11-21T14:40:00-08:00",
       "traffic": "1000+"
     },
     {
-      "term": "위기",
-      "startedAt": "2026-11-21T10:50:00-08:00",
-      "traffic": "200+"
+      "term": "인터 마이애미 대 콜럼버스 크루",
+      "startedAt": "2026-11-21T14:30:00-08:00",
+      "traffic": "1000+"
     },
     {
-      "term": "newcastle vs arsenal",
-      "startedAt": "2026-11-21T09:30:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "아스날",
-      "startedAt": "2026-11-21T09:20:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "psg",
-      "startedAt": "2026-11-21T09:20:00-08:00",
+      "term": "인천광역시",
+      "startedAt": "2026-11-21T14:20:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "샬케 대 슈투트가르트",
-      "startedAt": "2026-11-21T09:10:00-08:00",
+      "term": "공군사관학교",
+      "startedAt": "2026-11-21T14:20:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "뉴스",
+      "startedAt": "2026-11-21T14:10:00-08:00",
+      "traffic": "1000+"
+    },
+    {
+      "term": "편지",
+      "startedAt": "2026-11-21T14:00:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "뉴캐슬 대 아스널",
-      "startedAt": "2026-11-21T08:40:00-08:00",
+      "term": "реал мадрид – сельта",
+      "startedAt": "2026-11-21T14:00:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "real madrid đấu với celta",
+      "startedAt": "2026-11-21T14:00:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "laliga",
+      "startedAt": "2026-11-21T14:00:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "구자욱",
+      "startedAt": "2026-11-21T13:50:00-08:00",
       "traffic": "5000+"
-    },
-    {
-      "term": "nice vs psg",
-      "startedAt": "2026-11-21T08:40:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "เชลซี พบ ลีดส์",
-      "startedAt": "2026-11-21T08:10:00-08:00",
-      "traffic": "100+"
     }
   ],
-  "issues": [],
+  "issues": [
+    {
+      "term": "수능",
+      "day": "2026-11-22",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008857306",
+      "publishedAt": "2026-11-22T08:25:00+09:00",
+      "headline": "이제 객관식 말고 서·논술형으로?…'수능 개편론' 급부상"
+    },
+    {
+      "term": "AI 부정행위 논란",
+      "day": "2026-11-22",
+      "kind": "보도",
+      "publisher": "연합뉴스",
+      "url": "https://www.yna.co.kr/view/AKR20261121028100530",
+      "publishedAt": "2026-11-22T06:03:01+09:00",
+      "headline": "AI 커닝에 흔들린 국가자격시험…평가 방식도 바꿔야 하나"
+    },
+    {
+      "term": "단톡방 모여",
+      "day": "2026-11-22",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008857374",
+      "publishedAt": "2026-11-22T08:32:00+09:00",
+      "headline": "단톡방 모여 \"그 담임 좀\"…학부모들 명예훼손 무죄"
+    },
+    {
+      "term": "항소심 재판 중에",
+      "day": "2026-11-22",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008857337",
+      "publishedAt": "2026-11-22T08:25:00+09:00",
+      "headline": "'스토킹 죄' 항소심 재판 중에…같은 피해자 또 스토킹"
+    }
+  ],
   "previousIssues": [
     {
       "term": "수능",
