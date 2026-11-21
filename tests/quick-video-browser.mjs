@@ -76,6 +76,48 @@ try {
   });
   assert.ok(Math.abs(duration-expected)<.6,'편집 후 길이 '+duration+' / '+expected);
   console.log('자동 장면 선택·미리보기 컷 전환·완성 MP4 재생 확인',duration.toFixed(2)+'초');
+  await frame.getByText('스튜디오로 돌아가기').click();
+  await page.locator('#quickShortVideoInput').setInputFiles(fileURLToPath(new URL('./fixtures/montage-transition.webm',import.meta.url)));
+  const switchEffect = frame.locator('#sceneTransitions');
+  await switchEffect.waitFor();
+  assert.equal(await switchEffect.isChecked(),true);
+  // 순색 두 장면의 경계에서 양쪽 색이 함께 보이는지 미리보기와 인코딩한 MP4에서 확인.
+  const samplePreview = () => frame.locator('#overlay').evaluate(canvas => {
+    const ctx=canvas.getContext('2d');
+    return Array.from(ctx.getImageData(canvas.width/2,canvas.height/2,1,1).data);
+  });
+  await frame.locator('#sourceVideo').evaluate(async el => {
+    const boundary=session.clip.montage[1].start;
+    await new Promise(resolve => {el.addEventListener('seeked',resolve,{once:true});el.currentTime=boundary+.18;});
+  });
+  const blended=await samplePreview();
+  assert.ok(blended[0]>50 && blended[2]>50,'미리보기 디졸브 '+blended);
+  await switchEffect.uncheck();
+  const plain=await samplePreview();
+  assert.ok(plain[0]<20 && plain[2]>200,'전환 끄기 '+plain);
+  await switchEffect.check();
+  await frame.locator('#save').click();
+  await frame.locator('#download').waitFor({timeout:20000});
+  const mixedFrames=await frame.locator('#download').evaluate(async el => {
+    const out=document.createElement('video');out.playsInline=true;out.muted=true;out.src=el.href;
+    const canvas=document.createElement('canvas');canvas.width=canvas.height=1;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    let mixed=0;
+    const sample=() => {
+      ctx.drawImage(out,0,0,1,1);
+      const rgba=ctx.getImageData(0,0,1,1).data;
+      if(rgba[0]>40 && rgba[2]>40) mixed++;
+      if(!out.ended) out.requestVideoFrameCallback(sample);
+    };
+    out.requestVideoFrameCallback(sample);await out.play();
+    await new Promise((resolve,reject) => {
+      const timer=setTimeout(()=>reject(Error('전환 MP4 재생 시간 초과')),10000);
+      out.onended=()=>{clearTimeout(timer);resolve();};
+    });
+    return mixed;
+  });
+  assert.ok(mixedFrames>=2,'완성 MP4에 두 장면이 섞인 프레임 '+mixedFrames);
+  console.log('미리보기 전환 켜기·끄기 및 MP4 디졸브 확인',mixedFrames+' 프레임');
   assert.deepEqual(errors,[]);
   console.log('Independent file, full duration, trim, rate, sound, caption, music, portrait MP4, original studio preserved');
 } finally { await browser.close(); }

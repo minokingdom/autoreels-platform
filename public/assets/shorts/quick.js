@@ -1,12 +1,13 @@
 function openQuickClip(s,file) {
   const end = video.duration;
-  const clip = {start:0,end,rate:1,keepAudio:true,music:'',style:'box',title:'',customTitle:true,
+  const clip = {start:0,end,rate:1,keepAudio:true,transitions:true,music:'',style:'box',title:'',customTitle:true,
     showCaptions:true,lines:[{start:0,end,text:''}]};
   video.playbackRate = 1;
   video.muted = false;
   byId('music').selectedIndex = 0;
   byId('speed').value = '1';
   byId('sourceSound').checked = true;
+  byId('sceneTransitions').checked = true;
   byId('captionStyle').value = 'box';
   byId('quickControls').disabled = false;
   byId('quickControls').hidden = false;
@@ -42,6 +43,7 @@ function setQuickMode(s,automatic) {
   byId('useMontage').setAttribute('aria-pressed',String(automatic));
   byId('useManual').setAttribute('aria-pressed',String(!automatic));
   byId('manualTrim').hidden = automatic;
+  byId('transitionControl').hidden = !s.clip.montage?.some(r => r.transition);
   const waiting = automatic && !s.plan;
   byId('montageProgress').hidden = !waiting;
   save.disabled = play.disabled = waiting;
@@ -57,7 +59,7 @@ async function startMontage(s,file) {
   byId('montageProgress').value = 0;
   setQuickMode(s,true);
   try {
-    const {buildMontage} = await import('./montage.mjs');
+    const {buildMontage} = await import('./montage.mjs?v=transition1');
     s.plan = await buildMontage(file,video.duration,s.controller.signal,pct => {
       if (session === s) byId('montageProgress').value = pct;
     });
@@ -133,6 +135,8 @@ if (quickEdit) {
       case 'trimEnd':
         clip.end = Math.max(field.valueAsNumber,clip.start+gap);
         video.currentTime = clip.end; break;
+      case 'sceneTransitions':
+        clip.transitions = field.checked; break;
       case 'speed':
         clip.rate = video.playbackRate = Number(field.value); break;
       case 'sourceSound':

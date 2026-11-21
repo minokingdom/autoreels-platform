@@ -131,16 +131,48 @@ video.addEventListener('timeupdate',() => {
 });
 video.addEventListener('play',() => {play.textContent = 'Ⅱ'; play.setAttribute('aria-label','일시정지');});
 video.addEventListener('pause',() => {play.textContent = '▶'; play.setAttribute('aria-label','선택 구간 재생');});
+function drawQuickFrame(ctx,source,zoom,x=0) {
+  const w=ctx.canvas.width, h=ctx.canvas.height;
+  const sw=source.videoWidth||source.width, sh=source.videoHeight||source.height;
+  const fit=Math.min(w/sw,h/sh)*zoom;
+  const width=sw*fit, height=sh*fit;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x,0,w,h); ctx.clip();
+  ctx.fillStyle='#09090b'; ctx.fillRect(x,0,w,h);
+  ctx.drawImage(source,x+(w-width)/2,(h-height)/2,width,height);
+  ctx.restore();
+}
+function drawQuickScene(ctx,source,clip) {
+  const t=source.currentTime;
+  const take=clip.montage?.find(r => t>=r.start-.01 && t<=r.end+.02);
+  const position=take ? Math.max(0,Math.min(1,(t-take.start)/(take.end-take.start))) : 0;
+  const zoom=1+.055*position;
+  const transition=take?.transition;
+  if (clip.transitions && transition) {
+    const duration=Math.min(.36*(clip.rate||1),(take.end-take.start)/3);
+    const phase=Math.max(0,(t-take.start)/duration);
+    if (phase<1) {
+      const ease=phase*phase*(3-2*phase);
+      if (transition.kind==='slide') {
+        const x=Math.round(ctx.canvas.width*ease);
+        ctx.drawImage(transition.frame,-x,0,ctx.canvas.width,ctx.canvas.height);
+        drawQuickFrame(ctx,source,zoom,ctx.canvas.width-x);
+      } else {
+        drawQuickFrame(ctx,source,zoom);
+        // 바탕과 영상을 한 번에 합성해야 레터박스까지 같은 비율로 녹아든다.
+        ctx.save(); ctx.globalAlpha=1-ease;
+        ctx.drawImage(transition.frame,0,0,ctx.canvas.width,ctx.canvas.height);
+        ctx.restore();
+      }
+      return;
+    }
+  }
+  drawQuickFrame(ctx,source,zoom);
+}
 function paintClip(ctx, source, text) {
   const w = ctx.canvas.width, h = ctx.canvas.height;
   if (quickEdit) {
-    const fit = Math.min(w/source.videoWidth,h/source.videoHeight);
-    const take = session.clip.montage?.find(r => source.currentTime >= r.start-.01 && source.currentTime <= r.end+.02);
-    const position = take ? Math.max(0,Math.min(1,(source.currentTime-take.start)/(take.end-take.start))) : 0;
-    const zoom = 1 + .055*position;
-    const width = source.videoWidth*fit*zoom, height = source.videoHeight*fit*zoom;
-    ctx.fillStyle = '#09090b'; ctx.fillRect(0,0,w,h);
-    ctx.drawImage(source,(w-width)/2,(h-height)/2,width,height);
+    drawQuickScene(ctx,source,session.clip);
     drawTitles(ctx,session.clip,text); return;
   }
   const scale = Math.max(w/source.videoWidth,h/source.videoHeight);
