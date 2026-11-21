@@ -741,10 +741,10 @@
           window.__exportingVideo = true;
           window.__exportStartedAt = 0;
           window.__timelines.main.seek(0);
-          canvasStream = canvas.captureStream(30);
+          canvasStream = canvas.captureStream(60); // 60프레임으로 녹화 (2026-11-21 사장님 요청: 부드럽게)
           const tracks = [...canvasStream.getVideoTracks(), ...(AudioEngine.streamDest ? AudioEngine.streamDest.stream.getAudioTracks() : [])];
           const isMobileExport = (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 768px)').matches) || (typeof navigator !== 'undefined' && (navigator.maxTouchPoints || 0) > 0);
-          recorder = new MediaRecorder(new MediaStream(tracks), { mimeType, videoBitsPerSecond: isMobileExport ? 5000000 : 8000000 });
+          recorder = new MediaRecorder(new MediaStream(tracks), { mimeType, videoBitsPerSecond: isMobileExport ? 8000000 : 12000000 }); // 60프레임에 맞춰 비트레이트도 올림
           const cleanMime = recorder.mimeType.includes('mp4') ? 'video/mp4' : 'video/webm';
           const seconds = Math.max(4, Number(TOTAL_DURATION) || 12), chunks = [];
           const blob = await new Promise((resolve, reject) => {

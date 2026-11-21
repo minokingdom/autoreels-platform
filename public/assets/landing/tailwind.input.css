@@ -156,7 +156,7 @@ body.lp {
 .lp-full-bars, .lp-full-acct { opacity: var(--ui, 0); }
 .lp-full-bars { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); width: min(560px, calc(100% - 40px)); display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .lp-full-bars i { height: 3px; border-radius: 2px; background: rgba(255,255,255,.3); overflow: hidden; }
-.lp-full-bars b { display: block; height: 100%; width: 0; background: #fff; }
+.lp-full-bars b { display: block; height: 100%; width: 100%; background: #fff; transform: scaleX(0); transform-origin: left; }
 .lp-full-acct { position: absolute; top: 96px; left: 50%; transform: translateX(-50%); width: min(560px, calc(100% - 40px)); margin: 0; display: flex; align-items: center; gap: 10px; font-size: 15px; }
 .lp-full-acct span { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: var(--lp-deep); font-size: 13px; font-weight: 700; }
 .lp-full-acct strong { font-weight: 600; }
@@ -251,7 +251,7 @@ body.lp {
 .lp-reel-music { margin: 8px 0 0; display: flex; align-items: center; gap: 6px; font-size: 12px; opacity: .9; white-space: nowrap; overflow: hidden; }
 .lp-reel-music span { overflow: hidden; text-overflow: ellipsis; }
 .lp-reel-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: rgba(255,255,255,.25); }
-.lp-reel-bar i { display: block; height: 100%; width: 0; background: #fff; }
+.lp-reel-bar i { display: block; height: 100%; width: 100%; background: #fff; transform: scaleX(0); transform-origin: left; will-change: transform; }
 @media (prefers-reduced-motion: reduce) {
   .lp-reel .lp-reel-media img, .lp-reel .lp-reel-sub { animation: none !important; }
 }

@@ -83,10 +83,10 @@
     if (subEl) subEl.textContent = r.subs[cutIdx];
     if (progEl) {
       progEl.style.transition = 'none';
-      progEl.style.width = (cutIdx / r.subs.length * 100) + '%';
+      progEl.style.transform = 'scaleX(' + (cutIdx / r.subs.length) + ')';
       void progEl.offsetWidth;
-      progEl.style.transition = 'width ' + CUT_MS + 'ms linear';
-      progEl.style.width = ((cutIdx + 1) / r.subs.length * 100) + '%';
+      progEl.style.transition = 'transform ' + CUT_MS + 'ms linear';
+      progEl.style.transform = 'scaleX(' + ((cutIdx + 1) / r.subs.length) + ')';
     }
   }
   function schedule() {
@@ -396,11 +396,23 @@
     base = { x: r.left - pr.left, y: r.top - pr.top, w: r.width, h: r.height, W: pr.width, H: pr.height };
   }
 
-  function applyHero() {
+  // 스크롤 위치를 바로 따라가지 않고 매 프레임 조금씩 다가가게 해서(60프레임) 끊김 없이 움직임
+  var heroTop = 0, heroSpan = 1, smoothP = -1, lastFrame = 0;
+  function measureHero() {
+    if (!heroEl) return;
+    heroTop = heroEl.getBoundingClientRect().top + window.scrollY;
+    heroSpan = Math.max(1, heroEl.offsetHeight - window.innerHeight);
+  }
+  function applyHero(now) {
     if (!heroEl || !base) return;
-    var rect = heroEl.getBoundingClientRect();
-    var span = heroEl.offsetHeight - window.innerHeight;
-    var p = span > 0 ? clamp01(-rect.top / span) : 0;
+    var target = clamp01((window.scrollY - heroTop) / heroSpan);
+    var dt = lastFrame ? Math.min(0.1, (now - lastFrame) / 1000) : 1 / 60;
+    lastFrame = now;
+    if (smoothP < 0) smoothP = target;
+    var k = 1 - Math.pow(1 - 0.16, dt * 60); // 주사율과 상관없이 같은 속도로 다가감
+    smoothP += (target - smoothP) * k;
+    if (Math.abs(target - smoothP) < 0.0004) smoothP = target;
+    var p = smoothP;
     heroP = p;
 
     var e1 = ease(seg(p, 0, 0.14));     // 제목 빠짐
@@ -458,7 +470,7 @@
       var f = CUT_FRAMES[ci % CUT_FRAMES.length];
       if (fullImg) fullImg.style.transform = 'scale(' + lerp(f[0], f[3], lt).toFixed(4) + ') translate(' + lerp(f[1], f[4], lt).toFixed(2) + '%,' + lerp(f[2], f[5], lt).toFixed(2) + '%)';
       for (var b = 0; b < fullBars.length; b++) {
-        fullBars[b].style.width = (b < ci ? 100 : (b === ci ? lt * 100 : 0)).toFixed(1) + '%';
+        fullBars[b].style.transform = 'scaleX(' + (b < ci ? 1 : (b === ci ? lt : 0)).toFixed(4) + ')';
       }
       var ui = clamp01((e3 - 0.6) * 3); // 화면이 거의 다 펼쳐진 뒤에 글자·막대 표시
       fullEl.style.setProperty('--ui', ui.toFixed(3));
@@ -468,19 +480,20 @@
     }
   }
 
-  function heroLoop() {
-    if (!heroOn) return;
+  function heroLoop(now) {
+    if (!heroOn) { lastFrame = 0; return; }
     tiltX += (tiltTX - tiltX) * 0.08;
     tiltY += (tiltTY - tiltY) * 0.08;
-    applyHero();
+    applyHero(now || performance.now());
     requestAnimationFrame(heroLoop);
   }
 
   if (heroEl && pinEl && phoneEl && !reducedMotion) {
-    measure();
-    window.addEventListener('resize', function () { measure(); });
-    window.addEventListener('load', function () { measure(); });
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure).catch(function () {});
+    var remeasure = function () { measure(); measureHero(); };
+    remeasure();
+    window.addEventListener('resize', remeasure);
+    window.addEventListener('load', remeasure);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure).catch(function () {});
     requestAnimationFrame(heroLoop);
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (ents) {
