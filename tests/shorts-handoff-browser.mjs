@@ -35,6 +35,7 @@ try {
     takes: sequenceTakes(session).map(t => [+t.start.toFixed(2), +t.end.toFixed(2)]),
     captions: [...document.querySelectorAll('#captionLane .cue-block')].map(b => b.textContent).sort()
   }));
+  await frame.locator('#trackWave:not([hidden])').waitFor({timeout:10000});
   assert.deepEqual(state.takes, [[.4, 4.6]], '추천 구간만 타임라인에 올라가야 함');
   assert.deepEqual(state.captions, ['국물이 진하게 우러났어요', '오늘 점심은 김치찌개'], '받아쓴 대사가 자막 트랙에 올라가야 함');
   await frame.locator('[data-studio-back]').click();

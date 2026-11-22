@@ -23,12 +23,8 @@ function trackTime(s,time,updateSelection=true) {
   if(!pos) return;
   const cursor=byId('trackCursor');
   byId('trackNeedle').style.left=(100*s.trackTime/total)+'%';
-  if(previous!==s.trackTime){
-    const scroll=byId('trackScale').closest('.mix-scroll');
-    const x=s.trackTime/total*scroll.scrollWidth;
-    if(x<scroll.scrollLeft || x>scroll.scrollLeft+scroll.clientWidth-2)
-      scroll.scrollLeft=Math.max(0,x-scroll.clientWidth*.35);
-  }
+  // 재생선은 화면 가운데에 고정하고 타임라인이 그 밑으로 흘러간다.
+  if(quickEdit)centerTrackScroll(s);
   cursor.max=total;cursor.value=s.trackTime;cursor.disabled=false;
   byId('trackTime').textContent=cutClock(s.trackTime)+' / '+cutClock(total);
   if(updateSelection) {
@@ -59,6 +55,9 @@ async function trackThumbnails(s,takes,buttons,signal) {
       const cells=Math.max(1,Math.min(96,Math.ceil(buttons[index].clientWidth/55)));
       const cellWidth=64, cellHeight=50;
       canvas.width=cells*cellWidth;canvas.height=cellHeight;
+      // 확대 직후에는 새 썸네일이 나올 때까지 이전 그림을 늘려서 보여 준다.
+      const previous=s.prevThumbs?.[index];
+      if(previous)ctx.drawImage(previous,0,0,canvas.width,canvas.height);
       for(let n=0;n<cells;n++) {
         const at=take.start+(take.end-take.start)*(n+.5)/cells;
         await positionJoinedTake(probe,{...take,start:at},signal);
@@ -70,7 +69,7 @@ async function trackThumbnails(s,takes,buttons,signal) {
       }
     }
   } catch { /* 썸네일을 읽을 수 없어도 원본 클립을 편집할 수 있다. */ }
-  finally {probe.removeAttribute('src');probe.load();}
+  finally {probe.removeAttribute('src');probe.load();if(!signal.aborted)s.prevThumbs=null;}
 }
 function drawTrackWave(takes) {
   const canvas=byId('trackWave'),label=byId('sourceWaveState');
@@ -132,19 +131,7 @@ function renderCutTrack(s) {
     });
     buttons.forEach((button,i)=>{button.style.flexGrow=takeDuration(takes[i]);});
     strip.replaceChildren(...buttons);
-    const total=sequenceDuration(takes), scale=byId('trackScale');
-    const board=scale.closest('.track-board');
-    board.style.width=Math.max(100,total/12*100)+'%';
-    const tickSeconds=total<=3?.5:total<=6?1:2;
-    const ticks=[];
-    for(let tick=0;tick<total-.0001;tick+=tickSeconds){
-      const label=document.createElement('span');
-      label.textContent=tick+'초';label.style.left=(100*tick/total)+'%';ticks.push(label);
-    }
-    const last=document.createElement('span');last.textContent=Number(total.toFixed(1))+'초';last.className='last-tick';
-    if(ticks.length>1 && total-(ticks.length-1)*tickSeconds<tickSeconds*.6)ticks.pop();
-    scale.replaceChildren(...ticks,last);
-    board.style.setProperty('--tick-step',(100*tickSeconds/total)+'%');
+    layoutTrackBoard(s,takes);
     s.trackThumbController=new AbortController();
     trackThumbnails(s,takes,buttons,s.trackThumbController.signal);
   }
@@ -154,6 +141,56 @@ function renderCutTrack(s) {
   renderEffectLanes(s);
   if(typeof renderMix==="function")renderMix(s);
   trackTime(s,s.trackTime||0);
+}
+// 1초가 차지하는 폭(px). 처음에는 화면에 약 6초가 보이고, 두 손가락으로 늘이거나 줄인다.
+function trackPps(s) {
+  const scroll=byId('trackScale').closest('.mix-scroll'),view=scroll.clientWidth||300;
+  const total=sequenceDuration(sequenceTakes(s))||1;
+  const min=Math.min(30,view*.8/total),max=260;
+  if(!s.trackPps)s.trackPps=view/6;
+  s.trackPps=Math.max(min,Math.min(max,s.trackPps));
+  return s.trackPps;
+}
+function layoutTrackBoard(s,takes) {
+  const total=sequenceDuration(takes), scale=byId('trackScale');
+  const board=scale.closest('.track-board'),pps=trackPps(s);
+  board.style.width=Math.round(total*pps)+'px';
+  // 눈금 사이가 60px 이상 되도록 간격을 고른다.
+  const tickSeconds=[.5,1,2,5,10,15,30,60].find(step=>step*pps>=60)||120;
+  const ticks=[];
+  for(let tick=0;tick<total-.0001;tick+=tickSeconds){
+    const label=document.createElement('span');
+    label.textContent=(tick>=60?Math.floor(tick/60)+':'+String(tick%60).padStart(2,'0'):tick+'초');
+    label.style.left=(100*tick/total)+'%';ticks.push(label);
+  }
+  const last=document.createElement('span');last.textContent=Number(total.toFixed(1))+'초';last.className='last-tick';
+  if(ticks.length>1 && total-(ticks.length-1)*tickSeconds<tickSeconds*.6)ticks.pop();
+  scale.replaceChildren(...ticks,last);
+  board.style.setProperty('--tick-step',(100*tickSeconds/total)+'%');
+}
+function centerTrackScroll(s) {
+  const scroll=byId('trackScale').closest('.mix-scroll');
+  if(!scroll || s.trackPinch) return;
+  const x=Math.round((s.trackTime||0)*trackPps(s));
+  if(Math.abs(scroll.scrollLeft-x)>.5){scroll.scrollLeft=x;}
+  s.trackScrollAuto=scroll.scrollLeft;
+}
+function zoomTrack(s,pps) {
+  const takes=sequenceTakes(s);
+  s.trackPps=pps;trackPps(s);
+  layoutTrackBoard(s,takes);
+  drawTrackWave(takes);
+  if(typeof renderMix==='function')renderMix(s);
+  const scroll=byId('trackScale').closest('.mix-scroll');
+  scroll.scrollLeft=Math.round((s.trackTime||0)*s.trackPps);s.trackScrollAuto=scroll.scrollLeft;
+}
+function finishTrackZoom(s) {
+  // 확대가 끝나면 늘어난 폭에 맞춰 썸네일을 다시 뽑는다.
+  s.prevThumbs=[...byId('trackClips').querySelectorAll('canvas')].map(c=>{
+    const copy=document.createElement('canvas');copy.width=c.width;copy.height=c.height;
+    if(c.width&&c.height)copy.getContext('2d').drawImage(c,0,0);return copy;
+  });
+  s.trackKey=null;renderCutTrack(s);
 }
 function seekCutTrack(s,time) {
   if(session!==s || s.exporting || s.adding || s.postBusy) return;
@@ -205,6 +242,78 @@ function applyTrackTool(action) {
 if(quickEdit) {
   byId('trackTools').addEventListener('click',e=>{const button=e.target.closest('button');if(button)applyTrackTool(button.id);});
   byId('trackCursor').addEventListener('input',e=>{if(session?.clip)seekCutTrack(session,e.target.valueAsNumber);});
+  {
+    const scroll=byId('trackScale').closest('.mix-scroll');
+    let frame=0;
+    // 손으로 타임라인을 밀면 가운데 재생선 위치로 이동한다.
+    scroll.addEventListener('scroll',()=>{
+      const s=session;
+      if(!s?.clip || s.trackPinch || Math.abs(scroll.scrollLeft-(s.trackScrollAuto??-9))<=1) return;
+      cancelAnimationFrame(frame);
+      frame=requestAnimationFrame(()=>{
+        if(session!==s || s.trackPinch)return;
+        seekCutTrack(s,scroll.scrollLeft/trackPps(s));
+      });
+    },{passive:true});
+    // 두 손가락 확대·축소
+    let pinch=null;
+    const gap=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+    scroll.addEventListener('touchstart',e=>{
+      const s=session;
+      if(!s?.clip || e.touches.length!==2) return;
+      pinch={dist:gap(e.touches),pps:trackPps(s)};s.trackPinch=true;
+    },{passive:true});
+    scroll.addEventListener('touchmove',e=>{
+      const s=session;
+      if(!pinch || !s?.clip || e.touches.length!==2) return;
+      e.preventDefault();
+      zoomTrack(s,pinch.pps*gap(e.touches)/pinch.dist);
+    },{passive:false});
+    const endPinch=()=>{
+      const s=session;
+      if(!pinch)return;
+      pinch=null;
+      if(s){s.trackPinch=false;centerTrackScroll(s);finishTrackZoom(s);}
+    };
+    scroll.addEventListener('touchend',e=>{if(e.touches.length<2)endPinch();});
+    scroll.addEventListener('touchcancel',endPinch);
+    // 컴퓨터: Ctrl+휠로 확대, 마우스로 끌어서 이동
+    let wheelTimer=0;
+    scroll.addEventListener('wheel',e=>{
+      const s=session;
+      if(!s?.clip || !(e.ctrlKey||e.metaKey)) return;
+      e.preventDefault();
+      zoomTrack(s,trackPps(s)*Math.exp(-e.deltaY*.004));
+      clearTimeout(wheelTimer);wheelTimer=setTimeout(()=>{if(session===s)finishTrackZoom(s);},250);
+    },{passive:false});
+    let drag=null,dragged=false;
+    scroll.addEventListener('pointerdown',e=>{
+      dragged=false;
+      if(e.pointerType!=='mouse' || e.button!==0 || (e.target.closest('button,canvas') && !e.target.closest('.track-ruler'))) return;
+      drag={x:e.clientX,left:scroll.scrollLeft};scroll.setPointerCapture(e.pointerId);
+    });
+    scroll.addEventListener('pointermove',e=>{
+      if(!drag)return;
+      if(Math.abs(e.clientX-drag.x)>3)dragged=true;
+      if(dragged)scroll.scrollLeft=drag.left-(e.clientX-drag.x);
+    });
+    scroll.addEventListener('pointerup',()=>{drag=null;});
+    // 눈금을 누르면 그 시각으로 이동
+    scroll.querySelector('.track-ruler').addEventListener('click',e=>{
+      const s=session;
+      if(!s?.clip || dragged) return;
+      const board=scroll.querySelector('.track-board').getBoundingClientRect();
+      seekCutTrack(s,(e.clientX-board.left)/trackPps(s));
+    });
+    // 주소창이 접히는 세로 크기 변화는 무시하고, 폭이 바뀔 때만 다시 맞춘다.
+    let lastWidth=innerWidth;
+    addEventListener('resize',()=>{
+      const s=session;
+      if(innerWidth===lastWidth)return;
+      lastWidth=innerWidth;
+      if(s?.clip){s.trackPps=0;finishTrackZoom(s);}
+    });
+  }
   video.addEventListener('timeupdate',()=>{
     const s=session;
     if(!s?.clip || s.joined || s.timelineCuts) return;

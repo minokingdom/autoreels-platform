@@ -5,7 +5,10 @@
   if (quickEdit) {
     // 편집기 쪽: 쇼츠 화면이 넘긴 영상·구간·자막으로 편집 시작
     window.openShortsSelection = async function (file, pick) {
-      await openQuickFiles([file]);
+      // 쇼츠 화면(부모 창)의 File은 이 창에서 Blob으로 인식되지 않아 파형을 읽지 못한다.
+      // 데이터 복사 없이 이 창의 File로 다시 감싸서 넘긴다.
+      const own = new File([file], file.name || '쇼츠 원본.mp4', { type: file.type || 'video/mp4', lastModified: file.lastModified || Date.now() });
+      await openQuickFiles([own]);
       const s = session;
       if (!s?.clip || !pick) return;
       const duration = video.duration;
