@@ -115,6 +115,21 @@
 .track-mute-btn:hover{opacity:1;color:#e4e4e7;background:rgba(255,255,255,.08)}
 .track-mute-btn[aria-pressed=true]{opacity:1;color:#f87171;background:transparent}
 .mix-row.is-muted{opacity:.36;filter:grayscale(.7)}
+.ar-cap-sec-lbl{font-size:11.5px;color:#9ca3af;margin:8px 0 5px;display:block}
+.ar-font-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:8px}
+.ar-font-card{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;padding:8px 10px;border-radius:10px;border:1.5px solid #353742;background:#17181e;color:#f4f4f6;cursor:pointer;text-align:left;min-height:54px;overflow:hidden;transition:border-color 120ms,background-color 120ms}
+.ar-font-card:hover{border-color:#525566;background:#1e2028}
+.ar-font-card[aria-pressed=true]{border-color:#60a5fa;background:#172540;box-shadow:0 0 0 1px rgba(96,165,250,.35)}
+.ar-font-sample{font-size:15px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
+.ar-font-name{font:500 10px/1 system-ui;color:#8b8d98}
+.ar-style-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:8px}
+.ar-style-chip{padding:7px 4px;border-radius:8px;border:1.5px solid #353742;background:#17181e;color:#fff;font-size:11.5px;font-weight:700;cursor:pointer;text-align:center}
+.ar-style-chip[aria-pressed=true]{border-color:#60a5fa;box-shadow:0 0 0 1px rgba(96,165,250,.4)}
+.ar-chip-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.ar-mini-chip{padding:4px 9px;border-radius:999px;border:1px solid #454750;background:#262830;color:#e5e7eb;font-size:11px;cursor:pointer}
+.ar-mini-chip[aria-pressed=true]{background:#3b82f6;border-color:#60a5fa;color:#fff;font-weight:700}
+.ar-swatch-btn{width:24px;height:24px;border-radius:999px;border:2px solid rgba(255,255,255,.22);cursor:pointer;padding:0;flex-shrink:0}
+.ar-swatch-btn[aria-pressed=true]{border-color:#60a5fa;transform:scale(1.12)}
 .quick-video .mix-label[aria-pressed=true]{color:#fff;background:#1d2026}
 .mix-icon{display:block;width:19px;height:19px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
 .quick-video #trackScale{position:relative;background:repeating-linear-gradient(90deg,#45484e 0 1px,transparent 1px 25%) bottom left/var(--tick-step,16.6667%) 8px repeat-x}

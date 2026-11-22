@@ -225,46 +225,159 @@ function drawCues(s,type,total){
   }
   if(!lane.children.length)lane.append(mixButton(sound?'＋ 효과음':'＋ 자막',()=>{selectMix(s,type);editCue(s,type);},'mix-empty'));
 }
+const MIX_CAPTION_FONTS=[
+  {id:'pretendard',name:'프리텐다드',css:'"Pretendard Variable", Pretendard, sans-serif',w:700},
+  {id:'dohyeon',name:'도현체',css:'"Do Hyeon", sans-serif',w:400},
+  {id:'jua',name:'주아체',css:'"Jua", sans-serif',w:400},
+  {id:'gowun',name:'고운바탕',css:'"Gowun Batang", serif',w:700},
+  {id:'songmyung',name:'송명체',css:'"Song Myung", serif',w:400},
+  {id:'pen',name:'나눔손글씨 펜',css:'"Nanum Pen Script", cursive',w:400,sz:19},
+  {id:'blackhan',name:'블랙한산스',css:'"Black Han Sans", sans-serif',w:400}
+];
+function buildCaptionStylePicker(box,opts){
+  const state={
+    font:opts.font||'pretendard',
+    style:(opts.style&&opts.style!=='inherit')?opts.style:'box',
+    size:Number(opts.size)||1,
+    color:opts.color||'#ffffff',
+    posY:typeof opts.posY==='number'?opts.posY:0.82
+  };
+  const emit=()=>{if(typeof opts.onLive==='function')opts.onLive({...state});};
+  // 1) 라이브 폰트 미리보기 카드 (위 자막 입력 내용 실시간 반영)
+  const fLbl=document.createElement('span');fLbl.className='ar-cap-sec-lbl';fLbl.textContent='글꼴 미리보기 (위 자막 입력 시 실시간 반영)';
+  const fGrid=document.createElement('div');fGrid.className='ar-font-grid';
+  const sampleEls=[];
+  const getSampleText=()=>{
+    const v=opts.textInput?opts.textInput.value.trim():(opts.sampleFallback||'');
+    return v?v.slice(0,16):'가나다 릴스 자막';
+  };
+  MIX_CAPTION_FONTS.forEach(f=>{
+    const card=document.createElement('button');card.type='button';card.className='ar-font-card';
+    card.setAttribute('aria-pressed',String(state.font===f.id));
+    const sample=document.createElement('span');sample.className='ar-font-sample';
+    sample.style.fontFamily=f.css;sample.style.fontWeight=String(f.w);
+    if(f.sz)sample.style.fontSize=f.sz+'px';
+    sample.style.color=state.color;
+    sample.textContent=getSampleText();
+    const nm=document.createElement('span');nm.className='ar-font-name';nm.textContent=f.name;
+    card.append(sample,nm);
+    card.addEventListener('click',()=>{
+      state.font=f.id;
+      [...fGrid.children].forEach(c=>c.setAttribute('aria-pressed','false'));
+      card.setAttribute('aria-pressed','true');
+      emit();
+    });
+    sampleEls.push(sample);
+    fGrid.append(card);
+  });
+  const refreshSamples=()=>{
+    const txt=getSampleText();
+    sampleEls.forEach(el=>{el.textContent=txt;el.style.color=state.color==='#111111'?'#e5e7eb':state.color;});
+  };
+  if(opts.textInput)opts.textInput.addEventListener('input',()=>{refreshSamples();emit();});
+  box.append(fLbl,fGrid);
+
+  // 2) 자막 모양 비주얼 칩
+  const sLbl=document.createElement('span');sLbl.className='ar-cap-sec-lbl';sLbl.textContent='자막 모양';
+  const sGrid=document.createElement('div');sGrid.className='ar-style-grid';
+  [
+    ['box','어두운 박스','background:#111318;color:#fff;'],
+    ['cinema','시네마 밑줄','background:#181920;color:#fff;text-decoration:underline;font-style:italic;'],
+    ['outline','검정 테두리','background:#2a2d36;color:#fff;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000;'],
+    ['yellowBox','노란 박스','background:#facc15;color:#111;'],
+    ['pinkBox','네온 핑크','background:#e11d48;color:#fff;'],
+    ['shadow','그림자','background:#22242c;color:#fff;text-shadow:0 2px 6px #000;']
+  ].forEach(([val,lbl,css])=>{
+    const b=document.createElement('button');b.type='button';b.className='ar-style-chip';b.textContent=lbl;b.style.cssText=css;
+    b.setAttribute('aria-pressed',String(state.style===val));
+    b.addEventListener('click',()=>{
+      state.style=val;
+      [...sGrid.children].forEach(c=>c.setAttribute('aria-pressed','false'));
+      b.setAttribute('aria-pressed','true');
+      emit();
+    });
+    sGrid.append(b);
+  });
+  box.append(sLbl,sGrid);
+
+  // 3) 글자 색상 스와치 + 크기
+  const cLbl=document.createElement('span');cLbl.className='ar-cap-sec-lbl';cLbl.textContent='글자 색상 · 크기';
+  const cRow=document.createElement('div');cRow.className='ar-chip-row';cRow.style.alignItems='center';
+  ['#ffffff','#fde047','#38bdf8','#fb7185','#4ade80','#fb923c','#111111'].forEach(hex=>{
+    const sw=document.createElement('button');sw.type='button';sw.className='ar-swatch-btn';sw.style.background=hex;
+    sw.setAttribute('aria-pressed',String(state.color.toLowerCase()===hex));
+    sw.addEventListener('click',()=>{
+      state.color=hex;
+      cRow.querySelectorAll('.ar-swatch-btn').forEach(b=>b.setAttribute('aria-pressed','false'));
+      sw.setAttribute('aria-pressed','true');
+      refreshSamples();emit();
+    });
+    cRow.append(sw);
+  });
+  const colPick=document.createElement('input');colPick.type='color';colPick.value=state.color;
+  colPick.style.cssText='width:26px;height:24px;padding:0;border:0;background:none;cursor:pointer;';
+  colPick.addEventListener('input',()=>{state.color=colPick.value;refreshSamples();emit();});
+  cRow.append(colPick);
+  box.append(cLbl,cRow);
+
+  const szRow=document.createElement('div');szRow.className='ar-chip-row';
+  [['작게',0.8],['보통',1],['크게',1.25],['특대',1.45]].forEach(([lbl,val])=>{
+    const b=document.createElement('button');b.type='button';b.className='ar-mini-chip';b.textContent=lbl;
+    b.setAttribute('aria-pressed',String(Math.abs(state.size-val)<0.05));
+    b.addEventListener('click',()=>{
+      state.size=val;
+      [...szRow.children].forEach(c=>c.setAttribute('aria-pressed','false'));
+      b.setAttribute('aria-pressed','true');
+      emit();
+    });
+    szRow.append(b);
+  });
+  box.append(szRow);
+
+  // 4) 세로 위치 칩 + 슬라이더
+  const pLbl=document.createElement('span');pLbl.className='ar-cap-sec-lbl';pLbl.textContent='세로 위치 (미리보기 화면에서 직접 드래그도 가능)';
+  const pRow=document.createElement('div');pRow.className='ar-chip-row';
+  const pRange=document.createElement('input');pRange.type='range';pRange.min='12';pRange.max='90';pRange.step='1';
+  pRange.value=String(Math.round(state.posY*100));
+  pRange.style.cssText='width:100%;margin-bottom:6px;';
+  const syncPosChips=()=>{
+    const cur=Math.round(state.posY*100);
+    [...pRow.children].forEach(c=>c.setAttribute('aria-pressed',String(Math.abs(Number(c.dataset.pct)-cur)<=4)));
+  };
+  [['상단',18],['중상단',35],['정중앙',50],['중하단',68],['하단',82]].forEach(([lbl,pct])=>{
+    const pb=document.createElement('button');pb.type='button';pb.className='ar-mini-chip';pb.textContent=lbl;pb.dataset.pct=String(pct);
+    pb.addEventListener('click',()=>{state.posY=pct/100;pRange.value=String(pct);syncPosChips();emit();});
+    pRow.append(pb);
+  });
+  pRange.addEventListener('input',()=>{state.posY=Number(pRange.value)/100;syncPosChips();emit();});
+  syncPosChips();
+  box.append(pLbl,pRow,pRange);
+  return ()=>({...state});
+}
 function editSourceCaption(s,line){
   if(!editableEffects())return;
   const clip=s.clip;
-  let input,fontSel,styleSel,sizeSel,colorInp,posRange;
+  let input,getStyle;
   const box=mixDialog('자막 편집 · 폰트·위치',()=>{
+    const st=getStyle();
     line.text=input.value.trim();
-    clip.captionFont=fontSel.value;
-    clip.captionStyle=styleSel.value;
-    clip.captionSize=Number(sizeSel.value)||1;
-    clip.captionColor=colorInp.value||'#ffffff';
-    clip.captionPosY=(Number(posRange.value)||82)/100;
+    clip.captionFont=st.font;clip.captionStyle=st.style;clip.captionSize=st.size;clip.captionColor=st.color;clip.captionPosY=st.posY;
     mixChanged(s);
   });
   input=mixField(box,'자막',document.createElement('input'));input.maxLength=240;input.value=line.text;
-  fontSel=mixField(box,'글꼴 (폰트)',document.createElement('select'));
-  [['pretendard','프리텐다드 (깔끔한 고딕)'],['dohyeon','도현체 (임팩트 타이틀)'],['jua','주아체 (둥근 팝)'],['gowun','고운바탕 (감성 명조)'],['songmyung','송명체 (매거진 명조)'],['pen','나눔손글씨 펜'],['blackhan','블랙한산스 (초굵은 강조)']].forEach(([v,l])=>fontSel.add(new Option(l,v)));
-  fontSel.value=clip.captionFont||'pretendard';
-  styleSel=mixField(box,'자막 모양',document.createElement('select'));
-  [['box','어두운 라운드 박스'],['cinema','시네마 · 흰 글씨와 밑줄'],['outline','흰 글씨 · 검정 테두리'],['yellowBox','노란 포인트 박스'],['pinkBox','네온 핑크 박스'],['shadow','배경 없는 그림자']].forEach(([v,l])=>styleSel.add(new Option(l,v)));
-  styleSel.value=clip.captionStyle||clip.style||'box';
-  sizeSel=mixField(box,'글자 크기',document.createElement('select'));
-  [['0.8','작게 (80%)'],['1','보통 (100%)'],['1.25','크게 (125%)'],['1.45','특대 (145%)']].forEach(([v,l])=>sizeSel.add(new Option(l,v)));
-  sizeSel.value=String(clip.captionSize||1);
-  colorInp=mixField(box,'글자 색상',document.createElement('input'));colorInp.type='color';colorInp.value=clip.captionColor||'#ffffff';colorInp.style.height='36px';
-  posRange=mixField(box,'세로 위치 (화면 위↔아래 · 미리보기 직접 드래그 가능)',document.createElement('input'));
-  posRange.type='range';posRange.min='12';posRange.max='90';posRange.step='1';
-  posRange.value=String(Math.round((clip.captionPosY||0.82)*100));
-  const posChips=document.createElement('div');posChips.style.cssText='display:flex;gap:5px;flex-wrap:wrap;margin:-2px 0 8px;';
-  [['상단',18],['중상단',35],['정중앙',50],['중하단',68],['하단',82]].forEach(([lbl,pct])=>{
-    const pb=document.createElement('button');pb.type='button';pb.textContent=lbl;
-    pb.style.cssText='padding:4px 9px;border-radius:999px;border:1px solid #454750;background:#262830;color:#fff;font-size:11px;cursor:pointer;';
-    pb.addEventListener('click',()=>{posRange.value=String(pct);});
-    posChips.append(pb);
+  getStyle=buildCaptionStylePicker(box,{
+    textInput:input,font:clip.captionFont,style:clip.captionStyle||clip.style,size:clip.captionSize,color:clip.captionColor,posY:clip.captionPosY,
+    onLive:(st)=>{
+      line.text=input.value.trim()||line.text;
+      clip.captionFont=st.font;clip.captionStyle=st.style;clip.captionSize=st.size;clip.captionColor=st.color;clip.captionPosY=st.posY;
+      if(s.joined||s.timelineCuts)seekCutTrack(s,s.trackTime||0);else renderPreview();
+    }
   });
-  box.append(posChips);
 }
 function editCue(s,type,cue){
   if(!editableEffects())return;
   const sound=type==='sfx',total=mixTotal(s);
-  let choice,text,start,len,style,fontSel,sizeSel,colorInp,posRange;
+  let choice,text,start,len,getCapStyle;
   const box=mixDialog(mixNames[type],async()=>{
     const at=start.valueAsNumber;if(!Number.isFinite(at)||at<0||at>=total)throw Error('영상 안의 시작 시간을 입력해 주세요.');
     let data,duration;
@@ -276,14 +389,8 @@ function editCue(s,type,cue){
       data={buffer,id,name:choice.selectedOptions[0].text};duration=buffer.duration;
     }else{
       if(!text.value.trim())throw Error('자막을 입력해 주세요.');
-      data={
-        text:text.value.trim(),
-        style:style.value,
-        font:fontSel.value,
-        size:Number(sizeSel.value)||1,
-        color:colorInp.value||'#ffffff',
-        posY:(Number(posRange.value)||82)/100
-      };
+      const st=getCapStyle();
+      data={text:text.value.trim(),style:st.style,font:st.font,size:st.size,color:st.color,posY:st.posY};
       duration=len.valueAsNumber;
       if(!Number.isFinite(duration)||duration<=0)throw Error('자막 길이를 입력해 주세요.');
     }
@@ -337,28 +444,21 @@ function editCue(s,type,cue){
     }).catch(()=>{byId('mixError').textContent='효과음 목록을 불러올 수 없어요.';});
   }else{
     text=mixField(box,'자막',document.createElement('input'));text.maxLength=240;text.value=cue?.text||'';
-    fontSel=mixField(box,'글꼴 (폰트)',document.createElement('select'));
-    [['pretendard','프리텐다드 (깔끔한 고딕)'],['dohyeon','도현체 (임팩트 타이틀)'],['jua','주아체 (둥근 팝)'],['gowun','고운바탕 (감성 명조)'],['songmyung','송명체 (매거진 명조)'],['pen','나눔손글씨 펜'],['blackhan','블랙한산스 (초굵은 강조)']].forEach(([v,l])=>fontSel.add(new Option(l,v)));
-    fontSel.value=cue?.font||s.clip.captionFont||'pretendard';
-    style=mixField(box,'자막 모양',document.createElement('select'));
-    [['box','어두운 라운드 박스'],['cinema','시네마 · 흰 글씨와 밑줄'],['outline','흰 글씨 · 검정 테두리'],['yellowBox','노란 포인트 박스'],['pinkBox','네온 핑크 박스'],['shadow','배경 없는 그림자']].forEach(([v,l])=>style.add(new Option(l,v)));
-    style.value=cue?.style&&cue.style!=='inherit'?cue.style:(s.clip.captionStyle||'box');
-    sizeSel=mixField(box,'글자 크기',document.createElement('select'));
-    [['0.8','작게 (80%)'],['1','보통 (100%)'],['1.25','크게 (125%)'],['1.45','특대 (145%)']].forEach(([v,l])=>sizeSel.add(new Option(l,v)));
-    sizeSel.value=String(cue?.size||s.clip.captionSize||1);
-    colorInp=mixField(box,'글자 색상',document.createElement('input'));
-    colorInp.type='color';colorInp.value=cue?.color||s.clip.captionColor||'#ffffff';colorInp.style.height='36px';
-    posRange=mixField(box,'세로 위치 (화면 위↔아래 · 미리보기에서 직접 드래그 가능)',document.createElement('input'));
-    posRange.type='range';posRange.min='12';posRange.max='90';posRange.step='1';
-    posRange.value=String(Math.round((typeof cue?.posY==='number'?cue.posY:(s.clip.captionPosY||0.82))*100));
-    const posChips=document.createElement('div');posChips.style.cssText='display:flex;gap:5px;flex-wrap:wrap;margin:-2px 0 8px;';
-    [['상단',18],['중상단',35],['정중앙',50],['중하단',68],['하단',82]].forEach(([lbl,pct])=>{
-      const pb=document.createElement('button');pb.type='button';pb.textContent=lbl;
-      pb.style.cssText='padding:4px 9px;border-radius:999px;border:1px solid #454750;background:#262830;color:#fff;font-size:11px;cursor:pointer;';
-      pb.addEventListener('click',()=>{posRange.value=String(pct);});
-      posChips.append(pb);
+    text.placeholder='여기에 자막을 치면 아래 폰트가 바로 미리보기 됩니다';
+    getCapStyle=buildCaptionStylePicker(box,{
+      textInput:text,
+      font:cue?.font||s.clip.captionFont,
+      style:(cue?.style&&cue.style!=='inherit')?cue.style:(s.clip.captionStyle||'box'),
+      size:cue?.size||s.clip.captionSize||1,
+      color:cue?.color||s.clip.captionColor||'#ffffff',
+      posY:typeof cue?.posY==='number'?cue.posY:(s.clip.captionPosY||0.82),
+      onLive:(st)=>{
+        if(cue){
+          Object.assign(cue,{text:text.value.trim()||cue.text,font:st.font,style:st.style,size:st.size,color:st.color,posY:st.posY});
+          if(s.joined||s.timelineCuts)seekCutTrack(s,s.trackTime||0);else renderPreview();
+        }
+      }
     });
-    box.append(posChips);
   }
   start=numField(box,'시작(초)',cue?.start??Math.max(0,Math.min(s.trackTime||0,total-.1)),total);
   if(!sound)len=numField(box,'길이(초)',cue?.duration||Math.min(2,total),total,.01);
@@ -581,38 +681,24 @@ function showMixHint(text){
 function editGlobalCaptionStyle(s){
   if(!editableEffects())return;
   const clip=s.clip;
-  let fontSel,styleSel,sizeSel,colorInp,posRange;
+  const activeSample=activeCue(s,s.trackTime||0)?.text || clip.lines?.[0]?.text || clip.title || '가나다 릴스 자막';
+  let getStyle;
   const box=mixDialog('전체 자막 폰트·위치',()=>{
-    clip.captionFont=fontSel.value;
-    clip.captionStyle=styleSel.value;
-    clip.captionSize=Number(sizeSel.value)||1;
-    clip.captionColor=colorInp.value||'#ffffff';
-    clip.captionPosY=(Number(posRange.value)||82)/100;
-    for(const c of s.captions||[]){c.font=clip.captionFont;c.style=clip.captionStyle;c.size=clip.captionSize;c.color=clip.captionColor;c.posY=clip.captionPosY;}
+    const st=getStyle();
+    clip.captionFont=st.font;clip.captionStyle=st.style;clip.captionSize=st.size;clip.captionColor=st.color;clip.captionPosY=st.posY;
+    for(const c of s.captions||[]){c.font=st.font;c.style=st.style;c.size=st.size;c.color=st.color;c.posY=st.posY;}
     mixChanged(s);
     showMixHint('전체 자막 폰트와 위치를 적용했어요!');
   });
-  fontSel=mixField(box,'글꼴 (폰트)',document.createElement('select'));
-  [['pretendard','프리텐다드 (깔끔한 고딕)'],['dohyeon','도현체 (임팩트 타이틀)'],['jua','주아체 (둥근 팝)'],['gowun','고운바탕 (감성 명조)'],['songmyung','송명체 (매거진 명조)'],['pen','나눔손글씨 펜'],['blackhan','블랙한산스 (초굵은 강조)']].forEach(([v,l])=>fontSel.add(new Option(l,v)));
-  fontSel.value=clip.captionFont||'pretendard';
-  styleSel=mixField(box,'자막 모양',document.createElement('select'));
-  [['box','어두운 라운드 박스'],['cinema','시네마 · 흰 글씨와 밑줄'],['outline','흰 글씨 · 검정 테두리'],['yellowBox','노란 포인트 박스'],['pinkBox','네온 핑크 박스'],['shadow','배경 없는 그림자']].forEach(([v,l])=>styleSel.add(new Option(l,v)));
-  styleSel.value=clip.captionStyle||clip.style||'box';
-  sizeSel=mixField(box,'글자 크기',document.createElement('select'));
-  [['0.8','작게 (80%)'],['1','보통 (100%)'],['1.25','크게 (125%)'],['1.45','특대 (145%)']].forEach(([v,l])=>sizeSel.add(new Option(l,v)));
-  sizeSel.value=String(clip.captionSize||1);
-  colorInp=mixField(box,'글자 색상',document.createElement('input'));colorInp.type='color';colorInp.value=clip.captionColor||'#ffffff';colorInp.style.height='36px';
-  posRange=mixField(box,'세로 위치 (화면 위↔아래 · 미리보기 직접 드래그 가능)',document.createElement('input'));
-  posRange.type='range';posRange.min='12';posRange.max='90';posRange.step='1';
-  posRange.value=String(Math.round((clip.captionPosY||0.82)*100));
-  const posChips=document.createElement('div');posChips.style.cssText='display:flex;gap:5px;flex-wrap:wrap;margin:-2px 0 8px;';
-  [['상단',18],['중상단',35],['정중앙',50],['중하단',68],['하단',82]].forEach(([lbl,pct])=>{
-    const pb=document.createElement('button');pb.type='button';pb.textContent=lbl;
-    pb.style.cssText='padding:4px 9px;border-radius:999px;border:1px solid #454750;background:#262830;color:#fff;font-size:11px;cursor:pointer;';
-    pb.addEventListener('click',()=>{posRange.value=String(pct);});
-    posChips.append(pb);
+  getStyle=buildCaptionStylePicker(box,{
+    sampleFallback:activeSample,
+    font:clip.captionFont,style:clip.captionStyle||clip.style,size:clip.captionSize,color:clip.captionColor,posY:clip.captionPosY,
+    onLive:(st)=>{
+      clip.captionFont=st.font;clip.captionStyle=st.style;clip.captionSize=st.size;clip.captionColor=st.color;clip.captionPosY=st.posY;
+      for(const c of s.captions||[]){c.font=st.font;c.style=st.style;c.size=st.size;c.color=st.color;c.posY=st.posY;}
+      if(s.joined||s.timelineCuts)seekCutTrack(s,s.trackTime||0);else renderPreview();
+    }
   });
-  box.append(posChips);
 }
 function openAddTrackDialog(s){
   if(!editableEffects())return;
