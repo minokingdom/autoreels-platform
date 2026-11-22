@@ -2987,7 +2987,7 @@
             window.__arSelectedOverlayIdx = -1;
             const curKey = window.__arActiveCutElKey || '';
             dragElKey = 'photo';
-            window.__arActiveCutElKey = 'photo';
+            window.__arActiveCutElKey = '';
             const curOv = getCutElementOverride(window.__arPinnedCut);
             if (dragElKey === 'photo') {
               origX = Number(curOv.photo.panX) || 0;
@@ -3767,20 +3767,14 @@
           const targetIdx = window.__arPinnedCut >= 0
             ? window.__arPinnedCut
             : (curT < mainDur ? Math.min(n - 1, Math.max(0, Math.floor(curT / cutDur))) : 0);
-          const hitKey = hitTestCutCanvasElement(targetIdx, nx, ny);
-          // 롱프레스 시 복잡한 이중 시트 대신 깔끔한 직접 컷 편집 모드로 진입 (각 요소 클릭·수정·상단 도구로 추가)
+          // 롱프레스 시 어떤 요소에도 강제 포커싱 없이 깔끔한 컷 편집 모드로만 진입 (이후 사용자가 원하는 요소를 직접 클릭해 수정·추가)
           if (typeof closePresetDrawer === 'function') closePresetDrawer();
           window.__arPinnedCut = targetIdx;
           window.__arDirectCanvasMode = true;
           window.__arInlineEditActive = false;
           window.__arCutEditorOpen = false;
-          if (hitKey && hitKey.startsWith('overlay:')) {
-            window.__arSelectedOverlayIdx = Number(hitKey.split(':')[1]);
-            window.__arActiveCutElKey = hitKey;
-          } else {
-            window.__arSelectedOverlayIdx = -1;
-            window.__arActiveCutElKey = hitKey || 'caption';
-          }
+          window.__arSelectedOverlayIdx = -1;
+          window.__arActiveCutElKey = '';
           isPlaying = false;
           const ppBtn = document.getElementById('playPauseBtn');
           if (ppBtn) ppBtn.textContent = '▶️ 재생';
