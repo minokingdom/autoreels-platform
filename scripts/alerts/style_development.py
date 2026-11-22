@@ -1,6 +1,7 @@
 """스타일 개발: 코드 초안은 격리된 읽기 전용 Codex, 실행은 캔버스만. 반영은 승인 후 별도."""
 import hashlib,json,os,re,shutil,subprocess,time
 from pathlib import Path
+ENGINE_FILES=('lib/reference-style.cjs','public/assets/app/06-design-kit.js','public/assets/app/07-motion-styles.js','public/assets/app/07-reference-styles.js','public/assets/app/08-cut-editor.js')
 
 def digest(file):return hashlib.sha256(Path(file).read_bytes()).hexdigest()
 def source_digest(content):return hashlib.sha256(content.replace(b'\r\n',b'\n')).hexdigest()
@@ -85,7 +86,7 @@ def prepare(job,directory,repo,run,write,rpc):
     manifest={'tested':True,'candidateSha256':digest(directory/'proposal/candidate.json'),'videoSha256':digest(video),
               'sourceSha256':digest(directory/'source.mp4'),'baseCommit':run(['git','rev-parse','HEAD'],cwd=repo).strip(),
               'checksSha256':digest(directory/'proposal/checks.json'),
-              'engineFiles':{name:source_digest((repo/name).read_bytes()) for name in ('lib/reference-style.cjs','public/assets/app/07-reference-styles.js')},
+              'engineFiles':{name:source_digest((repo/name).read_bytes()) for name in ENGINE_FILES},
               'name':candidate['style']['name']}
     rev=revision(manifest);write(directory/'proposal/manifest.json',manifest)
     key=Path.home()/'.ssh/eatspay-kakaobot-restored-20261023';known=Path.home()/'.ssh/known_hosts-eatspay-restored-20261023'
@@ -102,7 +103,7 @@ def approved_candidate(job,directory,repo=None,run=None):
     if repo is not None:
         import base64
         for name,expected in manifest.get('engineFiles',{}).items():
-            if name not in ('lib/reference-style.cjs','public/assets/app/07-reference-styles.js') or source_digest((repo/name).read_bytes())!=expected:raise ValueError('비교 영상 이후 렌더 엔진이 바뀌었습니다. 새 비교 영상이 필요합니다.')
+            if name not in ENGINE_FILES or source_digest((repo/name).read_bytes())!=expected:raise ValueError('비교 영상 이후 렌더 엔진이 바뀌었습니다. 새 비교 영상이 필요합니다.')
             remote=json.loads(run(['gh','api',f'repos/minokingdom/autoreels-platform/contents/{name}?ref=main']))
             if source_digest(base64.b64decode(remote['content']))!=expected:raise ValueError('운영 렌더 엔진과 비교본 버전이 달라 등록하지 않았습니다.')
     return json.loads((directory/'proposal/candidate.json').read_text(encoding='utf-8'))
