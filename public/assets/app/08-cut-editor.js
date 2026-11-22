@@ -2216,6 +2216,75 @@
           c.restore();
         }
       }
+      // ── Prompt-Motion.com 전체 테마 공통 키네틱 크롬 (120 BPM 리듬 진행바 · 스프링 뷰파인더 · 듀얼스프링 컷 스윕) ──
+      if (!(design && design.mstyle === 'in_lookbook_still')) {
+        const isLightTheme = !!(design && design.light);
+        const pmAccent = (V && V.accent) || (design && design.accent) || (isLightTheme ? '#2340e8' : '#38bdf8');
+        const pmSpring = typeof arPmSpring === 'function' ? arPmSpring(localT * 1.4, 8.2, 9.6) : Math.min(1, localT / 0.28);
+        const pmDual = typeof arPmDualSpring === 'function' ? arPmDualSpring(localT, 0) : { lead: Math.min(1, localT / 0.22), trail: Math.min(1, Math.max(0, localT - 0.05) / 0.22) };
+        const pmBeat = typeof arPmBeat === 'function' ? arPmBeat(t) : { pulse: 0 };
+
+        c.save();
+        // 1) 상단 듀얼-스프링 리퀴드 세그먼트 진행바 (2.5px)
+        const padX = 24;
+        const barY = 18;
+        const gap = 5;
+        const nSeg = Math.max(1, totalCuts);
+        const segW = (W - padX * 2 - gap * (nSeg - 1)) / nSeg;
+        const railBg = isLightTheme ? 'rgba(15,15,20,0.14)' : 'rgba(255,255,255,0.20)';
+        for (let si = 0; si < nSeg; si++) {
+          const sx = padX + si * (segW + gap);
+          c.fillStyle = railBg;
+          gRoundRect(c, sx, barY, segW, 2.5, 2);
+          c.fill();
+          if (si < cutIdx) {
+            c.fillStyle = pmAccent;
+            gRoundRect(c, sx, barY, segW, 2.5, 2);
+            c.fill();
+          } else if (si === cutIdx) {
+            const cutFrac = Math.max(0, Math.min(1, localT / Math.max(0.1, cutDur)));
+            const activeW = Math.max(segW * 0.14 * pmDual.lead, segW * cutFrac);
+            c.fillStyle = pmAccent;
+            gRoundRect(c, sx, barY, Math.min(segW, activeW), 2.5 + pmBeat.pulse * 0.8, 2);
+            c.fill();
+          }
+        }
+
+        // 2) 코너 뷰파인더 마이크로 브래킷 (컷 진입 시 클로즈드폼 스프링 스냅)
+        const snapOff = (1 - Math.min(1.04, pmSpring)) * 10;
+        const brLen = 11;
+        const bx0 = 20 - snapOff;
+        const bx1 = W - 20 + snapOff;
+        const by0 = 32 - snapOff;
+        const by1 = H - 106 + snapOff;
+        c.strokeStyle = isLightTheme ? 'rgba(15,15,20,0.24)' : 'rgba(255,255,255,0.28)';
+        c.lineWidth = 1.25;
+        c.lineCap = 'square';
+        c.beginPath();
+        // 좌상
+        c.moveTo(bx0, by0 + brLen); c.lineTo(bx0, by0); c.lineTo(bx0 + brLen, by0);
+        // 우상
+        c.moveTo(bx1 - brLen, by0); c.lineTo(bx1, by0); c.lineTo(bx1, by0 + brLen);
+        // 좌하
+        c.moveTo(bx0, by1 - brLen); c.lineTo(bx0, by1); c.lineTo(bx0 + brLen, by1);
+        // 우하
+        c.moveTo(bx1 - brLen, by1); c.lineTo(bx1, by1); c.lineTo(bx1, by1 - brLen);
+        c.stroke();
+
+        // 3) 컷 전환 순간 듀얼-스프링 디렉셔널 액센트 스윕 (0.00s ~ 0.28s, 깔끔한 모멘텀)
+        if (cutIdx > 0 && localT < 0.30) {
+          const xStart = padX + (W - padX * 2) * pmDual.trail;
+          const xEnd = padX + (W - padX * 2) * pmDual.lead;
+          const sw = Math.max(0, xEnd - xStart);
+          if (sw > 2) {
+            c.globalAlpha = Math.max(0, 1 - localT / 0.30) * 0.85;
+            c.fillStyle = pmAccent;
+            gRoundRect(c, xStart, 24, sw, 2.5, 2);
+            c.fill();
+          }
+        }
+        c.restore();
+      }
       drawCutElementOverridesOverlay(c, W, H, cutIdx, localT, design, V);
       const overlays = (campaign.cutOverlays && campaign.cutOverlays[cutIdx]) || [];
       const animPreview = window.__arAnimPreviewTarget && window.__arAnimPreviewTarget.cutIdx === cutIdx ? window.__arAnimPreviewTarget : null;

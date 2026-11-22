@@ -266,32 +266,99 @@
 
     const mClamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
     const mEase = (p) => gEase(mClamp(p));
+    // ── Prompt-Motion.com 레퍼런스 물리·리듬 엔진 (결정론적 seek(t) · 120 BPM · 듀얼 스프링) ──
+    function arPmSpring(sec, damping = 7.5, freq = 10.5) {
+      const t = Math.max(0, sec);
+      if (t <= 0) return 0;
+      if (t > 1.2) return 1;
+      return 1 - Math.exp(-damping * t) * Math.cos(freq * t);
+    }
+    function arPmDualSpring(local, delay = 0) {
+      const dt = Math.max(0, local - delay);
+      const lead = mClamp(arPmSpring(dt * 1.45, 8.2, 9.5), 0, 1.04);
+      const trail = mClamp(arPmSpring(Math.max(0, dt - 0.055) * 1.25, 8.8, 8.5), 0, 1);
+      return { lead: Math.min(1, lead), trail: Math.min(1, trail) };
+    }
+    function arPmBeat(t) {
+      const beatDur = 0.5; // 120 BPM
+      const beatIdx = Math.floor(Math.max(0, t) / beatDur);
+      const frac = (Math.max(0, t) % beatDur) / beatDur;
+      return { beatIdx, frac, pulse: Math.exp(-7.5 * frac) };
+    }
     function mFit(c, text, maxW, maxLines, size, minSize, fontKey) {
       return kWrap(c, text, maxW, maxLines, size, minSize, fontKey);
     }
-    // 자막: 줄마다 아래에서 올라오며 나타남
+    // 자막: Prompt-Motion 마스크 리빌 + 컷별 강약 대비 + 키워드 듀얼-스프링 언더라인
     function mCaption(c, text, x, y, maxW, maxH, size, fontKey, color, e, align = 'center', box = null) {
       const F = KIT_FONTS[fontKey] || KIT_FONTS.sans;
       const maxLines = Math.max(1, Math.min(3, Math.floor(maxH / (size * F.k * 1.28))));
       const r = mFit(c, text, maxW, maxLines, size, Math.round(size * 0.55), fontKey);
       const total = r.lines.length * r.lh;
       const top = y + Math.max(0, (maxH - total) / 2);
+      const cutIdx = typeof window.__arActiveRenderCutIdx === 'number' ? Math.max(0, window.__arActiveRenderCutIdx) : 0;
+      const localSec = typeof window.__arActiveRenderLocalSec === 'number' ? Math.max(0, window.__arActiveRenderLocalSec) : e * 0.6;
+      const heroIdx = r.lines.length <= 1 ? 0 : (cutIdx % 2 === 0 ? 0 : r.lines.length - 1);
+      const isLightText = gLuminance(color) > 0.45;
+      const pmAccents = isLightText
+        ? ['#38bdf8', '#ff6b4a', '#34d399', '#facc15', '#a78bfa']
+        : ['#2340e8', '#ff4518', '#059669', '#d97706', '#7c3aed'];
+      const accentCol = pmAccents[cutIdx % pmAccents.length];
       c.save();
       c.textAlign = align;
       c.textBaseline = 'middle';
-      c.font = gFont(F.w, r.size, F.f);
       r.lines.forEach((ln, i) => {
-        const p = mEase((e - i * 0.12) / 0.5);
-        const ly = top + i * r.lh + r.lh / 2 + (1 - p) * 26;
-        c.globalAlpha = p;
-        if (box) {
-          const w = c.measureText(ln).width + 28;
-          const bx = align === 'center' ? x - w / 2 : x - 14;
-          c.fillStyle = box;
-          c.fillRect(bx, ly - r.lh / 2 + 3, w * p, r.lh - 6);
+        const isHero = i === heroIdx;
+        const lineP = mClamp((e - i * 0.11) / 0.46);
+        const spP = mClamp(arPmSpring(Math.max(0, localSec - i * 0.11) * 1.35, 8.0, 9.2), 0, 1.03);
+        const p = Math.min(1, Math.max(mEase(lineP), Math.min(1, spP)));
+        const ly = top + i * r.lh + r.lh / 2;
+        const lineW = isHero ? Math.min(900, Math.max(F.w, 800)) : F.w;
+        let lineSz = Math.round(r.size * (r.lines.length >= 2 ? (isHero ? 1.08 : 0.92) : 1));
+        c.font = gFont(lineW, lineSz, F.f);
+        const measured = c.measureText(ln).width;
+        if (measured > maxW - 4) {
+          lineSz = Math.max(14, Math.floor(lineSz * ((maxW - 4) / Math.max(1, measured))));
+          c.font = gFont(lineW, lineSz, F.f);
         }
+        const wText = c.measureText(ln).width;
+        const leftX = align === 'center' ? x - wText / 2 : (align === 'right' ? x - wText : x);
+
+        c.save();
+        c.globalAlpha *= mClamp(p * 1.35);
+        if (box) {
+          const bw = wText + 28;
+          const bx = align === 'center' ? x - bw / 2 : (align === 'right' ? x - bw + 14 : x - 14);
+          c.fillStyle = box;
+          c.fillRect(bx, ly - r.lh / 2 + 3, bw * p, r.lh - 6);
+        }
+        // Prompt-Motion 마스크 리빌 (줄 높이에 맞춘 깔끔한 수직 클립)
+        c.beginPath();
+        c.rect(leftX - 14, ly - r.lh * 0.62, wText + 28, r.lh * 1.24);
+        c.clip();
+        const slideY = (1 - Math.min(1, p)) * (r.lh * 0.68);
         c.fillStyle = color;
-        c.fillText(ln, x, ly);
+        c.fillText(ln, x, ly + slideY);
+        c.restore();
+
+        // 강조 줄의 핵심 키워드/숫자에 듀얼-스프링 액센트 언더라인 스윕
+        if (isHero && !box && typeof arCardFindKeyword === 'function') {
+          const kw = arCardFindKeyword(ln);
+          if (kw) {
+            const ds = arPmDualSpring(localSec, i * 0.11 + 0.14);
+            if (ds.lead > 0.02) {
+              const preW = c.measureText(ln.slice(0, kw.start)).width;
+              const hitW = c.measureText(ln.slice(kw.start, kw.end)).width;
+              const ux = leftX + preW;
+              const barW = Math.max(8, hitW * ds.lead);
+              c.save();
+              c.globalAlpha *= mClamp(p);
+              c.fillStyle = accentCol;
+              gRoundRect(c, ux, ly + lineSz * 0.50, barW, Math.max(2.5, lineSz * 0.095), 2);
+              c.fill();
+              c.restore();
+            }
+          }
+        }
       });
       c.restore();
       return { top, h: total };
@@ -309,10 +376,10 @@
       return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
     }
     function arCardCutPalette(sp, cutIdx, isDarkSurface) {
-      const base = (sp && sp.accent) || (isDarkSurface ? '#38bdf8' : '#e11d48');
+      const base = (sp && sp.accent) || (isDarkSurface ? '#38bdf8' : '#2340e8');
       const pool = isDarkSurface
-        ? ['#38bdf8', '#fb923c', '#34d399', '#f472b6', '#facc15', '#a78bfa']
-        : ['#e11d48', '#2563eb', '#d97706', '#059669', '#7c3aed', '#ea580c'];
+        ? ['#38bdf8', '#ff6b4a', '#34d399', '#facc15', '#a78bfa', '#f472b6']
+        : ['#2340e8', '#ff4518', '#059669', '#d97706', '#7c3aed', '#e11d48'];
       const list = [];
       const bLum = gLuminance(base);
       const baseOk = isDarkSurface ? bLum > 0.22 : bLum < 0.62;
