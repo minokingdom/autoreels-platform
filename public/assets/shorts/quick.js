@@ -55,7 +55,8 @@ function updateQuickTimes(clip) {
     byId(control).value = clip[key];
     byId(output).textContent = clip[key].toFixed(1) + '초';
   }
-  detail(session,'원본 ' + video.duration.toFixed(1) + '초 · 편집 후 ' + editedSeconds(clip).toFixed(1) + '초');
+  renderCutTrack(session);
+  detail(session,'원본 ' + video.duration.toFixed(1) + '초 · 편집 후 ' + sequenceDuration(sequenceTakes(session)).toFixed(1) + '초');
 }
 async function prepareQuickMusic(context,dest,url,signal) {
   const response = await fetch(url,{signal});
@@ -100,13 +101,13 @@ async function startMontage(s,file) {
     });
     if (session !== s) return;
     s.clip.peak=s.plan.peak;
-    if (s.wantMontage) setQuickMode(s,true);
+    if (s.wantMontage && !s.timelineCuts) setQuickMode(s,true);
   } catch(error) {
     if (session !== s || s.controller.signal.aborted) return;
     console.warn('장면 분석 중단',error);
     s.plan={segments:[{start:0,end:video.duration}],peak:null};
-    if (s.wantMontage) {setQuickMode(s,true);byId('montageStatus').textContent='자동 분석이 어려운 영상이에요. 타임라인에서 강조할 순간을 골라 주세요.';}
-  } finally { s.analyzing=false; }
+    if (s.wantMontage && !s.timelineCuts) {setQuickMode(s,true);byId('montageStatus').textContent='자동 분석이 어려운 영상이에요. 타임라인에서 강조할 순간을 골라 주세요.';}
+  } finally { s.analyzing=false; if(session===s && s.timelineCuts && !s.adding && !s.exporting) save.disabled=play.disabled=false; }
 }
 if (quickEdit) {
   byId('useMontage').addEventListener('click',() => {
@@ -152,8 +153,8 @@ if (quickEdit) {
 
   fileInput.multiple=true;
   document.body.classList.add('quick-video');
-  document.title = '오토릴스메이커 · 짧은 내 영상 바로 편집하기';
-  document.querySelectorAll('h1').forEach(h => { h.textContent = '짧은 내 영상 바로 편집하기'; });
+  document.title = '오토릴스메이커 · 영상 편집기';
+  document.querySelectorAll('h1').forEach(h => { h.textContent = '영상 편집기'; });
   byId('entry').querySelectorAll('.hint,.field,#initialGuide').forEach(el => { el.hidden = true; });
   byId('guideForm').hidden = byId('rankStatus').hidden = byId('clips').hidden = byId('progress').hidden = true;
   document.querySelector('label[for="file"] small').hidden = true;

@@ -7,6 +7,7 @@ async function openQuickFiles(files) {
   if (session===s && s?.clip && files.length>1) await appendJoinedFiles(s,files.slice(1));
 }
 function sequenceTakes(s) {
+  if (s.timelineCuts) return s.timelineCuts;
   const items=s.joined || [{url:s.url,clip:s.clip}];
   return items.flatMap(item=>clipRanges(item.clip).map(range=>({
     start:range.start,end:range.end,url:item.url,owner:item.clip
@@ -32,13 +33,15 @@ function awaitMedia(el,event,action,signal) {
   });
 }
 async function positionJoinedTake(source,take,signal) {
-  if(source.src!==take.url) await awaitMedia(source,'loadeddata',()=>{source.src=take.url;},signal);
+  if(source.src!==take.url || source.readyState<2) await awaitMedia(source,'loadeddata',()=>{source.src=take.url;},signal);
   if(Math.abs(source.currentTime-take.start)>.001) await awaitMedia(source,'seeked',()=>{source.currentTime=take.start;},signal);
   source.playbackRate=take.owner.rate||1;
 }
 function stopJoinedPreview(s) { s.previewController?.abort(); }
 function clearJoinedFiles(s) {
-  stopJoinedPreview(s);s.coverController?.abort();
+  stopJoinedPreview(s);s.coverController?.abort();s.trackThumbController?.abort();
+  if(s.coverSource){s.coverSource.removeAttribute('src');s.coverSource.load();}
+  byId("cutTimeline").hidden=true;byId("work").classList.remove("cut-arranged");
   for(const item of s.joined||[]) if(item.url!==s.url) URL.revokeObjectURL(item.url);
   byId('joinList').replaceChildren(); byId('joinNotice').textContent=''; byId('joinTools').hidden=true;
 }
@@ -61,6 +64,10 @@ async function appendJoinedFiles(s,files) {
     }
     if(added.length){
       s.joined ||= [{url:s.url,name:s.filename,clip:s.clip}];
+      if (s.timelineCuts) {
+        s.trackUndo=[{cuts:s.timelineCuts,cursor:s.trackTime||0}];
+        s.timelineCuts=[...s.timelineCuts,...added.map(item=>({url:item.url,owner:item.clip,start:item.clip.start,end:item.clip.end}))];
+      }
       s.joined.push(...added);renderJoinedList(s);
     }
     notice.textContent=skipped ? '재생할 수 없는 영상 '+skipped+'개를 제외했어요.' : '';
@@ -73,7 +80,7 @@ async function appendJoinedFiles(s,files) {
 }
 function renderJoinedList(s) {
   stopJoinedPreview(s);markEdited();
-  if(s.joined.length===1 && s.joined[0].url===s.url){
+  if(!s.timelineCuts && s.joined.length===1 && s.joined[0].url===s.url){
     s.coverController?.abort();s.joined=null;byId('joinList').replaceChildren();
     byId('quickControls').hidden=byId('editor').hidden=false;
     setQuickMode(s,!!s.wantMontage);return;
@@ -97,17 +104,18 @@ function renderJoinedList(s) {
     list.append(row);
   });
   detail(s,s.joined.length+'개 영상 · 이어붙인 길이 '+sequenceDuration(sequenceTakes(s)).toFixed(1)+'초');
-  showJoinedCover(s);
+  renderCutTrack(s);showJoinedCover(s);
 }
-async function showJoinedCover(s) {
+async function showJoinedCover(s,selectedTake) {
   s.coverController?.abort();
-  const controller=s.coverController=new AbortController(),source=document.createElement('video');
+  const controller=s.coverController=new AbortController();
+  const source=s.coverSource ||= document.createElement('video');
   source.muted=true;source.playsInline=true;
   try {
-    const first=sequenceTakes(s)[0];
+    const first=selectedTake || sequenceTakes(s)[0];
     await positionJoinedTake(source,first,controller.signal);
-    if(session===s && !controller.signal.aborted && !s.previewController) paintClip(byId('overlay').getContext('2d'),source,activeCaption(first.owner,first.start),first.owner);
-  } catch {} finally {source.removeAttribute('src');source.load();}
+    if(session===s && !controller.signal.aborted) paintClip(byId('overlay').getContext('2d'),source,activeCaption(first.owner,first.start),first.owner);
+  } catch { /* 다음 탐색이나 재생이 시작되면 이전 프레임 요청을 취소한다. */ }
 }
 async function previewJoined(s) {
   if(s.previewController){stopJoinedPreview(s);return;}
@@ -119,7 +127,14 @@ async function previewJoined(s) {
   const ctx=byId('overlay').getContext('2d');
   play.textContent='Ⅱ';play.setAttribute('aria-label','미리보기 정지');
   try {
-    for(const take of sequenceTakes(s)){
+    const takes=sequenceTakes(s), total=sequenceDuration(takes);
+    const cursor=s.trackTime>=total-.05 ? 0 : s.trackTime||0;
+    const pos=trackPosition(takes,cursor);
+    if(music && cursor) music.addEventListener('loadedmetadata',()=>{if(music.duration>0)music.currentTime=cursor%music.duration;},{once:true});
+    let offset=pos.offset;
+    for(let i=pos.i;i<takes.length;i++){
+      const original=takes[i];
+      const take=i===pos.i ? {...original,start:pos.sourceTime} : original;
       await positionJoinedTake(source,take,controller.signal);
       source.muted=take.owner.keepAudio===false;
       await source.play();music?.play().catch(()=>{});
@@ -128,11 +143,11 @@ async function previewJoined(s) {
         const finish=error=>{cancelAnimationFrame(raf);controller.signal.removeEventListener('abort',cancel);source.onerror=null;error?reject(error):resolve();};
         const cancel=()=>finish(controller.signal.reason);
         controller.signal.addEventListener('abort',cancel,{once:true});source.onerror=()=>finish(Error('영상을 재생할 수 없어요.'));
-        const tick=()=>{if(controller.signal.aborted){cancel();return;}if(music)music.volume=quickMusicGain(take.owner,source.currentTime);paintClip(ctx,source,activeCaption(take.owner,source.currentTime),take.owner);
+        const tick=()=>{if(controller.signal.aborted){cancel();return;}trackTime(s,offset+(source.currentTime-original.start)/(original.owner.rate||1));if(music)music.volume=quickMusicGain(take.owner,source.currentTime);paintClip(ctx,source,activeCaption(take.owner,source.currentTime),take.owner);
           if(source.ended||source.currentTime>=take.end)finish();else raf=requestAnimationFrame(tick);};
         tick();
       });
-      source.pause();music?.pause();
+      source.pause();music?.pause();offset+=takeDuration(original);
     }
   } catch(error){if(!controller.signal.aborted && session===s) detail(s,error.message);}
   finally {

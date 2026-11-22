@@ -183,6 +183,47 @@ try {
   });
   assert.deepEqual(samples.colors,[true,true]);assert.ok(Math.abs(samples.duration-7)<.65);
   console.log('여러 영상 선택·추가·순서 변경·삭제·전체 미리보기·MP4 실제 재생 확인',samples.duration);
+
+  await frame.getByText('스튜디오로 돌아가기').click();
+  await page.locator('dialog.ar-video-editor').waitFor({state:'detached'});
+  await page.locator('#openVideoEditor').click();
+  await frame.getByRole('button',{name:'＋ 영상 추가'}).waitFor();
+  assert.equal(await frame.locator('#trackSplit').isDisabled(),true);
+  await frame.locator('#file').setInputFiles(two);
+  await frame.locator('#highlightEditor').waitFor();
+  await frame.locator('#trackCursor').fill('3');
+  await frame.locator('#trackSplit').click();
+  assert.equal(await frame.locator('#trackClips button').count(),2);
+  await frame.locator('#trackLeft').click();
+  const readCuts=()=>frame.locator('#work').evaluate(()=>sequenceTakes(session).map(t=>[t.start,t.end]));
+  assert.deepEqual(await readCuts(),[[3,6],[0,3]]);
+  await frame.locator('#trackUndo').click();
+  assert.deepEqual(await readCuts(),[[0,3],[3,6]]);
+  await frame.locator('#trackDelete').click();
+  assert.deepEqual(await readCuts(),[[0,3]]);
+  await frame.locator('#trackUndo').click();
+  assert.deepEqual(await readCuts(),[[0,3],[3,6]]);
+  await frame.locator('#trackDelete').click();
+  await frame.locator('#save').click();
+  await frame.locator('#download').waitFor({timeout:18000});
+  const trimmed=await frame.locator('#download').evaluate(async a=>{
+    const out=document.createElement('video');out.muted=true;out.src=a.href;
+    const ended=new Promise((res,rej)=>{out.onended=res;out.onerror=rej;});
+    await out.play();await ended;return out.currentTime;
+  });
+  assert.ok(Math.abs(trimmed-3)<.6,'분할하고 뒷부분을 삭제한 MP4 길이 '+trimmed);
+  await frame.locator('#postVideo').evaluate(()=>{
+    window.arLoadBlobClient=async()=>({put:async(path,blob)=>{
+      const saved=await fetch(session.saved).then(r=>r.blob());
+      if(saved.size!==blob.size) throw Error('편집한 MP4가 발행에 사용되지 않았습니다.');
+      return {url:'https://example.test/trimmed.mp4'};
+    }});
+  });
+  await frame.locator('#postVideo').click();
+  await frame.getByText('게시 완료',{exact:true}).waitFor();
+  assert.equal(posts.at(-1).videoUrl,'https://example.test/trimmed.mp4');
+  console.log('편집기 열기·썸네일 타임라인·분할·순서 변경·삭제·되돌리기·3초 MP4 재생 확인');
+
   assert.deepEqual(errors,[]);
   console.log('Independent file, full duration, trim, rate, sound, caption, music, portrait MP4, original studio preserved');
 } finally { await browser.close(); }

@@ -120,7 +120,7 @@ function activeCaption(clip,t) {return clip?.lines.find(line => t >= line.start 
 play.addEventListener('click',async () => {
   const s = session; if (!s?.clip || s.exporting) return;
   s.interacted = true;
-  if (s.joined) { await previewJoined(s); return; }
+  if (s.joined || s.timelineCuts) { await previewJoined(s); return; }
   if (!video.paused) { video.pause(); return; }
   const ranges = clipRanges(s.clip);
   if (!ranges.some(r => video.currentTime >= r.start && video.currentTime < r.end-.03)) video.currentTime = ranges[0].start;

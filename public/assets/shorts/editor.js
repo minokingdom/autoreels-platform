@@ -68,7 +68,13 @@ function mountEditor(clip) {
   byId('lineFields').replaceChildren(...elements);
 }
 function markEdited() {
-  if (quickEdit) clearEditorPost(session);
+  if (quickEdit) {
+    clearEditorPost(session);
+    if(session.timelineCuts && !session.previewController) {
+      const pos=trackPosition(sequenceTakes(session),session.trackTime||0);
+      if(pos)showJoinedCover(session,{...pos.take,start:pos.sourceTime});
+    }
+  }
   session.interacted = true; download.hidden = true; session.clip.exportId = null;
   if (session.saved) { URL.revokeObjectURL(session.saved); session.saved = null; download.removeAttribute('href'); }
 }
@@ -118,7 +124,7 @@ function drawTitles(ctx,clip,caption) {
   if (clip.showCaptions) block(caption || '',false);
 }
 function renderPreview(at=video.currentTime) {
-  if (session?.joined) return;
+  if (session?.joined || session?.timelineCuts) return;
   const overlay=byId('overlay'),ctx=overlay.getContext('2d');
   if (session?.clip?.montage && (video.seeking || video.readyState < 2)) return;
   ctx.clearRect(0,0,overlay.width,overlay.height);
