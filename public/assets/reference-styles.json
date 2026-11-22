@@ -397,5 +397,26 @@
     "grain": 0,
     "entrySeconds": 0.45,
     "addedAt": "2026-11-21T07:20:57Z"
+  },
+  {
+    "id": "ref_e1e3436cf7c98bff",
+    "category": "브이로그",
+    "layout": "diagonal-fan",
+    "font": "pretM",
+    "captionPosition": "bottom",
+    "textMotion": "fade",
+    "camera": "zoom-in",
+    "transition": "cut",
+    "name": "사선 멀티 마스크",
+    "summary": "서로 다른 컷 사진 3장이 사선 부채꼴로 겹쳐 펼쳐지고, 현재 사진이 화면을 채웁니다. 컷별 사진 지정과 음성 기준 컷 경계를 유지하며 편집기 화면은 포함하지 않습니다.",
+    "background": "#101419",
+    "foreground": "#ffffff",
+    "accent": "#e2e8ec",
+    "captionSize": 0.058,
+    "zoom": 0.035,
+    "shade": 0.5,
+    "grain": 0,
+    "entrySeconds": 0.72,
+    "addedAt": "2026-11-22T05:37:54Z"
   }
 ]

@@ -1059,6 +1059,7 @@
     // ★ 미리보기 옆 바로 누르는 버튼: 소리 · 섞기 · 성우 · 처음부터 (어느 단계에서든)
     const AR_QB_ICONS = {
       color: '<path d="M12 3C7 3 3 6.8 3 12a9 9 0 0 0 9 9h1a2 2 0 0 0 1.4-3.4 1.5 1.5 0 0 1 1.1-2.6H17a4 4 0 0 0 4-4c0-4.6-4.1-8-9-8Z"/><circle cx="7.5" cy="11" r=".8"/><circle cx="11" cy="7.5" r=".8"/><circle cx="16" cy="8.5" r=".8"/>',
+      fx: '<path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15z"/>',
       sound: '<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M19 6a8 8 0 0 1 0 12"/>',
       mute: '<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M22 9l-6 6"/><path d="M16 9l6 6"/>',
       shuffle: '<path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/>',
@@ -1089,6 +1090,74 @@
       shelf.hidden = true;
       shelf.innerHTML = '<button type="button" class="color-page" aria-label="이전 색상">‹</button><div id="designColorSwatches" role="group" aria-label="디자인 색상"></div><button type="button" class="color-page" aria-label="다음 색상">›</button>';
       document.getElementById('previewViewport').after(shelf);
+
+      // ★ 1탭 색감 필터 · 비주얼 효과 바 (VLLO · InShot 스타일 · 전 컷 실시간 적용)
+      const fxDetails = document.createElement('details');
+      fxDetails.id = 'arQuickFx';
+      fxDetails.innerHTML = `<summary class="aq-btn" aria-controls="previewFxShelf"><span class="aq-dot">${arQbSvg('fx')}</span><span class="aq-label">필터·효과</span></summary>`;
+      colors.after(fxDetails);
+      const fxToggle = fxDetails.querySelector('summary');
+      const fxShelf = document.createElement('div');
+      fxShelf.id = 'previewFxShelf';
+      fxShelf.hidden = true;
+      fxShelf.style.cssText = 'width:100%;max-width:440px;margin:8px auto 0;padding:10px 12px;border-radius:14px;background:rgba(18,18,22,0.96);border:1px solid rgba(255,255,255,0.12);box-shadow:0 12px 32px rgba(0,0,0,0.45);display:flex;flex-direction:column;gap:8px;z-index:25';
+      shelf.after(fxShelf);
+
+      const AR_FX_DECO_LIST = [
+        { id: 'none', label: '없음' },
+        { id: 'cineKeyLight', label: '키라이트' },
+        { id: 'cineLeak', label: '라이트릭' },
+        { id: 'cineBokeh', label: '소프트 보케' },
+        { id: 'cineLetterbox', label: '레터박스' },
+        { id: 'sparks', label: '스파클' },
+        { id: 'petals', label: '꽃잎' },
+        { id: 'snow', label: '눈 내림' },
+        { id: 'prism', label: '프리즘' },
+        { id: 'hearts', label: '하트' }
+      ];
+      const renderFxShelf = () => {
+        const filters = (typeof CUT_FILTER_OPTIONS !== 'undefined' && Array.isArray(CUT_FILTER_OPTIONS)) ? CUT_FILTER_OPTIONS : [{ id: 'none', label: '원본', swatch: '#52525b' }];
+        const curFilter = (campaign && Array.isArray(campaign.cutFilters) && campaign.cutFilters[0]) || 'none';
+        const curDeco = (campaign && Array.isArray(campaign.cutDecos) && campaign.cutDecos[0]) || 'none';
+        fxShelf.innerHTML =
+          `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">` +
+            `<span style="font-size:11.5px;font-weight:600;color:#ededed">색감 필터 · 비주얼 효과 (전체 적용)</span>` +
+            `<button type="button" data-fx-reset style="font-size:11px;color:#9898a6;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:999px;padding:2px 9px;cursor:pointer">초기화</button>` +
+          `</div>` +
+          `<div style="display:flex;align-items:center;gap:6px;overflow-x:auto;padding-bottom:2px" class="no-scrollbar">` +
+            filters.map((f) => {
+              const on = curFilter === f.id;
+              return `<button type="button" data-fx-filter="${f.id}" style="flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:999px;font-size:11.5px;cursor:pointer;border:1px solid ${on ? '#60a5fa' : 'rgba(255,255,255,0.12)'};background:${on ? 'rgba(59,130,246,0.22)' : 'rgba(255,255,255,0.05)'};color:${on ? '#fff' : '#d4d4dc'}"><span style="width:9px;height:9px;border-radius:50%;background:${f.swatch || '#71717a'};border:1px solid rgba(255,255,255,0.3)"></span>${f.label}</button>`;
+            }).join('') +
+          `</div>` +
+          `<div style="display:flex;align-items:center;gap:6px;overflow-x:auto;padding-bottom:2px" class="no-scrollbar">` +
+            AR_FX_DECO_LIST.map((d) => {
+              const on = curDeco === d.id;
+              return `<button type="button" data-fx-deco="${d.id}" style="flex:0 0 auto;padding:5px 10px;border-radius:999px;font-size:11.5px;cursor:pointer;border:1px solid ${on ? '#facc15' : 'rgba(255,255,255,0.12)'};background:${on ? 'rgba(250,204,21,0.18)' : 'rgba(255,255,255,0.05)'};color:${on ? '#fef08a' : '#d4d4dc'}">${d.label}</button>`;
+            }).join('') +
+          `</div>`;
+      };
+      fxShelf.addEventListener('click', (ev) => {
+        const resetBtn = ev.target.closest('[data-fx-reset]');
+        const fltBtn = ev.target.closest('[data-fx-filter]');
+        const decoBtn = ev.target.closest('[data-fx-deco]');
+        const total = Math.max(10, typeof getTargetCutCount === 'function' ? getTargetCutCount() : 10);
+        if (resetBtn) {
+          campaign.cutFilters = Array.from({ length: total }, () => 'none');
+          campaign.cutDecos = Array.from({ length: total }, () => 'none');
+        } else if (fltBtn) {
+          const fid = fltBtn.getAttribute('data-fx-filter');
+          campaign.cutFilters = Array.from({ length: total }, () => fid);
+        } else if (decoBtn) {
+          const did = decoBtn.getAttribute('data-fx-deco');
+          campaign.cutDecos = Array.from({ length: total }, () => did);
+        } else return;
+        renderFxShelf();
+        if (window.__timelines && window.__timelines.main) {
+          window.__timelines.main.seek(window.__timelines.main.currentTime || 0);
+        }
+      });
+
       const strip = shelf.querySelector('#designColorSwatches');
       const [prev, next] = shelf.querySelectorAll('.color-page');
       const syncPages = () => {
@@ -1101,25 +1170,39 @@
       new ResizeObserver(syncPages).observe(strip);
       colors.addEventListener('toggle', () => {
         shelf.hidden = !colors.open;
+        if (colors.open) fxDetails.open = false;
         if (!colors.open) return;
         renderColorPalettePicker();
         const active = strip.querySelector('[aria-pressed="true"]');
         if (active) strip.scrollLeft = active.offsetLeft - (strip.clientWidth - active.offsetWidth) / 2;
         syncPages();
       });
+      fxDetails.addEventListener('toggle', () => {
+        fxShelf.hidden = !fxDetails.open;
+        if (fxDetails.open) {
+          colors.open = false;
+          renderFxShelf();
+        }
+      });
       document.addEventListener('pointerdown', (event) => {
         if (colors.open && !colors.contains(event.target) && !shelf.contains(event.target)) colors.open = false;
+        if (fxDetails.open && !fxDetails.contains(event.target) && !fxShelf.contains(event.target)) fxDetails.open = false;
       });
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && colors.open) {
           colors.open = false;
           colorToggle.focus({ preventScroll: true });
         }
+        if (event.key === 'Escape' && fxDetails.open) {
+          fxDetails.open = false;
+          fxToggle.focus({ preventScroll: true });
+        }
       });
       qb.addEventListener('click', (e) => {
         const b = e.target.closest('[data-qb]');
         if (!b) return;
         colors.open = false;
+        fxDetails.open = false;
         e.stopPropagation();
         arQuickAction(b.getAttribute('data-qb'));
       });

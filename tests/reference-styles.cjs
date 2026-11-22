@@ -25,3 +25,17 @@ test('측정된 효과만 편집기 카탈로그에 보존한다',()=>{
  for(const patch of [{kind:'script'},{duration:0},{strength:2}])
    assert.throws(()=>validateStyle({...style,effects:[{...effect,...patch}]}));
 });
+test('사선 다중 마스크는 기존 스타일과 별도 지원하고 분석기에 범위를 전달한다',async()=>{
+ const catalog=require('../public/assets/reference-styles.json');
+ assert.equal(validateCatalog(catalog).find(x=>x.id==='ref_e1e3436cf7c98bff').layout,'diagonal-fan');
+ const original=global.fetch,old=process.env.GEMINI_API_KEY;process.env.GEMINI_API_KEY='test';
+ global.fetch=async(url,options)=>{
+  const prompt=JSON.parse(options.body).contents[0].parts[0].text;
+  assert.ok(prompt.includes('diagonal-fan'));
+  assert.ok(prompt.includes('UI를 스타일에 포함하지 말고'));
+  return {ok:true,json:async()=>({candidates:[{content:{parts:[{text:JSON.stringify({supported:true,style:{...style,layout:'diagonal-fan'}})}]}}]})};
+ };
+ const res={status(n){this.code=n;return this},json(b){this.body=b;return this}};
+ try{await handleReferenceAnalysis({frames:['/9j/AA==','/9j/AA=='],timeline:'test'},res);assert.equal(res.code,200);assert.equal(res.body.style.layout,'diagonal-fan');}
+ finally{global.fetch=original;if(old===undefined)delete process.env.GEMINI_API_KEY;else process.env.GEMINI_API_KEY=old;}
+});

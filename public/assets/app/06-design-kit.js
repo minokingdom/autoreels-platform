@@ -3909,11 +3909,12 @@
     const AR_FINE_BADGE = '<span class="fine-edit-badge" title="자막·위 라벨·아래 이름을 컷마다 세세하게 바꿀 수 있어요">세부 편집</span>';
     function arVisibleDesigns() {
       const list = DESIGN_STYLES.filter(arDesignVisible);
-      // 1군 풀스크린 프로 엔진 -> 2026 에디토리얼 -> 나머지 최신 모션/커스텀 순으로 최상단 정렬
+      // 1군 프로 엔진 -> 오퍼스 화풍 30종 -> 2026 에디토리얼 -> 나머지 최신 모션/커스텀 순으로 최상단 정렬
       const pro = list.filter((d) => d.isProReels);
-      const ed = list.filter((d) => !d.isProReels && String(d.id || '').startsWith('ed_'));
-      const rest = list.filter((d) => !d.isProReels && !String(d.id || '').startsWith('ed_'));
-      return pro.concat(ed, rest);
+      const opus = list.filter((d) => !d.isProReels && d.isOpusArt);
+      const ed = list.filter((d) => !d.isProReels && !d.isOpusArt && String(d.id || '').startsWith('ed_'));
+      const rest = list.filter((d) => !d.isProReels && !d.isOpusArt && !String(d.id || '').startsWith('ed_'));
+      return pro.concat(opus, ed, rest);
     }
     // 신규는 대표 분류와 함께 표시하는 모음입니다. 카테고리를 옮기거나 복제하지 않습니다.
     const AR_NEW_STYLE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
@@ -4417,7 +4418,10 @@
       try {
         list.forEach((ds) => {
           campaign.designStyle = ds.id;
-          renderGenreFrame((mainDuration / totalCuts) * 0.9, mainDuration, totalCuts, getSelectedDealer());
+          const previewTime=ds.referenceStyle?.layout==='diagonal-fan'
+            ? Math.min((mainDuration/totalCuts)*.62,ds.referenceStyle.entrySeconds*2.4)*.55
+            : (mainDuration/totalCuts)*.9;
+          renderGenreFrame(previewTime, mainDuration, totalCuts, getSelectedDealer());
           tctx.drawImage(canvas, 0, 0, thumb.width, thumb.height);
           const url = thumb.toDataURL('image/jpeg', 0.72);
           designThumbCache.urls[ds.id] = url;

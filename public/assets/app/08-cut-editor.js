@@ -225,21 +225,21 @@
     ];
     const CUT_FILTER_OPTIONS = [
       { id: 'none', label: '원본', swatch: '#52525b', tint: '' },
-      { id: 'clear', label: '맑은톤', swatch: '#bae6fd', tint: 'rgba(224,242,254,0.14)', mode: 'screen' },
-      { id: 'warm', label: '따뜻함', swatch: '#fdba74', tint: 'rgba(251,146,60,0.18)', mode: 'soft-light' },
+      { id: 'warm', label: '따뜻한 카페', swatch: '#fdba74', tint: 'rgba(251,146,60,0.18)', mode: 'soft-light' },
+      { id: 'clear', label: '맑은 뷰티', swatch: '#bae6fd', tint: 'rgba(224,242,254,0.14)', mode: 'screen' },
       { id: 'golden', label: '골든아워', swatch: '#f59e0b', tint: 'rgba(245,158,11,0.22)', mode: 'soft-light' },
+      { id: 'vivid', label: '선명한 푸드', swatch: '#ec4899', tint: 'rgba(236,72,153,0.14)', mode: 'overlay' },
+      { id: 'mood', label: '럭셔리 다크', swatch: '#09090b', tint: 'rgba(9,9,11,0.34)', mode: 'multiply' },
+      { id: 'vintage', label: '35mm 필름', swatch: '#a16207', tint: 'rgba(161,98,7,0.22)', mode: 'overlay' },
+      { id: 'mono', label: '모노크롬', swatch: '#a1a1aa', mono: true },
       { id: 'cinema', label: '시네마', swatch: '#166534', tint: 'rgba(20,83,45,0.2)', mode: 'overlay' },
-      { id: 'cool', label: '쿨블루', swatch: '#38bdf8', tint: 'rgba(56,189,248,0.16)', mode: 'soft-light' },
-      { id: 'mono', label: '흑백', swatch: '#a1a1aa', mono: true },
-      { id: 'vivid', label: '비비드', swatch: '#ec4899', tint: 'rgba(236,72,153,0.14)', mode: 'overlay' },
-      { id: 'pastel', label: '파스텔', swatch: '#fde047', tint: 'rgba(253,224,71,0.14)', mode: 'screen' },
-      { id: 'rose', label: '로즈핑크', swatch: '#fb7185', tint: 'rgba(251,113,133,0.16)', mode: 'soft-light' },
+      { id: 'cool', label: '서울 야경', swatch: '#38bdf8', tint: 'rgba(56,189,248,0.16)', mode: 'soft-light' },
+      { id: 'pastel', label: '파스텔 크림', swatch: '#fde047', tint: 'rgba(253,224,71,0.14)', mode: 'screen' },
+      { id: 'rose', label: '로즈 블러쉬', swatch: '#fb7185', tint: 'rgba(251,113,133,0.16)', mode: 'soft-light' },
       { id: 'emerald', label: '에메랄드', swatch: '#10b981', tint: 'rgba(16,185,129,0.15)', mode: 'soft-light' },
-      { id: 'vintage', label: '빈티지', swatch: '#a16207', tint: 'rgba(161,98,7,0.22)', mode: 'overlay' },
       { id: 'sepia', label: '세피아', swatch: '#92400e', tint: 'rgba(146,64,14,0.26)', mode: 'color' },
-      { id: 'glow', label: '소프트', swatch: '#fef08a', tint: 'rgba(255,255,255,0.14)', mode: 'screen' },
-      { id: 'contrast', label: '선명대비', swatch: '#27272a', tint: 'rgba(0,0,0,0.2)', mode: 'overlay' },
-      { id: 'mood', label: '무드다크', swatch: '#09090b', tint: 'rgba(9,9,11,0.34)', mode: 'multiply' }
+      { id: 'glow', label: '소프트 글로우', swatch: '#fef08a', tint: 'rgba(255,255,255,0.14)', mode: 'screen' },
+      { id: 'contrast', label: '선명대비', swatch: '#27272a', tint: 'rgba(0,0,0,0.2)', mode: 'overlay' }
     ];
     const AR_ELEMENT_ANIMS = [
       { id: 'default',     label: '스타일 기본',     group: 'base' },

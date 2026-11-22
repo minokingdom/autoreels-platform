@@ -16,6 +16,17 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
   const caption=gCleanCaption((campaign.cutCaptions||[])[idx]||campaign.hook||'');
   c.save();
   c.fillStyle=r.background;c.fillRect(0,0,W,H);
+  if(r.layout==='diagonal-fan') {
+    // 여러 컷 사진이 겹치는 마스크는 단일 사진 사선 띠와 별도 처리합니다.
+    arReferenceDiagonalFan(c,W,H,S,r,idx,p,local,dur);
+    const shade=c.createLinearGradient(0,H*.48,0,H);
+    shade.addColorStop(0,'rgba(0,0,0,0)');shade.addColorStop(1,`rgba(0,0,0,${r.shade})`);
+    c.fillStyle=shade;c.fillRect(0,H*.48,W,H*.52);
+    if(r.grain)inGrain(c,W,H,t,r.grain);
+    arReferenceCaption(c,caption,W,H,H*.70,H*.16,{...r,textMotion:'fade'},entry);
+    inSign(c,d,W/2,H*.94,r.foreground,'center',W*.03);
+    c.restore();return;
+  }
   if(['diagonal','diamond-reveal','type-cutout','stacked','type-echo','type-flow','editorial','news-marker','floating-type','type-rail','repeat-poster','chevron-type','brush-frame'].includes(r.layout)) {
     arReferenceComposition(c,W,H,S,caption,r,idx,p,entry);
     if(r.grain)inGrain(c,W,H,t,r.grain);
@@ -49,7 +60,38 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
   inSign(c,d,W/2,H*.94,r.foreground,'center',W*.03);
   c.restore();
 }
-// 모든 사진 효과는 현재 컷의 같은 사진만 사용합니다. 별도 영상/이미지 생성은 없습니다.
+// 현재 컷 및 인접 컷에 지정한 사진만 사용합니다. 화면 녹화의 편집기 UI나 원본 소재는 복사하지 않습니다.
+function arReferenceFanScene(S,cut) {
+  const cuts=Math.max(1,S.cuts||1),target=Math.max(0,Math.min(cuts-1,cut));
+  return {...S,cutIdx:target,idx:Math.min(Math.max(0,S.n-1),Math.floor(target*Math.max(1,S.n)/cuts))};
+}
+function arReferenceFanMask(q) {
+  // 왼쪽 아래에서 부채꼴로 열리고, 마지막에는 두 가장자리가 함께 화면 밖으로 나갑니다.
+  const smooth=v=>{v=mClamp(v);return v*v*(3-2*v);};
+  return {left:1-smooth((q-.34)/.66),right:1-smooth(q/.78)};
+}
+function arReferenceDiagonalFan(c,W,H,S,r,idx,p,local,dur) {
+  const transition=Math.min(dur*.62,r.entrySeconds*2.4),progress=mClamp(local/Math.max(.001,transition));
+  const zoom=1.02+(r.camera==='still'?0:r.camera==='zoom-out'?(1-p)*r.zoom:p*r.zoom);
+  const previous=arReferenceFanScene(S,idx>0?idx-1:0);
+  const previousZoom=idx>0?1.02+(r.camera==='zoom-in'?r.zoom:0):zoom;
+  mPhoto(c,previous,0,0,0,W,H,previousZoom);
+  if(progress>=1) {mPhoto(c,arReferenceFanScene(S,idx),0,0,0,W,H,zoom);return;}
+  const layers=[2,1,0];
+  layers.forEach((offset,i)=>{
+    const q=mClamp((progress-i*.16)/.68);
+    if(q<=0)return;
+    const mask=arReferenceFanMask(q),left=H*mask.left,right=H*mask.right;
+    c.save();c.beginPath();c.moveTo(0,left);c.lineTo(W,right);c.lineTo(W,H);c.lineTo(0,H);c.closePath();c.clip();
+    mPhoto(c,arReferenceFanScene(S,idx+offset),0,0,0,W,H,zoom);
+    c.restore();
+    if(q<1) {
+      c.save();c.globalAlpha*=Math.sin(q*Math.PI)*.38;c.strokeStyle=r.foreground;c.lineWidth=Math.max(.75,W*.0015);
+      c.beginPath();c.moveTo(0,left);c.lineTo(W,right);c.stroke();c.restore();
+    }
+  });
+}
+// 나머지 구성은 현재 컷의 같은 사진만 사용합니다. 별도 영상/이미지 생성은 없습니다.
 let arReferenceMaskCanvas;
 function arReferenceComposition(c,W,H,S,caption,r,idx,p,entry) {
   const zoom=1.02+(r.camera==='zoom-out'?(1-p)*r.zoom:p*r.zoom);
