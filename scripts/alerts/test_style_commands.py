@@ -97,5 +97,21 @@ class Tests(unittest.TestCase):
         with self.q.db() as db:db.execute('CREATE TABLE deliveries(id TEXT,kind TEXT,text TEXT,state TEXT)')
         self.proposal()
         with self.q.db() as db:self.assertEqual(db.execute('SELECT count(*) FROM deliveries').fetchone()[0],0)
+    def test_rebuild_keeps_entry_link_but_rejects_previous_approval(self):
+        old=self.proposal()
+        with self.q.db() as db:token=db.execute('SELECT token FROM preview_links').fetchone()[0]
+        self.q.rpc({'op':'resume_development','id':'10','reason':'owner_requested_development'})
+        job=self.q.rpc({'op':'claim'});manifest={**old['manifest'],'candidateSha256':'b'*64}
+        revision=hashlib.sha256(json.dumps(manifest,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+        folder=Path(self.tmp.name)/'previews';(folder/f'10-{revision}.mp4').write_bytes((folder/f"10-{old['revision']}.mp4").read_bytes())
+        self.q.rpc({'op':'propose',**job,'revision':revision,'manifest':manifest})
+        with self.q.db() as db:
+            text=db.execute('SELECT text FROM deliveries_v2 WHERE kind=?',('preview:'+revision,)).fetchone()[0]
+            self.assertIn('/review/'+token,text);self.assertNotIn('!스타일승인',text)
+        for _ in range(4):self.q.deliver(lambda:True,lambda *a:None)
+        self.q.decision('20',old['revision'][:10],True)
+        self.assertEqual(self.q.rpc({'op':'status'})[0]['status'],'awaiting_approval')
+        self.q.decision('21',revision[:10],True)
+        self.assertEqual(self.q.rpc({'op':'claim'})['proposal']['revision'],revision)
 
 if __name__=='__main__':unittest.main()

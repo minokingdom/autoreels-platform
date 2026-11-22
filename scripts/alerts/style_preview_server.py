@@ -3,7 +3,7 @@ import hashlib,html,json,re,sqlite3,threading,time
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit,parse_qs
 
 ROOT=Path(__file__).resolve().parent/'autoreels-style'
 class PreviewHandler(BaseHTTPRequestHandler):
@@ -23,14 +23,19 @@ class PreviewHandler(BaseHTTPRequestHandler):
         try:
             with closing(sqlite3.connect('file:'+str(ROOT/'queue.sqlite')+'?mode=ro',uri=True,timeout=2)) as db:
                 db.row_factory=sqlite3.Row
-                row=db.execute('SELECT l.*,p.manifest FROM preview_links l JOIN proposals p ON l.id=p.id AND l.revision=p.revision WHERE l.token=?',(match[2],)).fetchone()
+                # 입구 링크는 작업에 고정하고 페이지를 열 때 최신 비교본을 선택합니다.
+                row=db.execute('SELECT l.id,p.revision,l.expires,p.manifest FROM preview_links l JOIN proposals p ON l.id=p.id WHERE l.token=?',(match[2],)).fetchone()
             if not row or row['expires']<=time.time():self.send_error(410);return
+            if match[1]=='media':
+                # 열린 화면의 승인 코드와 영상이 도중에 서로 다른 버전이 되면 안 됩니다.
+                version=parse_qs(urlsplit(self.path).query).get('v',[])
+                if version!=[row['revision']]:self.send_error(409,'Comparison changed; reopen the review link');return
             file=ROOT/'previews'/f"{row['id']}-{row['revision']}.mp4"
             manifest=json.loads(row['manifest'])
             if not file.is_file() or not 1000<=file.stat().st_size<=20_000_000 or hashlib.sha256(file.read_bytes()).hexdigest()!=manifest['videoSha256']:self.send_error(409);return
             if match[1]=='review':
                 name=html.escape(str(manifest.get('name') or '스타일 비교'))
-                body=f'''<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{name} · AutoReels 비교</title><style>body{{margin:0;background:#111820;color:#f5f7fb;font:16px system-ui,sans-serif}}main{{max-width:960px;margin:auto;padding:20px}}h1{{font-size:23px;margin:8px 0}}p{{color:#b9c3d0;line-height:1.6}}video{{display:block;width:100%;max-height:76vh;background:#000;border-radius:12px}}code{{display:inline-block;padding:12px;background:#233042;border-radius:8px;color:#fff}}small{{display:block;margin-top:20px;color:#b9c3d0}}</style><main><h1>{name}</h1><p>왼쪽 원본 · 오른쪽 구현본<br>아직 등록하지 않았습니다.</p><video controls playsinline preload="metadata" src="../media/{match[2]}"></video><p>확인 후 모비스테스트방에서 아래 명령을 보내 주세요.</p><code>!스타일승인 {row['revision'][:10]}</code><small>비교 링크는 7일간 유효합니다. 승인 권한은 본인 카카오 계정에만 있습니다.</small></main></html>'''.encode()
+                body=f'''<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{name} · AutoReels 비교</title><style>body{{margin:0;background:#111820;color:#f5f7fb;font:16px system-ui,sans-serif}}main{{max-width:960px;margin:auto;padding:20px}}h1{{font-size:23px;margin:8px 0}}p{{color:#b9c3d0;line-height:1.6}}video{{display:block;width:100%;max-height:76vh;background:#000;border-radius:12px}}code{{display:inline-block;padding:12px;background:#233042;border-radius:8px;color:#fff}}small{{display:block;margin-top:20px;color:#b9c3d0}}</style><main><h1>{name}</h1><p>왼쪽 원본 · 오른쪽 구현본<br>비교 버전: {row['revision'][:10]} · 아직 등록하지 않았습니다.</p><video controls playsinline preload="metadata" src="../media/{match[2]}?v={row['revision']}"></video><p>영상을 확인한 뒤 모비스테스트방에서 아래 명령을 보내 주세요.<br>이 코드는 지금 표시된 영상만 승인합니다. 새 비교본이 나오면 다시 열어 확인해 주세요.</p><code>!스타일승인 {row['revision'][:10]}</code><small>기존 링크도 다시 열면 최신 비교본이 표시됩니다. 마지막 비교본 안내부터 7일간 유효합니다. 승인 권한은 본인 카카오 계정에만 있습니다.</small></main></html>'''.encode()
                 self.respond_headers(200,'text/html; charset=utf-8',len(body))
                 if not head:self.wfile.write(body)
                 return
