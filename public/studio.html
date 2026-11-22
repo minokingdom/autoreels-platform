@@ -41,7 +41,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261121-pro-voice-chip" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261122-cuteditor-clean" />
   <link rel="stylesheet" href="/assets/app/splash.css?v=studio-return" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -410,7 +410,7 @@
 
           <!-- 9:16 렌더링 뷰포트 -->
           <div id="previewViewport" class="relative w-full aspect-[9/16] rounded-[12px] overflow-hidden bg-black border border-[var(--border)]">
-            <canvas id="reelCanvas" width="540" height="960" class="w-full h-full object-cover"></canvas><span class="ar-play-feedback" aria-hidden="true"></span>
+            <canvas id="reelCanvas" width="540" height="960" class="w-full h-full object-contain"></canvas><span class="ar-play-feedback" aria-hidden="true"></span>
             <div class="ar-generation-status" data-generation-status role="status" hidden><i aria-hidden="true"></i><span></span></div>
             <!-- 인스타 스타일 직접 드래그 레이어 (컷 고정 시 활성화) -->
             <div id="cutOverlayEditorLayer" class="hidden absolute inset-0 z-10 pointer-events-none select-none overflow-hidden"></div>
@@ -2186,7 +2186,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261122-cardnews-rhythm"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261122-cuteditor-clean"><\/script>');
     }
   </script>
   <!--

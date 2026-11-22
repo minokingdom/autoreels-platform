@@ -1619,9 +1619,16 @@ body.ar-cut-editing #arQuickBar { display: none; }
   }
   body.ar-sheet.ar-cut-editing #previewViewport {
     margin-top: 0 !important; margin-bottom: 0 !important;
-    flex: 1 1 0; min-height: 0; height: 100%; width: auto; max-width: 100%;
-    aspect-ratio: 9 / 16; overflow: hidden;
+    flex: 0 1 auto; min-height: 0;
+    width: min(100%, calc((100dvh - 96px) * 9 / 16));
+    max-width: 100%; max-height: calc(100dvh - 96px);
+    height: auto; aspect-ratio: 9 / 16; overflow: hidden;
   }
+  body.ar-sheet.ar-cut-editing:has(#cutEditorPanel:not(.hidden)) #previewViewport {
+    width: min(100%, calc((52dvh - 32px) * 9 / 16));
+    max-height: calc(52dvh - 32px);
+  }
+  body.ar-cut-editing .ar-play-feedback { display: none !important; }
   body.ar-sheet.ar-cut-editing #igTopBar {
     top: 6px !important; bottom: auto !important; left: 6px !important; right: 6px !important;
   }

@@ -2175,20 +2175,7 @@
         c.stroke();
       });
 
-      // 상단 라벨 필 (strokeText 사용 금지, fillRect + fillText만 사용)
-      c.font = `700 12px 'Pretendard Variable', 'Pretendard', sans-serif`;
-      const tagTxt = box.label;
-      const tagW = c.measureText(tagTxt).width + 18;
-      const tagH = 22;
-      const tagY = -hh - tagH - 6 > -H / 2 + 8 ? -hh - tagH - 6 : -hh + 8;
-      gRoundRect(c, -tagW / 2, tagY, tagW, tagH, 11);
-      c.fillStyle = col;
-      c.fill();
-      c.fillStyle = '#09090b';
-      c.textAlign = 'center';
-      c.textBaseline = 'middle';
-      c.fillText(tagTxt, 0, tagY + tagH / 2 + 0.5);
-
+      // 상단 라벨 필은 DOM 편집 버튼(renderCutOverlayEditorLayer)과 겹치지 않도록 캔버스에 중복 그리지 않음
       c.restore();
     }
 
@@ -2852,15 +2839,22 @@
                title="${b.title}"
                ondblclick="event.stopPropagation();openCanvasDirectTextEdit(${cutIdx}, '${b.key}')"
                style="left:${leftPct}%;top:${topPct}%;width:${wPct}%;height:${hPct}%;transform:translate(-50%,-50%);touch-action:none;"
-               class="absolute cursor-move rounded-[10px] ${isSel ? 'active' : ''}">
+               class="absolute cursor-move rounded-[10px] ${isSel ? 'active' : 'border border-dashed border-white/20 hover:border-white/55'}">
             ${isSel ? `
-              <button type="button"
-                      onmousedown="${stopEv}" ontouchstart="${stopEv}" onpointerdown="${stopEv}"
-                      onclick="event.stopPropagation();openCanvasDirectTextEdit(${cutIdx}, '${b.key}')"
-                      style="position:absolute;left:50%;top:-30px;transform:translateX(-50%);white-space:nowrap;z-index:25;"
-                      class="h-6 px-2.5 rounded-full bg-[#f4f0e8] text-[#080808] text-[10.5px] font-bold shadow-lg cursor-pointer hover:bg-white">
-                ${labelShort} 수정
-              </button>
+              <div onmousedown="${stopEv}" ontouchstart="${stopEv}" onpointerdown="${stopEv}"
+                   style="position:absolute;left:50%;top:-34px;transform:translateX(-50%);white-space:nowrap;z-index:25;"
+                   class="inline-flex items-center gap-1">
+                <button type="button"
+                        onclick="event.stopPropagation();openCanvasDirectTextEdit(${cutIdx}, '${b.key}')"
+                        class="h-6 px-2.5 rounded-full bg-[#f4f0e8] text-[#080808] text-[10.5px] font-bold shadow-lg cursor-pointer hover:bg-white">
+                  ${labelShort} 수정
+                </button>
+                <button type="button"
+                        onclick="event.stopPropagation();openCutEditor(${cutIdx}, '${b.key}')"
+                        class="h-6 px-2.5 rounded-full bg-[#18181b]/90 text-white border border-white/25 text-[10.5px] font-semibold shadow-lg cursor-pointer hover:bg-black">
+                  스타일
+                </button>
+              </div>
               <button type="button"
                       aria-label="${labelShort} 삭제"
                       title="삭제(숨김)"
@@ -3769,7 +3763,31 @@
             ? window.__arPinnedCut
             : (curT < mainDur ? Math.min(n - 1, Math.max(0, Math.floor(curT / cutDur))) : 0);
           const hitKey = hitTestCutCanvasElement(targetIdx, nx, ny);
-          openInlineQuickEdit(targetIdx, hitKey);
+          // 롱프레스 시 복잡한 이중 시트 대신 깔끔한 직접 컷 편집 모드로 진입 (각 요소 클릭·수정·상단 도구로 추가)
+          if (typeof closePresetDrawer === 'function') closePresetDrawer();
+          window.__arPinnedCut = targetIdx;
+          window.__arDirectCanvasMode = true;
+          window.__arInlineEditActive = false;
+          window.__arCutEditorOpen = false;
+          if (hitKey && hitKey.startsWith('overlay:')) {
+            window.__arSelectedOverlayIdx = Number(hitKey.split(':')[1]);
+            window.__arActiveCutElKey = hitKey;
+          } else {
+            window.__arSelectedOverlayIdx = -1;
+            window.__arActiveCutElKey = hitKey || 'caption';
+          }
+          isPlaying = false;
+          const ppBtn = document.getElementById('playPauseBtn');
+          if (ppBtn) ppBtn.textContent = '▶️ 재생';
+          if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
+          if (curT < targetIdx * cutDur || curT >= (targetIdx + 1) * cutDur) {
+            const seekT = targetIdx * cutDur + Math.min(0.55, cutDur * 0.35);
+            if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(seekT);
+          } else if (window.__timelines && window.__timelines.main) {
+            window.__timelines.main.seek(curT);
+          }
+          renderPreviewCutPinBar();
+          if (typeof arToast === 'function') arToast(`${targetIdx + 1}컷 편집 모드 · 요소를 클릭해 수정하거나 상단에서 추가하세요`, true);
         }, 380);
       };
 
@@ -3863,31 +3881,12 @@
       const canvas = document.getElementById('reelCanvas');
       const overlayLayer = document.getElementById('cutOverlayEditorLayer');
       if (!canvas) return;
-      const panel = document.getElementById('cutEditorPanel');
-      const inlineBar = document.getElementById('arInlineEditBar');
-      const cutSheetOpen = !!(window.__arCutEditorOpen && panel && !panel.classList.contains('hidden'));
-      const inlineOpen = !!(window.__arInlineEditActive && inlineBar && !inlineBar.classList.contains('hidden'));
-      let shiftPct = 0;
-      if (inlineOpen) { // 컷 편집창은 영상 아래에 있으므로 영상을 밀어 올리지 않음
-        const cutIdx = window.__arPinnedCut;
-        const elKey = window.__arSelectedOverlayIdx >= 0
-          ? `overlay:${window.__arSelectedOverlayIdx}`
-          : (window.__arActiveCutElKey || 'caption');
-        if (typeof cutIdx === 'number' && cutIdx >= 0 && elKey !== 'photo' && elKey !== 'deco' && elKey !== 'transition') {
-          const box = getCutElementHitBox(cutIdx, elKey, 540, 960);
-          const cyNorm = box && typeof box.cy === 'number' ? (box.cy / 960) : 0.5;
-          if (cyNorm > 0.44) {
-            shiftPct = Math.min(40, Math.max(0, (cyNorm - 0.42) * 100));
-          }
-        }
-      }
-      const tf = shiftPct > 0.5 ? `translateY(-${shiftPct.toFixed(1)}%)` : '';
-      const tr = 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1)';
-      canvas.style.transition = tr;
-      canvas.style.transform = tf;
+      // 캔버스를 위로 밀어 올려 잘리는 현상을 막기 위해 항상 원위치 유지
+      canvas.style.transition = '';
+      canvas.style.transform = '';
       if (overlayLayer) {
-        overlayLayer.style.transition = tr;
-        overlayLayer.style.transform = tf;
+        overlayLayer.style.transition = '';
+        overlayLayer.style.transform = '';
       }
     }
 
