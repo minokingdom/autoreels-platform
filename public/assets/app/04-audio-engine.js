@@ -2352,12 +2352,27 @@
         }
       };
 
+      const koSearchMap = {
+        '한국': 'seoul kpop', '한국곡': 'seoul kpop', '가요': 'kpop vocal', '케이팝': 'kpop', '서울': 'seoul',
+        '발라드': 'korean ballad', '카페': 'cafe lofi', '감성': 'emotional chill', '신나는': 'upbeat pop',
+        '힙합': 'krnb hiphop', '재즈': 'jazz', '운동': 'workout trap', '피아노': 'piano', '어쿠스틱': 'acoustic',
+        '로파이': 'lofi', '팝': 'pop vocal', '보컬': 'vocal pop', '브이로그': 'vlog chill'
+      };
+      function mapKoSearch(raw) {
+        const s = String(raw || '').trim();
+        if (!s) return '';
+        if (koSearchMap[s]) return koSearchMap[s];
+        for (const [k, v] of Object.entries(koSearchMap)) { if (s.includes(k)) return v; }
+        return s;
+      }
+
       window.arLoadStreamTracks = async function arLoadStreamTracks(query, genre) {
         const list = document.getElementById('arStreamTrackList');
         if (!list) return;
-        const q = String(query || '').trim();
+        const q = mapKoSearch(query);
         const g = String(genre || '').trim();
-        list.innerHTML = '<div class="py-4 text-center text-[#93c5fd]">실시간 스트리밍 곡을 불러오는 중…</div>';
+        list.style.minHeight = '168px';
+        list.innerHTML = '<div class="py-10 flex flex-col items-center justify-center gap-2 text-[#93c5fd]"><span style="width:20px;height:20px;border-radius:999px;border:2.5px solid rgba(147,197,253,0.22);border-top-color:#60a5fa;display:inline-block;animation:spin .75s linear infinite;"></span><span>실시간 스트리밍 곡을 불러오는 중…</span></div>';
         const cacheKey = q ? `q:${q}` : `g:${g}`;
         try {
           let tracks = streamCache.get(cacheKey);

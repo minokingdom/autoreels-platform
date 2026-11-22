@@ -122,29 +122,101 @@ function positionBlock(button,start,duration,total){
 function drawCues(s,type,total){
   const sound=type==='sfx',lane=byId(sound?'sfxLane':'captionLane');
   lane.replaceChildren();
+  const safeTotal=Math.max(0.1,total);
   const cues=sound?(s.sounds||[]):(s.captions||[]);
   for(const cue of cues){
-    if(cue.start>=total)continue;
+    if(cue.start>=safeTotal)continue;
     const name=sound?cue.name:cue.text;
-    const button=mixButton(name,()=>{s.activeCue=cue;selectMix(s,type);editCue(s,type,cue);},'cue-block');
+    const button=document.createElement('button');
+    button.type='button';button.className='cue-block';button.textContent=name;
     button.setAttribute('aria-label',name+' '+cutClock(cue.start));
-    button.setAttribute('aria-pressed',String(s.activeCue===cue));positionBlock(button,cue.start,cue.duration,total);
+    button.setAttribute('aria-pressed',String(s.activeCue===cue));
+    positionBlock(button,cue.start,cue.duration,safeTotal);
     if(sound){
       const wave=document.createElement('canvas');wave.width=120;wave.height=24;
       button.dataset.soundName=name;
-      button.classList.toggle('short-sound',cue.duration/total*lane.clientWidth<32);
+      button.classList.toggle('short-sound',cue.duration/safeTotal*lane.clientWidth<32);
       button.replaceChildren(wave);drawMixBuffer(wave,cue.buffer,cue.duration,'#bc86e9',false);
     }
+    let moved=false;
+    button.addEventListener('pointerdown',event=>{
+      if(!editableEffects()||event.button!==0)return;
+      event.stopPropagation();
+      moved=false;
+      const beforeStart=cue.start||0, beforeDur=cue.duration||1;
+      const startX=event.clientX, laneW=lane.getBoundingClientRect().width||1;
+      const rect=button.getBoundingClientRect();
+      const edge=(!sound && rect.width>=34 && event.clientX-rect.left<10)?'start':(!sound && rect.width>=34 && rect.right-event.clientX<10)?'end':'move';
+      try{button.setPointerCapture(event.pointerId);}catch(_){}
+      button.onpointermove=e=>{
+        if(Math.abs(e.clientX-startX)>4)moved=true;
+        if(!moved)return;
+        const delta=(e.clientX-startX)*safeTotal/laneW;
+        if(edge==='start'){
+          cue.start=Math.max(0,Math.min(beforeStart+beforeDur-0.2,beforeStart+delta));
+          cue.duration=beforeStart+beforeDur-cue.start;
+        }else if(edge==='end'){
+          cue.duration=Math.max(0.2,Math.min(safeTotal-beforeStart,beforeDur+delta));
+        }else{
+          cue.start=Math.max(0,Math.min(safeTotal-beforeDur,beforeStart+delta));
+        }
+        positionBlock(button,cue.start,cue.duration,safeTotal);
+      };
+      const finish=cancel=>{
+        button.onpointermove=button.onpointerup=button.onpointercancel=null;
+        if(cancel){cue.start=beforeStart;cue.duration=beforeDur;positionBlock(button,cue.start,cue.duration,safeTotal);return;}
+        s.activeCue=cue;selectMix(s,type);
+        if(moved){
+          mixChanged(s);
+          showMixHint(`${name} · ${cue.start.toFixed(1)}초`);
+        }else{
+          editCue(s,type,cue);
+        }
+      };
+      button.onpointerup=()=>finish(false);
+      button.onpointercancel=()=>finish(true);
+    });
     lane.append(button);
   }
   if(!sound){
     let offset=0;
     for(const take of sequenceTakes(s)){
+      const rate=take.owner.rate||1;
       for(const line of take.owner.lines||[]){
         const start=Math.max(take.start,line.start),end=Math.min(take.end,line.end);
         if(!line.text||!take.owner.showCaptions||end<=start)continue;
-        const button=mixButton(line.text,()=>editSourceCaption(s,line),'cue-block');
-        positionBlock(button,offset+(start-take.start)/(take.owner.rate||1),(end-start)/(take.owner.rate||1),total);
+        const button=document.createElement('button');
+        button.type='button';button.className='cue-block';button.textContent=line.text;
+        const placeLine=()=>positionBlock(button,offset+(Math.max(take.start,line.start)-take.start)/rate,(Math.min(take.end,line.end)-Math.max(take.start,line.start))/rate,safeTotal);
+        placeLine();
+        let moved=false;
+        button.addEventListener('pointerdown',event=>{
+          if(!editableEffects()||event.button!==0)return;
+          event.stopPropagation();
+          moved=false;
+          const bStart=line.start, bEnd=line.end, dur=bEnd-bStart;
+          const startX=event.clientX, laneW=lane.getBoundingClientRect().width||1;
+          const rect=button.getBoundingClientRect();
+          const edge=rect.width>=34 && event.clientX-rect.left<10?'start':rect.width>=34 && rect.right-event.clientX<10?'end':'move';
+          try{button.setPointerCapture(event.pointerId);}catch(_){}
+          button.onpointermove=e=>{
+            if(Math.abs(e.clientX-startX)>4)moved=true;
+            if(!moved)return;
+            const delta=(e.clientX-startX)*safeTotal/laneW*rate;
+            if(edge==='start'){line.start=Math.max(take.start,Math.min(bEnd-0.2,bStart+delta));}
+            else if(edge==='end'){line.end=Math.max(bStart+0.2,Math.min(take.end,bEnd+delta));}
+            else{line.start=Math.max(take.start,Math.min(take.end-dur,bStart+delta));line.end=line.start+dur;}
+            placeLine();
+          };
+          const finish=cancel=>{
+            button.onpointermove=button.onpointerup=button.onpointercancel=null;
+            if(cancel){line.start=bStart;line.end=bEnd;placeLine();return;}
+            if(moved){mixChanged(s);showMixHint(`자막 이동 · ${line.start.toFixed(1)}초`);}
+            else editSourceCaption(s,line);
+          };
+          button.onpointerup=()=>finish(false);
+          button.onpointercancel=()=>finish(true);
+        });
         lane.prepend(button);
       }
       offset+=takeDuration(take);
@@ -154,8 +226,39 @@ function drawCues(s,type,total){
 }
 function editSourceCaption(s,line){
   if(!editableEffects())return;
-  const box=mixDialog('자막 편집',()=>{line.text=input.value.trim();mixChanged(s);});
-  const input=mixField(box,'자막',document.createElement('input'));input.maxLength=240;input.value=line.text;
+  const clip=s.clip;
+  let input,fontSel,styleSel,sizeSel,colorInp,posRange;
+  const box=mixDialog('자막 편집 · 폰트·위치',()=>{
+    line.text=input.value.trim();
+    clip.captionFont=fontSel.value;
+    clip.captionStyle=styleSel.value;
+    clip.captionSize=Number(sizeSel.value)||1;
+    clip.captionColor=colorInp.value||'#ffffff';
+    clip.captionPosY=(Number(posRange.value)||82)/100;
+    mixChanged(s);
+  });
+  input=mixField(box,'자막',document.createElement('input'));input.maxLength=240;input.value=line.text;
+  fontSel=mixField(box,'글꼴 (폰트)',document.createElement('select'));
+  [['pretendard','프리텐다드 (깔끔한 고딕)'],['dohyeon','도현체 (임팩트 타이틀)'],['jua','주아체 (둥근 팝)'],['gowun','고운바탕 (감성 명조)'],['songmyung','송명체 (매거진 명조)'],['pen','나눔손글씨 펜'],['blackhan','블랙한산스 (초굵은 강조)']].forEach(([v,l])=>fontSel.add(new Option(l,v)));
+  fontSel.value=clip.captionFont||'pretendard';
+  styleSel=mixField(box,'자막 모양',document.createElement('select'));
+  [['box','어두운 라운드 박스'],['cinema','시네마 · 흰 글씨와 밑줄'],['outline','흰 글씨 · 검정 테두리'],['yellowBox','노란 포인트 박스'],['pinkBox','네온 핑크 박스'],['shadow','배경 없는 그림자']].forEach(([v,l])=>styleSel.add(new Option(l,v)));
+  styleSel.value=clip.captionStyle||clip.style||'box';
+  sizeSel=mixField(box,'글자 크기',document.createElement('select'));
+  [['0.8','작게 (80%)'],['1','보통 (100%)'],['1.25','크게 (125%)'],['1.45','특대 (145%)']].forEach(([v,l])=>sizeSel.add(new Option(l,v)));
+  sizeSel.value=String(clip.captionSize||1);
+  colorInp=mixField(box,'글자 색상',document.createElement('input'));colorInp.type='color';colorInp.value=clip.captionColor||'#ffffff';colorInp.style.height='36px';
+  posRange=mixField(box,'세로 위치 (화면 위↔아래 · 미리보기 직접 드래그 가능)',document.createElement('input'));
+  posRange.type='range';posRange.min='12';posRange.max='90';posRange.step='1';
+  posRange.value=String(Math.round((clip.captionPosY||0.82)*100));
+  const posChips=document.createElement('div');posChips.style.cssText='display:flex;gap:5px;flex-wrap:wrap;margin:-2px 0 8px;';
+  [['상단',18],['중상단',35],['정중앙',50],['중하단',68],['하단',82]].forEach(([lbl,pct])=>{
+    const pb=document.createElement('button');pb.type='button';pb.textContent=lbl;
+    pb.style.cssText='padding:4px 9px;border-radius:999px;border:1px solid #454750;background:#262830;color:#fff;font-size:11px;cursor:pointer;';
+    pb.addEventListener('click',()=>{posRange.value=String(pct);});
+    posChips.append(pb);
+  });
+  box.append(posChips);
 }
 function editCue(s,type,cue){
   if(!editableEffects())return;
@@ -377,29 +480,43 @@ function pickMusic(s,tab='내장 100곡'){
     return;
   }
 
-  // 실시간 스트리밍 탭 (Audius 오픈 스트리밍 API)
+  // 실시간 스트리밍 탭 (Audius 오픈 스트리밍 API + 한글 검색 자동 매핑 + 스피너 고정 높이)
+  const koMap = {
+    '한국':'seoul kpop','한국곡':'seoul kpop','가요':'kpop vocal','케이팝':'kpop','서울':'seoul',
+    '발라드':'korean ballad','카페':'cafe lofi','감성':'emotional chill','신나는':'upbeat pop',
+    '힙합':'krnb hiphop','재즈':'jazz','운동':'workout trap','피아노':'piano','어쿠스틱':'acoustic',
+    '로파이':'lofi','팝':'pop vocal','보컬':'vocal pop','브이로그':'vlog chill'
+  };
+  const mapKoQuery = (raw) => {
+    const t = String(raw || '').trim();
+    if (!t) return '';
+    if (koMap[t]) return koMap[t];
+    for (const [k, v] of Object.entries(koMap)) { if (t.includes(k)) return v; }
+    return t;
+  };
   const row=document.createElement('div');row.style.cssText='display:flex;gap:6px;margin-bottom:8px;';
-  const qInp=document.createElement('input');qInp.type='text';qInp.placeholder='노래·장르 검색 (예: pop, vocal, chill, jazz)';
+  const qInp=document.createElement('input');qInp.type='text';qInp.placeholder='노래·장르 검색 (예: 케이팝, 감성, 카페, pop, vocal)';
   qInp.style.cssText='flex:1;padding:7px 9px;border-radius:8px;border:1px solid #454750;background:#16171c;color:#fff;font-size:12.5px;';
   const goBtn=document.createElement('button');goBtn.type='button';goBtn.textContent='검색';
   goBtn.style.cssText='padding:0 12px;border-radius:8px;border:0;background:#3b82f6;color:#fff;font-size:12px;font-weight:700;cursor:pointer;';
   row.append(qInp,goBtn);
   const chips=document.createElement('div');chips.style.cssText='display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;';
-  const listEl=document.createElement('div');listEl.style.cssText='display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;';
+  const listEl=document.createElement('div');listEl.style.cssText='display:flex;flex-direction:column;gap:6px;min-height:210px;max-height:220px;overflow-y:auto;';
   box.append(row,chips,listEl);
 
   async function loadTracks(query,genre){
     stopPreview();
-    listEl.textContent='실시간 스트리밍 곡을 불러오는 중…';
+    listEl.innerHTML='<div class="ar-mix-loading"><span class="ar-mix-spinner"></span><span>실시간 스트리밍 곡을 불러오는 중…</span></div>';
     try{
-      const url=query
-        ?`https://api.audius.co/v1/tracks/search?app_name=AutoReelsMaker&query=${encodeURIComponent(query)}&limit=15`
+      const mapped=mapKoQuery(query);
+      const url=mapped
+        ?`https://api.audius.co/v1/tracks/search?app_name=AutoReelsMaker&query=${encodeURIComponent(mapped)}&limit=15`
         :`https://api.audius.co/v1/tracks/trending?app_name=AutoReelsMaker&limit=15${genre?'&genre='+encodeURIComponent(genre):''}`;
       const res=await fetch(url,{headers:{Accept:'application/json'}});
       const data=(await res.json())?.data||[];
       const tracks=data.filter(t=>t&&t.id&&t.is_streamable!==false);
       listEl.replaceChildren();
-      if(!tracks.length){listEl.textContent='검색 결과가 없어요. 영문 키워드(pop, chill, vocal 등)로 검색해 보세요.';return;}
+      if(!tracks.length){listEl.innerHTML='<div class="ar-mix-loading" style="color:#9ca3af;">검색 결과가 없어요. 다른 키워드(예: 케이팝, 카페, pop, vocal)로 검색해 보세요.</div>';return;}
       tracks.forEach(t=>{
         const item=document.createElement('div');
         item.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:#181920;border:1px solid #2e303a;';
@@ -420,23 +537,27 @@ function pickMusic(s,tab='내장 100곡'){
         pBtn.dataset.p='1';
         const useBtn=document.createElement('button');useBtn.type='button';useBtn.textContent='적용';
         useBtn.style.cssText='padding:5px 10px;border-radius:999px;border:0;background:#3b82f6;color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;';
-        useBtn.addEventListener('click',()=>{
+        useBtn.addEventListener('click',async()=>{
           stopPreview();
+          useBtn.disabled=true;
+          useBtn.innerHTML='<span class="ar-btn-spinner"></span>로딩';
           applyMusicUrl(s,streamUrl,`🌐 ${t.title||'스트리밍 곡'}`);
+          try{if(s.musicPreview)await s.musicPreview;}catch(_){}
+          useBtn.disabled=false;
+          useBtn.textContent='적용됨';
           showMixHint(`🌐 ${t.title} 적용됨!`);
-          byId('mixDialog').close();
         });
         item.append(info,pBtn,useBtn);listEl.append(item);
       });
-    }catch(_){listEl.textContent='스트리밍 목록을 불러오지 못했어요.';}
+    }catch(_){listEl.innerHTML='<div class="ar-mix-loading" style="color:#fca5a5;">스트리밍 목록을 불러오지 못했어요.</div>';}
   }
 
-  [['🔥 인기',''],['🎤 팝','Pop'],['🎧 힙합','Hip-Hop/Rap'],['☕ 로파이','Lo-Fi'],['⚡ EDM','Electronic'],['🎸 어쿠스틱','Acoustic']].forEach(([lbl,g],i)=>{
+  [['🔥 인기','',''],['🇰🇷 K-Pop·서울','seoul kpop',''],['🎤 팝','' ,'Pop'],['🎧 힙합','','Hip-Hop/Rap'],['☕ 로파이','','Lo-Fi'],['⚡ EDM','','Electronic'],['🎸 어쿠스틱','','Acoustic']].forEach(([lbl,q,g],i)=>{
     const cb=document.createElement('button');cb.type='button';cb.textContent=lbl;
     cb.style.cssText='padding:4px 8px;border-radius:999px;border:1px solid #454750;background:'+(i===0?'#3b82f6':'#262830')+';color:#fff;font-size:11px;cursor:pointer;';
     cb.addEventListener('click',()=>{
       [...chips.children].forEach(c=>c.style.background='#262830');cb.style.background='#3b82f6';
-      loadTracks('',g);
+      loadTracks(q,g);
     });
     chips.append(cb);
   });
@@ -521,10 +642,55 @@ function drawStickerLane(s,total){
   label.hidden=!show;row.hidden=!show;
   if(!show)return;
   lane.replaceChildren();
+  const safeTotal=Math.max(0.1,total);
   for(const st of list){
-    const btn=mixButton(st.label+(st.text?' · '+st.text:''),()=>{selectMix(s,'sticker');if(typeof window.openShortsStickerDialog==='function')window.openShortsStickerDialog(s);},'cue-block');
-    btn.style.left=(100*(st.start||0)/Math.max(0.1,total))+'%';
-    btn.style.width=(100*Math.min(st.duration||2,total)/Math.max(0.1,total))+'%';
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='cue-block';
+    btn.textContent=st.label+(st.text?' · '+st.text:'');
+    const place=()=>{
+      btn.style.left=(100*(st.start||0)/safeTotal)+'%';
+      btn.style.width=(100*Math.max(0.25,Math.min(st.duration||2,safeTotal))/safeTotal)+'%';
+    };
+    place();
+    let moved=false;
+    btn.addEventListener('pointerdown',event=>{
+      if(!editableEffects()||event.button!==0)return;
+      event.stopPropagation();
+      moved=false;
+      const beforeStart=st.start||0, beforeDur=st.duration||2;
+      const startX=event.clientX, laneW=lane.getBoundingClientRect().width||1;
+      const rect=btn.getBoundingClientRect();
+      const edge=rect.width>=34 && event.clientX-rect.left<10?'start':rect.width>=34 && rect.right-event.clientX<10?'end':'move';
+      try{btn.setPointerCapture(event.pointerId);}catch(_){}
+      btn.onpointermove=e=>{
+        if(Math.abs(e.clientX-startX)>4)moved=true;
+        if(!moved)return;
+        const delta=(e.clientX-startX)*safeTotal/laneW;
+        if(edge==='start'){
+          st.start=Math.max(0,Math.min(beforeStart+beforeDur-0.25,beforeStart+delta));
+          st.duration=beforeStart+beforeDur-st.start;
+        }else if(edge==='end'){
+          st.duration=Math.max(0.25,Math.min(safeTotal-beforeStart,beforeDur+delta));
+        }else{
+          st.start=Math.max(0,Math.min(safeTotal-beforeDur,beforeStart+delta));
+        }
+        place();
+      };
+      const finish=cancel=>{
+        btn.onpointermove=btn.onpointerup=btn.onpointercancel=null;
+        if(cancel){st.start=beforeStart;st.duration=beforeDur;place();return;}
+        if(moved){
+          mixChanged(s);
+          showMixHint(`${st.label} · ${st.start.toFixed(1)}초 ~ ${(st.start+st.duration).toFixed(1)}초`);
+        }else{
+          selectMix(s,'sticker');
+          if(typeof window.openShortsStickerDialog==='function')window.openShortsStickerDialog(s);
+        }
+      };
+      btn.onpointerup=()=>finish(false);
+      btn.onpointercancel=()=>finish(true);
+    });
     lane.append(btn);
   }
   if(!lane.children.length)lane.append(mixButton('＋ 스티커 추가',()=>{selectMix(s,'sticker');if(typeof window.openShortsStickerDialog==='function')window.openShortsStickerDialog(s);},'mix-empty'));

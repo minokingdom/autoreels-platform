@@ -51,7 +51,15 @@
 #mixActions button{flex:1;background:none;color:#dddfe5;border:0;padding:6px 2px;font:11px/1.2 system-ui}
 #mixActions i{display:block;color:#f4f4f6;font:20px/1.2 system-ui;margin-bottom:3px}
 #mixActions button:disabled,.track-heading button:disabled{opacity:.35}
-#mixDialog{position:fixed;inset:auto 0 0;width:min(540px,100%);max-width:100%;max-height:55dvh;margin:0 auto;padding:14px 15px max(15px,env(safe-area-inset-bottom));border:1px solid #454750;border-bottom:0;border-radius:16px 16px 0 0;background:#202127;color:#f5f5f5;overflow:auto}
+#mixDialog{position:fixed;inset:auto 0 0;width:min(540px,100%);max-width:100%;min-height:290px;max-height:58dvh;margin:0 auto;padding:14px 15px max(15px,env(safe-area-inset-bottom));border:1px solid #454750;border-bottom:0;border-radius:16px 16px 0 0;background:#202127;color:#f5f5f5;overflow:auto}
+@keyframes arMixSpin{to{transform:rotate(360deg)}}
+.ar-mix-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:200px;color:#93c5fd;font-size:12px}
+.ar-mix-spinner{width:24px;height:24px;border-radius:999px;border:2.5px solid rgba(147,197,253,.22);border-top-color:#60a5fa;animation:arMixSpin .75s linear infinite}
+.ar-btn-spinner{display:inline-block;width:12px;height:12px;border-radius:999px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;animation:arMixSpin .7s linear infinite;vertical-align:-2px;margin-right:4px}
+#stickerLane .cue-block,.cue-block{cursor:grab;touch-action:none}
+#stickerLane .cue-block:active,.cue-block:active{cursor:grabbing}
+.quick-video #frame #overlay{pointer-events:auto;touch-action:none;cursor:grab}
+.quick-video #frame #overlay:active{cursor:grabbing}
 #mixDialog::backdrop{background:#0005}
 .mix-dialog-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .mix-dialog-head h2{font-size:15px}#mixDone{margin:0}#mixClose{color:white;border:0;background:none;font-size:22px}

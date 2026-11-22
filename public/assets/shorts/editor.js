@@ -164,7 +164,7 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
   if (clip.customTitle || !clip.showCaptions || title !== caption.trim()) block(title,true);
   if (clip.showCaptions) block(caption || '',false);
 }
-// 미리보기 화면에서 자막을 위/아래로 직접 드래그해 위치 조절
+// 미리보기 화면에서 스티커(상하좌우) 또는 자막(위/아래)을 직접 드래그해 위치 조절
 (function bindShortsCaptionDrag(){
   const ov=document.getElementById('overlay');
   if(!ov || ov.dataset.capDragBound)return;
@@ -173,19 +173,39 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
   ov.addEventListener('pointerdown',e=>{
     const s=typeof session!=='undefined'?session:null;
     if(!s?.clip || s.exporting)return;
-    const rect=ov.getBoundingClientRect();if(!rect.height)return;
+    const rect=ov.getBoundingClientRect();if(!rect.width||!rect.height)return;
+    const nx=(e.clientX-rect.left)/rect.width;
     const ny=(e.clientY-rect.top)/rect.height;
-    const cue=typeof activeCue==='function'?activeCue(s,s.trackTime||0):null;
+    const curT=s.trackTime||0;
+    // 1) 현재 시간에 표시 중인 스티커 히트 테스트 우선
+    const stickers=Array.isArray(s.stickers)?s.stickers:[];
+    for(let i=stickers.length-1;i>=0;i--){
+      const st=stickers[i];
+      if(curT<(st.start||0) || curT>=(st.start||0)+(st.duration||3))continue;
+      const sx=typeof st.x==='number'?st.x:0.5, sy=typeof st.y==='number'?st.y:0.22;
+      if(Math.abs(nx-sx)<=0.24 && Math.abs(ny-sy)<=0.11){
+        drag={type:'sticker',st,startX:e.clientX,startY:e.clientY,origX:sx,origY:sy,w:rect.width,h:rect.height};
+        try{ov.setPointerCapture(e.pointerId);}catch(_){}
+        return;
+      }
+    }
+    // 2) 자막 세로 드래그
+    const cue=typeof activeCue==='function'?activeCue(s,curT):null;
     const curY=typeof cue?.posY==='number'?cue.posY:(s.clip.captionPosY||0.82);
     if(Math.abs(ny-curY)>0.16)return;
-    drag={cue,startY:e.clientY,origPos:curY,h:rect.height};
+    drag={type:'caption',cue,startY:e.clientY,origPos:curY,h:rect.height};
     try{ov.setPointerCapture(e.pointerId);}catch(_){}
   });
   ov.addEventListener('pointermove',e=>{
     if(!drag || !session?.clip)return;
-    const next=Math.max(0.12,Math.min(0.90,drag.origPos+(e.clientY-drag.startY)/drag.h));
-    if(drag.cue)drag.cue.posY=next;
-    else session.clip.captionPosY=next;
+    if(drag.type==='sticker'){
+      drag.st.x=Math.max(0.08,Math.min(0.92,drag.origX+(e.clientX-drag.startX)/drag.w));
+      drag.st.y=Math.max(0.08,Math.min(0.92,drag.origY+(e.clientY-drag.startY)/drag.h));
+    }else{
+      const next=Math.max(0.12,Math.min(0.90,drag.origPos+(e.clientY-drag.startY)/drag.h));
+      if(drag.cue)drag.cue.posY=next;
+      else session.clip.captionPosY=next;
+    }
     if(session.joined||session.timelineCuts){if(typeof seekCutTrack==='function')seekCutTrack(session,session.trackTime||0);}
     else renderPreview();
   });
