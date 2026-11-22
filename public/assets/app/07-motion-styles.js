@@ -4085,9 +4085,9 @@
       c.fillStyle = scBot;
       c.fillRect(0, H * 0.44, W, H * 0.56);
 
-      // 3) 각 1군 포맷별 시그니처 타이포그래피 (인스타/쇼츠 Safe Zone 준수 · 컷 자막 숨김(쓰레기통 삭제) 반영)
+      // 3) 각 1군 포맷별 시그니처 타이포그래피 (컷 자막 숨김 또는 커스텀 위치/폰트/스타일 편집 시 중복 렌더링 방지)
       const _proOv = typeof getCutElementOverride === 'function' ? getCutElementOverride(cutIdx) : null;
-      if (_proOv && _proOv.caption && _proOv.caption.hidden) {
+      if (_proOv && _proOv.caption && (_proOv.caption.hidden || (typeof isCutElementPropCustomized === 'function' && isCutElementPropCustomized(_proOv.caption)))) {
         c.restore();
         return;
       }
@@ -4577,7 +4577,7 @@
       const rem = 1 - ent;
       const dir = cutIdx % 2 === 0 ? 1 : -1;
       const _ov = typeof getCutElementOverride === 'function' ? getCutElementOverride(cutIdx) : null;
-      const capHidden = Boolean(_ov && _ov.caption && _ov.caption.hidden);
+      const capHidden = Boolean(_ov && _ov.caption && (_ov.caption.hidden || (M !== 'op_infocard' && typeof isCutElementPropCustomized === 'function' && isCutElementPropCustomized(_ov.caption))));
       const safeW = W * 0.82;
 
       c.save();

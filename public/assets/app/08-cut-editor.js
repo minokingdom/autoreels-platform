@@ -2054,7 +2054,7 @@
               textColor: cap.color || '#ffffff',
               bgColor: cap.bgColor || '',
               align: cap.align || 'center',
-              defaultBoxStyle: 'darkGlass',
+              defaultBoxStyle: cap.bgColor ? 'darkGlass' : 'none',
               pillRadius: false,
               padXBase: 44,
               padYBase: 28,
@@ -5627,7 +5627,8 @@
         }
       }
 
-      const suppressBaseCaption = !!(ov && ov.caption && !isNativeHookEngine && isCutElementPropCustomized(ov.caption));
+      const isRefMotion = !!(baseDesign && baseDesign.mstyle === 'reference');
+      const suppressBaseCaption = !!(ov && ov.caption && (!isNativeHookEngine || isRefMotion) && isCutElementPropCustomized(ov.caption));
       const savedCutCap = suppressBaseCaption && campaign.cutCaptions ? campaign.cutCaptions[activeCutIdx] : undefined;
       const savedHook = suppressBaseCaption ? campaign.hook : undefined;
       if (suppressBaseCaption) {
