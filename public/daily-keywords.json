@@ -1,59 +1,60 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-22T20:12:10.375627+09:00",
+  "collectedAt": "2026-11-23T06:00:54.849351+09:00",
   "items": [
     {
-      "term": "원자력 잠수함",
-      "startedAt": "2026-11-22T01:40:00-08:00",
+      "term": "대장동",
+      "startedAt": "2026-11-22T11:50:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "정상회담",
-      "startedAt": "2026-11-22T01:30:00-08:00",
+      "term": "ลำดับของ ลิเวอร์พูล พบ แมนยู",
+      "startedAt": "2026-11-22T11:50:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "서울 경전철 서부선",
-      "startedAt": "2026-11-22T01:20:00-08:00",
-      "traffic": "200+"
+      "term": "잠수함",
+      "startedAt": "2026-11-22T11:30:00-08:00",
+      "traffic": "1000+"
     },
     {
-      "term": "무신사",
-      "startedAt": "2026-11-22T01:10:00-08:00",
-      "traffic": "2000+"
-    },
-    {
-      "term": "회계사",
-      "startedAt": "2026-11-22T01:10:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "김혜윤",
-      "startedAt": "2026-11-22T01:10:00-08:00",
+      "term": "비야디",
+      "startedAt": "2026-11-22T11:30:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "금융위기",
-      "startedAt": "2026-11-22T01:00:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "acc emerging teams asia cup",
-      "startedAt": "2026-11-22T01:00:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "김영훈",
-      "startedAt": "2026-11-22T00:40:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "기온",
-      "startedAt": "2026-11-22T00:30:00-08:00",
+      "term": "평택시장",
+      "startedAt": "2026-11-22T11:30:00-08:00",
       "traffic": "100+"
+    },
+    {
+      "term": "코스피",
+      "startedAt": "2026-11-22T11:20:00-08:00",
+      "traffic": "5000+"
+    },
+    {
+      "term": "헤타페 대 아틀레티코",
+      "startedAt": "2026-11-22T11:10:00-08:00",
+      "traffic": "20000+"
+    },
+    {
+      "term": "카를로스 알카라스",
+      "startedAt": "2026-11-22T11:10:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "휴게소",
+      "startedAt": "2026-11-22T11:10:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "통장",
+      "startedAt": "2026-11-22T11:00:00-08:00",
+      "traffic": "200+"
     }
   ],
-  "issues": [
+  "issues": [],
+  "previousIssues": [
     {
       "term": "수능",
       "day": "2026-11-22",
@@ -125,71 +126,6 @@
       "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008857807",
       "publishedAt": "2026-11-22T16:24:00+09:00",
       "headline": "서울 금천구 주차타워서 미라화 시신 발견…경찰 수사"
-    }
-  ],
-  "previousIssues": [
-    {
-      "term": "수능",
-      "day": "2026-11-21",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856961",
-      "publishedAt": "2026-11-21T19:28:00+09:00",
-      "headline": "출소 반 년만 '1등급'?…리트 만점자 '수능 성적' 미스터리"
-    },
-    {
-      "term": "AI 부정행위 논란",
-      "day": "2026-11-21",
-      "kind": "보도",
-      "publisher": "연합뉴스",
-      "url": "https://www.yna.co.kr/view/AKR20261121023800530",
-      "publishedAt": "2026-11-21T10:12:05+09:00",
-      "headline": "노동장관, 'AI 커닝' 사태 속 첫 국가자격시험 현장 점검"
-    },
-    {
-      "term": "탈선 여파 일반열차",
-      "day": "2026-11-21",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856936",
-      "publishedAt": "2026-11-21T16:43:00+09:00",
-      "headline": "탈선 여파 일반열차 중단에 KTX·ITX-새마을 등 15대 임시 투입"
-    },
-    {
-      "term": "각하",
-      "day": "2026-11-21",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856877",
-      "publishedAt": "2026-11-21T16:15:00+09:00",
-      "headline": "'윤석열 영화비·특활비 공개 소송' 각하…\"대통령기록관 이관\""
-    },
-    {
-      "term": "보령 앞바다서 조업하던",
-      "day": "2026-11-21",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008857008",
-      "publishedAt": "2026-11-21T15:47:00+09:00",
-      "headline": "보령 앞바다서 조업하던 외국인 선원 양망기에 끼어 숨져"
-    },
-    {
-      "term": "강원 평창서 공기총",
-      "day": "2026-11-21",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856954",
-      "publishedAt": "2026-11-21T14:22:00+09:00",
-      "headline": "강원 평창서 공기총 손질 중 오발 사고…60대 1명 부상"
-    },
-    {
-      "term": "걸그룹 여자친구 출신",
-      "day": "2026-11-21",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008856873",
-      "publishedAt": "2026-11-21T13:40:00+09:00",
-      "headline": "걸그룹 여자친구 출신 3명, 차가원 회사와 전속계약 분쟁 1심 승소"
     }
   ]
 }
