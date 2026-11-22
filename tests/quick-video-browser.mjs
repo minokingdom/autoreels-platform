@@ -45,9 +45,15 @@ try {
   const before = () => page.evaluate(() => [campaign.uploadedPhotos.length,campaign.designStyle,TOTAL_DURATION]);
   const original = await before();
   const fixture = new URL('./fixtures/remix-caption.webm',import.meta.url);
-  await page.locator('#quickShortVideoInput').setInputFiles({name:'test.webm',mimeType:'video/webm',buffer:await fs.readFile(fixture)});
+  const editorButton = page.getByRole('button', {name:/^영상 편집기/});
+  await editorButton.click();
   const frame = page.frameLocator('dialog.ar-video-editor iframe');
+  await frame.getByRole('heading', {name:'영상 편집기',exact:true}).waitFor();
+  const chooser = page.waitForEvent('filechooser');
+  await frame.locator('#emptyVideoPick').click();
+  await (await chooser).setFiles({name:'test.webm',mimeType:'video/webm',buffer:await fs.readFile(fixture)});
   await frame.locator('#quickControls').waitFor({timeout:15000});
+  await frame.getByRole('heading', {name:'타임라인',exact:true}).waitFor();
   assert.equal(await frame.locator('#trimEnd').inputValue(),'1');
   assert.equal(await frame.locator('#guideForm').isVisible(),false);
   await frame.locator('#useManual').click();
