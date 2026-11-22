@@ -333,7 +333,9 @@
       const mp = kb(1, S.idx + k - 1);
       const tp = o.still ? 1 : S.tp;
       const e = tp < 0.5 ? 4 * tp * tp * tp : 1 - Math.pow(-2 * tp + 2, 3) / 2;
-      const tr = o.trans || 'fade';
+      const kitAccents = ['wipe', 'slide', 'blinds'];
+      const cutK = S.idx + k;
+      const tr = o.trans || ((cutK > 0 && cutK % 3 === 2) ? kitAccents[(((Math.floor(cutK / 3) + (spec.seed || 0)) % kitAccents.length) + kitAccents.length) % kitAccents.length] : 'fade');
       const draw = (img, m, dx, dy, sc, a) => {
         c.globalAlpha = a;
         kitCover(c, img, r.x + dx, r.y + dy, r.w, r.h, m.s * (sc || 1), m.x, m.y);

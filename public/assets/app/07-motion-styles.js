@@ -710,9 +710,10 @@
       c.restore();
     }
     // 컷이 바뀔 때 앞 사진에서 부드럽게 겹쳐 바뀜
-    // ★ 기본 전환: 전환효과 없이 깔끔한 순수 크로스 디졸브 (수동 선택 시에만 24종 특수 전환 사용)
+    // ★ 기본 전환: 순수 크로스 디졸브 + 중간중간 포인트 컷(3·6·9번째 컷)에만 세련된 장면전환 1회
     const AR_PHOTO_ENTRANCE_MODES = [
-      { id: 'auto', label: '✨ 크로스 디졸브(기본)' },
+      { id: 'auto', label: '✨ 디졸브+포인트(기본)' },
+      { id: -1, label: '🌫 순수 디졸브만' },
       { id: 0,  label: '🔍 클린 줌 안착' },
       { id: 1,  label: '⭕ 소프트 아이리스' },
       { id: 2,  label: '🪟 5단 블라인드' },
@@ -800,14 +801,17 @@
         life:      [10, 21, 1, 16, 6, 23, 5, 11, 0, 18],
         biz:       [23, 6, 2, 16, 10, 4, 5, 11, 21, 0]
       };
-      // 기본값: 전환효과 없이 순수하고 세련된 크로스 디졸브(-1). 컷 편집에서 직접 고른 경우에만 특수 전환 적용
-      let mode = -1;
+      // 기본값: 평소엔 순수 크로스 디졸브(-1)로 차분하게 흐르다가, 중간중간 포인트 컷(3·6·9번째 컷)에만 세련된 전환 1회!
+      const AR_POINT_ACCENTS = [16, 4, 3, 6, 5, 11]; // 책장넘김 · 부드러운슬라이드 · 클린사선 · 좌우커튼 · 업슬라이드 · 시네마셔터
+      let mode = (cutIdx > 0 && cutIdx % 3 === 2)
+        ? AR_POINT_ACCENTS[(h + Math.floor(cutIdx / 3)) % AR_POINT_ACCENTS.length]
+        : -1;
       let camMode = AR_GENTLE_CAMS[(h + cutIdx * 2) % AR_GENTLE_CAMS.length];
       const ov = typeof getCutElementOverride === 'function' ? getCutElementOverride(cutIdx) : null;
       if (ov && ov.photo) {
         if (ov.photo.entrance !== undefined && ov.photo.entrance !== null && ov.photo.entrance !== '' && ov.photo.entrance !== 'auto') {
           const parsed = Number(ov.photo.entrance);
-          if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 23) mode = parsed;
+          if (!Number.isNaN(parsed) && parsed >= -1 && parsed <= 23) mode = parsed;
         }
         if (ov.photo.cam && ov.photo.cam !== 'auto') camMode = ov.photo.cam;
       }
@@ -904,33 +908,33 @@
           drawCur(steadyZoom + rem * 0.03, steadyPx, steadyPy);
           c.restore();
         } else if (mode === 3) {
-          // 3) 클린 사선 와이프 (눈부신 선 제거)
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          // 3) 클린 사선 와이프 (이전 컷 포즈 그대로 유지 → 끊김·줄어듦 0%)
+          if (hasPrev) drawPrev(x, y, 0);
           const slant = Math.round(w * 0.26);
           const edgeX = x - slant + (w + slant * 2) * p;
           c.save(); c.beginPath();
           c.moveTo(x - slant, y); c.lineTo(edgeX, y); c.lineTo(edgeX - slant, y + h); c.lineTo(x - slant, y + h);
           c.closePath(); c.clip();
-          drawCur(steadyZoom + rem * 0.03, steadyPx, steadyPy);
+          drawCur(steadyZoom, steadyPx, steadyPy);
           c.restore();
         } else if (mode === 4) {
-          // 4) 부드러운 좌우 슬라이드 (경계 흰 바 제거)
+          // 4) 부드러운 좌우 슬라이드 (이전 컷 포즈 그대로 밀려남 → 끊김 0%)
           const oldX = x - Math.round(w * p * 0.35) * dir;
           const newX = x + Math.round(w * rem) * dir;
-          if (hasPrev) mPhoto(c, S, -1, oldX, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev(oldX, y, 0);
           mPhoto(c, S, 0, newX, y, w, h, steadyZoom, steadyPx, steadyPy);
         } else if (mode === 5) {
-          // 5) 부드러운 아래→위 슬라이드 (경계 흰 바 제거)
+          // 5) 부드러운 아래→위 슬라이드 (이전 컷 포즈 그대로 밀려 올라감 → 끊김 0%)
           const oldY = y - Math.round(h * p * 0.30);
           const newY = y + Math.round(h * rem);
-          if (hasPrev) mPhoto(c, S, -1, x, oldY, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev(x, oldY, 0);
           mPhoto(c, S, 0, x, newY, w, h, steadyZoom, steadyPx, steadyPy);
         } else if (mode === 6) {
-          // 6) 중앙→좌우 시어터 커튼 오픈 (경계 흰 바 제거)
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          // 6) 중앙→좌우 시어터 커튼 오픈 (이전 컷 포즈 유지)
+          if (hasPrev) drawPrev(x, y, 0);
           const openW = Math.round(w * p), leftX = x + Math.round((w - openW) / 2);
           c.save(); c.beginPath(); c.rect(leftX, y, openW, h); c.clip();
-          drawCur(steadyZoom + rem * 0.04, steadyPx, steadyPy);
+          drawCur(steadyZoom, steadyPx, steadyPy);
           c.restore();
         } else if (mode === 7) {
           // 7) 차분한 카드 안착 (오버슈트 바운스 제거)
@@ -972,11 +976,11 @@
           drawCur(steadyZoom + rem * 0.05, steadyPx, steadyPy);
           c.restore();
         } else if (mode === 11) {
-          // 11) 상하 시네마 필름 셔터
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          // 11) 상하 시네마 필름 셔터 (이전 컷 포즈 유지)
+          if (hasPrev) drawPrev(x, y, 0);
           const openH = Math.round(h * p), topY = y + Math.round((h - openH) / 2);
           c.save(); c.beginPath(); c.rect(x, topY, w, openH); c.clip();
-          drawCur(steadyZoom + rem * 0.04, steadyPx, steadyPy);
+          drawCur(steadyZoom, steadyPx, steadyPy);
           c.restore();
         } else if (mode === 12) {
           // 12) 부드러운 시계 와이프 (레이더 바늘 선 제거)
@@ -1018,17 +1022,17 @@
           if (hasPrev) mPhoto(c, S, -1, x, oldY, w, h, baseScale, 0, 0);
           mPhoto(c, S, 0, x, newY, w, h, steadyZoom, steadyPx, steadyPy);
         } else if (mode === 16) {
-          // 16) 에디토리얼 책장 넘김 (은은한 그림자만)
+          // 16) 에디토리얼 책장 넘김 (이전 컷 포즈 유지 + 은은한 그림자만)
           const foldX = x + Math.round(w * rem);
-          drawCur(steadyZoom + rem * 0.02, steadyPx, steadyPy);
+          drawCur(steadyZoom, steadyPx, steadyPy);
           if (hasPrev && foldX > x + 1) {
             c.save(); c.beginPath(); c.rect(x, y, foldX - x, h); c.clip();
-            mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+            drawPrev(x, y, 0);
             c.restore();
           }
-          const shW = Math.min(54, Math.max(14, Math.round(w * 0.10 * rem)));
+          const shW = Math.min(48, Math.max(12, Math.round(w * 0.09 * rem)));
           const pg = c.createLinearGradient(foldX, 0, foldX + shW, 0);
-          pg.addColorStop(0, `rgba(0,0,0,${(0.32 * rem).toFixed(3)})`);
+          pg.addColorStop(0, `rgba(0,0,0,${(0.28 * rem).toFixed(3)})`);
           pg.addColorStop(1, 'rgba(0,0,0,0)');
           c.fillStyle = pg; c.fillRect(foldX, y, shW, h);
         } else if (mode === 17) {
