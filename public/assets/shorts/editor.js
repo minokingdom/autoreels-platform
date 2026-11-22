@@ -198,7 +198,7 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
     if(editMode && typeof session!=='undefined' && session?.clip){
       try{video.pause();}catch(_){}
       if(typeof stopJoinedPreview==='function')stopJoinedPreview(session);
-      if(typeof showMixHint==='function')showMixHint('편집 모드 · 자막·스티커를 드래그하거나 상단 도구로 수정하세요');
+      if(typeof showMixHint==='function')showMixHint('편집 모드 · 자막·스티커를 드래그하거나 하단 도구로 수정하세요');
     }
   }
   window.setShortsEditMode=setShortsEditMode;
