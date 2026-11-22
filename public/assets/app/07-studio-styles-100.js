@@ -28,8 +28,10 @@
       ['s100_film_docu',        '다큐멘터리 필름',   '고급',   '#09090b', '#131317', '#d9b566', '#f4f4f5', 'maru',    false, 'film', 'cinema', '2.39:1 시네마 레터박스와 챕터 하단 자막']
     ];
 
-    if (typeof DESIGN_STYLES !== 'undefined' && Array.isArray(DESIGN_STYLES)) {
-      STUDIO_100_SPECS.forEach((r, idx) => {
+    const STUDIO_100_RENDERERS = {};
+    function s100RegisterStyles(specs, seedOffset = 900) {
+      if (typeof DESIGN_STYLES === 'undefined' || !Array.isArray(DESIGN_STYLES)) return;
+      specs.forEach((r, idx) => {
         if (DESIGN_STYLES.some((d) => d.id === r[0])) return;
         DESIGN_STYLES.push({
           id: r[0],
@@ -52,10 +54,11 @@
           isOpusArt: true,
           isStudio100: true,
           addedAt: '2026-11-22',
-          seed: 900 + idx
+          seed: seedOffset + idx
         });
       });
     }
+    s100RegisterStyles(STUDIO_100_SPECS, 900);
 
     // ── 경량 캐시 패턴 (한 번만 생성, 60fps 유지) ──────────────────────────
     const _s100TexCache = {};
@@ -199,6 +202,12 @@
       bgGrad.addColorStop(1, sp.bg2 || sp.bg1 || '#1a1c24');
       c.fillStyle = bgGrad;
       c.fillRect(0, 0, W, H);
+
+      if (typeof STUDIO_100_RENDERERS[M] === 'function') {
+        STUDIO_100_RENDERERS[M]({ c, W, H, t, mainDuration, totalCuts, d, sp, cutDur, cutIdx, local, lp, S, caption, capHidden, ent, rem, accent, fg, brandName });
+        c.restore();
+        return;
+      }
 
       // ════════════════════════════════════════════════════════════════════
       // 장르 1: 회화 · 일러스트 아트 (10종)
