@@ -3909,12 +3909,38 @@
     const AR_FINE_BADGE = '<span class="fine-edit-badge" title="자막·위 라벨·아래 이름을 컷마다 세세하게 바꿀 수 있어요">세부 편집</span>';
     function arVisibleDesigns() {
       const list = DESIGN_STYLES.filter(arDesignVisible);
-      // 신규 오퍼스 화풍 30종 -> 1군 프로 엔진 -> 2026 에디토리얼 -> 나머지 최신 모션/커스텀 순으로 최상단 정렬
-      const opus = list.filter((d) => d.isOpusArt);
-      const pro = list.filter((d) => !d.isOpusArt && d.isProReels);
-      const ed = list.filter((d) => !d.isOpusArt && !d.isProReels && String(d.id || '').startsWith('ed_'));
-      const rest = list.filter((d) => !d.isOpusArt && !d.isProReels && !String(d.id || '').startsWith('ed_'));
-      return opus.concat(pro, ed, rest);
+      // 1군 프로 엔진 -> 오퍼스 화풍(엔진별 다크·라이트 대표만) -> 2026 에디토리얼 -> 나머지 최신 모션 순 정렬 + 같은 레이아웃(mstyle) 중복 완전 제거
+      const pro = list.filter((d) => d.isProReels);
+      const opus = list.filter((d) => !d.isProReels && d.isOpusArt);
+      const ed = list.filter((d) => !d.isProReels && !d.isOpusArt && String(d.id || '').startsWith('ed_'));
+      const rest = list.filter((d) => !d.isProReels && !d.isOpusArt && !String(d.id || '').startsWith('ed_'));
+      const ordered = pro.concat(opus, ed, rest);
+
+      const seenOpus = new Set();
+      const seenMstyle = new Set();
+      const deduped = [];
+      for (const d of ordered) {
+        if (d.custom) { deduped.push(d); continue; }
+        if (d.isProReels) {
+          if (seenMstyle.has(d.mstyle)) continue;
+          seenMstyle.add(d.mstyle);
+          deduped.push(d);
+          continue;
+        }
+        if (d.isOpusArt) {
+          // 오퍼스 6대 엔진은 색만 다른 5개 복제 대신 다크/라이트 대표 최대 2종씩만 노출 (색상은 우측 색상 버튼으로 변경)
+          const key = `${d.mstyle}|${d.light ? 'L' : 'D'}`;
+          if (seenOpus.has(key)) continue;
+          seenOpus.add(key);
+          deduped.push(d);
+          continue;
+        }
+        const mKey = d.referenceStyle ? `ref:${d.referenceStyle.layout || d.id}` : String(d.mstyle || d.id);
+        if (seenMstyle.has(mKey)) continue;
+        seenMstyle.add(mKey);
+        deduped.push(d);
+      }
+      return deduped;
     }
     // 신규는 대표 분류와 함께 표시하는 모음입니다. 카테고리를 옮기거나 복제하지 않습니다.
     const AR_NEW_STYLE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
@@ -3923,7 +3949,7 @@
       return Number.isFinite(added) && now >= added && now - added < AR_NEW_STYLE_WINDOW_MS;
     }
     function arDesignMatchesCat(d, cat, now = Date.now()) {
-      if (cat === '인포·화풍 30') return Boolean(d && d.isOpusArt);
+      if (cat === '인포·화풍') return Boolean(d && d.isOpusArt);
       if (cat === '신규') return arDesignIsNew(d, now);
       return cat === '전체' || d.cat === cat;
     }
@@ -3944,10 +3970,10 @@
       const vis = arVisibleDesigns();
       const hasWeekly = vis.some((d) => d.cat === '이번 주 인기');
       const hasOpus = vis.some((d) => d.isOpusArt);
-      if (key === 'auto') return ['전체', ...(hasOpus ? ['인포·화풍 30'] : []), ...(hasWeekly ? ['이번 주 인기'] : []), ...DESIGN_CATS.filter((c) => c !== '전체')];
+      if (key === 'auto') return ['전체', ...(hasOpus ? ['인포·화풍'] : []), ...(hasWeekly ? ['이번 주 인기'] : []), ...DESIGN_CATS.filter((c) => c !== '전체')];
       return [
         '전체',
-        ...(hasOpus ? ['인포·화풍 30'] : []),
+        ...(hasOpus ? ['인포·화풍'] : []),
         ...(hasWeekly ? ['이번 주 인기'] : []),
         '내 업종',
         ...DESIGN_CATS.filter((c) => c !== '전체' && vis.some((d) => !d.industry && arDesignMatchesCat(d, c)))
