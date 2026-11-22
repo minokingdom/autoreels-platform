@@ -1,4 +1,7 @@
-const effectNames={flash:'플래시',zoom:'펀치 줌',echo:'이중상',dip:'딥 전환',leak:'빛 번짐',slice:'슬라이스 스텝'};
+const effectNames={flash:'플래시',zoom:'펀치 줌',echo:'이중상',dip:'딥 전환',leak:'빛 번짐',slice:'슬라이스 스텝',
+  grain:'필름 그레인',warm:'따뜻한 필름',matte:'크림 매트',mono:'흑백',vignette:'비네팅'};
+// 스튜디오 테마(인스타 감성 계열)에서 쓰는 색감·질감. 순간 효과가 아니라 구간 내내 고르게 입힌다.
+const lookKinds=new Set(['grain','warm','matte','mono','vignette']);
 const effectRecipes=[
   {kind:'leak',duration:.85,strength:.9},
   {kind:'slice',duration:.46,strength:.8},
@@ -7,8 +10,43 @@ const effectRecipes=[
   {kind:'echo',duration:.4,strength:.55},
   {kind:'flash',duration:.267,strength:.41,tint:'#ffda91',label:'폴라로이드 · 골든 플래시'},
   {kind:'dip',duration:.65,strength:1,tint:'#06070a',label:'블랙 딥'},
-  {kind:'dip',duration:.55,strength:1,tint:'#fff',label:'화이트 딥'}
+  {kind:'dip',duration:.55,strength:1,tint:'#fff',label:'화이트 딥'},
+  {kind:'grain',duration:Infinity,strength:.7,tab:'theme'},
+  {kind:'warm',duration:Infinity,strength:.8,tab:'theme'},
+  {kind:'matte',duration:Infinity,strength:.8,tab:'theme'},
+  {kind:'mono',duration:Infinity,strength:1,tab:'theme'},
+  {kind:'vignette',duration:Infinity,strength:.7,tab:'theme'},
+  {kind:'flash',duration:.9,strength:.9,tint:'#f4ece0',label:'인화 페이드인',tab:'theme'}
 ];
+let grainTile=null;
+function paintLook(ctx,kind,amount,time,w,h){
+  if(kind==='grain'){
+    if(!grainTile){
+      grainTile=document.createElement('canvas');grainTile.width=grainTile.height=160;
+      const g=grainTile.getContext('2d'),im=g.createImageData(160,160);
+      for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255;}
+      g.putImageData(im,0,0);
+    }
+    // 화면 폭에 맞춰 알갱이 크기를 키우고, 프레임마다 위치를 바꿔 필름처럼 일렁이게 한다.
+    const cell=Math.max(160,Math.round(w/6.75)),ox=Math.floor((Math.sin(time*37.1)*.5+.5)*cell),oy=Math.floor((Math.cos(time*23.7)*.5+.5)*cell);
+    ctx.globalAlpha=.24*amount;ctx.globalCompositeOperation='overlay';
+    for(let y=-oy;y<h;y+=cell)for(let x=-ox;x<w;x+=cell)ctx.drawImage(grainTile,x,y,cell,cell);
+  }else if(kind==='warm'){
+    ctx.globalCompositeOperation='soft-light';ctx.fillStyle=`rgba(255,196,140,${.32*amount})`;ctx.fillRect(0,0,w,h);
+    ctx.globalCompositeOperation='screen';ctx.fillStyle=`rgba(60,44,30,${.16*amount})`;ctx.fillRect(0,0,w,h);
+  }else if(kind==='matte'){
+    ctx.globalCompositeOperation='saturation';ctx.fillStyle=`rgba(128,128,128,${.28*amount})`;ctx.fillRect(0,0,w,h);
+    ctx.globalCompositeOperation='screen';ctx.fillStyle=`rgba(72,62,52,${.24*amount})`;ctx.fillRect(0,0,w,h);
+    ctx.globalCompositeOperation='soft-light';ctx.fillStyle=`rgba(246,236,220,${.3*amount})`;ctx.fillRect(0,0,w,h);
+  }else if(kind==='mono'){
+    ctx.globalCompositeOperation='saturation';ctx.fillStyle=`rgba(128,128,128,${amount})`;ctx.fillRect(0,0,w,h);
+    ctx.globalCompositeOperation='soft-light';ctx.fillStyle=`rgba(20,20,20,${.25*amount})`;ctx.fillRect(0,0,w,h);
+  }else if(kind==='vignette'){
+    const g=ctx.createRadialGradient(w/2,h/2,Math.min(w,h)*.32,w/2,h/2,Math.hypot(w,h)*.55);
+    g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(0,0,0,${.6*amount})`);
+    ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+  }
+}
 
 function outputTimeAt(s,sourceTime){
   let offset=0;
@@ -24,10 +62,13 @@ function paintEffects(ctx,s,time){
   for(const effect of s?.effects||[]){
     const phase=(time-effect.start)/effect.duration;
     if(phase<0 || phase>=1)continue;
-    const amount=effect.strength*(effect.kind==='flash'?1-phase:Math.sin(Math.PI*phase));
+    const look=lookKinds.has(effect.kind);
+    const amount=look?effect.strength:effect.strength*(effect.kind==='flash'?1-phase:Math.sin(Math.PI*phase));
     if(!amount)continue;
     ctx.save();
-    if(effect.kind==='flash' || effect.kind==='dip'){
+    if(look){
+      paintLook(ctx,effect.kind,amount,time,w,h);
+    }else if(effect.kind==='flash' || effect.kind==='dip'){
       ctx.globalAlpha=amount;ctx.fillStyle=effect.tint||'white';ctx.fillRect(0,0,w,h);
     }else if(effect.kind==='leak'){
       lightSweep(ctx,phase,effect.strength);

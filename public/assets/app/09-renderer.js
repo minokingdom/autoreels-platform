@@ -3729,7 +3729,7 @@
       });
       const audBtn = document.getElementById('svAudioToggleBtn');
       if (audBtn) {
-        audBtn.textContent = vid._keepAudio ? '🔊 원본 소리 켬' : '🔇 원본 소리 끔';
+        audBtn.textContent = vid._keepAudio ? '원본 소리 켬' : '원본 소리 끔';
       }
     }
 
@@ -3961,6 +3961,27 @@
           (failed > 0 ? ` ${failed}개는 열 수 없어 제외했습니다. ${photoError}` : '') +
           (skipped > 0 ? ` 10개까지만 쓸 수 있어 ${skipped}개는 제외했습니다.` : '');
       }
+    }
+
+    // ★ 영상 편집기에서 다듬은 영상에 스튜디오 테마 입히기 (2026-11-22)
+    // 편집기가 만든 MP4 하나를 사진 칸에 넣고, 모든 컷에 끊김 없이 이어서 재생한다(원본 소리 유지).
+    async function arApplyThemeToEditedVideo(file) {
+      const input = document.getElementById('multiPhotoInput');
+      if (!input || !file) throw new Error('편집한 영상을 넘기지 못했어요.');
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      await handleMultiPhotoUpload({ target: input });
+      const vid = campaign.uploadedPhotos[0];
+      if (!vid || !vid._isVideo) throw new Error('편집한 영상을 불러오지 못했어요. 다시 시도해 주세요.');
+      vid._continuousVideo = true;
+      vid._keepAudio = true;
+      vid._origName = '편집기에서 다듬은 영상';
+      document.querySelector('dialog.ar-video-editor[open]')?.close();
+      arUpdateShortVideoEdit({});
+      if (typeof renderUploadedPhotoThumbs === 'function') renderUploadedPhotoThumbs();
+      if (typeof openPresetDrawer === 'function') openPresetDrawer('right');
+      if (typeof arToast === 'function') arToast('편집한 영상을 넣었어요. 마음에 드는 테마를 골라 보세요.');
     }
 
     // 카마스터 프로필 사진 업로드 핸들러

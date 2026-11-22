@@ -28,6 +28,28 @@
       seekCutTrack(s, 0);
       detail(s, '추천 구간 ' + clock(start) + ' – ' + clock(end) + ' · ' + (end - start).toFixed(1) + '초를 불러왔어요.');
     };
+    // 스튜디오 안에서 연 편집기: 다듬은 영상을 제작 화면으로 넘겨 테마·대본·성우·명함을 입힌다.
+    const themeButton = byId('applyTheme');
+    let studio = null;
+    try { if (parent !== window && typeof parent.arApplyThemeToEditedVideo === 'function') studio = parent; } catch (e) {}
+    if (themeButton && studio) {
+      themeButton.hidden = false;
+      document.body.classList.add('can-apply-theme');
+      themeButton.addEventListener('click', async () => {
+        const s = session;
+        if (!s?.clip || s.exporting || s.adding) return;
+        themeButton.disabled = true;
+        try {
+          const blob = await exportShortClip(true, { handoff: true });
+          if (!blob || session !== s) return;
+          // 제작 화면 창의 File로 만들어 넘김 (창이 닫혀도 영상이 남도록)
+          const file = new studio.File([blob], '편집한 영상.mp4', { type: 'video/mp4', lastModified: Date.now() });
+          await studio.arApplyThemeToEditedVideo(file);
+        } catch (error) {
+          statusLine.textContent = error?.message || '스튜디오로 넘기지 못했어요.';
+        } finally { themeButton.disabled = false; }
+      });
+    }
     return;
   }
 

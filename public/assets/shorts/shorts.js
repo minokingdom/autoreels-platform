@@ -207,13 +207,13 @@ function paintClip(ctx, source, text, clip=session.clip, outputTime=0) {
   drawTitles(ctx,session.clip,text);
 }
 save.addEventListener('click',() => exportShortClip(false));
-async function exportShortClip(forPublish) {
+async function exportShortClip(forPublish, options = {}) {
   const s = session, clip = s?.clip; if (!clip || s.exporting || s.adding) return;
   const mime = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'].find(t => window.MediaRecorder?.isTypeSupported(t));
   if (!mime || !HTMLCanvasElement.prototype.captureStream) {detail(s,'이 브라우저는 MP4 저장을 지원하지 않아요.'); return;}
   stopJoinedPreview(s); video.pause(); byId('fields').disabled = true; s.exporting = true; save.disabled = true; download.hidden = true;
   byId('quickControls').disabled = true; byId('joinFiles').disabled=true;
-  statusLine.textContent = '선택 구간을 MP4로 만드는 중…'; let musicNode, context, track, recorder, stream, raf, timeout;
+  statusLine.textContent = options.handoff ? '테마를 입힐 영상을 만드는 중…' : '선택 구간을 MP4로 만드는 중…'; let musicNode, context, track, recorder, stream, raf, timeout;
   const source = document.createElement('video'); source.playsInline = true; source.muted = true;
   let rejectRender;
   const failure = new Promise((_,reject) => {rejectRender = reject;});
@@ -223,7 +223,8 @@ async function exportShortClip(forPublish) {
   document.addEventListener('visibilitychange',visibility);
   try {
     context = new AudioContext(); const resume = context.resume();
-    await arCheckShortsAccess(s.controller.signal);
+    // 스튜디오로 넘기는 중간 파일은 내려받을 수 없고 이용 횟수도 차감하지 않는다. 최종 저장은 스튜디오에서 확인한다.
+    if (!options.handoff) await arCheckShortsAccess(s.controller.signal);
     await Promise.race([failure,new Promise((resolve,reject) => {
       source.onloadeddata = resolve; source.onerror = () => reject(Error('영상을 열 수 없어요.')); source.src = sequenceTakes(s)[0].url;
     })]); await resume;

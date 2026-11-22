@@ -196,7 +196,7 @@ function editCue(s,type,cue){
 function effectDialog(tab='영상 효과'){
   if(tab==='전환'){openCutPicker(session);return;}
   const box=mixDialog('효과',null),nav=document.createElement('div');nav.className='fx-tabs';
-  for(const name of ['영상 효과','전환','효과음']){
+  for(const name of ['영상 효과','테마 색감','전환','효과음']){
     const b=mixButton(name,()=>{if(name==='효과음'){selectMix(session,'sfx');editCue(session,'sfx');}else effectDialog(name);});
     b.setAttribute('aria-pressed',String(name===tab));nav.append(b);
   }
@@ -211,7 +211,9 @@ function effectDialog(tab='영상 효과'){
   }
   const list=byId('fxPresetList'),previews=[];
   for(const button of list.children){
-    button.hidden=false;
+    // '테마 색감' 탭에는 스튜디오 테마의 색감·질감만, '영상 효과' 탭에는 순간 효과만
+    button.hidden=(effectRecipes[Number(button.dataset.recipe)]?.tab==='theme')!==(tab==='테마 색감');
+    if(button.hidden)continue;
     let thumb=button.querySelector('canvas');
     if(!thumb){thumb=document.createElement('canvas');thumb.width=96;thumb.height=84;button.prepend(thumb);}
     const ctx=thumb.getContext('2d'),recipe=effectRecipes[Number(button.dataset.recipe)];
