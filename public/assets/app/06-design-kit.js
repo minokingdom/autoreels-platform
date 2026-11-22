@@ -4448,7 +4448,7 @@
         list.forEach((ds) => {
           campaign.designStyle = ds.id;
           const previewTime=ds.referenceStyle?.layout==='diagonal-fan'
-            ? Math.min((mainDuration/totalCuts)*.62,ds.referenceStyle.entrySeconds*2.4)*.55
+            ? (mainDuration/totalCuts)*(Math.min(3,totalCuts-1)+.65)
             : (mainDuration/totalCuts)*.9;
           renderGenreFrame(previewTime, mainDuration, totalCuts, getSelectedDealer());
           tctx.drawImage(canvas, 0, 0, thumb.width, thumb.height);

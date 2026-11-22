@@ -65,31 +65,58 @@ function arReferenceFanScene(S,cut) {
   const cuts=Math.max(1,S.cuts||1),target=Math.max(0,Math.min(cuts-1,cut));
   return {...S,cutIdx:target,idx:Math.min(Math.max(0,S.n-1),Math.floor(target*Math.max(1,S.n)/cuts))};
 }
-function arReferenceFanMask(q) {
-  // 왼쪽 아래에서 부채꼴로 열리고, 마지막에는 두 가장자리가 함께 화면 밖으로 나갑니다.
-  const smooth=v=>{v=mClamp(v);return v*v*(3-2*v);};
-  return {left:1-smooth((q-.34)/.66),right:1-smooth(q/.78)};
+function arReferenceFanEase(v) {v=mClamp(v);return v*v*(3-2*v);}
+function arReferenceFanRay(slope) {
+  // 모든 경계는 (0, 1)에 고정. 끝점만 위쪽 변 → 오른쪽 변으로 회전합니다.
+  return slope>1?{x:1/slope,y:0}:{x:1,y:1-slope};
+}
+function arReferenceFanLayers(idx,p,dur,r) {
+  const transition=Math.max(.001,Math.min(dur*.36,r.entrySeconds*.38));
+  const q=arReferenceFanEase(p*dur/transition),layers=[];
+  const settle=mClamp((p*dur-transition)/Math.max(.001,dur-transition));
+  const currentSlope=.62-.22*settle;
+  for(let cut=1;cut<=idx;cut++){
+    const age=idx-cut;
+    if(age===0){
+      if(q<=0)continue;
+      const angle=Math.PI/2+(Math.atan(currentSlope)-Math.PI/2)*q;
+      layers.push({cut,end:arReferenceFanRay(Math.tan(angle))});
+    } else {
+      // 새 장면 진입 때 지난 장면의 쐐기를 아래로 압축합니다. 미래 컷은 읽지 않습니다.
+      const before=.40*Math.pow(.48,age-1),after=currentSlope*Math.pow(.48,age);
+      layers.push({cut,end:arReferenceFanRay(before+(after-before)*q)});
+    }
+  }
+  return layers;
+}
+function arReferenceFanIntro(c,W,H,S,r,p,zoom) {
+  c.fillStyle=r.background;c.fillRect(0,0,W,H);
+  for(let col=0;col<4;col++){
+    const arrive=arReferenceFanEase((p-col*.105+.025)/.075);
+    if(arrive<=0)continue;
+    const expand=arReferenceFanEase((p-(.49+col*.115))/.11);
+    const h=H*(.44+.56*expand),y=(H-h)/2-(1-arrive)*H*.85;
+    const x=W*col/4,gap=Math.max(.6,W*.002);
+    c.save();c.beginPath();c.rect(x,y,W/4-gap,h);c.clip();
+    // 한 사진을 네 번 반복하지 않고, 같은 전체 장면의 서로 다른 세로 부분을 보여줍니다.
+    mPhoto(c,arReferenceFanScene(S,0),0,0,0,W,H,zoom);
+    c.restore();
+  }
 }
 function arReferenceDiagonalFan(c,W,H,S,r,idx,p,local,dur) {
-  const transition=Math.min(dur*.62,r.entrySeconds*2.4),progress=mClamp(local/Math.max(.001,transition));
-  const zoom=1.02+(r.camera==='still'?0:r.camera==='zoom-out'?(1-p)*r.zoom:p*r.zoom);
-  const previous=arReferenceFanScene(S,idx>0?idx-1:0);
-  const previousZoom=idx>0?1.02+(r.camera==='zoom-in'?r.zoom:0):zoom;
-  mPhoto(c,previous,0,0,0,W,H,previousZoom);
-  if(progress>=1) {mPhoto(c,arReferenceFanScene(S,idx),0,0,0,W,H,zoom);return;}
-  const layers=[2,1,0];
-  layers.forEach((offset,i)=>{
-    const q=mClamp((progress-i*.16)/.68);
-    if(q<=0)return;
-    const mask=arReferenceFanMask(q),left=H*mask.left,right=H*mask.right;
-    c.save();c.beginPath();c.moveTo(0,left);c.lineTo(W,right);c.lineTo(W,H);c.lineTo(0,H);c.closePath();c.clip();
-    mPhoto(c,arReferenceFanScene(S,idx+offset),0,0,0,W,H,zoom);
+  const zoomAt=v=>1.02+(r.camera==='still'?0:r.camera==='zoom-out'?(1-v)*r.zoom:v*r.zoom);
+  arReferenceFanIntro(c,W,H,S,r,idx===0?p:1,zoomAt(idx===0?p:1));
+  if(idx===0)return;
+  for(const layer of arReferenceFanLayers(idx,p,dur,r)){
+    const {x,y}=layer.end;
+    c.save();c.beginPath();c.moveTo(0,H);c.lineTo(0,0);c.lineTo(x*W,0);
+    if(y>0)c.lineTo(W,y*H);
+    c.closePath();c.clip();
+    mPhoto(c,arReferenceFanScene(S,layer.cut),0,0,0,W,H,zoomAt(layer.cut===idx?p:1));
     c.restore();
-    if(q<1) {
-      c.save();c.globalAlpha*=Math.sin(q*Math.PI)*.38;c.strokeStyle=r.foreground;c.lineWidth=Math.max(.75,W*.0015);
-      c.beginPath();c.moveTo(0,left);c.lineTo(W,right);c.stroke();c.restore();
-    }
-  });
+    c.save();c.strokeStyle=r.foreground;c.lineWidth=Math.max(.65,W*.0015);
+    c.beginPath();c.moveTo(0,H);c.lineTo(x*W,y*H);c.stroke();c.restore();
+  }
 }
 // 나머지 구성은 현재 컷의 같은 사진만 사용합니다. 별도 영상/이미지 생성은 없습니다.
 let arReferenceMaskCanvas;

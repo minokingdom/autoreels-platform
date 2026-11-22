@@ -37,8 +37,8 @@ try{
   const r=AR_REFERENCE_STYLES.find(x=>x.layout==='diagonal-fan');
   if(!r)throw Error('catalog missing');
   const spec=DESIGN_STYLES.find(x=>x.id===r.id);
-  const S={photos,n:4,idx:1,cutIdx:1,cuts:4};
-  const draw=(local,dur=3)=>{c.clearRect(0,0,540,960);arReferenceDiagonalFan(c,540,960,S,{...r,camera:'still'},1,local/dur,local,dur);};
+  const S={photos,n:4,idx:3,cutIdx:3,cuts:4};
+  const draw=(local,dur=3,cut=3)=>{c.clearRect(0,0,540,960);arReferenceDiagonalFan(c,540,960,S,{...r,camera:'still'},cut,local/dur,local,dur);};
   const pixel=(x,y)=>[...c.getImageData(x,y,1,1).data];
   draw(.85);
   const pixels=c.getImageData(0,0,540,960).data,found=new Set();
@@ -47,9 +47,26 @@ try{
    if(i%64===0)found.add(`${pixels[i]},${pixels[i+1]},${pixels[i+2]}`);
   }
   for(const color of ['235,192,32','235,48,32','32,64,235','32,208,80'])if(!found.has(color))throw Error('missing distinct layer '+color);
-  draw(2.5);if(pixel(270,200).slice(0,3).join(',')!=='235,48,32')throw Error('scenePlan current cut ignored');
-  draw(0);if(pixel(270,200).slice(0,3).join(',')!=='235,192,32')throw Error('previous cut continuity lost');
-  draw(.28,.3);if(pixel(270,200).slice(0,3).join(',')!=='235,48,32')throw Error('short cut never opens');
+  draw(2.5);if(pixel(270,200).slice(0,3).join(',')!=='32,208,80')throw Error('scenePlan current cut ignored');
+  if(pixel(500,600).slice(0,3).join(',')!=='32,64,235')throw Error('previous scene must remain below current ray');
+  if(pixel(500,780).slice(0,3).join(',')!=='235,48,32')throw Error('older scene must remain in next wedge');
+  draw(0);if(pixel(270,200).slice(0,3).join(',')!=='32,64,235')throw Error('previous cut continuity lost');
+  draw(.28,.3);if(pixel(270,200).slice(0,3).join(',')!=='32,208,80')throw Error('short cut never opens');
+  // 다음 사진을 먼저 보여 주지 않음: 1번 컷에서는 0/1번 컷 색상만 존재해야 합니다.
+  draw(.8,3,1);
+  const early=c.getImageData(0,0,540,960).data;
+  for(let i=0;i<early.length;i+=4)if((early[i]===32&&early[i+1]===64&&early[i+2]===235)||(early[i]===32&&early[i+1]===208&&early[i+2]===80))throw Error('future scene leaked');
+  // 기하 검증: 경계 끝점은 위/오른쪽 변, 반대쪽 꼭짓점은 항상 (0,H).
+  for(const p of [.001,.04,.2,.8,1])for(const layer of arReferenceFanLayers(3,p,3,r)){
+   if(!(layer.end.y===0||layer.end.x===1))throw Error('fan endpoint is not on border');
+   if(layer.cut>3||layer.end.x<0||layer.end.y<0||layer.end.y>1)throw Error('invalid fan geometry');
+  }
+  // 첫 컷은 같은 장면의 세로 네 영역이 중앙 블록에서 전체 높이로 순차 확장합니다.
+  draw(.36*3,3,0);
+  for(const x of [65,200,335,470])if(pixel(x,480).slice(0,3).join(',')!=='235,192,32')throw Error('four panel introduction missing');
+  if(pixel(65,100).slice(0,3).join(',')==='235,192,32')throw Error('intro starts at full height');
+  draw(.70*3,3,0);
+  if(pixel(65,100).slice(0,3).join(',')!=='235,192,32'||pixel(470,100).slice(0,3).join(',')==='235,192,32')throw Error('panels must expand one by one');
   draw(.85);const forward=canvas.toDataURL();draw(2.5);draw(.85);
   if(canvas.toDataURL()!==forward)throw Error('seek is not deterministic');
   if(c.globalAlpha!==1||c.getTransform().a!==1||c.globalCompositeOperation!=='source-over')throw Error('canvas state leaked');
@@ -98,7 +115,7 @@ try{
    const r=AR_REFERENCE_STYLES.find(x=>x.layout==='diagonal-fan');
    const draw=t=>arRenderReferenceFrame(c,540,960,t,12,4,{}, {referenceStyle:r});
    const sheet=document.createElement('canvas');sheet.width=1080;sheet.height=1920;const sc=sheet.getContext('2d');
-   [.15,.65,1.05,1.85].forEach((t,i)=>{draw(t);sc.drawImage(canvas,(i%2)*540,Math.floor(i/2)*960);});
+   [1.2,2.1,7.2,10.2].forEach((t,i)=>{draw(t);sc.drawImage(canvas,(i%2)*540,Math.floor(i/2)*960);});
    const still=sheet.toDataURL('image/png');
    draw(0);const stream=canvas.captureStream(30),chunks=[];
    const recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:3500000});
@@ -114,6 +131,6 @@ try{
   fs.writeFileSync(path.join(output,'diagonal-fan-preview.webm'),Buffer.from(preview.video,'base64'));
  }
  assert.deepEqual(errors,[]);
- console.log('diagonal fan ok:',JSON.stringify(result),'4 image masks, scene mapping, short cuts, seeking, empty/single photos, ending, timing, mobile/desktop picker');
+ console.log('diagonal fan ok:',JSON.stringify(result),'four-panel intro, fixed-pivot history accumulation, no future photos, scene mapping, short cuts, seeking, empty/single photos, ending, timing, mobile/desktop picker');
 }catch(error){if(output)await page.screenshot({path:path.join(output,'diagonal-fan-failure.png')});throw error;}
 finally{await browser.close();if(server)server.close();}
