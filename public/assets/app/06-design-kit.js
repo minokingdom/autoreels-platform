@@ -3905,16 +3905,16 @@
     // ★ 세부 편집이 다 되는 디자인 (자막·위 라벨·아래 이름을 컷 편집에서 모두 골라 바꿀 수 있음)
     //   kit 디자인은 전부, motion 디자인은 아래 목록 (2026-11-16 전 디자인을 그려 확인)
     const AR_FINE_EDIT_MOTION = new Set(['in_film', 'in_mood', 'in_letter', 'in_vlog', 'in_collage', 'in_h_plaque', 'in_h_panes', 'in_h_double', 'in_h_vinyl', 'in_g_sub', 'in_g_arch', 'in_g_strip', 'in_g_postcard', 'in_g_cam', 'in_g_bookmark', 'ed_vogue', 'ed_arch', 'stm_kinetic', 'stm_cinema', 'stm_sonar', 'stm_glint', 'cn_deck', 'cn_summary', 'cn_boldquote', 'cn_splitbar', 'stm_split', 'stm_ticket', 'cn_timeline', 'cn_qna', 'cn_compare', 'cn_receipt', 'cn_polaroid_duo', 'stm_glassbar']);
-    function arDesignFineEdit(d) { return !!d && (d.engine === 'kit' || d.isProReels || AR_FINE_EDIT_MOTION.has(d.id)); }
+    function arDesignFineEdit(d) { return !!d && (d.engine === 'kit' || d.isProReels || d.isOpusArt || AR_FINE_EDIT_MOTION.has(d.id)); }
     const AR_FINE_BADGE = '<span class="fine-edit-badge" title="자막·위 라벨·아래 이름을 컷마다 세세하게 바꿀 수 있어요">세부 편집</span>';
     function arVisibleDesigns() {
       const list = DESIGN_STYLES.filter(arDesignVisible);
-      // 1군 프로 엔진 -> 오퍼스 화풍 30종 -> 2026 에디토리얼 -> 나머지 최신 모션/커스텀 순으로 최상단 정렬
-      const pro = list.filter((d) => d.isProReels);
-      const opus = list.filter((d) => !d.isProReels && d.isOpusArt);
-      const ed = list.filter((d) => !d.isProReels && !d.isOpusArt && String(d.id || '').startsWith('ed_'));
-      const rest = list.filter((d) => !d.isProReels && !d.isOpusArt && !String(d.id || '').startsWith('ed_'));
-      return pro.concat(opus, ed, rest);
+      // 신규 오퍼스 화풍 30종 -> 1군 프로 엔진 -> 2026 에디토리얼 -> 나머지 최신 모션/커스텀 순으로 최상단 정렬
+      const opus = list.filter((d) => d.isOpusArt);
+      const pro = list.filter((d) => !d.isOpusArt && d.isProReels);
+      const ed = list.filter((d) => !d.isOpusArt && !d.isProReels && String(d.id || '').startsWith('ed_'));
+      const rest = list.filter((d) => !d.isOpusArt && !d.isProReels && !String(d.id || '').startsWith('ed_'));
+      return opus.concat(pro, ed, rest);
     }
     // 신규는 대표 분류와 함께 표시하는 모음입니다. 카테고리를 옮기거나 복제하지 않습니다.
     const AR_NEW_STYLE_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
@@ -3923,6 +3923,7 @@
       return Number.isFinite(added) && now >= added && now - added < AR_NEW_STYLE_WINDOW_MS;
     }
     function arDesignMatchesCat(d, cat, now = Date.now()) {
+      if (cat === '인포·화풍 30') return Boolean(d && d.isOpusArt);
       if (cat === '신규') return arDesignIsNew(d, now);
       return cat === '전체' || d.cat === cat;
     }
@@ -3942,9 +3943,11 @@
       const key = typeof IND !== 'undefined' ? IND.key : 'auto';
       const vis = arVisibleDesigns();
       const hasWeekly = vis.some((d) => d.cat === '이번 주 인기');
-      if (key === 'auto') return hasWeekly ? ['전체', '이번 주 인기', ...DESIGN_CATS.filter((c) => c !== '전체')] : DESIGN_CATS;
+      const hasOpus = vis.some((d) => d.isOpusArt);
+      if (key === 'auto') return ['전체', ...(hasOpus ? ['인포·화풍 30'] : []), ...(hasWeekly ? ['이번 주 인기'] : []), ...DESIGN_CATS.filter((c) => c !== '전체')];
       return [
         '전체',
+        ...(hasOpus ? ['인포·화풍 30'] : []),
         ...(hasWeekly ? ['이번 주 인기'] : []),
         '내 업종',
         ...DESIGN_CATS.filter((c) => c !== '전체' && vis.some((d) => !d.industry && arDesignMatchesCat(d, c)))
