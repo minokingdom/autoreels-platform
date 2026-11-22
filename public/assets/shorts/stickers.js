@@ -442,10 +442,41 @@
     ctx.restore();
   }
 
+  function drawStrokesOverlay(ctx, strokes, w, h) {
+    if (!Array.isArray(strokes) || !strokes.length) return;
+    const u = Math.min(w, h) / 1080;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (const st of strokes) {
+      if (!st || !Array.isArray(st.points) || !st.points.length) continue;
+      ctx.save();
+      const sz = Math.max(2, (Number(st.size) || 14) * u);
+      ctx.strokeStyle = st.color || '#ffffff';
+      ctx.lineWidth = st.brush === 'highlighter' ? sz * 2.1 : sz;
+      if (st.brush === 'highlighter') ctx.globalAlpha = 0.42;
+      else if (st.brush === 'neon') {
+        ctx.shadowColor = st.color || '#38bdf8';
+        ctx.shadowBlur = Math.max(10, sz * 1.8);
+      }
+      ctx.beginPath();
+      st.points.forEach((p, i) => {
+        const px = p.x * w, py = p.y * h;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      });
+      if (st.points.length === 1) ctx.lineTo(st.points[0].x * w + 0.5, st.points[0].y * h + 0.5);
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
   window.arPaintShortsStickers = function arPaintShortsStickers(ctx, s, time) {
     if (!s) return;
     const w = ctx.canvas.width, h = ctx.canvas.height;
     if (s.activeFrame) drawFrameOverlay(ctx, w, h, s.activeFrame, time);
+    if (Array.isArray(s.strokes) && s.strokes.length) drawStrokesOverlay(ctx, s.strokes, w, h);
     const list = s.stickers;
     if (!Array.isArray(list) || !list.length) return;
     for (const st of list) drawSingleSticker(ctx, st, time, w, h);

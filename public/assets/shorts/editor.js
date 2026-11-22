@@ -187,6 +187,10 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
   const ov=document.getElementById('overlay');
   const frame=document.getElementById('frame');
   const hud=document.getElementById('shortsEditHud');
+  const undoBtn=document.getElementById('seUndoBtn');
+  const drawOverlay=document.getElementById('seDrawOverlay');
+  const drawPad=document.getElementById('seDrawPad');
+  const drawColorBar=document.getElementById('seDrawColorBar');
   const selBar=document.getElementById('seSelectedBar');
   const selLabel=document.getElementById('seSelLabel');
   const scaleSlider=document.getElementById('seScaleSlider');
@@ -197,13 +201,27 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
   ov.dataset.capDragBound='1';
 
   let editMode=false, selected=null;
+  const drawBrushes=[{id:'pen',label:'펜'},{id:'highlighter',label:'형광'},{id:'neon',label:'네온'}];
+  const drawSizes=[{px:8,label:'얇게'},{px:16,label:'보통'},{px:28,label:'굵게'},{px:42,label:'최대'}];
+  const drawColors=['#ffffff','#09090b','#facc15','#fb7185','#ef4444','#f97316','#38bdf8','#3b82f6','#34d399','#a3e635','#c084fc','#f472b6'];
+  let brushIdx=0, sizeIdx=1, drawColor='#ffffff', activeStroke=null;
+
+  function syncUndoBtn(){
+    if(!undoBtn)return;
+    const hasSt=!!(session?.stickers?.length);
+    const hasDr=!!(session?.strokes?.length);
+    const hasFr=!!(session?.activeFrame);
+    undoBtn.disabled=!(hasSt||hasDr||hasFr);
+  }
   function refreshPreview(){
     if(!session?.clip)return;
+    syncUndoBtn();
     if(session.joined||session.timelineCuts){if(typeof seekCutTrack==='function')seekCutTrack(session,session.trackTime||0);}
     else renderPreview();
   }
   function updateSelBar(){
     if(!selBar)return;
+    syncUndoBtn();
     if(!editMode || !selected || !session?.clip){selBar.hidden=true;return;}
     selBar.hidden=false;
     if(selected.type==='sticker'){
@@ -224,7 +242,7 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
   }
   function setShortsEditMode(on){
     editMode=!!on;
-    if(!editMode)selected=null;
+    if(!editMode){selected=null;if(drawOverlay)drawOverlay.hidden=true;}
     if(frame)frame.classList.toggle('se-editing',editMode);
     if(hud)hud.hidden=!editMode;
     updateSelBar();
@@ -241,6 +259,69 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
     if(!editMode)setShortsEditMode(true);
     else updateSelBar();
   };
+
+  // 그리기 모드 (펜 · 형광펜 · 네온)
+  if(drawOverlay && drawPad && drawColorBar){
+    const brushBtn=document.getElementById('seDrawBrushBtn');
+    const sizeBtn=document.getElementById('seDrawSizeBtn');
+    const renderColorBar=()=>{
+      drawColorBar.replaceChildren();
+      drawColors.forEach(c=>{
+        const b=document.createElement('button');
+        b.type='button';b.style.background=c;
+        b.setAttribute('aria-pressed',String(drawColor===c));
+        b.addEventListener('click',e=>{e.stopPropagation();drawColor=c;renderColorBar();});
+        drawColorBar.append(b);
+      });
+    };
+    renderColorBar();
+    brushBtn?.addEventListener('click',e=>{e.stopPropagation();brushIdx=(brushIdx+1)%drawBrushes.length;brushBtn.textContent=drawBrushes[brushIdx].label;});
+    sizeBtn?.addEventListener('click',e=>{e.stopPropagation();sizeIdx=(sizeIdx+1)%drawSizes.length;sizeBtn.textContent=drawSizes[sizeIdx].label;});
+    document.getElementById('seDrawUndoBtn')?.addEventListener('click',e=>{e.stopPropagation();if(session?.strokes?.length){session.strokes.pop();if(typeof markEdited==='function')markEdited();refreshPreview();}});
+    document.getElementById('seDrawClearBtn')?.addEventListener('click',e=>{e.stopPropagation();if(session?.strokes){session.strokes.length=0;if(typeof markEdited==='function')markEdited();refreshPreview();}});
+    document.getElementById('seDrawDoneBtn')?.addEventListener('click',e=>{e.stopPropagation();drawOverlay.hidden=true;syncUndoBtn();});
+    const toOvPt=(ev)=>{
+      const r=ov.getBoundingClientRect();
+      if(!r.width||!r.height)return null;
+      return{x:Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(ev.clientY-r.top)/r.height))};
+    };
+    drawPad.addEventListener('pointerdown',e=>{
+      if(!session?.clip)return;
+      e.preventDefault();e.stopPropagation();
+      const pt=toOvPt(e);if(!pt)return;
+      const st={brush:drawBrushes[brushIdx].id,color:drawColor,size:drawSizes[sizeIdx].px,points:[pt]};
+      (session.strokes||=[]).push(st);
+      activeStroke=st;
+      try{drawPad.setPointerCapture(e.pointerId);}catch(_){}
+      refreshPreview();
+    });
+    drawPad.addEventListener('pointermove',e=>{
+      if(!activeStroke)return;
+      const pt=toOvPt(e);if(!pt)return;
+      const last=activeStroke.points[activeStroke.points.length-1];
+      if(Math.hypot(pt.x-last.x,pt.y-last.y)<0.004)return;
+      activeStroke.points.push(pt);
+      refreshPreview();
+    });
+    const endDraw=()=>{if(activeStroke){activeStroke=null;if(typeof markEdited==='function')markEdited();syncUndoBtn();}};
+    drawPad.addEventListener('pointerup',endDraw);
+    drawPad.addEventListener('pointercancel',endDraw);
+  }
+
+  undoBtn?.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(!session?.clip)return;
+    if(session.strokes?.length){session.strokes.pop();}
+    else if(session.stickers?.length){
+      const popped=session.stickers.pop();
+      if(selected?.st===popped)selected=null;
+    }else if(session.activeFrame){session.activeFrame='';}
+    else return;
+    if(typeof markEdited==='function')markEdited();
+    if(typeof mixChanged==='function')mixChanged(session);
+    else refreshPreview();
+    updateSelBar();
+  });
 
   if(scaleSlider){
     scaleSlider.addEventListener('input',()=>{
@@ -307,21 +388,23 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
       if(!btn || !session?.clip)return;
       e.stopPropagation();
       const act=btn.dataset.se;
-      if(act==='caption'){
+      hud.querySelectorAll('.se-tool-row button').forEach(b=>b.classList.toggle('is-active',b===btn));
+      if(act==='detail'){
+        const applyBtn=document.getElementById('applyTheme');
+        if(applyBtn){setShortsEditMode(false);applyBtn.click();}
+      }else if(act==='caption'){
         const cue=typeof activeCue==='function'?activeCue(session,session.trackTime||0):null;
         if(typeof selectMix==='function')selectMix(session,'caption');
         if(cue && typeof editCue==='function')editCue(session,'caption',cue);
         else if(typeof editGlobalCaptionStyle==='function')editGlobalCaptionStyle(session);
+      }else if(act==='draw'){
+        if(drawOverlay)drawOverlay.hidden=false;
       }else if(act==='sticker'){
         if(typeof window.openShortsStickerDialog==='function')window.openShortsStickerDialog(session);
       }else if(act==='cutout'){
         if(typeof effectDialog==='function')effectDialog('컷아웃');
       }else if(act==='effect'){
         if(typeof effectDialog==='function')effectDialog('영상 효과');
-      }else if(act==='studio'){
-        setShortsEditMode(false);
-        const applyBtn=document.getElementById('applyTheme');
-        if(applyBtn)applyBtn.click();
       }
     });
     window.addEventListener('keydown',e=>{if(e.key==='Escape'&&editMode)setShortsEditMode(false);});
@@ -421,7 +504,7 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
 function renderPreview(at=video.currentTime) {
   if (session?.joined || session?.timelineCuts) return;
   const overlay=byId('overlay'),ctx=overlay.getContext('2d');
-  const composite=session?.clip?.montage || session?.effects?.length || session?.captions?.length || session?.stickers?.length || !!session?.activeFrame;
+  const composite=session?.clip?.montage || session?.effects?.length || session?.captions?.length || session?.stickers?.length || session?.strokes?.length || !!session?.activeFrame;
   if (composite && (video.seeking || video.readyState < 2)) return;
   ctx.clearRect(0,0,overlay.width,overlay.height);
   if (composite && video.readyState >= 2) paintClip(ctx,video,activeCaption(session.clip,at),session.clip,outputTimeAt(session,at));
