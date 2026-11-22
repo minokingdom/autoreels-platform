@@ -296,6 +296,182 @@
       c.restore();
       return { top, h: total };
     }
+    // ── 카드뉴스 리듬·폰트 강약·컬러 변화 엔진 (2026-11) ──
+    function arHexAlpha(hex, alpha) {
+      const m = String(hex || '').trim().match(/^#?([0-9a-f]{6})$/i);
+      if (!m) return `rgba(255,255,255,${alpha})`;
+      const n = parseInt(m[1], 16);
+      return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+    }
+    function arBackOut(p) {
+      const t = mClamp(p);
+      const c1 = 1.65, c3 = c1 + 1;
+      return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    }
+    function arCardCutPalette(sp, cutIdx, isDarkSurface) {
+      const base = (sp && sp.accent) || (isDarkSurface ? '#38bdf8' : '#e11d48');
+      const pool = isDarkSurface
+        ? ['#38bdf8', '#fb923c', '#34d399', '#f472b6', '#facc15', '#a78bfa']
+        : ['#e11d48', '#2563eb', '#d97706', '#059669', '#7c3aed', '#ea580c'];
+      const list = [];
+      const bLum = gLuminance(base);
+      const baseOk = isDarkSurface ? bLum > 0.22 : bLum < 0.62;
+      if (baseOk) list.push(base);
+      for (const col of pool) {
+        if (col.toLowerCase() !== String(base).toLowerCase()) list.push(col);
+      }
+      const accent = list[Math.abs(cutIdx) % list.length];
+      const darkTints = ['#0f172a', '#131620', '#0d1916', '#1a1218', '#17140f'];
+      const lightTints = ['#fffdf9', '#f8fafc', '#fdf8f3', '#f5faf7', '#faf6ff'];
+      const bgTints = isDarkSurface ? darkTints : lightTints;
+      return {
+        accent,
+        accentSoft: arHexAlpha(accent, isDarkSurface ? 0.26 : 0.18),
+        markerBg: arHexAlpha(accent, isDarkSurface ? 0.34 : 0.24),
+        pillFg: kTextOn(accent),
+        tintBg: bgTints[Math.abs(cutIdx) % bgTints.length],
+        beatMode: Math.abs(cutIdx) % 3
+      };
+    }
+    function arCardFindKeyword(line) {
+      const s = String(line || '');
+      if (!s.trim()) return null;
+      const numM = s.match(/\d+(?:[.,]\d+)?\s*(?:%|배|가지|분|초|시간|일|주|개월|년|원|만원|천원|위|등|단계|명|개|회|cm|kg|kcal)?/);
+      if (numM && numM.index >= 0) return { start: numM.index, end: numM.index + numM[0].length };
+      const qM = s.match(/[‘'“"\[\(][^’'”"\]\)]+[’'”"\]\)]/);
+      if (qM && qM.index >= 0) return { start: qM.index, end: qM.index + qM[0].length };
+      const words = [];
+      const re = /[^\s]+/g;
+      let m;
+      while ((m = re.exec(s)) !== null) {
+        if (m[0].length >= 2) words.push({ start: m.index, end: m.index + m[0].length, text: m[0] });
+      }
+      if (!words.length) return null;
+      return words.length >= 2 ? words[words.length - 1] : words[0];
+    }
+    function arCardRhythmCaption(c, text, x, y, maxW, maxH, baseSize, opts = {}) {
+      const clean = String(text || '').trim();
+      if (!clean) return { top: y, h: 0 };
+      const cutIdx = opts.cutIdx || 0;
+      const local = Math.max(0, opts.local || 0);
+      const align = opts.align || 'center';
+      const isDark = !!opts.isDark;
+      const accent = opts.accent || (isDark ? '#38bdf8' : '#e11d48');
+      const ov = mCapOv(cutIdx);
+      const ink = ov.color || opts.ink || (isDark ? '#f8fafc' : '#18181b');
+      // 컷마다 폰트 강약 페어링 순환 (사용자 개별 폰트 지정 시 존중)
+      const headPool = opts.headPool || (opts.serif ? ['maru', 'songmyung', 'gasoek'] : ['gasoek', 'dohyeon', 'maru', 'jua']);
+      const headKey = ov.font && KIT_FONTS[ov.font] ? ov.font : (opts.headFont || headPool[Math.abs(cutIdx) % headPool.length]);
+      const bodyKey = ov.font && KIT_FONTS[ov.font] ? ov.font : (opts.bodyFont || (opts.serif ? 'pretL' : 'pretM'));
+      const HF = KIT_FONTS[headKey] || KIT_FONTS.sans;
+      const BF = KIT_FONTS[bodyKey] || KIT_FONTS.pretM;
+
+      // 줄 나누기 (최대 3줄)
+      const maxLines = Math.max(1, Math.min(3, Math.floor(maxH / (baseSize * 1.24))));
+      const baseFit = mFit(c, clean, maxW, maxLines, baseSize, Math.round(baseSize * 0.56), bodyKey);
+      const lines = baseFit.lines;
+      // 짝수 컷은 첫 줄(훅) 강조, 홀수 컷은 마지막 줄(펀치라인) 강조로 리듬감 부여
+      const heroIdx = lines.length <= 1 ? 0 : (cutIdx % 2 === 0 ? 0 : lines.length - 1);
+
+      // 줄별 폰트·크기 계산 (폭 넘침 자동 보정)
+      const specs = lines.map((ln, i) => {
+        const isHero = i === heroIdx;
+        const F = isHero ? HF : BF;
+        let sz = Math.round(baseFit.size * (isHero ? (lines.length === 1 ? 1.14 : 1.20) : 0.88));
+        c.font = gFont(F.w, sz, F.f);
+        const w0 = c.measureText(ln).width;
+        if (w0 > maxW - 10) sz = Math.max(15, Math.floor(sz * ((maxW - 10) / Math.max(1, w0))));
+        const lh = Math.round(sz * F.k * (isHero ? 1.32 : 1.28));
+        return { ln, isHero, F, sz, lh };
+      });
+
+      const totalH = specs.reduce((acc, s) => acc + s.lh, 0);
+      const top = y + Math.max(0, (maxH - totalH) / 2);
+      const hlMode = Math.abs(cutIdx) % 3; // 0: 형광펜 마커, 1: 컬러 칩, 2: 컬러 언더라인+포인트 텍스트
+
+      c.save();
+      c.textBaseline = 'middle';
+      let curY = top;
+      specs.forEach((spLine, i) => {
+        const delay = i * 0.13;
+        const rawP = mClamp((local - delay) / (spLine.isHero ? 0.28 : 0.24));
+        const p = mEase(rawP);
+        const pop = spLine.isHero ? (0.90 + 0.10 * arBackOut(rawP)) : 1;
+        const ly = curY + spLine.lh / 2 + (1 - p) * (spLine.isHero ? 20 : 14);
+        curY += spLine.lh;
+
+        c.save();
+        c.globalAlpha = p;
+        c.font = gFont(spLine.F.w, spLine.sz, spLine.F.f);
+        const fullW = c.measureText(spLine.ln).width;
+        const startX = align === 'center' ? x - fullW / 2 : (align === 'right' ? x - fullW : x);
+
+        if (spLine.isHero) {
+          c.translate(align === 'center' ? x : startX, ly);
+          c.scale(pop, pop);
+          c.translate(align === 'center' ? -x : -startX, -ly);
+        }
+
+        const kw = spLine.isHero ? arCardFindKeyword(spLine.ln) : null;
+        if (kw) {
+          const pre = spLine.ln.slice(0, kw.start);
+          const hit = spLine.ln.slice(kw.start, kw.end);
+          const post = spLine.ln.slice(kw.end);
+          const preW = c.measureText(pre).width;
+          const hitW = c.measureText(hit).width;
+          const hitX = startX + preW;
+          const sweep = mEase((local - delay - 0.12) / 0.26);
+
+          if (hlMode === 0) {
+            // 형광펜 마커 스윕
+            const mh = spLine.sz * 0.56;
+            c.fillStyle = arHexAlpha(accent, isDark ? 0.42 : 0.28);
+            gRoundRect(c, hitX - 4, ly + spLine.sz * 0.04, (hitW + 8) * sweep, mh, 5);
+            c.fill();
+            c.textAlign = 'left';
+            c.fillStyle = ink;
+            if (pre) c.fillText(pre, startX, ly);
+            c.fillStyle = isDark ? '#ffffff' : ink;
+            c.fillText(hit, hitX, ly);
+            c.fillStyle = ink;
+            if (post) c.fillText(post, hitX + hitW, ly);
+          } else if (hlMode === 1) {
+            // 반전 컬러 포인트 칩
+            const padX = 7, padY = 4;
+            const ph = spLine.sz * 1.18 + padY;
+            c.fillStyle = accent;
+            gRoundRect(c, hitX - padX, ly - ph / 2, (hitW + padX * 2) * sweep, ph, 8);
+            c.fill();
+            c.textAlign = 'left';
+            c.fillStyle = ink;
+            if (pre) c.fillText(pre, startX, ly);
+            c.fillStyle = sweep > 0.35 ? kTextOn(accent) : ink;
+            c.fillText(hit, hitX, ly);
+            c.fillStyle = ink;
+            if (post) c.fillText(post, hitX + hitW, ly);
+          } else {
+            // 두꺼운 키네틱 언더라인 + 포인트 컬러 텍스트
+            c.fillStyle = accent;
+            gRoundRect(c, hitX - 2, ly + spLine.sz * 0.48, (hitW + 4) * sweep, Math.max(4, spLine.sz * 0.14), 3);
+            c.fill();
+            c.textAlign = 'left';
+            c.fillStyle = ink;
+            if (pre) c.fillText(pre, startX, ly);
+            c.fillStyle = accent;
+            c.fillText(hit, hitX, ly);
+            c.fillStyle = ink;
+            if (post) c.fillText(post, hitX + hitW, ly);
+          }
+        } else {
+          c.textAlign = align;
+          c.fillStyle = spLine.isHero ? ink : arHexAlpha(ink, isDark ? 0.84 : 0.78);
+          c.fillText(spLine.ln, x, ly);
+        }
+        c.restore();
+      });
+      c.restore();
+      return { top, h: totalH };
+    }
     // ★ 화면 속 자막(메모 앱·알림·포스터처럼 디자인에 박힌 글자)도 컷 편집에서 고를 수 있게:
     //   자막 위치를 알려 주고, 컷 편집에서 바꾼 글꼴·색·크기·위치·숨김을 따름
     function mCapOv(cutIdx) {
@@ -2450,14 +2626,22 @@
           const pace = Math.min(1, cutDur / 2), pe = settled ? 1 : mClamp((local / pace - 0.18) / 0.8);
           const be = settled ? 1 : mClamp((local / pace - 0.52) / 0.7);
           const textY = custom ? { top: 0.17, middle: 0.33, bottom: 0.49 }[custom.caption.position] : pageIdx % 2 ? 0.44 : 0.18;
+          const pagePal = arCardCutPalette(sp, pageIdx, true);
+          const pageAcc = custom ? custom.colors.accent : pagePal.accent;
           c.save(); c.translate(offset, 0);
           gRoundRect(c, W * 0.04, H * 0.035, W * 0.92, H * 0.85, W * 0.035); c.clip();
           mPhoto(c, pageScene, 0, W * 0.04, H * 0.035, W * 0.92, H * 0.85, 1.025);
           inWarm(c, W * 0.04, H * 0.035, W * 0.92, H * 0.85, 0.45);
           inCaptionScrim(c, W * 0.04, H * 0.035, W * 0.92, H * 0.85, (textY + 0.17 - 0.035) / 0.85);
-          inLabel(c, `${pageIdx + 1} / ${totalCuts}`, W * 0.15, H * (textY + 0.038), '#fffaf2', 'left', W * 0.03);
-          mCaption(c, headline, W * 0.15, H * (textY + 0.065), W * 0.70, H * 0.15, W * (custom ? custom.caption.sizeRatio : 0.08), custom ? custom.fontKey : 'sans', '#fffaf2', pe, 'left');
-          c.fillStyle = custom ? custom.colors.accent : '#cabbab'; c.fillRect(W * 0.15, H * (textY + 0.235), W * 0.12, H * 0.0015);
+          // 컷마다 포인트 컬러 칩으로 페이지 번호 강조
+          c.fillStyle = pageAcc;
+          gRoundRect(c, W * 0.15, H * (textY + 0.018), W * 0.16, H * 0.032, 999); c.fill();
+          inLabel(c, `${pageIdx + 1} / ${totalCuts}`, W * 0.23, H * (textY + 0.034), kTextOn(pageAcc), 'center', W * 0.026);
+          arCardRhythmCaption(c, headline, W * 0.15, H * (textY + 0.065), W * 0.70, H * 0.155, W * (custom ? custom.caption.sizeRatio : 0.076), {
+            cutIdx: pageIdx, local: settled ? 2 : local, accent: pageAcc, ink: '#fffaf2', isDark: true, align: 'left',
+            headFont: custom ? custom.fontKey : undefined
+          });
+          c.fillStyle = pageAcc; c.fillRect(W * 0.15, H * (textY + 0.235), W * 0.14 * (settled ? 1 : mEase(local / 0.35)), H * 0.003);
           mCaption(c, body, W * 0.15, H * (textY + 0.252), W * 0.70, H * 0.075, W * (custom ? custom.caption.sizeRatio * 0.65 : 0.043), custom ? custom.fontKey : 'pretL', '#fffaf2', be, 'left');
           c.restore();
         };
@@ -2985,29 +3169,34 @@
           mCaption(c, caption, W / 2, 585, W - 70, 170, 32, sp.font, '#2b2622', e);
         }
       } else if (M === 'cn_deck') {
-        // 카드뉴스 · 스택 덱: 겹쳐진 페이퍼 카드 + 상단 9:11 사진 + 번호/스와이프 인디케이터 + 깔끔한 요약 자막
+        // 카드뉴스 · 스택 덱: 컷별 컬러 리듬 + 폰트 강약 + 형광펜/칩 강조
+        const cp = arCardCutPalette(sp, cutIdx, false);
         c.fillStyle = sp.bg1 || '#f5f1ea';
         c.fillRect(0, 0, W, H);
-        const slideIn = cutIdx > 0 ? mEase(local / 0.42) : 1;
-        // 뒤쪽 겹쳐진 종이 카드 장식
+        const slideIn = cutIdx > 0 ? mEase(local / 0.36) : 1;
+        // 뒤쪽 겹쳐진 종이 카드 장식 (컷별 포인트 컬러 엣지)
         c.save();
         c.translate(W / 2, H * 0.44);
         c.rotate(-0.025);
-        c.fillStyle = 'rgba(0,0,0,0.06)';
+        c.fillStyle = cp.accentSoft;
         gRoundRect(c, -216, -330, 432, 668, 22); c.fill();
         c.rotate(0.05);
         c.fillStyle = '#ebe4d8';
         gRoundRect(c, -216, -330, 432, 668, 22); c.fill();
         c.restore();
-        // 메인 전면 카드
-        const cardX = 46 + (1 - slideIn) * 60;
-        const cardY = 82;
+        // 메인 전면 카드 (컷별 진입 리듬 변화)
+        const cardX = 46 + (cp.beatMode === 1 ? (1 - slideIn) * 52 : 0);
+        const cardY = 82 + (cp.beatMode === 0 ? (1 - slideIn) * 32 : 0);
         const cardW = W - 92;
         const cardH = 700;
         c.save();
         c.globalAlpha = Math.min(1, slideIn + 0.25);
+        if (cp.beatMode === 2) {
+          const sc = 0.95 + 0.05 * arBackOut(local / 0.34);
+          c.translate(W / 2, cardY + cardH / 2); c.scale(sc, sc); c.translate(-W / 2, -(cardY + cardH / 2));
+        }
         c.shadowColor = 'rgba(20, 16, 12, 0.14)'; c.shadowBlur = 24; c.shadowOffsetY = 10;
-        c.fillStyle = '#fffdf9';
+        c.fillStyle = cp.tintBg;
         gRoundRect(c, cardX, cardY, cardW, cardH, 22); c.fill();
         c.shadowBlur = 0; c.shadowOffsetY = 0;
         // 상단 사진 영역
@@ -3015,83 +3204,97 @@
         gRoundRect(c, cardX + 14, cardY + 14, cardW - 28, 396, 16); c.clip();
         mPhoto(c, S, 0, cardX + 14, cardY + 14, cardW - 28, 396, 1.03 + lp * 0.035);
         c.restore();
-        // 카드 상단 번호 칩 & 총 컷 도트
-        c.fillStyle = sp.accent || '#1f2937';
+        // 카드 상단 번호 칩 & 총 컷 도트 (컷별 컬러 변화)
+        c.fillStyle = cp.accent;
         gRoundRect(c, cardX + 26, cardY + 26, 86, 26, 13); c.fill();
-        c.fillStyle = kTextOn(sp.accent || '#1f2937');
+        c.fillStyle = cp.pillFg;
         c.font = gFont(800, 11, GENRE_FONTS.sans);
         c.textAlign = 'center'; c.textBaseline = 'middle';
         c.fillText(`CARD 0${cutIdx + 1}`, cardX + 69, cardY + 40);
         // 페이지 도트
         for (let di = 0; di < totalCuts; di++) {
-          c.fillStyle = di === cutIdx ? (sp.accent || '#1f2937') : '#d6d0c4';
-          c.beginPath(); c.arc(cardX + cardW - 30 - (totalCuts - 1 - di) * 14, cardY + 432, di === cutIdx ? 4.5 : 3.5, 0, Math.PI * 2); c.fill();
+          c.fillStyle = di === cutIdx ? cp.accent : '#d6d0c4';
+          c.beginPath(); c.arc(cardX + cardW - 30 - (totalCuts - 1 - di) * 14, cardY + 432, di === cutIdx ? 5 : 3.5, 0, Math.PI * 2); c.fill();
         }
-        inLabel(c, `${String(cutIdx + 1).padStart(2, '0')} / ${String(totalCuts).padStart(2, '0')}`, cardX + 24, cardY + 432, '#78716c', 'left', 12);
-        c.fillStyle = '#e7e1d6';
-        c.fillRect(cardX + 24, cardY + 450, cardW - 48, 1);
-        if (isPrice) mPrice(c, W, cardY + 462, sp, e);
-        mCaption(c, caption, W / 2, cardY + (isPrice ? 506 : 472), cardW - 44, 175, 29, 'pretM', '#1c1917', mClamp(local / 0.55), 'center');
+        inLabel(c, `${String(cutIdx + 1).padStart(2, '0')} / ${String(totalCuts).padStart(2, '0')}`, cardX + 24, cardY + 432, cp.accent, 'left', 12);
+        c.fillStyle = cp.accentSoft;
+        c.fillRect(cardX + 24, cardY + 450, (cardW - 48) * mEase(local / 0.35), 2);
+        if (isPrice) mPrice(c, W, cardY + 462, { ...sp, accent: cp.accent }, e);
+        arCardRhythmCaption(c, caption, W / 2, cardY + (isPrice ? 506 : 466), cardW - 44, 182, 28, {
+          cutIdx, local, accent: cp.accent, ink: '#1c1917', isDark: false, align: 'center'
+        });
         inSign(c, d, W / 2, cardY + cardH - 24, '#78716c');
         c.restore();
       } else if (M === 'cn_summary') {
-        // 카드뉴스 · 핵심 요약: 은은한 블러 배경 + 화이트/글래스 정보 카드 + 상단 POINT 진행바
+        // 카드뉴스 · 핵심 요약: 은은한 블러 배경 + 컷별 컬러 진행바 & 리듬 타이포 카드
+        const cp = arCardCutPalette(sp, cutIdx, false);
         c.save();
         c.filter = 'blur(8px) brightness(0.68)';
         mPhoto(c, S, 0, -16, -16, W + 32, H + 32, 1.08);
         c.restore();
-        const cx = 32, cy = 88, cw = W - 64, ch = 730;
+        const slideP = mEase(local / 0.32);
+        const cx = 32, cy = 88 + (1 - slideP) * 18, cw = W - 64, ch = 730;
         c.save();
         c.shadowColor = 'rgba(0,0,0,0.34)'; c.shadowBlur = 32; c.shadowOffsetY = 12;
-        c.fillStyle = 'rgba(255,255,255,0.96)';
+        c.fillStyle = cp.tintBg;
         gRoundRect(c, cx, cy, cw, ch, 24); c.fill();
         c.shadowBlur = 0; c.shadowOffsetY = 0;
         // 카드 헤더: 포인트 번호 + 진행 스텝 바
         const segW = (cw - 48 - (totalCuts - 1) * 6) / Math.max(1, totalCuts);
         for (let si = 0; si < totalCuts; si++) {
-          c.fillStyle = si <= cutIdx ? (sp.accent || '#0ea5e9') : '#e2e8f0';
+          c.fillStyle = si <= cutIdx ? cp.accent : '#e2e8f0';
           gRoundRect(c, cx + 24 + si * (segW + 6), cy + 22, segW, 5, 3); c.fill();
         }
-        inLabel(c, `POINT 0${cutIdx + 1} · 핵심 안내`, cx + 24, cy + 52, sp.accent || '#0284c7', 'left', 13);
+        c.fillStyle = cp.accentSoft;
+        gRoundRect(c, cx + 22, cy + 38, 146, 26, 13); c.fill();
+        inLabel(c, `POINT 0${cutIdx + 1} · 핵심 안내`, cx + 34, cy + 51, cp.accent, 'left', 12);
         // 카드 내부 사진
         c.save();
-        gRoundRect(c, cx + 20, cy + 72, cw - 40, 340, 16); c.clip();
-        mPhoto(c, S, 0, cx + 20, cy + 72, cw - 40, 340, 1.04 + lp * 0.04);
+        gRoundRect(c, cx + 20, cy + 74, cw - 40, 338, 16); c.clip();
+        mPhoto(c, S, 0, cx + 20, cy + 74, cw - 40, 338, 1.04 + lp * 0.04);
         c.restore();
-        if (isPrice) mPrice(c, W, cy + 432, sp, e);
-        mCaption(c, caption, W / 2, cy + (isPrice ? 478 : 444), cw - 48, 195, 30, 'sans', '#0f172a', mClamp(local / 0.5), 'center');
+        if (isPrice) mPrice(c, W, cy + 430, { ...sp, accent: cp.accent }, e);
+        arCardRhythmCaption(c, caption, W / 2, cy + (isPrice ? 474 : 438), cw - 48, 202, 29, {
+          cutIdx, local, accent: cp.accent, ink: '#0f172a', isDark: false, align: 'center'
+        });
         c.fillStyle = '#e2e8f0';
         c.fillRect(cx + 24, cy + ch - 52, cw - 48, 1);
         inSign(c, d, cx + cw / 2, cy + ch - 26, '#64748b');
         c.restore();
       } else if (M === 'cn_boldquote') {
-        // 카드뉴스 · 매거진 표지형: 딥 차콜 프레임 + 이슈 넘버 + 상단 Bold 헤더 + 중앙 와이드 화보 + 하단 크레딧
-        c.fillStyle = '#111215';
+        // 카드뉴스 · 매거진 표지형: 딥 차콜 프레임 + 컷별 포인트 컬러 & 에디토리얼 폰트 리듬
+        const cp = arCardCutPalette(sp, cutIdx, true);
+        c.fillStyle = cp.tintBg;
         c.fillRect(0, 0, W, H);
         const pw = W - 64, ph = 390, px = 32, py = 278;
-        c.fillStyle = sp.accent || '#e8d5bc';
-        c.font = gFont(800, 12, GENRE_FONTS.sans);
-        c.textAlign = 'left'; c.textBaseline = 'middle';
-        c.fillText(`ISSUE NO. 0${cutIdx + 1}`, 34, 62);
-        c.fillStyle = 'rgba(255,255,255,0.45)';
+        c.fillStyle = cp.accent;
+        gRoundRect(c, 34, 48, 108, 26, 13); c.fill();
+        c.fillStyle = cp.pillFg;
+        c.font = gFont(800, 11, GENRE_FONTS.sans);
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.fillText(`ISSUE NO. 0${cutIdx + 1}`, 88, 62);
+        c.fillStyle = 'rgba(255,255,255,0.52)';
         c.textAlign = 'right';
         c.fillText(`${cutIdx + 1} / ${totalCuts}`, W - 34, 62);
-        c.fillStyle = 'rgba(255,255,255,0.14)';
-        c.fillRect(34, 82, W - 68, 1);
-        mCaption(c, caption, W / 2, 102, W - 76, 154, 30, 'maru', '#ffffff', mClamp(local / 0.55), 'center');
+        c.fillStyle = cp.accentSoft;
+        c.fillRect(34, 84, (W - 68) * mEase(local / 0.35), 2);
+        arCardRhythmCaption(c, caption, W / 2, 98, W - 76, 162, 29, {
+          cutIdx, local, accent: cp.accent, ink: '#ffffff', isDark: true, align: 'center', serif: true
+        });
         c.save();
         gRoundRect(c, px, py, pw, ph, 14); c.clip();
         inPhotoFade(c, S, cutIdx, local, px, py, pw, ph, 1.03 + lp * 0.04, 1);
         c.restore();
-        c.strokeStyle = 'rgba(255,255,255,0.14)'; c.lineWidth = 1;
+        c.strokeStyle = cp.accentSoft; c.lineWidth = 1.5;
         gRoundRect(c, px, py, pw, ph, 14); c.stroke();
-        if (isPrice) mPrice(c, W, py + ph + 32, sp, e);
+        if (isPrice) mPrice(c, W, py + ph + 32, { ...sp, accent: cp.accent }, e);
         else {
-          c.fillStyle = sp.accent || '#e8d5bc';
-          c.fillRect(W / 2 - 24, py + ph + 36, 48, 2);
+          c.fillStyle = cp.accent;
+          c.fillRect(W / 2 - 28 * mEase(local / 0.4), py + ph + 36, 56 * mEase(local / 0.4), 3);
         }
       } else if (M === 'cn_splitbar') {
-        // 카드뉴스 · 컬러 배너: 상단 사진(56%) + 하단 강렬한 포인트 컬러 카드(34%)
+        // 카드뉴스 · 컬러 배너: 상단 사진(56%) + 하단 컷마다 컬러가 리드미컬하게 바뀌는 임팩트 카드(34%)
+        const cp = arCardCutPalette(sp, cutIdx, false);
         c.fillStyle = '#18181b';
         c.fillRect(0, 0, W, H);
         const cardPad = 24;
@@ -3100,21 +3303,26 @@
         gRoundRect(c, cardPad, 34, W - cardPad * 2, photoH, 20); c.clip();
         inPhotoFade(c, S, cutIdx, local, cardPad, 34, W - cardPad * 2, photoH, 1.04 + lp * 0.04, 1);
         c.restore();
-        const botY = 34 + photoH + 14;
+        const slideUp = (1 - mEase(local / 0.30)) * 22;
+        const botY = 34 + photoH + 14 + slideUp;
         const botH = 310;
-        const acc = sp.accent || '#f97316';
+        const acc = cp.accent;
         const fg = kTextOn(acc);
+        const subHl = fg === '#111111' ? '#111111' : '#fde047';
         c.save();
         c.fillStyle = acc;
         gRoundRect(c, cardPad, botY, W - cardPad * 2, botH, 20); c.fill();
-        c.fillStyle = fg === '#111111' ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.18)';
-        gRoundRect(c, cardPad + 20, botY + 18, 92, 24, 12); c.fill();
+        c.fillStyle = fg === '#111111' ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.20)';
+        gRoundRect(c, cardPad + 20, botY + 18, 96, 24, 12); c.fill();
         c.fillStyle = fg;
         c.font = gFont(800, 11, GENRE_FONTS.sans);
         c.textAlign = 'center'; c.textBaseline = 'middle';
-        c.fillText(`GUIDE 0${cutIdx + 1}`, cardPad + 66, botY + 31);
+        c.fillText(`GUIDE 0${cutIdx + 1}`, cardPad + 68, botY + 31);
         if (isPrice) mPrice(c, W, botY + 62, { accent: fg, accent2: fg }, e);
-        mCaption(c, caption, W / 2, botY + (isPrice ? 104 : 62), W - cardPad * 2 - 40, 165, 32, 'dohyeon', fg, mClamp(local / 0.5), 'center');
+        arCardRhythmCaption(c, caption, W / 2, botY + (isPrice ? 100 : 58), W - cardPad * 2 - 40, 174, 30, {
+          cutIdx, local, accent: subHl, ink: fg, isDark: fg !== '#111111', align: 'center',
+          headPool: ['dohyeon', 'gasoek', 'jua']
+        });
         inSign(c, d, W / 2, botY + botH - 22, fg);
         c.restore();
       } else if (M === 'stm_split') {
@@ -3167,21 +3375,22 @@
         inSign(c, d, W / 2, ty + th - 20, 'rgba(255,255,255,0.68)');
         c.restore();
       } else if (M === 'cn_timeline') {
-        // 카드뉴스 · 4단계 타임라인: 왼쪽 세로 스텝 라인 + 상단 사진 카드 + 하단 핵심 캡션
-        c.fillStyle = '#0f172a';
+        // 카드뉴스 · 4단계 타임라인: 컷별 포인트 컬러 스텝 라인 + 리듬 타이포
+        const cp = arCardCutPalette(sp, cutIdx, true);
+        c.fillStyle = cp.tintBg;
         c.fillRect(0, 0, W, H);
         const railX = 48;
         c.strokeStyle = 'rgba(148,163,184,0.22)'; c.lineWidth = 3;
         c.beginPath(); c.moveTo(railX, 110); c.lineTo(railX, 740); c.stroke();
         const progH = 630 * ((cutIdx + 1) / Math.max(1, totalCuts));
-        c.strokeStyle = sp.accent || '#38bdf8'; c.lineWidth = 3;
+        c.strokeStyle = cp.accent; c.lineWidth = 3;
         c.beginPath(); c.moveTo(railX, 110); c.lineTo(railX, 110 + progH); c.stroke();
         for (let si = 0; si < Math.min(totalCuts, 6); si++) {
           const sy = 130 + si * (560 / Math.max(1, Math.min(totalCuts, 6) - 1));
           const act = si === cutIdx;
-          c.fillStyle = si <= cutIdx ? (sp.accent || '#38bdf8') : '#1e293b';
-          c.beginPath(); c.arc(railX, sy, act ? 16 : 11, 0, Math.PI * 2); c.fill();
-          c.fillStyle = si <= cutIdx ? kTextOn(sp.accent || '#38bdf8') : '#94a3b8';
+          c.fillStyle = si <= cutIdx ? cp.accent : '#1e293b';
+          c.beginPath(); c.arc(railX, sy, act ? 17 : 11, 0, Math.PI * 2); c.fill();
+          c.fillStyle = si <= cutIdx ? cp.pillFg : '#94a3b8';
           c.font = gFont(800, act ? 12 : 10, GENRE_FONTS.sans);
           c.textAlign = 'center'; c.textBaseline = 'middle';
           c.fillText(`${si + 1}`, railX, sy + 1);
@@ -3191,17 +3400,22 @@
         gRoundRect(c, cx, 94, cw, 388, 18); c.clip();
         inPhotoFade(c, S, cutIdx, local, cx, 94, cw, 388, 1.03 + lp * 0.04, 1);
         c.restore();
-        inLabel(c, `STEP 0${cutIdx + 1} / 0${totalCuts}`, cx + 4, 514, sp.accent || '#38bdf8', 'left', 13);
-        if (isPrice) mPrice(c, W, 540, sp, e);
-        mCaption(c, caption, cx + cw / 2, isPrice ? 584 : 548, cw - 12, 180, 29, 'sans', '#f8fafc', mClamp(local / 0.5), 'center');
+        c.fillStyle = cp.accentSoft;
+        gRoundRect(c, cx, 498, 114, 26, 13); c.fill();
+        inLabel(c, `STEP 0${cutIdx + 1} / 0${totalCuts}`, cx + 14, 511, cp.accent, 'left', 12);
+        if (isPrice) mPrice(c, W, 536, { ...sp, accent: cp.accent }, e);
+        arCardRhythmCaption(c, caption, cx + cw / 2, isPrice ? 578 : 540, cw - 12, 186, 28, {
+          cutIdx, local, accent: cp.accent, ink: '#f8fafc', isDark: true, align: 'center'
+        });
       } else if (M === 'cn_qna') {
-        // 카드뉴스 · Q&A 가이드: 크림 캔버스 + 상단 Q 뱃지 + 사진 카드 + 깔끔한 A 답변 카드
+        // 카드뉴스 · Q&A 가이드: 컷별 포인트 컬러 Q 뱃지 + 리듬 답변 카드
+        const cp = arCardCutPalette(sp, cutIdx, false);
         c.fillStyle = '#faf7f2';
         c.fillRect(0, 0, W, H);
-        const acc = sp.accent || '#0ea5e9';
+        const acc = cp.accent;
         c.fillStyle = acc;
         gRoundRect(c, 36, 70, 96, 32, 16); c.fill();
-        c.fillStyle = kTextOn(acc);
+        c.fillStyle = cp.pillFg;
         c.font = gFont(800, 12, GENRE_FONTS.sans);
         c.textAlign = 'center'; c.textBaseline = 'middle';
         c.fillText(`Q&A · 0${cutIdx + 1}`, 84, 87);
@@ -3212,50 +3426,57 @@
         gRoundRect(c, 36, 120, W - 72, 390, 20); c.clip();
         inPhotoFade(c, S, cutIdx, local, 36, 120, W - 72, 390, 1.03 + lp * 0.04, 1);
         c.restore();
+        const cardSlide = (1 - mEase(local / 0.30)) * 18;
         c.save();
         c.shadowColor = 'rgba(15,23,42,0.08)'; c.shadowBlur = 18; c.shadowOffsetY = 6;
-        c.fillStyle = '#ffffff';
-        gRoundRect(c, 36, 532, W - 72, 232, 20); c.fill();
+        c.fillStyle = cp.tintBg;
+        gRoundRect(c, 36, 532 + cardSlide, W - 72, 236, 20); c.fill();
         c.restore();
         c.fillStyle = acc;
-        gRoundRect(c, 58, 554, 4, 30, 2); c.fill();
-        inLabel(c, 'KEY ANSWER', 72, 569, acc, 'left', 12);
-        if (isPrice) mPrice(c, W, 594, sp, e);
-        mCaption(c, caption, W / 2, isPrice ? 632 : 596, W - 116, 145, 28, 'pretM', '#0f172a', mClamp(local / 0.5), 'center');
+        gRoundRect(c, 58, 554 + cardSlide, 4, 28, 2); c.fill();
+        inLabel(c, 'KEY ANSWER', 72, 568 + cardSlide, acc, 'left', 12);
+        if (isPrice) mPrice(c, W, 594 + cardSlide, { ...sp, accent: acc }, e);
+        arCardRhythmCaption(c, caption, W / 2, (isPrice ? 628 : 592) + cardSlide, W - 116, 152, 27, {
+          cutIdx, local, accent: acc, ink: '#0f172a', isDark: false, align: 'center'
+        });
       } else if (M === 'cn_compare') {
-        // 카드뉴스 · 체크 포인트: 다크 에메랄드 매트 + 상단 화보 + 체크 배지 카드
-        c.fillStyle = '#0b1612';
+        // 카드뉴스 · 체크 포인트: 컷별 포인트 컬러 배지 + 리듬 타이포 카드
+        const cp = arCardCutPalette(sp, cutIdx, true);
+        c.fillStyle = cp.tintBg;
         c.fillRect(0, 0, W, H);
         c.save();
         gRoundRect(c, 32, 68, W - 64, 456, 20); c.clip();
         inPhotoFade(c, S, cutIdx, local, 32, 68, W - 64, 456, 1.04 + lp * 0.04, 1);
         c.restore();
-        const acc = sp.accent || '#10b981';
+        const acc = cp.accent;
         c.fillStyle = acc;
         gRoundRect(c, 48, 86, 126, 30, 15); c.fill();
-        c.fillStyle = kTextOn(acc);
+        c.fillStyle = cp.pillFg;
         c.font = gFont(800, 12, GENRE_FONTS.sans);
         c.textAlign = 'center'; c.textBaseline = 'middle';
         c.fillText(`✓ CHECK 0${cutIdx + 1}`, 111, 102);
         c.fillStyle = 'rgba(255,255,255,0.07)';
         gRoundRect(c, 32, 542, W - 64, 240, 20); c.fill();
-        c.strokeStyle = 'rgba(255,255,255,0.12)'; c.lineWidth = 1;
+        c.strokeStyle = cp.accentSoft; c.lineWidth = 1.5;
         gRoundRect(c, 32, 542, W - 64, 240, 20); c.stroke();
-        if (isPrice) mPrice(c, W, 566, sp, e);
-        mCaption(c, caption, W / 2, isPrice ? 608 : 570, W - 108, 185, 30, 'sans', '#ecfdf5', mClamp(local / 0.5), 'center');
+        if (isPrice) mPrice(c, W, 566, { ...sp, accent: acc }, e);
+        arCardRhythmCaption(c, caption, W / 2, isPrice ? 604 : 566, W - 108, 192, 29, {
+          cutIdx, local, accent: acc, ink: '#ecfdf5', isDark: true, align: 'center'
+        });
       } else if (M === 'cn_receipt') {
-        // 카드뉴스 · 클린 영수증: 블러 사진 위 모던 영수증 카드 + 점선 + 깔끔한 자막
+        // 카드뉴스 · 클린 영수증: 컷별 포인트 스탬프 + 리듬 타이포 영수증 카드
+        const cp = arCardCutPalette(sp, cutIdx, false);
         c.save();
         c.filter = 'blur(7px) brightness(0.74)';
         mPhoto(c, S, 0, -16, -16, W + 32, H + 32, 1.08);
         c.restore();
-        const rx = 44, rw = W - 88, ry = 82, rh = 696;
+        const rx = 44, rw = W - 88, ry = 82 + (1 - mEase(local / 0.30)) * 20, rh = 696;
         c.save();
         c.shadowColor = 'rgba(0,0,0,0.34)'; c.shadowBlur = 28; c.shadowOffsetY = 12;
-        c.fillStyle = '#fcfaf5';
+        c.fillStyle = cp.tintBg;
         gRoundRect(c, rx, ry, rw, rh, 14); c.fill();
         c.restore();
-        c.fillStyle = '#18181b';
+        c.fillStyle = cp.accent;
         c.font = gFont(800, 12, GENRE_FONTS.sans);
         c.textAlign = 'left'; c.textBaseline = 'middle';
         c.fillText(`RECEIPT · #0${cutIdx + 1}`, rx + 24, ry + 34);
@@ -3271,15 +3492,18 @@
         c.strokeStyle = '#d4d4d8'; c.setLineDash([4, 4]);
         c.beginPath(); c.moveTo(rx + 22, ry + 432); c.lineTo(rx + rw - 22, ry + 432); c.stroke();
         c.setLineDash([]);
-        if (isPrice) mPrice(c, W, ry + 448, sp, e);
-        mCaption(c, caption, W / 2, ry + (isPrice ? 492 : 458), rw - 48, 175, 28, 'pretM', '#18181b', mClamp(local / 0.55), 'center');
+        if (isPrice) mPrice(c, W, ry + 448, { ...sp, accent: cp.accent }, e);
+        arCardRhythmCaption(c, caption, W / 2, ry + (isPrice ? 488 : 452), rw - 48, 182, 27, {
+          cutIdx, local, accent: cp.accent, ink: '#18181b', isDark: false, align: 'center'
+        });
         c.fillStyle = '#18181b';
         for (let bi = 0; bi < 28; bi++) {
           const bw = (bi % 3 === 0 ? 4 : 2);
           c.fillRect(W / 2 - 84 + bi * 6, ry + rh - 38, bw, 16);
         }
       } else if (M === 'cn_polaroid_duo') {
-        // 카드뉴스 · 투컷 앨범: 틸트된 배경 포토 프레임 + 전면 스퀘어 카드뉴스 + 넘버 배지
+        // 카드뉴스 · 투컷 앨범: 컷별 컬러 넘버 배지 + 에디토리얼 폰트 리듬
+        const cp = arCardCutPalette(sp, cutIdx, false);
         c.fillStyle = '#f3ede3';
         c.fillRect(0, 0, W, H);
         c.save();
@@ -3294,7 +3518,7 @@
         c.save();
         c.translate(W * 0.46, 315); c.rotate(-0.025);
         c.shadowColor = 'rgba(40,30,20,0.18)'; c.shadowBlur = 22; c.shadowOffsetY = 8;
-        c.fillStyle = '#fffdf9';
+        c.fillStyle = cp.tintBg;
         gRoundRect(c, -188, -198, 376, 396, 14); c.fill();
         c.shadowBlur = 0;
         c.save();
@@ -3302,9 +3526,13 @@
         inPhotoFade(c, S, cutIdx, local, -172, -182, 344, 344, 1.03 + lp * 0.04, 1);
         c.restore();
         c.restore();
-        inLabel(c, `PAGE 0${cutIdx + 1} / 0${totalCuts}`, W / 2, 558, sp.accent || '#c2603f', 'center', 13);
-        if (isPrice) mPrice(c, W, 586, sp, e);
-        mCaption(c, caption, W / 2, isPrice ? 628 : 592, W - 84, 165, 30, 'maru', '#292524', mClamp(local / 0.55), 'center');
+        c.fillStyle = cp.accentSoft;
+        gRoundRect(c, W / 2 - 64, 544, 128, 26, 13); c.fill();
+        inLabel(c, `PAGE 0${cutIdx + 1} / 0${totalCuts}`, W / 2, 557, cp.accent, 'center', 12);
+        if (isPrice) mPrice(c, W, 584, { ...sp, accent: cp.accent }, e);
+        arCardRhythmCaption(c, caption, W / 2, isPrice ? 624 : 588, W - 84, 174, 29, {
+          cutIdx, local, accent: cp.accent, ink: '#292524', isDark: false, align: 'center', serif: true
+        });
       } else if (M === 'stm_glassbar') {
         // 💎 글래스 네온 바: 풀블리드 화보 + 하단 반투명 글래스 스트립 + 네온 세로 바
         inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.03 + lp * 0.035, 1);
@@ -4376,7 +4604,8 @@
           c.restore();
         }
       } else if (M === 'op_infocard') {
-        // 3) 인포그래픽 설명 카드: 블러 배경 + 플로팅 2단 STEP 카드
+        // 3) 인포그래픽 설명 카드: 블러 배경 + 컷별 포인트 컬러 & 리듬 타이포 2단 STEP 카드
+        const cp = arCardCutPalette(sp, cutIdx, !sp.light);
         c.save();
         try { c.filter = sp.light ? 'blur(18px) brightness(1.06)' : 'blur(18px) brightness(0.38)'; } catch (_) {}
         mPhoto(c, S, 0, -20, -20, W + 40, H + 40, 1.15, 0, 0);
@@ -4391,11 +4620,11 @@
         c.shadowBlur = 32;
         c.shadowOffsetY = 14;
         gRoundRect(c, cx, cy, cw, ch, 24);
-        c.fillStyle = sp.bg1;
+        c.fillStyle = sp.light ? cp.tintBg : sp.bg1;
         c.fill();
         c.restore();
 
-        // 카드 상단 사진 (380px)
+        // 카드 상단 사진 (370px)
         c.save();
         c.globalAlpha = easeOutCubic(local / 0.26);
         gRoundRect(c, cx + 14, cy + 14, cw - 28, 370, 18);
@@ -4403,31 +4632,28 @@
         inPhotoFade(c, S, cutIdx, local, cx + 14, cy + 14, cw - 28, 370, 1.04 + lp * 0.05, 0);
         c.restore();
 
-        // 카드 하단 STEP 배지 + 텍스트
+        // 카드 하단 STEP 배지 + 리듬 타이포
         c.save();
         c.globalAlpha = easeOutCubic(local / 0.30);
-        c.fillStyle = accent;
-        gRoundRect(c, cx + 22, cy + 404, 78, 24, 999);
+        c.fillStyle = cp.accent;
+        gRoundRect(c, cx + 22, cy + 402, 82, 26, 999);
         c.fill();
         c.font = `700 11px 'JetBrains Mono', monospace`;
-        c.fillStyle = gLuminance(accent) > 0.45 ? '#111111' : '#ffffff';
+        c.fillStyle = cp.pillFg;
         c.textAlign = 'center';
         c.textBaseline = 'middle';
-        c.fillText(`STEP 0${cutIdx + 1}`, cx + 61, cy + 416);
+        c.fillText(`STEP 0${cutIdx + 1}`, cx + 63, cy + 415);
 
         if (!capHidden && caption) {
-          const r = mFit(c, caption, cw - 44, 3, 30, 20, sp.font);
-          c.font = `700 ${r.size}px ${F.f}`;
-          c.fillStyle = fg;
-          c.textAlign = 'left';
-          c.textBaseline = 'top';
-          r.lines.forEach((ln, li) => c.fillText(ln, cx + 22, cy + 446 + li * r.lh));
+          arCardRhythmCaption(c, caption, cx + 22, cy + 440, cw - 44, 172, 28, {
+            cutIdx, local, accent: cp.accent, ink: fg, isDark: !sp.light, align: 'left'
+          });
         }
         // 카드 하단 진행 바
         c.fillStyle = lineCol;
         gRoundRect(c, cx + 22, cy + ch - 26, cw - 44, 4, 2);
         c.fill();
-        c.fillStyle = accent;
+        c.fillStyle = cp.accent;
         gRoundRect(c, cx + 22, cy + ch - 26, (cw - 44) * mClamp(t / Math.max(0.1, mainDuration)), 4, 2);
         c.fill();
         c.restore();
