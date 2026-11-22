@@ -4417,7 +4417,10 @@
       try {
         list.forEach((ds) => {
           campaign.designStyle = ds.id;
-          renderGenreFrame((mainDuration / totalCuts) * 0.9, mainDuration, totalCuts, getSelectedDealer());
+          const previewTime=ds.referenceStyle?.layout==='diagonal-fan'
+            ? Math.min((mainDuration/totalCuts)*.62,ds.referenceStyle.entrySeconds*2.4)*.55
+            : (mainDuration/totalCuts)*.9;
+          renderGenreFrame(previewTime, mainDuration, totalCuts, getSelectedDealer());
           tctx.drawImage(canvas, 0, 0, thumb.width, thumb.height);
           const url = thumb.toDataURL('image/jpeg', 0.72);
           designThumbCache.urls[ds.id] = url;
