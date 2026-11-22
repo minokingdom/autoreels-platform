@@ -1844,7 +1844,9 @@
       }
       syncStudioSettingsModal();
 
-      // 4대 SNS 연결 상태 UI 업데이트
+      // 회원의 발행 계정은 SNS API 응답으로만 표시한다. 딜러 프로필에는 명함용 계정명이 들어 있다.
+      if (window.AR_SERVER?.mode) return;
+      // 시연 모드 SNS 연결 상태
       const sns = d.snsAccounts || { ig: d.igUsername, yt: '', tt: '', fb: '' };
       ['ig', 'yt', 'tt', 'fb'].forEach((ch) => {
         const handleEl = document.getElementById(`snsHandle_${ch}`);

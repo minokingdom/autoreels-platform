@@ -160,6 +160,26 @@ const result = await page.evaluate(async () => {
   } catch (error) {
     out.errors.push('fixed lookbook: ' + error.message);
   }
+  try {
+    AR_SERVER.mode = true;
+    AR_SERVER.me = { user: { id: 'sns-render-check' } };
+    AR_SNS_STATE = { targets: { instagram: { ready: true, connected: true, name: '@studio_test' } },
+      page: 'one', pages: [{id:'one',name:'One'}, {id:'two',name:'Two'}] };
+    arSnsRender();
+    const check = document.getElementById('snsCheckIg');
+    check.checked = true;
+    switchStudioTab('publish');
+    syncDrmAndSnsUI();
+    if (document.getElementById('snsStatusBtn_ig').textContent !== '연결 해제' ||
+        document.getElementById('snsHandle_ig').textContent !== '@studio_test' ||
+        check.disabled || !check.checked || !document.getElementById('snsPagePicker')) {
+      throw Error('프로필 갱신 후 인스타 연결 또는 발행 선택이 사라졌습니다.');
+    }
+    AR_SNS_STATE.targets.instagram.connected = false;
+    arSnsRender();
+    syncDrmAndSnsUI();
+    if (!check.disabled || check.checked) throw Error('연결 해제 후 발행 선택이 남았습니다.');
+  } catch (error) { out.errors.push('SNS connection: ' + error.message); }
   return out;
 });
 await browser.close();

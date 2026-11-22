@@ -889,6 +889,7 @@
         if (!handle || !btn) return;
         handle.setAttribute('data-noind', '');
         const info = st && st.targets ? st.targets[t] : null;
+        btn.classList.toggle('is-on', Boolean(AR_SERVER.me && info?.connected));
         if (!AR_SERVER.me) {
           handle.textContent = '로그인하면 연결할 수 있어요';
           btn.textContent = '로그인';
@@ -928,7 +929,7 @@
           pick.setAttribute('data-noind', '');
           pick.className = 'studio-input w-full h-9 px-2 text-[12px] mt-2 sm:col-span-2';
           pick.onchange = () => arSnsSelectPage(pick.value);
-          fbRow.closest('.grid').appendChild(pick);
+          fbRow.closest('.ig-sns-row').after(pick);
         }
         pick.innerHTML = st.pages.map((p) => `<option value="${escapeHtmlInd(p.id)}">${escapeHtmlInd(p.name)}${p.ig ? ` · 인스타그램 @${escapeHtmlInd(p.ig)}` : ' · 인스타그램 연결 없음'}</option>`).join('');
         pick.value = st.page;

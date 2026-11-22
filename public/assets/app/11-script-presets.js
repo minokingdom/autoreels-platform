@@ -816,41 +816,77 @@
       }
     }
 
+    const arShareCopies = new WeakMap();
+    const arShareLimit = 50 * 1024 * 1024;
+
+    async function arPrepareShareCopy(blob, onProgress) {
+      // Mediabunny 1.66.2 (MPL-2.0), 원본 https://github.com/Vanilagy/mediabunny
+      const { Input, ALL_FORMATS, BlobSource, Output, Mp4OutputFormat, BufferTarget, Conversion } =
+        await import('/assets/vendor/mediabunny-1.66.2/mediabunny.min.mjs');
+      const input = new Input({ formats: ALL_FORMATS, source: new BlobSource(blob) });
+      try {
+        const duration = await input.computeDuration();
+        if (!Number.isFinite(duration) || duration <= 0) throw Error('영상 길이 확인 실패');
+        const bitrate = Math.min(4500000, Math.floor(arShareLimit * 8 * 0.8 / duration) - 192000);
+        if (bitrate < 200000) throw Error('공유 가능한 영상 길이 초과');
+        const target = new BufferTarget();
+        const output = new Output({ format: new Mp4OutputFormat(), target });
+        const conversion = await Conversion.init({
+          input, output, video: { codec: 'avc', width: 720, frameRate: 30, bitrate, forceTranscode: true }
+        });
+        if (!conversion.isValid || conversion.discardedTracks.length) throw Error('공유용 영상 변환 미지원');
+        conversion.onProgress = onProgress;
+        await conversion.execute();
+        if (!target.buffer?.byteLength || target.buffer.byteLength > arShareLimit) throw Error('공유 용량 초과');
+        return new Blob([target.buffer], { type: 'video/mp4' });
+      } finally { input.dispose(); }
+    }
+
     async function shareRecordedVideoMobile() {
       const notice = document.getElementById('saveStatusNotice');
       const blob = window.lastRecordedVideoBlob;
-      const mime = window.lastRecordedMime || 'video/mp4';
-      const filename = window.lastRecordedFilename || 'autoreelsmaker_dealer_12s.mp4';
-      const d = getSelectedDealer();
-      const caption = buildCaption(d);
-
-      if (!blob) {
-        if (notice) notice.textContent = '⚠️ 먼저 영상 제작을 완료해주세요.';
+      if (!blob?.size) {
+        notice.textContent = '먼저 영상을 만들어 주세요.';
         return;
       }
 
-      copyDealerCaption();
-
-      try {
-        const file = new File([blob], filename, { type: mime });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            title: `${campaign.vehicle} - ${d.name} ${d.title}`,
-            text: caption,
-            files: [file]
+      const btn = document.getElementById('shareVideoBtn');
+      const needsCopy = blob.size > arShareLimit && /Android/.test(navigator.userAgent);
+      if (navigator.share && needsCopy && !arShareCopies.has(blob)) {
+        if (btn.disabled) return;
+        btn.disabled = true;
+        document.getElementById('exportedVideoPlayer')?.pause();
+        notice.textContent = '공유용 영상을 준비하고 있어요…';
+        try {
+          const copy = await arPrepareShareCopy(blob, progress => {
+            if (window.lastRecordedVideoBlob === blob) notice.textContent = `공유용 영상 준비 중 · ${Math.round(progress * 100)}%`;
           });
-          if (notice) {
-            notice.textContent = '✅ 모바일 공유창으로 영상 파일과 본문이 전달되었습니다!';
-            notice.className = 'text-xs text-emerald-400 font-bold text-center leading-relaxed';
-          }
-          return;
-        }
-      } catch (err) {
-        if (err && err.name === 'AbortError') return;
+          arShareCopies.set(blob, copy);
+          if (window.lastRecordedVideoBlob === blob) notice.textContent = '영상이 준비됐어요. 앱으로 공유를 한 번 더 눌러 주세요.';
+        } catch {
+          if (window.lastRecordedVideoBlob === blob) notice.textContent = '공유용 영상을 준비하지 못했어요. 다운로드로 저장한 뒤 앱에서 선택해 주세요.';
+        } finally { btn.disabled = false; }
+        return;
       }
 
-      // 파일 공유 미지원 브라우저에서는 즉시 다운로드로 자동 연결
-      await saveRecordedVideoToDisk();
+      const copy = arShareCopies.get(blob);
+      let filename = window.lastRecordedFilename || arRecordedFilename(blob, Math.round(TOTAL_DURATION));
+      if (copy) filename = filename.replace(/\.[^.]+$/, '') + '.mp4';
+      const file = new File([copy || blob], filename, { type: (copy || blob).type || window.lastRecordedMime });
+      const data = { files: [file] };
+      if (!navigator.share || (navigator.canShare && !navigator.canShare(data))) {
+        notice.textContent = '이 브라우저에서 이 영상을 공유할 수 없어요. 위의 다운로드 버튼으로 저장한 뒤 앱에서 선택해 주세요.';
+        return;
+      }
+
+      try {
+        notice.textContent = '영상을 공유할 앱을 선택해 주세요.';
+        await navigator.share(data);
+        notice.textContent = '휴대폰 공유창으로 영상을 전달했어요.';
+      } catch (error) {
+        notice.textContent = error.name === 'AbortError' ? '공유를 취소했어요.'
+          : '휴대폰에서 영상 공유를 열지 못했어요. 위의 다운로드 버튼으로 저장한 뒤 앱에서 선택해 주세요.';
+      }
     }
 
     async function saveRecordedVideoToDisk() {
