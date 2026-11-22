@@ -739,45 +739,46 @@
       { id: 14, label: '⚡ 슬라이스 시프트' }
     ];
     const AR_CAMERA_MOTION_MODES = [
-      { id: 'auto',    label: '✨ 깔끔 고정(기본)' },
-      { id: 'steady',  label: '🧊 완전 고정' },
+      { id: 'auto',    label: '✨ 잔잔한 자동(기본)' },
       { id: 'zoomIn',  label: '🔍 잔잔한 줌인' },
       { id: 'zoomOut', label: '🔭 잔잔한 줌아웃' },
       { id: 'panX',    label: '↔️ 잔잔한 좌우' },
       { id: 'panY',    label: '↕️ 잔잔한 상하' },
-      { id: 'diag',    label: '↗️ 잔잔한 대각' }
+      { id: 'diag',    label: '↗️ 잔잔한 대각' },
+      { id: 'steady',  label: '🧊 완전 고정' }
     ];
     if (typeof window !== 'undefined') {
       window.AR_PHOTO_ENTRANCE_MODES = AR_PHOTO_ENTRANCE_MODES;
       window.AR_CAMERA_MOTION_MODES = AR_CAMERA_MOTION_MODES;
     }
 
-    // 자동 스타일 풀에는 눈을 찌르거나 번쩍이지 않는 정제된 시네마/에디토리얼 연출만 사용 + 등장 완료 후 완전 고정('steady')
+    // 자동 스타일 풀에는 눈을 찌르거나 번쩍이지 않는 정제된 시네마/에디토리얼 연출 + 한 방향으로 천천히 미끄러지는 잔잔한 카메라 무브
     const AR_CLEAN_POOL = [0, 1, 2, 3, 4, 5, 6, 10, 11, 12, 15, 16, 18, 21, 22, 23];
+    const AR_GENTLE_CAMS = ['zoomIn', 'zoomOut', 'panX', 'panY', 'diag'];
     const AR_STYLE_PHOTO_ANIM = {
-      art:       [1, 10, 'steady'],
-      film:      [15, 11, 'steady'],
-      editorial: [16, 21, 'steady'],
-      kinetic:   [3, 22, 'steady'],
-      tv:        [4, 5, 'steady'],
-      game:      [2, 18, 'steady'],
-      note:      [16, 5, 'steady'],
-      food:      [21, 10, 'steady'],
-      life:      [10, 1, 'steady'],
-      biz:       [23, 6, 'steady']
+      art:       [1, 10, 'panY'],
+      film:      [15, 11, 'zoomOut'],
+      editorial: [16, 21, 'panX'],
+      kinetic:   [3, 22, 'zoomIn'],
+      tv:        [4, 5, 'zoomIn'],
+      game:      [2, 18, 'zoomIn'],
+      note:      [16, 5, 'panY'],
+      food:      [21, 10, 'zoomIn'],
+      life:      [10, 1, 'diag'],
+      biz:       [23, 6, 'panX']
     };
     const AR_CAT_PHOTO_ANIM = {
-      '감성': [10, 21, 'steady'],
-      '고급': [21, 6, 'steady'],
-      '브이로그': [4, 5, 'steady'],
-      '타이포': [3, 22, 'steady'],
-      '손글씨': [16, 10, 'steady'],
-      '뉴스·방송': [4, 11, 'steady'],
-      '카드뉴스': [5, 16, 'steady'],
-      '비포·애프터': [22, 2, 'steady'],
-      '재미': [18, 1, 'steady'],
-      '테크': [2, 23, 'steady'],
-      '럭셔리': [23, 6, 'steady']
+      '감성': [10, 21, 'diag'],
+      '고급': [21, 6, 'zoomOut'],
+      '브이로그': [4, 5, 'panX'],
+      '타이포': [3, 22, 'zoomIn'],
+      '손글씨': [16, 10, 'panY'],
+      '뉴스·방송': [4, 11, 'zoomIn'],
+      '카드뉴스': [5, 16, 'panX'],
+      '비포·애프터': [22, 2, 'panX'],
+      '재미': [18, 1, 'zoomIn'],
+      '테크': [2, 23, 'zoomOut'],
+      '럭셔리': [23, 6, 'zoomOut']
     };
     function arResolvePhotoMotionSpec(cutIdx) {
       const ds = typeof getActiveDesign === 'function' ? getActiveDesign() : null;
@@ -786,7 +787,7 @@
       for (let i = 0; i < id.length; i++) h = ((h * 33) ^ id.charCodeAt(i)) >>> 0;
       let base = (ds && ds.s100Genre && AR_STYLE_PHOTO_ANIM[ds.s100Genre])
         || (ds && ds.cat && AR_CAT_PHOTO_ANIM[ds.cat])
-        || [AR_CLEAN_POOL[h % AR_CLEAN_POOL.length], AR_CLEAN_POOL[(h + 5) % AR_CLEAN_POOL.length], 'steady'];
+        || [AR_CLEAN_POOL[h % AR_CLEAN_POOL.length], AR_CLEAN_POOL[(h + 5) % AR_CLEAN_POOL.length], AR_GENTLE_CAMS[h % AR_GENTLE_CAMS.length]];
       const poolByGenre = {
         art:       [1, 10, 21, 16, 18, 12, 6, 11, 23, 0],
         film:      [15, 11, 10, 16, 0, 23, 6, 4, 5, 21],
@@ -801,7 +802,7 @@
       };
       let primary = base[0];
       let secondary = base[1];
-      let camMode = 'steady'; // 기본값: 등장 후 흔들림·드리프트 없이 완전 고정
+      let camMode = cutIdx % 2 === 0 ? (base[2] || 'zoomIn') : AR_GENTLE_CAMS[(h + cutIdx) % AR_GENTLE_CAMS.length];
       if (ds && ds.s100Genre && poolByGenre[ds.s100Genre]) {
         const list = poolByGenre[ds.s100Genre];
         primary = list[h % list.length];
@@ -834,26 +835,26 @@
       const mode = spec.mode;
       const camMode = spec.camMode;
 
-      // 등장 후 기본값('steady')은 완전 고정! 수동으로 카메라 무브를 고른 경우에만 아주 잔잔하고 어지럽지 않게 이동
+      // 흔들림·기울기·비트튀김 없이, 한 방향으로 아주 잔잔하고 우아하게만 미끄러지는 시네마 Ken Burns
       const baseScale = isVid ? Math.min(1.02, Math.max(1.0, scale || 1.0)) : Math.max(1.02, Math.min(1.06, scale || 1.02));
       let steadyZoom = baseScale;
       let steadyPx = 0;
       let steadyPy = 0;
       if (!isVid && camMode !== 'steady') {
         if (camMode === 'zoomIn') {
-          steadyZoom = baseScale + lp * 0.045;
+          steadyZoom = baseScale + lp * 0.055;
         } else if (camMode === 'zoomOut') {
-          steadyZoom = baseScale + (1 - lp) * 0.045;
+          steadyZoom = baseScale + (1 - lp) * 0.055;
         } else if (camMode === 'panX') {
-          steadyZoom = baseScale + 0.04;
-          steadyPx = (lp - 0.5) * Math.min(20, w * 0.036) * dir;
+          steadyZoom = baseScale + 0.045;
+          steadyPx = (lp - 0.5) * Math.min(24, w * 0.044) * dir;
         } else if (camMode === 'panY') {
-          steadyZoom = baseScale + 0.04;
-          steadyPy = (lp - 0.5) * Math.min(18, h * 0.028) * dir;
+          steadyZoom = baseScale + 0.045;
+          steadyPy = (lp - 0.5) * Math.min(22, h * 0.034) * dir;
         } else if (camMode === 'diag') {
-          steadyZoom = baseScale + 0.04;
-          steadyPx = (lp - 0.5) * Math.min(15, w * 0.028) * dir;
-          steadyPy = (lp - 0.5) * Math.min(13, h * 0.020) * -dir;
+          steadyZoom = baseScale + 0.035 + lp * 0.025;
+          steadyPx = (lp - 0.5) * Math.min(18, w * 0.032) * dir;
+          steadyPy = (lp - 0.5) * Math.min(14, h * 0.022) * -dir;
         }
       }
 
