@@ -99,7 +99,7 @@ class Queue:
                 # SSH 운영 채널 전용. 과거 결과는 보존하고 사용자가 지정한 실패 건만 개발 단계로 전환.
                 eid=str(data.get('id',''))
                 row=db.execute('SELECT * FROM jobs WHERE id=?',(eid,)).fetchone()
-                if not row or row['status'] not in ('failed','held') or data.get('reason')!='owner_requested_development':raise ValueError('resume_not_allowed')
+                if not row or row['status'] not in ('failed','held','awaiting_approval') or data.get('reason')!='owner_requested_development':raise ValueError('resume_not_allowed')
                 db.execute('INSERT OR REPLACE INTO meta(key,value) VALUES(?,?)',('resume:'+eid+':'+str(now),json.dumps({'previousStatus':row['status'],'previousResult':row['result'],'at':now})))
                 db.execute("UPDATE jobs SET status='development' WHERE id=?",(eid,))
                 return {'accepted':True,'id':eid}
