@@ -256,6 +256,18 @@ function pickMusic(s){
   });
   const select=mixField(box,'곡 선택',byId('music').cloneNode(true));select.removeAttribute('id');select.value=s.clip.music||'';
 }
+// 꺼진 도구는 눌렀을 때 왜 꺼졌는지 알려 줌 (disabled 대신 aria-disabled)
+function mixOff(button,off,hint){
+  button.setAttribute('aria-disabled',String(!!off));button.classList.toggle('is-off',!!off);
+  if(hint)button.dataset.hint=hint;
+}
+function showMixHint(text){
+  if(!text)return;
+  let tip=byId('mixHint');
+  if(!tip){tip=document.createElement('p');tip.id='mixHint';tip.setAttribute('role','status');document.body.append(tip);}
+  tip.textContent=text;tip.classList.add('show');
+  clearTimeout(showMixHint.timer);showMixHint.timer=setTimeout(()=>tip.classList.remove('show'),2600);
+}
 function renderMixActions(s){
   const type=s.mixTrack||'video',panel=byId('mixActions');
   const call=id=>()=>byId(id).click();
@@ -271,13 +283,17 @@ function renderMixActions(s){
     caption:[['＋','자막 추가',()=>editCue(s,'caption')],['T','문구·시간',()=>editCue(s,'caption',item)],['⌫','삭제',remove]]
   };
   panel.replaceChildren(...tools[type].map(([icon,label,fn])=>{
-    const button=mixButton(label,()=>{if(editableEffects())fn();});
+    const button=mixButton(label,()=>{
+      if(button.getAttribute('aria-disabled')==='true'){showMixHint(button.dataset.hint);return;}
+      if(editableEffects())fn();
+    });
     button.prepend(mixIcon(({'✧':'effect','⌁':'sfx','♩':'source','♫':'music','T':'caption'})[icon]||icon));
     if(type==='video' && (label==='분할'||label==='삭제')){
-      button.dataset.mirrors=label==='분할'?'trackSplit':'trackDelete';button.disabled=byId(button.dataset.mirrors).disabled;
+      button.dataset.mirrors=label==='분할'?'trackSplit':'trackDelete';
+      mixOff(button,byId(button.dataset.mirrors).disabled,label==='분할'?'클립을 누르고 재생선을 클립 가운데에 두면 나눌 수 있어요.':'클립이 두 개 이상일 때 지울 수 있어요. 먼저 분할해 보세요.');
     }
-    if(type==='effect' && label!=='효과 추가' && !s.selectedEffect)button.disabled=true;
-    if((type==='sfx'||type==='caption')&&label==='삭제'&&!item)button.disabled=true;
+    if(type==='effect' && label!=='효과 추가' && !s.selectedEffect)mixOff(button,true,'효과 트랙에서 효과 블록을 먼저 눌러 주세요.');
+    if((type==='sfx'||type==='caption')&&label==='삭제'&&!item)mixOff(button,true,'지울 블록을 먼저 눌러 주세요.');
     return button;
   }));
 }

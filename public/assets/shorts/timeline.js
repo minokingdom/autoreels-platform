@@ -45,7 +45,7 @@ function trackTime(s,time,updateSelection=true) {
     byId('trackRight').disabled=pos.i===takes.length-1;
     byId('trackUndo').disabled=!s.trackUndo?.length;
     if(byId('trackRedo'))byId('trackRedo').disabled=!s.trackRedo?.length;
-    for(const b of document.querySelectorAll('#mixActions [data-mirrors]'))b.disabled=byId(b.dataset.mirrors).disabled;
+    for(const b of document.querySelectorAll('#mixActions [data-mirrors]'))mixOff(b,byId(b.dataset.mirrors).disabled);
   }
   return pos;
 }
