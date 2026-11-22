@@ -1,9 +1,11 @@
-const effectNames={flash:'플래시',zoom:'펀치 줌',echo:'이중상'};
+const effectNames={flash:'플래시',zoom:'펀치 줌',echo:'이중상',dip:'딥 전환'};
 const effectRecipes=[
   {kind:'flash',duration:.24,strength:.75},
   {kind:'zoom',duration:.48,strength:.65},
   {kind:'echo',duration:.4,strength:.55},
-  {kind:'flash',duration:.267,strength:.41,tint:'#ffda91',label:'폴라로이드 · 골든 플래시'}
+  {kind:'flash',duration:.267,strength:.41,tint:'#ffda91',label:'폴라로이드 · 골든 플래시'},
+  {kind:'dip',duration:.65,strength:1,tint:'#06070a',label:'블랙 딥'},
+  {kind:'dip',duration:.55,strength:1,tint:'#fff',label:'화이트 딥'}
 ];
 
 function outputTimeAt(s,sourceTime){
@@ -23,7 +25,7 @@ function paintEffects(ctx,s,time){
     const amount=effect.strength*(effect.kind==='flash'?1-phase:Math.sin(Math.PI*phase));
     if(!amount)continue;
     ctx.save();
-    if(effect.kind==='flash'){
+    if(effect.kind==='flash' || effect.kind==='dip'){
       ctx.globalAlpha=amount;ctx.fillStyle=effect.tint||'white';ctx.fillRect(0,0,w,h);
     }else if(effect.kind==='zoom'){
       const z=1+amount*.32;
@@ -40,15 +42,16 @@ function editableEffects(){
 }
 function redrawEffects(s){
   renderEffectLanes(s);
+  if(typeof renderMixActions==='function')renderMixActions(s);
   markEdited();
   if(s.joined || s.timelineCuts)seekCutTrack(s,s.trackTime||0);
   else renderPreview();
 }
 function renderEffectLanes(s){
   const panel=byId('fxPanel'),inspector=byId('fxInspector'),lanes=byId('fxLanes');
-  panel.hidden=!s?.clip;
+  panel.hidden=!s?.clip || !(byId('mixDialog').open && byId('mixTitle').textContent==='효과');
   lanes.replaceChildren();inspector.hidden=true;
-  if(panel.hidden)return;
+  if(!s?.clip)return;
   if(!s.effects?.length){
     const empty=document.createElement('div');
     empty.className='fx-empty';empty.textContent='효과 트랙';lanes.append(empty);

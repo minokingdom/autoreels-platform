@@ -57,7 +57,8 @@ try {
       return {gap:Math.abs(stage.bottom-board.top),bottom:board.bottom,height:innerHeight};
     });
     assert.ok(geometry.gap<3 && geometry.bottom<=geometry.height,'미리보기 아래에 타임라인 전체가 보여야 함');
-    await frame.locator('#editSettings>summary').click();
+    assert.equal(await frame.locator('[data-track]').count(),6);
+    await frame.locator('#mixSettings').click();
   };
   const chooser = page.waitForEvent('filechooser');
   await frame.locator('#emptyVideoPick').click();
@@ -215,6 +216,9 @@ try {
   await frame.locator('#trackCursor').fill('3');
   await frame.locator('#trackSplit').click();
   assert.equal(await frame.locator('#trackClips button').count(),2);
+  await frame.locator('#trackUndo').click();
+  await frame.locator('#trackRedo').click();
+  assert.equal(await frame.locator('#trackClips button').count(),2);
   await frame.locator('#trackLeft').click();
   const readCuts=()=>frame.locator('#work').evaluate(()=>sequenceTakes(session).map(t=>[t.start,t.end]));
   assert.deepEqual(await readCuts(),[[3,6],[0,3]]);
@@ -226,6 +230,7 @@ try {
   assert.deepEqual(await readCuts(),[[0,3],[3,6]]);
   await frame.locator('#trackDelete').click();
   await frame.locator('#trackCursor').fill('0.5');
+  await frame.locator('[data-track=effect]').click();
   await frame.getByRole('button',{name:'폴라로이드 · 골든 플래시 효과 추가',exact:true}).click();
   assert.equal(await frame.locator('#fxDuration').inputValue(),'0.27');
   await frame.locator('#fxCopy').click();
@@ -234,6 +239,15 @@ try {
   await frame.locator('#fxDuration').fill('1.5');
   await frame.locator('#fxDuration').press('Tab');
   await frame.locator('#fxStrength').fill('100');
+  await frame.locator('#mixDone').click();
+  await frame.locator('#sfxLane button').click();
+  await frame.getByLabel('효과음 선택').selectOption('sfx-impact-01');
+  await frame.locator('#mixDone').click();
+  await frame.locator('#sfxLane .cue-block').waitFor();
+  await frame.locator('#captionLane button').click();
+  await frame.locator('#mixOptions input').first().fill('하이라이트');
+  await frame.locator('#mixDone').click();
+  assert.equal(await frame.locator('#captionLane .cue-block').textContent(),'하이라이트');
   await frame.locator('#trackCursor').fill('0.55');
   await frame.locator('#overlay').evaluate(async el=>{
     const ctx=el.getContext('2d');
@@ -246,6 +260,12 @@ try {
   });
   await frame.locator('#save').click();
   await frame.locator('#download').waitFor({timeout:18000});
+  const peak=await frame.locator('#download').evaluate(async a=>{
+    const bytes=await (await fetch(a.href)).arrayBuffer();
+    const buf=await new OfflineAudioContext(1,1,22050).decodeAudioData(bytes);
+    return buf.getChannelData(0).reduce((v,x)=>Math.max(v,Math.abs(x)),0);
+  });
+  assert.ok(peak>.02,'효과음이 합성된 MP4 오디오');
   const colors=await frame.locator('#download').evaluate(async link=>{
     const el=document.createElement('video');el.muted=true;el.src=link.href;
     const c=document.createElement('canvas');c.width=c.height=1;

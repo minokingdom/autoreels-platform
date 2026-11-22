@@ -48,7 +48,7 @@ function openQuickClip(s,file,fullSource=false) {
   selected(s,clip,null);
   byId('editor').open = true;
   updateQuickTimes(clip);
-  if (fullSource) setQuickMode(s,false); else startMontage(s,file);
+  if (fullSource) {queueSourceWave(s,clip,file,end);setQuickMode(s,false);} else startMontage(s,file);
 }
 function updateQuickTimes(clip) {
   for (const [key,control,output] of [['start','trimStart','startTime'],['end','trimEnd','endTime']]) {
@@ -96,7 +96,7 @@ async function startMontage(s,file) {
   byId('montageProgress').value = 0;
   setQuickMode(s,true);
   try {
-    const {buildMontage} = await import('./montage.mjs?v=dock2');
+    const {buildMontage} = await import('./montage.mjs?v=tracks1');
     s.plan = await buildMontage(file,video.duration,s.controller.signal,pct => {
       if (session === s) byId('montageProgress').value = pct;
     });
@@ -141,7 +141,7 @@ if (quickEdit) {
   let previewFrame;
   const advanceMontage = () => {
     const plan = session?.clip?.montage;
-    if (video.paused || (!plan && !session?.effects?.length)) return;
+    if (video.paused || (!plan && !session?.effects?.length && !session?.captions?.length)) return;
     if(!plan){renderPreview();previewFrame=requestAnimationFrame(advanceMontage);return;}
     const t = video.currentTime;
     if (!video.seeking) {

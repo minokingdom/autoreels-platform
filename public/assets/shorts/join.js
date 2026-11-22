@@ -58,14 +58,15 @@ async function appendJoinedFiles(s,files) {
         notice.textContent='영상 확인 중 · '+(added.length+skipped+1)+' / '+files.length;
         await awaitMedia(probe,'loadedmetadata',()=>{probe.src=url;},s.controller.signal);
         if(!Number.isFinite(probe.duration)||probe.duration<=0)throw Error();
-        added.push({url,name:file.name||'추가 영상',clip:{start:0,end:probe.duration,rate:1,keepAudio:true,lines:[]}});
+        const clip={start:0,end:probe.duration,rate:1,keepAudio:true,lines:[]};
+        added.push({url,name:file.name||'추가 영상',clip});queueSourceWave(s,clip,file,probe.duration);
       } catch {URL.revokeObjectURL(url);skipped++;s.controller.signal.throwIfAborted();}
       finally {probe.removeAttribute('src');probe.load();}
     }
     if(added.length){
       s.joined ||= [{url:s.url,name:s.filename,clip:s.clip}];
       if (s.timelineCuts) {
-        s.trackUndo=[{cuts:s.timelineCuts,cursor:s.trackTime||0}];
+        s.trackRedo=[];s.trackUndo=[{cuts:s.timelineCuts,cursor:s.trackTime||0}];
         s.timelineCuts=[...s.timelineCuts,...added.map(item=>({url:item.url,owner:item.clip,start:item.clip.start,end:item.clip.end}))];
       }
       s.joined.push(...added);renderJoinedList(s);
@@ -137,7 +138,7 @@ async function previewJoined(s) {
       const take=i===pos.i ? {...original,start:pos.sourceTime} : original;
       await positionJoinedTake(source,take,controller.signal);
       source.muted=take.owner.keepAudio===false;
-      await source.play();music?.play().catch(()=>{});
+      await source.play();previewSounds(s,offset+(take.start-original.start)/(original.owner.rate||1));music?.play().catch(()=>{});
       await new Promise((resolve,reject)=>{
         let raf;
         const finish=error=>{cancelAnimationFrame(raf);controller.signal.removeEventListener('abort',cancel);source.onerror=null;error?reject(error):resolve();};
@@ -147,11 +148,11 @@ async function previewJoined(s) {
           if(source.ended||source.currentTime>=take.end)finish();else raf=requestAnimationFrame(tick);};
         tick();
       });
-      source.pause();music?.pause();offset+=takeDuration(original);
+      stopMixSounds(s);source.pause();music?.pause();offset+=takeDuration(original);
     }
   } catch(error){if(!controller.signal.aborted && session===s) detail(s,error.message);}
   finally {
-    source.pause();source.removeAttribute('src');source.load();music?.pause();
+    stopMixSounds(s);source.pause();source.removeAttribute('src');source.load();music?.pause();
     s.previewController=null;
     if(session===s){play.textContent='▶';play.setAttribute('aria-label','이어붙인 영상 재생');}
   }

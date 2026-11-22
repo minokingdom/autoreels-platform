@@ -37,6 +37,8 @@ function trackTime(s,time,updateSelection=true) {
     byId('trackLeft').disabled=pos.i===0;
     byId('trackRight').disabled=pos.i===takes.length-1;
     byId('trackUndo').disabled=!s.trackUndo?.length;
+    if(byId('trackRedo'))byId('trackRedo').disabled=!s.trackRedo?.length;
+    for(const b of document.querySelectorAll('#mixActions [data-mirrors]'))b.disabled=byId(b.dataset.mirrors).disabled;
   }
   return pos;
 }
@@ -113,6 +115,7 @@ function renderCutTrack(s) {
   }
   drawTrackWave(takes);
   renderEffectLanes(s);
+  if(typeof renderMix==="function")renderMix(s);
   trackTime(s,s.trackTime||0);
 }
 function seekCutTrack(s,time) {
@@ -131,8 +134,11 @@ function applyTrackTool(action) {
   video.pause();stopJoinedPreview(s);
   let cursor=s.trackTime||0;
   s.trackUndo ||= [];
-  if(action==='trackUndo') {
-    const previous=s.trackUndo.pop();if(!previous)return;
+  s.trackRedo ||= [];
+  if(action==='trackUndo'||action==='trackRedo') {
+    const backwards=action==='trackUndo';
+    const previous=(backwards?s.trackUndo:s.trackRedo).pop();if(!previous)return;
+    (backwards?s.trackRedo:s.trackUndo).push({cuts:s.timelineCuts,cursor});
     s.timelineCuts=previous.cuts;cursor=previous.cursor;
   } else {
     const {i,take,sourceTime}=pos;
@@ -148,7 +154,7 @@ function applyTrackTool(action) {
       [cuts[i],cuts[to]]=[cuts[to],cuts[i]];
       cursor=sequenceDuration(cuts.slice(0,to))+(cursor-pos.offset);
     }
-    s.trackUndo.push({cuts:s.timelineCuts,cursor:s.trackTime||0});
+    s.trackRedo=[];s.trackUndo.push({cuts:s.timelineCuts,cursor:s.trackTime||0});
     if(s.trackUndo.length>50)s.trackUndo.shift();
     s.timelineCuts=cuts;
   }

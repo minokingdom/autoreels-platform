@@ -9,6 +9,7 @@ function reset() {
   const s = session;
   session = null;
   if (s) {
+    stopMixSounds(s);for(const url of s.replacementUrls||[])URL.revokeObjectURL(url);
     clearJoinedFiles(s);
     s.rankWorker?.terminate(); clearTimeout(s.rankTimer); s.controller.abort(); clearTimeout(s.timer); s.engine?.remove(); s.stopExport?.();
     URL.revokeObjectURL(s.url); if (s.saved) URL.revokeObjectURL(s.saved);
@@ -192,7 +193,8 @@ function paintClip(ctx, source, text, clip=session.clip, outputTime=0) {
     }
 
     paintEffects(ctx,session,outputTime);
-    drawTitles(ctx,clip,text); return;
+    const cue=activeCue(session,outputTime);
+    drawTitles(ctx,cue?{...clip,showCaptions:true}:clip,cue?.text||text); return;
   }
   const scale = Math.max(w/source.videoWidth,h/source.videoHeight);
   const sw = w/scale, sh = h/scale;
@@ -258,7 +260,7 @@ async function exportShortClip(forPublish) {
       } catch (error) { rejectRender(error); }
     };
     timeout = setTimeout(s.stopExport,(sequenceDuration(ranges)+30)*1000);
-    recorder.start(300); await source.play(); musicNode?.sound.start(); draw();
+    recorder.start(300); await source.play(); musicNode?.sound.start(); scheduleSounds(s,context,dest,0); draw();
     const blob = await Promise.race([done,failure]);
     if(session !== s || blob.size < 1000) throw Error('완성된 영상을 확인하지 못했어요.');
     if (forPublish) { await arValidateShortsExport(blob); return blob; }

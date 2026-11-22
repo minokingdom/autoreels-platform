@@ -1,7 +1,7 @@
 import {mediaEvent,sampleMotion} from '../remix/analysis.mjs';
 
 // 각 시점의 짧은 음량 구간을 써서 무음 여백과 말 중간 컷을 줄인다.
-async function audioLevels(file,duration) {
+export async function audioLevels(file,duration) {
   if (file.size > 64*1024*1024 || duration > 180 || !window.OfflineAudioContext) return [];
   try {
     const ctx = new OfflineAudioContext(1,1,8000);
@@ -75,7 +75,7 @@ export function planMontage(duration, samples, levels) {
 }
 
 export async function buildMontage(file,duration,signal,progress) {
-  if (duration < 3) return {segments:[{start:0,end:duration}],peak:null};
+  if (duration < 3) return {segments:[{start:0,end:duration}],peak:null,levels:await audioLevels(file,duration)};
   const [motion,levels] = await Promise.all([sampleMotion(file,signal,progress),audioLevels(file,duration)]);
   signal.throwIfAborted();
   const plan = planMontage(duration,motion.samples,levels);

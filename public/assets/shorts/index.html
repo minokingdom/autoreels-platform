@@ -2,9 +2,9 @@
 <html lang="ko"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>오토릴스메이커 · 내 영상으로 쇼츠 만들기</title>
-<link rel="stylesheet" href="/assets/app/astryx-tokens.css"><link rel="stylesheet" href="/assets/design-system.css"><link rel="stylesheet" href="screen.css?v=dock2">
-</head><body><main>
-<header><b>오토릴스<span>메이커</span></b><a data-studio-back href="/studio?from=shorts">스튜디오로 돌아가기</a></header>
+<link rel="stylesheet" href="/assets/app/astryx-tokens.css"><link rel="stylesheet" href="/assets/design-system.css"><link rel="stylesheet" href="screen.css?v=tracks1">
+<link rel="stylesheet" href="multitrack.css?v=tracks1"></head><body><main>
+<header><b>오토릴스<span>메이커</span></b><a data-studio-back href="/studio?from=shorts">스튜디오로 돌아가기</a><button id="mixPublish" type="button" hidden>발행 →</button></header>
 <section class="stage" hidden><div id="frame"><video playsinline id="sourceVideo" hidden></video><canvas id="overlay" width="540" height="960" aria-label="영상 제목과 자막"></canvas><button type="button" id="emptyVideoPick" hidden>＋ 영상 추가</button><button id="play" hidden type="button" aria-label="선택 구간 재생">▶</button></div></section>
 <section class="sheet"><div class="handle"></div><div id="entry">
 <h1>내 영상으로 쇼츠 만들기</h1><p class="hint">한국어로 말하는 영상에서 쇼츠로 쓸 구간을 찾아요.</p>
@@ -17,9 +17,12 @@
 <section id="cutTimeline" hidden aria-label="컷 편집">
 <div class="track-heading"><h2>타임라인</h2><button id="dockFile" type="button" aria-label="타임라인에 영상 추가">＋ 클립</button><output id="trackTime" for="trackCursor">0:00.0 / 0:00.0</output></div>
 <div class="track-board"><div class="track-ruler"><div id="trackScale" aria-hidden="true"></div><input type="range" id="trackCursor" aria-label="편집본 재생 위치" min="0" max="0" step="0.01" value="0" disabled></div>
-<div id="trackClips" aria-label="편집할 클립"></div>
-<div id="fxLanes" aria-label="효과 타임라인"></div>
-<canvas id="trackWave" width="640" height="34" aria-label="원본 소리 파형" hidden></canvas>
+<div class="mix-row"><button type="button" class="mix-label" data-track="video"><i aria-hidden="true">▣</i>영상</button><div id="trackClips" aria-label="편집할 클립"></div></div>
+<div class="mix-row"><button type="button" class="mix-label" data-track="effect"><i aria-hidden="true">✧</i>효과</button><div id="fxLanes" aria-label="효과 타임라인"></div></div>
+<div class="mix-row"><button type="button" class="mix-label" data-track="sfx"><i aria-hidden="true">⌁</i>효과음</button><div id="sfxLane" class="mix-content" aria-label="효과음 구간"></div></div>
+<div class="mix-row"><button type="button" class="mix-label" data-track="source"><i aria-hidden="true">♩</i>원본 소리</button><button type="button" id="sourceLane" class="mix-content"><canvas id="trackWave" width="640" height="34" aria-label="원본 소리 파형" hidden></canvas></button></div>
+<div class="mix-row"><button type="button" class="mix-label" data-track="music"><i aria-hidden="true">♫</i>음악</button><button type="button" id="musicLane" class="mix-content"><canvas id="musicWave" width="640" height="34" hidden></canvas><span></span></button></div>
+<div class="mix-row"><button type="button" class="mix-label" data-track="caption"><i aria-hidden="true">T</i>자막</button><div id="captionLane" class="mix-content" aria-label="자막 구간"></div></div>
 <div id="trackNeedle" aria-hidden="true"></div></div>
 <section id="fxPanel" aria-label="영상 효과" hidden>
 <div class="fx-heading"><h3>효과</h3></div>
@@ -31,7 +34,7 @@
 <button type="button" id="fxCopy">복제</button><button type="button" id="fxRemove">효과 삭제</button></fieldset></section>
 <div id="trackTools" aria-label="선택한 클립 편집">
 <button type="button" id="trackSplit" disabled>분할</button><button type="button" id="trackDelete" disabled>삭제</button><button type="button" id="trackLeft" disabled aria-label="선택한 클립을 앞으로">← 앞으로</button><button type="button" id="trackRight" disabled aria-label="선택한 클립을 뒤로">뒤로 →</button><button type="button" id="trackUndo" disabled>되돌리기</button>
-</div></section>
+</div><div id="mixActions" aria-label="선택 트랙 도구"></div></section>
 <section id="joinTools" hidden><label class="entry" for="joinFiles"><strong>영상 추가해서 이어붙이기</strong></label><input type="file" id="joinFiles" class="sr" accept="video/*" multiple><div id="joinList"></div><p id="joinNotice" class="hint" role="status"></p></section>
 <details id="editSettings" open><summary>세부 편집</summary><fieldset id="quickControls" hidden><legend>영상 편집</legend>
 <div id="cutMode" class="guide-row"><button id="useMontage" type="button" aria-pressed="true">자동 편집본</button><button id="useManual" type="button" aria-pressed="false">직접 편집</button></div>
@@ -61,4 +64,4 @@
 <label class="field" for="postCaption">게시글 본문</label><textarea id="postCaption" class="edit-input" rows="2" maxlength="2100"></textarea>
 <button id="postVideo" class="primary" type="button" disabled>SNS에 발행</button>
 <p id="postStatus" class="hint" role="status"></p></section></div>
-</section></main><script src="return.js"></script><script src="export-access.js?v=dock2"></script><script src="shorts.js?v=dock2"></script><script src="editor.js?v=dock2"></script><script src="quick.js?v=dock2"></script><script src="join.js?v=dock2"></script><script src="sns-transport.js"></script><script src="publish.js"></script><script src="effects.js?v=dock2"></script><script src="timeline.js?v=dock2"></script></body></html>
+</section></main><dialog id="mixDialog"><div class="mix-dialog-head"><button type="button" id="mixClose" aria-label="닫기">×</button><h2 id="mixTitle">효과</h2><button type="button" id="mixDone">완료</button></div><div id="mixOptions"></div><p id="mixError" role="status"></p></dialog><script src="return.js"></script><script src="export-access.js?v=tracks1"></script><script src="shorts.js?v=tracks1"></script><script src="editor.js?v=tracks1"></script><script src="quick.js?v=tracks1"></script><script src="join.js?v=tracks1"></script><script src="sns-transport.js"></script><script src="publish.js"></script><script src="effects.js?v=tracks1"></script><script src="timeline.js?v=tracks1"></script><script src="multitrack.js?v=tracks1"></script></body></html>
