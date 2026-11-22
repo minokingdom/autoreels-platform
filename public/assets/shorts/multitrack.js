@@ -31,6 +31,7 @@ function mixTotal(s){return sequenceDuration(sequenceTakes(s));}
 function activeCue(s,time){return s?.captions?.findLast(c=>c.start<=time && time<c.start+c.duration);}
 function stopMixSounds(s){for(const node of s?.previewSounds||[])try{node.stop();}catch{} if(s)s.previewSounds=null;}
 function scheduleSounds(s,context,destination,time){
+  if(s?.muteSfx)return [];
   const nodes=[],total=mixTotal(s),now=context.currentTime;
   for(const cue of s.sounds||[]){
     const start=Math.max(time,cue.start),end=Math.min(total,cue.start+cue.duration);
@@ -730,10 +731,49 @@ function selectMix(s,key){
   document.querySelectorAll('[data-track]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.track===key)));
   renderMixActions(s);
 }
+function syncTrackMuteUI(s){
+  const map={
+    sfx:{muted:!!s?.muteSfx,row:byId('sfxLane')?.closest('.mix-row')},
+    source:{muted:!!(s?.muteSource || currentTake(s)?.take?.owner?.keepAudio===false),row:byId('sourceLane')?.closest('.mix-row')},
+    music:{muted:!!s?.muteMusic,row:byId('musicLane')?.closest('.mix-row')}
+  };
+  for(const [k,info] of Object.entries(map)){
+    const btn=document.querySelector(`[data-track="${k}"] .track-mute-btn`);
+    if(btn){
+      btn.setAttribute('aria-pressed',String(info.muted));
+      btn.textContent=info.muted?'🔇':'🔊';
+      btn.title=info.muted?`${mixNames[k]} 음소거 해제`:`${mixNames[k]} 음소거`;
+    }
+    if(info.row)info.row.classList.toggle('is-muted',info.muted);
+  }
+}
+function toggleTrackMute(s,key){
+  if(!s?.clip)return;
+  if(key==='sfx'){
+    s.muteSfx=!s.muteSfx;
+    if(s.muteSfx)stopMixSounds(s);
+    showMixHint(s.muteSfx?'효과음 트랙 음소거됨':'효과음 트랙 소리 켜짐');
+  }else if(key==='source'){
+    s.muteSource=!s.muteSource;
+    video.muted=!!(s.muteSource || s.clip.keepAudio===false);
+    const cb=byId('sourceSound');if(cb)cb.checked=!s.muteSource;
+    showMixHint(s.muteSource?'원본 소리 트랙 음소거됨':'원본 소리 트랙 소리 켜짐');
+  }else if(key==='music'){
+    s.muteMusic=!s.muteMusic;
+    if(typeof music!=='undefined'&&music){
+      music.muted=!!s.muteMusic;
+      if(!s.muteMusic)music.volume=quickMusicGain(s.clip,video.currentTime||0);
+    }
+    showMixHint(s.muteMusic?'음악 트랙 음소거됨':'음악 트랙 소리 켜짐');
+  }
+  syncTrackMuteUI(s);
+  markEdited();
+}
 function renderMix(s){
   if(!s?.clip)return;
   const total=mixTotal(s);
   drawStickerLane(s,total);drawCues(s,'sfx',total);drawCues(s,'caption',total);renderMusicWave(s,total);
+  syncTrackMuteUI(s);
   // 효과 트랙에 여러 레이어가 쌓였을 때 왼쪽 라벨 높이 동기화
   const fxRow=byId('fxLanes')?.closest('.mix-row'), fxLbl=document.querySelector('[data-track="effect"]');
   if(fxRow&&fxLbl){const h=fxRow.offsetHeight;if(h>0)fxLbl.style.height=h+'px';}
@@ -778,6 +818,21 @@ if(quickEdit){
   byId('musicLane').addEventListener('click',()=>{if(editableEffects()){selectMix(session,'music');pickMusic(session);}});
   const addTrk=byId('addTrackBtn');
   if(addTrk)addTrk.addEventListener('click',()=>{if(editableEffects())openAddTrackDialog(session);});
+  // 오디오 트랙(효과음·원본 소리·음악) 라벨마다 원탭 음소거 버튼 부착
+  for(const key of ['sfx','source','music']){
+    const lbl=document.querySelector(`[data-track="${key}"]`);
+    if(!lbl || lbl.querySelector('.track-mute-btn'))continue;
+    const mb=document.createElement('button');
+    mb.type='button';mb.className='track-mute-btn';mb.textContent='🔊';
+    mb.setAttribute('aria-pressed','false');
+    mb.setAttribute('aria-label',`${mixNames[key]} 음소거`);
+    mb.title=`${mixNames[key]} 음소거`;
+    mb.addEventListener('click',e=>{
+      e.stopPropagation();
+      if(editableEffects())toggleTrackMute(session,key);
+    });
+    lbl.append(mb);
+  }
   byId('mixClose').addEventListener('click',()=>byId('mixDialog').close());
   byId('mixDone').addEventListener('click',async()=>{
     if(!editableEffects())return;

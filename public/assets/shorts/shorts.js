@@ -153,6 +153,7 @@ function peakEnvelope(clip,t) {
   return delta <= 0 ? (1+delta/1.1)**2 : 1-delta/.12;
 }
 function quickMusicGain(clip,t) {
+  if (typeof session !== 'undefined' && session?.muteMusic) return 0;
   return .25-.16*peakEnvelope(clip,t);
 }
 function drawQuickScene(ctx,source,clip) {
@@ -239,9 +240,9 @@ async function exportShortClip(forPublish, options = {}) {
     stream = canvas.captureStream(30);
     const dest = context.createMediaStreamDestination(), node = context.createMediaElementSource(source);
     source.muted = false;
-    const gain = context.createGain(); gain.gain.value = ranges[0].owner.keepAudio === false ? 0 : 1;
+    const gain = context.createGain(); gain.gain.value = (s.muteSource || ranges[0].owner.keepAudio === false) ? 0 : 1;
     node.connect(gain).connect(dest);
-    if (clip.music) musicNode = await prepareQuickMusic(context,dest,clip.music,s.controller.signal);
+    if (clip.music && !s.muteMusic) musicNode = await prepareQuickMusic(context,dest,clip.music,s.controller.signal);
     track = dest.stream.getAudioTracks()[0]; stream.addTrack(track);
     recorder = new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6000000});
     const chunks = [], done = new Promise((resolve,reject) => {
@@ -260,7 +261,7 @@ async function exportShortClip(forPublish, options = {}) {
           await context.suspend();
           const take = ranges[takeIndex];
           await Promise.race([failure,positionJoinedTake(source,take,s.controller.signal)]);
-          gain.gain.value = take.owner.keepAudio === false ? 0 : 1;
+          gain.gain.value = (s.muteSource || take.owner.keepAudio === false) ? 0 : 1;
           paintClip(ctx,source,activeCaption(take.owner,source.currentTime),take.owner,outputOffset);
           await context.resume(); await source.play(); recorder.resume();
         } else { const owner=ranges[takeIndex].owner; paintClip(ctx,source,activeCaption(owner,source.currentTime),owner,outputOffset+Math.max(0,source.currentTime-ranges[takeIndex].start)/(owner.rate||1)); }

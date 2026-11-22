@@ -137,7 +137,7 @@ async function previewJoined(s) {
       const original=takes[i];
       const take=i===pos.i ? {...original,start:pos.sourceTime} : original;
       await positionJoinedTake(source,take,controller.signal);
-      source.muted=take.owner.keepAudio===false;
+      source.muted=!!(s.muteSource || take.owner.keepAudio===false);
       await source.play();previewSounds(s,offset+(take.start-original.start)/(original.owner.rate||1));music?.play().catch(()=>{});
       await new Promise((resolve,reject)=>{
         let raf;
