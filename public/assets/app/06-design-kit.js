@@ -333,8 +333,7 @@
       const mp = kb(1, S.idx + k - 1);
       const tp = o.still ? 1 : S.tp;
       const e = tp < 0.5 ? 4 * tp * tp * tp : 1 - Math.pow(-2 * tp + 2, 3) / 2;
-      const cleanKitTrans = ['slide', 'wipe', 'blinds', 'iris', 'zoom', 'fade'];
-      const tr = o.trans || cleanKitTrans[(((S.idx + k + (spec.seed || 0)) % cleanKitTrans.length) + cleanKitTrans.length) % cleanKitTrans.length];
+      const tr = o.trans || 'fade';
       const draw = (img, m, dx, dy, sc, a) => {
         c.globalAlpha = a;
         kitCover(c, img, r.x + dx, r.y + dy, r.w, r.h, m.s * (sc || 1), m.x, m.y);
@@ -3944,13 +3943,12 @@
     const AR_FINE_BADGE = '<span class="fine-edit-badge" title="자막·위 라벨·아래 이름을 컷마다 세세하게 바꿀 수 있어요">세부 편집</span>';
     function arVisibleDesigns() {
       const list = DESIGN_STYLES.filter(arDesignVisible);
-      // Prompt-Motion 모션 쇼릴 -> 1군 프로 엔진 -> 오퍼스 화풍 -> 2026 에디토리얼 -> 나머지 최신 모션 순 정렬
-      const pm = list.filter((d) => d.isPromptMotion);
-      const pro = list.filter((d) => !d.isPromptMotion && d.isProReels);
-      const opus = list.filter((d) => !d.isPromptMotion && !d.isProReels && d.isOpusArt);
-      const ed = list.filter((d) => !d.isPromptMotion && !d.isProReels && !d.isOpusArt && String(d.id || '').startsWith('ed_'));
-      const rest = list.filter((d) => !d.isPromptMotion && !d.isProReels && !d.isOpusArt && !String(d.id || '').startsWith('ed_'));
-      const ordered = pm.concat(pro, opus, ed, rest);
+      // 1군 프로 엔진 -> 오퍼스 화풍 -> 2026 에디토리얼 -> 나머지 최신 모션 순 정렬
+      const pro = list.filter((d) => d.isProReels);
+      const opus = list.filter((d) => !d.isProReels && d.isOpusArt);
+      const ed = list.filter((d) => !d.isProReels && !d.isOpusArt && String(d.id || '').startsWith('ed_'));
+      const rest = list.filter((d) => !d.isProReels && !d.isOpusArt && !String(d.id || '').startsWith('ed_'));
+      const ordered = pro.concat(opus, ed, rest);
 
       const seenOpus = new Set();
       const seenMstyle = new Set();

@@ -710,9 +710,9 @@
       c.restore();
     }
     // 컷이 바뀔 때 앞 사진에서 부드럽게 겹쳐 바뀜
-    // ★ 스타일별 시그니처 사진 등장·전환 애니메이션 24종 (플래시·깜빡임·어지러운 흔들림 전면 제거, 안착 후 완전 고정)
+    // ★ 기본 전환: 전환효과 없이 깔끔한 순수 크로스 디졸브 (수동 선택 시에만 24종 특수 전환 사용)
     const AR_PHOTO_ENTRANCE_MODES = [
-      { id: 'auto', label: '✨ 스타일 자동' },
+      { id: 'auto', label: '✨ 크로스 디졸브(기본)' },
       { id: 0,  label: '🔍 클린 줌 안착' },
       { id: 1,  label: '⭕ 소프트 아이리스' },
       { id: 2,  label: '🪟 5단 블라인드' },
@@ -800,11 +800,9 @@
         life:      [10, 21, 1, 16, 6, 23, 5, 11, 0, 18],
         biz:       [23, 6, 2, 16, 10, 4, 5, 11, 21, 0]
       };
-      // 매 컷마다 서로 다른 사진 전환 연출이 순서대로 나오도록 (A→B→A→B 반복 완전 제거!)
-      const activeList = (ds && ds.s100Genre && poolByGenre[ds.s100Genre]) || AR_CLEAN_POOL;
-      const stride = (h % 2 === 0) ? 1 : 3; // 10 및 16과 서로소 → 최대 10컷 전체가 단 한 번도 겹치지 않음
-      let mode = activeList[(h + cutIdx * stride) % activeList.length];
-      let camMode = AR_GENTLE_CAMS[(h + cutIdx * 2) % AR_GENTLE_CAMS.length]; // 5종 잔잔한 카메라 무브도 5컷 연속 겹침 없이 순환
+      // 기본값: 전환효과 없이 순수하고 세련된 크로스 디졸브(-1). 컷 편집에서 직접 고른 경우에만 특수 전환 적용
+      let mode = -1;
+      let camMode = AR_GENTLE_CAMS[(h + cutIdx * 2) % AR_GENTLE_CAMS.length];
       const ov = typeof getCutElementOverride === 'function' ? getCutElementOverride(cutIdx) : null;
       if (ov && ov.photo) {
         if (ov.photo.entrance !== undefined && ov.photo.entrance !== null && ov.photo.entrance !== '' && ov.photo.entrance !== 'auto') {
@@ -866,7 +864,20 @@
       c.rect(x, y, w, h);
       c.clip();
 
-      if (rem > 0.001) {
+      if (mode === -1) {
+        // 순수 크로스 디졸브: 첫 컷은 깔끔하게 바로 표시, 컷 전환 시 이전 사진에서 새 사진으로 부드럽게 녹아듦
+        const disDur = 0.78;
+        if (hasPrev && local < disDur) {
+          const dp = easeQuint(mClamp(local / disDur));
+          mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          c.save();
+          c.globalAlpha *= dp;
+          drawCur(steadyZoom, steadyPx, steadyPy);
+          c.restore();
+        } else {
+          drawCur(steadyZoom, steadyPx, steadyPy);
+        }
+      } else if (rem > 0.001) {
         if (mode === 1) {
           // 1) 소프트 원형 아이리스 (번쩍이는 테두리 선 제거)
           if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
@@ -1468,7 +1479,7 @@
         arRenderOpusFrame(c, W, H, t, mainDuration, totalCuts, d, sp);
         return;
       }
-      if ((String(spec.mstyle || '').startsWith('s100_') || String(spec.mstyle || '').startsWith('pm_')) && typeof arRenderStudio100Frame === 'function') {
+      if (String(spec.mstyle || '').startsWith('s100_') && typeof arRenderStudio100Frame === 'function') {
         arRenderStudio100Frame(c, W, H, t, mainDuration, totalCuts, d, sp);
         return;
       }
