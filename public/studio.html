@@ -1176,13 +1176,43 @@
               </div>
 
               <div>
-                <div class="flex items-center justify-between mb-1">
+                <div class="flex flex-wrap items-center justify-between gap-1.5 mb-1.5">
                   <label class="text-[12px] text-[#a1a1a6]">배경음악</label>
-                  <label for="customBgmFileInput" class="text-[11px] font-mono text-[#3b82f6] hover:underline cursor-pointer">
-                    + 내 음원 불러오기
-                  </label>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <button type="button" id="arStreamMusicToggleBtn" onclick="arToggleStreamMusicBox()" class="px-2 py-0.5 rounded-full bg-[#3b82f6]/15 hover:bg-[#3b82f6]/25 border border-[#3b82f6]/40 text-[11px] font-semibold text-[#93c5fd] cursor-pointer transition">
+                      🌐 실시간 노래 검색
+                    </button>
+                    <label for="customBgmFileInput" class="px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-[11px] text-[#ededed] cursor-pointer transition">
+                      + 내 음원(MP3)
+                    </label>
+                    <button type="button" onclick="arEnableInstaAudioMode()" class="px-2 py-0.5 rounded-full bg-[#e11d48]/15 hover:bg-[#e11d48]/25 border border-[#e11d48]/35 text-[11px] font-medium text-[#fda4af] cursor-pointer transition" title="BGM 없이 나레이션·효과음만 저장해 인스타 릴스에서 인기 가요를 바로 얹기">
+                      🎵 인스타 가요용
+                    </button>
+                  </div>
                   <input id="customBgmFileInput" type="file" accept="audio/*,video/mp4" onchange="handleCustomBgmUpload(event)" class="hidden" />
                 </div>
+                <!-- 실시간 오픈 스트리밍 노래 검색 & 인기 차트 (Audius) -->
+                <div id="arStreamMusicBox" class="hidden mb-2 p-2.5 rounded-[12px] bg-[#121318] border border-[#3b82f6]/30 space-y-2">
+                  <div class="flex items-center gap-1.5">
+                    <input id="arStreamSearchInput" type="text" placeholder="노래·장르 검색 (예: pop, chill, vocal, kpop, jazz)" onkeydown="if(event.key==='Enter'){event.preventDefault();arLoadStreamTracks(this.value);}" class="studio-input flex-1 h-8 px-2.5 text-[12px]" />
+                    <button type="button" onclick="arLoadStreamTracks(document.getElementById('arStreamSearchInput')?.value || '')" class="h-8 px-3 rounded-[8px] bg-[#3b82f6] hover:bg-[#2563eb] text-white text-[11.5px] font-semibold cursor-pointer shrink-0">검색</button>
+                  </div>
+                  <div id="arStreamGenreChips" class="flex flex-wrap gap-1">
+                    <button type="button" onclick="arLoadStreamTracks('', '')" class="px-2 py-0.5 rounded-full bg-[#3b82f6]/25 text-[#bfdbfe] text-[10.5px] font-semibold cursor-pointer">🔥 인기 차트</button>
+                    <button type="button" onclick="arLoadStreamTracks('', 'Pop')" class="px-2 py-0.5 rounded-full bg-white/8 hover:bg-white/15 text-[#d4d4d8] text-[10.5px] cursor-pointer">🎤 팝·보컬</button>
+                    <button type="button" onclick="arLoadStreamTracks('', 'Hip-Hop/Rap')" class="px-2 py-0.5 rounded-full bg-white/8 hover:bg-white/15 text-[#d4d4d8] text-[10.5px] cursor-pointer">🎧 힙합·R&amp;B</button>
+                    <button type="button" onclick="arLoadStreamTracks('', 'Lo-Fi')" class="px-2 py-0.5 rounded-full bg-white/8 hover:bg-white/15 text-[#d4d4d8] text-[10.5px] cursor-pointer">☕ 로파이</button>
+                    <button type="button" onclick="arLoadStreamTracks('', 'Electronic')" class="px-2 py-0.5 rounded-full bg-white/8 hover:bg-white/15 text-[#d4d4d8] text-[10.5px] cursor-pointer">⚡ 하우스·EDM</button>
+                    <button type="button" onclick="arLoadStreamTracks('', 'Acoustic')" class="px-2 py-0.5 rounded-full bg-white/8 hover:bg-white/15 text-[#d4d4d8] text-[10.5px] cursor-pointer">🎸 어쿠스틱</button>
+                    <button type="button" onclick="arLoadStreamTracks('', 'Jazz')" class="px-2 py-0.5 rounded-full bg-white/8 hover:bg-white/15 text-[#d4d4d8] text-[10.5px] cursor-pointer">🎹 재즈</button>
+                  </div>
+                  <div id="arStreamTrackList" class="max-h-48 overflow-y-auto space-y-1.5 pr-0.5 text-[11.5px] text-[#a1a1a6]">
+                    <div class="py-3 text-center text-[#71717a]">장르를 누르거나 검색어를 입력해 실시간 스트리밍 곡을 찾아보세요.</div>
+                  </div>
+                </div>
+                <p id="arInstaAudioModeNotice" class="hidden mb-1.5 px-2.5 py-2 rounded-[9px] bg-[#e11d48]/12 border border-[#e11d48]/30 text-[11px] text-[#fecdd3] leading-relaxed">
+                  🎵 <strong>인스타 인기 가요용 모드</strong>: 배경음악 없이 나레이션·효과음만 깔끔하게 저장됩니다. 인스타 릴스 업로드 화면에서 <strong>‘오디오 추가’</strong>로 최신 인기 가요를 바로 얹으세요!
+                </p>
                 <div id="bgmRecommendRow" class="flex flex-wrap items-center gap-1.5 mb-1.5"></div>
                 <select id="bgmStyleSelect" onchange="onAudioConfigChange()" class="studio-input w-full h-9 px-2.5 text-[12px] cursor-pointer">
                   <option value="showroom" selected>Chill House 쇼룸</option>
@@ -2186,7 +2216,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261122-fix-dup-caption"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261122-music-stream"><\/script>');
     }
   </script>
   <!--

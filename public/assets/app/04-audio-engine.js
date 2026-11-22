@@ -2311,3 +2311,149 @@
         if (ti) ti.addEventListener('input', () => { clearTimeout(window.__bgmRecT); window.__bgmRecT = setTimeout(renderBgmRecommendations, 300); });
       });
     }
+
+    // ── 실시간 오픈 스트리밍 노래 검색(Audius) + 인스타 인기 가요용 모드 (2026-11) ──
+    (function initStudioStreamingMusic() {
+      let auditionEl = null;
+      let auditionId = '';
+      let streamCache = new Map();
+
+      function stopAudition() {
+        if (auditionEl) {
+          try { auditionEl.pause(); auditionEl.src = ''; } catch (_) {}
+          auditionEl = null;
+        }
+        auditionId = '';
+        document.querySelectorAll('[data-stream-play]').forEach((btn) => { btn.textContent = '▶'; });
+      }
+
+      function escHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+      }
+
+      function fmtSec(sec) {
+        const s = Math.max(0, Math.round(Number(sec) || 0));
+        return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+      }
+
+      window.arToggleStreamMusicBox = function arToggleStreamMusicBox() {
+        const box = document.getElementById('arStreamMusicBox');
+        if (!box) return;
+        const willOpen = box.classList.contains('hidden');
+        box.classList.toggle('hidden', !willOpen);
+        if (willOpen) {
+          const list = document.getElementById('arStreamTrackList');
+          if (list && !list.dataset.loaded) {
+            list.dataset.loaded = '1';
+            window.arLoadStreamTracks('', '');
+          }
+        } else {
+          stopAudition();
+        }
+      };
+
+      window.arLoadStreamTracks = async function arLoadStreamTracks(query, genre) {
+        const list = document.getElementById('arStreamTrackList');
+        if (!list) return;
+        const q = String(query || '').trim();
+        const g = String(genre || '').trim();
+        list.innerHTML = '<div class="py-4 text-center text-[#93c5fd]">실시간 스트리밍 곡을 불러오는 중…</div>';
+        const cacheKey = q ? `q:${q}` : `g:${g}`;
+        try {
+          let tracks = streamCache.get(cacheKey);
+          if (!tracks) {
+            const url = q
+              ? `https://api.audius.co/v1/tracks/search?app_name=AutoReelsMaker&query=${encodeURIComponent(q)}&limit=18`
+              : `https://api.audius.co/v1/tracks/trending?app_name=AutoReelsMaker&limit=18${g ? '&genre=' + encodeURIComponent(g) : ''}`;
+            const res = await fetch(url, { headers: { Accept: 'application/json' } });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const json = await res.json();
+            tracks = (json && Array.isArray(json.data) ? json.data : []).filter((t) => t && t.id && t.is_streamable !== false);
+            streamCache.set(cacheKey, tracks);
+          }
+          if (!tracks.length) {
+            list.innerHTML = '<div class="py-4 text-center text-[#71717a]">검색 결과가 없습니다. 영문 키워드(예: pop, vocal, chill, jazz)로 검색해 보세요.</div>';
+            return;
+          }
+          list.innerHTML = tracks.map((t) => {
+            const art = (t.artwork && (t.artwork['150x150'] || t.artwork['480x480'])) || '';
+            const title = escHtml(t.title || 'Untitled');
+            const artist = escHtml((t.user && t.user.name) || 'Artist');
+            const genreTag = escHtml(t.genre || '');
+            const dur = fmtSec(t.duration);
+            const idSafe = escHtml(t.id);
+            const titleArg = JSON.stringify(`${t.title || 'Untitled'} — ${(t.user && t.user.name) || ''}`).replace(/"/g, '&quot;');
+            return `
+              <div class="flex items-center gap-2 p-1.5 rounded-[9px] bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06]">
+                ${art ? `<img src="${escHtml(art)}" alt="" class="w-9 h-9 rounded-[6px] object-cover shrink-0 bg-[#1e1f26]" loading="lazy" />` : '<div class="w-9 h-9 rounded-[6px] bg-[#1e293b] flex items-center justify-center shrink-0 text-[14px]">🎵</div>'}
+                <div class="min-w-0 flex-1">
+                  <div class="text-[12px] font-semibold text-[#ededed] truncate">${title}</div>
+                  <div class="text-[10.5px] text-[#85858b] truncate">${artist}${genreTag ? ' · ' + genreTag : ''} · ${dur}</div>
+                </div>
+                <button type="button" data-stream-play="${idSafe}" onclick="arPreviewStreamTrack('${idSafe}', this)" class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] flex items-center justify-center cursor-pointer shrink-0" title="미리듣기">▶</button>
+                <button type="button" onclick="arApplyStreamTrack('${idSafe}', ${titleArg})" class="h-7 px-2.5 rounded-full bg-[#3b82f6] hover:bg-[#2563eb] text-white text-[11px] font-semibold cursor-pointer shrink-0">적용</button>
+              </div>
+            `;
+          }).join('');
+        } catch (err) {
+          list.innerHTML = '<div class="py-4 text-center text-[#fca5a5]">스트리밍 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>';
+        }
+      };
+
+      window.arPreviewStreamTrack = function arPreviewStreamTrack(trackId, btn) {
+        if (!trackId) return;
+        if (auditionId === trackId && auditionEl) {
+          stopAudition();
+          return;
+        }
+        stopAudition();
+        auditionId = trackId;
+        if (btn) btn.textContent = '⏹';
+        const url = `https://api.audius.co/v1/tracks/${encodeURIComponent(trackId)}/stream?app_name=AutoReelsMaker`;
+        const a = new Audio(url);
+        a.crossOrigin = 'anonymous';
+        a.volume = 0.72;
+        auditionEl = a;
+        a.onended = stopAudition;
+        a.onerror = () => {
+          stopAudition();
+          if (typeof arToast === 'function') arToast('이 트랙은 미리듣기가 제한되어 있습니다. 다른 곡을 선택해 보세요.', false);
+        };
+        a.play().catch(() => {});
+      };
+
+      window.arApplyStreamTrack = function arApplyStreamTrack(trackId, label) {
+        if (!trackId) return;
+        stopAudition();
+        const url = `https://api.audius.co/v1/tracks/${encodeURIComponent(trackId)}/stream?app_name=AutoReelsMaker`;
+        const notice = document.getElementById('arInstaAudioModeNotice');
+        if (notice) notice.classList.add('hidden');
+        const opt = document.getElementById('customBgmOption');
+        const sel = document.getElementById('bgmStyleSelect');
+        if (opt) {
+          opt.classList.remove('hidden');
+          opt.textContent = `🌐 ${String(label || '실시간 스트리밍 곡').slice(0, 34)}`;
+        }
+        if (sel) sel.value = 'custom_mp3';
+        AudioEngine.userPickedBgm = true;
+        AudioEngine.loadRemoteBgmUrl(url, `스트리밍: ${label || '음악'}`, true);
+        if (typeof arToast === 'function') arToast(`🌐 ${String(label || '스트리밍 노래').slice(0, 28)} 적용됨`, true);
+      };
+
+      window.arEnableInstaAudioMode = function arEnableInstaAudioMode() {
+        stopAudition();
+        const sel = document.getElementById('bgmStyleSelect');
+        if (sel) {
+          sel.value = 'off';
+          if (typeof onAudioConfigChange === 'function') onAudioConfigChange();
+        } else {
+          AudioEngine.bgmStyle = 'off';
+          if (typeof AudioEngine.stopBgmLoop === 'function') AudioEngine.stopBgmLoop();
+        }
+        const notice = document.getElementById('arInstaAudioModeNotice');
+        if (notice) notice.classList.remove('hidden');
+        const statusText = document.getElementById('lyriaBgmStatusText');
+        if (statusText) statusText.classList.add('hidden');
+        if (typeof arToast === 'function') arToast('🎵 인스타 인기 가요용 모드 켜짐 (BGM 끔 · 나레이션/효과음 유지)', true);
+      };
+    })();

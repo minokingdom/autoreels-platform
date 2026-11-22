@@ -294,11 +294,129 @@ function pickSpeed(s){
   for(const value of [.5,.8,1,1.25,1.5,2])select.add(new Option(value+'배',value));
   select.value=currentTake(s).take.owner.rate||1;
 }
-function pickMusic(s){
-  const box=mixDialog('배경 음악',()=>{
-    byId('music').value=select.value;byId('music').dispatchEvent(new Event('input',{bubbles:true}));renderCutTrack(s);
+function applyMusicUrl(s,url,label){
+  const musicSel=byId('music');
+  if(url && ![...musicSel.options].some(o=>o.value===url)){
+    const opt=new Option(label||'선택한 음악',url);
+    musicSel.add(opt);
+  }
+  musicSel.value=url||'';
+  musicSel.dispatchEvent(new Event('input',{bubbles:true}));
+  renderCutTrack(s);
+}
+function pickMusic(s,tab='내장 100곡'){
+  let previewAudio=null;
+  const stopPreview=()=>{if(previewAudio){try{previewAudio.pause();previewAudio.src='';}catch(_){} previewAudio=null;}};
+  const box=mixDialog('배경 음악',()=>{stopPreview();});
+  byId('mixDialog').addEventListener('close',stopPreview,{once:true});
+  const nav=document.createElement('div');nav.className='fx-tabs';
+  for(const name of ['내장 100곡','실시간 스트리밍','내 음원·가요']){
+    const b=mixButton(name,()=>{stopPreview();pickMusic(s,name);});
+    b.setAttribute('aria-pressed',String(name===tab));nav.append(b);
+  }
+  box.append(nav);
+
+  if(tab==='내장 100곡'){
+    const select=mixField(box,'곡 선택',byId('music').cloneNode(true));select.removeAttribute('id');select.value=s.clip.music||'';
+    select.addEventListener('change',()=>applyMusicUrl(s,select.value,select.selectedOptions[0]?.text));
+    return;
+  }
+
+  if(tab==='내 음원·가요'){
+    const fileBtn=document.createElement('label');
+    fileBtn.style.cssText='display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;border-radius:10px;border:1px dashed #3b82f6;background:#132038;color:#bfdbfe;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px;';
+    fileBtn.textContent='📁 내 기기 음원(MP3·M4A·WAV) 불러오기';
+    const inp=document.createElement('input');inp.type='file';inp.accept='audio/*,video/mp4';inp.style.display='none';
+    inp.addEventListener('change',()=>{
+      const file=inp.files&&inp.files[0];if(!file)return;
+      const blobUrl=URL.createObjectURL(file);
+      applyMusicUrl(s,blobUrl,'📁 '+file.name.replace(/\.[^.]+$/,''));
+      showMixHint('내 음원을 배경음악으로 적용했어요!');
+      byId('mixDialog').close();
+    });
+    fileBtn.append(inp);
+    const instaBtn=document.createElement('button');
+    instaBtn.type='button';
+    instaBtn.style.cssText='width:100%;padding:12px;border-radius:10px;border:1px solid #e11d48;background:#2b111b;color:#fecdd3;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;';
+    instaBtn.textContent='🎵 인스타 인기 가요용 모드 (배경음악 끄기)';
+    instaBtn.addEventListener('click',()=>{
+      applyMusicUrl(s,'','');
+      showMixHint('배경음악 없이 저장 → 인스타 릴스에서 인기 가요를 1탭으로 얹으세요!');
+      byId('mixDialog').close();
+    });
+    const note=document.createElement('p');
+    note.style.cssText='font-size:11.5px;color:#9ca3af;line-height:1.5;margin:0;';
+    note.textContent='인스타그램 릴스 업로드 화면에서 공식 인기 가요를 얹을 때는 배경음악을 끄고 저장하는 것이 조회수와 저작권 모두 가장 안전합니다.';
+    box.append(fileBtn,instaBtn,note);
+    return;
+  }
+
+  // 실시간 스트리밍 탭 (Audius 오픈 스트리밍 API)
+  const row=document.createElement('div');row.style.cssText='display:flex;gap:6px;margin-bottom:8px;';
+  const qInp=document.createElement('input');qInp.type='text';qInp.placeholder='노래·장르 검색 (예: pop, vocal, chill, jazz)';
+  qInp.style.cssText='flex:1;padding:7px 9px;border-radius:8px;border:1px solid #454750;background:#16171c;color:#fff;font-size:12.5px;';
+  const goBtn=document.createElement('button');goBtn.type='button';goBtn.textContent='검색';
+  goBtn.style.cssText='padding:0 12px;border-radius:8px;border:0;background:#3b82f6;color:#fff;font-size:12px;font-weight:700;cursor:pointer;';
+  row.append(qInp,goBtn);
+  const chips=document.createElement('div');chips.style.cssText='display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;';
+  const listEl=document.createElement('div');listEl.style.cssText='display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;';
+  box.append(row,chips,listEl);
+
+  async function loadTracks(query,genre){
+    stopPreview();
+    listEl.textContent='실시간 스트리밍 곡을 불러오는 중…';
+    try{
+      const url=query
+        ?`https://api.audius.co/v1/tracks/search?app_name=AutoReelsMaker&query=${encodeURIComponent(query)}&limit=15`
+        :`https://api.audius.co/v1/tracks/trending?app_name=AutoReelsMaker&limit=15${genre?'&genre='+encodeURIComponent(genre):''}`;
+      const res=await fetch(url,{headers:{Accept:'application/json'}});
+      const data=(await res.json())?.data||[];
+      const tracks=data.filter(t=>t&&t.id&&t.is_streamable!==false);
+      listEl.replaceChildren();
+      if(!tracks.length){listEl.textContent='검색 결과가 없어요. 영문 키워드(pop, chill, vocal 등)로 검색해 보세요.';return;}
+      tracks.forEach(t=>{
+        const item=document.createElement('div');
+        item.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:#181920;border:1px solid #2e303a;';
+        const info=document.createElement('div');info.style.cssText='min-width:0;flex:1;';
+        const ttl=document.createElement('div');ttl.textContent=t.title||'Untitled';ttl.style.cssText='font-size:12px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+        const sub=document.createElement('div');sub.textContent=`${t.user?.name||''}${t.genre?' · '+t.genre:''}`;sub.style.cssText='font-size:10.5px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+        info.append(ttl,sub);
+        const streamUrl=`https://api.audius.co/v1/tracks/${encodeURIComponent(t.id)}/stream?app_name=AutoReelsMaker`;
+        const pBtn=document.createElement('button');pBtn.type='button';pBtn.textContent='▶';
+        pBtn.style.cssText='width:28px;height:28px;border-radius:999px;border:0;background:#2e313c;color:#fff;font-size:11px;cursor:pointer;flex-shrink:0;';
+        pBtn.addEventListener('click',()=>{
+          if(previewAudio&&previewAudio._id===t.id){stopPreview();pBtn.textContent='▶';return;}
+          stopPreview();
+          listEl.querySelectorAll('button[data-p]').forEach(b=>b.textContent='▶');
+          const a=new Audio(streamUrl);a.crossOrigin='anonymous';a.volume=0.72;a._id=t.id;previewAudio=a;
+          pBtn.textContent='⏹';a.onended=()=>{pBtn.textContent='▶';};a.play().catch(()=>{});
+        });
+        pBtn.dataset.p='1';
+        const useBtn=document.createElement('button');useBtn.type='button';useBtn.textContent='적용';
+        useBtn.style.cssText='padding:5px 10px;border-radius:999px;border:0;background:#3b82f6;color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;';
+        useBtn.addEventListener('click',()=>{
+          stopPreview();
+          applyMusicUrl(s,streamUrl,`🌐 ${t.title||'스트리밍 곡'}`);
+          showMixHint(`🌐 ${t.title} 적용됨!`);
+          byId('mixDialog').close();
+        });
+        item.append(info,pBtn,useBtn);listEl.append(item);
+      });
+    }catch(_){listEl.textContent='스트리밍 목록을 불러오지 못했어요.';}
+  }
+
+  [['🔥 인기',''],['🎤 팝','Pop'],['🎧 힙합','Hip-Hop/Rap'],['☕ 로파이','Lo-Fi'],['⚡ EDM','Electronic'],['🎸 어쿠스틱','Acoustic']].forEach(([lbl,g],i)=>{
+    const cb=document.createElement('button');cb.type='button';cb.textContent=lbl;
+    cb.style.cssText='padding:4px 8px;border-radius:999px;border:1px solid #454750;background:'+(i===0?'#3b82f6':'#262830')+';color:#fff;font-size:11px;cursor:pointer;';
+    cb.addEventListener('click',()=>{
+      [...chips.children].forEach(c=>c.style.background='#262830');cb.style.background='#3b82f6';
+      loadTracks('',g);
+    });
+    chips.append(cb);
   });
-  const select=mixField(box,'곡 선택',byId('music').cloneNode(true));select.removeAttribute('id');select.value=s.clip.music||'';
+  goBtn.addEventListener('click',()=>loadTracks(qInp.value.trim(),''));
+  qInp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();loadTracks(qInp.value.trim(),'');}});
+  loadTracks('','');
 }
 // 꺼진 도구는 눌렀을 때 왜 꺼졌는지 알려 줌 (disabled 대신 aria-disabled)
 function mixOff(button,off,hint){
