@@ -8,7 +8,7 @@ function arOpenQuickVideoEditor(selection=[]) {
   dialog.className = 'ar-video-editor';
   frame.title = '영상 편집기';
   dialog.setAttribute('aria-label', frame.title);
-  frame.src = '/assets/shorts/index.html?mode=edit';
+  frame.src = '/assets/shorts/index.html?mode=edit&v=dock2';
   frame.addEventListener('load', () => {
     if (typeof frame.contentWindow.openQuickFiles === 'function') frame.contentWindow.openQuickFiles(files);
     else { dialog.close(); arToast('편집기를 열지 못했어요. 다시 시도해 주세요.'); }

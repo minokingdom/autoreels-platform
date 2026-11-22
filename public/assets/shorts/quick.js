@@ -32,6 +32,7 @@ function openQuickClip(s,file,fullSource=false) {
   openEditorPublish(s);
   s.filename=file.name || '현재 편집본';
   byId('joinTools').hidden=false;
+  byId('editSettings').open=false;
   const end = video.duration;
   const clip = {start:0,end,rate:1,keepAudio:true,transitions:false,peak:null,peakEffect:true,music:'',style:'box',title:'',customTitle:true,
     showCaptions:true,lines:[{start:0,end,text:''}]};
@@ -95,11 +96,13 @@ async function startMontage(s,file) {
   byId('montageProgress').value = 0;
   setQuickMode(s,true);
   try {
-    const {buildMontage} = await import('./montage.mjs?v=peak1');
+    const {buildMontage} = await import('./montage.mjs?v=dock2');
     s.plan = await buildMontage(file,video.duration,s.controller.signal,pct => {
       if (session === s) byId('montageProgress').value = pct;
     });
     if (session !== s) return;
+    s.clip.audioLevels=s.plan.levels;
+    renderCutTrack(s);
     s.clip.peak=s.plan.peak;
     if (s.wantMontage && !s.timelineCuts) setQuickMode(s,true);
   } catch(error) {

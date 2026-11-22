@@ -49,9 +49,20 @@ try {
   await editorButton.click();
   const frame = page.frameLocator('dialog.ar-video-editor iframe');
   await frame.getByRole('heading', {name:'영상 편집기',exact:true}).waitFor();
+  const openSettings=async()=>{
+    const track=frame.locator('#cutTimeline.has-media');
+    await track.waitFor();
+    const geometry=await track.evaluate(el=>{
+      const stage=document.querySelector('.stage').getBoundingClientRect(),board=el.getBoundingClientRect();
+      return {gap:Math.abs(stage.bottom-board.top),bottom:board.bottom,height:innerHeight};
+    });
+    assert.ok(geometry.gap<3 && geometry.bottom<=geometry.height,'미리보기 아래에 타임라인 전체가 보여야 함');
+    await frame.locator('#editSettings>summary').click();
+  };
   const chooser = page.waitForEvent('filechooser');
   await frame.locator('#emptyVideoPick').click();
   await (await chooser).setFiles({name:'test.webm',mimeType:'video/webm',buffer:await fs.readFile(fixture)});
+  await openSettings();
   await frame.locator('#quickControls').waitFor({timeout:15000});
   await frame.getByRole('heading', {name:'타임라인',exact:true}).waitFor();
   assert.equal(await frame.locator('#trimEnd').inputValue(),'1');
@@ -80,6 +91,7 @@ try {
   await page.locator('dialog.ar-video-editor').waitFor({state:'detached'});
   assert.deepEqual(await before(),original);
   await page.locator('#quickShortVideoInput').setInputFiles(path.join(root,'assets/remix/fixtures/remix-spoken-ko.mp4'));
+  await openSettings();
   try {await frame.locator('#highlightEditor').waitFor({timeout:9000});} catch(e){throw Error(JSON.stringify(await frame.locator('#work').evaluate(el=>({status:statusLine.textContent,analysis:byId('montageStatus').textContent,ready:video.readyState,plan:!!session?.plan,src:video.error?.message,progress:byId('montageProgress').value})))+' '+errors.join(', '),{cause:e});}
   const times=await frame.locator('#sourceVideo').evaluate(el=>[session.clip.montage[0].start,session.clip.montage.at(-1).end,el.duration]);
   assert.deepEqual(times,[0,times[2],times[2]]);
@@ -102,6 +114,7 @@ try {
   await frame.getByText('스튜디오로 돌아가기').click();
   await page.locator('dialog.ar-video-editor').waitFor({state:'detached'});
   await page.locator('#quickShortVideoInput').setInputFiles(fileURLToPath(new URL('./fixtures/montage-transition.webm',import.meta.url)));
+  await openSettings();
   try {await frame.locator('#highlightEditor').waitFor({timeout:12000});} catch(e){throw Error(JSON.stringify(await frame.locator('body').evaluate(el=>({status:statusLine.textContent,pct:byId('montageProgress').value,controls:byId('quickControls').hidden,work:byId('work').hidden,style:getComputedStyle(byId('highlightEditor')).display,ready:video.readyState,src:video.error?.message,plan:!!session?.plan})))+' '+errors.join(', '),{cause:e});}
   await frame.locator('#editCursor').fill('2.2'); await frame.locator('#setPeak').click();
   const edgePixel = () => frame.locator('#overlay').evaluate(canvas=>{
@@ -165,6 +178,7 @@ try {
   const one=fileURLToPath(new URL('./fixtures/remix-caption.webm',import.meta.url));
   const two=fileURLToPath(new URL('./fixtures/montage-transition.webm',import.meta.url));
   await page.locator('#quickShortVideoInput').setInputFiles([one,two]);
+  await openSettings();
   try {await frame.getByText('2개 영상 · 이어붙인 길이 7.0초').waitFor({timeout:9000});} catch(err){throw Error(await frame.locator('#work').innerText()+' '+errors.join(', '),{cause:err});}
   await frame.locator('.join-row').nth(1).getByText('앞으로').click();
   assert.match(await frame.locator('.join-row').first().textContent(),/montage-transition/);
@@ -196,6 +210,7 @@ try {
   await frame.getByRole('button',{name:'＋ 영상 추가'}).waitFor();
   assert.equal(await frame.locator('#trackSplit').isDisabled(),true);
   await frame.locator('#file').setInputFiles(two);
+  await openSettings();
   await frame.locator('#highlightEditor').waitFor();
   await frame.locator('#trackCursor').fill('3');
   await frame.locator('#trackSplit').click();
@@ -211,8 +226,7 @@ try {
   assert.deepEqual(await readCuts(),[[0,3],[3,6]]);
   await frame.locator('#trackDelete').click();
   await frame.locator('#trackCursor').fill('0.5');
-  await frame.locator('#fxRecipe').selectOption({label:'폴라로이드 · 골든 플래시'});
-  await frame.locator('#fxAdd').click();
+  await frame.getByRole('button',{name:'폴라로이드 · 골든 플래시 효과 추가',exact:true}).click();
   assert.equal(await frame.locator('#fxDuration').inputValue(),'0.27');
   await frame.locator('#fxCopy').click();
   assert.equal(await frame.locator('.fx-block').count(),2);

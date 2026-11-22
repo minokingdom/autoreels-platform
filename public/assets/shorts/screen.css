@@ -48,8 +48,8 @@
 #fxPanel{padding-block:8px;color:#f3eee4}
 .fx-heading,#fxInspector{display:flex;align-items:center;gap:8px}
 .fx-heading h3{margin:0 auto 0 0;font-size:14px}
-.fx-heading select,#fxAdd,#fxRemove{border-radius:6px;padding:6px;background:#292c34;color:#fff;border:1px solid #535762}
-.fx-heading select{min-width:0;max-width:65%}
+#fxRemove{border-radius:6px;padding:6px;background:#292c34;color:#fff;border:1px solid #535762}
+
 #fxLanes{display:grid;gap:2px;margin-top:6px}
 .fx-lane{position:relative;height:32px;background:#252322;border-radius:4px}
 .fx-block{position:absolute;top:1px;bottom:1px;overflow:hidden;white-space:nowrap;touch-action:none;border:1px solid #a97a39;background:#785528;color:white;font-size:11px;font-weight:600;padding:0;border-radius:4px}
@@ -61,3 +61,64 @@
 #fxPanel[hidden],#fxInspector[hidden]{display:none}
 #trackClips{gap:0;padding-inline:0}
 #trackClips button{min-width:0;max-width:none}
+
+/* 영상과 편집 트랙을 같은 화면에 두고, 추가 설정만 아래에서 스크롤한다. */
+.quick-video main{height:100dvh;min-height:0;display:grid;grid-template-rows:auto minmax(112px,1fr) auto minmax(104px,auto);overflow:hidden}
+.quick-video header{padding:9px 16px;background:#121316}
+.quick-video .stage{position:relative;top:auto;min-height:0;padding:8px;background:#0b0c0e}
+.quick-video #frame{height:100%;max-height:48dvh;max-width:100%}
+.quick-video #cutTimeline{max-height:48dvh;overflow:auto;background:#18191d;border-block:1px solid #34353a;padding:10px 14px;scrollbar-width:thin}
+.quick-video .sheet{min-height:0;max-height:24dvh;overflow:auto;border-radius:0;padding:8px 14px 18px;overscroll-behavior:contain}
+.quick-video main:has(#editSettings[open]):has(#work:not([hidden])){grid-template-rows:auto minmax(96px,1fr) auto minmax(155px,38dvh)}
+.quick-video main:has(#editSettings[open]) .sheet{max-height:none}
+.quick-video .handle{display:none}
+.quick-video .track-heading{gap:8px;margin:0 0 7px}
+.track-heading h2{font-size:14px}.track-heading output{margin-left:auto;font:600 12px/1.3 ui-monospace,monospace}
+#dockFile{background:#25272d;color:#edf0f4;border:1px solid #41444b;font-family:inherit;font-weight:600;font-size:12px;border-radius:6px;min-height:29px}
+#cutTimeline:not(.has-media) #dockFile,#cutTimeline:not(.has-media) #trackNeedle{display:none}
+.track-board{position:relative;overflow:hidden;border-radius:5px;background:#111216}
+#trackScale{display:flex;justify-content:space-between;align-items:start;height:23px;color:#b5b8c0;font:10px/1.1 ui-monospace,monospace;background:repeating-linear-gradient(90deg,#44464e 0 1px,transparent 1px 5%) bottom/100% 4px no-repeat}
+#trackScale:empty{height:8px}
+#trackNeedle{position:absolute;top:16px;bottom:0;left:0;width:2px;background:#fff;pointer-events:none;box-shadow:0 0 2px #171719}
+#trackNeedle::before{content:"";position:absolute;top:-2px;left:-3px;width:8px;height:6px;background:white;clip-path:polygon(0 0,100% 0,100% 50%,50% 100%,0 50%)}
+#trackClips{min-height:44px;border-radius:4px}
+#trackClips canvas{height:42px;object-fit:fill}
+#trackClips progress{display:none}
+#fxLanes{margin-top:3px;max-height:100px;overflow:auto}
+.fx-empty{width:100%;min-height:30px;border:1px dashed #705c3d;border-radius:4px;background:#26221d;text-align:left;color:#e6bf84;font:inherit;font-size:12px;padding:3px 9px}
+.fx-lane{height:28px;background:#24211d}
+.fx-block{min-width:4px;border-color:#b48544}
+#trackWave{height:21px;width:100%;display:block;margin-top:3px;border-radius:4px;background:#172b2a}
+#fxPanel{padding:5px 0 0}.fx-heading h3{font-size:12px;color:#e5bb81}
+#fxInspector{align-items:end}
+#fxInspector button{color:#eee;border:1px solid #5b5042;border-radius:5px;background:#302b25;padding:5px}
+.quick-video #trackTools{display:grid;grid-template-columns:repeat(5,1fr)}
+.quick-video #trackTools button{padding:4px;min-height:34px;font-size:12px}
+.quick-video #work>.heading{margin:0}.quick-video #work>.heading h1{display:none}
+.quick-video #work>.heading button{width:auto;height:auto;font-size:12px;padding:3px 0;color:#b9bdc5}
+.quick-video #joinTools>.entry{display:none}
+body:not(.quick-video) #editSettings>summary{display:none}
+#editSettings{margin-top:6px}#editSettings>summary{font-size:14px;font-weight:600}
+.quick-video #quickControls{min-width:0}
+@media(max-height:650px){.quick-video header{padding:5px 12px}.quick-video main{grid-template-rows:auto minmax(90px,1fr) auto minmax(80px,auto)}.quick-video #cutTimeline{padding-block:6px;max-height:46dvh}}
+
+.track-ruler{position:relative}
+.quick-video #trackCursor{position:absolute;inset:0;opacity:0;width:100%;height:100%;min-height:0;margin:0;cursor:ew-resize}
+.track-ruler:focus-within{outline:1px solid #78b6ff;outline-offset:-1px}
+#trackScale{padding-block:2px}
+.quick-video #fxPanel{padding:8px 0}
+#fxInspector{background:#1e2025;border:1px solid #414149;padding:6px 8px 8px;column-gap:6px}
+#fxInspector legend{padding-inline:4px;color:#edca8f}
+#fxInspector label{font-weight:500;color:#c3c3c8;font-size:10px}
+#fxInspector input[type=number]{padding:4px 5px;border:1px solid #45454b;border-radius:4px;background:#282a30;font:12px ui-monospace,monospace;color:#f5f5f5}
+#fxInspector input[type=range]{accent-color:#edbd72;min-height:24px}
+#fxInspector #fxRemove,#fxInspector #fxCopy{font-size:11px}
+#fxPresetList{display:flex;gap:6px;overflow:auto;scrollbar-width:thin;padding-bottom:2px}
+#fxPresetList button{flex:none;display:flex;gap:5px;align-items:center;padding:7px 9px;background:#26272c;border:1px solid #404046;color:#e7e5df;border-radius:7px;font-family:inherit;font-size:12px}
+#fxPresetList button:before{content:'✦';font-size:13px;color:#f2ce85}
+#fxPresetList button[data-kind=zoom]:before{content:'↗';color:#aed4ff}
+#fxPresetList button[data-kind=echo]:before{content:'▧';color:#c2b3f2}
+#fxPresetList button:focus-visible{outline:2px solid white}
+.fx-heading{margin-bottom:5px}.fx-heading h3{font-size:12px}
+
+#trackTools button{white-space:nowrap}

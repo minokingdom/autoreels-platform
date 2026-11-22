@@ -83,5 +83,5 @@ export async function buildMontage(file,duration,signal,progress) {
     try { await prepareTransitions(file,plan.segments,signal); }
     catch { signal.throwIfAborted(); }
   }
-  return plan;
+  return {...plan,levels};
 }

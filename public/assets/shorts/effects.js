@@ -49,6 +49,10 @@ function renderEffectLanes(s){
   panel.hidden=!s?.clip;
   lanes.replaceChildren();inspector.hidden=true;
   if(panel.hidden)return;
+  if(!s.effects?.length){
+    const empty=document.createElement('div');
+    empty.className='fx-empty';empty.textContent='효과 트랙';lanes.append(empty);
+  }
   const total=sequenceDuration(sequenceTakes(s));
   for(const effect of s.effects||[]){
     const row=document.createElement('div'),bar=document.createElement('button');
@@ -96,8 +100,13 @@ function renderEffectLanes(s){
 }
 
 if(quickEdit){
-  const picker=byId('fxRecipe');
-  const option=(label,index)=>picker.add(new Option(label,String(index)));
+  const option=(label,index)=>{
+    const button=document.createElement('button');
+    button.type='button';button.textContent=label;button.dataset.kind=effectRecipes[index].kind;
+    button.setAttribute('aria-label',label+' 효과 추가');
+    button.addEventListener('click',()=>addEffect(effectRecipes[index]));
+    byId('fxPresetList').append(button);
+  };
   effectRecipes.forEach((recipe,i)=>option(recipe.label||effectNames[recipe.kind],i));
   fetch('/assets/reference-styles.json').then(response=>response.json()).then(styles=>{
     for(const style of styles)for(const recipe of style.effects||[]){
@@ -105,14 +114,14 @@ if(quickEdit){
       option(style.name+' · '+effectNames[recipe.kind],effectRecipes.push(recipe)-1);
     }
   }).catch(()=>{});
-  byId('fxAdd').addEventListener('click',()=>{
+  function addEffect(recipe){
     if(!editableEffects())return;
-    const s=session,total=sequenceDuration(sequenceTakes(s)),recipe=effectRecipes[picker.selectedIndex];
+    const s=session,total=sequenceDuration(sequenceTakes(s));
     if(!recipe||total<.05)return;
     const duration=Math.min(recipe.duration,total);
     const effect={...recipe,start:Math.min(s.trackTime||0,total-duration),duration};
     (s.effects||=[]).push(effect);s.selectedEffect=effect;redrawEffects(s);
-  });
+  }
   byId('fxInspector').addEventListener('change',e=>{
     if(!editableEffects())return;
     const s=session,fx=s.selectedEffect,v=e.target.valueAsNumber,total=sequenceDuration(sequenceTakes(s));

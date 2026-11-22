@@ -21,6 +21,7 @@ function trackTime(s,time,updateSelection=true) {
   const pos=trackPosition(takes,s.trackTime);
   if(!pos) return;
   const cursor=byId('trackCursor');
+  byId('trackNeedle').style.left=(100*s.trackTime/total)+'%';
   cursor.max=total;cursor.value=s.trackTime;cursor.disabled=false;
   byId('trackTime').textContent=cutClock(s.trackTime)+' / '+cutClock(total);
   if(updateSelection) {
@@ -46,23 +47,45 @@ async function trackThumbnails(s,takes,buttons,signal) {
   try {
     for (const [index,take] of takes.entries()) {
       const canvas=buttons[index].querySelector('canvas'),ctx=canvas.getContext('2d');
-      for(let n=0;n<3;n++) {
-        const at=take.start+(take.end-take.start)*(n+.5)/3;
+      const cells=Math.max(1,Math.min(7,Math.round(buttons[index].clientWidth/55)));
+      const cellWidth=64, cellHeight=50;
+      canvas.width=cells*cellWidth;canvas.height=cellHeight;
+      for(let n=0;n<cells;n++) {
+        const at=take.start+(take.end-take.start)*(n+.5)/cells;
         await positionJoinedTake(probe,{...take,start:at},signal);
         signal.throwIfAborted();
         if(session!==s) return;
-        const scale=Math.max(64/probe.videoWidth,64/probe.videoHeight);
-        const w=64/scale,h=64/scale;
-        ctx.drawImage(probe,(probe.videoWidth-w)/2,(probe.videoHeight-h)/2,w,h,n*64,0,64,64);
+        const scale=Math.max(cellWidth/probe.videoWidth,cellHeight/probe.videoHeight);
+        const w=cellWidth/scale,h=cellHeight/scale;
+        ctx.drawImage(probe,(probe.videoWidth-w)/2,(probe.videoHeight-h)/2,w,h,n*cellWidth,0,cellWidth,cellHeight);
       }
     }
   } catch { /* 썸네일을 읽을 수 없어도 원본 클립을 편집할 수 있다. */ }
   finally {probe.removeAttribute('src');probe.load();}
 }
+function drawTrackWave(takes) {
+  const canvas=byId('trackWave');
+  canvas.hidden=!takes.some(t=>t.owner.keepAudio!==false && t.owner.audioLevels?.length);
+  if(canvas.hidden)return;
+  const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height,total=sequenceDuration(takes);
+  ctx.clearRect(0,0,w,h);ctx.fillStyle='#65c8b7';
+  let offset=0;
+  for(const take of takes){
+    const end=offset+takeDuration(take),levels=take.owner.audioLevels;
+    if(take.owner.keepAudio!==false && levels?.length){
+      for(let x=Math.ceil(w*offset/total);x<w*end/total;x+=3){
+        const sec=take.start+(x*total/w-offset)*(take.owner.rate||1);
+        const height=Math.max(1,Math.min(h,Math.sqrt(levels[Math.floor(sec*10)]||0)*h*2));
+        ctx.fillRect(x,(h-height)/2,2,height);
+      }
+    }
+    offset=end;
+  }
+}
 function renderCutTrack(s) {
   if(!quickEdit || session!==s || !s?.clip) return;
   byId('emptyVideoPick').hidden=true;
-  if(byId('cutTimeline').parentElement!==byId('work'))byId('joinTools').before(byId('cutTimeline'));
+  byId('cutTimeline').classList.add('has-media');
   byId('cutTimeline').hidden=false;
   const takes=sequenceTakes(s),strip=byId('trackClips');
   const key=takes.map(t=>[t.url,t.start,t.end,t.owner.rate].join('/')).join('|');
@@ -82,9 +105,13 @@ function renderCutTrack(s) {
     });
     buttons.forEach((button,i)=>{button.style.flexGrow=takeDuration(takes[i]);});
     strip.replaceChildren(...buttons);
+    byId('trackScale').replaceChildren(...[0,.25,.5,.75,1].map(f=>{
+      const label=document.createElement('span');label.textContent=cutClock(sequenceDuration(takes)*f);return label;
+    }));
     s.trackThumbController=new AbortController();
     trackThumbnails(s,takes,buttons,s.trackThumbController.signal);
   }
+  drawTrackWave(takes);
   renderEffectLanes(s);
   trackTime(s,s.trackTime||0);
 }
@@ -151,7 +178,9 @@ function emptyCutTrack() {
   document.querySelector('.stage').hidden=false;
   renderEffectLanes(null);
   byId('emptyVideoPick').hidden=false;
-  byId('entry').after(byId('cutTimeline'));
+  byId('cutTimeline').classList.remove('has-media');
+  byId('trackWave').hidden=true;byId('trackScale').replaceChildren();
+  byId('editSettings').open=false;
   byId('cutTimeline').hidden=false;
   byId('trackClips').replaceChildren();byId('trackCursor').value=0;byId('trackCursor').disabled=true;
   byId('trackTime').textContent='0:00.0 / 0:00.0';
@@ -160,5 +189,8 @@ function emptyCutTrack() {
 if(quickEdit) {
   byId('emptyVideoPick').addEventListener('click',()=>fileInput.click());
   byId('back').addEventListener('click',emptyCutTrack);
+  byId('back').textContent='‹ 다른 영상 선택';
+  document.querySelector('.stage').after(byId('cutTimeline'));
+  byId('dockFile').addEventListener('click',()=>byId('joinFiles').click());
   emptyCutTrack();
 }
