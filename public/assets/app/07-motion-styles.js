@@ -215,8 +215,53 @@
       bg1: r[4], bg2: r[5], accent: r[6], accent2: r[7], light: r[8], seed: 1800 + i, genre: 'motion', grade: 'none', label: r[1],
       insta: true, isTrend: true, isProReels: true, desc: r[10] || r[1]
     }));
-    // 1군 풀스크린 릴스 엔진 6종을 디자인 목록 최상단에 배치
-    DESIGN_STYLES.unshift(...PRO_REELS_DESIGNS);
+
+    // ★ 코드 기반 인포그래픽 · 키노트 · 스위스 그리드 · 키네틱 화풍 30종 (6개 전용 캔버스 엔진 × 5개 아트 디렉션)
+    const OPUS_ART_ROWS = [
+      // 1) 다크테크 · 애플 키노트 인포그래픽 5종
+      ['op_keynote_obsidian', '키노트 · 옵시디언 다크', 'op_keynote', 'sans', '#08090d', '#131620', '#60a5fa', '#ffffff', false, '테크', '다크테크 키노트 무대 · 라운드 쇼케이스 창 · 상단 인덱스 바'],
+      ['op_keynote_cobalt', '테크 브리핑 · 코발트', 'op_keynote', 'pretM', '#070b14', '#101a2e', '#38bdf8', '#f0f9ff', false, '테크', '딥 코발트 브리핑 무대 · 선명한 테크 인포그래픽'],
+      ['op_keynote_emerald', '핀테크 인사이트 · 에메랄드', 'op_keynote', 'sans', '#060d0b', '#0d1d17', '#34d399', '#ecfdf5', false, '테크', '에메랄드 데이터 리포트 · 미니멀 프로그레스 틱'],
+      ['op_keynote_amber', '프리미엄 리포트 · 샴페인', 'op_keynote', 'maru', '#0c0a08', '#1a1510', '#e8c488', '#faf5ec', false, '고급', '럭셔리 프레젠테이션 · 샴페인 골드 포인트'],
+      ['op_keynote_white', '클린 키노트 · 퓨어 화이트', 'op_keynote', 'pretM', '#f5f5f7', '#e8e8ed', '#1d4ed8', '#111114', true, '카드뉴스', '애플 화이트 키노트 · 깔끔한 섀도우 쇼케이스'],
+      // 2) 스위스 인터내셔널 타이포 · 모던 그리드 5종
+      ['op_swiss_red', '스위스 그리드 · 레드', 'op_swiss', 'sans', '#f4f2ec', '#eae6dc', '#dc2626', '#141414', true, '타이포', '스위스 국제 타이포 · 1px 그리드 라인 · 강렬한 레드 포인트'],
+      ['op_swiss_mono', '스위스 아키텍처 · 모노', 'op_swiss', 'pretM', '#0e0e10', '#18181c', '#e4e4e7', '#ffffff', false, '타이포', '모노크롬 건축 그리드 · 정교한 비대칭 레이아웃'],
+      ['op_swiss_cream', '바우하우스 · 웜 크림', 'op_swiss', 'maru', '#f3ede2', '#e7decb', '#c2410c', '#1c1917', true, '감성', '바우하우스 크림 그리드 · 절제된 에디토리얼 타이포'],
+      ['op_swiss_navy', '네이비 매거진 · 그리드', 'op_swiss', 'sans', '#0b1220', '#131f36', '#93c5fd', '#f8fafc', false, '고급', '딥 네이비 그리드 · 비즈니스·금융·부동산 최적화'],
+      ['op_swiss_sage', '세이지 스튜디오 · 그리드', 'op_swiss', 'gowun', '#edf1eb', '#dfe6dc', '#3f6249', '#1b261e', true, '감성', '차분한 세이지 그린 그리드 · 카페·인테리어·클리닉'],
+      // 3) 인포그래픽 설명 카드 · STEP 넘버링 5종
+      ['op_info_slate', '인포 카드 · 슬레이트 브리핑', 'op_infocard', 'pretM', '#0f131a', '#181f2b', '#60a5fa', '#ffffff', false, '카드뉴스', '블러 배경 위 플로팅 STEP 넘버링 설명 카드'],
+      ['op_info_ivory', '매거진 팁카드 · 아이보리', 'op_infocard', 'maru', '#f6f2ea', '#ebe4d6', '#9a6b42', '#1f1a16', true, '카드뉴스', '아이보리 2단 팁카드 · 깔끔한 밑줄 강조'],
+      ['op_info_mint', '클리닉·웰니스 · 소프트 민트', 'op_infocard', 'pretM', '#eff7f4', '#e0efe9', '#0d9488', '#132a26', true, '카드뉴스', '신뢰감 있는 민트 인포그래픽 · 병원·뷰티·학원'],
+      ['op_info_coral', '트렌드 랭킹 · 코랄 포인트', 'op_infocard', 'sans', '#141012', '#22181c', '#fb7185', '#fff1f2', false, '카드뉴스', '시선을 끄는 코랄 넘버링 랭킹 카드'],
+      ['op_info_charcoal', '비즈니스 요약 · 차콜', 'op_infocard', 'sans', '#121214', '#1d1d22', '#facc15', '#ffffff', false, '카드뉴스', '차콜 다크 브리핑 카드 · 옐로 하이라이트'],
+      // 4) 키네틱 타이포 · 세그먼트 프로그레스 5종
+      ['op_kin_volt', '키네틱 훅 · 일렉트릭 라임', 'op_kinetic_bar', 'sans', '#08090a', '#131618', '#a3e635', '#ffffff', false, '타이포', '풀스크린 다크 그레이드 · 좌측 라임 바 · 단어별 키네틱'],
+      ['op_kin_crimson', '임팩트 브리핑 · 크림슨', 'op_kinetic_bar', 'sans', '#0b0809', '#191114', '#f43f5e', '#ffffff', false, '타이포', '강렬한 크림슨 액센트 바 · 숏폼 훅 최적화'],
+      ['op_kin_cyan', '퓨처 테크 · 시안 라인', 'op_kinetic_bar', 'pretM', '#060b10', '#0e1722', '#22d3ee', '#ecfeff', false, '테크', '선명한 시안 키네틱 타이포 · 하단 컷 세그먼트 바'],
+      ['op_kin_gold', '하이엔드 쇼룸 · 골드 바', 'op_kinetic_bar', 'maru', '#0a0907', '#17140f', '#e5c17b', '#faf6ee', false, '고급', '샴페인 골드 키네틱 · 수입차·럭셔리 브랜드'],
+      ['op_kin_snow', '미니멀 키네틱 · 퓨어 화이트', 'op_kinetic_bar', 'pretM', '#09090b', '#16161a', '#ffffff', '#ffffff', false, '타이포', '군더더기 없는 화이트 키네틱 · 모든 업종 만능'],
+      // 5) 에디토리얼 60/40 스플릿 룩북 5종
+      ['op_split_linen', '에디토리얼 스플릿 · 웜 리넨', 'op_editorial_split', 'maru', '#f3ede3', '#e7decb', '#8c6239', '#241e19', true, '감성', '상단 60% 사진 · 하단 40% 리넨 에디토리얼 여백'],
+      ['op_split_noir', '누아르 룩북 · 매트 블랙', 'op_editorial_split', 'maru', '#0a0a0c', '#141418', '#e2d4be', '#ffffff', false, '고급', '매트 블랙 60/40 스플릿 · 명품 룩북 감성'],
+      ['op_split_espresso', '카페 무드 · 에스프레소', 'op_editorial_split', 'gowun', '#1b1410', '#291e17', '#d9a773', '#f8f1e7', false, '감성', '깊은 에스프레소 매트 스플릿 · 카페·베이커리'],
+      ['op_split_blush', '뷰티 룩북 · 소프트 로즈', 'op_editorial_split', 'gowun', '#f9f1f1', '#f0e2e2', '#be6a7a', '#2b1d20', true, '감성', '부드러운 로즈 블러쉬 스플릿 · 뷰티·에스테틱'],
+      ['op_split_forest', '보태니컬 · 딥 포레스트', 'op_editorial_split', 'maru', '#0e1915', '#172922', '#86c5a3', '#eef7f2', false, '고급', '차분한 딥 그린 스플릿 · 인테리어·플라워·클리닉'],
+      // 6) 시네마틱 아트 프레임 · 필름 갤러리 5종
+      ['op_cine_leica', '라이카 아트 · 실버 모노', 'op_cinema_frame', 'maru', '#090909', '#141414', '#d4d4d8', '#ffffff', false, '고급', '블러 배경 위 4:5 흑백 아트 프레임 · 필름 카운터'],
+      ['op_cine_sunset', '선셋 필름 · 웜 앰버', 'op_cinema_frame', 'gowun', '#140e0a', '#211610', '#f59e0b', '#fef3c7', false, '감성', '따뜻한 노을빛 4:5 시네마 프레임'],
+      ['op_cine_midnight', '미드나잇 시네마 · 딥 블루', 'op_cinema_frame', 'pretM', '#070b14', '#0f172a', '#60a5fa', '#f1f5f9', false, '브이로그', '도회적 야경 톤 4:5 시네마 액자'],
+      ['op_cine_kyoto', '교토 페이퍼 · 베이지', 'op_cinema_frame', 'maru', '#efe9de', '#e3d9c8', '#7c6248', '#26201a', true, '감성', '한지·페이퍼 톤 4:5 갤러리 프레임'],
+      ['op_cine_velvet', '벨벳 라운지 · 버건디', 'op_cinema_frame', 'maru', '#150a0e', '#241118', '#e8a8b4', '#fdf2f4', false, '고급', '깊은 버건디 라운지 아트 프레임']
+    ];
+    const OPUS_ART_DESIGNS = OPUS_ART_ROWS.map((r, i) => ({
+      id: r[0], name: r[1], addedAt: '2026-11-22T07:45:00Z', cat: r[9] || '고급', engine: 'motion', mstyle: r[2], font: r[3],
+      bg1: r[4], bg2: r[5], accent: r[6], accent2: r[7], light: r[8], seed: 2200 + i, genre: 'motion', grade: 'none', label: r[1],
+      insta: true, isTrend: true, isOpusArt: true, desc: r[10] || r[1]
+    }));
+    // 1군 풀스크린 릴스 엔진 + 코드 기반 오퍼스 화풍 30종을 디자인 목록 최상단에 배치
+    DESIGN_STYLES.unshift(...PRO_REELS_DESIGNS, ...OPUS_ART_DESIGNS);
     DESIGN_STYLES.push(...MOTION_DESIGNS);
 
     const mClamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
@@ -816,6 +861,10 @@
       if (spec.referenceStyle) { arRenderReferenceFrame(c, W, H, t, mainDuration, totalCuts, d, spec); return; }
       if (String(spec.mstyle || '').startsWith('pro_')) {
         arRenderProReelsFrame(c, W, H, t, mainDuration, totalCuts, d, sp);
+        return;
+      }
+      if (String(spec.mstyle || '').startsWith('op_')) {
+        arRenderOpusFrame(c, W, H, t, mainDuration, totalCuts, d, sp);
         return;
       }
       const cutDur = mainDuration / totalCuts;
@@ -4188,5 +4237,320 @@
         c.fillRect(barX, barY, barW * mClamp(t / Math.max(0.1, mainDuration)), 2);
         c.restore();
       }
+      c.restore();
+    }
+
+    // ★ 코드 기반 오퍼스 화풍 30종 전용 6대 캔버스 엔진 (실시간 60fps · 0원 · 무흔들림 · Safe Zone 준수)
+    function arRenderOpusFrame(c, W, H, t, mainDuration, totalCuts, d, sp) {
+      const cutDur = Math.max(0.5, mainDuration / Math.max(1, totalCuts));
+      const cutIdx = Math.min(totalCuts - 1, Math.floor(t / cutDur));
+      const local = Math.max(0, t - cutIdx * cutDur);
+      const lp = mClamp(local / cutDur);
+      const M = sp.mstyle;
+      const S = kitScene(t, mainDuration, false);
+      const rawCap = (campaign.cutCaptions && campaign.cutCaptions[cutIdx]) || campaign.hook || '';
+      const caption = gCleanCaption(rawCap);
+      const F = KIT_FONTS[sp.font] || KIT_FONTS.sans;
+      const accent = sp.accent || '#60a5fa';
+      const fg = sp.accent2 || (sp.light ? '#141414' : '#ffffff');
+      const muted = sp.light ? 'rgba(20,20,24,0.52)' : 'rgba(255,255,255,0.52)';
+      const lineCol = sp.light ? 'rgba(20,20,24,0.14)' : 'rgba(255,255,255,0.16)';
+      const easeOutCubic = (x) => 1 - Math.pow(1 - mClamp(x), 3);
+      const easeOutQuart = (x) => 1 - Math.pow(1 - mClamp(x), 4);
+      const ent = easeOutQuart(local / 0.38);
+      const rem = 1 - ent;
+      const dir = cutIdx % 2 === 0 ? 1 : -1;
+      const _ov = typeof getCutElementOverride === 'function' ? getCutElementOverride(cutIdx) : null;
+      const capHidden = Boolean(_ov && _ov.caption && _ov.caption.hidden);
+      const safeW = W * 0.82;
+
+      c.save();
+      const bgGrad = c.createLinearGradient(0, 0, 0, H);
+      bgGrad.addColorStop(0, sp.bg1 || '#090a0e');
+      bgGrad.addColorStop(1, sp.bg2 || sp.bg1 || '#141620');
+      c.fillStyle = bgGrad;
+      c.fillRect(0, 0, W, H);
+
+      if (M === 'op_keynote') {
+        // 1) 다크테크·애플 키노트 인포그래픽: 상단 인덱스 + 라운드 16:10 쇼케이스 창 + 하단 볼드 헤드라인
+        const pad = 34;
+        // 상단 프로그레스 틱 & 씬 번호
+        c.font = `600 12px 'JetBrains Mono', monospace`;
+        c.fillStyle = accent;
+        c.textAlign = 'left';
+        c.fillText(`KEYNOTE · 0${cutIdx + 1} / 0${totalCuts}`, pad, 84);
+        const tickW = (W - pad * 2 - (totalCuts - 1) * 6) / totalCuts;
+        for (let i = 0; i < totalCuts; i++) {
+          const tx = pad + i * (tickW + 6);
+          c.fillStyle = lineCol;
+          gRoundRect(c, tx, 98, tickW, 3, 2);
+          c.fill();
+          if (i < cutIdx || i === cutIdx) {
+            c.fillStyle = accent;
+            gRoundRect(c, tx, 98, i < cutIdx ? tickW : tickW * lp, 3, 2);
+            c.fill();
+          }
+        }
+        // 중앙 16:10 쇼케이스 창
+        const fw = W - pad * 2, fh = 372, fx = pad, fy = 132 + rem * 18;
+        c.save();
+        c.globalAlpha = easeOutCubic(local / 0.28);
+        c.shadowColor = sp.light ? 'rgba(0,0,0,0.14)' : 'rgba(0,0,0,0.55)';
+        c.shadowBlur = 28;
+        c.shadowOffsetY = 12;
+        gRoundRect(c, fx, fy, fw, fh, 20);
+        c.fillStyle = sp.light ? '#ffffff' : '#11131a';
+        c.fill();
+        c.restore();
+
+        c.save();
+        c.globalAlpha = easeOutCubic(local / 0.28);
+        gRoundRect(c, fx, fy, fw, fh, 20);
+        c.clip();
+        inPhotoFade(c, S, cutIdx, local, fx, fy, fw, fh, 1.05 + lp * 0.05, 0);
+        c.restore();
+
+        gRoundRect(c, fx, fy, fw, fh, 20);
+        c.strokeStyle = lineCol;
+        c.lineWidth = 1.2;
+        c.stroke();
+
+        // 하단 헤드라인 타이포
+        if (!capHidden && caption) {
+          const r = mFit(c, caption, safeW, 3, 34, 22, sp.font);
+          const by = 568 + rem * 14;
+          c.save();
+          c.globalAlpha = easeOutCubic(local / 0.30);
+          c.fillStyle = accent;
+          gRoundRect(c, pad, by - 26, 36, 4, 2);
+          c.fill();
+          c.font = `700 ${r.size}px ${F.f}`;
+          c.fillStyle = fg;
+          c.textAlign = 'left';
+          c.textBaseline = 'top';
+          r.lines.forEach((ln, li) => c.fillText(ln, pad, by + li * r.lh));
+          c.restore();
+        }
+      } else if (M === 'op_swiss') {
+        // 2) 스위스 인터내셔널 그리드: 1px 건축 그리드 + 대형 인덱스 번호 + 비대칭 사진 & 타이포
+        const pad = 32;
+        c.strokeStyle = lineCol;
+        c.lineWidth = 1;
+        c.beginPath();
+        c.moveTo(pad, 74); c.lineTo(W - pad, 74);
+        c.moveTo(pad, 136); c.lineTo(W - pad, 136);
+        c.moveTo(pad, 574); c.lineTo(W - pad, 574);
+        c.moveTo(pad, 788); c.lineTo(W - pad, 788);
+        c.stroke();
+
+        c.font = `700 32px 'JetBrains Mono', monospace`;
+        c.fillStyle = accent;
+        c.textAlign = 'left';
+        c.textBaseline = 'middle';
+        c.fillText(`0${cutIdx + 1}`, pad, 106);
+        c.font = `500 12px 'JetBrains Mono', monospace`;
+        c.fillStyle = muted;
+        c.textAlign = 'right';
+        c.fillText(`GRID SYSTEM · ${cutIdx + 1} / ${totalCuts}`, W - pad, 106);
+
+        // 사진 영역 (스위스 그리드 셀)
+        const px = pad, py = 152, pw = W - pad * 2, ph = 406;
+        c.save();
+        c.beginPath();
+        c.rect(px, py, pw, ph);
+        c.clip();
+        inPhotoFade(c, S, cutIdx, local, px, py, pw, ph, 1.05 + lp * 0.05, 0);
+        c.restore();
+
+        // 하단 스위스 좌정렬 볼드 타이포
+        if (!capHidden && caption) {
+          const r = mFit(c, caption, safeW, 3, 35, 22, sp.font);
+          const startY = 602 + rem * 14;
+          c.save();
+          c.globalAlpha = easeOutCubic(local / 0.28);
+          c.font = `800 ${r.size}px ${F.f}`;
+          c.fillStyle = fg;
+          c.textAlign = 'left';
+          c.textBaseline = 'top';
+          r.lines.forEach((ln, li) => c.fillText(ln, pad, startY + li * r.lh));
+          c.restore();
+        }
+      } else if (M === 'op_infocard') {
+        // 3) 인포그래픽 설명 카드: 블러 배경 + 플로팅 2단 STEP 카드
+        c.save();
+        try { c.filter = sp.light ? 'blur(18px) brightness(1.06)' : 'blur(18px) brightness(0.38)'; } catch (_) {}
+        mPhoto(c, S, 0, -20, -20, W + 40, H + 40, 1.15, 0, 0);
+        c.restore();
+        c.fillStyle = sp.light ? 'rgba(246,242,234,0.72)' : 'rgba(10,12,18,0.58)';
+        c.fillRect(0, 0, W, H);
+
+        const cx = 36, cy = 104 + rem * 20, cw = W - 72, ch = 660;
+        c.save();
+        c.globalAlpha = easeOutCubic(local / 0.26);
+        c.shadowColor = 'rgba(0,0,0,0.32)';
+        c.shadowBlur = 32;
+        c.shadowOffsetY = 14;
+        gRoundRect(c, cx, cy, cw, ch, 24);
+        c.fillStyle = sp.bg1;
+        c.fill();
+        c.restore();
+
+        // 카드 상단 사진 (380px)
+        c.save();
+        c.globalAlpha = easeOutCubic(local / 0.26);
+        gRoundRect(c, cx + 14, cy + 14, cw - 28, 370, 18);
+        c.clip();
+        inPhotoFade(c, S, cutIdx, local, cx + 14, cy + 14, cw - 28, 370, 1.04 + lp * 0.05, 0);
+        c.restore();
+
+        // 카드 하단 STEP 배지 + 텍스트
+        c.save();
+        c.globalAlpha = easeOutCubic(local / 0.30);
+        c.fillStyle = accent;
+        gRoundRect(c, cx + 22, cy + 404, 78, 24, 999);
+        c.fill();
+        c.font = `700 11px 'JetBrains Mono', monospace`;
+        c.fillStyle = gLuminance(accent) > 0.45 ? '#111111' : '#ffffff';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillText(`STEP 0${cutIdx + 1}`, cx + 61, cy + 416);
+
+        if (!capHidden && caption) {
+          const r = mFit(c, caption, cw - 44, 3, 30, 20, sp.font);
+          c.font = `700 ${r.size}px ${F.f}`;
+          c.fillStyle = fg;
+          c.textAlign = 'left';
+          c.textBaseline = 'top';
+          r.lines.forEach((ln, li) => c.fillText(ln, cx + 22, cy + 446 + li * r.lh));
+        }
+        // 카드 하단 진행 바
+        c.fillStyle = lineCol;
+        gRoundRect(c, cx + 22, cy + ch - 26, cw - 44, 4, 2);
+        c.fill();
+        c.fillStyle = accent;
+        gRoundRect(c, cx + 22, cy + ch - 26, (cw - 44) * mClamp(t / Math.max(0.1, mainDuration)), 4, 2);
+        c.fill();
+        c.restore();
+      } else if (M === 'op_kinetic_bar') {
+        // 4) 키네틱 타이포 · 세그먼트 바: 풀스크린 + 좌측 강렬한 액센트 바 + 하단 컷 세그먼트
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.05 + lp * 0.06, 0);
+        const sc = c.createLinearGradient(0, H * 0.38, 0, H);
+        sc.addColorStop(0, 'rgba(6,6,10,0)');
+        sc.addColorStop(0.55, 'rgba(6,6,10,0.62)');
+        sc.addColorStop(1, 'rgba(6,6,10,0.88)');
+        c.fillStyle = sc;
+        c.fillRect(0, H * 0.38, W, H * 0.62);
+
+        if (!capHidden && caption) {
+          const r = mFit(c, caption, safeW - 26, 3, 36, 23, sp.font);
+          const totalH = r.lines.length * r.lh;
+          const sx = 46, sy = H * 0.67 - totalH / 2;
+          c.save();
+          c.globalAlpha = easeOutCubic(local / 0.24);
+          c.fillStyle = accent;
+          gRoundRect(c, sx, sy - 4, 6, totalH + 8, 3);
+          c.fill();
+          c.font = `800 ${r.size}px ${F.f}`;
+          c.fillStyle = '#ffffff';
+          c.textAlign = 'left';
+          c.textBaseline = 'middle';
+          c.shadowColor = 'rgba(0,0,0,0.8)';
+          c.shadowBlur = 18;
+          r.lines.forEach((ln, li) => {
+            const lineEnt = easeOutQuart((local - li * 0.06) / 0.28);
+            c.fillText(ln, sx + 22 + (1 - lineEnt) * 20, sy + r.lh / 2 + li * r.lh);
+          });
+          c.restore();
+        }
+        // 하단 세그먼트 진행 바
+        const segGap = 6, padX = 46;
+        const segW = (W - padX * 2 - (totalCuts - 1) * segGap) / totalCuts;
+        for (let i = 0; i < totalCuts; i++) {
+          const bx = padX + i * (segW + segGap);
+          c.fillStyle = 'rgba(255,255,255,0.22)';
+          gRoundRect(c, bx, H * 0.81, segW, 4, 2);
+          c.fill();
+          if (i <= cutIdx) {
+            c.fillStyle = accent;
+            gRoundRect(c, bx, H * 0.81, i < cutIdx ? segW : segW * lp, 4, 2);
+            c.fill();
+          }
+        }
+      } else if (M === 'op_editorial_split') {
+        // 5) 에디토리얼 60/40 스플릿 룩북: 상단 60% 사진 + 하단 40% 매트 여백 타이포
+        const splitY = Math.round(H * 0.57);
+        c.save();
+        c.beginPath();
+        c.rect(0, 0, W, splitY);
+        c.clip();
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, splitY, 1.05 + lp * 0.06, 0.2);
+        c.restore();
+
+        c.fillStyle = accent;
+        c.fillRect(0, splitY, W * mClamp(t / Math.max(0.1, mainDuration)), 3);
+        c.fillStyle = lineCol;
+        c.fillRect(0, splitY + 3, W, 1);
+
+        c.font = `500 12px 'JetBrains Mono', monospace`;
+        c.fillStyle = muted;
+        c.textAlign = 'left';
+        c.fillText(`NO.0${cutIdx + 1}`, 38, splitY + 34);
+
+        if (!capHidden && caption) {
+          const r = mFit(c, caption, safeW, 3, 32, 21, sp.font);
+          c.save();
+          c.globalAlpha = easeOutCubic(local / 0.28);
+          c.font = `600 ${r.size}px ${F.f}`;
+          c.fillStyle = fg;
+          c.textAlign = 'left';
+          c.textBaseline = 'top';
+          r.lines.forEach((ln, li) => c.fillText(ln, 38, splitY + 56 + rem * 12 + li * r.lh));
+          c.restore();
+        }
+      } else if (M === 'op_cinema_frame') {
+        // 6) 시네마틱 아트 프레임: 블러 배경 + 4:5 갤러리 액자 + 하단 미니멀 캡션
+        const isMono = sp.id === 'op_cine_leica';
+        c.save();
+        try { c.filter = (isMono ? 'grayscale(100%) ' : '') + (sp.light ? 'blur(18px) brightness(1.05)' : 'blur(18px) brightness(0.36)'); } catch (_) {}
+        mPhoto(c, S, 0, -20, -20, W + 40, H + 40, 1.16, 0, 0);
+        c.restore();
+        c.fillStyle = sp.light ? 'rgba(239,233,222,0.68)' : 'rgba(8,8,10,0.46)';
+        c.fillRect(0, 0, W, H);
+
+        const cw = W - 84, ch = 486, cx = 42, cy = 112 + rem * 16;
+        c.save();
+        c.globalAlpha = easeOutCubic(local / 0.28);
+        gRoundRect(c, cx, cy, cw, ch, 14);
+        c.clip();
+        if (isMono) { try { c.filter = 'grayscale(100%) contrast(1.12)'; } catch (_) {} }
+        inPhotoFade(c, S, cutIdx, local, cx, cy, cw, ch, 1.05 + lp * 0.06, isMono ? 0 : 0.25);
+        c.restore();
+
+        gRoundRect(c, cx, cy, cw, ch, 14);
+        c.strokeStyle = sp.light ? 'rgba(38,32,26,0.22)' : 'rgba(255,255,255,0.24)';
+        c.lineWidth = 1.2;
+        c.stroke();
+
+        c.font = `500 11px 'JetBrains Mono', monospace`;
+        c.fillStyle = muted;
+        c.textAlign = 'center';
+        c.fillText(`FRAME 0${cutIdx + 1} / 0${totalCuts}`, W / 2, 92);
+
+        if (!capHidden && caption) {
+          const r = mFit(c, caption, safeW, 3, 30, 20, sp.font);
+          const by = 648 + rem * 12;
+          c.save();
+          c.globalAlpha = easeOutCubic(local / 0.30);
+          c.font = `600 ${r.size}px ${F.f}`;
+          c.fillStyle = fg;
+          c.textAlign = 'center';
+          c.textBaseline = 'top';
+          if (!sp.light) { c.shadowColor = 'rgba(0,0,0,0.75)'; c.shadowBlur = 16; }
+          r.lines.forEach((ln, li) => c.fillText(ln, W / 2, by + li * r.lh));
+          c.restore();
+        }
+        inGrain(c, W, H, t, 0.038);
+      }
+
       c.restore();
     }
