@@ -288,38 +288,23 @@
     function mFit(c, text, maxW, maxLines, size, minSize, fontKey) {
       return kWrap(c, text, maxW, maxLines, size, minSize, fontKey);
     }
-    // 자막: Prompt-Motion 마스크 리빌 + 컷별 강약 대비 + 키워드 듀얼-스프링 언더라인
+    // 자막: 줄마다 클립 마스크 안에서 스프링 리빌로 깔끔하게 등장
     function mCaption(c, text, x, y, maxW, maxH, size, fontKey, color, e, align = 'center', box = null) {
       const F = KIT_FONTS[fontKey] || KIT_FONTS.sans;
       const maxLines = Math.max(1, Math.min(3, Math.floor(maxH / (size * F.k * 1.28))));
       const r = mFit(c, text, maxW, maxLines, size, Math.round(size * 0.55), fontKey);
       const total = r.lines.length * r.lh;
       const top = y + Math.max(0, (maxH - total) / 2);
-      const cutIdx = typeof window.__arActiveRenderCutIdx === 'number' ? Math.max(0, window.__arActiveRenderCutIdx) : 0;
       const localSec = typeof window.__arActiveRenderLocalSec === 'number' ? Math.max(0, window.__arActiveRenderLocalSec) : e * 0.6;
-      const heroIdx = r.lines.length <= 1 ? 0 : (cutIdx % 2 === 0 ? 0 : r.lines.length - 1);
-      const isLightText = gLuminance(color) > 0.45;
-      const pmAccents = isLightText
-        ? ['#38bdf8', '#ff6b4a', '#34d399', '#facc15', '#a78bfa']
-        : ['#2340e8', '#ff4518', '#059669', '#d97706', '#7c3aed'];
-      const accentCol = pmAccents[cutIdx % pmAccents.length];
       c.save();
       c.textAlign = align;
       c.textBaseline = 'middle';
+      c.font = gFont(F.w, r.size, F.f);
       r.lines.forEach((ln, i) => {
-        const isHero = i === heroIdx;
         const lineP = mClamp((e - i * 0.11) / 0.46);
-        const spP = mClamp(arPmSpring(Math.max(0, localSec - i * 0.11) * 1.35, 8.0, 9.2), 0, 1.03);
+        const spP = mClamp(arPmSpring(Math.max(0, localSec - i * 0.11) * 1.35, 8.2, 9.0), 0, 1.02);
         const p = Math.min(1, Math.max(mEase(lineP), Math.min(1, spP)));
         const ly = top + i * r.lh + r.lh / 2;
-        const lineW = isHero ? Math.min(900, Math.max(F.w, 800)) : F.w;
-        let lineSz = Math.round(r.size * (r.lines.length >= 2 ? (isHero ? 1.08 : 0.92) : 1));
-        c.font = gFont(lineW, lineSz, F.f);
-        const measured = c.measureText(ln).width;
-        if (measured > maxW - 4) {
-          lineSz = Math.max(14, Math.floor(lineSz * ((maxW - 4) / Math.max(1, measured))));
-          c.font = gFont(lineW, lineSz, F.f);
-        }
         const wText = c.measureText(ln).width;
         const leftX = align === 'center' ? x - wText / 2 : (align === 'right' ? x - wText : x);
 
@@ -331,34 +316,13 @@
           c.fillStyle = box;
           c.fillRect(bx, ly - r.lh / 2 + 3, bw * p, r.lh - 6);
         }
-        // Prompt-Motion 마스크 리빌 (줄 높이에 맞춘 깔끔한 수직 클립)
         c.beginPath();
         c.rect(leftX - 14, ly - r.lh * 0.62, wText + 28, r.lh * 1.24);
         c.clip();
-        const slideY = (1 - Math.min(1, p)) * (r.lh * 0.68);
+        const slideY = (1 - Math.min(1, p)) * (r.lh * 0.65);
         c.fillStyle = color;
         c.fillText(ln, x, ly + slideY);
         c.restore();
-
-        // 강조 줄의 핵심 키워드/숫자에 듀얼-스프링 액센트 언더라인 스윕
-        if (isHero && !box && typeof arCardFindKeyword === 'function') {
-          const kw = arCardFindKeyword(ln);
-          if (kw) {
-            const ds = arPmDualSpring(localSec, i * 0.11 + 0.14);
-            if (ds.lead > 0.02) {
-              const preW = c.measureText(ln.slice(0, kw.start)).width;
-              const hitW = c.measureText(ln.slice(kw.start, kw.end)).width;
-              const ux = leftX + preW;
-              const barW = Math.max(8, hitW * ds.lead);
-              c.save();
-              c.globalAlpha *= mClamp(p);
-              c.fillStyle = accentCol;
-              gRoundRect(c, ux, ly + lineSz * 0.50, barW, Math.max(2.5, lineSz * 0.095), 2);
-              c.fill();
-              c.restore();
-            }
-          }
-        }
       });
       c.restore();
       return { top, h: total };
@@ -4190,11 +4154,8 @@
         c.textBaseline = 'top';
         c.fillText(numTag, W * 0.075, H * 0.085);
         c.restore();
-        const alpha = easeOutExpo(local / 0.32);
-        const rise = (1 - alpha) * 14;
         const r = mFit(c, caption, safeW, 2, Math.round(W * 0.052), Math.round(W * 0.036), sp.font);
         c.save();
-        c.globalAlpha = alpha;
         c.font = `500 ${r.size}px ${F.f}`;
         c.textAlign = 'center';
         c.textBaseline = 'middle';
@@ -4202,8 +4163,14 @@
         c.shadowBlur = 18;
         c.shadowOffsetY = 2;
         c.fillStyle = '#f4f0e8';
-        const baseY = H * 0.725 - ((r.lines.length - 1) * r.lh) / 2 + rise;
-        r.lines.forEach((ln, li) => c.fillText(ln, W / 2, baseY + li * r.lh));
+        const baseY = H * 0.725 - ((r.lines.length - 1) * r.lh) / 2;
+        r.lines.forEach((ln, li) => {
+          const lpLine = easeOutExpo((local - li * 0.11) / 0.34);
+          c.save();
+          c.globalAlpha = lpLine;
+          c.fillText(ln, W / 2, baseY + li * r.lh + (1 - lpLine) * 14);
+          c.restore();
+        });
         c.restore();
       } else if (M === 'pro_punch_hook') {
         const r = mFit(c, caption, safeW, 3, Math.round(W * 0.068), Math.round(W * 0.044), sp.font);
@@ -4236,14 +4203,16 @@
         c.restore();
       } else if (M === 'pro_editorial_center') {
         const alpha = easeOutExpo(local / 0.36);
+        const lineGrow = easeOutExpo(local / 0.42);
         const r = mFit(c, caption, W * 0.76, 3, Math.round(W * 0.060), Math.round(W * 0.040), sp.font);
         const blockH = r.lines.length * r.lh;
         const centerY = H * 0.49;
         c.save();
         c.globalAlpha = alpha;
-        c.fillStyle = 'rgba(244,240,232,0.45)';
-        c.fillRect(W / 2 - 28, centerY - blockH / 2 - 28, 56, 1);
-        c.fillRect(W / 2 - 28, centerY + blockH / 2 + 28, 56, 1);
+        const hwRule = 34 * lineGrow;
+        c.fillStyle = 'rgba(244,240,232,0.52)';
+        c.fillRect(W / 2 - hwRule, centerY - blockH / 2 - 28, hwRule * 2, 1);
+        c.fillRect(W / 2 - hwRule, centerY + blockH / 2 + 28, hwRule * 2, 1);
         c.font = `500 ${Math.round(W * 0.023)}px 'JetBrains Mono', monospace`;
         c.textAlign = 'center';
         c.textBaseline = 'middle';
@@ -4253,8 +4222,18 @@
         c.fillStyle = '#f4f0e8';
         c.shadowColor = 'rgba(0,0,0,0.65)';
         c.shadowBlur = 20;
-        const topY = centerY - ((r.lines.length - 1) * r.lh) / 2 + (1 - alpha) * 10;
-        r.lines.forEach((ln, li) => c.fillText(ln, W / 2, topY + li * r.lh));
+        const topY = centerY - ((r.lines.length - 1) * r.lh) / 2;
+        r.lines.forEach((ln, li) => {
+          const lpLine = easeOutExpo((local - li * 0.10) / 0.32);
+          const ly = topY + li * r.lh;
+          c.save();
+          c.beginPath();
+          c.rect(0, ly - r.lh * 0.58, W, r.lh * 1.16);
+          c.clip();
+          c.globalAlpha = lpLine;
+          c.fillText(ln, W / 2, ly + (1 - lpLine) * r.lh * 0.65);
+          c.restore();
+        });
         c.restore();
       } else if (M === 'pro_pov_caption') {
         const pop = easeOutBack(local / 0.24);
@@ -4305,7 +4284,13 @@
         c.font = `700 ${r.size}px ${F.f}`;
         c.shadowColor = 'rgba(0,0,0,0.82)';
         c.shadowBlur = 16;
-        r.lines.forEach((ln, li) => c.fillText(ln, leftX + (1 - alpha) * -14, baseY + li * r.lh));
+        r.lines.forEach((ln, li) => {
+          const lpLine = easeOutExpo((local - li * 0.08) / 0.28);
+          c.save();
+          c.globalAlpha = lpLine;
+          c.fillText(ln, leftX + (1 - lpLine) * -22, baseY + li * r.lh);
+          c.restore();
+        });
         c.restore();
       } else if (M === 'pro_handwrite') {
         // 감성 손글씨: 왼쪽에서 오른쪽으로 써 내려가는 클립 리빌 + 손그림 곡선 밑줄 (Safe Zone: y = 0.65H)
@@ -4404,16 +4389,27 @@
         c.strokeStyle = 'rgba(255, 255, 255, 0.22)';
         c.lineWidth = 1.2;
         c.stroke();
-        // 상단 미세 스페큘러 하이라이트
+        // 상단 미세 스페큘러 하이라이트 (듀얼-스프링 확장)
+        const glDs = arPmDualSpring(local, 0.04);
         c.fillStyle = accent;
-        gRoundRect(c, bx + 20, by + 10, 28, 3, 2);
+        gRoundRect(c, bx + 20, by + 10, 42 * glDs.lead, 3, 2);
         c.fill();
         c.font = `600 ${r.size}px ${F.f}`;
         c.textAlign = 'center';
         c.textBaseline = 'middle';
         c.fillStyle = '#ffffff';
         const firstY = by + boxH / 2 - ((r.lines.length - 1) * r.lh) / 2 + 4;
-        r.lines.forEach((ln, li) => c.fillText(ln, W / 2, firstY + li * r.lh));
+        r.lines.forEach((ln, li) => {
+          const lpLine = easeOutCubic((local - li * 0.09) / 0.28);
+          const ly = firstY + li * r.lh;
+          c.save();
+          c.beginPath();
+          c.rect(bx + 12, ly - r.lh * 0.58, boxW - 24, r.lh * 1.16);
+          c.clip();
+          c.globalAlpha = alpha * lpLine;
+          c.fillText(ln, W / 2, ly + (1 - lpLine) * r.lh * 0.62);
+          c.restore();
+        });
         c.restore();
       } else if (M === 'pro_neon_pulse') {
         // 미드나잇 에디토리얼 포인트 바: 좌측 수직 액센트 바 + 고대비 좌정렬 타이포
@@ -4635,64 +4631,90 @@
         c.lineWidth = 1.2;
         c.stroke();
 
-        // 하단 헤드라인 타이포
+        // 하단 헤드라인 타이포 (키노트 전용: 듀얼-스프링 액센트 바 + 마스크 라인 리빌)
         if (!capHidden && caption) {
           const r = mFit(c, caption, safeW, 3, 34, 22, sp.font);
-          const by = 568 + rem * 14;
+          const by = 568;
+          const knDs = arPmDualSpring(local, 0.02);
           c.save();
-          c.globalAlpha = easeOutCubic(local / 0.30);
           c.fillStyle = accent;
-          gRoundRect(c, pad, by - 26, 36, 4, 2);
+          gRoundRect(c, pad, by - 26, 48 * knDs.lead, 4, 2);
           c.fill();
           c.font = `700 ${r.size}px ${F.f}`;
           c.fillStyle = fg;
           c.textAlign = 'left';
           c.textBaseline = 'top';
-          r.lines.forEach((ln, li) => c.fillText(ln, pad, by + li * r.lh));
+          r.lines.forEach((ln, li) => {
+            const lpLine = easeOutQuart((local - li * 0.09) / 0.30);
+            const ly = by + li * r.lh;
+            c.save();
+            c.beginPath();
+            c.rect(pad - 4, ly - 4, safeW + 8, r.lh + 8);
+            c.clip();
+            c.globalAlpha = lpLine;
+            c.fillText(ln, pad, ly + (1 - lpLine) * r.lh * 0.72);
+            c.restore();
+          });
           c.restore();
         }
       } else if (M === 'op_swiss') {
-        // 2) 스위스 인터내셔널 그리드: 1px 건축 그리드 + 대형 인덱스 번호 + 비대칭 사진 & 타이포
+        // 2) 스위스 인터내셔널 그리드: 선이 그려지는 건축 그리드 + 마스크 인덱스 + 스태거 타이포
         const pad = 32;
+        const gridP = easeOutQuart(local / 0.32);
         c.strokeStyle = lineCol;
         c.lineWidth = 1;
         c.beginPath();
-        c.moveTo(pad, 74); c.lineTo(W - pad, 74);
-        c.moveTo(pad, 136); c.lineTo(W - pad, 136);
-        c.moveTo(pad, 574); c.lineTo(W - pad, 574);
-        c.moveTo(pad, 788); c.lineTo(W - pad, 788);
+        const gxEnd = pad + (W - pad * 2) * gridP;
+        c.moveTo(pad, 74); c.lineTo(gxEnd, 74);
+        c.moveTo(pad, 136); c.lineTo(gxEnd, 136);
+        c.moveTo(pad, 574); c.lineTo(gxEnd, 574);
+        c.moveTo(pad, 788); c.lineTo(gxEnd, 788);
         c.stroke();
 
+        c.save();
+        c.beginPath();
+        c.rect(pad, 80, 90, 50);
+        c.clip();
         c.font = `700 32px 'JetBrains Mono', monospace`;
         c.fillStyle = accent;
         c.textAlign = 'left';
         c.textBaseline = 'middle';
-        c.fillText(`0${cutIdx + 1}`, pad, 106);
+        c.fillText(`0${cutIdx + 1}`, pad, 106 + (1 - gridP) * 34);
+        c.restore();
         c.font = `500 12px 'JetBrains Mono', monospace`;
         c.fillStyle = muted;
         c.textAlign = 'right';
         c.fillText(`GRID SYSTEM · ${cutIdx + 1} / ${totalCuts}`, W - pad, 106);
 
-        // 사진 영역 (스위스 그리드 셀)
+        // 사진 영역 (스위스 그리드 셀 와이프 오픈)
         const px = pad, py = 152, pw = W - pad * 2, ph = 406;
         c.save();
         c.beginPath();
-        c.rect(px, py, pw, ph);
+        c.rect(px, py, pw, ph * Math.min(1, easeOutQuart(local / 0.30) + 0.15));
         c.clip();
         inPhotoFade(c, S, cutIdx, local, px, py, pw, ph, 1.05 + lp * 0.05, 0);
         c.restore();
 
-        // 하단 스위스 좌정렬 볼드 타이포
+        // 하단 스위스 좌정렬 볼드 타이포 (줄별 마스크 스냅)
         if (!capHidden && caption) {
           const r = mFit(c, caption, safeW, 3, 35, 22, sp.font);
-          const startY = 602 + rem * 14;
+          const startY = 602;
           c.save();
-          c.globalAlpha = easeOutCubic(local / 0.28);
           c.font = `800 ${r.size}px ${F.f}`;
           c.fillStyle = fg;
           c.textAlign = 'left';
           c.textBaseline = 'top';
-          r.lines.forEach((ln, li) => c.fillText(ln, pad, startY + li * r.lh));
+          r.lines.forEach((ln, li) => {
+            const lpLine = easeOutQuart((local - li * 0.08) / 0.28);
+            const ly = startY + li * r.lh;
+            c.save();
+            c.beginPath();
+            c.rect(pad - 4, ly - 4, safeW + 8, r.lh + 8);
+            c.clip();
+            c.globalAlpha = lpLine;
+            c.fillText(ln, pad, ly + (1 - lpLine) * r.lh * 0.72);
+            c.restore();
+          });
           c.restore();
         }
       } else if (M === 'op_infocard') {
@@ -4817,12 +4839,21 @@
         if (!capHidden && caption) {
           const r = mFit(c, caption, safeW, 3, 32, 21, sp.font);
           c.save();
-          c.globalAlpha = easeOutCubic(local / 0.28);
           c.font = `600 ${r.size}px ${F.f}`;
           c.fillStyle = fg;
           c.textAlign = 'left';
           c.textBaseline = 'top';
-          r.lines.forEach((ln, li) => c.fillText(ln, 38, splitY + 56 + rem * 12 + li * r.lh));
+          r.lines.forEach((ln, li) => {
+            const lpLine = easeOutQuart((local - li * 0.11) / 0.30);
+            const ly = splitY + 56 + li * r.lh;
+            c.save();
+            c.beginPath();
+            c.rect(34, ly - 4, safeW + 10, r.lh + 8);
+            c.clip();
+            c.globalAlpha = lpLine;
+            c.fillText(ln, 38, ly + (1 - lpLine) * r.lh * 0.65);
+            c.restore();
+          });
           c.restore();
         }
       } else if (M === 'op_cinema_frame') {
