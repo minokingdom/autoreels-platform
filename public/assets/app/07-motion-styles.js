@@ -800,19 +800,11 @@
         life:      [10, 21, 1, 16, 6, 23, 5, 11, 0, 18],
         biz:       [23, 6, 2, 16, 10, 4, 5, 11, 21, 0]
       };
-      let primary = base[0];
-      let secondary = base[1];
-      let camMode = cutIdx % 2 === 0 ? (base[2] || 'zoomIn') : AR_GENTLE_CAMS[(h + cutIdx) % AR_GENTLE_CAMS.length];
-      if (ds && ds.s100Genre && poolByGenre[ds.s100Genre]) {
-        const list = poolByGenre[ds.s100Genre];
-        primary = list[h % list.length];
-        secondary = list[(h + 3) % list.length];
-        if (secondary === primary) secondary = list[(h + 5) % list.length];
-      } else if (id) {
-        primary = AR_CLEAN_POOL[h % AR_CLEAN_POOL.length];
-        secondary = AR_CLEAN_POOL[(h + 4) % AR_CLEAN_POOL.length];
-      }
-      let mode = cutIdx % 2 === 0 ? primary : secondary;
+      // 매 컷마다 서로 다른 사진 전환 연출이 순서대로 나오도록 (A→B→A→B 반복 완전 제거!)
+      const activeList = (ds && ds.s100Genre && poolByGenre[ds.s100Genre]) || AR_CLEAN_POOL;
+      const stride = (h % 2 === 0) ? 1 : 3; // 10 및 16과 서로소 → 최대 10컷 전체가 단 한 번도 겹치지 않음
+      let mode = activeList[(h + cutIdx * stride) % activeList.length];
+      let camMode = AR_GENTLE_CAMS[(h + cutIdx * 2) % AR_GENTLE_CAMS.length]; // 5종 잔잔한 카메라 무브도 5컷 연속 겹침 없이 순환
       const ov = typeof getCutElementOverride === 'function' ? getCutElementOverride(cutIdx) : null;
       if (ov && ov.photo) {
         if (ov.photo.entrance !== undefined && ov.photo.entrance !== null && ov.photo.entrance !== '' && ov.photo.entrance !== 'auto') {

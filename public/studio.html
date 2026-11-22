@@ -1447,6 +1447,49 @@
           <div class="studio-sub p-4 space-y-0">
             <label class="ig-switch-row"><span id="arScheduleLabel">예약 실행 서비스 연결 준비 중</span><input id="snsScheduleEnabled" type="checkbox" disabled onchange="document.getElementById('snsScheduleWrap').classList.toggle('hidden', !this.checked)" /><i></i></label>
             <label class="ig-switch-row"><span>해시태그는 인스타 첫 댓글로</span><input id="snsIgFirstComment" type="checkbox" /><i></i></label>
+            <label class="ig-switch-row"><span>💌 댓글 키워드 자동 DM <small class="text-[#85858b] font-normal ml-1">인스타 공식 API</small></span><input id="snsIgAutoDmEnabled" type="checkbox" onchange="arIgDmTogglePanel(this.checked)" /><i></i></label>
+            <div id="snsIgAutoDmWrap" class="hidden pt-2 pb-3 space-y-2.5 border-t border-white/[0.06]">
+              <div class="flex items-center gap-2 flex-wrap">
+                <select id="snsIgAutoDmScope" class="studio-input h-8 px-2.5 text-[12px]">
+                  <option value="reel">이번에 올리는 릴스만</option>
+                  <option value="all">내 인스타 전체 릴스 공통</option>
+                </select>
+                <label class="inline-flex items-center gap-1.5 text-[12px] text-[#c4c4cc] cursor-pointer ml-auto">
+                  <input id="snsIgAutoDmAllComments" type="checkbox" onchange="arIgDmMatchModeChange()" />
+                  <span>키워드 없이 모든 댓글에 발송</span>
+                </label>
+              </div>
+              <div id="snsIgAutoDmKeywordsRow" class="space-y-1">
+                <div class="flex items-center justify-between gap-2">
+                  <label for="snsIgAutoDmKeywords" class="text-[11.5px] text-[#a1a1aa]">반응할 댓글 키워드 (쉼표로 구분)</label>
+                  <button type="button" onclick="arIgDmAppendCta()" class="tag-chip text-[11px] cursor-pointer">+ 본문에 댓글 유도 문구 넣기</button>
+                </div>
+                <input id="snsIgAutoDmKeywords" type="text" class="studio-input w-full h-9 px-3 text-[12.5px]" placeholder="예: 견적, 가격, 상담, 위치" />
+              </div>
+              <div class="space-y-1">
+                <label for="snsIgAutoDmText" class="text-[11.5px] text-[#a1a1aa]">자동으로 보낼 DM 내용 (링크·안내·혜택)</label>
+                <textarea id="snsIgAutoDmText" rows="3" maxlength="950" class="studio-input w-full p-2.5 text-[12.5px] leading-relaxed" placeholder="안녕하세요! 댓글 남겨주셔서 감사합니다. 아래 링크에서 바로 확인해 보세요 👉"></textarea>
+              </div>
+              <div class="space-y-1">
+                <label for="snsIgAutoDmReply" class="text-[11.5px] text-[#a1a1aa]">자동 대댓글 <span class="text-[#71717a]">(선택 · 비우면 DM만 발송)</span></label>
+                <input id="snsIgAutoDmReply" type="text" maxlength="280" class="studio-input w-full h-9 px-3 text-[12.5px]" placeholder="예: DM으로 상세 안내 보내드렸어요! 확인해 주세요 💌" />
+              </div>
+              <div class="flex items-center gap-2 flex-wrap pt-1">
+                <button type="button" id="arIgDmSaveBtn" onclick="arIgDmSaveRule()" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">지금 규칙만 저장</button>
+                <button type="button" onclick="arIgDmLoadRules(true)" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">규칙·발송내역 새로고침</button>
+                <span id="snsIgAutoDmNotice" class="text-[11.5px] text-[#4cc38a]"></span>
+              </div>
+              <div id="arIgDmRulesList" class="space-y-1.5 text-[12px]"></div>
+              <details class="studio-sub p-2.5 text-[11.5px] text-[#a1a1aa] space-y-1.5">
+                <summary class="cursor-pointer text-[#d4d4d8]">Meta 댓글 웹훅 연결 안내 (관리자·단독 계정용)</summary>
+                <p>Meta 개발자 앱 → Webhooks → Instagram → <strong>comments</strong> 구독에 아래 주소를 등록하면 댓글 즉시 DM이 발송됩니다.</p>
+                <div class="flex items-center gap-1.5">
+                  <input id="arIgDmWebhookUrl" type="text" readonly value="https://autoreelsmaker.kr/api/sns?action=ig-webhook" class="studio-input flex-1 h-8 px-2 text-[11px] font-mono" />
+                  <button type="button" onclick="arIgDmCopyWebhook()" class="btn-secondary h-8 px-2.5 text-[11px] cursor-pointer">복사</button>
+                </div>
+                <p class="text-[11px] text-[#85858b]">필요 권한: <code>instagram_manage_comments</code> · <code>instagram_manage_messages</code> (본인 테스트 계정 1개는 앱 검수 없이 즉시 사용 가능)</p>
+              </details>
+            </div>
             <details class="studio-sub p-3 space-y-2">
               <summary>예약·발행 내역</summary>
               <button id="arHistoryRefresh" type="button" class="btn-secondary h-8 px-3">내역 새로고침</button>
@@ -2247,7 +2290,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-smooth-trans"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-ig-autodm"><\/script>');
     }
   </script>
   <!--

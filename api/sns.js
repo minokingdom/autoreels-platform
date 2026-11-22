@@ -21,6 +21,23 @@ function send(res, status, body) {
   res.status(status).json(body);
 }
 
+async function readRawBuffer(req) {
+  if (Buffer.isBuffer(req.body)) return req.body;
+  if (typeof req.body === 'string') return Buffer.from(req.body, 'utf8');
+  if (req.body && typeof req.body === 'object') return Buffer.from(JSON.stringify(req.body), 'utf8');
+  return await new Promise((resolve) => {
+    const chunks = [];
+    let total = 0;
+    req.on('data', (c) => {
+      total += c.length;
+      if (total > 200000) { req.destroy(); return; }
+      chunks.push(Buffer.from(c));
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', () => resolve(Buffer.alloc(0)));
+  });
+}
+
 async function readBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
   if (typeof req.body === 'string') {
@@ -61,6 +78,29 @@ module.exports = async function handler(req, res) {
     return send(res, 503, { ok: false, error: 'server_mode_off', message: '회원 서버가 아직 준비되지 않았습니다.' });
   }
 
+  // Meta Instagram 댓글 Webhook (GET 검증 챌린지 + POST 댓글 자동 DM 처리)
+  if (action === 'ig-webhook' || (req.method === 'GET' && q['hub.mode'] === 'subscribe')) {
+    if (req.method === 'GET') {
+      const v = sns.verifyIgWebhook(q);
+      if (!v.ok) return res.status(403).send('forbidden');
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.status(200).send(v.challenge);
+    }
+    if (req.method === 'POST') {
+      try {
+        const rawBuf = await readRawBuffer(req);
+        const sig = req.headers['x-hub-signature-256'] || '';
+        const out = await sns.handleIgWebhook(rawBuf, sig);
+        return send(res, 200, { ok: true, ...out });
+      } catch (e) {
+        if (e instanceof sns.SnsError && e.status === 403) return send(res, 403, { ok: false, error: 'bad_signature' });
+        console.error('[sns-webhook]', e && e.message);
+        return send(res, 200, { ok: false, error: 'webhook_error' });
+      }
+    }
+    return send(res, 405, { ok: false, error: 'method' });
+  }
+
   // SNS 로그인 후 돌아오는 곳
   if (!action && req.method === 'GET' && (q.state || q.error)) {
     if (q.error) return backTo(res, { sns: 'error', reason: String(q.error_reason || q.error).slice(0, 60) });
@@ -81,8 +121,21 @@ module.exports = async function handler(req, res) {
     if (action === 'status') {
       return send(res, 200, { ok: true, ...(await sns.status(user)) });
     }
+    if (action === 'dm-rules') {
+      return send(res, 200, { ok: true, ...(await sns.listIgDmRules(user)) });
+    }
     if (req.method !== 'POST') return send(res, 405, { ok: false, error: 'method' });
     const b = await readBody(req);
+
+    if (action === 'dm-save') {
+      return send(res, 200, { ok: true, ...(await sns.saveIgDmRule(user, b)) });
+    }
+    if (action === 'dm-toggle') {
+      return send(res, 200, { ok: true, ...(await sns.toggleIgDmRule(user, b.id, b.enabled)) });
+    }
+    if (action === 'dm-delete') {
+      return send(res, 200, { ok: true, ...(await sns.deleteIgDmRule(user, b.id)) });
+    }
 
     if (action === 'connect') {
       return send(res, 200, { ok: true, url: await sns.startAuth(user, String(b.target || ''), req.headers.host) });
@@ -109,7 +162,7 @@ module.exports = async function handler(req, res) {
       if (!/^[a-zA-Z0-9_-]{16,100}$/.test(String(b.requestId || ''))) return send(res,400,{ok:false,error:'request_id_required',message:'화면을 새로고침한 뒤 다시 게시해 주세요.'});
       const expectedJobs = new Set((Array.isArray(b.targets) ? b.targets : []).filter(t => sns.TARGETS.includes(t))).size;
       if (!expectedJobs) return send(res,400,{ok:false,error:'targets_required',message:'발행할 SNS를 골라 주세요.'});
-      const signature='sns:'+require('node:crypto').createHash('sha256').update(JSON.stringify([[...new Set(b.targets)].sort(),b.videoUrl,b.caption||'',b.title||'',b.scheduledAt||'',Boolean(b.igFirstComment)])).digest('hex');
+      const signature='sns:'+require('node:crypto').createHash('sha256').update(JSON.stringify([[...new Set(b.targets)].sort(),b.videoUrl,b.caption||'',b.title||'',b.scheduledAt||'',Boolean(b.igFirstComment),b.igAutoDm||null])).digest('hex');
       const q = await consume(req, 'export', 1, {requestId:b.requestId,expectedJobs,signature});
       if (!q.ok) return send(res, q.status, q.body);
       try {

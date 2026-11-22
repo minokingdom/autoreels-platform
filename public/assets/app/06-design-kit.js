@@ -261,7 +261,7 @@
       const selected = campaign.scenePlan && campaign.scenePlan[cutIdx];
       const chosen = selected && Number.isInteger(selected.photoIdx) && campaign.uploadedPhotos[selected.photoIdx] ? selected.photoIdx : idx;
       if (!isOutro) syncCutVideos(chosen, Math.max(0, (window.__realTimelineT || 0) - (selected && Number.isInteger(selected.photoIdx) ? getCutStart(cutIdx) : toRealTime(idx * sceneDur))));
-      return { photos, n, idx, cutIdx, cuts, p: Math.min(1, into / sceneDur), tp: idx === 0 || isOutro ? 1 : Math.min(1, into / 0.5), into, sceneDur };
+      return { photos, n, idx, cutIdx, cuts, p: Math.min(1, into / sceneDur), tp: idx === 0 || isOutro ? 1 : Math.min(1, into / 0.85), into, sceneDur };
     }
     function kitImg(S, k) {
       if (!S.n) return null;
@@ -322,16 +322,19 @@
       const cur = kitImg(S, k);
       const prev = kitImg(S, k - 1);
       const kb = (p, i) => {
-        const m = (((i + (spec.seed || 0)) % 3) + 3) % 3;
-        if (m === 0) return { s: 1.04 + 0.08 * p, x: 0, y: 0 };
-        if (m === 1) return { s: 1.12, x: 24 - 48 * p, y: 0 };
-        return { s: 1.14 - 0.08 * p, x: 0, y: -12 + 24 * p };
+        const m = (((i + (spec.seed || 0)) % 5) + 5) % 5;
+        if (m === 0) return { s: 1.03 + 0.05 * p, x: 0, y: 0 };
+        if (m === 1) return { s: 1.06, x: 12 - 24 * p, y: 0 };
+        if (m === 2) return { s: 1.08 - 0.05 * p, x: 0, y: 0 };
+        if (m === 3) return { s: 1.06, x: 0, y: -10 + 20 * p };
+        return { s: 1.04 + 0.03 * p, x: -10 + 20 * p, y: 8 - 16 * p };
       };
       const mc = kb(o.still ? 0.5 : S.p, S.idx + k);
       const mp = kb(1, S.idx + k - 1);
       const tp = o.still ? 1 : S.tp;
-      const e = gEase(tp);
-      const tr = o.trans || spec.trans;
+      const e = tp < 0.5 ? 4 * tp * tp * tp : 1 - Math.pow(-2 * tp + 2, 3) / 2;
+      const cleanKitTrans = ['slide', 'wipe', 'blinds', 'iris', 'zoom', 'fade'];
+      const tr = o.trans || cleanKitTrans[(((S.idx + k + (spec.seed || 0)) % cleanKitTrans.length) + cleanKitTrans.length) % cleanKitTrans.length];
       const draw = (img, m, dx, dy, sc, a) => {
         c.globalAlpha = a;
         kitCover(c, img, r.x + dx, r.y + dy, r.w, r.h, m.s * (sc || 1), m.x, m.y);

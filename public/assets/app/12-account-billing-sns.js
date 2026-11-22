@@ -936,6 +936,206 @@
       const r = await arSnsApi('status');
       if (r.ok) AR_SNS_STATE = r.body;
       arSnsRender();
+      arIgDmLoadRules(false);
+    }
+
+    // ==========================================================================
+    // ★ 인스타 댓글 키워드 자동 DM (발행 패널 연동)
+    // ==========================================================================
+    const AR_IG_DM_DEFAULTS = {
+      auto:       { kw: '견적, 가격, 상담', reply: 'DM으로 맞춤 견적 안내 보내드렸어요! 💌', msg: (n, p) => `안녕하세요, ${n}입니다!\n댓글 남겨주셔서 감사합니다.\n원하시는 차종·조건을 알려주시면 최저가 프로모션 견적을 바로 안내해 드릴게요.${p ? `\n📞 빠른 상담: ${p}` : ''}` },
+      dining:     { kw: '위치, 메뉴, 예약', reply: 'DM으로 매장 위치와 메뉴 안내 보내드렸어요! 🍽️', msg: (n, p) => `안녕하세요, ${n}입니다!\n댓글 남겨주셔서 감사합니다.\n대표 메뉴와 네이버 예약 안내를 보내드려요. 방문 전 편하게 문의해 주세요!${p ? `\n📞 문의: ${p}` : ''}` },
+      cafe:       { kw: '위치, 메뉴, 영업시간', reply: 'DM으로 위치와 시그니처 메뉴 안내 보내드렸어요! ☕', msg: (n, p) => `안녕하세요, ${n}입니다!\n관심 가져주셔서 감사합니다.\n매장 위치와 오늘의 추천 메뉴 안내를 드립니다.${p ? `\n📞 문의: ${p}` : ''}` },
+      beauty:     { kw: '가격, 예약, 시술', reply: 'DM으로 시술 가격표와 예약 안내 보내드렸어요! ✨', msg: (n, p) => `안녕하세요, ${n}입니다!\n댓글 남겨주셔서 감사합니다.\n시술 가격과 이달의 이벤트, 빠른 예약 안내를 보내드려요.${p ? `\n📞 예약 문의: ${p}` : ''}` },
+      realestate: { kw: '매물, 가격, 위치', reply: 'DM으로 매물 상세 정보 보내드렸어요! 🏠', msg: (n, p) => `안녕하세요, ${n}입니다!\n문의하신 매물의 상세 조건과 투어 가능 일정을 안내해 드립니다.${p ? `\n📞 직통 문의: ${p}` : ''}` },
+      academy:    { kw: '수강료, 상담, 커리큘럼', reply: 'DM으로 커리큘럼과 수강 안내 보내드렸어요! 📚', msg: (n, p) => `안녕하세요, ${n}입니다!\n댓글 남겨주셔서 감사합니다.\n반별 커리큘럼과 무료 레벨테스트·상담 안내를 보내드려요.${p ? `\n📞 상담 문의: ${p}` : ''}` },
+      clinic:     { kw: '비용, 예약, 상담', reply: 'DM으로 진료 안내와 예약 방법 보내드렸어요! 🏥', msg: (n, p) => `안녕하세요, ${n}입니다!\n댓글 남겨주셔서 감사합니다.\n진료 시간과 상담 예약 안내를 보내드립니다.${p ? `\n📞 문의: ${p}` : ''}` },
+      fitness:    { kw: '가격, PT, 체험', reply: 'DM으로 PT 혜택과 무료 체험 안내 보내드렸어요! 💪', msg: (n, p) => `안녕하세요, ${n}입니다!\n댓글 남겨주셔서 감사합니다.\n이달의 PT 프로모션과 1회 무료 체험 신청 안내를 보내드려요.${p ? `\n📞 상담: ${p}` : ''}` },
+      shop:       { kw: '구매, 링크, 가격', reply: 'DM으로 상품 링크와 할인 정보 보내드렸어요! 🛍️', msg: (n, p) => `안녕하세요, ${n}입니다!\n관심 가져주셔서 감사합니다.\n영상 속 상품 상세 안내와 구매 링크를 보내드려요.${p ? `\n📞 문의: ${p}` : ''}` },
+      interior:   { kw: '견적, 시공, 평수', reply: 'DM으로 시공 견적 안내 보내드렸어요! 🏡', msg: (n, p) => `안녕하세요, ${n}입니다!\n댓글 남겨주셔서 감사합니다.\n평수별 시공 사례와 무료 방문 견적 안내를 보내드려요.${p ? `\n📞 문의: ${p}` : ''}` }
+    };
+
+    function arIgDmPrefillDefaults(force) {
+      const kwEl = document.getElementById('snsIgAutoDmKeywords');
+      const txtEl = document.getElementById('snsIgAutoDmText');
+      const repEl = document.getElementById('snsIgAutoDmReply');
+      if (!kwEl || !txtEl) return;
+      const key = (typeof IND !== 'undefined' && IND.key) ? IND.key : 'auto';
+      const preset = AR_IG_DM_DEFAULTS[key] || AR_IG_DM_DEFAULTS.auto;
+      const d = typeof getSelectedDealer === 'function' ? getSelectedDealer() : {};
+      const storeName = (d && (d.branch || d.name)) || (typeof IND !== 'undefined' && IND.place) || '매장';
+      const phone = (d && d.phone) || '';
+      if (force || !kwEl.value.trim()) kwEl.value = preset.kw;
+      if (force || !txtEl.value.trim()) txtEl.value = preset.msg(storeName, phone);
+      if (repEl && (force || !repEl.value.trim())) repEl.value = preset.reply;
+    }
+
+    function arIgDmTogglePanel(on) {
+      const wrap = document.getElementById('snsIgAutoDmWrap');
+      if (wrap) wrap.classList.toggle('hidden', !on);
+      if (on) {
+        arIgDmPrefillDefaults(false);
+        arIgDmMatchModeChange();
+        arIgDmLoadRules(false);
+      }
+    }
+
+    function arIgDmMatchModeChange() {
+      const all = Boolean(document.getElementById('snsIgAutoDmAllComments')?.checked);
+      const kwRow = document.getElementById('snsIgAutoDmKeywordsRow');
+      if (kwRow) kwRow.style.opacity = all ? '0.45' : '1';
+      const kwEl = document.getElementById('snsIgAutoDmKeywords');
+      if (kwEl) kwEl.disabled = all;
+    }
+
+    function arIgDmAppendCta() {
+      const ta = document.getElementById('dlrCaptionTextarea');
+      if (!ta) return;
+      const all = Boolean(document.getElementById('snsIgAutoDmAllComments')?.checked);
+      const firstKw = String(document.getElementById('snsIgAutoDmKeywords')?.value || '안내').split(/[,，\n]+/)[0].trim() || '안내';
+      const cta = all
+        ? '💬 궁금한 점을 댓글로 남겨주시면 DM으로 바로 안내 보내드려요!'
+        : `💬 상세 안내가 필요하시면 댓글에 '${firstKw}'을(를) 남겨주세요! 바로 DM 보내드려요 💌`;
+      if (ta.value.includes(cta)) {
+        if (typeof arToast === 'function') arToast('이미 본문에 댓글 유도 문구가 들어 있어요.');
+        return;
+      }
+      const cur = ta.value.trim();
+      ta.value = cur ? `${cta}\n\n${cur}` : cta;
+      if (typeof arToast === 'function') arToast('본문 상단에 댓글 유도 문구를 추가했어요', true);
+    }
+
+    function arIgDmCollectPayload() {
+      const enabled = Boolean(document.getElementById('snsIgAutoDmEnabled')?.checked);
+      if (!enabled) return null;
+      const all = Boolean(document.getElementById('snsIgAutoDmAllComments')?.checked);
+      const keywords = String(document.getElementById('snsIgAutoDmKeywords')?.value || '').trim();
+      const dmText = String(document.getElementById('snsIgAutoDmText')?.value || '').trim();
+      const replyText = String(document.getElementById('snsIgAutoDmReply')?.value || '').trim();
+      const scope = document.getElementById('snsIgAutoDmScope')?.value === 'all' ? 'all' : 'reel';
+      if (!dmText) return null;
+      if (!all && !keywords) return null;
+      return { enabled: true, matchMode: all ? 'all' : 'contains', keywords, dmText, replyText, scope };
+    }
+
+    function arIgDmRenderRules(data) {
+      const box = document.getElementById('arIgDmRulesList');
+      const urlEl = document.getElementById('arIgDmWebhookUrl');
+      if (urlEl && data && data.webhookUrl) urlEl.value = data.webhookUrl;
+      if (!box) return;
+      const rules = (data && Array.isArray(data.rules)) ? data.rules : [];
+      const logs = (data && Array.isArray(data.logs)) ? data.logs : [];
+      if (!rules.length) {
+        box.innerHTML = '<div class="text-[11.5px] text-[#85858b]">저장된 자동 DM 규칙이 없습니다. 위 내용을 입력하고 [지금 규칙만 저장]하거나 릴스를 발행하면 자동 연동됩니다.</div>';
+        return;
+      }
+      const esc = (s) => String(s || '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+      box.innerHTML = rules.map((r) => {
+        const scopeLabel = r.mediaId === '*' ? '전체 릴스' : '특정 릴스';
+        const kwLabel = r.matchMode === 'all' ? '모든 댓글' : `키워드: ${esc(r.keywords)}`;
+        return `
+          <div class="flex items-start justify-between gap-2 p-2.5 rounded-lg bg-white/[0.03] border border-white/[0.07]">
+            <div class="min-w-0 flex-1 space-y-0.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="px-1.5 py-0.5 rounded bg-white/10 text-[10.5px] font-semibold text-[#ededed]">${scopeLabel}</span>
+                <span class="text-[11.5px] font-medium text-[#d4d4d8]">${kwLabel}</span>
+                <span class="text-[10.5px] text-[#4cc38a]">발송 ${Number(r.sentCount || 0)}건</span>
+              </div>
+              <div class="text-[11px] text-[#a1a1aa] truncate">${esc(r.dmText)}</div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" onclick="arIgDmToggleRule('${esc(r.id)}', ${!r.enabled})" class="tag-chip text-[11px] cursor-pointer ${r.enabled ? 'is-on' : ''}">${r.enabled ? '켜짐' : '꺼짐'}</button>
+              <button type="button" onclick="arIgDmDeleteRule('${esc(r.id)}')" class="tag-chip text-[11px] cursor-pointer text-[#f87171]">삭제</button>
+            </div>
+          </div>`;
+      }).join('') + (logs.length ? `
+        <div class="pt-1.5 space-y-1">
+          <div class="text-[11px] font-semibold text-[#a1a1aa]">최근 자동 DM 발송 기록 (${logs.length}건)</div>
+          ${logs.slice(0, 5).map((l) => `
+            <div class="text-[11px] text-[#a1a1aa] flex items-center justify-between gap-2">
+              <span class="truncate">${l.status === 'sent' ? '✅' : '⚠️'} @${esc(l.commenter || 'user')}: "${esc(l.commentText)}"</span>
+              <span class="shrink-0 text-[#71717a]">${l.createdAt ? new Date(l.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : '');
+    }
+
+    async function arIgDmLoadRules(showToast) {
+      if (!AR_SERVER.mode || !AR_SERVER.me) return;
+      try {
+        const r = await arSnsApi('dm-rules');
+        if (r.ok) {
+          arIgDmRenderRules(r.body);
+          if (showToast && typeof arToast === 'function') arToast('자동 DM 규칙을 불러왔어요', true);
+        }
+      } catch (_) {}
+    }
+
+    async function arIgDmSaveRule() {
+      if (!AR_SERVER.me) { openDealerAuthModal(); return; }
+      const notice = document.getElementById('snsIgAutoDmNotice');
+      const btn = document.getElementById('arIgDmSaveBtn');
+      const all = Boolean(document.getElementById('snsIgAutoDmAllComments')?.checked);
+      const keywords = String(document.getElementById('snsIgAutoDmKeywords')?.value || '').trim();
+      const dmText = String(document.getElementById('snsIgAutoDmText')?.value || '').trim();
+      const replyText = String(document.getElementById('snsIgAutoDmReply')?.value || '').trim();
+      const scope = document.getElementById('snsIgAutoDmScope')?.value === 'all' ? 'all' : 'reel';
+      if (!dmText) { if (notice) notice.textContent = '보낼 DM 내용을 입력해 주세요.'; return; }
+      if (!all && !keywords) { if (notice) notice.textContent = '반응할 키워드를 입력하거나 [모든 댓글]을 선택해 주세요.'; return; }
+      if (btn) btn.disabled = true;
+      try {
+        const r = await arSnsApi('dm-save', {
+          mediaId: '*',
+          scope,
+          matchMode: all ? 'all' : 'contains',
+          keywords,
+          dmText,
+          replyText,
+          title: (campaign && (campaign.hook || campaign.vehicle)) || '인스타 댓글 자동 DM'
+        });
+        if (!r.ok) throw new Error(r.body.message || '저장에 실패했습니다.');
+        arIgDmRenderRules(r.body);
+        if (notice) notice.textContent = '저장 완료! 댓글이 달리면 자동으로 DM이 발송됩니다.';
+        if (typeof arToast === 'function') arToast('댓글 자동 DM 규칙을 저장했어요', true);
+      } catch (e) {
+        if (notice) notice.textContent = e.message || '저장에 실패했습니다.';
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function arIgDmToggleRule(id, enabled) {
+      const r = await arSnsApi('dm-toggle', { id, enabled });
+      if (r.ok) arIgDmRenderRules(r.body);
+    }
+
+    async function arIgDmDeleteRule(id) {
+      if (!confirm('이 자동 DM 규칙을 삭제할까요?')) return;
+      const r = await arSnsApi('dm-delete', { id });
+      if (r.ok) {
+        arIgDmRenderRules(r.body);
+        if (typeof arToast === 'function') arToast('자동 DM 규칙을 삭제했어요');
+      }
+    }
+
+    function arIgDmCopyWebhook() {
+      const el = document.getElementById('arIgDmWebhookUrl');
+      const val = (el && el.value) || 'https://autoreelsmaker.kr/api/sns?action=ig-webhook';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(val).then(() => { if (typeof arToast === 'function') arToast('웹훅 주소를 복사했어요', true); }).catch(() => {});
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.arIgDmTogglePanel = arIgDmTogglePanel;
+      window.arIgDmMatchModeChange = arIgDmMatchModeChange;
+      window.arIgDmAppendCta = arIgDmAppendCta;
+      window.arIgDmSaveRule = arIgDmSaveRule;
+      window.arIgDmLoadRules = arIgDmLoadRules;
+      window.arIgDmToggleRule = arIgDmToggleRule;
+      window.arIgDmDeleteRule = arIgDmDeleteRule;
+      window.arIgDmCopyWebhook = arIgDmCopyWebhook;
     }
 
     async function arSnsSelectPage(pageId) {
@@ -1022,10 +1222,12 @@
         const schedRaw = document.getElementById('snsScheduleAt')?.value;
         const scheduledAt = schedOn && schedRaw ? new Date(schedRaw).toISOString() : '';
         const igFirstComment = Boolean(document.getElementById('snsIgFirstComment')?.checked);
-        const pub = await arSnsApi('publish', { targets, videoUrl, caption, title, scheduledAt, igFirstComment, requestId });
+        const igAutoDm = arIgDmCollectPayload();
+        const pub = await arSnsApi('publish', { targets, videoUrl, caption, title, scheduledAt, igFirstComment, igAutoDm, requestId });
         if (!pub.ok) throw new Error(pub.body.message || '발행을 시작하지 못했습니다');
         await arSnsTrackJobs(pub.body.jobs || []);
         await arShowSnsHistory();
+        if (igAutoDm && igAutoDm.enabled) arIgDmLoadRules(false);
       } catch (e) {
         arSnsLog(`발행 실패: ${e.message || e}`, 'err');
         if (stepStatus) stepStatus.textContent = '발행 실패';
