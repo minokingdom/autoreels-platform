@@ -360,8 +360,7 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
     if(selected.type==='sticker'){
       if(typeof window.openShortsStickerDialog==='function')window.openShortsStickerDialog(session);
     }else{
-      if(selected.cue && typeof editCue==='function')editCue(session,'caption',selected.cue);
-      else if(typeof editGlobalCaptionStyle==='function')editGlobalCaptionStyle(session);
+      if(typeof editCue==='function')editCue(session,'caption',selected.cue||undefined);
     }
   });
   document.getElementById('seDelBtn')?.addEventListener('click',e=>{
@@ -395,8 +394,7 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
       }else if(act==='caption'){
         const cue=typeof activeCue==='function'?activeCue(session,session.trackTime||0):null;
         if(typeof selectMix==='function')selectMix(session,'caption');
-        if(cue && typeof editCue==='function')editCue(session,'caption',cue);
-        else if(typeof editGlobalCaptionStyle==='function')editGlobalCaptionStyle(session);
+        if(typeof editCue==='function')editCue(session,'caption',cue||undefined);
       }else if(act==='draw'){
         if(drawOverlay)drawOverlay.hidden=false;
       }else if(act==='sticker'){

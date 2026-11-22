@@ -498,6 +498,7 @@ function editCue(s,type,cue){
   }else{
     text=mixField(box,'자막',document.createElement('input'));text.maxLength=240;text.value=cue?.text||'';
     text.placeholder='여기에 자막을 치면 아래 폰트가 바로 미리보기 됩니다';
+    if(!cue)setTimeout(()=>{try{text.focus();}catch(_){}},60);
     getCapStyle=buildCaptionStylePicker(box,{
       textInput:text,
       font:cue?.font||s.clip.captionFont,
@@ -849,7 +850,7 @@ function renderMixActions(s){
     sfx:[['＋','효과음 추가',()=>editCue(s,'sfx')],['⌁','효과음 편집',()=>editCue(s,'sfx',item)],['⌫','삭제',remove]],
     source:[['♩',currentTake(s)?.take.owner.keepAudio===false?'소리 켜기':'음소거',()=>changeTake(s,t=>({...t,owner:{...t.owner,keepAudio:t.owner.keepAudio===false}}))]],
     music:[['♫','곡·스트리밍',()=>pickMusic(s,'실시간 스트리밍')],['📁','내 음원',()=>pickMusic(s,'내 음원·가요')],['⌫','음악 제거',()=>{byId('music').value='';byId('music').dispatchEvent(new Event('input',{bubbles:true}));}]],
-    caption:[['＋','자막 추가',()=>editCue(s,'caption')],['Aa','폰트·위치',()=>item?editCue(s,'caption',item):editGlobalCaptionStyle(s)],['T','전체 스타일',()=>editGlobalCaptionStyle(s)],['⌫','삭제',remove]]
+    caption:[['＋','자막 추가',()=>editCue(s,'caption')],['Aa','자막 편집',()=>editCue(s,'caption',item||undefined)],['T','전체 스타일',()=>editGlobalCaptionStyle(s)],['⌫','삭제',remove]]
   };
   panel.replaceChildren(...tools[type].map(([icon,label,fn])=>{
     const button=mixButton(label,()=>{
