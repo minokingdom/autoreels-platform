@@ -179,7 +179,7 @@ function drawQuickScene(ctx,source,clip) {
   }
   drawQuickFrame(ctx,source,zoom);
 }
-function paintClip(ctx, source, text, clip=session.clip) {
+function paintClip(ctx, source, text, clip=session.clip, outputTime=0) {
   const w = ctx.canvas.width, h = ctx.canvas.height;
   if (quickEdit) {
     drawQuickScene(ctx,source,clip);
@@ -191,6 +191,7 @@ function paintClip(ctx, source, text, clip=session.clip) {
       ctx.fillStyle=shade; ctx.fillRect(0,0,w,h);
     }
 
+    paintEffects(ctx,session,outputTime);
     drawTitles(ctx,clip,text); return;
   }
   const scale = Math.max(w/source.videoWidth,h/source.videoHeight);
@@ -220,7 +221,7 @@ async function exportShortClip(forPublish) {
       source.onloadeddata = resolve; source.onerror = () => reject(Error('영상을 열 수 없어요.')); source.src = sequenceTakes(s)[0].url;
     })]); await resume;
     const ranges = sequenceTakes(s);
-    let takeIndex = 0;
+    let takeIndex = 0, outputOffset=0;
     const firstStart = ranges[0].start;
     await Promise.race([failure,positionJoinedTake(source,ranges[0],s.controller.signal)]);
     const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1920;
@@ -243,15 +244,16 @@ async function exportShortClip(forPublish) {
       try {
         if (musicNode) musicNode.volume.gain.value=quickMusicGain(ranges[takeIndex].owner,source.currentTime);
         if (source.currentTime >= ranges[takeIndex].end || source.ended) {
+          outputOffset+=takeDuration(ranges[takeIndex]);
           if (++takeIndex >= ranges.length) { stop(); return; }
           recorder.pause(); source.pause();
           await context.suspend();
           const take = ranges[takeIndex];
           await Promise.race([failure,positionJoinedTake(source,take,s.controller.signal)]);
           gain.gain.value = take.owner.keepAudio === false ? 0 : 1;
-          paintClip(ctx,source,activeCaption(take.owner,source.currentTime),take.owner);
+          paintClip(ctx,source,activeCaption(take.owner,source.currentTime),take.owner,outputOffset);
           await context.resume(); await source.play(); recorder.resume();
-        } else { const owner=ranges[takeIndex].owner; paintClip(ctx,source,activeCaption(owner,source.currentTime),owner); }
+        } else { const owner=ranges[takeIndex].owner; paintClip(ctx,source,activeCaption(owner,source.currentTime),owner,outputOffset+Math.max(0,source.currentTime-ranges[takeIndex].start)/(owner.rate||1)); }
         raf = requestAnimationFrame(draw);
       } catch (error) { rejectRender(error); }
     };

@@ -19,3 +19,9 @@ test('지원되지 않는 효과를 가짜 성공으로 바꾸지 않는다',asy
  const res={status(n){this.code=n;return this},json(b){this.body=b;return this}};
  try{await handleReferenceAnalysis({frames:['/9j/AA==','/9j/AA=='],timeline:'test'},res);assert.equal(res.code,422);assert.equal(res.body.ok,false);}finally{global.fetch=original;if(old===undefined)delete process.env.GEMINI_API_KEY;else process.env.GEMINI_API_KEY=old;}
 });
+test('측정된 효과만 편집기 카탈로그에 보존한다',()=>{
+ const effect={kind:'flash',duration:.267,strength:.41};
+ assert.deepEqual(validateStyle({...style,effects:[{...effect,start:82}]}).effects,[effect]);
+ for(const patch of [{kind:'script'},{duration:0},{strength:2}])
+   assert.throws(()=>validateStyle({...style,effects:[{...effect,...patch}]}));
+});

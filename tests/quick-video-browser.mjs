@@ -210,8 +210,47 @@ try {
   await frame.locator('#trackUndo').click();
   assert.deepEqual(await readCuts(),[[0,3],[3,6]]);
   await frame.locator('#trackDelete').click();
+  await frame.locator('#trackCursor').fill('0.5');
+  await frame.locator('#fxRecipe').selectOption({label:'폴라로이드 · 골든 플래시'});
+  await frame.locator('#fxAdd').click();
+  assert.equal(await frame.locator('#fxDuration').inputValue(),'0.27');
+  await frame.locator('#fxCopy').click();
+  assert.equal(await frame.locator('.fx-block').count(),2);
+  await frame.locator('#fxRemove').click();
+  await frame.locator('#fxDuration').fill('1.5');
+  await frame.locator('#fxDuration').press('Tab');
+  await frame.locator('#fxStrength').fill('100');
+  await frame.locator('#trackCursor').fill('0.55');
+  await frame.locator('#overlay').evaluate(async el=>{
+    const ctx=el.getContext('2d');
+    for(let i=0;i<80;i++){
+      const rgb=ctx.getImageData(el.width/2,el.height/2,1,1).data;
+      if(rgb[1]>130)return;
+      await new Promise(resolve=>setTimeout(resolve,25));
+    }
+    throw Error('골든 플래시 미리보기 색상 불일치');
+  });
   await frame.locator('#save').click();
   await frame.locator('#download').waitFor({timeout:18000});
+  const colors=await frame.locator('#download').evaluate(async link=>{
+    const el=document.createElement('video');el.muted=true;el.src=link.href;
+    const c=document.createElement('canvas');c.width=c.height=1;
+    const ctx=c.getContext('2d',{willReadFrequently:true}),lit=[],plain=[];
+    el.playsInline=true;
+    const sample=(_,frame)=>{
+      ctx.drawImage(el,0,0,1,1);
+      const green=ctx.getImageData(0,0,1,1).data[1];
+      if(frame.mediaTime>.58 && frame.mediaTime<1.1)lit.push(green);
+      if(frame.mediaTime>2.15 && frame.mediaTime<2.9)plain.push(green);
+      if(!el.ended)el.requestVideoFrameCallback(sample);
+    };
+    el.requestVideoFrameCallback(sample);
+    const ended=new Promise((resolve,reject)=>{el.onended=resolve;el.onerror=reject;});
+    await el.play();await ended;
+    if(!lit.length || !plain.length)throw Error('MP4 효과 구간 디코딩 실패');
+    return [Math.max(...lit),Math.max(...plain)];
+  });
+  assert.ok(colors[0]>colors[1]+60,'MP4 효과 구간의 녹색 채널 변화 '+colors);
   const trimmed=await frame.locator('#download').evaluate(async a=>{
     const out=document.createElement('video');out.muted=true;out.src=a.href;
     const ended=new Promise((res,rej)=>{out.onended=res;out.onerror=rej;});

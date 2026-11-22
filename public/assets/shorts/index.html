@@ -2,7 +2,7 @@
 <html lang="ko"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>오토릴스메이커 · 내 영상으로 쇼츠 만들기</title>
-<link rel="stylesheet" href="/assets/app/astryx-tokens.css"><link rel="stylesheet" href="/assets/design-system.css"><link rel="stylesheet" href="screen.css?v=cut2">
+<link rel="stylesheet" href="/assets/app/astryx-tokens.css"><link rel="stylesheet" href="/assets/design-system.css"><link rel="stylesheet" href="screen.css?v=fx1">
 </head><body><main>
 <header><b>오토릴스<span>메이커</span></b><a data-studio-back href="/studio?from=shorts">스튜디오로 돌아가기</a></header>
 <section class="stage" hidden><div id="frame"><video playsinline id="sourceVideo" hidden></video><canvas id="overlay" width="540" height="960" aria-label="영상 제목과 자막"></canvas><button type="button" id="emptyVideoPick" hidden>＋ 영상 추가</button><button id="play" hidden type="button" aria-label="선택 구간 재생">▶</button></div></section>
@@ -17,6 +17,14 @@
 <section id="cutTimeline" hidden aria-label="컷 편집">
 <div class="track-heading"><h2>타임라인</h2><output id="trackTime" for="trackCursor">0:00.0 / 0:00.0</output></div>
 <div id="trackClips" aria-label="편집할 클립"></div>
+<section id="fxPanel" aria-label="영상 효과" hidden>
+<div class="fx-heading"><h3>효과</h3><select id="fxRecipe" aria-label="추가할 효과"></select><button type="button" id="fxAdd">＋ 추가</button></div>
+<div id="fxLanes" aria-label="효과 타임라인"></div>
+<fieldset id="fxInspector" hidden><legend id="fxName"></legend>
+<label>시작(초)<input id="fxStart" type="number" min="0" step="0.01"></label>
+<label>길이(초)<input id="fxDuration" type="number" min="0.05" step="0.01"></label>
+<label>강도<input id="fxStrength" type="range" min="0" max="100"></label>
+<button type="button" id="fxCopy">복제</button><button type="button" id="fxRemove">효과 삭제</button></fieldset></section>
 <input type="range" id="trackCursor" aria-label="편집본 재생 위치" min="0" max="0" step="0.01" value="0" disabled>
 <div id="trackTools" aria-label="선택한 클립 편집">
 <button type="button" id="trackSplit" disabled>분할</button><button type="button" id="trackDelete" disabled>삭제</button><button type="button" id="trackLeft" disabled aria-label="선택한 클립을 앞으로">← 앞으로</button><button type="button" id="trackRight" disabled aria-label="선택한 클립을 뒤로">뒤로 →</button><button type="button" id="trackUndo" disabled>되돌리기</button>
@@ -50,4 +58,4 @@
 <label class="field" for="postCaption">게시글 본문</label><textarea id="postCaption" class="edit-input" rows="2" maxlength="2100"></textarea>
 <button id="postVideo" class="primary" type="button" disabled>SNS에 발행</button>
 <p id="postStatus" class="hint" role="status"></p></section></div>
-</section></main><script src="return.js"></script><script src="export-access.js?v=cut2"></script><script src="shorts.js?v=cut2"></script><script src="editor.js?v=cut2"></script><script src="quick.js?v=cut2"></script><script src="join.js?v=cut2"></script><script src="sns-transport.js"></script><script src="publish.js"></script><script src="timeline.js"></script></body></html>
+</section></main><script src="return.js"></script><script src="export-access.js?v=fx1"></script><script src="shorts.js?v=fx1"></script><script src="editor.js?v=fx1"></script><script src="quick.js?v=fx1"></script><script src="join.js?v=fx1"></script><script src="sns-transport.js"></script><script src="publish.js"></script><script src="effects.js"></script><script src="timeline.js?v=fx1"></script></body></html>

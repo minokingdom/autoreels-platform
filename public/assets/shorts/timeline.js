@@ -80,10 +80,12 @@ function renderCutTrack(s) {
       });
       return button;
     });
+    buttons.forEach((button,i)=>{button.style.flexGrow=takeDuration(takes[i]);});
     strip.replaceChildren(...buttons);
     s.trackThumbController=new AbortController();
     trackThumbnails(s,takes,buttons,s.trackThumbController.signal);
   }
+  renderEffectLanes(s);
   trackTime(s,s.trackTime||0);
 }
 function seekCutTrack(s,time) {
@@ -147,6 +149,7 @@ if(quickEdit) {
 function emptyCutTrack() {
   if(!quickEdit)return;
   document.querySelector('.stage').hidden=false;
+  renderEffectLanes(null);
   byId('emptyVideoPick').hidden=false;
   byId('entry').after(byId('cutTimeline'));
   byId('cutTimeline').hidden=false;

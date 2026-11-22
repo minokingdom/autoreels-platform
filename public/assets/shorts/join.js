@@ -114,7 +114,7 @@ async function showJoinedCover(s,selectedTake) {
   try {
     const first=selectedTake || sequenceTakes(s)[0];
     await positionJoinedTake(source,first,controller.signal);
-    if(session===s && !controller.signal.aborted) paintClip(byId('overlay').getContext('2d'),source,activeCaption(first.owner,first.start),first.owner);
+    if(session===s && !controller.signal.aborted) paintClip(byId('overlay').getContext('2d'),source,activeCaption(first.owner,first.start),first.owner,selectedTake?s.trackTime||0:0);
   } catch { /* 다음 탐색이나 재생이 시작되면 이전 프레임 요청을 취소한다. */ }
 }
 async function previewJoined(s) {
@@ -143,7 +143,7 @@ async function previewJoined(s) {
         const finish=error=>{cancelAnimationFrame(raf);controller.signal.removeEventListener('abort',cancel);source.onerror=null;error?reject(error):resolve();};
         const cancel=()=>finish(controller.signal.reason);
         controller.signal.addEventListener('abort',cancel,{once:true});source.onerror=()=>finish(Error('영상을 재생할 수 없어요.'));
-        const tick=()=>{if(controller.signal.aborted){cancel();return;}trackTime(s,offset+(source.currentTime-original.start)/(original.owner.rate||1));if(music)music.volume=quickMusicGain(take.owner,source.currentTime);paintClip(ctx,source,activeCaption(take.owner,source.currentTime),take.owner);
+        const tick=()=>{if(controller.signal.aborted){cancel();return;}trackTime(s,offset+(source.currentTime-original.start)/(original.owner.rate||1));if(music)music.volume=quickMusicGain(take.owner,source.currentTime);paintClip(ctx,source,activeCaption(take.owner,source.currentTime),take.owner,s.trackTime);
           if(source.ended||source.currentTime>=take.end)finish();else raf=requestAnimationFrame(tick);};
         tick();
       });

@@ -138,7 +138,8 @@ if (quickEdit) {
   let previewFrame;
   const advanceMontage = () => {
     const plan = session?.clip?.montage;
-    if (!plan || video.paused) return;
+    if (video.paused || (!plan && !session?.effects?.length)) return;
+    if(!plan){renderPreview();previewFrame=requestAnimationFrame(advanceMontage);return;}
     const t = video.currentTime;
     if (!video.seeking) {
       const next = plan.find(r => t < r.end);

@@ -126,9 +126,10 @@ function drawTitles(ctx,clip,caption) {
 function renderPreview(at=video.currentTime) {
   if (session?.joined || session?.timelineCuts) return;
   const overlay=byId('overlay'),ctx=overlay.getContext('2d');
-  if (session?.clip?.montage && (video.seeking || video.readyState < 2)) return;
+  const composite=session?.clip?.montage || session?.effects?.length;
+  if (composite && (video.seeking || video.readyState < 2)) return;
   ctx.clearRect(0,0,overlay.width,overlay.height);
-  if (session?.clip?.montage && video.readyState >= 2) paintClip(ctx,video,activeCaption(session.clip,at));
+  if (composite && video.readyState >= 2) paintClip(ctx,video,activeCaption(session.clip,at),session.clip,outputTimeAt(session,at));
   else drawTitles(ctx,session?.clip,activeCaption(session?.clip,at));
 }
 video.addEventListener('seeked',() => renderPreview());
