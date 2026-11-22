@@ -40,6 +40,36 @@ try {
     const file = path.join(root,url.pathname === '/studio' ? 'studio.html' : url.pathname);
     try { await route.fulfill({path:file}); } catch { await route.abort(); }
   });
+  async function verifySourceWave(filename,large=false,nativeOnly=false){
+    await page.goto('http://localhost/assets/shorts/index.html?mode=edit',{waitUntil:'load'});
+    if(nativeOnly)await page.evaluate(()=>Object.defineProperty(window,'AudioDecoder',{value:undefined,configurable:true}));
+    const data=await fs.readFile(filename);
+    await page.evaluate(({bytes,large})=>{
+      const parts=[Uint8Array.from(bytes)];
+      if(large){
+        // 유효한 MP4 free box로 영상 컨테이너의 크기만 키운다.
+        const block=new Uint8Array(1024*1024);
+        const header=new Uint8Array([0,0,0,0,102,114,101,101]);
+        new DataView(header.buffer).setUint32(0,65*block.length+8);
+        parts.push(header,...Array(65).fill(block));
+      }
+      const file=new File(parts,'wave.mp4',{type:'video/mp4'});
+      if(large)file.arrayBuffer=async()=>{throw Error('전체 영상 메모리 복사');};
+      const transfer=new DataTransfer();transfer.items.add(file);
+      fileInput.files=transfer.files;fileInput.dispatchEvent(new Event('change'));
+    },{bytes:[...data],large});
+    await page.waitForFunction(()=>session?.clip?.waveform?.state==='ready',{},{timeout:25000});
+    const result=await page.evaluate(()=>{
+      const c=byId('trackWave'),pixels=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+      return {size:session.file.size,duration:video.duration,bins:session.clip.waveform.levels.length,
+        peak:session.clip.waveform.peak,visible:!c.hidden && pixels.some((value,i)=>i%4===3&&value>0)};
+    });
+    assert.ok(result.visible && result.peak>0 && result.bins>=Math.floor(result.duration*10)-1,JSON.stringify(result));
+    console.log('원본 파형',result.size,result.duration,result.bins,nativeOnly?'브라우저 오디오 디코더':'기본 디코더');
+  }
+  const speechFixture=path.join(root,'assets/remix/fixtures/remix-spoken-ko.mp4');
+  await verifySourceWave(speechFixture,true);
+  await verifySourceWave(speechFixture,true,true);
   let unblockAnalysis,analysisRequested;
   const blocked=new Promise(resolve=>{unblockAnalysis=resolve;});
   const requested=new Promise(resolve=>{analysisRequested=resolve;});

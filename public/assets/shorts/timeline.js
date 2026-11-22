@@ -17,11 +17,18 @@ function trackPosition(takes,time) {
 }
 function trackTime(s,time,updateSelection=true) {
   const takes=sequenceTakes(s),total=sequenceDuration(takes);
+  const previous=s.trackTime;
   s.trackTime=Math.min(total,Math.max(0,time));
   const pos=trackPosition(takes,s.trackTime);
   if(!pos) return;
   const cursor=byId('trackCursor');
   byId('trackNeedle').style.left=(100*s.trackTime/total)+'%';
+  if(previous!==s.trackTime){
+    const scroll=byId('trackScale').closest('.mix-scroll');
+    const x=s.trackTime/total*scroll.scrollWidth;
+    if(x<scroll.scrollLeft || x>scroll.scrollLeft+scroll.clientWidth-2)
+      scroll.scrollLeft=Math.max(0,x-scroll.clientWidth*.35);
+  }
   cursor.max=total;cursor.value=s.trackTime;cursor.disabled=false;
   byId('trackTime').textContent=cutClock(s.trackTime)+' / '+cutClock(total);
   if(updateSelection) {
@@ -49,7 +56,7 @@ async function trackThumbnails(s,takes,buttons,signal) {
   try {
     for (const [index,take] of takes.entries()) {
       const canvas=buttons[index].querySelector('canvas'),ctx=canvas.getContext('2d');
-      const cells=Math.max(1,Math.min(7,Math.round(buttons[index].clientWidth/55)));
+      const cells=Math.max(1,Math.min(96,Math.ceil(buttons[index].clientWidth/55)));
       const cellWidth=64, cellHeight=50;
       canvas.width=cells*cellWidth;canvas.height=cellHeight;
       for(let n=0;n<cells;n++) {
@@ -66,18 +73,36 @@ async function trackThumbnails(s,takes,buttons,signal) {
   finally {probe.removeAttribute('src');probe.load();}
 }
 function drawTrackWave(takes) {
-  const canvas=byId('trackWave');
-  canvas.hidden=!takes.some(t=>t.owner.keepAudio!==false && t.owner.audioLevels?.length);
-  if(canvas.hidden)return;
+  const canvas=byId('trackWave'),label=byId('sourceWaveState');
+  const waves=takes.map(t=>t.owner.waveform);
+  const visible=waves.some(w=>w?.levels.length);
+  const muted=takes.length>0 && takes.every(t=>t.owner.keepAudio===false);
+  canvas.hidden=!visible;
+  const reading=waves.some(w=>!w || w.state==='reading');
+  const quiet=visible && !reading && !waves.some(w=>w?.peak>0);
+  label.hidden=visible && !muted && !quiet;
+  label.textContent=muted?'음소거':quiet?'무음':reading?'파형 읽는 중…':
+    waves.length && waves.every(w=>w?.state==='no-audio')?'원본에 오디오 트랙 없음':'이 기기에서 파형을 읽을 수 없어요';
+  if(!visible)return;
+  const resolution=Math.min(8192,Math.max(640,Math.round(canvas.clientWidth*1.5)));
+  if(canvas.width!==resolution)canvas.width=resolution;
   const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height,total=sequenceDuration(takes);
-  ctx.clearRect(0,0,w,h);ctx.fillStyle='#65c8b7';
+  ctx.clearRect(0,0,w,h);
+  const max=Math.max(.0001,...waves.map(w=>w?.peak||0));
   let offset=0;
   for(const take of takes){
-    const end=offset+takeDuration(take),levels=take.owner.audioLevels;
-    if(take.owner.keepAudio!==false && levels?.length){
+    const end=offset+takeDuration(take),levels=take.owner.waveform?.levels;
+    if(levels?.length){
+      ctx.fillStyle=take.owner.keepAudio===false?'#677078':'#65d9c7';
+      const rate=take.owner.rate||1;
       for(let x=Math.ceil(w*offset/total);x<w*end/total;x+=3){
-        const sec=take.start+(x*total/w-offset)*(take.owner.rate||1);
-        const height=Math.max(1,Math.min(h,Math.sqrt(levels[Math.floor(sec*10)]||0)*h*2));
+        const sec=take.start+(x*total/w-offset)*rate;
+        const start=Math.floor(sec*10);
+        if(start>=levels.length)break;
+        const stop=Math.min(levels.length,Math.ceil(Math.min(take.end,sec+3*total/w*rate)*10));
+        let peak=0;
+        for(let i=start;i<stop;i++)peak=Math.max(peak,levels[i]||0);
+        const height=Math.max(1,Math.sqrt(peak/max)*(h-2));
         ctx.fillRect(x,(h-height)/2,2,height);
       }
     }
@@ -107,9 +132,19 @@ function renderCutTrack(s) {
     });
     buttons.forEach((button,i)=>{button.style.flexGrow=takeDuration(takes[i]);});
     strip.replaceChildren(...buttons);
-    byId('trackScale').replaceChildren(...[0,.25,.5,.75,1].map(f=>{
-      const label=document.createElement('span');label.textContent=cutClock(sequenceDuration(takes)*f);return label;
-    }));
+    const total=sequenceDuration(takes), scale=byId('trackScale');
+    const board=scale.closest('.track-board');
+    board.style.width=Math.max(100,total/12*100)+'%';
+    const tickSeconds=total<=3?.5:total<=6?1:2;
+    const ticks=[];
+    for(let tick=0;tick<total-.0001;tick+=tickSeconds){
+      const label=document.createElement('span');
+      label.textContent=tick+'s';label.style.left=(100*tick/total)+'%';ticks.push(label);
+    }
+    const last=document.createElement('span');last.textContent=Number(total.toFixed(1))+'s';last.className='last-tick';
+    if(ticks.length>1 && total-(ticks.length-1)*tickSeconds<tickSeconds*.6)ticks.pop();
+    scale.replaceChildren(...ticks,last);
+    board.style.setProperty('--tick-step',(100*tickSeconds/total)+'%');
     s.trackThumbController=new AbortController();
     trackThumbnails(s,takes,buttons,s.trackThumbController.signal);
   }
@@ -189,6 +224,7 @@ function emptyCutTrack() {
   byId('emptyVideoPick').hidden=false;
   byId('cutTimeline').classList.remove('has-media');
   byId('trackWave').hidden=true;byId('trackScale').replaceChildren();
+  byId('trackScale').closest('.track-board').style.removeProperty('width');
   byId('editSettings').open=false;
   byId('cutTimeline').hidden=false;
   byId('trackClips').replaceChildren();byId('trackCursor').value=0;byId('trackCursor').disabled=true;

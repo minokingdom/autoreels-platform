@@ -1,21 +1,5 @@
 import {mediaEvent,sampleMotion} from '../remix/analysis.mjs';
 
-// 각 시점의 짧은 음량 구간을 써서 무음 여백과 말 중간 컷을 줄인다.
-export async function audioLevels(file,duration) {
-  if (file.size > 64*1024*1024 || duration > 180 || !window.OfflineAudioContext) return [];
-  try {
-    const ctx = new OfflineAudioContext(1,1,8000);
-    const audio = await ctx.decodeAudioData(await file.arrayBuffer());
-    const samples = audio.getChannelData(0), step = Math.round(audio.sampleRate/10), levels = [];
-    for(let i=0;i<samples.length;i+=step) {
-      let sum=0, count=0;
-      for(let j=i;j<Math.min(i+step,samples.length);j+=4) {sum+=samples[j]*samples[j];count++;}
-      levels.push(Math.sqrt(sum/count));
-    }
-    return levels;
-  } catch { return []; }
-}
-
 // 잘라낸 구간을 건너뛴 뒤에도 앞 장면의 마지막 프레임으로 전환을 그린다.
 async function prepareTransitions(file,segments,signal) {
   const source=document.createElement('video');
@@ -74,9 +58,9 @@ export function planMontage(duration, samples, levels) {
   return {segments,peak};
 }
 
-export async function buildMontage(file,duration,signal,progress,onLevels) {
-  if (duration < 3) return {segments:[{start:0,end:duration}],peak:null,levels:await audioLevels(file,duration)};
-  const [motion,levels] = await Promise.all([sampleMotion(file,signal,progress),audioLevels(file,duration).then(values=>{if(!signal.aborted)onLevels?.(values);return values;})]);
+export async function buildMontage(file,duration,signal,progress,sourceLevels) {
+  if (duration < 3) return {segments:[{start:0,end:duration}],peak:null,levels:await sourceLevels};
+  const [motion,levels] = await Promise.all([sampleMotion(file,signal,progress),sourceLevels]);
   signal.throwIfAborted();
   const plan = planMontage(duration,motion.samples,levels);
   if (plan.segments.length > 1) {

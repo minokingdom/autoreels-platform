@@ -195,7 +195,7 @@ function paintClip(ctx, source, text, clip=session.clip, outputTime=0) {
 
     paintEffects(ctx,session,outputTime);
     const cue=activeCue(session,outputTime);
-    drawTitles(ctx,cue?{...clip,showCaptions:true}:clip,cue?.text||text); return;
+    drawTitles(ctx,cue?{...clip,showCaptions:true}:clip,cue?.text||text,cue?.style); return;
   }
   const scale = Math.max(w/source.videoWidth,h/source.videoHeight);
   const sw = w/scale, sh = h/scale;

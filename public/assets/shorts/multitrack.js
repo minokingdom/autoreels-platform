@@ -6,6 +6,26 @@ const mixButton=(name,action,cls)=>{
   const button=document.createElement('button');button.type='button';button.textContent=name;
   if(cls)button.className=cls;button.addEventListener('click',action);return button;
 };
+const mixGlyphs={
+  video:'M3 5h18v14H3z M7 5v14 M17 5v14 M3 10h4 M3 14h4 M17 10h4 M17 14h4',
+  effect:'M12 2c1 6 4 9 10 10-6 1-9 4-10 10C11 16 8 13 2 12c6-1 9-4 10-10z',
+  sfx:'M3 10v4 M7 6v12 M12 3v18 M17 7v10 M21 10v4',
+  source:'M9 6a3 3 0 0 1 6 0v6a3 3 0 0 1-6 0z M5 11v1a7 7 0 0 0 14 0v-1 M12 19v3 M8 22h8',
+  music:'M9 17V6l12-3v12 M9 9l12-3 M9 17c0 4-7 5-7 2 0-3 5-4 7-2z M21 15c0 4-7 5-7 2 0-3 5-4 7-2z',
+  caption:'M3 7V4h18v3 M12 4v16 M8 20h8',
+  '✂':'M4 3l15 17 M20 3l-9 11 M9 15l-3 5 M4 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6z M19 15a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
+  '◴':'M4 18a9 9 0 1 1 16 0z M12 15l5-6',
+  '⇄':'M3 8h16l-4-4 M21 16H5l4 4',
+  '⌫':'M3 6h18 M8 6V3h8v3 M6 6l1 15h10l1-15 M10 10v7 M14 10v7',
+  '☷':'M3 6h9 M16 6h5 M3 16h3 M10 16h11 M12 3v6 M7 13v6',
+  '▣':'M8 4h12v12h-3 M4 8h12v12H4z','＋':'M12 4v16 M4 12h16'
+};
+function mixIcon(key){
+  const ns='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(ns,'svg'),path=document.createElementNS(ns,'path');
+  svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('class','mix-icon');svg.setAttribute('aria-hidden','true');
+  path.setAttribute('d',mixGlyphs[key]);svg.append(path);return svg;
+}
 function mixTotal(s){return sequenceDuration(sequenceTakes(s));}
 function activeCue(s,time){return s?.captions?.findLast(c=>c.start<=time && time<c.start+c.duration);}
 function stopMixSounds(s){for(const node of s?.previewSounds||[])try{node.stop();}catch{} if(s)s.previewSounds=null;}
@@ -41,12 +61,16 @@ function drawMixBuffer(canvas,buffer,seconds,color,loop){
   }
 }
 function queueSourceWave(s,clip,file,duration){
+  // 분할·속도 변경으로 owner가 복사되어도 같은 원본의 진행 상태를 본다.
+  const wave=clip.waveform={state:'reading',levels:[],peak:0};
+  const notify=()=>{if(session===s && s.clip)drawTrackWave(sequenceTakes(s));};
   s.waveQueue=(s.waveQueue||Promise.resolve()).then(async()=>{
-    if(session!==s)return;
-    const {audioLevels}=await import('./montage.mjs?v=ready1');
-    clip.audioLevels=await audioLevels(file,duration);
-    if(session===s && s.clip)renderCutTrack(s);
-  }).catch(()=>{});
+    if(s.controller.signal.aborted)return [];
+    const {readSourceWave}=await import('./source-wave.mjs?v=wave1');
+    await readSourceWave(file,duration,wave,notify,s.controller.signal);
+    return wave.state==='ready'?wave.levels:[];
+  }).catch(()=>{wave.state='unavailable';notify();return [];});
+  return s.waveQueue;
 }
 function renderMusicWave(s,total){
   const canvas=byId('musicWave'),url=s.clip.music;
@@ -100,6 +124,8 @@ function drawCues(s,type,total){
     button.setAttribute('aria-pressed',String(s.activeCue===cue));positionBlock(button,cue.start,cue.duration,total);
     if(sound){
       const wave=document.createElement('canvas');wave.width=120;wave.height=24;
+      button.dataset.soundName=name;
+      button.classList.toggle('short-sound',cue.duration/total*lane.clientWidth<32);
       button.replaceChildren(wave);drawMixBuffer(wave,cue.buffer,cue.duration,'#bc86e9',false);
     }
     lane.append(button);
@@ -127,7 +153,7 @@ function editSourceCaption(s,line){
 function editCue(s,type,cue){
   if(!editableEffects())return;
   const sound=type==='sfx',total=mixTotal(s);
-  let choice,text,start,len;
+  let choice,text,start,len,style;
   const box=mixDialog(mixNames[type],async()=>{
     const at=start.valueAsNumber;if(!Number.isFinite(at)||at<0||at>=total)throw Error('영상 안의 시작 시간을 입력해 주세요.');
     let data,duration;
@@ -139,7 +165,7 @@ function editCue(s,type,cue){
       data={buffer,id,name:choice.selectedOptions[0].text};duration=buffer.duration;
     }else{
       if(!text.value.trim())throw Error('자막을 입력해 주세요.');
-      data={text:text.value.trim()};duration=len.valueAsNumber;
+      data={text:text.value.trim(),style:style.value};duration=len.valueAsNumber;
       if(!Number.isFinite(duration)||duration<=0)throw Error('자막 길이를 입력해 주세요.');
     }
     if(session!==s)return;
@@ -152,6 +178,10 @@ function editCue(s,type,cue){
     mixLibrary.then(library=>{for(const e of library.effects)choice.add(new Option(e.name,e.id));if(cue)choice.value=cue.id;}).catch(()=>{byId('mixError').textContent='효과음 목록을 불러올 수 없어요.';});
   }else{
     text=mixField(box,'자막',document.createElement('input'));text.maxLength=240;text.value=cue?.text||'';
+    style=mixField(box,'자막 모양',document.createElement('select'));
+    style.add(new Option('시네마 · 흰 글씨와 밑줄','cinema'));
+    style.add(new Option('영상의 자막 스타일','inherit'));
+    style.value=cue ? (cue.style||'inherit') : 'cinema';
   }
   start=numField(box,'시작(초)',cue?.start??Math.max(0,Math.min(s.trackTime||0,total-.1)),total);
   if(!sound)len=numField(box,'길이(초)',cue?.duration||Math.min(2,total),total,.01);
@@ -214,7 +244,7 @@ function renderMixActions(s){
   };
   panel.replaceChildren(...tools[type].map(([icon,label,fn])=>{
     const button=mixButton(label,()=>{if(editableEffects())fn();});
-    const i=document.createElement('i');i.textContent=icon;i.setAttribute('aria-hidden','true');button.prepend(i);
+    button.prepend(mixIcon(({'✧':'effect','⌁':'sfx','♩':'source','♫':'music','T':'caption'})[icon]||icon));
     if(type==='video' && (label==='분할'||label==='삭제')){
       button.dataset.mirrors=label==='분할'?'trackSplit':'trackDelete';button.disabled=byId(button.dataset.mirrors).disabled;
     }
@@ -232,13 +262,11 @@ function renderMix(s){
   if(!s?.clip)return;
   const total=mixTotal(s);
   drawCues(s,'sfx',total);drawCues(s,'caption',total);renderMusicWave(s,total);
-  const label=byId('sourceWaveState'),muted=sequenceTakes(s).every(t=>t.owner.keepAudio===false);
-  label.hidden=!byId('trackWave').hidden;
-  label.textContent=muted?'음소거':s.analyzing && !s.clip.audioLevels?'파형 분석 중…':'파형 없음';
   byId('sourceLane').setAttribute('aria-label',currentTake(s)?.take.owner.keepAudio===false?'원본 소리 꺼짐':'원본 소리 편집');
   selectMix(s,s.mixTrack||'video');
 }
 if(quickEdit){
+  for(const label of document.querySelectorAll('.mix-label'))label.firstElementChild.replaceWith(mixIcon(label.dataset.track));
   const heading=document.querySelector('.track-heading');
   const settings=mixButton('☷',()=>showTools('editSettings'));settings.id='mixSettings';settings.setAttribute('aria-label','세부 편집 열기');
   const undo=byId('trackUndo');undo.textContent='↶';undo.setAttribute('aria-label','컷 편집 되돌리기');
@@ -258,7 +286,7 @@ if(quickEdit){
       await awaitMedia(probe,'loadedmetadata',()=>{probe.src=url;},s.controller.signal);
       if(!Number.isFinite(probe.duration)||probe.duration<=0)throw Error();
       (s.replacementUrls||=[]).push(url);
-      const owner={...currentTake(s).take.owner,start:0,end:probe.duration,lines:[],montage:null,audioLevels:null};
+      const owner={...currentTake(s).take.owner,start:0,end:probe.duration,lines:[],montage:null,waveform:null};
       changeTake(s,t=>({url,start:0,end:Math.min(t.end-t.start,probe.duration),owner}));
       queueSourceWave(s,owner,file,probe.duration);
     }catch{URL.revokeObjectURL(url);if(session===s){byId('mixError').textContent='다른 영상을 선택해 주세요.';detail(s,'교체할 영상을 열 수 없어요.');showTools('status');}}

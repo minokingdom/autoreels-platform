@@ -86,18 +86,19 @@ byId('showCaptions').addEventListener('change',e => {
   session.clip.showCaptions = e.target.checked; markEdited(); renderPreview();
 });
 byId('editor').addEventListener('toggle',() => { if (session && byId('editor').open) session.interacted = true; });
-function drawTitles(ctx,clip,caption) {
+function drawTitles(ctx,clip,caption,cueStyle) {
   if (!clip) return;
   caption = caption || '';
   const w = ctx.canvas.width, h = ctx.canvas.height;
   function block(text,isTitle) {
     if (!text.trim()) return;
     ctx.save();
-    let size = w * (isTitle ? .060 : .052);
+    const cinema=!isTitle && cueStyle==='cinema';
+    let size = w * (cinema ? .084 : isTitle ? .060 : .052);
     const limit = w * .86, lines = [];
     do {
       lines.length = 0; let row = '';
-      ctx.font = '700 ' + size + 'px Pretendard, sans-serif';
+      ctx.font = (cinema?'italic 600 ':'700 ') + size + 'px Pretendard, sans-serif';
       for (const word of text.trim().split(/\s+/)) {
         const next = row ? row + ' ' + word : word;
         if (row && ctx.measureText(next).width > limit) {lines.push(row);row=word;}
@@ -112,7 +113,13 @@ function drawTitles(ctx,clip,caption) {
     ctx.textAlign='center';ctx.textBaseline='middle';
     lines.forEach((line,i) => {
       const y=top+i*step, width=Math.min(limit,ctx.measureText(line).width)+w*.045;
-      if (clip.style === 'outline') {
+      if(cinema){
+        ctx.shadowColor='rgba(0,0,0,.85)';ctx.shadowBlur=size*.19;ctx.shadowOffsetY=size*.05;
+        if(i===lines.length-1){
+          const underline=Math.min(limit,width-w*.045);ctx.fillStyle='#fff';
+          ctx.fillRect((w-underline)/2,y+step,underline,Math.max(1,size*.045));
+        }
+      } else if (clip.style === 'outline') {
         ctx.lineJoin='round'; ctx.lineWidth=size*.12; ctx.strokeStyle='#161616';
         ctx.strokeText(line,w/2,y+step*.52,limit);
       } else { ctx.fillStyle='rgba(12,14,18,.68)'; ctx.fillRect((w-width)/2,y,width,step); }

@@ -48,7 +48,8 @@ function openQuickClip(s,file,fullSource=false) {
   selected(s,clip,null);
   byId('editor').open = true;
   updateQuickTimes(clip);
-  if (fullSource) {queueSourceWave(s,clip,file,end);setQuickMode(s,false);} else startMontage(s,file);
+  s.sourceLevels=queueSourceWave(s,clip,file,end);
+  if (fullSource) setQuickMode(s,false); else startMontage(s,file);
 }
 function updateQuickTimes(clip) {
   for (const [key,control,output] of [['start','trimStart','startTime'],['end','trimEnd','endTime']]) {
@@ -121,12 +122,11 @@ async function startMontage(s,file) {
   s.previewTouched=false;s.trackAnalysisEdits=true;
   updateAnalysisStatus(s,0);
   try {
-    const {buildMontage} = await import('./montage.mjs?v=ready1');
+    const {buildMontage} = await import('./montage.mjs?v=wave1');
     s.plan = await buildMontage(file,video.duration,s.controller.signal,pct => {
       if (session === s) {byId('montageProgress').value=pct;updateAnalysisStatus(s,pct);}
-    },levels=>{if(session===s){s.clip.audioLevels=levels;renderCutTrack(s);}});
+    },s.sourceLevels);
     if (session !== s) return;
-    s.clip.audioLevels=s.plan.levels;
     renderCutTrack(s);
     finishBackgroundPlan(s);
   } catch(error) {
