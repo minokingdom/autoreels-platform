@@ -68,6 +68,7 @@ function mountEditor(clip) {
   byId('lineFields').replaceChildren(...elements);
 }
 function markEdited() {
+  if (quickEdit) clearEditorPost(session);
   session.interacted = true; download.hidden = true; session.clip.exportId = null;
   if (session.saved) { URL.revokeObjectURL(session.saved); session.saved = null; download.removeAttribute('href'); }
 }

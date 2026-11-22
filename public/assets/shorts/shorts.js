@@ -144,11 +144,19 @@ function drawQuickFrame(ctx,source,zoom,x=0) {
   ctx.drawImage(source,x+(w-width)/2,(h-height)/2,width,height);
   ctx.restore();
 }
+function peakEnvelope(clip,t) {
+  if (!clip.montage || !clip.peakEffect || !Number.isFinite(clip.peak)) return 0;
+  const delta = t-clip.peak;
+  if (delta < -1.1 || delta >= .12) return 0;
+  return delta <= 0 ? (1+delta/1.1)**2 : 1-delta/.12;
+}
+function quickMusicGain(clip,t) {
+  return .25-.16*peakEnvelope(clip,t);
+}
 function drawQuickScene(ctx,source,clip) {
   const t=source.currentTime;
   const take=clip.montage?.find(r => t>=r.start-.01 && t<=r.end+.02);
-  const position=take ? Math.max(0,Math.min(1,(t-take.start)/(take.end-take.start))) : 0;
-  const zoom=1+.055*position;
+  const zoom=1;
   const transition=take?.transition;
   if (clip.transitions && transition) {
     const duration=Math.min(.36*(clip.rate||1),(take.end-take.start)/3);
@@ -175,6 +183,14 @@ function paintClip(ctx, source, text, clip=session.clip) {
   const w = ctx.canvas.width, h = ctx.canvas.height;
   if (quickEdit) {
     drawQuickScene(ctx,source,clip);
+    const strength=peakEnvelope(clip,source.currentTime);
+    if (strength>0) {
+      const shade=ctx.createRadialGradient(w/2,h/2,w*.18,w/2,h/2,Math.hypot(w,h)/2);
+      shade.addColorStop(0,'transparent');
+      shade.addColorStop(1,'rgba(0,0,0,'+(.44*strength)+')');
+      ctx.fillStyle=shade; ctx.fillRect(0,0,w,h);
+    }
+
     drawTitles(ctx,clip,text); return;
   }
   const scale = Math.max(w/source.videoWidth,h/source.videoHeight);
@@ -182,7 +198,8 @@ function paintClip(ctx, source, text, clip=session.clip) {
   ctx.drawImage(source,(source.videoWidth-sw)/2,(source.videoHeight-sh)/2,sw,sh,0,0,w,h);
   drawTitles(ctx,session.clip,text);
 }
-save.addEventListener('click',async () => {
+save.addEventListener('click',() => exportShortClip(false));
+async function exportShortClip(forPublish) {
   const s = session, clip = s?.clip; if (!clip || s.exporting || s.adding) return;
   const mime = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4'].find(t => window.MediaRecorder?.isTypeSupported(t));
   if (!mime || !HTMLCanvasElement.prototype.captureStream) {detail(s,'이 브라우저는 MP4 저장을 지원하지 않아요.'); return;}
@@ -224,6 +241,7 @@ save.addEventListener('click',async () => {
     const stop = () => { if (recorder.state !== 'inactive') recorder.stop(); source.pause(); };
     const draw = async () => {
       try {
+        if (musicNode) musicNode.volume.gain.value=quickMusicGain(ranges[takeIndex].owner,source.currentTime);
         if (source.currentTime >= ranges[takeIndex].end || source.ended) {
           if (++takeIndex >= ranges.length) { stop(); return; }
           recorder.pause(); source.pause();
@@ -238,9 +256,10 @@ save.addEventListener('click',async () => {
       } catch (error) { rejectRender(error); }
     };
     timeout = setTimeout(s.stopExport,(sequenceDuration(ranges)+30)*1000);
-    recorder.start(300); await source.play(); musicNode?.start(); draw();
+    recorder.start(300); await source.play(); musicNode?.sound.start(); draw();
     const blob = await Promise.race([done,failure]);
     if(session !== s || blob.size < 1000) throw Error('완성된 영상을 확인하지 못했어요.');
+    if (forPublish) { await arValidateShortsExport(blob); return blob; }
     await confirmExport(s,clip,blob);
     if (session !== s) return;
     if (s.saved) URL.revokeObjectURL(s.saved);
@@ -250,8 +269,8 @@ save.addEventListener('click',async () => {
   finally {
     clearTimeout(timeout); cancelAnimationFrame(raf); document.removeEventListener('visibilitychange',visibility);
     if (recorder && recorder.state !== 'inactive') recorder.stop(); source.pause(); source.removeAttribute('src'); source.load();
-    stream?.getTracks().forEach(t => t.stop()); if (musicNode) { try { musicNode.stop(); } catch {} }
+    stream?.getTracks().forEach(t => t.stop()); if (musicNode) { try { musicNode.sound.stop(); } catch {} }
     if(context) await context.close().catch(() => {});
     s.stopExport = null; s.exporting = false; if (session === s) { save.disabled = false; byId('joinFiles').disabled=false; byId('quickControls').disabled = false; byId('fields').disabled = false; if (s.deferredRank) { applyRank(s,s.deferredRank); s.deferredRank = null; } }
   }
-});
+}

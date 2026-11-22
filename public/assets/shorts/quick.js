@@ -1,17 +1,46 @@
+function updateHighlightEdit(s) {
+  const clip = s.clip, segments = s.plan.segments;
+  const kept = [{...segments[0]}], gaps = byId('trimmedGaps');
+  gaps.replaceChildren();
+  for (let i=1; i<segments.length; i++) {
+    const before = segments[i-1].end, after = segments[i].start;
+    const protectsPeak = Number.isFinite(clip.peak) && clip.peak+1.2 > before && clip.peak-1.5 < after;
+    if (protectsPeak || s.restored.has(i)) kept.at(-1).end = segments[i].end;
+    else {
+      kept.push({...segments[i]});
+      const restore = document.createElement('button');
+      restore.type = 'button'; restore.textContent = before.toFixed(1)+'–'+after.toFixed(1)+'초 복원';
+      restore.addEventListener('click',() => {
+        if (s !== session || s.exporting) return;
+        s.restored.add(i); updateHighlightEdit(s); markEdited(); video.currentTime=Math.max(0,before-1);
+      });
+      gaps.append(restore);
+    }
+  }
+  clip.montage = kept;
+  byId('peakTime').textContent = Number.isFinite(clip.peak) ? '하이라이트 · '+clip.peak.toFixed(1)+'초' : '강조할 순간을 타임라인에서 골라 주세요.';
+  byId('previewPeak').disabled = !Number.isFinite(clip.peak);
+  byId('transitionControl').hidden = !kept.some(r=>r.transition);
+  const removed = (video.duration-kept.reduce((sum,r)=>sum+r.end-r.start,0));
+  byId('montageStatus').textContent = removed>.1 ? '중간 대기 '+removed.toFixed(1)+'초를 줄였어요.' : '원본 흐름을 유지했어요.';
+  updateQuickTimes(clip);
+}
+
 function openQuickClip(s,file,fullSource=false) {
   byId('joinFiles').disabled=false;
   s.file=file;
+  openEditorPublish(s);
   s.filename=file.name || '현재 편집본';
   byId('joinTools').hidden=false;
   const end = video.duration;
-  const clip = {start:0,end,rate:1,keepAudio:true,transitions:true,music:'',style:'box',title:'',customTitle:true,
+  const clip = {start:0,end,rate:1,keepAudio:true,transitions:false,peak:null,peakEffect:true,music:'',style:'box',title:'',customTitle:true,
     showCaptions:true,lines:[{start:0,end,text:''}]};
   video.playbackRate = 1;
   video.muted = false;
   byId('music').selectedIndex = 0;
   byId('speed').value = '1';
   byId('sourceSound').checked = true;
-  byId('sceneTransitions').checked = true;
+  byId('sceneTransitions').checked = false; byId('peakEffect').checked=true; byId('editCursor').max=end; s.restored=new Set();
   byId('captionStyle').value = 'box';
   byId('quickControls').disabled = false;
   byId('quickControls').hidden = false;
@@ -37,13 +66,14 @@ async function prepareQuickMusic(context,dest,url,signal) {
   volume.gain.value = .25;
   sound.loop = true;
   sound.connect(volume).connect(dest);
-  return sound;
+  return {sound,volume};
 }
 function setQuickMode(s,automatic) {
   if (session !== s || s.exporting || s.joined) return;
   video.pause();
   s.wantMontage = automatic;
-  s.clip.montage = automatic ? s.plan : null;
+  s.clip.montage = null;
+  byId('highlightEditor').hidden = !(automatic && s.plan);
   byId('useMontage').setAttribute('aria-pressed',String(automatic));
   byId('useManual').setAttribute('aria-pressed',String(!automatic));
   byId('manualTrim').hidden = automatic;
@@ -53,7 +83,7 @@ function setQuickMode(s,automatic) {
   save.disabled = play.disabled = waiting;
   const notice = byId('montageStatus');
   if (waiting) notice.textContent = '움직임과 컷을 고르는 중이에요.';
-  else if (automatic) notice.textContent = s.plan.length === 1 ? '짧은 원본에 부드러운 줌을 적용했어요.' : s.plan.length + '개 장면을 골라 원래 순서로 이었어요.';
+  else if (automatic) updateHighlightEdit(s);
   else notice.textContent = '';
   video.currentTime = clipRanges(s.clip)[0].start;
   markEdited(); updateQuickTimes(s.clip); renderPreview();
@@ -64,16 +94,18 @@ async function startMontage(s,file) {
   byId('montageProgress').value = 0;
   setQuickMode(s,true);
   try {
-    const {buildMontage} = await import('./montage.mjs?v=transition1');
+    const {buildMontage} = await import('./montage.mjs?v=peak1');
     s.plan = await buildMontage(file,video.duration,s.controller.signal,pct => {
       if (session === s) byId('montageProgress').value = pct;
     });
-    if (session === s && s.wantMontage) setQuickMode(s,true);
-  } catch {
     if (session !== s) return;
-    if (s.wantMontage) setQuickMode(s,false);
-    byId('useMontage').disabled = true;
-    byId('montageStatus').textContent = '장면 분석을 마치지 못했어요. 원본은 직접 편집할 수 있어요.';
+    s.clip.peak=s.plan.peak;
+    if (s.wantMontage) setQuickMode(s,true);
+  } catch(error) {
+    if (session !== s || s.controller.signal.aborted) return;
+    console.warn('장면 분석 중단',error);
+    s.plan={segments:[{start:0,end:video.duration}],peak:null};
+    if (s.wantMontage) {setQuickMode(s,true);byId('montageStatus').textContent='자동 분석이 어려운 영상이에요. 타임라인에서 강조할 순간을 골라 주세요.';}
   } finally { s.analyzing=false; }
 }
 if (quickEdit) {
@@ -82,6 +114,26 @@ if (quickEdit) {
     else setQuickMode(session,true);
   });
   byId('useManual').addEventListener('click',() => setQuickMode(session,false));
+  byId('editCursor').addEventListener('input',e=>{
+    video.pause(); video.currentTime=e.target.valueAsNumber;
+    byId('cursorTime').textContent=video.currentTime.toFixed(1)+'초';
+  });
+  video.addEventListener('timeupdate',()=>{
+    byId('editCursor').value=video.currentTime;
+    byId('cursorTime').textContent=video.currentTime.toFixed(1)+'초';
+    if (session?.peakPreviewEnd != null && video.currentTime >= session.peakPreviewEnd) video.pause();
+  });
+  video.addEventListener('pause',()=>{ if(session) session.peakPreviewEnd=null; });
+  byId('setPeak').addEventListener('click',()=>{
+    if (!session?.plan || session.exporting) return;
+    video.pause(); session.clip.peak=video.currentTime; updateHighlightEdit(session); markEdited(); renderPreview();
+  });
+  byId('previewPeak').addEventListener('click',async()=>{
+    const s=session, peak=s?.clip?.peak;
+    if (!Number.isFinite(peak) || s.exporting) return;
+    video.currentTime=Math.max(0,peak-1.5); s.peakPreviewEnd=Math.min(video.duration,peak+1.2);
+    try { await video.play(); } catch { detail(s,'강조 구간을 재생할 수 없어요.'); }
+  });
   let previewFrame;
   const advanceMontage = () => {
     const plan = session?.clip?.montage;
@@ -91,7 +143,7 @@ if (quickEdit) {
       const next = plan.find(r => t < r.end);
       if (!next) { video.pause(); return; }
       if (t < next.start) video.currentTime = next.start;
-      else renderPreview(t);
+      else { renderPreview(t); music.volume = quickMusicGain(session.clip,t); }
     }
     previewFrame = requestAnimationFrame(advanceMontage);
   };
@@ -144,6 +196,8 @@ if (quickEdit) {
       case 'trimEnd':
         clip.end = Math.max(field.valueAsNumber,clip.start+gap);
         video.currentTime = clip.end; break;
+      case 'peakEffect':
+        clip.peakEffect=field.checked; break;
       case 'sceneTransitions':
         clip.transitions = field.checked; break;
       case 'speed':

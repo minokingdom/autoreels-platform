@@ -128,7 +128,7 @@ async function previewJoined(s) {
         const finish=error=>{cancelAnimationFrame(raf);controller.signal.removeEventListener('abort',cancel);source.onerror=null;error?reject(error):resolve();};
         const cancel=()=>finish(controller.signal.reason);
         controller.signal.addEventListener('abort',cancel,{once:true});source.onerror=()=>finish(Error('영상을 재생할 수 없어요.'));
-        const tick=()=>{if(controller.signal.aborted){cancel();return;}paintClip(ctx,source,activeCaption(take.owner,source.currentTime),take.owner);
+        const tick=()=>{if(controller.signal.aborted){cancel();return;}if(music)music.volume=quickMusicGain(take.owner,source.currentTime);paintClip(ctx,source,activeCaption(take.owner,source.currentTime),take.owner);
           if(source.ended||source.currentTime>=take.end)finish();else raf=requestAnimationFrame(tick);};
         tick();
       });

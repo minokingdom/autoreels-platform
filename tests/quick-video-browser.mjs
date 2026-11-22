@@ -4,11 +4,22 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
+const {planMontage} = await import('../public/assets/shorts/montage.mjs');
+const samples=Array.from({length:93},(_,i)=>({t:(i+1)/2,score:i>=18 && i<=29?0:8}));
+const levels=Array.from({length:470},(_,i)=>i>=85 && i<155?0:.04);
+const natural=planMontage(47,samples,levels);
+assert.equal(natural.segments.length,2);
+assert.equal(natural.segments[0].start,0);
+assert.equal(natural.segments.at(-1).end,47);
+assert.equal(planMontage(47,samples,levels.map(()=>.06)).segments.length,1);
+assert.equal(planMontage(47,samples,[]).segments.length,1);
+
 const root = fileURLToPath(new URL('../public/',import.meta.url));
 const browser = await chromium.launch(process.env.CHROME_PATH ? {executablePath:process.env.CHROME_PATH} : {});
 try {
   const page = await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
-  const errors = [], requests = [];
+  const errors = [], requests = [], posts=[];
+  page.on('console',msg=>{if(msg.type()==='warning' && msg.text().includes('장면 분석 중단')) console.warn(msg.text());});
   page.on('pageerror', error => errors.push(error.message));
   await page.route('**/*',async route => {
     const url = new URL(route.request().url());
@@ -17,6 +28,13 @@ try {
     if (url.pathname === '/api/account') {
       requests.push(url.searchParams.get('action'));
       return route.fulfill({json:{ok:true,user:{id:'test'},entitlement:{pro:true}}});
+    }
+    if(url.pathname==='/api/sns') {
+      const action=url.searchParams.get('action');
+      if(action==='status')return route.fulfill({json:{ok:true,targets:{instagram:{ready:true,connected:true,name:'@test'}}}});
+      if(action==='upload-token')return route.fulfill({json:{ok:true,pathname:'video.mp4',clientToken:'mock',contentType:'video/mp4'}});
+      if(action==='publish'){posts.push(route.request().postDataJSON());return route.fulfill({json:{ok:true,jobs:[{id:'1',status:'processing',target:'instagram'}]}});}
+      if(action==='jobs') return route.fulfill({json:{ok:true,jobs:[{id:'1',status:'done',target:'instagram'}]}});
     }
     if (url.pathname.startsWith('/api/')) return route.fulfill({json:{}});
     const file = path.join(root,url.pathname === '/studio' ? 'studio.html' : url.pathname);
@@ -56,31 +74,49 @@ try {
   await page.locator('dialog.ar-video-editor').waitFor({state:'detached'});
   assert.deepEqual(await before(),original);
   await page.locator('#quickShortVideoInput').setInputFiles(path.join(root,'assets/remix/fixtures/remix-spoken-ko.mp4'));
-  await frame.getByText('2개 장면을 골라 원래 순서로 이었어요.').waitFor();
-  const expected = await frame.locator('#sourceVideo').evaluate(el => el.duration*.62);
-  await frame.locator('#play').click();
-  const skipped = await frame.locator('#sourceVideo').evaluate(el => new Promise(resolve => {
-    const timer = setTimeout(() => resolve(false),6000);
-    el.addEventListener('seeking',() => {clearTimeout(timer);resolve(true);},{once:true});
-  }));
-  assert.equal(skipped,true);
-  await frame.locator('#save').click();
-  await frame.locator('#download').waitFor({timeout:20000});
-  const duration = await frame.locator('#download').evaluate(async el => {
-    const out = document.createElement('video'); out.playsInline = true; out.muted = true; out.src = el.href;
-    await out.play();
-    return new Promise((resolve,reject) => {
-      const timer = setTimeout(() => reject(Error('MP4 재생 시간 초과')),10000);
-      out.onended = () => {clearTimeout(timer);resolve(out.currentTime);};
-    });
-  });
-  assert.ok(Math.abs(duration-expected)<.6,'편집 후 길이 '+duration+' / '+expected);
-  console.log('자동 장면 선택·미리보기 컷 전환·완성 MP4 재생 확인',duration.toFixed(2)+'초');
+  try {await frame.locator('#highlightEditor').waitFor({timeout:9000});} catch(e){throw Error(JSON.stringify(await frame.locator('#work').evaluate(el=>({status:statusLine.textContent,analysis:byId('montageStatus').textContent,ready:video.readyState,plan:!!session?.plan,src:video.error?.message,progress:byId('montageProgress').value})))+' '+errors.join(', '),{cause:e});}
+  const times=await frame.locator('#sourceVideo').evaluate(el=>[session.clip.montage[0].start,session.clip.montage.at(-1).end,el.duration]);
+  assert.deepEqual(times,[0,times[2],times[2]]);
+  await frame.locator('#editCursor').fill('1.5');
+  await frame.locator('#setPeak').click();
+  assert.match(await frame.locator('#peakTime').textContent(),/1.5초/);
+  await frame.locator('#previewPeak').click();
+  await frame.locator('#sourceVideo').evaluate(el=>new Promise(resolve=>el.addEventListener('pause',resolve,{once:true})));
+  await frame.locator('#postCaption').fill('편집한 영상');
+  await frame.locator('#postVideo').evaluate(()=>{arLoadBlobClient=async()=>({put:async(path,blob)=>{
+    if(blob.type!=='video/mp4'||blob.size<1000) throw Error('MP4 누락');
+    return {url:'https://example.test/video.mp4'};
+  }});});
+  await frame.locator('#postVideo').click();
+  await frame.getByText('게시 완료',{exact:true}).waitFor({timeout:25000});
+  assert.equal(posts.length,1); assert.deepEqual(posts[0].targets,['instagram']);
+  assert.equal(posts[0].caption,'편집한 영상');
+  assert.equal(requests.filter(a=>a==='consume-export').length,1);
+  assert.equal(await frame.locator('#postVideo').isDisabled(),true);
   await frame.getByText('스튜디오로 돌아가기').click();
+  await page.locator('dialog.ar-video-editor').waitFor({state:'detached'});
   await page.locator('#quickShortVideoInput').setInputFiles(fileURLToPath(new URL('./fixtures/montage-transition.webm',import.meta.url)));
+  try {await frame.locator('#highlightEditor').waitFor({timeout:12000});} catch(e){throw Error(JSON.stringify(await frame.locator('body').evaluate(el=>({status:statusLine.textContent,pct:byId('montageProgress').value,controls:byId('quickControls').hidden,work:byId('work').hidden,style:getComputedStyle(byId('highlightEditor')).display,ready:video.readyState,src:video.error?.message,plan:!!session?.plan})))+' '+errors.join(', '),{cause:e});}
+  await frame.locator('#editCursor').fill('2.2'); await frame.locator('#setPeak').click();
+  const edgePixel = () => frame.locator('#overlay').evaluate(canvas=>{
+    renderPreview();return canvas.getContext('2d').getImageData(canvas.width/2,canvas.height*.30,1,1).data[0];
+  });
+  await frame.locator('#editCursor').fill('2.1');
+  await frame.locator('#sourceVideo').evaluate(el=>el.seeking?new Promise(r=>el.addEventListener('seeked',r,{once:true})):null);
+  const withEffect=await edgePixel();
+  await frame.locator('#peakEffect').uncheck();
+  assert.ok(await edgePixel()>withEffect,'하이라이트 직전의 강조 효과 전환');
+  await frame.locator('#peakEffect').check();
+  // 고정된 컷 경계로 전환 효과의 미리보기와 MP4 합성을 각각 확인한다.
+  await frame.locator('#sourceVideo').evaluate(()=>{
+    const canvas=document.createElement('canvas');canvas.width=720;canvas.height=1280;
+    const ctx=canvas.getContext('2d');ctx.fillStyle='red';ctx.fillRect(0,0,720,1280);
+    session.plan.segments=[{start:0,end:1.8},{start:3.6,end:6,transition:{kind:'dissolve',frame:canvas}}];
+    session.clip.peak=null;updateHighlightEdit(session);
+  });
   const switchEffect = frame.locator('#sceneTransitions');
   await switchEffect.waitFor();
-  assert.equal(await switchEffect.isChecked(),true);
+  assert.equal(await switchEffect.isChecked(),false); await switchEffect.check();
   // 순색 두 장면의 경계에서 양쪽 색이 함께 보이는지 미리보기와 인코딩한 MP4에서 확인.
   const samplePreview = () => frame.locator('#overlay').evaluate(canvas => {
     const ctx=canvas.getContext('2d');

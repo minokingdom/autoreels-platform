@@ -872,14 +872,6 @@
     const AR_SNS_NAMES = { instagram: '인스타그램', youtube: '유튜브', tiktok: '틱톡', facebook: '페이스북', threads: '스레드' };
     let AR_SNS_STATE = null;
 
-    async function arSnsApi(action, body) {
-      const opt = { method: body ? 'POST' : 'GET', headers: {}, credentials: 'same-origin' };
-      if (body) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
-      const r = await fetch(`/api/sns?action=${encodeURIComponent(action)}`, opt);
-      const j = await r.json().catch(() => ({}));
-      return { status: r.status, ok: r.ok && j.ok !== false, body: j };
-    }
-
     function arSnsRender() {
       const st = AR_SNS_STATE;
       Object.entries(AR_SNS_ROWS).forEach(([t, k]) => {
@@ -997,12 +989,6 @@
       return line;
     }
 
-    let arVercelBlob = null;
-    async function arLoadBlobClient() {
-      if (!arVercelBlob) arVercelBlob = await import('https://esm.sh/@vercel/blob@2.9.0/client');
-      return arVercelBlob;
-    }
-
     let arSnsPublishing = false;
     async function arSnsPublish() {
       if (arSnsPublishing) return;
@@ -1028,21 +1014,15 @@
       const requestId = crypto.randomUUID();
       if (stepStatus) stepStatus.textContent = '영상 올리는 중...';
       try {
-        const tk = await arSnsApi('upload-token', { size: blob.size, type: blob.type || 'video/mp4' });
-        if (!tk.ok) throw new Error(tk.body.message || '업로드 권한을 받지 못했습니다');
         const prog = arSnsLog('영상 파일 올리는 중... 0%');
-        const { put } = await arLoadBlobClient();
-        const up = await put(tk.body.pathname, blob, {
-          access: 'public', token: tk.body.clientToken, contentType: tk.body.contentType,
-          onUploadProgress: (e) => { if (prog) prog.textContent = `영상 파일 올리는 중... ${Math.round(e.percentage || 0)}%`; }
-        });
+        const videoUrl = await arUploadSnsVideo(blob, pct => { if (prog) prog.textContent = '영상 파일 올리는 중... '+pct+'%'; });
         if (prog) prog.textContent = '영상 파일 올리기 완료';
         if (stepStatus) stepStatus.textContent = `${targets.length}개 SNS에 발행 중...`;
         const schedOn = document.getElementById('snsScheduleEnabled')?.checked;
         const schedRaw = document.getElementById('snsScheduleAt')?.value;
         const scheduledAt = schedOn && schedRaw ? new Date(schedRaw).toISOString() : '';
         const igFirstComment = Boolean(document.getElementById('snsIgFirstComment')?.checked);
-        const pub = await arSnsApi('publish', { targets, videoUrl: up.url, caption, title, scheduledAt, igFirstComment, requestId });
+        const pub = await arSnsApi('publish', { targets, videoUrl, caption, title, scheduledAt, igFirstComment, requestId });
         if (!pub.ok) throw new Error(pub.body.message || '발행을 시작하지 못했습니다');
         await arSnsTrackJobs(pub.body.jobs || []);
         await arShowSnsHistory();
