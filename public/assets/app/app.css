@@ -1764,3 +1764,24 @@ body.ar-cut-editing #arQuickBar { display: none; }
 @media (prefers-reduced-motion: reduce) { .ar-generation-status i { animation: none; } }
 @font-face { font-family: 'AR Gaegu'; src: url('../fonts/point/Gaegu-Bold.ttf') format('truetype'); font-weight: 700; font-display: swap; }
 @font-face { font-family: 'AR Dokdo'; src: url('../fonts/point/EastSeaDokdo-Regular.ttf') format('truetype'); font-weight: 400; font-display: swap; }
+
+/* 휴대폰 컷 편집: 도구 줄이 영상 위(자막·사진)를 덮지 않게 영상 바깥 위쪽 한 줄로 뺀다.
+ * 왼쪽은 도구(가로 스크롤), 오른쪽은 되돌리기·완료. '1컷 편집' 표시는 아래 시트의 '1 / 4컷'과 겹쳐서 숨김. */
+@media (max-width: 1023px) {
+  body.ar-sheet.ar-cut-editing #previewViewport {
+    overflow: visible; margin-top: 52px !important;
+    width: min(100%, calc((100dvh - 150px) * 9 / 16)); max-height: calc(100dvh - 150px);
+  }
+  body.ar-sheet.ar-cut-editing:has(#cutEditorPanel:not(.hidden)) #previewViewport {
+    width: min(100%, calc((52dvh - 84px) * 9 / 16)); max-height: calc(52dvh - 84px);
+  }
+  body.ar-sheet.ar-cut-editing #reelCanvas { border-radius: 12px; }
+  body.ar-sheet.ar-cut-editing #igTopBar {
+    position: fixed !important; top: max(8px, env(safe-area-inset-top)) !important; bottom: auto !important;
+    left: 8px !important; right: 8px !important;
+    display: flex; flex-direction: row; align-items: center; gap: 6px;
+  }
+  body.ar-sheet.ar-cut-editing #igTopBar #igToolRow { order: 1; flex: 1 1 auto; padding: 2px; }
+  body.ar-sheet.ar-cut-editing #igTopBar .ig-header-row { order: 2; flex: 0 0 auto; padding: 2px; }
+  body.ar-sheet.ar-cut-editing #igTopBar #igCutBadge { display: none; }
+}
