@@ -194,7 +194,7 @@
       const rem = 1 - ent;
       const accent = sp.accent || '#d97706';
       const fg = sp.accent2 || (sp.light ? '#18181b' : '#ffffff');
-      const brandName = (d && (d.branch || d.name)) || (typeof IND !== 'undefined' && IND.place) || 'AUTOREELS';
+      const brandName = (campaign && campaign.hideCardOnVideo) ? '' : ((d && (d.branch || d.name)) || (typeof IND !== 'undefined' && IND.place) || 'AUTOREELS');
 
       c.save();
       const bgGrad = c.createLinearGradient(0, 0, 0, H);

@@ -3756,6 +3756,7 @@
       const targetTotal = Math.max(6, Math.min(60, Math.round(span + outroSec)));
       if (typeof setVideoTotalDuration === 'function') setVideoTotalDuration(targetTotal);
       arRenderShortVideoBar();
+      if (typeof arSyncEditedVideoOptionUI === 'function') arSyncEditedVideoOptionUI();
       if (window.__timelines && window.__timelines.main) {
         try { vid.currentTime = vid._trimStart || 0; } catch (e) {}
         window.__timelines.main.seek(0);
@@ -3767,7 +3768,10 @@
       campaign.uploadedPhotos.forEach(arReleasePhoto);
       campaign.uploadedPhotos = [];
       campaign.isUserCustomPhotos = false;
+      campaign.hideCardOnVideo = false;
+      campaign.noDefaultCaptions = false;
       arRenderShortVideoBar();
+      if (typeof arSyncEditedVideoOptionUI === 'function') arSyncEditedVideoOptionUI();
       if (typeof arApplyIndustryPhotos === 'function') arApplyIndustryPhotos();
       if (typeof renderUploadedPhotoThumbs === 'function') renderUploadedPhotoThumbs();
       if (typeof arToast === 'function') arToast('단일 영상 편집 모드를 해제했습니다.');
@@ -3963,6 +3967,75 @@
       }
     }
 
+    // ★ 편집 영상(내 영상)에 대본 자막 / 명함·상호를 넣을지 말지 1탭 선택 토글
+    function arSyncEditedVideoOptionUI() {
+      const bar = document.getElementById('pdOverlayChoiceBar');
+      const isShort = Boolean(typeof arGetShortVideoMedia === 'function' && arGetShortVideoMedia());
+      if (bar) bar.classList.toggle('hidden', !isShort);
+      const scriptOn = !campaign.noDefaultCaptions;
+      const cardOn = !campaign.hideCardOnVideo;
+      const styleBtn = (id, on, label) => {
+        const b = document.getElementById(id);
+        if (!b) return;
+        b.textContent = `${label}: ${on ? '켜짐' : '끄기'}`;
+        b.setAttribute('aria-pressed', String(on));
+        b.style.background = on ? '#1d4ed8' : '#1f2027';
+        b.style.borderColor = on ? '#60a5fa' : 'rgba(255,255,255,0.14)';
+        b.style.color = on ? '#ffffff' : '#a1a1aa';
+      };
+      styleBtn('pdToggleScriptBtn', scriptOn, '📝 대본 자막');
+      styleBtn('pdToggleCardBtn', cardOn, '🪪 명함·상호');
+      styleBtn('svToggleScriptBtn', scriptOn, '📝 대본');
+      styleBtn('svToggleCardBtn', cardOn, '🪪 명함');
+    }
+    window.arSyncEditedVideoOptionUI = arSyncEditedVideoOptionUI;
+
+    function arToggleEditedVideoOption(kind) {
+      if (kind === 'script') {
+        const turnOn = Boolean(campaign.noDefaultCaptions);
+        campaign.noDefaultCaptions = !turnOn;
+        if (turnOn) {
+          campaign._userWroteScript = true;
+          const hasAny = Array.isArray(campaign.cutCaptions) && campaign.cutCaptions.some((x) => String(x || '').trim());
+          if (!hasAny && Array.isArray(campaign._stashedCaptions) && campaign._stashedCaptions.length) {
+            campaign.cutCaptions = campaign._stashedCaptions.slice();
+            campaign.hook = campaign._stashedHook || campaign.cutCaptions[0] || '';
+          } else if (!hasAny) {
+            if (typeof arToast === 'function') arToast('대본 자막을 켰어요. [대본] 탭에서 원하는 문구를 입력해 주세요.');
+          }
+          if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+        } else {
+          if (Array.isArray(campaign.cutCaptions) && campaign.cutCaptions.some((x) => String(x || '').trim())) {
+            campaign._stashedCaptions = campaign.cutCaptions.slice();
+            campaign._stashedHook = campaign.hook || '';
+          }
+          const nCuts = Math.max(4, typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4);
+          campaign.hook = '';
+          campaign.sub = '';
+          campaign.priceTag = '';
+          campaign.cutCaptions = Array.from({ length: nCuts }, () => '');
+          campaign.ttsLines = Array.from({ length: nCuts }, () => '');
+          if (typeof AudioEngine !== 'undefined') {
+            AudioEngine.ttsVoice = 'off';
+            AudioEngine.masterBuffer = null;
+            AudioEngine.masterDuration = 0;
+            AudioEngine.ttsDirty = false;
+            const vSel = document.getElementById('ttsVoiceSelect');
+            if (vSel) vSel.value = 'off';
+          }
+          if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+        }
+      } else if (kind === 'card') {
+        campaign.hideCardOnVideo = !campaign.hideCardOnVideo;
+        arUpdateShortVideoEdit({});
+      }
+      if (typeof designThumbCache !== 'undefined' && designThumbCache) designThumbCache.fresh = {};
+      if (typeof scheduleDesignThumbs === 'function') scheduleDesignThumbs();
+      arSyncEditedVideoOptionUI();
+      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+    }
+    window.arToggleEditedVideoOption = arToggleEditedVideoOption;
+
     // ★ 영상 편집기에서 다듬은 영상에 스튜디오 테마 입히기 (2026-11-22)
     // 편집기가 만든 MP4 하나를 사진 칸에 넣고, 모든 컷에 끊김 없이 이어서 재생한다(원본 소리 유지).
     async function arApplyThemeToEditedVideo(file) {
@@ -3977,9 +4050,14 @@
       vid._continuousVideo = true;
       vid._keepAudio = true;
       vid._origName = '편집기에서 다듬은 영상';
-      // 사용자가 스튜디오에서 대본을 직접 쓰거나 생성한 적이 없다면 업종 기본 예시 대본·추가 컷 자동 문구·성우가 절대 얹히지 않게 비움
+      // 사용자가 스튜디오에서 대본을 직접 쓰거나 생성한 적이 없다면 대본·명함 모두 기본 OFF로 시작하고 상단에서 직접 선택하게 함
       const hasUserScript = Boolean(campaign._userWroteScript);
+      campaign.hideCardOnVideo = true;
       if (!hasUserScript) {
+        if (Array.isArray(campaign.cutCaptions) && campaign.cutCaptions.some((x) => String(x || '').trim())) {
+          campaign._stashedCaptions = campaign.cutCaptions.slice();
+          campaign._stashedHook = campaign.hook || '';
+        }
         campaign.noDefaultCaptions = true;
         campaign.hook = '';
         campaign.sub = '';
@@ -4007,12 +4085,11 @@
         if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
         if (typeof designThumbCache !== 'undefined' && designThumbCache) designThumbCache.fresh = {};
       }
+      arSyncEditedVideoOptionUI();
       if (typeof renderUploadedPhotoThumbs === 'function') renderUploadedPhotoThumbs();
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0);
       if (typeof openPresetDrawer === 'function') openPresetDrawer('right');
-      if (typeof arToast === 'function') arToast(hasUserScript
-        ? '편집한 영상을 넣었어요. 마음에 드는 테마를 골라 보세요.'
-        : '편집한 영상을 넣었어요. 대본 없이 테마만 깔끔하게 적용됩니다.');
+      if (typeof arToast === 'function') arToast('편집한 영상을 넣었어요. 대본·명함은 위 버튼에서 원할 때 켜고 끌 수 있어요.');
     }
 
     // 쇼츠 화면에서 연 편집기가 맡겨 둔 영상을 받아 테마 입히기 (/studio?applyTheme=1)

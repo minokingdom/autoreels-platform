@@ -531,6 +531,13 @@
                   <button type="button" onclick="closePresetDrawer()" class="pd-close" aria-label="닫기">✕</button>
                 </div>
               </div>
+              <div id="pdOverlayChoiceBar" class="hidden px-2.5 py-2 border-b border-[var(--border)] bg-[#141418] space-y-1.5">
+                <div class="text-[11px] font-semibold text-[#d4d4d8]">내 영상에 함께 넣을 항목 선택</div>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <button type="button" id="pdToggleScriptBtn" onclick="arToggleEditedVideoOption('script')" class="h-8 px-2 rounded-[8px] border text-[11.5px] font-bold cursor-pointer transition" style="background:#1f2027;border-color:rgba(255,255,255,0.14);color:#a1a1aa">📝 대본 자막: 끄기</button>
+                  <button type="button" id="pdToggleCardBtn" onclick="arToggleEditedVideoOption('card')" class="h-8 px-2 rounded-[8px] border text-[11.5px] font-bold cursor-pointer transition" style="background:#1f2027;border-color:rgba(255,255,255,0.14);color:#a1a1aa">🪪 명함·상호: 끄기</button>
+                </div>
+              </div>
               <button type="button" class="ar-custom-entry" data-custom-action="new">＋ 내 스타일 만들기</button>
               <div id="pdRecommend" class="pd-reco"></div>
               <p class="pd-section-help">분류를 고르면 해당 분위기의 디자인만 보여요</p>
@@ -970,7 +977,9 @@
                 </div>
                 <p id="svFileName" class="text-[11.5px] text-[#85858b] truncate mt-0.5">전체 컷에 끊김 없이 이어서 재생됩니다.</p>
               </div>
-              <div class="flex items-center gap-1.5 shrink-0">
+              <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
+                <button type="button" id="svToggleScriptBtn" onclick="arToggleEditedVideoOption('script')" class="h-7 px-2.5 rounded-[7px] border text-[11px] font-bold cursor-pointer transition" style="background:#1f2027;border-color:rgba(255,255,255,0.14);color:#a1a1aa">📝 대본: 끄기</button>
+                <button type="button" id="svToggleCardBtn" onclick="arToggleEditedVideoOption('card')" class="h-7 px-2.5 rounded-[7px] border text-[11px] font-bold cursor-pointer transition" style="background:#1f2027;border-color:rgba(255,255,255,0.14);color:#a1a1aa">🪪 명함: 끄기</button>
                 <label for="quickShortVideoInput" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer flex items-center">영상 바꾸기</label>
                 <button type="button" onclick="arClearShortVideoMode()" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer text-[#fca5a5]">해제</button>
               </div>
@@ -2217,7 +2226,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261122-styles100-b3"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-styles100-b4"><\/script>');
     }
   </script>
   <!--

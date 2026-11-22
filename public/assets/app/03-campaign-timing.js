@@ -282,6 +282,12 @@
     // 영상 화면에 그릴 명함: 혜택이 견본 그대로면 비워서 🎁 혜택 장식이 나오지 않게 함 (원본 명함은 그대로 둠)
     function arDisplayDealer(d) {
       if (!d) return d;
+      if (typeof campaign !== 'undefined' && campaign && campaign.hideCardOnVideo) {
+        const blank = Object.create(d);
+        blank.name = ''; blank.title = ''; blank.phone = ''; blank.branch = ''; blank.promoTag = '';
+        blank.avatarImg = null; blank.logoImg = null;
+        return blank;
+      }
       const hide = d.cardHide || {};
       const demo = arIsDemoPromo(d.promoTag);
       if (!demo && !Object.keys(hide).length) return d;
