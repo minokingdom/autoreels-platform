@@ -1,0 +1,18 @@
+[Unit]
+Description=AutoReels private comparison preview (read-only)
+After=network.target
+[Service]
+User=mino
+WorkingDirectory=/home/mino/eatspay-kakao
+ExecStart=/usr/bin/python3 -u /home/mino/eatspay-kakao/style_preview_server.py
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+MemoryMax=160M
+CPUQuota=30%
+IPAddressDeny=any
+IPAddressAllow=localhost
+[Install]
+WantedBy=multi-user.target

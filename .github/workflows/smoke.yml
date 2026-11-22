@@ -61,6 +61,8 @@ jobs:
       - name: Reference style ingestion
         run: |
           python3 scripts/alerts/test_style_commands.py
+          python3 scripts/alerts/test_style_development.py
+          python3 scripts/alerts/test_style_preview.py
           node --test tests/reference-styles.cjs
           node --test tests/style-renderer-guard.cjs
           node tests/reference-styles-browser.mjs

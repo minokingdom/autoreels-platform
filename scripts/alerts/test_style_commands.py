@@ -87,5 +87,15 @@ class Tests(unittest.TestCase):
         self.q.enqueue('1','url');job=self.q.rpc({'op':'claim'})
         self.q.rpc({'op':'complete',**job,'status':'development','message':'구현 시작'})
         self.assertEqual(self.q.rpc({'op':'claim'})['phase'],'develop')
+    def test_expired_preview_cannot_be_approved(self):
+        data=self.proposal()
+        for _ in range(3):self.q.deliver(lambda:True,lambda *a:None,lambda *a:None)
+        with self.q.db() as db:db.execute('UPDATE preview_links SET expires=0')
+        self.q.decision('11',data['revision'][:10],True)
+        self.assertEqual(self.q.rpc({'op':'status'})[0]['status'],'awaiting_approval')
+    def test_old_delivery_consumer_cannot_take_new_items(self):
+        with self.q.db() as db:db.execute('CREATE TABLE deliveries(id TEXT,kind TEXT,text TEXT,state TEXT)')
+        self.proposal()
+        with self.q.db() as db:self.assertEqual(db.execute('SELECT count(*) FROM deliveries').fetchone()[0],0)
 
 if __name__=='__main__':unittest.main()

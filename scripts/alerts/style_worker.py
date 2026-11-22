@@ -259,6 +259,12 @@ def deployed(commit):
         time.sleep(10)
     raise RuntimeError('스타일은 등록했지만 배포 검사가 아직 끝나지 않았습니다.')
 
+def require_passing_base():
+    head=json.loads(run(['gh','api',f'repos/{REMOTE}/git/ref/heads/main']))['object']['sha']
+    runs=json.loads(run(['gh','api',f'repos/{REMOTE}/actions/runs?head_sha={head}&per_page=20']))['workflow_runs']
+    if any(r['name']=='smoke' and r.get('conclusion') in ('failure','cancelled','timed_out') for r in runs):
+        raise ValueError('비교본 승인은 저장했습니다. 기반 코드의 자동 검사 실패로 운영 등록을 보류했습니다. 검사 문제를 해결한 뒤 다시 확인해야 합니다. 아직 등록하지 않았습니다.')
+
 def process(job):
     directory=ROOT/'jobs'/job['id'];directory.mkdir(parents=True,exist_ok=True)
     phase=job.get('phase','analyse')
@@ -271,6 +277,7 @@ def process(job):
                 prepare(job,directory,REPO,run,write,rpc)
                 return {'proposed':True}
             candidate=approved_candidate(job,directory,REPO,run)
+            require_passing_base()
             style=candidate['style'];pub=publish(style,candidate['sourceUrl'],directory,candidate.get('renderer',''))
             deployed(pub['sha']);require_live_style(pub['id'],pub['sha'][:10])
             result={'status':'done','message':f"승인한 스타일 등록·배포 확인 완료\n{pub['name']}\n{SITE}/studio?v={pub['sha'][:10]}"}
