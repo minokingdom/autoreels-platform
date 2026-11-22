@@ -1,6 +1,20 @@
 // '내 영상으로 쇼츠 만들기' → 여섯 트랙 편집기 연결 (2026-11-22)
 // 쇼츠 화면에서 추천 구간을 고르면 같은 편집기(?mode=edit)를 창으로 띄우고,
 // 그 구간과 받아쓴 대사 자막을 그대로 넘겨 편집을 이어 간다.
+// 쇼츠 화면 → 제작 화면: 다듬은 영상을 같은 사이트 브라우저 저장소(IndexedDB)에 잠깐 맡긴다.
+function arStashThemeVideo(blob) {
+  return new Promise((resolve, reject) => {
+    const open = indexedDB.open('ar-handoff', 1);
+    open.onupgradeneeded = () => open.result.createObjectStore('files');
+    open.onerror = () => reject(Error('영상을 제작 화면으로 넘기지 못했어요.'));
+    open.onsuccess = () => {
+      const tx = open.result.transaction('files', 'readwrite');
+      tx.objectStore('files').put({ blob, at: Date.now() }, 'themeVideo');
+      tx.oncomplete = () => { open.result.close(); resolve(); };
+      tx.onerror = () => { open.result.close(); reject(Error('영상이 너무 커서 넘기지 못했어요.')); };
+    };
+  });
+}
 (function () {
   if (quickEdit) {
     // 편집기 쪽: 쇼츠 화면이 넘긴 영상·구간·자막으로 편집 시작
@@ -29,12 +43,13 @@
       detail(s, '추천 구간 ' + clock(start) + ' – ' + clock(end) + ' · ' + (end - start).toFixed(1) + '초를 불러왔어요.');
     };
     // 스튜디오 안에서 연 편집기: 다듬은 영상을 제작 화면으로 넘겨 테마·대본·성우·명함을 입힌다.
+    // 어디서 연 편집기든(제작 화면 · 내 영상으로 쇼츠 만들기) 같은 기능을 쓴다.
+    // 제작 화면 안이면 바로 넘기고, 쇼츠 화면이면 영상을 브라우저 저장소에 맡긴 뒤 제작 화면으로 이동한다.
     const themeButton = byId('applyTheme');
     let studio = null;
     try { if (parent !== window && typeof parent.arApplyThemeToEditedVideo === 'function') studio = parent; } catch (e) {}
-    if (themeButton && studio) {
+    if (themeButton) {
       themeButton.hidden = false;
-      document.body.classList.add('can-apply-theme');
       themeButton.addEventListener('click', async () => {
         const s = session;
         if (!s?.clip || s.exporting || s.adding) return;
@@ -42,9 +57,15 @@
         try {
           const blob = await exportShortClip(true, { handoff: true });
           if (!blob || session !== s) return;
-          // 제작 화면 창의 File로 만들어 넘김 (창이 닫혀도 영상이 남도록)
-          const file = new studio.File([blob], '편집한 영상.mp4', { type: 'video/mp4', lastModified: Date.now() });
-          await studio.arApplyThemeToEditedVideo(file);
+          if (studio) {
+            // 제작 화면 창의 File로 만들어 넘김 (창이 닫혀도 영상이 남도록)
+            const file = new studio.File([blob], '편집한 영상.mp4', { type: 'video/mp4', lastModified: Date.now() });
+            await studio.arApplyThemeToEditedVideo(file);
+          } else {
+            statusLine.textContent = '제작 화면으로 넘어가는 중…';
+            await arStashThemeVideo(blob);
+            top.location.href = '/studio?applyTheme=1';
+          }
         } catch (error) {
           statusLine.textContent = error?.message || '스튜디오로 넘기지 못했어요.';
         } finally { themeButton.disabled = false; }

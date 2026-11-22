@@ -3984,6 +3984,42 @@
       if (typeof arToast === 'function') arToast('편집한 영상을 넣었어요. 마음에 드는 테마를 골라 보세요.');
     }
 
+    // 쇼츠 화면에서 연 편집기가 맡겨 둔 영상을 받아 테마 입히기 (/studio?applyTheme=1)
+    function arTakeStashedThemeVideo() {
+      return new Promise((resolve) => {
+        const open = indexedDB.open('ar-handoff', 1);
+        open.onupgradeneeded = () => open.result.createObjectStore('files');
+        open.onerror = () => resolve(null);
+        open.onsuccess = () => {
+          const tx = open.result.transaction('files', 'readwrite'), store = tx.objectStore('files');
+          const get = store.get('themeVideo');
+          get.onsuccess = () => { store.delete('themeVideo'); };
+          tx.oncomplete = () => {
+            open.result.close();
+            const item = get.result;
+            // 30분이 지난 영상은 쓰지 않음
+            resolve(item && item.blob && Date.now() - item.at < 30 * 60 * 1000 ? item.blob : null);
+          };
+          tx.onerror = () => { open.result.close(); resolve(null); };
+        };
+      });
+    }
+    async function arResumeThemeHandoff() {
+      const params = new URLSearchParams(location.search);
+      if (params.get('applyTheme') !== '1') return;
+      params.delete('applyTheme');
+      history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params : '') + location.hash);
+      const blob = await arTakeStashedThemeVideo();
+      if (!blob) { if (typeof arToast === 'function') arToast('넘겨받은 영상이 없어요. 편집기에서 다시 눌러 주세요.'); return; }
+      if (typeof dismissAutoReelsSplash === 'function') dismissAutoReelsSplash();
+      try {
+        await arApplyThemeToEditedVideo(new File([blob], '편집한 영상.mp4', { type: blob.type || 'video/mp4', lastModified: Date.now() }));
+      } catch (e) {
+        if (typeof arToast === 'function') arToast(e.message || '편집한 영상을 불러오지 못했어요.');
+      }
+    }
+    window.addEventListener('load', () => setTimeout(arResumeThemeHandoff, 900));
+
     // 카마스터 프로필 사진 업로드 핸들러
     async function handleDealerAvatarUpload(event) {
       const file = event.target.files && event.target.files[0];
