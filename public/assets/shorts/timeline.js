@@ -139,9 +139,9 @@ function renderCutTrack(s) {
     const ticks=[];
     for(let tick=0;tick<total-.0001;tick+=tickSeconds){
       const label=document.createElement('span');
-      label.textContent=tick+'s';label.style.left=(100*tick/total)+'%';ticks.push(label);
+      label.textContent=tick+'초';label.style.left=(100*tick/total)+'%';ticks.push(label);
     }
-    const last=document.createElement('span');last.textContent=Number(total.toFixed(1))+'s';last.className='last-tick';
+    const last=document.createElement('span');last.textContent=Number(total.toFixed(1))+'초';last.className='last-tick';
     if(ticks.length>1 && total-(ticks.length-1)*tickSeconds<tickSeconds*.6)ticks.pop();
     scale.replaceChildren(...ticks,last);
     board.style.setProperty('--tick-step',(100*tickSeconds/total)+'%');

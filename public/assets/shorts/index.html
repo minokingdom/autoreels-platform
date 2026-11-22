@@ -3,8 +3,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>오토릴스메이커 · 내 영상으로 쇼츠 만들기</title>
 <link rel="stylesheet" href="/assets/app/astryx-tokens.css"><link rel="stylesheet" href="/assets/design-system.css"><link rel="stylesheet" href="screen.css?v=cuts2">
-<link rel="stylesheet" href="multitrack.css?v=cuts2"></head><body><main>
-<header><b>오토릴스<span>메이커</span></b><a data-studio-back href="/studio?from=shorts">스튜디오로 돌아가기</a><button id="mixPublish" type="button" hidden>발행 →</button></header>
+<link rel="stylesheet" href="multitrack.css?v=cuts2"><link rel="stylesheet" href="editor-polish.css?v=pol1"></head><body><main>
+<header><b>오토릴스<span>메이커</span></b><a data-studio-back href="/studio?from=shorts">스튜디오로 돌아가기</a><p class="me-title" aria-hidden="true">영상 편집기</p><button id="mixPublish" type="button" hidden>저장·발행</button></header>
 <section class="stage" hidden><div id="frame"><video playsinline id="sourceVideo" hidden></video><canvas id="overlay" width="540" height="960" aria-label="영상 제목과 자막"></canvas><button type="button" id="emptyVideoPick" hidden>＋ 영상 추가</button><button id="play" hidden type="button" aria-label="선택 구간 재생">▶</button></div></section>
 <section class="sheet"><div class="handle"></div><div id="entry">
 <h1>내 영상으로 쇼츠 만들기</h1><p class="hint">한국어로 말하는 영상에서 쇼츠로 쓸 구간을 찾아요.</p>
@@ -51,7 +51,7 @@
 <div id="trimmedGaps"></div></section>
 <div id="manualTrim"><label class="field" for="trimStart">시작 <output id="startTime"></output></label><input id="trimStart" type="range" min="0" step="any">
 <label class="field" for="trimEnd">끝 <output id="endTime"></output></label><input id="trimEnd" type="range" min="0" step="any">
-</div><label class="field" for="speed">재생 속도</label><select class="edit-input" id="speed"><option>0.8</option><option selected>1</option><option>1.25</option><option>1.5</option></select>
+</div><label class="field" for="speed">재생 속도</label><select class="edit-input" id="speed"><option value="0.8">0.8배</option><option value="1" selected>1배</option><option value="1.25">1.25배</option><option value="1.5">1.5배</option></select>
 <label class="toggle"><input id="sourceSound" type="checkbox" checked> 원본 소리</label>
 <label class="field" for="music">배경 음악</label><select class="edit-input" id="music"><option value="">음악 없음</option></select>
 <label class="field" for="captionStyle">자막 스타일</label><select class="edit-input" id="captionStyle"><option value="box">기본 · 어두운 배경</option><option value="outline">흰 글씨 · 테두리</option></select>
@@ -60,9 +60,9 @@
 <p id="rankStatus" class="hint" role="status"></p><div id="clips" aria-label="추천 구간"></div>
 <details id="editor" hidden><summary>제목·자막 편집</summary><fieldset id="fields"><label class="field" for="clipTitle">영상 위 제목</label>
 <input class="edit-input" id="clipTitle" maxlength="52" placeholder="제목 입력"><label class="toggle"><input id="showCaptions" type="checkbox" checked> 대사 자막 표시</label><div id="lineFields"></div></fieldset></details></details>
-<button id="save" class="primary" type="button" disabled>선택한 구간 저장</button><a id="download" hidden download="오토릴스메이커-쇼츠.mp4">완성된 MP4 다운로드</a><section id="quickPublish" hidden aria-label="SNS 발행">
+<button id="openInEditor" class="primary" type="button" hidden>이 구간을 편집기에서 다듬기</button><button id="save" class="primary" type="button" disabled>선택한 구간 저장</button><a id="download" hidden download="오토릴스메이커-쇼츠.mp4">완성된 MP4 다운로드</a><section id="quickPublish" hidden aria-label="SNS 발행">
 <label class="field" for="postTarget">발행 계정</label><select id="postTarget" class="edit-input"></select>
 <label class="field" for="postCaption">게시글 본문</label><textarea id="postCaption" class="edit-input" rows="2" maxlength="2100"></textarea>
 <button id="postVideo" class="primary" type="button" disabled>SNS에 발행</button>
 <p id="postStatus" class="hint" role="status"></p></section></div>
-</section></main><dialog id="mixDialog"><div class="mix-dialog-head"><button type="button" id="mixClose" aria-label="닫기">×</button><h2 id="mixTitle">효과</h2><button type="button" id="mixDone">완료</button></div><div id="mixOptions"></div><p id="mixError" role="status"></p></dialog><script src="return.js"></script><script src="export-access.js?v=cuts2"></script><script src="shorts.js?v=cuts2"></script><script src="editor.js?v=cuts2"></script><script src="quick.js?v=cuts2"></script><script src="join.js?v=cuts2"></script><script src="sns-transport.js"></script><script src="publish.js"></script><script src="effects.js?v=cuts2"></script><script src="cut-transitions.js?v=cuts2"></script><script src="timeline.js?v=cuts2"></script><script src="multitrack.js?v=cuts2"></script></body></html>
+</section></main><dialog id="mixDialog"><div class="mix-dialog-head"><button type="button" id="mixClose" aria-label="닫기">×</button><h2 id="mixTitle">효과</h2><button type="button" id="mixDone">완료</button></div><div id="mixOptions"></div><p id="mixError" role="status"></p></dialog><script src="return.js"></script><script src="export-access.js?v=cuts2"></script><script src="shorts.js?v=cuts2"></script><script src="editor.js?v=cuts2"></script><script src="quick.js?v=cuts2"></script><script src="join.js?v=cuts2"></script><script src="sns-transport.js"></script><script src="publish.js"></script><script src="effects.js?v=cuts2"></script><script src="cut-transitions.js?v=cuts2"></script><script src="timeline.js?v=cuts2"></script><script src="multitrack.js?v=cuts2"></script><script src="shorts-handoff.js?v=pol1"></script></body></html>

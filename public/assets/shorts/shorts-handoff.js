@@ -1,0 +1,76 @@
+// '내 영상으로 쇼츠 만들기' → 여섯 트랙 편집기 연결 (2026-11-22)
+// 쇼츠 화면에서 추천 구간을 고르면 같은 편집기(?mode=edit)를 창으로 띄우고,
+// 그 구간과 받아쓴 대사 자막을 그대로 넘겨 편집을 이어 간다.
+(function () {
+  if (quickEdit) {
+    // 편집기 쪽: 쇼츠 화면이 넘긴 영상·구간·자막으로 편집 시작
+    window.openShortsSelection = async function (file, pick) {
+      await openQuickFiles([file]);
+      const s = session;
+      if (!s?.clip || !pick) return;
+      const duration = video.duration;
+      const start = Math.max(0, Math.min(duration, Number(pick.start) || 0));
+      const end = Math.max(start + 0.1, Math.min(duration, Number(pick.end) || duration));
+      // 받아쓴 대사는 원본 시간 기준 그대로 자막 트랙에 올림
+      s.clip.lines = (pick.lines || []).filter(l => l && l.text).map(l => ({ start: l.start, end: l.end, text: String(l.text) }));
+      s.clip.showCaptions = true;
+      if (pick.title) { s.clip.title = pick.title; s.clip.customTitle = true; }
+      // 추천 구간 하나만 타임라인에 올림 (자동 편집이 끝나도 덮어쓰지 않음)
+      s.wantMontage = false;
+      s.timelineCuts = [{ start, end, url: s.url, owner: s.clip }];
+      byId('work').classList.add('cut-arranged');
+      s.trackTime = 0;
+      markEdited();
+      renderCutTrack(s);
+      seekCutTrack(s, 0);
+      detail(s, '추천 구간 ' + clock(start) + ' – ' + clock(end) + ' · ' + (end - start).toFixed(1) + '초를 불러왔어요.');
+    };
+    return;
+  }
+
+  // 쇼츠 화면 쪽: 구간을 고르면 '편집기에서 다듬기' 버튼을 보여 줌
+  const button = byId('openInEditor');
+  if (!button) return;
+  document.body.classList.add('shorts-handoff');
+  save.textContent = '편집 없이 바로 저장';
+
+  function sync() {
+    const s = session;
+    button.hidden = !(s?.clip && s.file && !byId('work').hidden);
+    button.disabled = !!s?.exporting;
+  }
+  new MutationObserver(sync).observe(byId('clips'), { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-pressed'] });
+  new MutationObserver(sync).observe(save, { attributes: true, attributeFilter: ['disabled'] });
+  new MutationObserver(sync).observe(byId('work'), { attributes: true, attributeFilter: ['hidden'] });
+  sync();
+
+  button.addEventListener('click', () => {
+    const s = session, clip = s?.clip;
+    if (!clip || !s.file || s.exporting || document.querySelector('dialog.ar-video-editor[open]')) return;
+    video.pause();
+    const pick = {
+      start: clip.start, end: clip.end,
+      lines: (clip.lines || []).map(l => ({ start: l.start, end: l.end, text: l.text })),
+      title: clip.customTitle ? clip.title : ''
+    };
+    const dialog = document.createElement('dialog');
+    const frame = document.createElement('iframe');
+    dialog.className = 'ar-video-editor';
+    frame.title = '영상 편집기';
+    dialog.setAttribute('aria-label', frame.title);
+    frame.src = 'index.html?mode=edit';
+    frame.addEventListener('load', () => {
+      const w = frame.contentWindow;
+      if (typeof w.openShortsSelection === 'function') w.openShortsSelection(s.file, pick);
+      else { dialog.close(); detail(s, '편집기를 열지 못했어요. 다시 시도해 주세요.'); }
+    }, { once: true });
+    const onMessage = e => {
+      if (e.origin === location.origin && e.source === frame.contentWindow && e.data === 'close-quick-video') dialog.close();
+    };
+    window.addEventListener('message', onMessage);
+    dialog.addEventListener('close', () => { window.removeEventListener('message', onMessage); dialog.remove(); }, { once: true });
+    dialog.append(frame);
+    document.body.append(dialog);
+    dialog.showModal();
+  });
+})();

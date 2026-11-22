@@ -18,7 +18,8 @@ const mixGlyphs={
   '⇄':'M3 8h16l-4-4 M21 16H5l4 4',
   '⌫':'M3 6h18 M8 6V3h8v3 M6 6l1 15h10l1-15 M10 10v7 M14 10v7',
   '☷':'M3 6h9 M16 6h5 M3 16h3 M10 16h11 M12 3v6 M7 13v6',
-  '▣':'M8 4h12v12h-3 M4 8h12v12H4z','＋':'M12 4v16 M4 12h16'
+  '▣':'M8 4h12v12h-3 M4 8h12v12H4z','＋':'M12 4v16 M4 12h16',
+  replace:'M4 4h7v7H4z M13 13h7v7h-7z M14 7h3a3 3 0 0 1 3 3v1 M10 17H7a3 3 0 0 1-3-3v-1'
 };
 function mixIcon(key){
   const ns='http://www.w3.org/2000/svg';
@@ -89,7 +90,7 @@ function renderMusicWave(s,total){
 }
 function showTools(target){
   if(!session?.clip)return;
-  byId('editSettings').open=true;document.body.classList.add('show-tools');
+  byId('editSettings').open=true;document.body.classList.add('show-tools');document.body.dataset.tools=target==='quickPublish'?'publish':'settings';
   requestAnimationFrame(()=>byId(target)?.scrollIntoView({block:'nearest'}));
 }
 function mixDialog(title,saveFn){
@@ -104,7 +105,13 @@ function mixField(container,label,input){
 }
 function numField(container,label,value,max,min=0){
   const input=document.createElement('input');input.type='number';input.step='.01';input.min=min;input.max=max;input.value=Number(value.toFixed(3));
-  return mixField(container,label,input);
+  const field=mixField(container,label,input);
+  // 시작 시간은 숫자를 치지 않아도 지금 재생 위치로 맞출 수 있게
+  if(label.startsWith('시작')){
+    const now=mixButton('지금 재생 위치로',()=>{input.value=Number(Math.min(max,Math.max(min,session?.trackTime||0)).toFixed(2));},'mix-now');
+    input.parentElement.append(now);
+  }
+  return field;
 }
 function mixChanged(s){
   markEdited();renderCutTrack(s);seekCutTrack(s,s.trackTime||0);renderPreview();
@@ -240,7 +247,7 @@ function changeTake(s,replace){
 function pickSpeed(s){
   const box=mixDialog('클립 속도',()=>changeTake(s,t=>({...t,owner:{...t.owner,rate:Number(select.value)}})));
   const select=mixField(box,'재생 속도',document.createElement('select'));
-  for(const value of [.5,.8,1,1.25,1.5,2])select.add(new Option(value+'×',value));
+  for(const value of [.5,.8,1,1.25,1.5,2])select.add(new Option(value+'배',value));
   select.value=currentTake(s).take.owner.rate||1;
 }
 function pickMusic(s){
@@ -256,7 +263,7 @@ function renderMixActions(s){
   const item=selected.includes(s.activeCue)?s.activeCue:selected.at(-1);
   const remove=()=>{if(item){selected.splice(selected.indexOf(item),1);s.activeCue=null;mixChanged(s);}};
   const tools={
-    video:[['✂','분할',call('trackSplit')],['⇄','전환',()=>openCutPicker(s)],['◴','속도',()=>pickSpeed(s)],['⇄','교체',()=>byId('mixReplace').click()],['⌫','삭제',call('trackDelete')]],
+    video:[['✂','분할',call('trackSplit')],['⇄','전환',()=>openCutPicker(s)],['◴','속도',()=>pickSpeed(s)],['replace','교체',()=>byId('mixReplace').click()],['⌫','삭제',call('trackDelete')]],
     effect:[['✧','효과 추가',effectDialog],['☷','강도',effectDialog],['▣','복제',call('fxCopy')],['⌫','삭제',call('fxRemove')]],
     sfx:[['＋','효과음 추가',()=>editCue(s,'sfx')],['⌁','효과음 편집',()=>editCue(s,'sfx',item)],['⌫','삭제',remove]],
     source:[['♩',currentTake(s)?.take.owner.keepAudio===false?'소리 켜기':'음소거',()=>changeTake(s,t=>({...t,owner:{...t.owner,keepAudio:t.owner.keepAudio===false}}))]],
@@ -296,7 +303,7 @@ if(quickEdit){
   heading.prepend(undo,redo,settings);heading.append(play);
   const fx=byId('fxPanel');byId('mixOptions').after(fx);fx.hidden=true;
   byId('mixPublish').hidden=false;byId('mixPublish').addEventListener('click',()=>showTools('quickPublish'));
-  const close=mixButton('닫기',()=>document.body.classList.remove('show-tools'));close.id='mixHideTools';
+  const close=mixButton('닫기',()=>{document.body.classList.remove('show-tools');delete document.body.dataset.tools;});close.id='mixHideTools';
   document.querySelector('.sheet').prepend(close);byId('trackTools').before(byId('mixActions'));byId('editSettings').append(byId('trackTools'));
   const replace=document.createElement('input');replace.id='mixReplace';replace.type='file';replace.accept='video/*';replace.hidden=true;document.body.append(replace);
   replace.addEventListener('change',async()=>{

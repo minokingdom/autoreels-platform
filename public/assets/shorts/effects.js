@@ -71,7 +71,7 @@ function renderEffectLanes(s){
       if(to>from){
         const start=offset+(from-take.start)/rate;
         const marker=document.createElement('button');marker.type='button';marker.className='peak-block';
-        marker.textContent='강조';marker.setAttribute('aria-label','자동 하이라이트 '+cutClock(start));
+        marker.textContent='하이라이트';marker.setAttribute('aria-label','자동 하이라이트 '+cutClock(start));
         positionBlock(marker,start,(to-from)/rate,total);
         const cursor=Math.min(total,offset+Math.max(0,Math.min(take.end,peak)-take.start)/rate);
         marker.addEventListener('click',()=>{if(editableEffects()){seekCutTrack(s,cursor);selectMix(s,'effect');}});

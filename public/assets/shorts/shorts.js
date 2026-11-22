@@ -85,7 +85,7 @@ fileInput.addEventListener('change', async () => {
 });
 async function openShortsFile(file,fullSource=false) {
   reset();
-  const s = session = {id:++sequence,url:URL.createObjectURL(file),pending:[],clips:[],rankVersion:0,guide:byId('initialGuide').value.trim(),offset:0,status:'',controller:new AbortController()};
+  const s = session = {id:++sequence,file,url:URL.createObjectURL(file),pending:[],clips:[],rankVersion:0,guide:byId('initialGuide').value.trim(),offset:0,status:'',controller:new AbortController()};
   document.querySelector('.stage').hidden = false; byId('guide').value = s.guide;
   byId('entry').hidden = true; byId('work').hidden = false; byId('frame').classList.add('loaded');
   detail(s,'영상 여는 중…'); video.hidden = false;
