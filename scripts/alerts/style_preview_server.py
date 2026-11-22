@@ -8,6 +8,12 @@ from urllib.parse import urlsplit,parse_qs
 ROOT=Path(__file__).resolve().parent/'autoreels-style'
 class PreviewHandler(BaseHTTPRequestHandler):
     def log_message(self,*args):pass  # capability URL을 로그에 남기지 않음
+    def send_error(self,code,message=None,explain=None):
+        # 410은 기본적으로 캐시될 수 있으므로 오류에도 성공 응답과 같은 no-store 적용.
+        title={404:'비교 링크를 확인해 주세요.',409:'비교 영상이 갱신되었습니다. 링크를 다시 열어 주세요.',410:'비교 링크의 유효기간이 끝났습니다. 새 안내를 요청해 주세요.',416:'영상 재생 위치를 다시 선택해 주세요.',503:'잠시 후 다시 열어 주세요.'}.get(code,'비교 영상을 열지 못했습니다.')
+        body=f'<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>비교 영상 안내</title><h1>{title}</h1><p>오류 {code}</p></html>'.encode()
+        self.respond_headers(code,'text/html; charset=utf-8',len(body))
+        if self.command!='HEAD':self.wfile.write(body)
     def do_HEAD(self):self.serve(head=True)
     def do_GET(self):self.serve()
     def serve(self,head=False):

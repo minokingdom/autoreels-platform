@@ -154,7 +154,8 @@ class Queue:
         # 과거에 전달한 링크도 같은 작업의 최신 비교본 입구로 유지합니다.
         db.execute('UPDATE preview_links SET expires=? WHERE id=?',(time.time()+7*86400,eid))
         link=db.execute('SELECT token FROM preview_links WHERE id=? ORDER BY rowid LIMIT 1',(eid,)).fetchone()
-        url='https://wiki.tail752fa1.ts.net:10000/styles/review/'+link['token']
+        # 기존 브라우저가 저장한 과거 410도 새 안내에서는 재사용하지 않게 합니다.
+        url='https://wiki.tail752fa1.ts.net:10000/styles/review/'+link['token']+'?open='+revision[:10]
         message=f"원본 비교 영상\n{url}\n\n기존 링크에서도 최신 비교본을 볼 수 있습니다.\n영상을 확인한 뒤 페이지에 표시된 승인 명령을 보내 주세요.\n아직 등록하지 않았습니다."
         db.execute('INSERT OR IGNORE INTO deliveries_v2(id,kind,text) VALUES(?,?,?)',(eid,'preview:'+revision,message))
     def decision(self,eid,code,approve):

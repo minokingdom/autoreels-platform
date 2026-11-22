@@ -26,6 +26,8 @@ class PreviewTests(unittest.TestCase):
         with self.queue.db() as db:db.execute('UPDATE preview_links SET expires=0')
         with self.assertRaises(urllib.error.HTTPError) as e:urllib.request.urlopen(self.base+'/review/'+self.token)
         self.assertEqual(e.exception.code,410)
+        self.assertEqual(e.exception.headers['Cache-Control'],'private, no-store')
+        self.assertIn('유효기간',e.exception.read().decode())
     def test_modified_video(self):
         self.file.write_bytes(b'x'*2000)
         with self.assertRaises(urllib.error.HTTPError) as e:urllib.request.urlopen(self.base+'/media/'+self.token)
