@@ -150,6 +150,7 @@ function renderCutTrack(s) {
   }
   updateAnalysisStatus(s);
   drawTrackWave(takes);
+  renderCutMarkers(s);
   renderEffectLanes(s);
   if(typeof renderMix==="function")renderMix(s);
   trackTime(s,s.trackTime||0);
@@ -220,6 +221,7 @@ function emptyCutTrack() {
   if(!quickEdit)return;
   document.querySelector('.stage').hidden=false;
   byId('analysisInfo').hidden=true;
+  renderCutMarkers(null);
   renderEffectLanes(null);
   byId('emptyVideoPick').hidden=false;
   byId('cutTimeline').classList.remove('has-media');

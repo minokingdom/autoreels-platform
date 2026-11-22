@@ -193,6 +193,10 @@ function paintClip(ctx, source, text, clip=session.clip, outputTime=0) {
       ctx.fillStyle=shade; ctx.fillRect(0,0,w,h);
     }
 
+    for(const transition of session.visibleTransitions||[]){
+      if(outputTime>=transition.start && outputTime<transition.start+transition.duration)
+        compositeCut(ctx,transition.frame,transition.kind,(outputTime-transition.start)/transition.duration);
+    }
     paintEffects(ctx,session,outputTime);
     const cue=activeCue(session,outputTime);
     drawTitles(ctx,cue?{...clip,showCaptions:true}:clip,cue?.text||text,cue?.style); return;

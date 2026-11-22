@@ -274,6 +274,43 @@ try {
   assert.equal(await frame.locator('#trackClips button').count(),2);
   await frame.locator('#trackUndo').click();
   await frame.locator('#trackRedo').click();
+  await frame.locator('#cutMarkers button').click();
+  await frame.getByRole('button',{name:'휩 슬라이드',exact:true}).click();
+  await frame.locator('#mixOptions input').fill('1');
+  await frame.locator('#mixDone').click();
+  await frame.locator('#cutMarkers .applied').waitFor();
+  const hasPush=async canvas=>{
+    const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
+    const left=ctx.getImageData(w*.15,h*.5,1,1).data,right=ctx.getImageData(w*.85,h*.5,1,1).data;
+    return left[0]>150 && left[2]<70 && right[0]<70 && right[2]>150;
+  };
+  await frame.locator('#trackCursor').fill('3.5');
+  await frame.locator('#overlay').evaluate(async c=>{
+    for(let i=0;i<80;i++){
+      const ctx=c.getContext('2d'),w=c.width,h=c.height;
+      if(ctx.getImageData(w*.15,h*.5,1,1).data[0]>150 && ctx.getImageData(w*.85,h*.5,1,1).data[2]>150)return;
+      await new Promise(r=>setTimeout(r,25));
+    }
+    throw Error('컷 경계 미리보기 누락');
+  });
+  assert.ok(await frame.locator('#overlay').evaluate(hasPush));
+  await frame.locator('#save').click();
+  await frame.locator('#download').waitFor({timeout:20000});
+  const transitionFrames=await frame.locator('#download').evaluate(async a=>{
+    const v=document.createElement('video'),c=document.createElement('canvas');v.muted=true;v.playsInline=true;
+    c.width=32;c.height=32;const g=c.getContext('2d',{willReadFrequently:true});
+    let frames=0;v.src=a.href;
+    const sample=()=>{
+      g.drawImage(v,0,0,32,32);
+      if(g.getImageData(5,16,1,1).data[0]>150 && g.getImageData(27,16,1,1).data[2]>150)frames++;
+      if(!v.ended)v.requestVideoFrameCallback(sample);
+    };
+    v.requestVideoFrameCallback(sample);await v.play();
+    await new Promise((ok,fail)=>{const t=setTimeout(()=>fail(Error('전환 MP4 확인 시간 초과')),11000);v.onended=()=>{clearTimeout(t);ok();};});
+    return frames;
+  });
+  assert.ok(transitionFrames>=2,'MP4 슬라이드 전환 프레임 '+transitionFrames);
+  console.log('모바일 편집기 컷 경계 선택과 저장한 MP4에서 휩 슬라이드 확인',transitionFrames);
   assert.equal(await frame.locator('#trackClips button').count(),2);
   await frame.locator('#trackLeft').click();
   const readCuts=()=>frame.locator('#work').evaluate(()=>sequenceTakes(session).map(t=>[t.start,t.end]));

@@ -1,5 +1,7 @@
-const effectNames={flash:'플래시',zoom:'펀치 줌',echo:'이중상',dip:'딥 전환'};
+const effectNames={flash:'플래시',zoom:'펀치 줌',echo:'이중상',dip:'딥 전환',leak:'빛 번짐',slice:'슬라이스 스텝'};
 const effectRecipes=[
+  {kind:'leak',duration:.85,strength:.9},
+  {kind:'slice',duration:.46,strength:.8},
   {kind:'flash',duration:.24,strength:.75},
   {kind:'zoom',duration:.48,strength:.65},
   {kind:'echo',duration:.4,strength:.55},
@@ -27,6 +29,14 @@ function paintEffects(ctx,s,time){
     ctx.save();
     if(effect.kind==='flash' || effect.kind==='dip'){
       ctx.globalAlpha=amount;ctx.fillStyle=effect.tint||'white';ctx.fillRect(0,0,w,h);
+    }else if(effect.kind==='leak'){
+      lightSweep(ctx,phase,effect.strength);
+    }else if(effect.kind==='slice'){
+      const shift=Math.round(w*.095*amount*(1-phase));
+      for(const [y,height,direction] of [[.18,.16,1],[.43,.23,-1],[.76,.09,1]]){
+        const dy=Math.round(h*y),band=Math.round(h*height),dx=direction*shift;
+        if(shift)ctx.drawImage(ctx.canvas,Math.max(0,-dx),dy,w-shift,band,Math.max(0,dx),dy,w-shift,band);
+      }
     }else if(effect.kind==='zoom'){
       const z=1+amount*.32;
       ctx.drawImage(ctx.canvas,(w-w/z)/2,(h-h/z)/2,w/z,h/z,0,0,w,h);
@@ -124,7 +134,7 @@ function renderEffectLanes(s){
 if(quickEdit){
   const option=(label,index)=>{
     const button=document.createElement('button');
-    button.type='button';button.textContent=label;button.dataset.kind=effectRecipes[index].kind;
+    button.type='button';button.textContent=label;button.dataset.kind=effectRecipes[index].kind;button.dataset.recipe=index;
     button.setAttribute('aria-label',label+' 효과 추가');
     button.addEventListener('click',()=>addEffect(effectRecipes[index]));
     byId('fxPresetList').append(button);

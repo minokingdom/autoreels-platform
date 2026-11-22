@@ -187,25 +187,46 @@ function editCue(s,type,cue){
   if(!sound)len=numField(box,'길이(초)',cue?.duration||Math.min(2,total),total,.01);
 }
 function effectDialog(tab='영상 효과'){
+  if(tab==='전환'){openCutPicker(session);return;}
   const box=mixDialog('효과',null),nav=document.createElement('div');nav.className='fx-tabs';
   for(const name of ['영상 효과','전환','효과음']){
     const b=mixButton(name,()=>{if(name==='효과음'){selectMix(session,'sfx');editCue(session,'sfx');}else effectDialog(name);});
     b.setAttribute('aria-pressed',String(name===tab));nav.append(b);
   }
   box.append(nav);byId('fxPanel').hidden=false;
-  const canvas=byId('overlay'),source=session.joined||session.timelineCuts?canvas:video;
-  for(const button of byId('fxPresetList').children){
-    button.hidden=(button.dataset.kind==='dip')!==(tab==='전환');
+
+  const live=byId('overlay'),source=session.joined||session.timelineCuts?live:video;
+  const still=document.createElement('canvas');still.width=96;still.height=84;
+  const w=source.videoWidth||source.width,h=source.videoHeight||source.height;
+  if(w && h && (source!==video || video.readyState>=2)){
+    const scale=Math.max(96/w,84/h);
+    still.getContext('2d').drawImage(source,(96-w*scale)/2,(84-h*scale)/2,w*scale,h*scale);
+  }
+  const list=byId('fxPresetList'),previews=[];
+  for(const button of list.children){
+    button.hidden=false;
     let thumb=button.querySelector('canvas');
     if(!thumb){thumb=document.createElement('canvas');thumb.width=96;thumb.height=84;button.prepend(thumb);}
-    const ctx=thumb.getContext('2d'),w=source.videoWidth||source.width,h=source.videoHeight||source.height;
-    if(!w||!h || (source===video && video.readyState<2))continue;
-    const scale=Math.max(96/w,84/h)*(button.dataset.kind==='zoom'?1.25:1);
-    ctx.drawImage(source,(96-w*scale)/2,(84-h*scale)/2,w*scale,h*scale);
-    if(button.dataset.kind==='flash'){ctx.fillStyle='#ffe7a84d';ctx.fillRect(0,0,96,84);}
-    if(button.dataset.kind==='dip'){ctx.fillStyle=button.textContent.includes('블랙')?'#0008':'#fff8';ctx.fillRect(0,0,96,84);}
-    if(button.dataset.kind==='echo'){ctx.globalAlpha=.4;ctx.drawImage(thumb,5,0);ctx.globalAlpha=1;}
+    const ctx=thumb.getContext('2d'),recipe=effectRecipes[Number(button.dataset.recipe)];
+    ctx.drawImage(still,0,0);previews.push({ctx,recipe,button});
   }
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let last=-100;
+  function animate(now){
+    if(!byId('mixDialog').open || !nav.isConnected)return;
+    if(now-last>=80){
+      last=now;const bounds=list.getBoundingClientRect();
+      for(const {ctx,recipe,button} of previews){
+        const rect=button.getBoundingClientRect();
+        if(rect.right<bounds.left || rect.left>bounds.right)continue;
+        ctx.drawImage(still,0,0);
+        const phase=reduced?.45:Math.min(1,now%1450/950);
+        paintEffects(ctx,{effects:[{...recipe,start:0,duration:1}]},phase);
+      }
+    }
+    if(!reduced)requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
 }
 function currentTake(s){return trackPosition(sequenceTakes(s),s.trackTime||0);}
 function changeTake(s,replace){
@@ -235,7 +256,7 @@ function renderMixActions(s){
   const item=selected.includes(s.activeCue)?s.activeCue:selected.at(-1);
   const remove=()=>{if(item){selected.splice(selected.indexOf(item),1);s.activeCue=null;mixChanged(s);}};
   const tools={
-    video:[['✂','분할',call('trackSplit')],['◴','속도',()=>pickSpeed(s)],['⇄','교체',()=>byId('mixReplace').click()],['⌫','삭제',call('trackDelete')]],
+    video:[['✂','분할',call('trackSplit')],['⇄','전환',()=>openCutPicker(s)],['◴','속도',()=>pickSpeed(s)],['⇄','교체',()=>byId('mixReplace').click()],['⌫','삭제',call('trackDelete')]],
     effect:[['✧','효과 추가',effectDialog],['☷','강도',effectDialog],['▣','복제',call('fxCopy')],['⌫','삭제',call('fxRemove')]],
     sfx:[['＋','효과음 추가',()=>editCue(s,'sfx')],['⌁','효과음 편집',()=>editCue(s,'sfx',item)],['⌫','삭제',remove]],
     source:[['♩',currentTake(s)?.take.owner.keepAudio===false?'소리 켜기':'음소거',()=>changeTake(s,t=>({...t,owner:{...t.owner,keepAudio:t.owner.keepAudio===false}}))]],

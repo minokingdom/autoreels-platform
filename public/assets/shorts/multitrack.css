@@ -131,3 +131,13 @@
 #sfxLane .short-sound::after{content:attr(data-sound-name);position:absolute;left:100%;top:50%;transform:translateY(-50%);color:#d3b5eb;background:#211927;border-radius:0 4px 4px 0;padding:3px 5px;font-size:10px;white-space:nowrap}
 #sfxLane .short-sound canvas{border-radius:3px}
 @media(max-width:359px){.quick-video #cutTimeline{--label:70px}}
+
+#cutMarkers{position:absolute;inset:0;pointer-events:none}
+.cut-marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:32px;height:42px;padding:0;border:0;background:transparent;color:white;font:700 16px/1 system-ui;pointer-events:auto;isolation:isolate}
+.cut-marker::before{content:'';position:absolute;z-index:-1;inset:9px 4px;border:1px solid #a7b4c2;border-radius:6px;background:#20242ce8}
+.cut-marker.applied{color:#ffdda1}.cut-marker.applied::before{border-color:#c39b53}
+.cut-demo{display:block;width:auto;height:min(22dvh,172px);margin:8px auto;background:#101114}
+.cut-pair{text-align:center;color:#cad4e1;font-size:12px}
+.cut-choices{display:flex;gap:6px;flex-wrap:wrap}
+.cut-choices button,.cut-split{font:inherit;font-size:13px;color:#e7e8eb;background:#2b2d34;border:1px solid #51525a;border-radius:6px;padding:8px}
+.cut-choices button[aria-pressed=true]{background:#58432b;color:#ffe4ac;border-color:#cea566}
