@@ -113,6 +113,7 @@ function renderCutTrack(s) {
     s.trackThumbController=new AbortController();
     trackThumbnails(s,takes,buttons,s.trackThumbController.signal);
   }
+  updateAnalysisStatus(s);
   drawTrackWave(takes);
   renderEffectLanes(s);
   if(typeof renderMix==="function")renderMix(s);
@@ -121,6 +122,7 @@ function renderCutTrack(s) {
 function seekCutTrack(s,time) {
   if(session!==s || s.exporting || s.adding || s.postBusy) return;
   video.pause();stopJoinedPreview(s);
+  if(s.trackAnalysisEdits)s.previewTouched=true;
   const pos=trackTime(s,time);
   if(!pos) return;
   if(s.joined || s.timelineCuts) showJoinedCover(s,{...pos.take,start:pos.sourceTime});
@@ -182,6 +184,7 @@ if(quickEdit) {
 function emptyCutTrack() {
   if(!quickEdit)return;
   document.querySelector('.stage').hidden=false;
+  byId('analysisInfo').hidden=true;
   renderEffectLanes(null);
   byId('emptyVideoPick').hidden=false;
   byId('cutTimeline').classList.remove('has-media');

@@ -68,6 +68,7 @@ function mountEditor(clip) {
   byId('lineFields').replaceChildren(...elements);
 }
 function markEdited() {
+  if(session?.trackAnalysisEdits)session.previewTouched=true;
   if (quickEdit) {
     clearEditorPost(session);
     if(session.timelineCuts && !session.previewController) {

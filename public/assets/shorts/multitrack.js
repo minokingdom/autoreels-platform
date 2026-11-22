@@ -43,7 +43,7 @@ function drawMixBuffer(canvas,buffer,seconds,color,loop){
 function queueSourceWave(s,clip,file,duration){
   s.waveQueue=(s.waveQueue||Promise.resolve()).then(async()=>{
     if(session!==s)return;
-    const {audioLevels}=await import('./montage.mjs?v=tracks1');
+    const {audioLevels}=await import('./montage.mjs?v=ready1');
     clip.audioLevels=await audioLevels(file,duration);
     if(session===s && s.clip)renderCutTrack(s);
   }).catch(()=>{});
@@ -169,7 +169,7 @@ function effectDialog(tab='영상 효과'){
     let thumb=button.querySelector('canvas');
     if(!thumb){thumb=document.createElement('canvas');thumb.width=96;thumb.height=84;button.prepend(thumb);}
     const ctx=thumb.getContext('2d'),w=source.videoWidth||source.width,h=source.videoHeight||source.height;
-    if(!w||!h)continue;
+    if(!w||!h || (source===video && video.readyState<2))continue;
     const scale=Math.max(96/w,84/h)*(button.dataset.kind==='zoom'?1.25:1);
     ctx.drawImage(source,(96-w*scale)/2,(84-h*scale)/2,w*scale,h*scale);
     if(button.dataset.kind==='flash'){ctx.fillStyle='#ffe7a84d';ctx.fillRect(0,0,96,84);}
@@ -232,6 +232,9 @@ function renderMix(s){
   if(!s?.clip)return;
   const total=mixTotal(s);
   drawCues(s,'sfx',total);drawCues(s,'caption',total);renderMusicWave(s,total);
+  const label=byId('sourceWaveState'),muted=sequenceTakes(s).every(t=>t.owner.keepAudio===false);
+  label.hidden=!byId('trackWave').hidden;
+  label.textContent=muted?'음소거':s.analyzing && !s.clip.audioLevels?'파형 분석 중…':'파형 없음';
   byId('sourceLane').setAttribute('aria-label',currentTake(s)?.take.owner.keepAudio===false?'원본 소리 꺼짐':'원본 소리 편집');
   selectMix(s,s.mixTrack||'video');
 }

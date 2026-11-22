@@ -74,9 +74,9 @@ export function planMontage(duration, samples, levels) {
   return {segments,peak};
 }
 
-export async function buildMontage(file,duration,signal,progress) {
+export async function buildMontage(file,duration,signal,progress,onLevels) {
   if (duration < 3) return {segments:[{start:0,end:duration}],peak:null,levels:await audioLevels(file,duration)};
-  const [motion,levels] = await Promise.all([sampleMotion(file,signal,progress),audioLevels(file,duration)]);
+  const [motion,levels] = await Promise.all([sampleMotion(file,signal,progress),audioLevels(file,duration).then(values=>{if(!signal.aborted)onLevels?.(values);return values;})]);
   signal.throwIfAborted();
   const plan = planMontage(duration,motion.samples,levels);
   if (plan.segments.length > 1) {

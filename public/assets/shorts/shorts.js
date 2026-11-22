@@ -121,6 +121,7 @@ function activeCaption(clip,t) {return clip?.lines.find(line => t >= line.start 
 play.addEventListener('click',async () => {
   const s = session; if (!s?.clip || s.exporting) return;
   s.interacted = true;
+  if(s.trackAnalysisEdits)s.previewTouched=true;
   if (s.joined || s.timelineCuts) { await previewJoined(s); return; }
   if (!video.paused) { video.pause(); return; }
   const ranges = clipRanges(s.clip);

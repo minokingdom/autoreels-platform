@@ -70,3 +70,13 @@
 .quick-video #trackTools{margin:8px 0}
 
 .fx-tabs{display:flex;margin-bottom:8px;border-bottom:1px solid #383a40}.fx-tabs button{flex:1;color:#b9bbc3;background:none;border:0;border-bottom:2px solid transparent;padding:7px;font:600 12px system-ui}.fx-tabs button[aria-pressed=true]{color:#85baff;border-color:#4398ff}#mixDialog .fx-heading{display:none}
+
+#analysisInfo{display:flex;align-items:center;gap:8px;min-height:22px;color:#b7c5d9;font:11px system-ui}
+#applyReadyPlan{font:inherit;background:#233a58;color:#d5e7ff;border:1px solid #496b98;border-radius:5px;padding:3px 10px}
+#fxLanes .fx-empty{width:100%;min-height:28px;cursor:pointer;text-align:left;color:#d9b57b}
+#fxLanes .peak-block{position:absolute;top:2px;bottom:2px;min-width:4px;overflow:hidden;white-space:nowrap;border:1px solid #b78841;border-radius:4px;background:#6a4d25;color:white;padding:0;font-size:10px}
+
+.quick-video #cutTimeline.has-media{display:flex;flex-direction:column;overflow:hidden}
+#cutTimeline.has-media .mix-scroll{overflow:auto;min-height:0;overscroll-behavior:contain}
+#cutTimeline .track-heading,#analysisInfo,#mixActions{flex-shrink:0}
+#sourceWaveState{color:#939ba3}

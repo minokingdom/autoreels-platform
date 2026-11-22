@@ -40,6 +40,32 @@ try {
     const file = path.join(root,url.pathname === '/studio' ? 'studio.html' : url.pathname);
     try { await route.fulfill({path:file}); } catch { await route.abort(); }
   });
+  let unblockAnalysis,analysisRequested;
+  const blocked=new Promise(resolve=>{unblockAnalysis=resolve;});
+  const requested=new Promise(resolve=>{analysisRequested=resolve;});
+  const delayAnalysis=async route=>{analysisRequested();await blocked;await route.fallback();};
+  await page.route('**/montage.mjs*',delayAnalysis);
+  try{
+    await page.goto('http://localhost/assets/shorts/index.html?mode=edit');
+    await page.locator('#file').setInputFiles(fileURLToPath(new URL('./fixtures/montage-transition.webm',import.meta.url)));
+    await requested;
+    assert.ok(await page.locator('#play').isEnabled(),'분석 중 재생 가능');
+    assert.ok(await page.locator('#analysisInfo').isVisible());
+    await page.locator('#fxLanes').getByRole('button',{name:'＋ 효과 추가'}).click();
+    await page.getByRole('button',{name:'펀치 줌 효과 추가',exact:true}).click();
+    await page.locator('#mixDone').click();
+    await page.locator('#trackCursor').fill('1.2');
+    await page.locator('#play').click();
+    await page.waitForFunction(()=>!video.paused && video.currentTime>1.4);
+    unblockAnalysis();await page.locator('#applyReadyPlan').waitFor();
+    const state=await page.evaluate(()=>({time:video.currentTime,playing:!video.paused,fx:session.effects.length,plan:session.clip.montage}));
+    assert.ok(state.time>=1.4 && (state.playing || await page.locator('#sourceVideo').evaluate(v=>v.ended||v.currentTime>=v.duration-.1)),'분석 완료 시 재생 위치와 상태 유지');
+    assert.equal(state.fx,1);assert.ok(!state.plan,'보고 있는 편집본 보존');
+    await page.locator('#applyReadyPlan').click();
+    assert.ok(await page.evaluate(()=>!!session.clip.montage));
+    assert.equal(await page.locator('#fxLanes .fx-block').count(),1);
+    console.log('장면 분석 중 재생·효과 추가 및 편집본 적용 확인');
+  }finally{unblockAnalysis();await page.unroute('**/montage.mjs*',delayAnalysis);}
   await page.goto('http://localhost/studio',{waitUntil:'domcontentloaded'});
   await page.waitForFunction(() => typeof arOpenQuickVideoEditor === 'function');
   const before = () => page.evaluate(() => [campaign.uploadedPhotos.length,campaign.designStyle,TOTAL_DURATION]);

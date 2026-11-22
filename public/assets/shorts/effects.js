@@ -52,11 +52,30 @@ function renderEffectLanes(s){
   panel.hidden=!s?.clip || !(byId('mixDialog').open && byId('mixTitle').textContent==='효과');
   lanes.replaceChildren();inspector.hidden=true;
   if(!s?.clip)return;
-  if(!s.effects?.length){
-    const empty=document.createElement('div');
-    empty.className='fx-empty';empty.textContent='효과 트랙';lanes.append(empty);
+  const takes=sequenceTakes(s),total=sequenceDuration(takes);
+  let offset=0;
+  for(const take of takes){
+    const clip=take.owner,peak=clip.peak,rate=clip.rate||1;
+    if(clip.montage && clip.peakEffect && Number.isFinite(peak)){
+      const from=Math.max(take.start,peak-1.1),to=Math.min(take.end,peak+.12);
+      if(to>from){
+        const start=offset+(from-take.start)/rate;
+        const marker=document.createElement('button');marker.type='button';marker.className='peak-block';
+        marker.textContent='강조';marker.setAttribute('aria-label','자동 하이라이트 '+cutClock(start));
+        positionBlock(marker,start,(to-from)/rate,total);
+        const cursor=Math.min(total,offset+Math.max(0,Math.min(take.end,peak)-take.start)/rate);
+        marker.addEventListener('click',()=>{if(editableEffects()){seekCutTrack(s,cursor);selectMix(s,'effect');}});
+        lanes.append(marker);
+      }
+    }
+    offset+=takeDuration(take);
   }
-  const total=sequenceDuration(sequenceTakes(s));
+  if(!s.effects?.length && !lanes.children.length){
+    const add=document.createElement('button');add.type='button';
+    add.className='fx-empty';add.textContent='＋ 효과 추가';
+    add.addEventListener('click',()=>{if(editableEffects()){selectMix(s,'effect');effectDialog();}});
+    lanes.append(add);
+  }
   for(const effect of s.effects||[]){
     const row=document.createElement('div'),bar=document.createElement('button');
     row.className='fx-lane';bar.className='fx-block';bar.type='button';

@@ -70,10 +70,32 @@ async function prepareQuickMusic(context,dest,url,signal) {
   sound.connect(volume).connect(dest);
   return {sound,volume};
 }
+function updateAnalysisStatus(s,percent) {
+  if(session!==s)return;
+  const box=byId('analysisInfo'),apply=byId('applyReadyPlan');
+  const pending=!!s.planReady && s.wantMontage && !s.timelineCuts && !s.joined;
+  const working=s.analyzing && s.wantMontage && !s.joined && !s.timelineCuts;
+  const showResult=s.wantMontage && !s.joined && !s.timelineCuts && !working && !pending && s.plan &&
+    (s.analysisFailed || (s.clip.montage?.length===1 && !Number.isFinite(s.clip.peak)));
+  box.hidden=!working && !pending && !showResult;
+  apply.hidden=!pending;
+  if(percent!==undefined)s.analysisPercent=Math.min(99,Math.max(0,Math.round(percent)));
+  if(pending)byId('analysisText').textContent='자동 편집 준비됨';
+  else if(working)byId('analysisText').textContent='장면 분석 중 · '+(s.analysisPercent||0)+'%';
+  else byId('analysisText').textContent=s.analysisFailed?'장면 분석 실패 · 원본 편집 가능':'추천 구간 없음 · 원본 유지';
+}
+function finishBackgroundPlan(s){
+  if(!s.wantMontage || s.timelineCuts || s.joined)return;
+  if(s.previewTouched || !video.paused || s.exporting || s.postBusy || s.adding || byId('mixDialog').open){
+    s.planReady=true;
+  }else setQuickMode(s,true);
+}
 function setQuickMode(s,automatic) {
   if (session !== s || s.exporting || s.joined) return;
   video.pause();
+  s.planReady=false;
   s.wantMontage = automatic;
+  if(automatic && s.plan && !s.peakInitialized){s.clip.peak=s.plan.peak;s.peakInitialized=true;}
   s.clip.montage = null;
   byId('highlightEditor').hidden = !(automatic && s.plan);
   byId('useMontage').setAttribute('aria-pressed',String(automatic));
@@ -82,7 +104,8 @@ function setQuickMode(s,automatic) {
   byId('transitionControl').hidden = !s.clip.montage?.some(r => r.transition);
   const waiting = automatic && !s.plan;
   byId('montageProgress').hidden = !waiting;
-  save.disabled = play.disabled = waiting;
+  save.disabled = play.disabled = false;
+  updateAnalysisStatus(s);
   const notice = byId('montageStatus');
   if (waiting) notice.textContent = '움직임과 컷을 고르는 중이에요.';
   else if (automatic) updateHighlightEdit(s);
@@ -95,24 +118,29 @@ async function startMontage(s,file) {
   byId('useMontage').disabled = false;
   byId('montageProgress').value = 0;
   setQuickMode(s,true);
+  s.previewTouched=false;s.trackAnalysisEdits=true;
+  updateAnalysisStatus(s,0);
   try {
-    const {buildMontage} = await import('./montage.mjs?v=tracks1');
+    const {buildMontage} = await import('./montage.mjs?v=ready1');
     s.plan = await buildMontage(file,video.duration,s.controller.signal,pct => {
-      if (session === s) byId('montageProgress').value = pct;
-    });
+      if (session === s) {byId('montageProgress').value=pct;updateAnalysisStatus(s,pct);}
+    },levels=>{if(session===s){s.clip.audioLevels=levels;renderCutTrack(s);}});
     if (session !== s) return;
     s.clip.audioLevels=s.plan.levels;
     renderCutTrack(s);
-    s.clip.peak=s.plan.peak;
-    if (s.wantMontage && !s.timelineCuts) setQuickMode(s,true);
+    finishBackgroundPlan(s);
   } catch(error) {
     if (session !== s || s.controller.signal.aborted) return;
     console.warn('장면 분석 중단',error);
-    s.plan={segments:[{start:0,end:video.duration}],peak:null};
-    if (s.wantMontage && !s.timelineCuts) {setQuickMode(s,true);byId('montageStatus').textContent='자동 분석이 어려운 영상이에요. 타임라인에서 강조할 순간을 골라 주세요.';}
-  } finally { s.analyzing=false; if(session===s && s.timelineCuts && !s.adding && !s.exporting) save.disabled=play.disabled=false; }
+    s.analysisFailed=true;s.plan={segments:[{start:0,end:video.duration}],peak:null};
+    if(!s.previewTouched && video.paused && !s.exporting && !s.postBusy && !s.adding && !byId('mixDialog').open && s.wantMontage && !s.timelineCuts && !s.joined)setQuickMode(s,true);
+    byId('montageStatus').textContent='자동 분석이 어려운 영상이에요. 타임라인에서 강조할 순간을 골라 주세요.';
+  } finally {s.analyzing=false;s.trackAnalysisEdits=false;updateAnalysisStatus(s);}
 }
 if (quickEdit) {
+  byId('applyReadyPlan').addEventListener('click',()=>{if(editableEffects() && session.planReady){
+    const s=session,at=video.currentTime;setQuickMode(s,true);seekCutTrack(s,outputTimeAt(s,at));
+  }});
   byId('useMontage').addEventListener('click',() => {
     if (!session.plan && !session.analyzing) startMontage(session,session.file);
     else setQuickMode(session,true);

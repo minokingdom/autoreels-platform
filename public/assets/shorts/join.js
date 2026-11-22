@@ -75,7 +75,7 @@ async function appendJoinedFiles(s,files) {
   } finally {
     if(session===s) {
       s.adding=false;byId('joinFiles').disabled=false;
-      save.disabled=play.disabled=!!(!s.joined && s.wantMontage && !s.plan);
+      save.disabled=play.disabled=false;
     } else for(const item of added) URL.revokeObjectURL(item.url);
   }
 }
