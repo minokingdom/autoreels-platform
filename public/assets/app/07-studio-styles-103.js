@@ -61,7 +61,7 @@
 
       STUDIO_100_RENDERERS.s100_tv_variety = ({ c, W, H, t, local, lp, S, cutIdx, caption, capHidden, ent, accent }) => {
         s100FullBleed(c, S, cutIdx, local, lp, W, H, { botScrim: 'rgba(12,14,22,0.74)', botH: 340 });
-        const pop = 1 + Math.sin(t * 6) * 0.04;
+        const pop = 1;
         c.save(); c.translate(W - 96, 66); c.rotate(0.08); c.scale(pop * ent, pop * ent);
         gRoundRect(c, -74, -22, 148, 44, 22); c.fillStyle = '#ec4899'; c.fill();
         c.strokeStyle = '#ffffff'; c.lineWidth = 3; c.stroke();
@@ -145,7 +145,7 @@
         gRoundRect(c, -52, -32, 104, 64, 14); c.fillStyle = accent; c.fill();
         c.strokeStyle = '#ffffff'; c.lineWidth = 2.5; c.stroke();
         c.fillStyle = '#120f17'; c.font = `900 11px 'JetBrains Mono', monospace`; c.textAlign = 'center'; c.textBaseline = 'middle';
-        c.fillText('RANKING', 0, -13); c.font = `900 28px 'Black Han Sans', sans-serif`; c.fillText(`TOP ${cutIdx + 1}`, 0, 12);
+        c.fillText('RANKING', 0, -13); c.font = `800 28px 'Paperlogy', sans-serif`; c.fillText(`TOP ${cutIdx + 1}`, 0, 12);
         c.restore();
         s100DrawCaption(c, W, H, caption, { cutIdx, local, fontKey: 'gasoek', x: W / 2, y: 766, maxW: W * 0.84, maxLines: 3, maxSize: 40, minSize: 24, color: '#ffffff', strokeCol: '#120f17', strokeW: 6, ent, capHidden });
       };
@@ -214,7 +214,7 @@
         c.fillStyle = '#ffffff'; c.strokeStyle = '#111111'; c.lineWidth = 3; c.beginPath();
         for (let k = 0; k < 16; k++) { const a = (k / 16) * Math.PI * 2, r = k % 2 ? 28 : 42; if (k === 0) c.moveTo(Math.cos(a) * r, Math.sin(a) * r); else c.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
         c.closePath(); c.fill(); c.stroke();
-        c.fillStyle = '#111111'; c.font = `900 18px 'Black Han Sans', sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('주목!', 0, 2); c.restore();
+        c.fillStyle = '#111111'; c.font = `800 18px 'Paperlogy', sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('주목!', 0, 2); c.restore();
         s100DrawCaption(c, W, H, caption, { cutIdx, local, fontKey: 'dohyeon', x: W / 2, y: 766, maxW: W * 0.80, maxLines: 3, maxSize: 38, minSize: 23, color: '#111111', boxBg: '#ffffff', boxBorder: '#111111', boxRadius: 4, padX: 20, padY: 14, ent, capHidden });
       };
 

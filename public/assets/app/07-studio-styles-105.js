@@ -66,7 +66,7 @@
 
       STUDIO_100_RENDERERS.s100_lf_roomtour = ({ c, W, H, t, local, lp, S, cutIdx, caption, capHidden, ent, accent }) => {
         s100FullBleed(c, S, cutIdx, local, lp, W, H, { botScrim: 'rgba(28,24,20,0.80)', botH: 320 });
-        const pulse = 1 + Math.sin(t * 4) * 0.16;
+        const pulse = 1;
         gRoundRect(c, 26, 38, 158, 34, 17); c.fillStyle = 'rgba(255,252,247,0.92)'; c.fill();
         c.fillStyle = accent; c.beginPath(); c.arc(44, 55, 4.5 * pulse, 0, Math.PI * 2); c.fill();
         c.fillStyle = '#292524'; c.font = `700 11.5px 'JetBrains Mono', monospace`; c.textAlign = 'left'; c.textBaseline = 'middle';
@@ -76,7 +76,7 @@
 
       STUDIO_100_RENDERERS.s100_lf_beforeafter = ({ c, W, H, t, local, lp, S, cutIdx, caption, capHidden, ent, accent }) => {
         s100FullBleed(c, S, cutIdx, local, lp, W, H, { botScrim: 'rgba(14,17,22,0.88)', botH: 340 });
-        const splitX = W * (0.5 + Math.sin(t * 1.3) * 0.12);
+        const splitX = W * 0.5;
         c.fillStyle = 'rgba(14,17,22,0.22)'; c.fillRect(0, 0, splitX, H);
         c.fillStyle = '#ffffff'; c.fillRect(splitX - 1.5, 0, 3, H);
         c.fillStyle = '#ffffff'; c.beginPath(); c.arc(splitX, H * 0.44, 20, 0, Math.PI * 2); c.fill();

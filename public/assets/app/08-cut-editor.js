@@ -115,9 +115,7 @@
       { id: 'sans', label: '모던고딕', css: "'Pretendard Variable', 'Pretendard', sans-serif", weight: 800 },
       { id: 'paperlogy', label: '페이퍼로지', css: "'Paperlogy', 'Pretendard Variable', sans-serif", weight: 800 },
       { id: 'gmarket', label: '지마켓산스', css: "'GmarketSans', 'Pretendard Variable', sans-serif", weight: 700 },
-      { id: 'aggro', label: '어그로체', css: "'SBAggroB', 'Black Han Sans', sans-serif", weight: 700 },
-      { id: 'blackhan', label: '검은고딕', css: "'Black Han Sans', 'SBAggroB', sans-serif", weight: 400 },
-      { id: 'gasoek', label: '가석원', css: "'Gasoek One', 'SBAggroB', sans-serif", weight: 400 },
+      { id: 'aggro', label: '어그로체', css: "'SBAggroB', 'Paperlogy', sans-serif", weight: 700 },
       // ── 예능 · 팝 · 둥근체 ──
       { id: 'cafe24', label: '써라운드', css: "'Cafe24Ssurround', 'Bagel Fat One', sans-serif", weight: 700 },
       { id: 'bagel', label: '베이글통통', css: "'Bagel Fat One', 'Cafe24Ssurround', sans-serif", weight: 400 },
@@ -1049,7 +1047,7 @@
         c.fillStyle = col;
         c.shadowColor = 'rgba(0,0,0,0.5)';
         c.shadowBlur = 10;
-        c.font = `900 ${Math.round(58 * sc)}px 'Black Han Sans', sans-serif`;
+        c.font = `800 ${Math.round(58 * sc)}px 'Paperlogy', sans-serif`;
         c.fillText('!!', 0, 4);
       } else if (k === 'circleMark') {
         const col = item.color || '#fb7185';
@@ -4695,7 +4693,7 @@
             </div>
           </div>
           <div class="ar-el-row">
-            <span class="ar-el-label">카메라 무브(10종)</span>
+            <span class="ar-el-label">카메라 무브</span>
             <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
               ${((typeof AR_CAMERA_MOTION_MODES !== 'undefined') ? AR_CAMERA_MOTION_MODES : []).map((cm) => {
                 const on = (ph.cam || 'auto') === cm.id;

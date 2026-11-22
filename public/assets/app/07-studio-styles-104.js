@@ -160,7 +160,7 @@
 
       STUDIO_100_RENDERERS.s100_fd_pocha = ({ c, W, H, t, local, lp, S, cutIdx, caption, capHidden, ent, accent }) => {
         s100FullBleed(c, S, cutIdx, local, lp, W, H, { botScrim: 'rgba(17,9,24,0.86)', botH: 340 });
-        const pulse = 0.78 + 0.22 * Math.sin(t * 5);
+        const pulse = 0.92;
         c.save(); c.shadowColor = accent; c.shadowBlur = 18 * pulse; c.strokeStyle = accent; c.lineWidth = 3.5;
         gRoundRect(c, 16, 20, W - 32, H - 40, 20); c.stroke(); c.restore();
         for (let i = 0; i < 5; i++) {

@@ -83,11 +83,11 @@
     //   색상은 여기서 정하지 않습니다 (COLOR_PALETTES에서 따로 선택).
     // ==========================================================================
     const KIT_FONTS = {
-      // ── 임팩트 · 트렌디 타이틀 (대한민국 릴스·유튜브 상업용 무료 대표 서체) ──
-      impact: { f: '"Black Han Sans", "SBAggroB", "Do Hyeon", sans-serif', w: 400, k: 1.06 },
-      blackhan: { f: '"Black Han Sans", "SBAggroB", sans-serif', w: 400, k: 1.06 },
-      gasoek: { f: '"Gasoek One", "SBAggroB", sans-serif', w: 400, k: 0.94 },
-      aggro: { f: '"SBAggroB", "Black Han Sans", sans-serif', w: 700, k: 0.98 },
+      // ── 임팩트 · 트렌디 타이틀 (획이 깔끔한 상업용 무료 대표 서체) ──
+      impact: { f: '"Paperlogy", "GmarketSans", "SBAggroB", sans-serif', w: 800, k: 0.98 },
+      blackhan: { f: '"Paperlogy", "GmarketSans", sans-serif', w: 800, k: 0.98 },
+      gasoek: { f: '"GmarketSans", "Paperlogy", sans-serif', w: 700, k: 0.98 },
+      aggro: { f: '"SBAggroB", "Paperlogy", sans-serif', w: 700, k: 0.98 },
       gmarket: { f: '"GmarketSans", "Pretendard Variable", sans-serif', w: 700, k: 0.98 },
       paperlogy: { f: '"Paperlogy", "Pretendard Variable", sans-serif', w: 800, k: 0.98 },
       cafe24: { f: '"Cafe24Ssurround", "Bagel Fat One", sans-serif', w: 700, k: 1.02 },
@@ -3936,7 +3936,7 @@
     }
     // ★ 세부 편집이 다 되는 디자인 (자막·위 라벨·아래 이름을 컷 편집에서 모두 골라 바꿀 수 있음)
     //   kit 디자인은 전부, motion 디자인은 아래 목록 (2026-11-16 전 디자인을 그려 확인)
-    const AR_FINE_EDIT_MOTION = new Set(['in_film', 'in_mood', 'in_letter', 'in_vlog', 'in_collage', 'in_h_plaque', 'in_h_panes', 'in_h_double', 'in_h_vinyl', 'in_g_sub', 'in_g_arch', 'in_g_strip', 'in_g_postcard', 'in_g_cam', 'in_g_bookmark', 'ed_vogue', 'ed_arch', 'stm_kinetic', 'stm_cinema', 'stm_sonar', 'stm_glint', 'cn_deck', 'cn_summary', 'cn_boldquote', 'cn_splitbar', 'stm_split', 'stm_ticket', 'cn_timeline', 'cn_qna', 'cn_compare', 'cn_receipt', 'cn_polaroid_duo', 'stm_glassbar']);
+    const AR_FINE_EDIT_MOTION = new Set(['in_film', 'in_mood', 'in_letter', 'in_vlog', 'in_collage', 'in_h_plaque', 'in_h_panes', 'in_h_vinyl', 'in_g_sub', 'in_g_arch', 'in_g_strip', 'in_g_postcard', 'in_g_cam', 'in_g_bookmark', 'ed_vogue', 'ed_arch', 'stm_kinetic', 'stm_cinema', 'stm_sonar', 'stm_glint', 'cn_deck', 'cn_summary', 'cn_boldquote', 'cn_splitbar', 'stm_split', 'stm_ticket', 'cn_timeline', 'cn_qna', 'cn_compare', 'cn_receipt', 'cn_polaroid_duo', 'stm_glassbar']);
     function arDesignFineEdit(d) { return !!d && (d.engine === 'kit' || d.isProReels || d.isOpusArt || AR_FINE_EDIT_MOTION.has(d.id)); }
     const AR_FINE_BADGE = '<span class="fine-edit-badge" title="자막·위 라벨·아래 이름을 컷마다 세세하게 바꿀 수 있어요">세부 편집</span>';
     function arVisibleDesigns() {

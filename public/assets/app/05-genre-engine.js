@@ -155,7 +155,7 @@
     const USE_GENRE_ENGINE = true;
 
     const GENRE_FONTS = {
-      impact: '"Black Han Sans", "SBAggroB", "Do Hyeon", sans-serif',
+      impact: '"Paperlogy", "GmarketSans", "SBAggroB", sans-serif',
       serif: '"Hahmlet", "MaruBuri", "Gowun Batang", "Noto Serif KR", serif',
       sans: '"Pretendard Variable", Pretendard, sans-serif',
       mono: '"JetBrains Mono", "Orbit", "Gowun Dodum", monospace'
@@ -204,8 +204,6 @@
         '700 40px "Cafe24Ssurround"',
         '700 40px "SBAggroB"',
         '800 40px "Paperlogy"',
-        '400 40px "Black Han Sans"',
-        '400 40px "Gasoek One"',
         '400 40px "Bagel Fat One"',
         '900 40px "Hahmlet"',
         '400 40px "Orbit"',

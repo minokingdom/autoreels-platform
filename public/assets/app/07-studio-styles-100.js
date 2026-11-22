@@ -87,9 +87,9 @@
       return pat;
     }
 
-    // 풀블리드 9:16 헬퍼 (전체 화면 꽉 채우고 필요 영역만 자연스러운 그라데이션 스크림)
+    // 풀블리드 9:16 헬퍼 (전체 화면 꽉 채우고 등장 완료 후 흔들림·불필요한 줌 없이 완전 고정)
     function s100FullBleed(c, S, cutIdx, local, lp, W, H, opts = {}) {
-      inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, (opts.zoom || 1.03) + lp * 0.04, 0);
+      inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, opts.zoom || 1.02, 0);
       if (opts.tint) { c.fillStyle = opts.tint; c.fillRect(0, 0, W, H); }
       if (opts.pattern) { c.fillStyle = s100Pattern(c, opts.pattern); c.fillRect(0, 0, W, H); }
       if (opts.topScrim) {
@@ -115,22 +115,22 @@
       // 필름 10종
       s100_film_super8: 'sunflower', s100_film_vhs: 'orbit', s100_film_kodak35: 'gowun',
       s100_film_polaroid: 'singleday', s100_film_crt: 'orbit', s100_film_newspaper: 'hahmlet',
-      s100_film_poster: 'blackhan', s100_film_cassette: 'gugi', s100_film_90smag: 'aggro',
+      s100_film_poster: 'paperlogy', s100_film_cassette: 'gugi', s100_film_90smag: 'aggro',
       s100_film_docu: 'diphylleia',
       // 매거진 10종
       s100_ed_vogue: 'diphylleia', s100_ed_swiss: 'paperlogy', s100_ed_museum: 'grandiflora',
       s100_ed_goldfoil: 'hahmlet', s100_ed_noir: 'songmyung', s100_ed_monochrome: 'paperlogy',
-      s100_ed_brutalist: 'blackhan', s100_ed_whitegallery: 'gowun', s100_ed_lookbook: 'diphylleia',
+      s100_ed_brutalist: 'gmarket', s100_ed_whitegallery: 'gowun', s100_ed_lookbook: 'diphylleia',
       s100_ed_arch: 'gmarket',
       // 키네틱 10종
       s100_kin_slam: 'aggro', s100_kin_curtain: 'paperlogy', s100_kin_cyber: 'orbit',
-      s100_kin_glitch: 'gugi', s100_kin_wave: 'stylish', s100_kin_stamp: 'blackhan',
-      s100_kin_iso: 'gmarket', s100_kin_marquee: 'gasoek', s100_kin_liquid: 'diphylleia',
+      s100_kin_glitch: 'gugi', s100_kin_wave: 'stylish', s100_kin_stamp: 'paperlogy',
+      s100_kin_iso: 'gmarket', s100_kin_marquee: 'aggro', s100_kin_liquid: 'diphylleia',
       s100_kin_spotlight: 'hahmlet',
       // 방송·TV 10종
       s100_tv_breaking: 'aggro', s100_tv_variety: 'cafe24', s100_tv_docu_nar: 'hahmlet',
-      s100_tv_podcast: 'paperlogy', s100_tv_sports: 'blackhan', s100_tv_finance: 'gmarket',
-      s100_tv_interview: 'dodum', s100_tv_top5: 'gasoek', s100_tv_review: 'cafe24',
+      s100_tv_podcast: 'paperlogy', s100_tv_sports: 'gmarket', s100_tv_finance: 'gmarket',
+      s100_tv_interview: 'dodum', s100_tv_top5: 'paperlogy', s100_tv_review: 'cafe24',
       s100_tv_qa: 'jua',
       // 게임·만화 10종
       s100_gm_rpg: 'gugi', s100_gm_arcade: 'orbit', s100_gm_manga: 'kirang',
@@ -155,7 +155,7 @@
       // 비즈니스·프로 10종
       s100_bz_showroom: 'paperlogy', s100_bz_hud: 'orbit', s100_bz_property: 'gmarket',
       s100_bz_report: 'hahmlet', s100_bz_clinic: 'dodum', s100_bz_academy: 'cafe24',
-      s100_bz_bodypro: 'blackhan', s100_bz_timesale: 'aggro', s100_bz_ceo: 'hahmlet',
+      s100_bz_bodypro: 'paperlogy', s100_bz_timesale: 'aggro', s100_bz_ceo: 'hahmlet',
       s100_bz_vip: 'diphylleia'
     };
     let _s100ActiveStyleId = '';
@@ -388,7 +388,7 @@
       // ════════════════════════════════════════════════════════════════════
       } else if (M === 's100_film_super8') {
         // 11. 슈퍼 8mm: 풀높이 8mm 게이트 + 좌측 회전 스프로킷 + 웜 플리커
-        const flicker = 0.96 + Math.sin(t * 24) * 0.03;
+        const flicker = 0.99;
         c.fillStyle = '#0a0908'; c.fillRect(0, 0, W, H);
         c.fillStyle = '#181512'; c.fillRect(0, 0, 44, H);
         const spOff = (t * 48) % 92;
@@ -524,7 +524,7 @@
       } else if (M === 's100_film_90smag') {
         // 19. 90년대 잡지: 풀블리드
         s100FullBleed(c, S, cutIdx, local, lp, W, H, { topScrim: 'rgba(14,10,22,0.74)', botScrim: 'rgba(14,10,22,0.86)', botH: 340 });
-        c.save(); c.font = `900 66px 'Black Han Sans', sans-serif`; c.textAlign = 'center'; c.textBaseline = 'top';
+        c.save(); c.font = `800 66px 'Paperlogy', sans-serif`; c.textAlign = 'center'; c.textBaseline = 'top';
         c.fillStyle = '#ec4899'; c.fillText('STREET 99', W / 2 + 4, 34);
         c.fillStyle = accent; c.fillText('STREET 99', W / 2, 30); c.restore();
         c.save(); c.translate(W - 72, 152); c.rotate(0.14);

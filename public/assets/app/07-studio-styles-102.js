@@ -205,13 +205,7 @@
       };
 
       STUDIO_100_RENDERERS.s100_kin_glitch = ({ c, W, H, t, local, lp, S, cutIdx, caption, capHidden, ent, accent }) => {
-        const glitchOn = local < 0.32 || (Math.floor(t * 7) % 11 === 0);
-        const jitter = glitchOn ? Math.sin(t * 85) * 10 : 0;
-        inPhotoFade(c, S, cutIdx, local, jitter * 0.4, 0, W, H, 1.04 + lp * 0.04, 0);
-        if (glitchOn) {
-          c.fillStyle = 'rgba(34,211,238,0.20)'; c.fillRect(0, 180 + Math.abs(jitter) * 8, W, 14);
-          c.fillStyle = 'rgba(244,63,94,0.22)'; c.fillRect(0, 520 - Math.abs(jitter) * 6, W, 10);
-        }
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.02, 0);
         c.fillStyle = s100Pattern(c, 'scanline'); c.fillRect(0, 0, W, H);
         const vg = c.createLinearGradient(0, H * 0.56, 0, H);
         vg.addColorStop(0, 'rgba(9,9,13,0)'); vg.addColorStop(1, 'rgba(9,9,13,0.90)');
