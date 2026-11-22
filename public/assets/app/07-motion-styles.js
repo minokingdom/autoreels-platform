@@ -828,7 +828,10 @@
       const img = kitImg(S, 0);
       const isVid = !!(img && img._isVideo);
       const easeCubic = (v) => 1 - Math.pow(1 - mClamp(v), 3);
-      const easeQuint = (v) => 1 - Math.pow(1 - mClamp(v), 5);
+      const easeQuint = (v) => {
+        const t = mClamp(v);
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      };
       const dir = cutIdx % 2 === 0 ? 1 : -1;
       const lp = mClamp(local / 3.0);
       const spec = arResolvePhotoMotionSpec(cutIdx);
@@ -860,7 +863,7 @@
 
       const drawCur = (z, dx, dy) => mPhoto(c, S, 0, x, y, w, h, z, dx, dy);
 
-      const tDur = cutIdx === 0 ? 0.54 : 0.46;
+      const tDur = cutIdx === 0 ? 0.85 : 0.92;
       const rawP = mClamp(local / tDur);
       const p = easeQuint(rawP);
       const rem = 1 - p;

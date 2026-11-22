@@ -195,7 +195,7 @@
       if (shadow) { c.shadowColor = shadow; c.shadowBlur = 16; c.shadowOffsetY = 3; }
 
       fit.lines.forEach((ln, li) => {
-        const lineEnt = mEase((local - li * 0.08) / 0.30);
+        const lineEnt = mEase((local - li * 0.10) / 0.48);
         const ly = startY + li * fit.lh + (1 - lineEnt) * 14;
         c.save();
         c.globalAlpha *= Math.min(1, lineEnt * 1.35);
@@ -223,7 +223,7 @@
       const caption = capOv.hidden ? '' : gCleanCaption(rawCap);
       const _ov = typeof getCutElementOverride === 'function' ? getCutElementOverride(cutIdx) : null;
       const capHidden = Boolean(_ov && _ov.caption && (_ov.caption.hidden || (typeof isCutElementPropCustomized === 'function' && isCutElementPropCustomized(_ov.caption))));
-      const ent = 1 - Math.pow(1 - mClamp(local / 0.40), 3);
+      const ent = 1 - Math.pow(1 - mClamp(local / 0.65), 3);
       const rem = 1 - ent;
       const accent = sp.accent || '#d97706';
       const fg = sp.accent2 || (sp.light ? '#18181b' : '#ffffff');

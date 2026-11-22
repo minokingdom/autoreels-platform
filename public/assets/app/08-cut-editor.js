@@ -3989,7 +3989,7 @@
       const mainD = typeof getMainDuration === 'function' ? Math.max(1, getMainDuration()) : Math.max(1, (tl.duration || 12) - 3);
       const cutD = mainD / totalC;
       const startT = cutIdx * cutD;
-      const previewDur = Math.min(prop === 'cam' ? 1.5 : 0.95, Math.max(0.55, cutD - 0.1));
+      const previewDur = Math.min(prop === 'cam' ? 1.8 : 1.15, Math.max(0.75, cutD - 0.1));
       const t0 = performance.now();
       const step = (now) => {
         const elapsed = (now - t0) / 1000;
@@ -5572,10 +5572,10 @@
 
     function applyCutTransitionPre(c, W, H, transId, localSec) {
       if (!transId || transId === 'default' || transId === 'none') return false;
-      const dur = 0.45;
+      const dur = 0.82;
       if (typeof localSec !== 'number' || localSec < 0 || localSec >= dur) return false;
       const tp = Math.max(0, Math.min(1, localSec / dur));
-      const ep = 1 - Math.pow(1 - tp, 3);
+      const ep = tp < 0.5 ? 4 * tp * tp * tp : 1 - Math.pow(-2 * tp + 2, 3) / 2;
 
       c.fillStyle = '#09090b';
       c.fillRect(0, 0, W, H);
@@ -5641,10 +5641,10 @@
     function applyCutTransitionPost(c, W, H, transId, localSec, hadPre) {
       if (hadPre) c.restore();
       if (!transId || transId === 'default' || transId === 'none') return;
-      const dur = 0.45;
+      const dur = 0.82;
       if (typeof localSec !== 'number' || localSec < 0 || localSec >= dur) return;
       const tp = Math.max(0, Math.min(1, localSec / dur));
-      const ep = 1 - Math.pow(1 - tp, 3);
+      const ep = tp < 0.5 ? 4 * tp * tp * tp : 1 - Math.pow(-2 * tp + 2, 3) / 2;
 
       c.save();
       if (transId === 'whiteFlash') {
