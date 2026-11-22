@@ -542,7 +542,9 @@ ${confirmedProduct ? '[매장이 선택한 상품과 직접 입력한 설명] ' 
 }
 
 // 주제 맞춤 9:16 씬 이미지 생성 ({ mode: 'scene-prompts' | 'scene-image' | 'scene-images' })
-const NO_TEXT_IMAGE_GUARD = 'pure text-free editorial photography, completely blank unlabeled surfaces, shallow depth of field bokeh background, NO text, NO letters, NO Korean Hangul, NO Chinese or Japanese characters, NO numbers, NO signboards, NO menu boards, NO posters, NO banners, NO price tags, NO product labels, NO readable license plates, NO logos, NO watermarks';
+// z-image 등 확산/DiT 모델은 긍정 프롬프트에 "NO text / NO signboard / NO Hangul" 같은 부정어를 적으면
+// 오히려 그 단어(간판·메뉴판·한글·라벨)를 그려버리는 역효과가 발생하므로, 100% 긍정 시각 묘사만 사용합니다.
+const NO_TEXT_IMAGE_GUARD = 'clean wordless editorial photography, smooth blank unbranded surfaces, pure visual objects and natural textures, shallow depth of field creamy bokeh background, soft studio commercial lighting';
 const ENGLISH_INDUSTRY_HINTS = {
   auto: 'modern luxury car showroom and sleek automobile exterior/interior',
   dining: 'upscale restaurant plating and warm ambient dining table',
@@ -558,15 +560,35 @@ const ENGLISH_INDUSTRY_HINTS = {
 
 function sanitizeNoTextImagePrompt(rawPrompt, industryKey = '') {
   let clean = String(rawPrompt || '').trim();
-  // z-image는 한글 문자열이 들어가면 깨진 한글/외계어를 그리므로 잔여 한글 토큰을 제거
-  clean = clean.replace(/[가-힣ㄱ-ㅎㅏ-ㅣ]+/g, ' ').replace(/\s+/g, ' ').replace(/^[,.\-:\s]+|[,.\-:\s]+$/g, '').trim();
+  // 1) z-image가 외계어/깨진 글자로 그리는 한글·한자·일어 문자 제거
+  clean = clean.replace(/[가-힣ㄱ-ㅎㅏ-ㅣ\u4E00-\u9FFF\u3040-\u30FF]+/g, ' ');
+  // 2) 긍정 프롬프트 안의 부정 리스트("no text, no signboards, no Korean Hangul...") 자체가 텍스트를 유발하므로 제거
+  const negItem = '(?:any\\s+)?(?:readable\\s+|visible\\s+|printed\\s+|written\\s+)?(?:korean\\s+hangul|menu\\s+boards?|price\\s+tags?|license\\s+plates?|number\\s+plates?|product\\s+labels?|bottle\\s+labels?|signboards?|signage|korean|english|asian|chinese|japanese|hangul|text|letters?|words?|numbers?|digits?|characters?|typography|fonts?|captions?|subtitles?|headlines?|titles?|signs?|menus?|posters?|banners?|flyers?|labels?|stickers?|logos?|brands?|branding|watermarks?|writing|written|scripts?|ui|interface|overlays?|books?|documents?|newspapers?|screens?)';
+  clean = clean.replace(new RegExp(`\\b(?:no|without|zero|avoid|never|free\\s+of)\\s+${negItem}(?:\\s*(?:,|and|or|\\/)\\s*${negItem})*`, 'gi'), ' ');
+  // 3) 모델이 자동으로 글자를 그려 넣는 텍스트 유발 사물 명사를 무지/깨끗한 시각 요소로 치환
+  const replacements = [
+    [/\b(?:storefront\s+signs?|street\s+signs?|neon\s+signs?|shop\s+signs?|signboards?|signage|billboards?)\b/gi, 'clean architectural facade'],
+    [/\b(?:menu\s+boards?|chalkboards?|blackboards?|whiteboards?|bulletin\s+boards?)\b/gi, 'smooth matte wall'],
+    [/\b(?:price\s+tags?|product\s+labels?|bottle\s+labels?|wine\s+labels?|packaging\s+labels?|labels?|stickers?)\b/gi, 'blank unbranded surface'],
+    [/\b(?:newspapers?|magazines?|flyers?|brochures?|posters?|banners?|receipts?|documents?|sticky\s+notes?|post-it\s+notes?|calendars?|infographics?|charts?|graphs?|diagrams?|menus?|books?|notebooks?)\b/gi, 'clean minimalist decor'],
+    [/\b(?:smartphone\s+screens?|phone\s+screens?|laptop\s+screens?|computer\s+screens?|tablet\s+screens?|tv\s+screens?|digital\s+displays?|smartphones?|monitors?|tablets?|screens?)\b/gi, 'sleek modern desk'],
+    [/\b(?:readable\s+)?(?:license\s+plates?|number\s+plates?)\b/gi, 'sleek dark metallic bumper'],
+    [/\b(?:typography|lettering|calligraphy|handwriting|captions?|subtitles?|headlines?|watermarks?|logos?|brand\s+names?|korean\s+hangul|hangul|text-free|text|letters?|words?)\b/gi, '']
+  ];
+  for (const [re, rep] of replacements) clean = clean.replace(re, rep);
+  clean = clean
+    .replace(/\s*,\s*(?:,\s*)+/g, ', ')
+    .replace(/\(\s*\)/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/^[,.\-:\s]+|[,.\-:\s]+$/g, '')
+    .trim();
   if (clean.length < 18) {
     const indScene = ENGLISH_INDUSTRY_HINTS[industryKey] || 'clean modern commercial studio photography';
     clean = `Vertical 9:16 editorial commercial photograph of ${indScene}, natural cinematic lighting`;
   }
   const suffix = `, ${NO_TEXT_IMAGE_GUARD}`;
   const maxBase = Math.max(120, 1000 - suffix.length);
-  if (clean.toLowerCase().includes('no korean hangul')) return clean.slice(0, 1000);
+  if (clean.toLowerCase().includes('clean wordless editorial photography')) return clean.slice(0, 1000);
   return `${clean.slice(0, maxBase)}${suffix}`;
 }
 
@@ -583,7 +605,9 @@ async function translateSingleKoreanImagePrompt(rawPrompt, geminiKey, industryKe
           role: 'user',
           parts: [{
             text: `Convert this Korean image request into ONE concise English 9:16 commercial photography prompt.
-NEVER include any signs, signboards, menus, posters, banners, books, documents, whiteboards, screens, product labels, or readable license plates. Keep every surface blank/unlabeled and use shallow depth of field. Output ONLY the English prompt sentence.
+Describe ONLY pure physical objects, materials, lighting, spaces, and camera angle.
+NEVER depict signs, menus, posters, banners, books, documents, whiteboards, screens, product labels, or license plates.
+IMPORTANT: Do NOT write negative words like "no text", "no sign", "no logo", or "no letters" in your output; simply describe blank unbranded surfaces and soft bokeh naturally. Output ONLY the English prompt sentence.
 Request: ${text}`
           }]
         }],
@@ -602,21 +626,19 @@ Request: ${text}`
 async function buildTopicScenePrompts(body, apiKey, count) {
   const topicText = String(body.prompt || body.topic?.title || body.vehicle || '').trim();
   const vehicle = body.industry === 'auto' ? String(body.vehicle || '').trim().slice(0, 100) : '';
-  const vehicleRule = vehicle ? `Main vehicle: ${vehicle}. Keep that make and model in every scene, with no substitute vehicle, and keep license plates blank dark metallic or out of frame.` : '';
+  const vehicleRule = vehicle ? `Main vehicle: ${vehicle}. Keep that make and model in every scene, cropped cleanly or angled so the front/rear bumper is smooth dark metallic.` : '';
   const captions = Array.isArray(body.captions) ? body.captions.slice(0, count).map((c) => String(c || '').trim()) : [];
   const topicsList = Array.isArray(body.topicsList) ? body.topicsList.slice(0, count) : [];
   const isIcon = Boolean(body.isIcon);
   const indKey = String(body.industry || '').trim();
   const indName = (body.industryInfo && body.industryInfo.name) ? String(body.industryInfo.name) : (indKey || '비즈니스');
   const th = body.themeInfo && typeof body.themeInfo === 'object' ? body.themeInfo : {};
+  // 디자인 이름("신문 1면", "초록 칠판", "미슐랭 메뉴판", "포스트잇" 등)을 그대로 넣으면
+  // 이미지 생성기가 신문·칠판·메뉴판·라벨을 그리며 깨진 글자를 만들어내므로 색감/밝기 톤만 전달합니다.
   const themeDesc = [
-    th.designName ? `Design Style: ${th.designName}` : '',
-    th.designCat ? `Mood Category: ${th.designCat}` : '',
-    th.designBg ? `Surface Tone: ${th.designBg}` : '',
-    th.designGrade ? `Color Grade: ${th.designGrade}` : '',
-    th.themeName ? `Theme: ${th.themeName}` : '',
-    th.accentColor ? `Accent Palette: ${th.accentColor}` : '',
-    th.designLayout ? `Layout: ${th.designLayout}` : ''
+    th.designBg ? `Background Brightness/Tone: ${th.designBg}` : '',
+    th.designGrade ? `Color Grading: ${th.designGrade}` : '',
+    th.accentColor ? `Accent Color Palette: ${th.accentColor}` : ''
   ].filter(Boolean).join(' | ');
   let prompts = [];
   try {
@@ -624,16 +646,17 @@ async function buildTopicScenePrompts(body, apiKey, count) {
       ? `Topics (${topicsList.length}):\n${topicsList.map((t, i) => `${i + 1}. ${t.title || ''} (${t.why || ''})`).join('\n')}
 
 Return ONLY a JSON array of ${topicsList.length} concise English square 1:1 thumbnail icon prompts (one per topic in exact order).
-Each icon must feature a clear, unmistakable central visual subject depicting THAT specific topic in "${indName}" context, harmonized with the design mood (${themeDesc || 'clean modern editorial'}), readable even at 52x52px thumbnail size.
-STRICT TEXT-FREE RULES: NEVER include signs, labels, menus, posters, banners, documents, screens, or any readable surfaces. Use pure unlabeled objects/materials, shallow depth of field, NO text, NO typography, NO letters, NO numbers, NO watermarks, NO logos.`
+Each icon must feature ONE clear, unmistakable physical object or clean visual scene depicting THAT specific topic in "${indName}" context, harmonized with the color mood (${themeDesc || 'clean modern editorial'}), readable even at 52x52px thumbnail size.
+CRITICAL VISUAL RULE: Depict ONLY pure unlabeled physical objects, ingredients, tools, textures, or spaces on clean blank backgrounds with soft bokeh. NEVER depict signs, labels, menus, posters, banners, documents, books, chalkboards, charts, or screens. Do NOT write negative phrases like "no text" or "no logo" inside the prompt strings — express everything purely as clean unbranded photography.`
       : `Topic / Product: ${topicText}
 ${vehicleRule}
 Cut captions (${count}): ${captions.join(' | ') || topicText}
 
 Return ONLY a JSON array of ${count} concise English photography prompts (one per cut) for vertical 9:16 Reels backgrounds that:
-1) Directly depict the topic "${topicText}" in real-world "${indName}" context, matching each cut caption purely through visual storytelling (objects, hands, lighting, spaces, textures).
-2) Visually harmonize with the active design & theme (${themeDesc || 'modern editorial'}) — match its background brightness (dark/moody vs bright/cream/pastel), color grading, and accent tone, and leave clean uncluttered negative space for overlay Korean typography added later.
-3) STRICT TEXT-FREE RULES (CRITICAL): NEVER depict storefronts with signs, street signboards, menu boards, price tags, banners, posters, flyers, whiteboards, blackboards, books, newspapers, documents, phone/laptop screens, branded bottle labels, or readable car license plates. Every background surface must be completely blank/unlabeled or softly blurred with shallow depth of field. NO text, NO typography, NO Korean/English/Asian characters, NO numbers, NO watermarks, NO logos, NO UI.`;
+1) Directly depict the topic "${topicText}" in real-world "${indName}" context, matching each cut caption purely through physical visual storytelling (close-up textures, hands in action, lighting, spaces, unbranded objects, architecture, food, materials).
+2) Visually harmonize with the active color & lighting mood (${themeDesc || 'modern editorial'}) — match its background brightness (dark/moody vs bright/cream/pastel), color grading, and accent tone, leaving clean uncluttered negative space.
+3) CRITICAL VISUAL RULE: NEVER depict storefronts, street signs, menu boards, price tags, banners, posters, flyers, whiteboards, chalkboards, books, newspapers, sticky notes, documents, phone/laptop screens, charts, branded bottles/packages, or car license plates. Every surface must be described as smooth, blank, and unbranded with shallow depth of field bokeh.
+4) IMPORTANT: Do NOT include negative words like "no text", "no Korean", "no signboards", or "no watermarks" inside your output prompt strings (the image model renders words you mention even after "no"). Describe ONLY the clean visual subject, materials, lighting, and smooth blurred background.`;
 
     const promptReq = {
       contents: [{
@@ -641,7 +664,7 @@ Return ONLY a JSON array of ${count} concise English photography prompts (one pe
         parts: [{
           text: `You are a commercial short-form video art director.
 Industry: ${indName}
-Visual Design & Theme: ${themeDesc || 'Clean modern editorial Reels'}
+Color & Lighting Mood: ${themeDesc || 'Clean modern editorial Reels'}
 ${instruction}`
         }]
       }],
@@ -675,8 +698,8 @@ ${instruction}`
             content: [{
               type: 'text',
               text: isIcon && topicsList.length
-                ? `Industry: ${indName}\nTopics:\n${topicsList.map((t, i) => `${i + 1}. ${t.title || ''} (${t.why || ''})`).join('\n')}\nOutput ONLY a JSON array of ${topicsList.length} vivid English 1:1 visual object/scene photography prompts (pure unlabeled objects, zero signs/menus/labels/documents/screens, no text/letters/numbers/watermarks).`
-                : `Industry: ${indName}, Topic: ${topicText}, Captions: ${captions.join(' | ')}\n${vehicleRule}\nOutput ONLY a JSON array of ${count} English 9:16 photography prompts (pure visual scenes with completely blank unlabeled surfaces; strictly avoid signs, signboards, menus, banners, posters, documents, whiteboards, screens, product labels, or readable license plates; no text/letters/numbers/watermarks).`
+                ? `Industry: ${indName}\nTopics:\n${topicsList.map((t, i) => `${i + 1}. ${t.title || ''} (${t.why || ''})`).join('\n')}\nOutput ONLY a JSON array of ${topicsList.length} vivid English 1:1 studio photography prompts of clean unbranded physical objects on smooth blank backgrounds. Do NOT include signs, menus, labels, books, screens, or negative words like "no text".`
+                : `Industry: ${indName}, Topic: ${topicText}, Captions: ${captions.join(' | ')}\n${vehicleRule}\nOutput ONLY a JSON array of ${count} English 9:16 photography prompts of clean visual scenes, textures, hands, and smooth unbranded surfaces with soft bokeh. Do NOT depict storefronts, signs, menus, posters, documents, screens, or packages, and do NOT write negative words like "no text" in the prompts.`
             }]
           }]
         })

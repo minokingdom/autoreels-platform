@@ -129,7 +129,7 @@
               const ir = await fetch('/api/generate-script', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mode: 'scene-image', imagePrompt: prompt, index: i, aspectRatio: '1:1' })
+                body: JSON.stringify({ mode: 'scene-image', imagePrompt: prompt, index: i, aspectRatio: '1:1', industry: IND.key })
               });
               const ij = await ir.json().catch(() => ({}));
               if (jobId !== arTopicIconJob || !ir.ok || !ij.ok || !ij.image || !ij.image.dataUrl) return;
@@ -2961,7 +2961,7 @@
               const imgRes = await fetch('/api/generate-script', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mode: 'scene-image', imagePrompt: arScenePromptWithVehicle(imagePrompt, payload), index: idx })
+                body: JSON.stringify({ mode: 'scene-image', imagePrompt: arScenePromptWithVehicle(imagePrompt, payload), index: idx, industry: payload.industry || IND.key })
               });
               const ij = await imgRes.json().catch(() => ({}));
               if (!stillCurrent()) return;

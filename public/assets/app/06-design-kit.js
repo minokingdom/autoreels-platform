@@ -3948,9 +3948,27 @@
       const added = Date.parse(d.addedAt || '');
       return Number.isFinite(added) && now >= added && now - added < AR_NEW_STYLE_WINDOW_MS;
     }
+    const S100_IND_MATCH = {
+      restaurant: ['s100_fd_michelin','s100_fd_pocha','s100_fd_omakase','s100_fd_recipe','s100_fd_delivery','s100_fd_wine','s100_nt_chalkboard'],
+      cafe: ['s100_fd_brunch','s100_fd_dessert','s100_fd_espresso','s100_fd_bakery','s100_fd_wine','s100_nt_chalkboard','s100_art_watercolor','s100_film_polaroid'],
+      beauty: ['s100_lf_glassskin','s100_lf_beautyrev','s100_lf_beforeafter','s100_lf_perfume','s100_lf_wedding','s100_lf_wellness','s100_ed_vogue'],
+      interior: ['s100_lf_roomtour','s100_lf_beforeafter','s100_ed_arch','s100_ed_whitegallery','s100_nt_blueprint','s100_ed_museum'],
+      auto: ['s100_bz_showroom','s100_bz_hud','s100_bz_timesale','s100_bz_vip','s100_kin_slam','s100_ed_noir'],
+      realestate: ['s100_bz_property','s100_bz_report','s100_lf_roomtour','s100_nt_blueprint','s100_bz_ceo'],
+      academy: ['s100_bz_academy','s100_nt_chalkboard','s100_nt_whiteboard','s100_nt_checklist','s100_nt_highlighter','s100_nt_infograph'],
+      clinic: ['s100_bz_clinic','s100_lf_beforeafter','s100_lf_wellness','s100_tv_interview','s100_tv_qa','s100_bz_ceo'],
+      fitness: ['s100_bz_bodypro','s100_lf_beforeafter','s100_tv_sports','s100_kin_slam','s100_bz_timesale'],
+      shop: ['s100_lf_looktag','s100_ed_lookbook','s100_bz_timesale','s100_tv_review','s100_ed_vogue','s100_kin_stamp']
+    };
     function arDesignMatchesCat(d, cat, now = Date.now()) {
       if (cat === '인포·화풍') return Boolean(d && d.isOpusArt);
       if (cat === '신규') return arDesignIsNew(d, now);
+      if (cat === '내 업종') {
+        const indKey = typeof IND !== 'undefined' ? IND.key : 'auto';
+        if (d.cat === '내 업종') return true;
+        const specIds = S100_IND_MATCH[indKey];
+        return Boolean(specIds && specIds.includes(d.id));
+      }
       return cat === '전체' || d.cat === cat;
     }
     // 열린 화면에서도 일주일 만료를 반영하며, 재빌드나 예약 서버가 필요하지 않습니다.
@@ -4525,6 +4543,38 @@
       if (changed && restart && AudioEngine.enabled) AudioEngine.startBgmLoop();
     }
 
+    // 랜덤 섞기 / 랜덤 테마 클릭 시 배경음악도 진짜 랜덤으로 교체 (BGM 끄기 상태일 때만 유지)
+    function arShuffleRandomBgm() {
+      if (typeof AudioEngine === 'undefined' || AudioEngine.bgmStyle === 'off') return;
+      const sel = document.getElementById('bgmStyleSelect');
+      const packList = (typeof AR_AUDIO_LIBRARY !== 'undefined' && Array.isArray(AR_AUDIO_LIBRARY.music)) ? AR_AUDIO_LIBRARY.music : [];
+      if (packList.length > 1 && typeof AudioEngine.loadRemoteBgmUrl === 'function') {
+        const curName = AudioEngine.customBgmName || '';
+        const curVal = sel ? sel.value : '';
+        const candidates = packList.filter((m) => m.name !== curName && ('pack:' + m.id) !== curVal && m.id !== curVal);
+        const pick = (candidates.length ? candidates : packList)[Math.floor(Math.random() * (candidates.length ? candidates.length : packList.length))];
+        if (pick) {
+          const val = (sel && [...sel.options].some((o) => o.value === 'pack:' + pick.id)) ? ('pack:' + pick.id) : pick.id;
+          if (sel && [...sel.options].some((o) => o.value === val)) sel.value = val;
+          AudioEngine.userPickedBgm = false;
+          try { localStorage.removeItem('autoreels_bgm_style'); } catch (e) {}
+          AudioEngine.loadRemoteBgmUrl(`/assets/bgm/pack/${pick.id}.mp3`, pick.name, Boolean(AudioEngine.enabled));
+          if (typeof renderBgmRecommendations === 'function') renderBgmRecommendations(Boolean(AudioEngine.enabled));
+          return pick.name;
+        }
+      }
+      const synthKeys = Object.keys(AudioEngine.BGM_STYLES || {}).filter((k) => k !== 'off' && k !== 'custom_mp3' && k !== AudioEngine.bgmStyle);
+      if (!synthKeys.length) return;
+      const nextKey = synthKeys[Math.floor(Math.random() * synthKeys.length)];
+      AudioEngine.bgmStyle = nextKey;
+      AudioEngine.userPickedBgm = false;
+      if (sel) sel.value = nextKey;
+      if (typeof renderBgmRecommendations === 'function') renderBgmRecommendations();
+      if (AudioEngine.enabled) AudioEngine.startBgmLoop();
+      return (AudioEngine.BGM_STYLES[nextKey] && AudioEngine.BGM_STYLES[nextKey].label) || nextKey;
+    }
+    window.arShuffleRandomBgm = arShuffleRandomBgm;
+
     function selectDesignCat(cat) {
       campaign.designCat = cat;
       renderDesignStylePicker();
@@ -4750,13 +4800,14 @@
         const pickId = window.__arStyleBag.shift();
         const pick = designs.find((x) => x.id === pickId) || designs[0];
         selectDesignStyle(pick.id);
+        const bgmPicked = typeof arShuffleRandomBgm === 'function' ? arShuffleRandomBgm() : '';
         // 어떤 디자인으로 바뀌었는지 버튼 바로 위에 보여 주고, 클릭하면 설정창 열기 + 현재 스타일 랜덤 제외
         if (typeof arToast === 'function') {
           const shuffleBtn = [document.getElementById('previewRandomDesignBtnMain'), document.getElementById('previewRandomDesignBtn')].find((b) => b && b.offsetParent !== null);
           const idxNow = (window.__arStyleBagTotal || designs.length) - window.__arStyleBag.length;
           const totalNow = window.__arStyleBagTotal || designs.length;
           arToast(
-            `🎲 ${pick.name}${pick.cat ? ' · ' + pick.cat : ''} (${idxNow}/${totalNow}) · 누르면 설정·제외`,
+            `🎲 ${pick.name}${bgmPicked ? ' · 🎵 ' + bgmPicked : ''} (${idxNow}/${totalNow}) · 누르면 설정·제외`,
             true,
             shuffleBtn || null,
             () => {

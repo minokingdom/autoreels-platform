@@ -1061,6 +1061,62 @@
       c.restore();
     }
 
+    // 붉은 낙관·도장('기록'·'정성'·'여운'·'수묵'·'특선' 등)을 컷 직접 편집 모드에서 클릭·드래그·글자수정·색변경·숨김 가능하게 렌더
+    function arDrawEditableSeal(c, W, H, cutIdx, opts) {
+      if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
+      if (!window.__arLastRenderedBoxes[cutIdx]) window.__arLastRenderedBoxes[cutIdx] = {};
+      if (!window.__arNativeElementHandled) window.__arNativeElementHandled = {};
+      if (!window.__arNativeElementHandled[cutIdx]) window.__arNativeElementHandled[cutIdx] = {};
+      window.__arNativeElementHandled[cutIdx].badge = true;
+
+      const bOv = (typeof getCutElementOverride === 'function' && getCutElementOverride(cutIdx)?.badge) || {};
+      if (bOv.hidden) {
+        delete window.__arLastRenderedBoxes[cutIdx].badge;
+        return;
+      }
+      const sc = Math.max(0.5, Math.min(2.4, Number(bOv.scale) || 1));
+      const sx = bOv.customPos && typeof bOv.x === 'number' ? bOv.x * W : opts.x;
+      const sy = bOv.customPos && typeof bOv.y === 'number' ? bOv.y * H : opts.y;
+      const txt = (bOv.text && String(bOv.text).trim()) ? String(bOv.text).trim().slice(0, 4) : (opts.text || '기록');
+      const bgCol = bOv.bgColor || opts.bg || '#ac3127';
+      const fgCol = bOv.color || opts.fg || '#fff0d7';
+      const sw = (opts.w || 30) * sc;
+      const chars = Array.from(txt);
+      const isVert = opts.vertical !== false && chars.length >= 2;
+      const sh = (opts.h || (isVert ? Math.max(44, chars.length * 22) : 36)) * sc;
+
+      c.save();
+      if (typeof opts.alpha === 'number') c.globalAlpha *= opts.alpha;
+      c.translate(sx, sy);
+      if (opts.rot) c.rotate(opts.rot);
+      c.fillStyle = bgCol;
+      c.fillRect(-sw / 2, -sh / 2, sw, sh);
+      if (opts.innerBorder) {
+        c.strokeStyle = fgCol;
+        c.lineWidth = Math.max(1, 1.4 * sc);
+        c.strokeRect(-sw / 2 + 3 * sc, -sh / 2 + 3 * sc, sw - 6 * sc, sh - 6 * sc);
+      }
+      c.fillStyle = fgCol;
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      const fontFam = opts.font || (typeof KIT_FONTS !== 'undefined' && KIT_FONTS.brush ? KIT_FONTS.brush.f : "'Nanum Brush Script', cursive");
+      if (isVert) {
+        const fs = Math.round(Math.min(sw * 0.78, (sh / chars.length) * 0.88));
+        c.font = gFont(opts.weight || 400, fs, fontFam);
+        const step = (sh * 0.84) / chars.length;
+        chars.forEach((ch, idx) => {
+          c.fillText(ch, 0, -sh * 0.42 + step * (idx + 0.5));
+        });
+      } else {
+        const fs = Math.round(Math.min(sh * 0.56, (sw * 0.88) / Math.max(1, chars.length * 0.85)));
+        c.font = gFont(opts.weight || 700, fs, fontFam);
+        c.fillText(txt, 0, 1);
+      }
+      c.restore();
+
+      window.__arLastRenderedBoxes[cutIdx].badge = { cx: sx, cy: sy, w: Math.max(44, sw + 16), h: Math.max(44, sh + 16) };
+    }
+
     function renderMotionFrame(c, W, H, t, mainDuration, totalCuts, d, spec, V) {
       const custom = spec.custom;
       const userColor = campaign.colorKey && campaign.colorKey !== 'default';
@@ -1145,15 +1201,15 @@
           const lastWidth = c.measureText(wr.lines[wr.lines.length - 1]).width;
           const sealX = letter ? x - W * 0.024 : postcard ? x : Math.min(W * 0.932, x + lastWidth + W * 0.046);
           const sealY = y + (wr.lines.length - 1) * gap + (letter || postcard ? gap * 0.96 : 0);
-          c.save(); c.globalAlpha *= mEase((reveal - 0.75) / 0.25);
-          c.translate(sealX, sealY); c.rotate(postcard ? 0 : -0.055);
           const sw = W * 0.052, sh = W * 0.078;
-          c.fillStyle = '#ac3127'; c.fillRect(-sw/2, -sh/2, sw, sh);
-          c.fillStyle = '#fff0d7'; c.font = gFont(400, sh * 0.47, KIT_FONTS.brush.f);
-          c.textAlign = 'center';
           const seal = letter ? '여운' : postcard ? '기록' : '정성';
-          c.fillText(seal[0], 0, -sh*0.23); c.fillText(seal[1], 0, sh*0.23);
-          c.restore(); mCapEnd(c);
+          arDrawEditableSeal(c, W, H, cutIdx, {
+            x: sealX, y: sealY, w: sw, h: sh, text: seal,
+            rot: postcard ? 0 : -0.055,
+            alpha: mEase((reveal - 0.75) / 0.25),
+            bg: '#ac3127', fg: '#fff0d7', font: KIT_FONTS.brush.f, weight: 400, vertical: true
+          });
+          mCapEnd(c);
         }
         c.restore();
       } else if (M === 'ty_mask' || M === 'ty_focus' || M === 'ty_spring') {

@@ -388,12 +388,47 @@
           ${AR_DESIGN_MOODS.map((m) => `<button type="button" class="pd-mood ${pdMood === m.id ? 'on' : ''}" onclick="selectPdMood('${m.id}')">#${m.label}</button>`).join('')}
         </div>`;
     }
+    let pdSearchQuery = '';
+    let pdGenre = '';
+    const PD_GENRE_CHIPS = [
+      { id: '', label: '전체 화풍' },
+      { id: 'art', label: '🎨 아트' },
+      { id: 'film', label: '🎞️ 필름' },
+      { id: 'editorial', label: '🏛️ 매거진' },
+      { id: 'kinetic', label: '⚡ 타이포' },
+      { id: 'broadcast', label: '📺 방송' },
+      { id: 'game', label: '🎮 게임·만화' },
+      { id: 'note', label: '📝 칠판·노트' },
+      { id: 'food', label: '🍽️ 푸드·카페' },
+      { id: 'lifestyle', label: '✨ 뷰티·라이프' },
+      { id: 'business', label: '💼 비즈니스' }
+    ];
+    function setPdSearchQuery(val) {
+      pdSearchQuery = String(val || '').trim();
+      const inp = document.getElementById('pdStyleSearch');
+      if (inp && inp.value !== pdSearchQuery && !val) inp.value = '';
+      const clr = document.getElementById('pdSearchClearBtn');
+      if (clr) clr.classList.toggle('hidden', !pdSearchQuery);
+      renderPresetDrawer();
+    }
+    window.setPdSearchQuery = setPdSearchQuery;
+    function selectPdGenre(id) {
+      pdGenre = (pdGenre === id) ? '' : id;
+      if (pdGenre) pdCat = '전체';
+      renderPresetDrawer();
+    }
+    window.selectPdGenre = selectPdGenre;
+
     function renderPresetDrawer() {
       const list = document.getElementById('presetDrawerList');
       if (!list || typeof DESIGN_STYLES === 'undefined') return;
+      const gWrap = document.getElementById('pdGenreChips');
+      if (gWrap) {
+        gWrap.innerHTML = PD_GENRE_CHIPS.map((g) => `<button type="button" onclick="selectPdGenre('${g.id}')" class="shrink-0 px-2 py-1 rounded-full text-[10.5px] font-semibold border cursor-pointer transition ${pdGenre === g.id ? 'bg-[#ededed] text-[#111113] border-[#ededed]' : 'bg-[#1c1c21] text-[#a1a1aa] border-white/10 hover:text-white'}">${g.label}</button>`).join('');
+      }
       const cats = document.getElementById('pdCats');
       if (cats) {
-        cats.innerHTML = '<button type="button" class="pd-cat pd-shuffle-filter" onclick="toggleShuffleFilterPanel(true)">⚙ 섞기 범위</button>' + arDesignCats().map((c) => `<button type="button" class="pd-cat ${c === pdCat ? 'on' : ''}" onclick="selectPdCat('${c}')">${c}</button>`).join('');
+        cats.innerHTML = '<button type="button" class="pd-cat pd-shuffle-filter" onclick="toggleShuffleFilterPanel(true)">⚙ 섞기 범위</button>' + arDesignCats().map((c) => `<button type="button" class="pd-cat ${!pdGenre && c === pdCat ? 'on' : ''}" onclick="pdGenre='';selectPdCat('${c}')">${c}</button>`).join('');
       }
       const cnt = document.getElementById('pdCount');
       if (cnt) cnt.textContent = String(arVisibleDesigns().length + arCustomDesigns.length);
@@ -403,15 +438,24 @@
       if (!arDesignCats().includes(pdCat)) pdCat = '전체';
       renderPresetRecommend(urls, blank);
       const vis = pdMood && typeof arDesignsForMood === 'function' ? arDesignsForMood(pdMood) : arVisibleDesigns();
-      const items = pdCat === '전체' ? vis : vis.filter((d) => arDesignMatchesCat(d, pdCat));
-      list.innerHTML = (pdCat === '전체' ? arCustomPickerCards('pdthumb_') : '') + `<button type="button" class="pd-card pd-random" onclick="pickRandomTheme(true)" title="디자인과 색을 무작위로 바꿔 봅니다">
+      let items = pdGenre
+        ? vis.filter((d) => d.s100Genre === pdGenre)
+        : (pdCat === '전체' ? vis : vis.filter((d) => arDesignMatchesCat(d, pdCat)));
+      if (pdSearchQuery) {
+        const q = pdSearchQuery.toLowerCase();
+        items = vis.filter((d) => {
+          const hay = [d.name, d.label, d.cat, d.desc, d.s100Genre, d.id].filter(Boolean).join(' ').toLowerCase();
+          return hay.includes(q);
+        });
+      }
+      list.innerHTML = (pdCat === '전체' && !pdGenre && !pdSearchQuery ? arCustomPickerCards('pdthumb_') : '') + (!pdSearchQuery ? `<button type="button" class="pd-card pd-random" onclick="pickRandomTheme(true)" title="디자인·색상·배경음악을 무작위로 바꿔 봅니다">
           <span class="pd-dice">🎲</span>
           <div>랜덤 테마</div>
-        </button>` + items.map((d) => `<button type="button" class="pd-card ${d.id === active ? 'on' : ''}" onclick="choosePresetFromDrawer('${d.id}')" title="${d.desc}">
+        </button>` : '') + (items.length ? items.map((d) => `<button type="button" class="pd-card ${d.id === active ? 'on' : ''}" onclick="choosePresetFromDrawer('${d.id}')" title="${d.desc}">
           ${typeof arDesignFineEdit === 'function' && arDesignFineEdit(d) ? AR_FINE_BADGE : ''}
           <img id="pdthumb_${d.id}" src="${urls[d.id] || blank}" alt="" loading="lazy" />
           <div>${d.name}</div>
-        </button>`).join('');
+        </button>`).join('') : `<div style="grid-column:1/-1;padding:24px 12px;text-align:center;color:#85858b;font-size:12px;">'${pdSearchQuery.replace(/</g, '&lt;')}'에 맞는 스타일이 없어요</div>`);
       if (typeof scheduleDesignThumbs === 'function') scheduleDesignThumbs();
     }
     function openPresetDrawer(side) {
@@ -464,6 +508,7 @@
       if (!pool.length) return;
       const ds = pool[Math.floor(Math.random() * pool.length)];
       selectDesignStyle(ds.id);
+      if (typeof arShuffleRandomBgm === 'function') arShuffleRandomBgm();
       if (typeof COLOR_PALETTES !== 'undefined' && typeof selectColorPalette === 'function') {
         const colors = COLOR_PALETTES.filter((c) => c.id !== campaign.colorKey);
         const c = Math.random() < 0.4 ? { id: 'default' } : colors[Math.floor(Math.random() * colors.length)];
