@@ -64,7 +64,7 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  };
  const db={query,tx:async fn=>{const before=new Map(balances),prior=structuredClone(receipts);try{return await fn({query})}catch(e){balances=before;receipts=prior;throw e}}};
  const nightlyToken = 'a'.repeat(64);
- const usage=load('lib/server/usage.js',{'./db':db,'./config':{readiness:()=>({serverMode:true})},'./session':{readSession:req=>req.testSession},'./plans':{FREE_TRIAL_DAYS:7,limits:()=>({standard:{aiScripts:5,ttsChars:10,exportPublishLimit:2},pro:{aiScripts:1,ttsChars:10,exportPublishLimit:null}})},'./comp-pro':comp},{AI_DAILY_UNIT_CAP:'3',AI_MONTHLY_UNIT_CAP:'3',NIGHTLY_MEDIA_TOKEN:nightlyToken});
+ const usage=load('lib/server/usage.js',{'./db':db,'./config':{readiness:()=>({serverMode:true})},'./session':{readSession:req=>req.testSession},'./plans':{FREE_TRIAL_DAYS:7,limits:()=>({standard:{aiScripts:5,ttsChars:10,exportPublishLimit:2},pro:{aiScripts:1,ttsChars:10,exportPublishLimit:null}})},'./comp-pro':comp},{AI_DAILY_UNIT_CAP:'3',AI_MONTHLY_UNIT_CAP:'3',NIGHTLY_MEDIA_TOKEN:nightlyToken,REFERENCE_STYLE_WORKER_TOKEN:'c'.repeat(64)});
  assert.equal((await usage.resolveSubject({testSession:{uid:'42',v:1}})).tier,'pro');
  assert.equal((await usage.resolveSubject({testSession:{uid:'42',v:2}})).kind,'anonymous');
  const unlimited={testSession:{uid:'42',v:1}};
@@ -125,6 +125,40 @@ function response(){return {statusCode:200,body:null,setHeader(){},status(n){thi
  assert.equal(batchProviderCalls,3);
  assert.ok(Array.from(balances.keys()).some(key=>key.startsWith('nightly:media|d:')));
  balances.clear();
+ let styleCalls = 0;
+ const styleApi = load('api/generate-script.js', {...deps,
+   '../lib/reference-analysis.cjs':{handleReferenceAnalysis:async (body,res)=>{
+     styleCalls++;
+     return body.timeline === 'fail' ? res.status(422).json({ok:false,error:'unsupported'}) : res.json({ok:true,style:{name:'시험'}});
+   }}
+ });
+ const sendStyle = async (id, token = 'c'.repeat(64), mode = 'reference-style-worker', timeline = 'sample', origin = 'https://app.test') => {
+   const result = response();
+   await styleApi({method:'POST',headers:{host:'app.test',origin,'x-autoreels-style-token':token},
+     body:JSON.stringify({mode,requestId:id,frames:[],timeline})},result);
+   return result;
+ };
+ assert.equal((await sendStyle('reference-test0001','')).statusCode,403);
+ assert.equal((await sendStyle('reference-test0001','b'.repeat(64))).statusCode,403);
+ assert.equal((await sendStyle('reference-test0001','c'.repeat(64),'script')).statusCode,401);
+ assert.equal((await sendStyle('reference-test0001','c'.repeat(64),'reference-style')).statusCode,401);
+ assert.equal((await sendStyle('reference-test0001','c'.repeat(64),'nightly-topics')).statusCode,403);
+ assert.equal((await sendStyle('reference-test0001','c'.repeat(64),'reference-style-worker','sample','https://other.test')).statusCode,403);
+ assert.equal((await sendStyle('bad-id')).statusCode,400);
+ assert.equal(styleCalls,0);
+ assert.equal((await sendStyle('reference-test0001')).statusCode,200);
+ assert.equal((await sendStyle('reference-test0001')).body.error,'style_request_already_used');
+ assert.equal((await sendStyle('reference-test0001','c'.repeat(64),'reference-style-worker','changed')).statusCode,409);
+ assert.equal(styleCalls,1);
+ assert.equal((await sendStyle('reference-test0002','c'.repeat(64),'reference-style-worker','fail')).statusCode,422);
+ assert.equal((await sendStyle('reference-test0002')).statusCode,409);
+ assert.equal((await sendStyle('reference-test0003')).statusCode,200);
+ assert.equal((await sendStyle('reference-test0004')).statusCode,200);
+ assert.equal((await sendStyle('reference-test0005')).body.error,'service_budget_exceeded');
+ assert.equal(styleCalls,4);
+ assert.ok(Array.from(balances.keys()).some(key=>key.startsWith('style:reference|d:')));
+ balances.clear();
+ receipts.clear();
  const cases = [
    ...['script','topics','scene-prompts','scene-image','scene-images','reference-style']
      .map(mode=>[scriptApi,{method:'POST',body:{mode,prompt:'sample',count:4}}]),

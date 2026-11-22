@@ -1,5 +1,5 @@
 """카카오 분석 큐 → rea-video → 프레임 분석 → 검증된 스타일 카탈로그 등록."""
-import argparse, base64, hashlib, json, os, shutil, subprocess, sys, time, urllib.request
+import argparse, base64, hashlib, json, os, re, shutil, subprocess, sys, time, urllib.request
 from pathlib import Path
 from urllib.error import URLError
 from urllib.parse import urlsplit
@@ -150,12 +150,38 @@ def analyse(video,directory):
     write(directory/'measurements.json',compact)
     return frames,timeline
 
+def style_worker_token():
+    token=os.environ.pop('REFERENCE_STYLE_WORKER_TOKEN','')
+    if not token and os.name=='nt':
+        # 현재 Windows 사용자만 복호화할 수 있는 전용 자격증명입니다.
+        credential=ROOT/'style-worker-credential.xml'
+        if credential.exists():
+            literal=str(credential).replace("'","''")
+            command=f"$c=Import-Clixml -LiteralPath '{literal}'; [Console]::Write($c.GetNetworkCredential().Password)"
+            encoded=base64.b64encode(command.encode('utf-16le')).decode()
+            result=subprocess.run(['powershell','-NoProfile','-NonInteractive','-EncodedCommand',encoded],
+                capture_output=True,timeout=15,creationflags=subprocess.CREATE_NO_WINDOW)
+            if result.returncode==0:token=result.stdout.decode('ascii',errors='replace').strip()
+    if not re.fullmatch(r'[0-9a-f]{64}',token):
+        raise ValueError('영상 분석기 인증 연결이 필요합니다. 사용자 로그인 문제가 아닙니다. 운영자가 연결을 확인해야 합니다.')
+    return token
+
+
+class StyleApiRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self,req,fp,code,msg,headers,newurl):
+        # 전용 키가 다른 주소로 전달되지 않도록 자동 이동을 차단합니다.
+        raise ValueError('영상 분석 API 주소가 변경되어 연결 확인이 필요합니다.')
+
+
 def request_style(frames,timeline,eid):
-    body=json.dumps({'mode':'reference-style','frames':frames,'timeline':timeline,'requestId':'reference-'+eid}).encode()
-    request=urllib.request.Request(SITE+'/api/generate-script',data=body,headers={'Content-Type':'application/json','Origin':SITE},method='POST')
+    token=style_worker_token()
+    body=json.dumps({'mode':'reference-style-worker','frames':frames,'timeline':timeline,'requestId':'reference-'+eid}).encode()
+    request=urllib.request.Request(SITE+'/api/generate-script',data=body,headers={'Content-Type':'application/json','Origin':SITE,'X-Autoreels-Style-Token':token},method='POST')
     try:
-        with urllib.request.urlopen(request,timeout=65) as response:result=json.load(response)
+        with urllib.request.build_opener(StyleApiRedirect()).open(request,timeout=65) as response:result=json.load(response)
     except urllib.error.HTTPError as exc:
+        if exc.code in (401,403):
+            raise ValueError('영상 분석기 인증 연결에 문제가 있어 중단했습니다. 사용자 로그인 문제가 아닙니다. 운영자가 연결을 확인해야 합니다.') from None
         try:result=json.load(exc)
         except Exception:result={}
         raise ValueError(result.get('message') or result.get('error') or f'분석 API 오류 {exc.code}') from None

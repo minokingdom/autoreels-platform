@@ -767,7 +767,7 @@ async function handleSceneImages(body, res) {
   return res.status(200).json({ ok: images.length > 0, images, error: images.length ? undefined : results[0]?.error });
 }
 
-const { isSameSiteRequest, consumeNightlyMedia } = require('../lib/server/usage');
+const { isSameSiteRequest, consumeNightlyMedia, consumeReferenceStyle } = require('../lib/server/usage');
 
 async function handler(req, res) {
   if (!isSameSiteRequest(req)) {
@@ -1296,10 +1296,19 @@ const nightlyMedia = withMeter(async (req, res) => {
   return handleSceneImages({ mode: 'scene-prompts', isIcon: true, industry, industryInfo, topicsList, count: 10 }, res);
 }, 'ai', () => 1, consumeNightlyMedia);
 
+const referenceWorker = withMeter(async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  return require('../lib/reference-analysis.cjs').handleReferenceAnalysis(req.body, res);
+}, 'ai', () => 1, consumeReferenceStyle);
+
 module.exports = (req, res) => {
   if (req.method === 'POST') {
     let body;
     try { body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body; } catch {}
+    if (body?.mode === 'reference-style-worker') {
+      req.body = body;
+      return referenceWorker(req, res);
+    }
     if (['nightly-topics', 'nightly-scene-prompts'].includes(body?.mode)) {
       req.body = body;
       return nightlyMedia(req, res);
