@@ -2372,6 +2372,7 @@
 
     let _arCutCaptionDebounce = null;
     function updateCustomCutCaptions() {
+      campaign._userWroteScript = true;
       const totalCuts = getTargetCutCount();
       if (!Array.isArray(campaign.ttsLines)) campaign.ttsLines = [];
       for (let i = 0; i < totalCuts; i++) {

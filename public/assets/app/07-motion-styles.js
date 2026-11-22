@@ -1097,6 +1097,10 @@
         arRenderOpusFrame(c, W, H, t, mainDuration, totalCuts, d, sp);
         return;
       }
+      if (String(spec.mstyle || '').startsWith('s100_') && typeof arRenderStudio100Frame === 'function') {
+        arRenderStudio100Frame(c, W, H, t, mainDuration, totalCuts, d, sp);
+        return;
+      }
       const cutDur = mainDuration / totalCuts;
       const cutIdx = Math.min(totalCuts - 1, Math.floor(t / cutDur));
       const local = t - cutIdx * cutDur;

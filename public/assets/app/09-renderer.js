@@ -3977,11 +3977,37 @@
       vid._continuousVideo = true;
       vid._keepAudio = true;
       vid._origName = '편집기에서 다듬은 영상';
+      // 사용자가 스튜디오에서 대본을 직접 만들지 않았다면 업종 기본 예시 대본·성우가 자동으로 얹히지 않게 비움
+      const hasUserScript = Boolean(campaign._userWroteScript || (typeof arStepsVisited !== 'undefined' && arStepsVisited.has('script')));
+      if (!hasUserScript) {
+        campaign.hook = '';
+        campaign.sub = '';
+        campaign.priceTag = '';
+        const nCuts = Math.max(4, Array.isArray(campaign.cutCaptions) ? campaign.cutCaptions.length : 4);
+        campaign.cutCaptions = Array.from({ length: nCuts }, () => '');
+        campaign.ttsLines = Array.from({ length: nCuts }, () => '');
+        for (let i = 0; i < nCuts; i++) {
+          const sEl = document.getElementById(`cutSub${i}`); if (sEl) sEl.value = '';
+          const tEl = document.getElementById(`cutTts${i}`); if (tEl) tEl.value = '';
+        }
+        if (typeof AudioEngine !== 'undefined') {
+          AudioEngine.ttsVoice = 'off';
+          AudioEngine.masterBuffer = null;
+          AudioEngine.masterDuration = 0;
+          AudioEngine.ttsDirty = false;
+          const vSel = document.getElementById('ttsVoiceSelect');
+          if (vSel) vSel.value = 'off';
+        }
+        if (typeof designThumbCache !== 'undefined' && designThumbCache) designThumbCache.fresh = {};
+      }
       document.querySelector('dialog.ar-video-editor[open]')?.close();
       arUpdateShortVideoEdit({});
       if (typeof renderUploadedPhotoThumbs === 'function') renderUploadedPhotoThumbs();
+      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0);
       if (typeof openPresetDrawer === 'function') openPresetDrawer('right');
-      if (typeof arToast === 'function') arToast('편집한 영상을 넣었어요. 마음에 드는 테마를 골라 보세요.');
+      if (typeof arToast === 'function') arToast(hasUserScript
+        ? '편집한 영상을 넣었어요. 마음에 드는 테마를 골라 보세요.'
+        : '편집한 영상을 넣었어요. 대본 없이 테마만 깔끔하게 적용됩니다.');
     }
 
     // 쇼츠 화면에서 연 편집기가 맡겨 둔 영상을 받아 테마 입히기 (/studio?applyTheme=1)
