@@ -731,6 +731,8 @@ function selectMix(s,key){
   document.querySelectorAll('[data-track]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.track===key)));
   renderMixActions(s);
 }
+const MUTE_SVG_ON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.8 5.8a9 9 0 0 1 0 12.4"/></svg>';
+const MUTE_SVG_OFF='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5Z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg>';
 function syncTrackMuteUI(s){
   const map={
     sfx:{muted:!!s?.muteSfx,row:byId('sfxLane')?.closest('.mix-row')},
@@ -741,7 +743,7 @@ function syncTrackMuteUI(s){
     const btn=document.querySelector(`[data-track="${k}"] .track-mute-btn`);
     if(btn){
       btn.setAttribute('aria-pressed',String(info.muted));
-      btn.textContent=info.muted?'🔇':'🔊';
+      btn.innerHTML=info.muted?MUTE_SVG_OFF:MUTE_SVG_ON;
       btn.title=info.muted?`${mixNames[k]} 음소거 해제`:`${mixNames[k]} 음소거`;
     }
     if(info.row)info.row.classList.toggle('is-muted',info.muted);
@@ -823,7 +825,7 @@ if(quickEdit){
     const lbl=document.querySelector(`[data-track="${key}"]`);
     if(!lbl || lbl.querySelector('.track-mute-btn'))continue;
     const mb=document.createElement('span');
-    mb.setAttribute('role','button');mb.tabIndex=0;mb.className='track-mute-btn';mb.textContent='🔊';
+    mb.setAttribute('role','button');mb.tabIndex=0;mb.className='track-mute-btn';mb.innerHTML=MUTE_SVG_ON;
     mb.setAttribute('aria-pressed','false');
     mb.setAttribute('aria-label',`${mixNames[key]} 음소거`);
     mb.title=`${mixNames[key]} 음소거`;
