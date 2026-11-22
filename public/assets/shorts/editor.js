@@ -182,26 +182,122 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
   if (clip.customTitle || !clip.showCaptions || title !== caption.trim()) block(title,true);
   if (clip.showCaptions) block(caption || '',false);
 }
-// 미리보기 화면 꾹 누르기(380ms) → 직접 편집 모드 진입 + 스티커·자막 상하좌우(2D) 자유 드래그 & 탭 편집
+// 미리보기 화면 꾹 누르기(380ms) → 스튜디오 동일 상단 편집 모드 + 선택 요소 하단 크기/회전/삭제 조절 + 2D 자유 드래그
 (function bindShortsCaptionDrag(){
   const ov=document.getElementById('overlay');
   const frame=document.getElementById('frame');
   const hud=document.getElementById('shortsEditHud');
+  const selBar=document.getElementById('seSelectedBar');
+  const selLabel=document.getElementById('seSelLabel');
+  const scaleSlider=document.getElementById('seScaleSlider');
+  const scaleVal=document.getElementById('seScaleVal');
+  const rotGroup=document.getElementById('seRotGroup');
+  const dupBtn=document.getElementById('seDupBtn');
   if(!ov || ov.dataset.capDragBound)return;
   ov.dataset.capDragBound='1';
 
-  let editMode=false;
+  let editMode=false, selected=null;
+  function refreshPreview(){
+    if(!session?.clip)return;
+    if(session.joined||session.timelineCuts){if(typeof seekCutTrack==='function')seekCutTrack(session,session.trackTime||0);}
+    else renderPreview();
+  }
+  function updateSelBar(){
+    if(!selBar)return;
+    if(!editMode || !selected || !session?.clip){selBar.hidden=true;return;}
+    selBar.hidden=false;
+    if(selected.type==='sticker'){
+      const sc=Number(selected.st.scale)||1;
+      if(selLabel)selLabel.textContent='스티커 크기';
+      if(scaleSlider){scaleSlider.min='0.45';scaleSlider.max='2.5';scaleSlider.value=String(sc);}
+      if(scaleVal)scaleVal.textContent=Math.round(sc*100)+'%';
+      if(rotGroup)rotGroup.style.display='flex';
+      if(dupBtn)dupBtn.style.display='';
+    }else{
+      const sz=Number(selected.cue?selected.cue.size:session.clip.captionSize)||1;
+      if(selLabel)selLabel.textContent='자막 크기';
+      if(scaleSlider){scaleSlider.min='0.55';scaleSlider.max='2.0';scaleSlider.value=String(sz);}
+      if(scaleVal)scaleVal.textContent=Math.round(sz*100)+'%';
+      if(rotGroup)rotGroup.style.display='none';
+      if(dupBtn)dupBtn.style.display='none';
+    }
+  }
   function setShortsEditMode(on){
     editMode=!!on;
+    if(!editMode)selected=null;
     if(frame)frame.classList.toggle('se-editing',editMode);
     if(hud)hud.hidden=!editMode;
+    updateSelBar();
     if(editMode && typeof session!=='undefined' && session?.clip){
       try{video.pause();}catch(_){}
       if(typeof stopJoinedPreview==='function')stopJoinedPreview(session);
-      if(typeof showMixHint==='function')showMixHint('편집 모드 · 자막·스티커를 드래그하거나 하단 도구로 수정하세요');
+      if(typeof showMixHint==='function')showMixHint('편집 모드 · 상단 도구로 꾸미고 자막·스티커를 직접 끌어 이동하세요');
     }
   }
   window.setShortsEditMode=setShortsEditMode;
+  window.selectShortsSticker=function(st){
+    if(!st)return;
+    selected={type:'sticker',st};
+    if(!editMode)setShortsEditMode(true);
+    else updateSelBar();
+  };
+
+  if(scaleSlider){
+    scaleSlider.addEventListener('input',()=>{
+      if(!selected || !session?.clip)return;
+      const v=parseFloat(scaleSlider.value)||1;
+      if(scaleVal)scaleVal.textContent=Math.round(v*100)+'%';
+      if(selected.type==='sticker')selected.st.scale=v;
+      else if(selected.cue)selected.cue.size=v;
+      else session.clip.captionSize=v;
+      if(typeof markEdited==='function')markEdited();
+      refreshPreview();
+    });
+  }
+  const rotStep=(delta)=>{
+    if(!selected || selected.type!=='sticker')return;
+    selected.st.rot=delta===0?0:((Number(selected.st.rot)||0)+delta);
+    if(typeof markEdited==='function')markEdited();
+    refreshPreview();
+  };
+  document.getElementById('seRotL')?.addEventListener('click',e=>{e.stopPropagation();rotStep(-10);});
+  document.getElementById('seRotR')?.addEventListener('click',e=>{e.stopPropagation();rotStep(10);});
+  document.getElementById('seRot0')?.addEventListener('click',e=>{e.stopPropagation();rotStep(0);});
+  dupBtn?.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(!selected || selected.type!=='sticker' || !session?.stickers)return;
+    const copy={...selected.st,x:Math.min(0.88,(selected.st.x||0.5)+0.06),y:Math.min(0.88,(selected.st.y||0.35)+0.05)};
+    session.stickers.push(copy);
+    selected={type:'sticker',st:copy};
+    if(typeof mixChanged==='function')mixChanged(session);
+    else refreshPreview();
+    updateSelBar();
+  });
+  document.getElementById('seEditBtn')?.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(!selected || !session?.clip)return;
+    if(selected.type==='sticker'){
+      if(typeof window.openShortsStickerDialog==='function')window.openShortsStickerDialog(session);
+    }else{
+      if(selected.cue && typeof editCue==='function')editCue(session,'caption',selected.cue);
+      else if(typeof editGlobalCaptionStyle==='function')editGlobalCaptionStyle(session);
+    }
+  });
+  document.getElementById('seDelBtn')?.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(!selected || !session?.clip)return;
+    if(selected.type==='sticker' && Array.isArray(session.stickers)){
+      const i=session.stickers.indexOf(selected.st);
+      if(i>=0)session.stickers.splice(i,1);
+      selected=null;
+      updateSelBar();
+      if(typeof mixChanged==='function')mixChanged(session);
+      else refreshPreview();
+    }else{
+      selected=null;
+      updateSelBar();
+    }
+  });
 
   if(hud){
     const doneBtn=document.getElementById('seDoneBtn');
@@ -270,9 +366,10 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
     for(let i=stickers.length-1;i>=0;i--){
       const st=stickers[i];
       if(curT<(st.start||0) || curT>=(st.start||0)+(st.duration||3))continue;
-      const sx=typeof st.x==='number'?st.x:0.5, sy=typeof st.y==='number'?st.y:0.22;
-      if(Math.abs(nx-sx)<=0.24 && Math.abs(ny-sy)<=0.11){
+      const sx=typeof st.x==='number'?st.x:0.5, sy=typeof st.y==='number'?st.y:0.34;
+      if(Math.abs(nx-sx)<=0.24 && Math.abs(ny-sy)<=0.13){
         drag={type:'sticker',st,startX:e.clientX,startY:e.clientY,origX:sx,origY:sy,w:rect.width,h:rect.height};
+        if(editMode){selected={type:'sticker',st};updateSelBar();}
         try{ov.setPointerCapture(e.pointerId);}catch(_){}
         return;
       }
@@ -281,8 +378,12 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
     const cue=typeof activeCue==='function'?activeCue(s,curT):null;
     const curX=typeof cue?.posX==='number'?cue.posX:(s.clip.captionPosX||0.5);
     const curY=typeof cue?.posY==='number'?cue.posY:(s.clip.captionPosY||0.82);
-    if(Math.abs(ny-curY)>0.20)return;
+    if(Math.abs(ny-curY)>0.20){
+      if(editMode){selected=null;updateSelBar();}
+      return;
+    }
     drag={type:'caption',cue,startX:e.clientX,startY:e.clientY,origX:curX,origY:curY,w:rect.width,h:rect.height};
+    if(editMode){selected={type:'caption',cue};updateSelBar();}
     try{ov.setPointerCapture(e.pointerId);}catch(_){}
   });
   ov.addEventListener('pointermove',e=>{
@@ -301,8 +402,7 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
       if(drag.cue){drag.cue.posX=nextX;drag.cue.posY=nextY;}
       else{session.clip.captionPosX=nextX;session.clip.captionPosY=nextY;}
     }
-    if(session.joined||session.timelineCuts){if(typeof seekCutTrack==='function')seekCutTrack(session,session.trackTime||0);}
-    else renderPreview();
+    refreshPreview();
   });
   const end=()=>{
     clearLp();
@@ -311,12 +411,8 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
       if(movedDuringPress){
         if(typeof markEdited==='function')markEdited();
       }else if(editMode && session?.clip){
-        // 편집 모드에서 요소를 살짝 탭하면 바로 해당 요소 편집창 열기
-        if(d.type==='sticker' && typeof window.openShortsStickerDialog==='function')window.openShortsStickerDialog(session);
-        else if(d.type==='caption'){
-          if(d.cue && typeof editCue==='function')editCue(session,'caption',d.cue);
-          else if(typeof editGlobalCaptionStyle==='function')editGlobalCaptionStyle(session);
-        }
+        selected=d.type==='sticker'?{type:'sticker',st:d.st}:{type:'caption',cue:d.cue};
+        updateSelBar();
       }
     }
   };
@@ -325,7 +421,7 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
 function renderPreview(at=video.currentTime) {
   if (session?.joined || session?.timelineCuts) return;
   const overlay=byId('overlay'),ctx=overlay.getContext('2d');
-  const composite=session?.clip?.montage || session?.effects?.length || session?.captions?.length || session?.stickers?.length;
+  const composite=session?.clip?.montage || session?.effects?.length || session?.captions?.length || session?.stickers?.length || !!session?.activeFrame;
   if (composite && (video.seeking || video.readyState < 2)) return;
   ctx.clearRect(0,0,overlay.width,overlay.height);
   if (composite && video.readyState >= 2) paintClip(ctx,video,activeCaption(session.clip,at),session.clip,outputTimeAt(session,at));

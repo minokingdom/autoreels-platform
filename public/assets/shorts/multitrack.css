@@ -140,21 +140,53 @@
 .ar-mini-chip[aria-pressed=true]{background:#3b82f6;border-color:#60a5fa;color:#fff;font-weight:700}
 .ar-swatch-btn{width:24px;height:24px;border-radius:999px;border:2px solid rgba(255,255,255,.22);cursor:pointer;padding:0;flex-shrink:0}
 .ar-swatch-btn[aria-pressed=true]{border-color:#60a5fa;transform:scale(1.12)}
-/* 쇼츠 미리보기 꾹 누르기(롱프레스) → 직접 편집 모드 HUD */
+/* 쇼츠 미리보기 꾹 누르기(롱프레스) → 스튜디오와 동일한 상단 편집 모드 HUD + 선택 조절 바 */
 .se-lp-ring{position:absolute;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:999px;border:2.5px solid #60a5fa;background:rgba(59,130,246,.18);pointer-events:none;z-index:20;animation:seLpPulse 380ms cubic-bezier(.22,1,.36,1) forwards}
 @keyframes seLpPulse{0%{transform:scale(.45);opacity:.95}75%{transform:scale(1.08);opacity:.9;border-color:#4cc38a;background:rgba(76,195,138,.22)}100%{transform:scale(1.22);opacity:0}}
 #frame.se-editing{box-shadow:0 0 0 2px rgba(96,165,250,.75);border-radius:8px}
-#shortsEditHud{position:absolute;inset:0;z-index:12;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:8px 10px}
+#shortsEditHud{position:absolute;inset:0;z-index:12;pointer-events:none;select:none}
 #shortsEditHud[hidden]{display:none}
-#shortsEditHud .se-top{display:flex;align-items:center;justify-content:space-between;gap:6px;pointer-events:none}
-#shortsEditHud .se-badge{padding:4px 10px;border-radius:999px;background:rgba(12,14,18,.82);border:1px solid rgba(96,165,250,.55);color:#bfdbfe;font-size:11px;font-weight:700;backdrop-filter:blur(8px);pointer-events:none}
-#shortsEditHud #seDoneBtn{padding:5px 12px;border-radius:999px;border:0;background:#f4f4f6;color:#09090b;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.45);pointer-events:auto}
-#shortsEditHud .se-tools{display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:999px;background:rgba(12,14,18,.84);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(10px);box-shadow:0 6px 20px rgba(0,0,0,.5);pointer-events:auto;align-self:center;max-width:calc(100% - 8px);overflow-x:auto;scrollbar-width:none}
-#shortsEditHud .se-tools::-webkit-scrollbar{display:none}
-#shortsEditHud .se-tools button{height:28px;padding:0 10px;border-radius:999px;border:0;background:transparent;color:#e4e4e7;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background-color 120ms,color 120ms}
-#shortsEditHud .se-tools button:hover{background:rgba(255,255,255,.12);color:#fff}
-#shortsEditHud .se-tools button[data-se=studio]{background:#1e3a8a;color:#dbeafe;margin-left:2px}
-#shortsEditHud .se-tools button[data-se=studio]:hover{background:#2563eb;color:#fff}
+#seTopBar{position:absolute;top:8px;left:10px;right:10px;display:grid;gap:6px;pointer-events:none}
+#seTopBar .se-header-row{display:flex;align-items:center;justify-content:space-between;gap:6px;pointer-events:none}
+#seTopBar .se-badge{padding:4px 10px;border-radius:999px;background:rgba(12,14,18,.78);border:1px solid rgba(255,255,255,.18);color:#ededed;font-size:11px;font-weight:700;backdrop-filter:blur(8px)}
+#seTopBar #seDoneBtn{min-width:46px;height:28px;padding:0 12px;border-radius:999px;border:0;background:#ededed;color:#141416;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.45);pointer-events:auto}
+#seTopBar .se-tool-row{display:flex;align-items:center;gap:6px;pointer-events:auto;width:fit-content;max-width:100%;overflow-x:auto;scrollbar-width:none}
+#seTopBar .se-tool-row::-webkit-scrollbar{display:none}
+#seTopBar .se-tool-row button{width:32px;height:32px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(12,14,18,.68);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(8px);flex-shrink:0;padding:0;transition:background-color 120ms,transform 100ms}
+#seTopBar .se-tool-row button:hover{background:rgba(24,24,27,.92);border-color:rgba(255,255,255,.35)}
+#seTopBar .se-tool-row button:active{transform:scale(.92)}
+#seTopBar .se-tool-row button[data-se=studio]{width:auto;padding:0 11px;font-size:11px;background:rgba(30,58,138,.86);border-color:rgba(96,165,250,.55);color:#dbeafe}
+#seSelectedBar{position:absolute;bottom:8px;left:10px;right:10px;max-width:340px;margin:0 auto;border-radius:14px;background:rgba(12,14,18,.82);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(10px);padding:7px 10px;display:flex;flex-direction:column;gap:6px;pointer-events:auto;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+#seSelectedBar[hidden]{display:none}
+.se-sel-row{display:flex;align-items:center;gap:8px;font-size:11px;color:#d4d4d8}
+.se-sel-row input[type=range]{flex:1;min-width:0;accent-color:#fff;height:4px;cursor:pointer}
+.se-sel-actions{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.se-rot-group,.se-act-group{display:flex;align-items:center;gap:4px}
+#seSelectedBar button{height:24px;padding:0 8px;border-radius:999px;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:11px;font-weight:600;cursor:pointer}
+#seSelectedBar button:hover{background:rgba(255,255,255,.22)}
+#seSelectedBar #seEditBtn{background:rgba(255,255,255,.22);font-weight:700}
+#seSelectedBar #seDelBtn{width:24px;padding:0;background:rgba(229,72,77,.28);color:#fca5a5}
+#seSelectedBar #seDelBtn:hover{background:#e5484d;color:#fff}
+/* 스튜디오 동일 5탭 스티커·프레임 시트 */
+.ar-st-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:3px;border-radius:10px;background:#131418;border:1px solid #2e3038;margin-bottom:8px}
+.ar-st-tabs button{padding:5px 2px;border-radius:7px;border:0;background:transparent;color:#9ca3af;font-size:11.5px;font-weight:700;cursor:pointer}
+.ar-st-tabs button[aria-pressed=true]{background:#f4f4f6;color:#09090b}
+.ar-st-photo-btn{width:100%;margin-bottom:8px;padding:9px 10px;border-radius:11px;border:1px dashed rgba(255,255,255,.32);background:rgba(255,255,255,.08);color:#fff;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.ar-st-photo-btn small{color:#a1a1aa;font-weight:400;font-size:10.5px}
+.ar-st-grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.ar-st-widget-btn,.ar-st-frame-btn{padding:8px 10px;border-radius:11px;border:1px solid rgba(255,255,255,.14);color:#fff;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.ar-st-widget-btn strong,.ar-st-frame-btn strong{font-size:12px;font-weight:700}
+.ar-st-widget-btn small,.ar-st-frame-btn small{font-size:10px;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ar-st-frame-btn{background:#23252d}
+.ar-st-frame-btn[aria-pressed=true]{background:#f4f4f6;color:#09090b;border-color:#fff}
+.ar-st-grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.ar-st-doodle-btn{padding:8px 4px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#23252d;color:#fff;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-size:10.5px;font-weight:600}
+.ar-st-doodle-btn i{width:16px;height:16px;border-radius:999px;border:1px solid rgba(255,255,255,.35);display:block}
+.ar-st-badge-wrap{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0}
+.ar-st-badge-pill{padding:5px 11px;border-radius:999px;border:0;font-size:11.5px;font-weight:800;cursor:pointer}
+.ar-st-grid-7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.ar-st-emoji-btn{height:36px;border-radius:9px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.05);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ar-st-emoji-btn:hover{background:rgba(255,255,255,.16)}
 .quick-video .mix-label[aria-pressed=true]{color:#fff;background:#1d2026}
 .mix-icon{display:block;width:19px;height:19px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
 .quick-video #trackScale{position:relative;background:repeating-linear-gradient(90deg,#45484e 0 1px,transparent 1px 25%) bottom left/var(--tick-step,16.6667%) 8px repeat-x}
