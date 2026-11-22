@@ -814,44 +814,50 @@
       return { mode, camMode, accent: (ds && ds.accent) || '#ffffff' };
     }
 
+    function arComputeSteadyPose(idx, prog, w, h, baseScale, isVid) {
+      if (isVid || idx < 0) return { z: baseScale, px: 0, py: 0 };
+      const p = mClamp(prog);
+      const spec = arResolvePhotoMotionSpec(idx);
+      const camMode = spec.camMode;
+      const dir = idx % 2 === 0 ? 1 : -1;
+      if (camMode === 'steady') return { z: baseScale, px: 0, py: 0 };
+      if (camMode === 'zoomIn') return { z: baseScale + p * 0.045, px: 0, py: 0 };
+      if (camMode === 'zoomOut') return { z: baseScale + (1 - p) * 0.045, px: 0, py: 0 };
+      if (camMode === 'panX') return { z: baseScale + 0.04, px: (p - 0.5) * Math.min(20, w * 0.036) * dir, py: 0 };
+      if (camMode === 'panY') return { z: baseScale + 0.04, px: 0, py: (p - 0.5) * Math.min(18, h * 0.028) * dir };
+      if (camMode === 'diag') return { z: baseScale + 0.03 + p * 0.02, px: (p - 0.5) * Math.min(14, w * 0.026) * dir, py: (p - 0.5) * Math.min(12, h * 0.018) * -dir };
+      return { z: baseScale, px: 0, py: 0 };
+    }
+
     function inPhotoFade(c, S, cutIdx, local, x, y, w, h, scale, warm = 1) {
       const img = kitImg(S, 0);
       const isVid = !!(img && img._isVideo);
+      const prevImg = cutIdx > 0 ? kitImg(S, -1) : null;
+      const prevIsVid = !!(prevImg && prevImg._isVideo);
       const easeCubic = (v) => 1 - Math.pow(1 - mClamp(v), 3);
       const easeQuint = (v) => {
         const t = mClamp(v);
         return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       };
       const dir = cutIdx % 2 === 0 ? 1 : -1;
-      const lp = mClamp(local / 3.0);
+      const cutSpan = (typeof getMainDuration === 'function' && typeof getTargetCutCount === 'function')
+        ? Math.max(0.5, getMainDuration() / Math.max(1, getTargetCutCount()))
+        : ((S && S.sceneDur && S.sceneDur > 0.2) ? S.sceneDur : 3.0);
+      const lp = mClamp(local / cutSpan);
       const spec = arResolvePhotoMotionSpec(cutIdx);
       const mode = spec.mode;
-      const camMode = spec.camMode;
 
-      // 흔들림·기울기·비트튀김 없이, 한 방향으로 아주 잔잔하고 우아하게만 미끄러지는 시네마 Ken Burns
-      const baseScale = isVid ? Math.min(1.02, Math.max(1.0, scale || 1.0)) : Math.max(1.02, Math.min(1.06, scale || 1.02));
-      let steadyZoom = baseScale;
-      let steadyPx = 0;
-      let steadyPy = 0;
-      if (!isVid && camMode !== 'steady') {
-        if (camMode === 'zoomIn') {
-          steadyZoom = baseScale + lp * 0.055;
-        } else if (camMode === 'zoomOut') {
-          steadyZoom = baseScale + (1 - lp) * 0.055;
-        } else if (camMode === 'panX') {
-          steadyZoom = baseScale + 0.045;
-          steadyPx = (lp - 0.5) * Math.min(24, w * 0.044) * dir;
-        } else if (camMode === 'panY') {
-          steadyZoom = baseScale + 0.045;
-          steadyPy = (lp - 0.5) * Math.min(22, h * 0.034) * dir;
-        } else if (camMode === 'diag') {
-          steadyZoom = baseScale + 0.035 + lp * 0.025;
-          steadyPx = (lp - 0.5) * Math.min(18, w * 0.032) * dir;
-          steadyPy = (lp - 0.5) * Math.min(14, h * 0.022) * -dir;
-        }
-      }
+      // 일정한 기준 스케일(baseScale) + 이전 컷의 정확한 최종 포즈(prevPose)를 이어받아 컷 경계에서 줄어들거나 툭 끊어짐 0%!
+      const baseScale = isVid ? 1.01 : 1.02;
+      const prevBaseScale = prevIsVid ? 1.01 : 1.02;
+      const curPose = arComputeSteadyPose(cutIdx, lp, w, h, baseScale, isVid);
+      const prevPose = arComputeSteadyPose(cutIdx - 1, 1.0, w, h, prevBaseScale, prevIsVid);
+      const steadyZoom = curPose.z;
+      const steadyPx = curPose.px;
+      const steadyPy = curPose.py;
 
       const drawCur = (z, dx, dy) => mPhoto(c, S, 0, x, y, w, h, z, dx, dy);
+      const drawPrev = (ox = x, oy = y, zAdd = 0) => mPhoto(c, S, -1, ox, oy, w, h, prevPose.z + zAdd, prevPose.px, prevPose.py);
 
       const tDur = cutIdx === 0 ? 0.85 : 0.92;
       const rawP = mClamp(local / tDur);
@@ -865,11 +871,11 @@
       c.clip();
 
       if (mode === -1) {
-        // 순수 크로스 디졸브: 첫 컷은 깔끔하게 바로 표시, 컷 전환 시 이전 사진에서 새 사진으로 부드럽게 녹아듦
-        const disDur = 0.78;
+        // 순수 크로스 디졸브: 이전 컷의 마지막 확대/위치 그대로 유지하면서 새 사진으로 부드럽게 녹아듦 (줄어듦·끊김 0%)
+        const disDur = 0.82;
         if (hasPrev && local < disDur) {
           const dp = easeQuint(mClamp(local / disDur));
-          mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          drawPrev(x, y, 0);
           c.save();
           c.globalAlpha *= dp;
           drawCur(steadyZoom, steadyPx, steadyPy);
@@ -4173,213 +4179,21 @@
       c.fillStyle = sp.bg1 || '#080808';
       c.fillRect(0, 0, W, H);
 
-      // 1) 9:16 풀스크린 매끄러운 시네마 카메라 모션 (흔들림·회전 0%, 컷 전환 끊김 0%)
+      // 1) 9:16 풀스크린 순수 크로스 디졸브 (확대 후 줄어듦·플래시·특수 전환 0%)
       const dir = cutIdx % 2 === 0 ? 1 : -1;
       const dirY = cutIdx % 3 === 0 ? 1 : -1;
       const easeOutCubic = (x) => 1 - Math.pow(1 - mClamp(x), 3);
       const easeOutQuart = (x) => 1 - Math.pow(1 - mClamp(x), 4);
-      const drawDynamicPhoto = (zoom, px, py, fadeDur = 0.34, flashAmt = 0, leakAmt = 0) => {
-        const img = kitImg(S, 0);
-        const isVid = !!(img && img._isVideo);
-        const safeZoom = isVid ? Math.min(1.05, Math.max(1.0, zoom)) : zoom;
-        const safePx = isVid ? px * 0.15 : px;
-        const safePy = isVid ? py * 0.15 : py;
-        const tDur = Math.max(0.36, fadeDur);
-        const p = cutIdx > 0 ? easeOutQuart(local / tDur) : 1;
-        const rem = 1 - p;
-        const transKind = cutIdx % 5;
-        if (cutIdx > 0 && rem > 0.001) {
-          if (transKind === 1) {
-            // 1) 풀 슬라이드 푸시 (좌우 100% 밀어내기 + 경계 빛 라인)
-            const newX = Math.round(W * rem) * dir;
-            mPhoto(c, S, -1, -Math.round(W * p) * dir, 0, W, H, 1.08, 0, 0);
-            mPhoto(c, S, 0, newX, 0, W, H, safeZoom + rem * 0.04, safePx, safePy);
-            c.fillStyle = 'rgba(255,255,255,0.55)';
-            c.fillRect(dir > 0 ? newX - 1 : newX + W - 1, 0, 2, H);
-          } else if (transKind === 2) {
-            // 2) 대각선 시네마 슬래시 와이프
-            mPhoto(c, S, -1, 0, 0, W, H, 1.08, 0, 0);
-            const slant = Math.round(W * 0.28);
-            const edgeX = -slant + (W + slant * 2) * p;
-            c.save();
-            c.beginPath();
-            c.moveTo(-slant, 0);
-            c.lineTo(edgeX, 0);
-            c.lineTo(edgeX - slant, H);
-            c.lineTo(-slant, H);
-            c.closePath();
-            c.clip();
-            mPhoto(c, S, 0, 0, 0, W, H, safeZoom + rem * 0.06, safePx, safePy);
-            c.restore();
-            c.strokeStyle = 'rgba(255,250,240,0.75)';
-            c.lineWidth = 2;
-            c.beginPath();
-            c.moveTo(edgeX, 0);
-            c.lineTo(edgeX - slant, H);
-            c.stroke();
-          } else if (transKind === 3) {
-            // 3) 상하 셔터 오픈 리빌
-            mPhoto(c, S, -1, 0, 0, W, H, 1.08, 0, 0);
-            const openH = Math.round(H * p);
-            const topY = Math.round((H - openH) / 2);
-            c.save();
-            c.beginPath();
-            c.rect(0, topY, W, openH);
-            c.clip();
-            mPhoto(c, S, 0, 0, 0, W, H, safeZoom + rem * 0.07, safePx, safePy);
-            c.restore();
-          } else if (transKind === 4) {
-            // 4) 수직 풀-업 슬라이드 푸시
-            const newY = Math.round(H * rem);
-            mPhoto(c, S, -1, 0, -Math.round(H * p * 0.55), W, H, 1.08, 0, 0);
-            mPhoto(c, S, 0, 0, newY, W, H, safeZoom + rem * 0.04, safePx, safePy);
-            c.fillStyle = 'rgba(255,255,255,0.5)';
-            c.fillRect(0, newY - 1, W, 2);
-          } else {
-            // 0) 크리스프 노출 줌-스냅
-            mPhoto(c, S, -1, 0, 0, W, H, 1.08 + p * 0.14, 0, 0);
-            c.save();
-            c.globalAlpha = easeOutCubic(local / (tDur * 0.72));
-            mPhoto(c, S, 0, 0, 0, W, H, safeZoom + rem * 0.14, safePx, safePy);
-            c.restore();
-            if (local < 0.18) {
-              c.fillStyle = `rgba(255,252,245,${((1 - local / 0.18) * 0.28).toFixed(3)})`;
-              c.fillRect(0, 0, W, H);
-            }
-          }
-        } else {
-          mPhoto(c, S, 0, 0, 0, W, H, safeZoom, safePx, safePy);
-        }
-        if (flashAmt > 0 && local < 0.14 && cutIdx > 0) {
-          c.fillStyle = `rgba(255,252,245,${((1 - local / 0.14) * flashAmt).toFixed(3)})`;
-          c.fillRect(0, 0, W, H);
-        }
-        if (leakAmt > 0 && local < 0.38 && cutIdx > 0) {
-          const lkA = (1 - local / 0.38) * leakAmt;
-          const lg = c.createRadialGradient(W * (dir > 0 ? 0.15 : 0.85), H * 0.22, 10, W * 0.5, H * 0.4, W * 0.95);
-          lg.addColorStop(0, `rgba(255,188,120,${lkA.toFixed(3)})`);
-          lg.addColorStop(1, 'rgba(255,140,80,0)');
-          c.fillStyle = lg;
-          c.fillRect(0, 0, W, H);
-        }
+      const drawDynamicPhoto = (zoom, px, py, fadeDur = 0.82, flashAmt = 0, leakAmt = 0) => {
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.02, 0);
       };
 
-      // ★ 렌즈 포커스 풀 + 4단 구도 리듬 컴포지션 (흔들림 0% · 구도 변화로 시선 유지)
-      const drawWithFocusPull = (fn, maxBlur = 4.5, dur = 0.28) => {
-        const img = kitImg(S, 0);
-        const isVid = !!(img && img._isVideo);
-        const b = (!isVid && local < dur) ? (1 - easeOutCubic(local / dur)) * maxBlur : 0;
-        if (b > 0.25) {
-          c.save();
-          try { c.filter = `blur(${b.toFixed(1)}px) brightness(${(1 + (b / maxBlur) * 0.08).toFixed(2)})`; } catch (_) {}
-          fn();
-          c.restore();
-        } else {
-          fn();
-        }
+      const drawWithFocusPull = (fn) => {
+        fn();
       };
 
       const drawRhythmComposition = (warmAmt = 0, borderCol = 'rgba(255,255,255,0.22)') => {
-        const beat = cutIdx % 4;
-        const img = kitImg(S, 0);
-        const isVid = !!(img && img._isVideo);
-        const p = easeOutQuart(local / 0.36);
-        const rem = 1 - p;
-        const slowZoom = isVid ? 1.03 : (1.05 + lp * 0.07);
-        const slowPanX = isVid ? 0 : (lp - 0.5) * 26 * dir;
-
-        if (beat === 0) {
-          // Beat 0: 풀스크린 시네마 히어로 + 스피드 램프 + 렌즈 포커스 풀
-          drawWithFocusPull(() => {
-            drawDynamicPhoto(slowZoom + rem * 0.06, slowPanX, 0, 0.34, 0, warmAmt > 0 ? 0.16 : 0);
-          }, 4.5, 0.28);
-        } else if (beat === 1) {
-          // Beat 1: 블러 배경 위 플로팅 4:5 에디토리얼 액자 카드 (하단 Safe Zone 자막 공간 확보)
-          c.save();
-          try { c.filter = 'blur(16px) brightness(0.45)'; } catch (_) {}
-          mPhoto(c, S, 0, -20, -20, W + 40, H + 40, 1.16, 0, 0);
-          c.restore();
-          c.fillStyle = 'rgba(8,8,10,0.34)';
-          c.fillRect(0, 0, W, H);
-
-          const cw = W - 84, ch = 490;
-          const cx = 42, cy = 122 + rem * 26;
-          c.save();
-          c.globalAlpha = easeOutCubic(local / 0.24);
-          c.shadowColor = 'rgba(0,0,0,0.55)';
-          c.shadowBlur = 32;
-          c.shadowOffsetY = 14;
-          gRoundRect(c, cx, cy, cw, ch, 22);
-          c.fillStyle = '#111114';
-          c.fill();
-          c.restore();
-
-          c.save();
-          c.globalAlpha = easeOutCubic(local / 0.24);
-          gRoundRect(c, cx, cy, cw, ch, 22);
-          c.clip();
-          drawWithFocusPull(() => {
-            mPhoto(c, S, 0, cx, cy, cw, ch, isVid ? 1.02 : (1.06 + lp * 0.07), slowPanX * 0.7, 0);
-          }, 3.5, 0.24);
-          c.restore();
-
-          c.save();
-          c.globalAlpha = easeOutCubic(local / 0.28);
-          gRoundRect(c, cx, cy, cw, ch, 22);
-          c.strokeStyle = borderCol;
-          c.lineWidth = 1.2;
-          c.stroke();
-          c.restore();
-        } else if (beat === 2) {
-          // Beat 2: 상하 2분할 다이나믹 스플릿 (상단 풀뷰 + 하단 디테일 클로즈업)
-          const splitY = Math.round(H * 0.48);
-          c.save();
-          c.beginPath();
-          c.rect(0, 0, W, splitY - 2);
-          c.clip();
-          mPhoto(c, S, 0, Math.round(rem * 42 * dir), 0, W, splitY, isVid ? 1.03 : (1.07 + lp * 0.06), slowPanX, 0);
-          c.restore();
-
-          c.save();
-          c.beginPath();
-          c.rect(0, splitY + 2, W, H - splitY - 2);
-          c.clip();
-          mPhoto(c, S, cutIdx > 0 ? -1 : 0, Math.round(-rem * 42 * dir), splitY, W, H - splitY, isVid ? 1.04 : (1.18 - lp * 0.06), -slowPanX * 0.8, 0);
-          c.fillStyle = 'rgba(8,8,10,0.32)';
-          c.fillRect(0, splitY + 2, W, H - splitY - 2);
-          c.restore();
-
-          c.fillStyle = borderCol;
-          c.fillRect(0, splitY - 1, W, 2);
-        } else {
-          // Beat 3: 와이드 시네마 레터박스 프레임 + 포커스 풀
-          c.save();
-          try { c.filter = 'blur(18px) brightness(0.36)'; } catch (_) {}
-          mPhoto(c, S, 0, -20, -20, W + 40, H + 40, 1.18, 0, 0);
-          c.restore();
-          c.fillStyle = 'rgba(6,6,8,0.44)';
-          c.fillRect(0, 0, W, H);
-
-          const cw = W - 44, ch = 396;
-          const cx = 22, cy = 176 + rem * 18;
-          c.save();
-          c.globalAlpha = easeOutCubic(local / 0.26);
-          gRoundRect(c, cx, cy, cw, ch, 16);
-          c.clip();
-          drawWithFocusPull(() => {
-            mPhoto(c, S, 0, cx, cy, cw, ch, isVid ? 1.02 : (1.05 + lp * 0.09), slowPanX * 0.9, 0);
-          }, 4.0, 0.26);
-          c.restore();
-
-          c.save();
-          c.globalAlpha = easeOutCubic(local / 0.30);
-          gRoundRect(c, cx, cy, cw, ch, 16);
-          c.strokeStyle = borderCol;
-          c.lineWidth = 1;
-          c.stroke();
-          c.restore();
-        }
-        if (warmAmt > 0) inWarm(c, 0, 0, W, H, warmAmt);
+        inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.02, warmAmt);
       };
 
       if (M === 'pro_rhythm_editorial') {
@@ -4389,45 +4203,21 @@
         drawRhythmComposition(0.45, 'rgba(242,228,204,0.34)');
         inGrain(c, W, H, t, 0.048);
       } else if (M === 'pro_karaoke') {
-        const snap = 1 - easeOutQuart(local / 0.30);
-        drawWithFocusPull(() => {
-          drawDynamicPhoto(1.08 + snap * 0.10 + lp * 0.06, (lp - 0.5) * 32 * dir, 0, 0.28, 0.16, 0);
-        }, 3.0, 0.20);
+        drawDynamicPhoto();
       } else if (M === 'pro_film_sub') {
-        drawWithFocusPull(() => {
-          drawDynamicPhoto(1.07 + lp * 0.10, (lp - 0.5) * 34 * dir, (lp - 0.5) * 16 * dirY, 0.36, 0, 0.18);
-        }, 4.5, 0.28);
+        drawDynamicPhoto();
         inGrain(c, W, H, t, 0.045);
       } else if (M === 'pro_punch_hook') {
-        const snap = 1 - easeOutQuart(local / 0.26);
-        drawDynamicPhoto(1.08 + snap * 0.14 + lp * 0.06, (lp - 0.5) * 30 * dir, 0, 0.26, 0.16, 0);
+        drawDynamicPhoto();
       } else if (M === 'pro_editorial_center') {
-        drawWithFocusPull(() => {
-          drawDynamicPhoto(1.18 - lp * 0.11, (lp - 0.5) * 18 * dir, (0.5 - lp) * 28 * dirY, 0.36, 0, 0.12);
-        }, 4.0, 0.26);
+        drawDynamicPhoto();
         inGrain(c, W, H, t, 0.032);
       } else if (M === 'pro_pov_caption') {
-        drawDynamicPhoto(1.08 + lp * 0.08, (lp - 0.5) * 30 * dir, (0.5 - lp) * 14, 0.32, 0, 0);
+        drawDynamicPhoto();
       } else if (M === 'pro_split_reveal') {
-        const wipe = easeOutQuart(local / 0.38);
-        if (cutIdx > 0 && wipe < 0.995) {
-          mPhoto(c, S, -1, 0, 0, W, H, 1.09, -wipe * 28, 0);
-        }
-        const splitX = Math.round(W * wipe);
-        c.save();
-        c.beginPath();
-        c.rect(0, 0, cutIdx > 0 ? splitX : W, H);
-        c.clip();
-        mPhoto(c, S, 0, 0, 0, W, H, 1.15 - lp * 0.08, (1 - wipe) * 22 + (lp - 0.5) * 16 * dir, 0);
-        c.restore();
-        if (cutIdx > 0 && wipe > 0.02 && wipe < 0.98) {
-          c.fillStyle = 'rgba(244,240,232,0.85)';
-          c.fillRect(splitX - 2, 0, 3, H);
-        }
+        drawDynamicPhoto();
       } else if (M === 'pro_handwrite') {
-        drawWithFocusPull(() => {
-          drawDynamicPhoto(1.10 + lp * 0.07, (lp - 0.5) * 38 * dir, 0, 0.36, 0, 0.22);
-        }, 4.0, 0.26);
+        drawDynamicPhoto();
         inWarm(c, 0, 0, W, H, 0.55);
         inGrain(c, W, H, t, 0.05);
       } else if (M === 'pro_trend_sticker') {
@@ -4436,8 +4226,7 @@
       } else if (M === 'pro_glass_card') {
         drawRhythmComposition(0, 'rgba(255,255,255,0.22)');
       } else if (M === 'pro_neon_pulse') {
-        const snap = 1 - easeOutQuart(local / 0.28);
-        drawDynamicPhoto(1.08 + snap * 0.11 + lp * 0.06, (lp - 0.5) * 32 * dir, 0, 0.28, 0.14, 0);
+        drawDynamicPhoto();
         c.fillStyle = 'rgba(6,10,18,0.20)';
         c.fillRect(0, 0, W, H);
       } else if (M === 'pro_magazine_cover') {
@@ -4447,12 +4236,11 @@
         drawRhythmComposition(0.50, 'rgba(248,243,234,0.36)');
         inGrain(c, W, H, t, 0.04);
       } else if (M === 'pro_bold_badge') {
-        const snap = 1 - easeOutQuart(local / 0.26);
-        drawDynamicPhoto(1.09 + snap * 0.14 + lp * 0.06, (lp - 0.5) * 28 * dir, 0, 0.26, 0.18, 0);
+        drawDynamicPhoto();
       } else if (M === 'pro_minimal_mono') {
         c.save();
         try { c.filter = 'grayscale(100%) contrast(1.14)'; } catch (_) {}
-        drawDynamicPhoto(1.18 - lp * 0.10, (lp - 0.5) * 28 * dir, (0.5 - lp) * 20 * dirY, 0.36, 0, 0);
+        drawDynamicPhoto();
         c.restore();
         inGrain(c, W, H, t, 0.055);
       }
