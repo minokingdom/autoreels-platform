@@ -822,13 +822,14 @@ if(quickEdit){
   for(const key of ['sfx','source','music']){
     const lbl=document.querySelector(`[data-track="${key}"]`);
     if(!lbl || lbl.querySelector('.track-mute-btn'))continue;
-    const mb=document.createElement('button');
-    mb.type='button';mb.className='track-mute-btn';mb.textContent='🔊';
+    const mb=document.createElement('span');
+    mb.setAttribute('role','button');mb.tabIndex=0;mb.className='track-mute-btn';mb.textContent='🔊';
     mb.setAttribute('aria-pressed','false');
     mb.setAttribute('aria-label',`${mixNames[key]} 음소거`);
     mb.title=`${mixNames[key]} 음소거`;
     mb.addEventListener('click',e=>{
       e.stopPropagation();
+      e.preventDefault();
       if(editableEffects())toggleTrackMute(session,key);
     });
     lbl.append(mb);

@@ -109,7 +109,7 @@
 .quick-video .track-board{margin:0;min-width:100%;background:#0c0d10}
 .quick-video .mix-label,.quick-video .mix-row{height:var(--lane);min-height:var(--lane);box-sizing:border-box;border:0;border-bottom:1px solid #26282e}
 .quick-video .mix-label[data-track=video],.quick-video .mix-row:has(#trackClips){height:var(--film);min-height:var(--film)}
-.quick-video .mix-label{position:relative;flex-shrink:0;width:100%;padding:0 4px 0 7px;gap:5px;letter-spacing:-.04em;font-weight:500;line-height:1.2;font-family:inherit;font-size:12px;color:#c8cbd2;background:transparent}
+.quick-video .mix-label{position:relative;right:auto;inset-block:auto;flex-shrink:0;width:100%;padding:0 4px 0 7px;gap:5px;letter-spacing:-.04em;font-weight:500;line-height:1.2;font-family:inherit;font-size:12px;color:#c8cbd2;background:transparent}
 .track-mute-btn{position:absolute;top:3px;right:3px;width:20px;height:20px;border:0;border-radius:999px;background:rgba(255,255,255,.07);color:#a1a1aa;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
 .track-mute-btn:hover{background:rgba(255,255,255,.18);color:#fff}
 .track-mute-btn[aria-pressed=true]{background:rgba(239,68,68,.24);color:#fca5a5}
