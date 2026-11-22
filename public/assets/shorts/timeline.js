@@ -171,8 +171,13 @@ function layoutTrackBoard(s,takes) {
 function centerTrackScroll(s) {
   const scroll=byId('trackScale').closest('.mix-scroll');
   if(!scroll || s.trackPinch) return;
+  const view=scroll.clientWidth||300;
   const x=Math.round((s.trackTime||0)*trackPps(s));
-  if(Math.abs(scroll.scrollLeft-x)>.5){scroll.scrollLeft=x;}
+  // 왼쪽 끝(0초)부터 자연스럽게 시작하고, 재생선이 화면 오른쪽 밖으로 나갈 때만 따라 스크롤
+  let target=scroll.scrollLeft;
+  if(x<target+16) target=Math.max(0,x-24);
+  else if(x>target+view*0.82) target=Math.max(0,x-view*0.25);
+  if(Math.abs(scroll.scrollLeft-target)>1){scroll.scrollLeft=target;}
   s.trackScrollAuto=scroll.scrollLeft;
 }
 function zoomTrack(s,pps) {
@@ -244,17 +249,6 @@ if(quickEdit) {
   byId('trackCursor').addEventListener('input',e=>{if(session?.clip)seekCutTrack(session,e.target.valueAsNumber);});
   {
     const scroll=byId('trackScale').closest('.mix-scroll');
-    let frame=0;
-    // 손으로 타임라인을 밀면 가운데 재생선 위치로 이동한다.
-    scroll.addEventListener('scroll',()=>{
-      const s=session;
-      if(!s?.clip || s.trackPinch || Math.abs(scroll.scrollLeft-(s.trackScrollAuto??-9))<=1) return;
-      cancelAnimationFrame(frame);
-      frame=requestAnimationFrame(()=>{
-        if(session!==s || s.trackPinch)return;
-        seekCutTrack(s,scroll.scrollLeft/trackPps(s));
-      });
-    },{passive:true});
     // 두 손가락 확대·축소
     let pinch=null;
     const gap=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
@@ -277,7 +271,7 @@ if(quickEdit) {
     };
     scroll.addEventListener('touchend',e=>{if(e.touches.length<2)endPinch();});
     scroll.addEventListener('touchcancel',endPinch);
-    // 컴퓨터: Ctrl+휠로 확대, 마우스로 끌어서 이동
+    // 컴퓨터: Ctrl+휠로 확대, 마우스로 트랙 끌어서 이동
     let wheelTimer=0;
     scroll.addEventListener('wheel',e=>{
       const s=session;
@@ -289,7 +283,7 @@ if(quickEdit) {
     let drag=null,dragged=false;
     scroll.addEventListener('pointerdown',e=>{
       dragged=false;
-      if(e.pointerType!=='mouse' || e.button!==0 || (e.target.closest('button,canvas') && !e.target.closest('.track-ruler'))) return;
+      if(e.pointerType!=='mouse' || e.button!==0 || e.target.closest('button,canvas,.track-ruler')) return;
       drag={x:e.clientX,left:scroll.scrollLeft};scroll.setPointerCapture(e.pointerId);
     });
     scroll.addEventListener('pointermove',e=>{
@@ -298,13 +292,24 @@ if(quickEdit) {
       if(dragged)scroll.scrollLeft=drag.left-(e.clientX-drag.x);
     });
     scroll.addEventListener('pointerup',()=>{drag=null;});
-    // 눈금을 누르면 그 시각으로 이동
-    scroll.querySelector('.track-ruler').addEventListener('click',e=>{
+    // 눈금을 클릭하거나 좌우로 드래그하면 재생선이 즉시 그 시각으로 이동
+    const ruler=scroll.querySelector('.track-ruler');
+    let scrubbing=false;
+    const seekAtClientX=clientX=>{
       const s=session;
-      if(!s?.clip || dragged) return;
+      if(!s?.clip) return;
       const board=scroll.querySelector('.track-board').getBoundingClientRect();
-      seekCutTrack(s,(e.clientX-board.left)/trackPps(s));
+      seekCutTrack(s,(clientX-board.left)/trackPps(s));
+    };
+    ruler.addEventListener('pointerdown',e=>{
+      if(e.button && e.button!==0) return;
+      scrubbing=true;
+      try{ruler.setPointerCapture(e.pointerId);}catch(_){}
+      seekAtClientX(e.clientX);
     });
+    ruler.addEventListener('pointermove',e=>{if(scrubbing)seekAtClientX(e.clientX);});
+    ruler.addEventListener('pointerup',()=>{scrubbing=false;});
+    ruler.addEventListener('pointercancel',()=>{scrubbing=false;});
     // 주소창이 접히는 세로 크기 변화는 무시하고, 폭이 바뀔 때만 다시 맞춘다.
     let lastWidth=innerWidth;
     addEventListener('resize',()=>{
