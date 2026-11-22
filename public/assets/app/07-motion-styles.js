@@ -1468,7 +1468,7 @@
         arRenderOpusFrame(c, W, H, t, mainDuration, totalCuts, d, sp);
         return;
       }
-      if (String(spec.mstyle || '').startsWith('s100_') && typeof arRenderStudio100Frame === 'function') {
+      if ((String(spec.mstyle || '').startsWith('s100_') || String(spec.mstyle || '').startsWith('pm_')) && typeof arRenderStudio100Frame === 'function') {
         arRenderStudio100Frame(c, W, H, t, mainDuration, totalCuts, d, sp);
         return;
       }

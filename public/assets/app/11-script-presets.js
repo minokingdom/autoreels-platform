@@ -392,6 +392,7 @@
     let pdGenre = '';
     const PD_GENRE_CHIPS = [
       { id: '', label: '전체 화풍' },
+      { id: 'showreel', label: '🎬 모션 쇼릴' },
       { id: 'art', label: '🎨 아트' },
       { id: 'film', label: '🎞️ 필름' },
       { id: 'editorial', label: '🏛️ 매거진' },

@@ -3944,12 +3944,13 @@
     const AR_FINE_BADGE = '<span class="fine-edit-badge" title="자막·위 라벨·아래 이름을 컷마다 세세하게 바꿀 수 있어요">세부 편집</span>';
     function arVisibleDesigns() {
       const list = DESIGN_STYLES.filter(arDesignVisible);
-      // 1군 프로 엔진 -> 오퍼스 화풍(엔진별 다크·라이트 대표만) -> 2026 에디토리얼 -> 나머지 최신 모션 순 정렬 + 같은 레이아웃(mstyle) 중복 완전 제거
-      const pro = list.filter((d) => d.isProReels);
-      const opus = list.filter((d) => !d.isProReels && d.isOpusArt);
-      const ed = list.filter((d) => !d.isProReels && !d.isOpusArt && String(d.id || '').startsWith('ed_'));
-      const rest = list.filter((d) => !d.isProReels && !d.isOpusArt && !String(d.id || '').startsWith('ed_'));
-      const ordered = pro.concat(opus, ed, rest);
+      // Prompt-Motion 모션 쇼릴 -> 1군 프로 엔진 -> 오퍼스 화풍 -> 2026 에디토리얼 -> 나머지 최신 모션 순 정렬
+      const pm = list.filter((d) => d.isPromptMotion);
+      const pro = list.filter((d) => !d.isPromptMotion && d.isProReels);
+      const opus = list.filter((d) => !d.isPromptMotion && !d.isProReels && d.isOpusArt);
+      const ed = list.filter((d) => !d.isPromptMotion && !d.isProReels && !d.isOpusArt && String(d.id || '').startsWith('ed_'));
+      const rest = list.filter((d) => !d.isPromptMotion && !d.isProReels && !d.isOpusArt && !String(d.id || '').startsWith('ed_'));
+      const ordered = pm.concat(pro, opus, ed, rest);
 
       const seenOpus = new Set();
       const seenMstyle = new Set();
