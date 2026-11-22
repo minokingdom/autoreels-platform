@@ -712,57 +712,97 @@
       c.restore();
     }
     // 컷이 바뀔 때 앞 사진에서 부드럽게 겹쳐 바뀜
-    // ★ 스타일별 시그니처 사진 등장·전환 애니메이션 12종 (스타일을 바꿀 때마다 사진 연출 자체가 확연히 달라짐)
+    // ★ 스타일별 시그니처 사진 등장·전환 애니메이션 24종 + 카메라 무브 10종
+    const AR_PHOTO_ENTRANCE_MODES = [
+      { id: 'auto', label: '✨ 스타일 자동' },
+      { id: 0,  label: '⚡ 줌 플래시' },
+      { id: 1,  label: '⭕ 원형 아이리스' },
+      { id: 2,  label: '🪟 5단 블라인드' },
+      { id: 3,  label: '⚔️ 사선 슬래시' },
+      { id: 4,  label: '💨 좌우 휩슬라이드' },
+      { id: 5,  label: '⬆️ 릴스 스와이프업' },
+      { id: 6,  label: '🎭 시어터 커튼' },
+      { id: 7,  label: '🃏 회전 틸트드롭' },
+      { id: 8,  label: '💎 다이아몬드' },
+      { id: 9,  label: '🧩 4분할 모자이크' },
+      { id: 10, label: '📷 포커스 풀 블러' },
+      { id: 11, label: '🎬 상하 필름셔터' },
+      { id: 12, label: '🕒 시계 레이더' },
+      { id: 13, label: '🔄 3D 카드뒤집기' },
+      { id: 14, label: '⚡ RGB 글리치' },
+      { id: 15, label: '🎞 필름 스트립롤' },
+      { id: 16, label: '📖 책장 넘김' },
+      { id: 17, label: '🎈 바운스 팝' },
+      { id: 18, label: '🌊 8단 계단웨이브' },
+      { id: 19, label: '🚀 하이퍼 크로스줌' },
+      { id: 20, label: '♟ 체커보드 타일' },
+      { id: 21, label: '🏛 아치 창문오픈' },
+      { id: 22, label: '✂️ 지그재그 스플릿' },
+      { id: 23, label: '📸 카메라 조리개' }
+    ];
+    const AR_CAMERA_MOTION_MODES = [
+      { id: 'auto',       label: '✨ 자동' },
+      { id: 'zoomIn',     label: '🔍 줌 인' },
+      { id: 'zoomOut',    label: '🔭 줌 아웃' },
+      { id: 'panX',       label: '↔️ 좌우 패닝' },
+      { id: 'panY',       label: '↕️ 상하 크레인' },
+      { id: 'diag',       label: '↗️ 대각선 드리프트' },
+      { id: 'punch',      label: '💓 비트 펀치' },
+      { id: 'handheld',   label: '🎥 핸드헬드 호흡' },
+      { id: 'dutchDrift', label: '🎞 시네마 틸트' },
+      { id: 'orbitSway',  label: '🌀 오빗 스웨이' },
+      { id: 'snapHold',   label: '⚡ 스냅 홀드' }
+    ];
+    if (typeof window !== 'undefined') {
+      window.AR_PHOTO_ENTRANCE_MODES = AR_PHOTO_ENTRANCE_MODES;
+      window.AR_CAMERA_MOTION_MODES = AR_CAMERA_MOTION_MODES;
+    }
+
     const AR_STYLE_PHOTO_ANIM = {
-      // 장르별 기본 시그니처 [첫컷·짝수컷 메인 연출, 홀수컷 보조 연출, 카메라 무브]
-      // 연출 코드: 0=줌플래시, 1=원형아이리스, 2=5단셔터블라인드, 3=사선슬래시, 4=휩슬라이드,
-      //           5=릴스스와이프업, 6=좌우커튼분할, 7=회전틸트드롭, 8=다이아몬드리빌,
-      //           9=4분할모자이크, 10=포커스풀블러, 11=시네마상하셔터
-      art:       [1, 10, 'panY'],
-      film:      [11, 0, 'zoomOut'],
-      editorial: [2, 6, 'panX'],
-      kinetic:   [3, 8, 'punch'],
-      tv:        [4, 5, 'zoomIn'],
-      game:      [9, 8, 'punch'],
-      note:      [7, 5, 'panY'],
-      food:      [5, 1, 'zoomIn'],
-      life:      [10, 1, 'diag'],
-      biz:       [6, 2, 'panX']
+      art:       [1, 18, 'orbitSway'],
+      film:      [15, 11, 'dutchDrift'],
+      editorial: [16, 21, 'panX'],
+      kinetic:   [19, 3, 'punch'],
+      tv:        [4, 22, 'snapHold'],
+      game:      [14, 20, 'punch'],
+      note:      [16, 7, 'handheld'],
+      food:      [17, 21, 'zoomIn'],
+      life:      [10, 21, 'diag'],
+      biz:       [23, 2, 'panX']
     };
     const AR_CAT_PHOTO_ANIM = {
-      '감성': [10, 1, 'diag'],
-      '고급': [6, 2, 'zoomOut'],
-      '브이로그': [4, 5, 'panX'],
-      '타이포': [3, 8, 'punch'],
-      '손글씨': [7, 10, 'panY'],
-      '뉴스·방송': [4, 11, 'zoomIn'],
-      '카드뉴스': [5, 9, 'panX'],
-      '비포·애프터': [2, 3, 'panX'],
-      '재미': [7, 9, 'punch'],
-      '테크': [8, 9, 'zoomIn'],
-      '럭셔리': [6, 11, 'zoomOut']
+      '감성': [10, 21, 'orbitSway'],
+      '고급': [21, 6, 'zoomOut'],
+      '브이로그': [18, 4, 'handheld'],
+      '타이포': [19, 3, 'punch'],
+      '손글씨': [16, 7, 'panY'],
+      '뉴스·방송': [4, 22, 'snapHold'],
+      '카드뉴스': [13, 5, 'panX'],
+      '비포·애프터': [22, 2, 'panX'],
+      '재미': [17, 20, 'punch'],
+      '테크': [14, 8, 'snapHold'],
+      '럭셔리': [23, 21, 'dutchDrift']
     };
     function arResolvePhotoMotionSpec(cutIdx) {
       const ds = typeof getActiveDesign === 'function' ? getActiveDesign() : null;
       const id = (ds && ds.id) ? String(ds.id) : '';
       let h = 0;
       for (let i = 0; i < id.length; i++) h = ((h * 33) ^ id.charCodeAt(i)) >>> 0;
-      // 특정 스타일 성격에 맞춘 세부 연출 매핑
+      const cams = ['zoomIn', 'zoomOut', 'panX', 'panY', 'diag', 'punch', 'handheld', 'dutchDrift', 'orbitSway', 'snapHold'];
       let base = (ds && ds.s100Genre && AR_STYLE_PHOTO_ANIM[ds.s100Genre])
         || (ds && ds.cat && AR_CAT_PHOTO_ANIM[ds.cat])
-        || [h % 12, (h + 5) % 12, ['zoomIn', 'zoomOut', 'panX', 'panY', 'diag', 'punch'][h % 6]];
-      // 같은 장르 안에서도 스타일마다 고유한 사진 등장 연출이 나오도록 해시 오프셋 적용
+        || [h % 24, (h + 7) % 24, cams[h % cams.length]];
       const poolByGenre = {
-        art:       [1, 10, 7, 6, 11, 1, 10, 8, 7, 3],
-        film:      [11, 4, 10, 7, 8, 2, 3, 5, 9, 6],
-        editorial: [6, 2, 10, 0, 11, 2, 3, 1, 6, 5],
-        kinetic:   [3, 6, 8, 9, 1, 0, 9, 4, 10, 1],
-        tv:        [4, 5, 11, 1, 3, 2, 4, 9, 7, 5],
-        game:      [9, 8, 3, 5, 11, 1, 7, 9, 8, 7],
-        note:      [7, 5, 2, 8, 7, 9, 5, 4, 2, 1],
-        food:      [6, 10, 3, 1, 11, 10, 7, 5, 6, 1],
-        life:      [10, 5, 2, 4, 3, 6, 1, 10, 7, 4],
-        biz:       [2, 8, 5, 6, 10, 9, 0, 3, 11, 6]
+        art:       [1, 18, 10, 21, 16, 7, 12, 23, 18, 3],
+        film:      [15, 11, 10, 7, 14, 16, 23, 15, 13, 6],
+        editorial: [16, 21, 2, 6, 23, 11, 22, 10, 13, 12],
+        kinetic:   [19, 3, 14, 22, 8, 12, 17, 19, 20, 23],
+        tv:        [4, 17, 15, 12, 19, 2, 22, 13, 5, 20],
+        game:      [20, 14, 13, 17, 9, 8, 7, 19, 14, 13],
+        note:      [16, 7, 13, 12, 17, 20, 5, 18, 16, 9],
+        food:      [21, 17, 14, 1, 10, 16, 7, 19, 21, 18],
+        life:      [10, 21, 18, 16, 22, 23, 1, 10, 17, 13],
+        biz:       [23, 12, 13, 16, 10, 20, 19, 3, 2, 21]
       };
       let primary = base[0];
       let secondary = base[1];
@@ -771,15 +811,23 @@
         const list = poolByGenre[ds.s100Genre];
         primary = list[h % list.length];
         secondary = list[(h + 3) % list.length];
-        if (secondary === primary) secondary = (primary + 4) % 12;
+        if (secondary === primary) secondary = (primary + 5) % 24;
       } else if (id) {
-        primary = (base[0] + (h % 4)) % 12;
-        secondary = (base[1] + ((h >> 2) % 4)) % 12;
-        if (secondary === primary) secondary = (primary + 3) % 12;
+        primary = (base[0] + (h % 6)) % 24;
+        secondary = (base[1] + ((h >> 2) % 6)) % 24;
+        if (secondary === primary) secondary = (primary + 5) % 24;
       }
-      const mode = cutIdx % 2 === 0 ? primary : secondary;
-      const cams = ['zoomIn', 'zoomOut', 'panX', 'panY', 'diag', 'punch'];
-      const camMode = cutIdx % 2 === 0 ? cam : cams[(h + cutIdx) % cams.length];
+      let mode = cutIdx % 2 === 0 ? primary : secondary;
+      let camMode = cutIdx % 2 === 0 ? cam : cams[(h + cutIdx) % cams.length];
+      // 사용자 컷별 수동 지정 우선 반영
+      const ov = typeof getCutElementOverride === 'function' ? getCutElementOverride(cutIdx) : null;
+      if (ov && ov.photo) {
+        if (ov.photo.entrance !== undefined && ov.photo.entrance !== null && ov.photo.entrance !== '' && ov.photo.entrance !== 'auto') {
+          const parsed = Number(ov.photo.entrance);
+          if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 23) mode = parsed;
+        }
+        if (ov.photo.cam && ov.photo.cam !== 'auto') camMode = ov.photo.cam;
+      }
       return { mode, camMode, accent: (ds && ds.accent) || '#ffffff' };
     }
 
@@ -790,7 +838,7 @@
       const easeQuart = (v) => 1 - Math.pow(1 - mClamp(v), 4);
       const easeOutBack = (v) => {
         const t = mClamp(v);
-        const c1 = 1.45, c3 = c1 + 1;
+        const c1 = 1.55, c3 = c1 + 1;
         return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
       };
       const dir = cutIdx % 2 === 0 ? 1 : -1;
@@ -799,38 +847,65 @@
       const mode = spec.mode;
       const camMode = spec.camMode;
 
-      // 스타일별 차별화된 카메라 무브 (줌인 / 풀백 / 좌우팬 / 상하크레인 / 대각선 / 비트펀치)
-      const baseScale = isVid ? Math.min(1.04, Math.max(1.0, scale || 1.02)) : Math.max(1.09, (scale || 1.04) + 0.05);
+      // 스타일별 차별화된 카메라 무브 10종
+      const baseScale = isVid ? Math.min(1.04, Math.max(1.0, scale || 1.02)) : Math.max(1.10, (scale || 1.04) + 0.05);
       let steadyZoom = baseScale;
       let steadyPx = 0;
       let steadyPy = 0;
+      let steadyRot = 0;
       if (!isVid) {
         if (camMode === 'zoomIn') {
-          steadyZoom = baseScale + lp * 0.11;
+          steadyZoom = baseScale + lp * 0.12;
           steadyPx = (lp - 0.5) * Math.min(20, w * 0.036) * dir;
         } else if (camMode === 'zoomOut') {
-          steadyZoom = baseScale + (1 - lp) * 0.12;
+          steadyZoom = baseScale + (1 - lp) * 0.13;
           steadyPy = (lp - 0.5) * Math.min(18, h * 0.028) * -dir;
         } else if (camMode === 'panX') {
-          steadyZoom = baseScale + 0.06;
-          steadyPx = (lp - 0.5) * Math.min(54, w * 0.105) * dir;
+          steadyZoom = baseScale + 0.07;
+          steadyPx = (lp - 0.5) * Math.min(58, w * 0.11) * dir;
         } else if (camMode === 'panY') {
-          steadyZoom = baseScale + 0.06;
-          steadyPy = (lp - 0.5) * Math.min(48, h * 0.075) * dir;
+          steadyZoom = baseScale + 0.07;
+          steadyPy = (lp - 0.5) * Math.min(52, h * 0.08) * dir;
         } else if (camMode === 'diag') {
-          steadyZoom = baseScale + lp * 0.07;
-          steadyPx = (lp - 0.5) * Math.min(38, w * 0.072) * dir;
-          steadyPy = (lp - 0.5) * Math.min(30, h * 0.048) * -dir;
+          steadyZoom = baseScale + lp * 0.08;
+          steadyPx = (lp - 0.5) * Math.min(40, w * 0.075) * dir;
+          steadyPy = (lp - 0.5) * Math.min(32, h * 0.05) * -dir;
+        } else if (camMode === 'handheld') {
+          steadyZoom = baseScale + 0.05 + Math.sin(local * 1.4) * 0.015;
+          steadyPx = Math.sin(local * 1.15 + cutIdx) * Math.min(18, w * 0.032);
+          steadyPy = Math.cos(local * 0.92 + cutIdx) * Math.min(14, h * 0.022);
+          steadyRot = Math.sin(local * 0.85) * 0.011;
+        } else if (camMode === 'dutchDrift') {
+          steadyZoom = baseScale + 0.08 + lp * 0.05;
+          steadyRot = ((lp - 0.5) * 0.055) * dir; // -1.6° ~ +1.6° 시네마 틸트
+        } else if (camMode === 'orbitSway') {
+          steadyZoom = baseScale + 0.07;
+          steadyPx = Math.sin(lp * Math.PI * 1.5) * Math.min(32, w * 0.06) * dir;
+          steadyPy = Math.sin(lp * Math.PI * 3.0) * Math.min(18, h * 0.028);
+        } else if (camMode === 'snapHold') {
+          const spZ = easeQuart(mClamp(local / 0.85));
+          steadyZoom = baseScale + 0.14 * (1 - spZ) + lp * 0.02;
         } else {
           // punch: 120BPM 미세 펌프 + 빠른 줌 착지
           const beat = arPmBeat(local).pulse;
-          steadyZoom = baseScale + lp * 0.06 + beat * 0.028;
+          steadyZoom = baseScale + lp * 0.06 + beat * 0.032;
           steadyPx = (lp - 0.5) * Math.min(26, w * 0.048) * dir;
         }
       }
 
-      // 첫 컷(cutIdx === 0)도 스타일 시그니처 등장 애니메이션을 재생해 스타일 전환 즉시 차이를 체감!
-      const tDur = cutIdx === 0 ? 0.56 : 0.46;
+      const drawCur = (z, dx, dy) => {
+        if (Math.abs(steadyRot) > 0.0005) {
+          c.save();
+          c.translate(x + w / 2, y + h / 2);
+          c.rotate(steadyRot);
+          mPhoto(c, S, 0, -w / 2, -h / 2, w, h, z, dx, dy);
+          c.restore();
+        } else {
+          mPhoto(c, S, 0, x, y, w, h, z, dx, dy);
+        }
+      };
+
+      const tDur = cutIdx === 0 ? 0.58 : 0.48;
       const rawP = mClamp(local / tDur);
       const p = easeQuart(rawP);
       const rem = 1 - p;
@@ -843,59 +918,44 @@
 
       if (rem > 0.001) {
         if (mode === 1) {
-          // 1) 원형 아이리스 렌즈 확장 (중앙에서 둥글게 펼쳐지는 시네마 아이리스)
+          // 1) 원형 아이리스 렌즈 확장
           if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
           const maxR = Math.hypot(w, h) * 0.62;
           const r = Math.max(8, maxR * p);
           c.save();
-          c.beginPath();
-          c.arc(x + w / 2, y + h / 2, r, 0, Math.PI * 2);
-          c.clip();
-          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.14, steadyPx, steadyPy);
+          c.beginPath(); c.arc(x + w / 2, y + h / 2, r, 0, Math.PI * 2); c.clip();
+          drawCur(steadyZoom + rem * 0.14, steadyPx, steadyPy);
           c.restore();
           c.strokeStyle = 'rgba(255,255,255,0.45)';
           c.lineWidth = Math.max(1.5, 4 * rem);
-          c.beginPath();
-          c.arc(x + w / 2, y + h / 2, r, 0, Math.PI * 2);
-          c.stroke();
+          c.beginPath(); c.arc(x + w / 2, y + h / 2, r, 0, Math.PI * 2); c.stroke();
         } else if (mode === 2) {
-          // 2) 5단 에디토리얼 셔터 블라인드 (세로 루버가 동시에 열리며 리빌)
+          // 2) 5단 에디토리얼 셔터 블라인드
           if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
-          const strips = 5;
-          const sw = w / strips;
-          c.save();
-          c.beginPath();
+          const strips = 5, sw = w / strips;
+          c.save(); c.beginPath();
           for (let i = 0; i < strips; i++) {
             const sp2 = easeCubic(mClamp((rawP - i * 0.05) / 0.75));
-            const curW = Math.ceil(sw * sp2) + 1;
-            c.rect(x + i * sw, y, curW, h);
+            c.rect(x + i * sw, y, Math.ceil(sw * sp2) + 1, h);
           }
           c.clip();
-          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.08, steadyPx, steadyPy);
+          drawCur(steadyZoom + rem * 0.08, steadyPx, steadyPy);
           c.restore();
         } else if (mode === 3) {
-          // 3) 사선 시네마 슬래시 와이프 (18° 날카로운 대각선 컷 + 빛줄기)
+          // 3) 사선 시네마 슬래시 와이프
           if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04, 0, 0);
           const slant = Math.round(w * 0.30);
           const edgeX = x - slant + (w + slant * 2) * p;
-          c.save();
-          c.beginPath();
-          c.moveTo(x - slant, y);
-          c.lineTo(edgeX, y);
-          c.lineTo(edgeX - slant, y + h);
-          c.lineTo(x - slant, y + h);
-          c.closePath();
-          c.clip();
-          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.09, steadyPx, steadyPy);
+          c.save(); c.beginPath();
+          c.moveTo(x - slant, y); c.lineTo(edgeX, y); c.lineTo(edgeX - slant, y + h); c.lineTo(x - slant, y + h);
+          c.closePath(); c.clip();
+          drawCur(steadyZoom + rem * 0.09, steadyPx, steadyPy);
           c.restore();
           c.strokeStyle = spec.accent || 'rgba(255,250,240,0.85)';
           c.lineWidth = 3;
-          c.beginPath();
-          c.moveTo(edgeX, y);
-          c.lineTo(edgeX - slant, y + h);
-          c.stroke();
+          c.beginPath(); c.moveTo(edgeX, y); c.lineTo(edgeX - slant, y + h); c.stroke();
         } else if (mode === 4) {
-          // 4) 좌우 휩-슬라이드 푸시 (시원하게 밀고 들어오는 모션)
+          // 4) 좌우 휩-슬라이드 푸시
           const oldX = x - Math.round(w * p) * dir;
           const newX = x + Math.round(w * rem) * dir;
           if (hasPrev) mPhoto(c, S, -1, oldX, y, w, h, baseScale + 0.04, 0, 0);
@@ -903,7 +963,7 @@
           c.fillStyle = 'rgba(255,255,255,0.6)';
           c.fillRect(dir > 0 ? newX - 1 : newX + w - 1, y, 2, h);
         } else if (mode === 5) {
-          // 5) 수직 릴스 스와이프 업 (아래에서 탄력 있게 올라옴)
+          // 5) 수직 릴스 스와이프 업
           const oldY = y - Math.round(h * p * 0.55);
           const newY = y + Math.round(h * rem);
           if (hasPrev) mPhoto(c, S, -1, x, oldY, w, h, baseScale + 0.04, 0, 0);
@@ -911,94 +971,256 @@
           c.fillStyle = 'rgba(255,255,255,0.55)';
           c.fillRect(x, newY - 1, w, 2);
         } else if (mode === 6) {
-          // 6) 중앙→좌우 시어터 커튼 오픈 (양옆으로 우아하게 열리는 막)
+          // 6) 중앙→좌우 시어터 커튼 오픈
           if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04, 0, 0);
-          const openW = Math.round(w * p);
-          const leftX = x + Math.round((w - openW) / 2);
-          c.save();
-          c.beginPath();
-          c.rect(leftX, y, openW, h);
-          c.clip();
-          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.10, steadyPx, steadyPy);
+          const openW = Math.round(w * p), leftX = x + Math.round((w - openW) / 2);
+          c.save(); c.beginPath(); c.rect(leftX, y, openW, h); c.clip();
+          drawCur(steadyZoom + rem * 0.10, steadyPx, steadyPy);
           c.restore();
           c.fillStyle = 'rgba(255,255,255,0.45)';
-          c.fillRect(leftX, y, 1.5, h);
-          c.fillRect(leftX + openW - 1.5, y, 1.5, h);
+          c.fillRect(leftX, y, 1.5, h); c.fillRect(leftX + openW - 1.5, y, 1.5, h);
         } else if (mode === 7) {
-          // 7) 회전 틸트 드롭 (폴라로이드/카드처럼 살짝 기울며 탄성 착지)
+          // 7) 회전 틸트 드롭
           if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
           const bp = easeOutBack(rawP);
-          const ang = (1 - p) * 0.11 * dir;
-          const dropY = (1 - bp) * h * 0.24;
-          const scDrop = 0.84 + 0.16 * bp;
           c.save();
-          c.translate(x + w / 2, y + h / 2 + dropY);
-          c.rotate(ang);
-          c.scale(scDrop, scDrop);
+          c.translate(x + w / 2, y + h / 2 + (1 - bp) * h * 0.24);
+          c.rotate((1 - p) * 0.11 * dir);
+          c.scale(0.84 + 0.16 * bp, 0.84 + 0.16 * bp);
           c.globalAlpha = easeCubic(rawP * 1.4);
           mPhoto(c, S, 0, -w / 2, -h / 2, w, h, steadyZoom, steadyPx, steadyPy);
           c.restore();
         } else if (mode === 8) {
-          // 8) 다이아몬드 마름모 기하학 리빌 (중앙 마름모가 회전하며 확장)
+          // 8) 다이아몬드 마름모 기하학 리빌
           if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
-          const rad = Math.hypot(w, h) * 0.78 * p;
-          const cx0 = x + w / 2, cy0 = y + h / 2;
-          c.save();
-          c.beginPath();
-          c.moveTo(cx0, cy0 - rad);
-          c.lineTo(cx0 + rad, cy0);
-          c.lineTo(cx0, cy0 + rad);
-          c.lineTo(cx0 - rad, cy0);
-          c.closePath();
-          c.clip();
-          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.14, steadyPx, steadyPy);
+          const rad = Math.hypot(w, h) * 0.78 * p, cx0 = x + w / 2, cy0 = y + h / 2;
+          c.save(); c.beginPath();
+          c.moveTo(cx0, cy0 - rad); c.lineTo(cx0 + rad, cy0); c.lineTo(cx0, cy0 + rad); c.lineTo(cx0 - rad, cy0);
+          c.closePath(); c.clip();
+          drawCur(steadyZoom + rem * 0.14, steadyPx, steadyPy);
           c.restore();
           c.strokeStyle = spec.accent || 'rgba(255,255,255,0.6)';
           c.lineWidth = Math.max(1.5, 3.5 * rem);
-          c.beginPath();
-          c.moveTo(cx0, cy0 - rad); c.lineTo(cx0 + rad, cy0); c.lineTo(cx0, cy0 + rad); c.lineTo(cx0 - rad, cy0); c.closePath();
-          c.stroke();
+          c.beginPath(); c.moveTo(cx0, cy0 - rad); c.lineTo(cx0 + rad, cy0); c.lineTo(cx0, cy0 + rad); c.lineTo(cx0 - rad, cy0); c.closePath(); c.stroke();
         } else if (mode === 9) {
-          // 9) 4분할 모자이크 타일 리빌 (4개 사분면이 시간차로 딱딱 맞춰짐)
+          // 9) 4분할 모자이크 타일 리빌
           if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
           const hw = Math.ceil(w / 2), hh = Math.ceil(h / 2);
-          const quads = [[0, 0, 0], [hw, 0, 0.08], [0, hh, 0.14], [hw, hh, 0.20]];
-          quads.forEach(([qx, qy, delay]) => {
+          [[0, 0, 0], [hw, 0, 0.08], [0, hh, 0.14], [hw, hh, 0.20]].forEach(([qx, qy, delay]) => {
             const qp = easeQuart(mClamp((rawP - delay) / 0.72));
             if (qp <= 0.01) return;
-            c.save();
-            c.beginPath();
-            c.rect(x + qx, y + qy, hw + 1, Math.ceil(hh * qp) + 1);
-            c.clip();
-            mPhoto(c, S, 0, x, y, w, h, steadyZoom + (1 - qp) * 0.12, steadyPx, steadyPy);
+            c.save(); c.beginPath(); c.rect(x + qx, y + qy, hw + 1, Math.ceil(hh * qp) + 1); c.clip();
+            drawCur(steadyZoom + (1 - qp) * 0.12, steadyPx, steadyPy);
             c.restore();
           });
         } else if (mode === 10) {
-          // 10) 시네마 포커스 풀 (렌즈 아웃포커스 블러에서 또렷하게 초점 착지)
+          // 10) 시네마 포커스 풀 (블러→선명)
           if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
-          const blurPx = Math.max(0, rem * 14);
+          const blurPx = Math.max(0, rem * 15);
           c.save();
           c.globalAlpha = easeCubic(rawP * 1.35);
           if (blurPx > 0.4) c.filter = `blur(${blurPx.toFixed(1)}px) brightness(${(1 + rem * 0.18).toFixed(2)})`;
-          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.14, steadyPx, steadyPy);
+          drawCur(steadyZoom + rem * 0.14, steadyPx, steadyPy);
           c.restore();
         } else if (mode === 11) {
-          // 11) 상하 시네마 필름 셔터 오픈 (중앙에서 위아래로 영화관 셔터 리빌)
+          // 11) 상하 시네마 필름 셔터
           if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04, 0, 0);
-          const openH = Math.round(h * p);
-          const topY = y + Math.round((h - openH) / 2);
+          const openH = Math.round(h * p), topY = y + Math.round((h - openH) / 2);
+          c.save(); c.beginPath(); c.rect(x, topY, w, openH); c.clip();
+          drawCur(steadyZoom + rem * 0.09, steadyPx, steadyPy);
+          c.restore();
+        } else if (mode === 12) {
+          // 12) 시계 레이더 360° 와이프
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
+          const cx0 = x + w / 2, cy0 = y + h / 2, maxR = Math.hypot(w, h) * 0.75;
+          const startA = -Math.PI / 2, endA = startA + Math.PI * 2 * p;
+          c.save(); c.beginPath(); c.moveTo(cx0, cy0); c.arc(cx0, cy0, maxR, startA, endA); c.closePath(); c.clip();
+          drawCur(steadyZoom + rem * 0.08, steadyPx, steadyPy);
+          c.restore();
+          c.strokeStyle = spec.accent || 'rgba(255,255,255,0.75)';
+          c.lineWidth = 2.5;
+          c.beginPath(); c.moveTo(cx0, cy0); c.lineTo(cx0 + Math.cos(endA) * maxR, cy0 + Math.sin(endA) * maxR); c.stroke();
+        } else if (mode === 13) {
+          // 13) 3D 카드 뒤집기 (수평 원근 플립 + 광택 스윕)
+          const flipScale = Math.max(0.02, Math.abs(Math.cos(p * Math.PI)));
+          const showNew = !hasPrev || p >= 0.5;
+          c.save();
+          c.fillStyle = '#09090b'; c.fillRect(x, y, w, h);
+          c.translate(x + w / 2, y + h / 2);
+          c.scale(flipScale, 0.94 + 0.06 * flipScale);
+          if (showNew) mPhoto(c, S, 0, -w / 2, -h / 2, w, h, steadyZoom, steadyPx, steadyPy);
+          else mPhoto(c, S, -1, -w / 2, -h / 2, w, h, baseScale + 0.03, 0, 0);
+          c.fillStyle = `rgba(255,255,255,${((1 - flipScale) * 0.28).toFixed(3)})`;
+          c.fillRect(-w / 2, -h / 2, w, h);
+          c.restore();
+        } else if (mode === 14) {
+          // 14) RGB 글리치 슬라이스 (8단 수평 사이버 시프트 + 시안/마젠타 플래시)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04, 0, 0);
+          const bands = 8, bh = Math.ceil(h / bands);
+          for (let i = 0; i < bands; i++) {
+            const bp2 = easeQuart(mClamp((rawP - (i % 4) * 0.04) / 0.82));
+            const jitter = (1 - bp2) * (i % 2 === 0 ? 1 : -1) * w * 0.34;
+            c.save(); c.beginPath(); c.rect(x, y + i * bh, w, bh + 1); c.clip();
+            mPhoto(c, S, 0, x + jitter, y, w, h, steadyZoom + (1 - bp2) * 0.06, steadyPx, steadyPy);
+            if (rem > 0.12) {
+              c.fillStyle = i % 2 === 0 ? `rgba(34,211,238,${(rem * 0.28).toFixed(3)})` : `rgba(244,63,94,${(rem * 0.26).toFixed(3)})`;
+              c.fillRect(x, y + i * bh, w, Math.max(2, bh * 0.22));
+            }
+            c.restore();
+          }
+        } else if (mode === 15) {
+          // 15) 35mm 필름 스트립 롤 (스프로킷 홀과 함께 위로 말려 올라감)
+          const gap = 36;
+          const totalTravel = h + gap;
+          const oldY = y - Math.round(totalTravel * p);
+          const newY = y + Math.round(totalTravel * rem);
+          c.fillStyle = '#090807'; c.fillRect(x, y, w, h);
+          if (hasPrev) mPhoto(c, S, -1, x, oldY, w, h, baseScale + 0.02, 0, 0);
+          mPhoto(c, S, 0, x, newY, w, h, steadyZoom, steadyPx, steadyPy);
+          // 필름 스프로킷 사이드바 순간 노출
+          const railW = Math.round(18 * rem);
+          if (railW > 1) {
+            c.fillStyle = 'rgba(10,9,8,0.88)';
+            c.fillRect(x, y, railW, h); c.fillRect(x + w - railW, y, railW, h);
+            c.fillStyle = 'rgba(255,245,220,0.45)';
+            for (let sy = y + 10; sy < y + h; sy += 34) {
+              c.fillRect(x + 3, sy, Math.max(2, railW - 6), 14);
+              c.fillRect(x + w - railW + 3, sy, Math.max(2, railW - 6), 14);
+            }
+          }
+        } else if (mode === 16) {
+          // 16) 에디토리얼 책장 넘김 (우측에서 좌측으로 부드러운 종이 음영과 함께 넘김)
+          const foldX = x + Math.round(w * rem);
+          drawCur(steadyZoom + rem * 0.05, steadyPx, steadyPy);
+          if (hasPrev && foldX > x + 1) {
+            c.save(); c.beginPath(); c.rect(x, y, foldX - x, h); c.clip();
+            mPhoto(c, S, -1, x, y, w, h, baseScale + 0.02, 0, 0);
+            c.restore();
+          }
+          const shW = Math.min(84, Math.max(18, Math.round(w * 0.16 * rem)));
+          const pg = c.createLinearGradient(foldX - shW * 0.3, 0, foldX + shW, 0);
+          pg.addColorStop(0, 'rgba(0,0,0,0)');
+          pg.addColorStop(0.28, `rgba(255,250,240,${(0.55 * rem).toFixed(3)})`);
+          pg.addColorStop(0.42, `rgba(0,0,0,${(0.45 * rem).toFixed(3)})`);
+          pg.addColorStop(1, 'rgba(0,0,0,0)');
+          c.fillStyle = pg; c.fillRect(foldX - shW * 0.3, y, shW * 1.3, h);
+        } else if (mode === 17) {
+          // 17) 바운스 스프링 팝 (둥근 카드가 톡 튀어오르며 풀화면 확장)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.02, 0, 0);
+          const bp = easeOutBack(rawP);
+          const scPop = Math.max(0.25, 0.38 + 0.62 * bp);
+          const cw = w * scPop, ch = h * scPop;
+          const cx0 = x + (w - cw) / 2, cy0 = y + (h - ch) / 2;
+          const rad = Math.max(0, Math.round(44 * rem));
+          c.save();
+          if (rad > 1) { gRoundRect(c, cx0, cy0, cw, ch, rad); c.clip(); }
+          mPhoto(c, S, 0, cx0, cy0, cw, ch, steadyZoom, steadyPx, steadyPy);
+          c.restore();
+        } else if (mode === 18) {
+          // 18) 8단 계단 웨이브 리빌 (좌우 교차 물결 리본 슬라이드)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
+          const rows = 8, rh = Math.ceil(h / rows);
+          for (let i = 0; i < rows; i++) {
+            const rp = easeQuart(mClamp((rawP - i * 0.04) / 0.68));
+            if (rp <= 0.005) continue;
+            const rw = Math.ceil(w * rp) + 1;
+            const rx = i % 2 === 0 ? x : x + w - rw;
+            c.save(); c.beginPath(); c.rect(rx, y + i * rh, rw, rh + 1); c.clip();
+            drawCur(steadyZoom + (1 - rp) * 0.08, steadyPx, steadyPy);
+            c.restore();
+          }
+        } else if (mode === 19) {
+          // 19) 하이퍼 크로스 줌 워프 (이전 컷이 빠르게 뚫고 지나가며 새 컷 등장)
+          if (hasPrev) {
+            c.save(); c.globalAlpha = Math.max(0, 1 - p * 1.45);
+            mPhoto(c, S, -1, x, y, w, h, baseScale + p * 0.85, 0, 0);
+            c.restore();
+          }
+          c.save();
+          c.globalAlpha = easeCubic(rawP * 1.25);
+          drawCur(Math.max(0.72, steadyZoom - rem * 0.38), steadyPx, steadyPy);
+          c.restore();
+          if (rawP > 0.12 && rawP < 0.55) {
+            const flash = Math.sin(((rawP - 0.12) / 0.43) * Math.PI) * 0.25;
+            c.fillStyle = `rgba(255,255,255,${flash.toFixed(3)})`;
+            c.fillRect(x, y, w, h);
+          }
+        } else if (mode === 20) {
+          // 20) 체커보드 4×6 타일 캐스케이드
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
+          const cols = 4, rows = 6, tw = w / cols, th = h / rows;
+          c.save(); c.beginPath();
+          for (let r0 = 0; r0 < rows; r0++) {
+            for (let c0 = 0; c0 < cols; c0++) {
+              const delay = ((r0 + c0) / (rows + cols)) * 0.48;
+              const tp = easeQuart(mClamp((rawP - delay) / 0.52));
+              if (tp <= 0.01) continue;
+              const ww = tw * tp + 1, hh = th * tp + 1;
+              c.rect(x + c0 * tw + (tw - ww) / 2, y + r0 * th + (th - hh) / 2, ww, hh);
+            }
+          }
+          c.clip();
+          drawCur(steadyZoom + rem * 0.07, steadyPx, steadyPy);
+          c.restore();
+        } else if (mode === 21) {
+          // 21) 럭셔리 아치 창문 오픈 (중앙 아치 포털이 풀블리드로 확장)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
+          const aw = w * (0.28 + 0.92 * p), ah = h * (0.34 + 0.86 * p);
+          const ax = x + (w - aw) / 2, ay = y + (h - ah) / 2;
+          const ar = Math.min(aw / 2, ah * 0.45) * rem;
           c.save();
           c.beginPath();
-          c.rect(x, topY, w, openH);
+          c.moveTo(ax, ay + ah);
+          c.lineTo(ax, ay + ar);
+          c.arc(ax + aw / 2, ay + ar, aw / 2, Math.PI, 0, false);
+          c.lineTo(ax + aw, ay + ah);
+          c.closePath();
           c.clip();
-          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.09, steadyPx, steadyPy);
+          drawCur(steadyZoom + rem * 0.12, steadyPx, steadyPy);
           c.restore();
+        } else if (mode === 22) {
+          // 22) 지그재그 스플릿 (상반부는 왼쪽에서, 하반부는 오른쪽에서 맞물림)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
+          const midY = Math.round(h / 2);
+          const shift = Math.round(w * rem);
+          c.save(); c.beginPath(); c.rect(x, y, w, midY + 1); c.clip();
+          mPhoto(c, S, 0, x - shift, y, w, h, steadyZoom, steadyPx, steadyPy);
+          c.restore();
+          c.save(); c.beginPath(); c.rect(x, y + midY, w, h - midY); c.clip();
+          mPhoto(c, S, 0, x + shift, y, w, h, steadyZoom, steadyPx, steadyPy);
+          c.restore();
+          c.fillStyle = `rgba(255,255,255,${(0.65 * rem).toFixed(3)})`;
+          c.fillRect(x, y + midY - 1, w, 2);
+        } else if (mode === 23) {
+          // 23) 6날 카메라 셔터 조리개 회전 확장
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
+          const cx0 = x + w / 2, cy0 = y + h / 2;
+          const rad = Math.max(12, Math.hypot(w, h) * 0.72 * p);
+          const rot = (1 - p) * 0.85;
+          c.save(); c.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const a = rot + (i * Math.PI) / 3;
+            const px = cx0 + Math.cos(a) * rad, py = cy0 + Math.sin(a) * rad;
+            if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+          }
+          c.closePath(); c.clip();
+          drawCur(steadyZoom + rem * 0.15, steadyPx, steadyPy);
+          c.restore();
+          c.strokeStyle = 'rgba(255,255,255,0.55)';
+          c.lineWidth = Math.max(1.5, 3 * rem);
+          c.beginPath();
+          for (let i = 0; i < 6; i++) {
+            const a = rot + (i * Math.PI) / 3;
+            const px = cx0 + Math.cos(a) * rad, py = cy0 + Math.sin(a) * rad;
+            if (i === 0) c.moveTo(px, py); else c.lineTo(px, py);
+          }
+          c.closePath(); c.stroke();
         } else {
-          // 0) 크리스프 노출 줌-스냅 (속도감 있는 줌 착지 + 카메라 플래시)
+          // 0) 크리스프 노출 줌-스냅 플래시
           if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04 + p * 0.16, 0, 0);
           c.save();
           c.globalAlpha = easeCubic(rawP * 1.35);
-          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.22, steadyPx, steadyPy);
+          drawCur(steadyZoom + rem * 0.22, steadyPx, steadyPy);
           c.restore();
           if (local < 0.20) {
             c.fillStyle = `rgba(255,252,245,${((1 - local / 0.20) * 0.34).toFixed(3)})`;
@@ -1006,7 +1228,7 @@
           }
         }
       } else {
-        mPhoto(c, S, 0, x, y, w, h, steadyZoom, steadyPx, steadyPy);
+        drawCur(steadyZoom, steadyPx, steadyPy);
       }
       c.restore();
       if (warm) inWarm(c, x, y, w, h, warm);

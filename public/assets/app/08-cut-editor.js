@@ -3693,6 +3693,10 @@
         // photo
         const ph = ov.photo;
         const curFilter = (campaign.cutFilters && campaign.cutFilters[cutIdx]) || 'none';
+        const curEnt = (ph.entrance !== undefined && ph.entrance !== null && ph.entrance !== '') ? ph.entrance : 'auto';
+        const curCam = ph.cam || 'auto';
+        const entModes = (typeof AR_PHOTO_ENTRANCE_MODES !== 'undefined') ? AR_PHOTO_ENTRANCE_MODES : [];
+        const camModes = (typeof AR_CAMERA_MOTION_MODES !== 'undefined') ? AR_CAMERA_MOTION_MODES : [];
         bodyHtml = `
           <div class="ar-el-row">
             <span class="ar-el-label">확대</span>
@@ -3701,6 +3705,22 @@
             <button type="button" onclick="openCutPhotoReplaceModal(${cutIdx})" class="ar-el-badge blue">📷 이 컷 사진 교체</button>
             <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'photo')" class="ar-el-badge muted">↺</button>
           </div>
+          ${entModes.length ? `
+            <div class="ar-inline-scroll-row ar-inline-anim-bar">
+              ${entModes.map((m) => `
+                <button type="button" onclick="setCutPhotoMotion(${cutIdx}, 'entrance', '${m.id}')"
+                        class="ar-inline-anim-chip ${String(curEnt) === String(m.id) ? 'active' : ''}">${m.label}</button>
+              `).join('')}
+            </div>
+          ` : ''}
+          ${camModes.length ? `
+            <div class="ar-inline-scroll-row ar-inline-style-bar">
+              ${camModes.map((cm) => `
+                <button type="button" onclick="setCutPhotoMotion(${cutIdx}, 'cam', '${cm.id}')"
+                        class="ar-inline-style-chip ${curCam === cm.id ? 'active' : ''}">${cm.label}</button>
+              `).join('')}
+            </div>
+          ` : ''}
           <div class="ar-inline-scroll-row ar-inline-style-bar">
             ${CUT_FILTER_OPTIONS.map((f) => `
               <button type="button" onclick="setCutFilter(${cutIdx}, '${f.id}')"
@@ -3953,6 +3973,56 @@
         s2Input.value = campaign.cutCaptions[cutIdx];
       }
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+    }
+
+    let _arPhotoMotionPreviewRaf = 0;
+    function setCutPhotoMotion(cutIdx, prop, val) {
+      if (typeof cutIdx !== 'number' || cutIdx < 0) return;
+      const ov = getCutElementOverride(cutIdx);
+      if (!ov || !ov.photo) return;
+      ov.photo[prop] = val;
+      if (typeof renderCutEditorPanel === 'function') renderCutEditorPanel();
+      if (typeof renderInlineQuickEditBar === 'function') renderInlineQuickEditBar();
+      // 선택한 사진 등장 / 카메라 움직임을 현재 컷 시작점부터 0.9초간 즉시 미리보기 재생
+      if (_arPhotoMotionPreviewRaf) cancelAnimationFrame(_arPhotoMotionPreviewRaf);
+      const tl = window.__timelines && window.__timelines.main;
+      if (!tl) return;
+      const totalC = typeof getTargetCutCount === 'function' ? Math.max(1, getTargetCutCount()) : 4;
+      const mainD = typeof getMainDuration === 'function' ? Math.max(1, getMainDuration()) : Math.max(1, (tl.duration || 12) - 3);
+      const cutD = mainD / totalC;
+      const startT = cutIdx * cutD;
+      const previewDur = Math.min(prop === 'cam' ? 1.5 : 0.95, Math.max(0.55, cutD - 0.1));
+      const t0 = performance.now();
+      const step = (now) => {
+        const elapsed = (now - t0) / 1000;
+        if (elapsed < previewDur) {
+          tl.seek(startT + elapsed);
+          _arPhotoMotionPreviewRaf = requestAnimationFrame(step);
+        } else {
+          tl.seek(startT + Math.min(cutD * 0.55, previewDur));
+          _arPhotoMotionPreviewRaf = 0;
+        }
+      };
+      _arPhotoMotionPreviewRaf = requestAnimationFrame(step);
+    }
+    function applyCutPhotoMotionToAll(srcCutIdx) {
+      const src = getCutElementOverride(srcCutIdx);
+      if (!src || !src.photo) return;
+      const totalC = typeof getTargetCutCount === 'function' ? Math.max(1, getTargetCutCount()) : 4;
+      for (let i = 0; i < totalC; i++) {
+        const ov = getCutElementOverride(i);
+        if (ov && ov.photo) {
+          ov.photo.entrance = src.photo.entrance ?? 'auto';
+          ov.photo.cam = src.photo.cam || 'auto';
+        }
+      }
+      if (typeof arToast === 'function') arToast('선택한 사진·카메라 움직임을 전체 컷에 적용했어요');
+      if (typeof renderCutEditorPanel === 'function') renderCutEditorPanel();
+      if (typeof renderInlineQuickEditBar === 'function') renderInlineQuickEditBar();
+    }
+    if (typeof window !== 'undefined') {
+      window.setCutPhotoMotion = setCutPhotoMotion;
+      window.applyCutPhotoMotionToAll = applyCutPhotoMotionToAll;
     }
 
     function updateCutElementOverride(cutIdx, elKey, prop, val, rerenderPanel) {
@@ -4612,6 +4682,31 @@
                                 class="ar-el-chip ${on ? 'active' : ''}">${lo.label}</button>`;
               }).join('')}
             </div>
+          </div>
+          <div class="ar-el-row">
+            <span class="ar-el-label">사진 등장(24종)</span>
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
+              ${((typeof AR_PHOTO_ENTRANCE_MODES !== 'undefined') ? AR_PHOTO_ENTRANCE_MODES : []).map((m) => {
+                const curEnt = (ph.entrance !== undefined && ph.entrance !== null && ph.entrance !== '') ? ph.entrance : 'auto';
+                const on = String(curEnt) === String(m.id);
+                return `<button type="button" onclick="setCutPhotoMotion(${cutIdx}, 'entrance', '${m.id}')"
+                                class="ar-el-chip ${on ? 'active' : ''}">${m.label}</button>`;
+              }).join('')}
+            </div>
+          </div>
+          <div class="ar-el-row">
+            <span class="ar-el-label">카메라 무브(10종)</span>
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
+              ${((typeof AR_CAMERA_MOTION_MODES !== 'undefined') ? AR_CAMERA_MOTION_MODES : []).map((cm) => {
+                const on = (ph.cam || 'auto') === cm.id;
+                return `<button type="button" onclick="setCutPhotoMotion(${cutIdx}, 'cam', '${cm.id}')"
+                                class="ar-el-chip ${on ? 'active' : ''}">${cm.label}</button>`;
+              }).join('')}
+            </div>
+          </div>
+          <div class="ar-el-row">
+            <span class="ar-el-label">모션 일괄</span>
+            <button type="button" onclick="applyCutPhotoMotionToAll(${cutIdx})" class="ar-el-badge blue">이 컷의 사진·카메라 움직임을 전체 컷에 적용</button>
           </div>
           <div class="ar-el-row">
             <span class="ar-el-label">색감 필터</span>
