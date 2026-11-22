@@ -2776,24 +2776,31 @@
       layer.classList.remove('hidden', 'pointer-events-none');
       layer.classList.add('pointer-events-auto');
 
-      // 기본 컷 요소(자막·배지·혜택문구·하단프로필) 직접 선택·드래그 히트박스 (캔버스 실제 좌표와 % 단위로 정확히 일치)
-      const baseBoxes = directMode ? ['badge', 'price', 'chip', 'caption'].map((key) => {
-        const hb = getCutElementHitBox(cutIdx, key, 540, 960);
-        const titleMap = {
-          badge: '🏷️ 상단 라벨/배지 (클릭하여 선택 · 드래그하여 이동 · 더블클릭 편집)',
-          price: '💰 혜택/강조 배지 (클릭하여 선택 · 드래그하여 이동 · 더블클릭 편집)',
-          chip: '🪪 하단 프로필·상호 (클릭하여 선택 · 드래그하여 이동 · 더블클릭 편집)',
-          caption: '💬 컷 자막·카드 (클릭하여 선택 · 드래그하여 이동 · 더블클릭 편집)'
-        };
-        return {
-          key,
-          x: hb ? hb.cx / 540 : 0.5,
-          y: hb ? hb.cy / 960 : 0.5,
-          wPct: hb ? (hb.w / 540) * 100 : 40,
-          hPct: hb ? (hb.h / 960) * 100 : 10,
-          title: titleMap[key]
-        };
-      }) : [];
+      // 실제 이 테마·컷에서 화면에 그려진 기본 요소만 클릭/드래그 히트박스 생성 (빈 화면에 가짜 점선 박스 금지)
+      const renderedMap = (window.__arLastRenderedBoxes && window.__arLastRenderedBoxes[cutIdx]) || {};
+      const baseBoxes = directMode ? ['badge', 'price', 'chip', 'caption']
+        .filter((key) => {
+          const elOv = ov && ov[key];
+          if (elOv && elOv.hidden) return false;
+          return !!renderedMap[key];
+        })
+        .map((key) => {
+          const hb = getCutElementHitBox(cutIdx, key, 540, 960);
+          const titleMap = {
+            badge: '🏷️ 상단 라벨/배지 (클릭하여 선택 · 드래그하여 이동 · 더블클릭 편집)',
+            price: '💰 혜택/강조 배지 (클릭하여 선택 · 드래그하여 이동 · 더블클릭 편집)',
+            chip: '🪪 하단 프로필·상호 (클릭하여 선택 · 드래그하여 이동 · 더블클릭 편집)',
+            caption: '💬 컷 자막·카드 (클릭하여 선택 · 드래그하여 이동 · 더블클릭 편집)'
+          };
+          return {
+            key,
+            x: hb ? hb.cx / 540 : 0.5,
+            y: hb ? hb.cy / 960 : 0.5,
+            wPct: hb ? (hb.w / 540) * 100 : 40,
+            hPct: hb ? (hb.h / 960) * 100 : 10,
+            title: titleMap[key]
+          };
+        }) : [];
 
       if (typeof window.arQuickDeleteOverlay !== 'function') {
         window.arQuickDeleteOverlay = function (cIdx, oIdx) {
@@ -2839,7 +2846,7 @@
                title="${b.title}"
                ondblclick="event.stopPropagation();openCanvasDirectTextEdit(${cutIdx}, '${b.key}')"
                style="left:${leftPct}%;top:${topPct}%;width:${wPct}%;height:${hPct}%;transform:translate(-50%,-50%);touch-action:none;"
-               class="absolute cursor-move rounded-[10px] ${isSel ? 'active' : 'border border-dashed border-white/20 hover:border-white/55'}">
+               class="absolute cursor-move rounded-[10px] ${isSel ? 'active' : 'hover:ring-1 hover:ring-white/55 hover:bg-white/5'}">
             ${isSel ? `
               <div onmousedown="${stopEv}" ontouchstart="${stopEv}" onpointerdown="${stopEv}"
                    style="position:absolute;left:50%;top:-34px;transform:translateX(-50%);white-space:nowrap;z-index:25;"
@@ -2873,9 +2880,7 @@
         ? `<div class="ar-inline-edit-badge pointer-events-none">⚡ ${cutIdx + 1}컷 빠른 편집 · 빈 곳 탭하면 닫힘</div>`
         : '';
 
-      const hintHtml = (!window.__arInlineEditActive && directMode)
-        ? `<div class="ar-el-canvas-hint pointer-events-none">${activeKey === 'photo' ? '드래그하여 사진 구도 이동' : '수정 · × 버튼으로 바로 편집·삭제 · 드래그로 이동'}</div>`
-        : '';
+      const hintHtml = '';
 
       layer.innerHTML = `
         <div id="cutSnapV" class="hidden absolute top-0 bottom-0 left-1/2 w-[1px] bg-[#38bdf8]/80 pointer-events-none"></div>
@@ -5672,7 +5677,61 @@
         }
         if (design.engine === 'motion') {
           const keepFinishedCard = isStillLookbook && campaign.lookbookFinishedCards;
-          renderMotionFrame(c, W, H, t, mainDuration, totalCuts, d, design, V);
+          // 직접 fillText로 자막을 그리는 모든 모션/에디토리얼/화풍 테마도 실제 그려진 자막 좌표를 자동 추적
+          let autoCap = null;
+          const trackCap = activeCutIdx >= 0 && !window.__exportingVideo && typeof c.getTransform === 'function';
+          const origFillText = trackCap ? c.fillText : null;
+          const capTarget = trackCap ? gCleanCaption((campaign.cutCaptions && campaign.cutCaptions[activeCutIdx]) || campaign.hook || '').replace(/\s+/g, '') : '';
+          const dprX = (c.canvas && c.canvas.width) ? (c.canvas.width / W) : 1;
+          const dprY = (c.canvas && c.canvas.height) ? (c.canvas.height / H) : 1;
+          if (trackCap && capTarget) {
+            c.fillText = function (txt, tx, ty) {
+              const res = origFillText.apply(this, arguments);
+              try {
+                const s = String(txt || '').trim().replace(/\s+/g, '');
+                if (s.length >= 2 && capTarget.includes(s)) {
+                  const tw = this.measureText(String(txt || '')).width;
+                  const fm = String(this.font || '').match(/(\d+(?:\.\d+)?)px/);
+                  const fh = fm ? parseFloat(fm[1]) : 28;
+                  let lx0 = tx, lx1 = tx + tw;
+                  if (this.textAlign === 'center') { lx0 = tx - tw / 2; lx1 = tx + tw / 2; }
+                  else if (this.textAlign === 'right' || this.textAlign === 'end') { lx0 = tx - tw; lx1 = tx; }
+                  let ly0 = ty - fh * 0.8, ly1 = ty + fh * 0.25;
+                  if (this.textBaseline === 'middle') { ly0 = ty - fh * 0.55; ly1 = ty + fh * 0.55; }
+                  else if (this.textBaseline === 'top' || this.textBaseline === 'hanging') { ly0 = ty; ly1 = ty + fh * 1.1; }
+                  const m = this.getTransform();
+                  const pts = [[lx0, ly0], [lx1, ly0], [lx0, ly1], [lx1, ly1]];
+                  for (const [px, py] of pts) {
+                    const gx = (m.a * px + m.c * py + m.e) / dprX;
+                    const gy = (m.b * px + m.d * py + m.f) / dprY;
+                    if (!autoCap) autoCap = { minX: gx, minY: gy, maxX: gx, maxY: gy };
+                    else {
+                      if (gx < autoCap.minX) autoCap.minX = gx;
+                      if (gy < autoCap.minY) autoCap.minY = gy;
+                      if (gx > autoCap.maxX) autoCap.maxX = gx;
+                      if (gy > autoCap.maxY) autoCap.maxY = gy;
+                    }
+                  }
+                }
+              } catch (_) {}
+              return res;
+            };
+          }
+          try {
+            renderMotionFrame(c, W, H, t, mainDuration, totalCuts, d, design, V);
+          } finally {
+            if (origFillText) c.fillText = origFillText;
+          }
+          if (autoCap && activeCutIdx >= 0 && window.__arLastRenderedBoxes && window.__arLastRenderedBoxes[activeCutIdx] && !window.__arLastRenderedBoxes[activeCutIdx].caption) {
+            const bw = Math.min(W - 24, Math.max(120, (autoCap.maxX - autoCap.minX) + 34));
+            const bh = Math.min(H * 0.45, Math.max(46, (autoCap.maxY - autoCap.minY) + 22));
+            window.__arLastRenderedBoxes[activeCutIdx].caption = {
+              cx: Math.max(bw / 2, Math.min(W - bw / 2, (autoCap.minX + autoCap.maxX) / 2)),
+              cy: Math.max(bh / 2, Math.min(H - bh / 2, (autoCap.minY + autoCap.maxY) / 2)),
+              w: bw,
+              h: bh
+            };
+          }
           if (suppressBaseCaption) {
             if (Array.isArray(campaign.cutCaptions)) campaign.cutCaptions[activeCutIdx] = savedCutCap;
             campaign.hook = savedHook;

@@ -353,12 +353,17 @@
       const clean = String(text || '').trim();
       if (!clean) return { top: y, h: 0 };
       const cutIdx = opts.cutIdx || 0;
+      const ov = mCapOv(cutIdx);
+      if (ov.hidden) {
+        if (window.__arNativeElementHandled && window.__arNativeElementHandled[cutIdx]) window.__arNativeElementHandled[cutIdx].caption = true;
+        return { top: y, h: 0 };
+      }
       const local = Math.max(0, opts.local || 0);
-      const align = opts.align || 'center';
+      const align = ov.align || opts.align || 'center';
       const isDark = !!opts.isDark;
       const accent = opts.accent || (isDark ? '#38bdf8' : '#e11d48');
-      const ov = mCapOv(cutIdx);
       const ink = ov.color || opts.ink || (isDark ? '#f8fafc' : '#18181b');
+      const sc = Math.max(0.6, Math.min(2.0, Number(ov.scale) || 1));
       // 컷마다 폰트 강약 페어링 순환 (사용자 개별 폰트 지정 시 존중)
       const headPool = opts.headPool || (opts.serif ? ['maru', 'songmyung', 'gasoek'] : ['gasoek', 'dohyeon', 'maru', 'jua']);
       const headKey = ov.font && KIT_FONTS[ov.font] ? ov.font : (opts.headFont || headPool[Math.abs(cutIdx) % headPool.length]);
@@ -374,6 +379,7 @@
       const heroIdx = lines.length <= 1 ? 0 : (cutIdx % 2 === 0 ? 0 : lines.length - 1);
 
       // 줄별 폰트·크기 계산 (폭 넘침 자동 보정)
+      let maxLineW = 0;
       const specs = lines.map((ln, i) => {
         const isHero = i === heroIdx;
         const F = isHero ? HF : BF;
@@ -381,6 +387,8 @@
         c.font = gFont(F.w, sz, F.f);
         const w0 = c.measureText(ln).width;
         if (w0 > maxW - 10) sz = Math.max(15, Math.floor(sz * ((maxW - 10) / Math.max(1, w0))));
+        c.font = gFont(F.w, sz, F.f);
+        maxLineW = Math.max(maxLineW, c.measureText(ln).width);
         const lh = Math.round(sz * F.k * (isHero ? 1.32 : 1.28));
         return { ln, isHero, F, sz, lh };
       });
@@ -388,8 +396,23 @@
       const totalH = specs.reduce((acc, s) => acc + s.lh, 0);
       const top = y + Math.max(0, (maxH - totalH) / 2);
       const hlMode = Math.abs(cutIdx) % 3; // 0: 형광펜 마커, 1: 컬러 칩, 2: 컬러 언더라인+포인트 텍스트
+      const defW = Math.min(504, Math.max(150, maxLineW + 38));
+      const defH = Math.max(52, totalH + 22);
+      const defCx = align === 'left' ? x + defW / 2 - 12 : align === 'right' ? x - defW / 2 + 12 : x;
+      const defCy = top + totalH / 2;
+      const tx = ov.customPos && typeof ov.x === 'number' ? ov.x * 540 : defCx;
+      const ty = ov.customPos && typeof ov.y === 'number' ? ov.y * 960 : defCy;
+      if (!window.__arLastRenderedBoxes) window.__arLastRenderedBoxes = {};
+      if (!window.__arLastRenderedBoxes[cutIdx]) window.__arLastRenderedBoxes[cutIdx] = {};
+      window.__arLastRenderedBoxes[cutIdx].caption = { cx: tx, cy: ty, w: defW * sc, h: defH * sc };
+      if (window.__arNativeElementHandled && window.__arNativeElementHandled[cutIdx]) window.__arNativeElementHandled[cutIdx].caption = true;
 
       c.save();
+      if (ov.customPos || sc !== 1) {
+        c.translate(tx, ty);
+        c.scale(sc, sc);
+        c.translate(-defCx, -defCy);
+      }
       c.textBaseline = 'middle';
       let curY = top;
       specs.forEach((spLine, i) => {
@@ -3723,8 +3746,9 @@
       const M = sp.mstyle;
       const S = kitScene(t, mainDuration, false);
       const rawCap = (campaign.cutCaptions && campaign.cutCaptions[cutIdx]) || campaign.hook || '';
-      const caption = gCleanCaption(rawCap);
-      const F = KIT_FONTS[sp.font] || KIT_FONTS.sans;
+      const capOv = mCapOv(cutIdx);
+      const caption = capOv.hidden ? '' : gCleanCaption(rawCap);
+      const F = KIT_FONTS[mCapFont(cutIdx, sp.font)] || KIT_FONTS.sans;
       const easeOutExpo = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * mClamp(x)));
       const easeOutBack = (x) => { const v = mClamp(x) - 1; return 1 + 2.4 * v * v * v + 1.4 * v * v; };
 
@@ -4477,8 +4501,9 @@
       const M = sp.mstyle;
       const S = kitScene(t, mainDuration, false);
       const rawCap = (campaign.cutCaptions && campaign.cutCaptions[cutIdx]) || campaign.hook || '';
-      const caption = gCleanCaption(rawCap);
-      const F = KIT_FONTS[sp.font] || KIT_FONTS.sans;
+      const capOv = mCapOv(cutIdx);
+      const caption = capOv.hidden ? '' : gCleanCaption(rawCap);
+      const F = KIT_FONTS[mCapFont(cutIdx, sp.font)] || KIT_FONTS.sans;
       const accent = sp.accent || '#60a5fa';
       const fg = sp.accent2 || (sp.light ? '#141414' : '#ffffff');
       const muted = sp.light ? 'rgba(20,20,24,0.52)' : 'rgba(255,255,255,0.52)';
