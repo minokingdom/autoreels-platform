@@ -182,12 +182,62 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
   if (clip.customTitle || !clip.showCaptions || title !== caption.trim()) block(title,true);
   if (clip.showCaptions) block(caption || '',false);
 }
-// 미리보기 화면에서 스티커·자막 모두 상하좌우(2D) 자유롭게 드래그해 위치 조절 (중앙 스냅 지원)
+// 미리보기 화면 꾹 누르기(380ms) → 직접 편집 모드 진입 + 스티커·자막 상하좌우(2D) 자유 드래그 & 탭 편집
 (function bindShortsCaptionDrag(){
   const ov=document.getElementById('overlay');
+  const frame=document.getElementById('frame');
+  const hud=document.getElementById('shortsEditHud');
   if(!ov || ov.dataset.capDragBound)return;
   ov.dataset.capDragBound='1';
-  let drag=null;
+
+  let editMode=false;
+  function setShortsEditMode(on){
+    editMode=!!on;
+    if(frame)frame.classList.toggle('se-editing',editMode);
+    if(hud)hud.hidden=!editMode;
+    if(editMode && typeof session!=='undefined' && session?.clip){
+      try{video.pause();}catch(_){}
+      if(typeof stopJoinedPreview==='function')stopJoinedPreview(session);
+      if(typeof showMixHint==='function')showMixHint('편집 모드 · 자막·스티커를 드래그하거나 상단 도구로 수정하세요');
+    }
+  }
+  window.setShortsEditMode=setShortsEditMode;
+
+  if(hud){
+    const doneBtn=document.getElementById('seDoneBtn');
+    if(doneBtn)doneBtn.addEventListener('click',e=>{e.stopPropagation();setShortsEditMode(false);});
+    hud.addEventListener('click',e=>{
+      const btn=e.target.closest('button[data-se]');
+      if(!btn || !session?.clip)return;
+      e.stopPropagation();
+      const act=btn.dataset.se;
+      if(act==='caption'){
+        const cue=typeof activeCue==='function'?activeCue(session,session.trackTime||0):null;
+        if(typeof selectMix==='function')selectMix(session,'caption');
+        if(cue && typeof editCue==='function')editCue(session,'caption',cue);
+        else if(typeof editGlobalCaptionStyle==='function')editGlobalCaptionStyle(session);
+      }else if(act==='sticker'){
+        if(typeof window.openShortsStickerDialog==='function')window.openShortsStickerDialog(session);
+      }else if(act==='cutout'){
+        if(typeof effectDialog==='function')effectDialog('컷아웃');
+      }else if(act==='effect'){
+        if(typeof effectDialog==='function')effectDialog('영상 효과');
+      }else if(act==='studio'){
+        setShortsEditMode(false);
+        const applyBtn=document.getElementById('applyTheme');
+        if(applyBtn)applyBtn.click();
+      }
+    });
+    window.addEventListener('keydown',e=>{if(e.key==='Escape'&&editMode)setShortsEditMode(false);});
+  }
+
+  let drag=null, lpTimer=null, lpRing=null, lpStartX=0, lpStartY=0, movedDuringPress=false;
+  const clearLp=()=>{
+    if(lpTimer){clearTimeout(lpTimer);lpTimer=null;}
+    if(lpRing&&lpRing.parentNode)lpRing.parentNode.removeChild(lpRing);
+    lpRing=null;
+  };
+
   ov.addEventListener('pointerdown',e=>{
     const s=typeof session!=='undefined'?session:null;
     if(!s?.clip || s.exporting)return;
@@ -195,6 +245,26 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
     const nx=(e.clientX-rect.left)/rect.width;
     const ny=(e.clientY-rect.top)/rect.height;
     const curT=s.trackTime||0;
+    lpStartX=e.clientX;lpStartY=e.clientY;movedDuringPress=false;
+    clearLp();
+
+    // 롱프레스(380ms, 이동 < 8px) → 직접 편집 모드 진입
+    if(!editMode && frame){
+      const fRect=frame.getBoundingClientRect();
+      lpRing=document.createElement('div');
+      lpRing.className='se-lp-ring';
+      lpRing.style.left=(e.clientX-fRect.left)+'px';
+      lpRing.style.top=(e.clientY-fRect.top)+'px';
+      frame.appendChild(lpRing);
+      lpTimer=setTimeout(()=>{
+        lpTimer=null;
+        if(lpRing&&lpRing.parentNode)lpRing.parentNode.removeChild(lpRing);
+        lpRing=null;
+        drag=null;
+        setShortsEditMode(true);
+      },380);
+    }
+
     // 1) 현재 시간에 표시 중인 스티커 히트 테스트 우선
     const stickers=Array.isArray(s.stickers)?s.stickers:[];
     for(let i=stickers.length-1;i>=0;i--){
@@ -216,13 +286,17 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
     try{ov.setPointerCapture(e.pointerId);}catch(_){}
   });
   ov.addEventListener('pointermove',e=>{
-    if(!drag || !session?.clip)return;
+    if(Math.hypot(e.clientX-lpStartX,e.clientY-lpStartY)>8){
+      movedDuringPress=true;
+      clearLp();
+    }
+    if(!drag || !session?.clip || !movedDuringPress)return;
     if(drag.type==='sticker'){
       drag.st.x=Math.max(0.08,Math.min(0.92,drag.origX+(e.clientX-drag.startX)/drag.w));
       drag.st.y=Math.max(0.08,Math.min(0.92,drag.origY+(e.clientY-drag.startY)/drag.h));
     }else{
       let nextX=Math.max(0.12,Math.min(0.88,drag.origX+(e.clientX-drag.startX)/drag.w));
-      if(Math.abs(nextX-0.5)<0.025)nextX=0.5; // 중앙 자동 스냅
+      if(Math.abs(nextX-0.5)<0.025)nextX=0.5;
       const nextY=Math.max(0.10,Math.min(0.92,drag.origY+(e.clientY-drag.startY)/drag.h));
       if(drag.cue){drag.cue.posX=nextX;drag.cue.posY=nextY;}
       else{session.clip.captionPosX=nextX;session.clip.captionPosY=nextY;}
@@ -230,7 +304,22 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
     if(session.joined||session.timelineCuts){if(typeof seekCutTrack==='function')seekCutTrack(session,session.trackTime||0);}
     else renderPreview();
   });
-  const end=()=>{if(drag){drag=null;if(typeof markEdited==='function')markEdited();}};
+  const end=()=>{
+    clearLp();
+    if(drag){
+      const d=drag;drag=null;
+      if(movedDuringPress){
+        if(typeof markEdited==='function')markEdited();
+      }else if(editMode && session?.clip){
+        // 편집 모드에서 요소를 살짝 탭하면 바로 해당 요소 편집창 열기
+        if(d.type==='sticker' && typeof window.openShortsStickerDialog==='function')window.openShortsStickerDialog(session);
+        else if(d.type==='caption'){
+          if(d.cue && typeof editCue==='function')editCue(session,'caption',d.cue);
+          else if(typeof editGlobalCaptionStyle==='function')editGlobalCaptionStyle(session);
+        }
+      }
+    }
+  };
   ov.addEventListener('pointerup',end);ov.addEventListener('pointercancel',end);
 })();
 function renderPreview(at=video.currentTime) {
