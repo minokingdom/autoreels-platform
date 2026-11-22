@@ -111,21 +111,44 @@
       { id: 'prism', label: '🌈 프리즘' }
     ];
     const CUT_TEXT_FONTS = [
-      { id: 'sans', label: '모던', css: "'Pretendard', 'Noto Sans KR', sans-serif", weight: 800 },
-      { id: 'dohyeon', label: '릴스', css: "'Do Hyeon', 'Noto Sans KR', sans-serif", weight: 400 },
-      { id: 'gaegu', label: '펜손글씨', css: "'AR Gaegu', cursive", weight: 700 },
-      { id: 'dokdo', label: '먹붓', css: "'AR Dokdo', cursive", weight: 400 },
-      { id: 'blackhan', label: '임팩트', css: "'Pretendard Variable', 'Pretendard', sans-serif", weight: 900 },
-      { id: 'bagel', label: '통통', css: "'Jua', 'Do Hyeon', sans-serif", weight: 400 },
-      { id: 'jua', label: '동글', css: "'Jua', sans-serif", weight: 400 },
-      { id: 'gugi', label: '레트로', css: "'Gugi', sans-serif", weight: 400 },
+      // ── 트렌디 · 릴스 임팩트 ──
+      { id: 'sans', label: '모던고딕', css: "'Pretendard Variable', 'Pretendard', sans-serif", weight: 800 },
+      { id: 'paperlogy', label: '페이퍼로지', css: "'Paperlogy', 'Pretendard Variable', sans-serif", weight: 800 },
+      { id: 'gmarket', label: '지마켓산스', css: "'GmarketSans', 'Pretendard Variable', sans-serif", weight: 700 },
+      { id: 'aggro', label: '어그로체', css: "'SBAggroB', 'Black Han Sans', sans-serif", weight: 700 },
+      { id: 'blackhan', label: '검은고딕', css: "'Black Han Sans', 'SBAggroB', sans-serif", weight: 400 },
+      { id: 'gasoek', label: '가석원', css: "'Gasoek One', 'SBAggroB', sans-serif", weight: 400 },
+      // ── 예능 · 팝 · 둥근체 ──
+      { id: 'cafe24', label: '써라운드', css: "'Cafe24Ssurround', 'Bagel Fat One', sans-serif", weight: 700 },
+      { id: 'bagel', label: '베이글통통', css: "'Bagel Fat One', 'Cafe24Ssurround', sans-serif", weight: 400 },
+      { id: 'dohyeon', label: '배민도현', css: "'Do Hyeon', sans-serif", weight: 400 },
+      { id: 'jua', label: '배민주아', css: "'Jua', sans-serif", weight: 400 },
+      { id: 'dongle', label: '동글', css: "'Dongle', sans-serif", weight: 700 },
+      { id: 'cute', label: '큐트폰트', css: "'Cute Font', cursive", weight: 400 },
+      { id: 'stylish', label: '스타일리시', css: "'Stylish', sans-serif", weight: 400 },
+      // ── 매거진 · 에디토리얼 명조 ──
+      { id: 'hahmlet', label: '햄릿명조', css: "'Hahmlet', 'Noto Serif KR', serif", weight: 900 },
+      { id: 'diphylleia', label: '럭셔리세리프', css: "'Diphylleia', 'MaruBuri', serif", weight: 400 },
+      { id: 'grandiflora', label: '시적명조', css: "'Grandiflora One', 'Gowun Batang', serif", weight: 400 },
+      { id: 'maru', label: '마루부리', css: "'MaruBuri', 'Gowun Batang', serif", weight: 600 },
+      { id: 'serif', label: '본명조', css: "'Noto Serif KR', serif", weight: 900 },
+      { id: 'batang', label: '고운바탕', css: "'Gowun Batang', serif", weight: 700 },
+      { id: 'songmyung', label: '송명', css: "'Song Myung', serif", weight: 400 },
+      { id: 'sunflower', label: '해바라기', css: "'Sunflower', sans-serif", weight: 700 },
+      // ── 테크 · 레트로 · 스트릿 ──
+      { id: 'orbit', label: '사이버오빗', css: "'Orbit', 'Gowun Dodum', sans-serif", weight: 400 },
+      { id: 'gugi', label: '구기레트로', css: "'Gugi', sans-serif", weight: 400 },
+      { id: 'bwpicture', label: '흑백사진', css: "'Black And White Picture', sans-serif", weight: 400 },
+      { id: 'kirang', label: '스트릿붓', css: "'Kirang Haerang', cursive", weight: 400 },
+      // ── 손글씨 · 붓글씨 · 영문필기 ──
+      { id: 'dokdo', label: '동해독도', css: "'East Sea Dokdo', cursive", weight: 400 },
+      { id: 'brush', label: '나눔붓글씨', css: "'Nanum Brush Script', cursive", weight: 400 },
+      { id: 'pen', label: '나눔펜', css: "'Nanum Pen Script', cursive", weight: 400 },
+      { id: 'gaegu', label: '개구쟁이', css: "'Gaegu', cursive", weight: 700 },
       { id: 'singleday', label: '다이어리', css: "'Single Day', cursive", weight: 400 },
-      { id: 'himelody', label: '멜로디', css: "'Hi Melody', cursive", weight: 400 },
-      { id: 'serif', label: '명조', css: "'Noto Serif KR', serif", weight: 900 },
-      { id: 'batang', label: '감성', css: "'Gowun Batang', serif", weight: 700 },
-      { id: 'pen', label: '손글씨', css: "'Nanum Pen Script', cursive", weight: 400 },
-      { id: 'brush', label: '붓글씨', css: "'Nanum Brush Script', cursive", weight: 400 },
-      { id: 'script', label: 'Script', css: "'Great Vibes', 'Pinyon Script', cursive", weight: 400 }
+      { id: 'yeonsung', label: '연성체', css: "'Yeon Sung', cursive", weight: 400 },
+      { id: 'himelody', label: '하이멜로디', css: "'Hi Melody', cursive", weight: 400 },
+      { id: 'script', label: '영문필기', css: "'Great Vibes', 'Pinyon Script', cursive", weight: 400 }
     ];
     const CUT_TEXT_STYLES = [
       { id: 'box', label: '박스' },
@@ -3948,6 +3971,7 @@
         target.hidden = !!val;
       } else {
         target[prop] = val;
+        if (prop === 'font' && val && typeof kitEnsureFont === 'function') kitEnsureFont(val);
       }
       syncCutInspectorLiveValues(cutIdx, elKey);
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
@@ -4041,6 +4065,7 @@
         else it.text = String(val ?? '');
       } else {
         it[prop] = val;
+        if (prop === 'font' && val && typeof kitEnsureFont === 'function') kitEnsureFont(val);
       }
       saveCutOverlays();
       syncCutInspectorLiveValues(cutIdx, `overlay:${ovIdx}`);
@@ -4643,6 +4668,7 @@
                   ${CUT_TEXT_FONTS.map((f) => {
                     const on = (it.font || 'dohyeon') === f.id;
                     return `<button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'font', '${f.id}', true)"
+                                    style="font-family:${f.css};font-weight:${f.weight};"
                                     class="ar-el-chip ${on ? 'active' : ''}">${f.label}</button>`;
                   }).join('')}
                 </div>

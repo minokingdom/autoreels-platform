@@ -145,24 +145,24 @@
       ['ed_clean_slider', '클린 비포·애프터', 'ba_slider', 'pretM', '#0b0c0e', '#16181c', '#e8e4dc', '#ffffff', false],
       ['ed_ink_seal', '먹빛 캘리 낙관', 'in_brush_seal', 'brush', '#181614', '#26221e', '#c04632', '#f5efe2', false],
     ];
-    // ★ 2026 1군 풀스크린 릴스 전용 모션 엔진 6종 (9:16 풀스크린 · 모션 물리 · 인스타/쇼츠 Safe Zone 준수)
+    // ★ 2026 1군 풀스크린 릴스 전용 모션 엔진 16종 (9:16 풀스크린 · 모션 물리 · 개성 있는 한국어 디스플레이 폰트)
     const PRO_REELS_ROWS = [
-      ['pro_rhythm_editorial', '프로 리듬 · 4단 구도 변화', 'pro_rhythm_editorial', 'maru', '#09090b', '#141418', '#e8d5bc', '#ffffff', false, '고급', '컷마다 풀스크린 → 블러 액자 → 2분할 스플릿 → 와이드 시네마로 구도 전환 + 렌즈 포커스 풀'],
-      ['pro_focus_cinema', '포커스 풀 · 시네마 리듬', 'pro_focus_cinema', 'gowun', '#0b0a09', '#171512', '#f2e4cc', '#ffffff', false, '감성', '렌즈 초점 포커스 풀 + 컷별 액자·스플릿 구도 변화 + 35mm 필름 그레인'],
-      ['pro_karaoke', '단어 하이라이트 · 훅 자막', 'pro_karaoke', 'sans', '#080808', '#141414', '#f4f0e8', '#ffffff', false, '타이포', '말하는 단어에 맞춰 실시간 하이라이트 · 0.18초 펀치 컷'],
-      ['pro_film_sub', '시네마 풀스크린 자막', 'pro_film_sub', 'gowun', '#090908', '#141311', '#e6d5b8', '#f4f0e8', false, '고급', '풀스크린 35mm 필름 그레인 · 안전 영역 명조 자막'],
-      ['pro_punch_hook', '0.2초 펀치 컷 · 키네틱', 'pro_punch_hook', 'sans', '#080809', '#141518', '#facc15', '#ffffff', false, '타이포', '빠른 줌 펀치 · 줄별 마스크 슬라이드 · 라이브 진행 바'],
-      ['pro_editorial_center', '매거진 센터 타이포', 'pro_editorial_center', 'maru', '#080808', '#131210', '#f4f0e8', '#ffffff', false, '고급', '풀스크린 중앙 명조 타이포 · 1px 헤어라인 에디토리얼'],
-      ['pro_pov_caption', '인스타 감성 POV 자막', 'pro_pov_caption', 'pretM', '#0b0b0c', '#161618', '#f4f0e8', '#ffffff', false, '브이로그', '네이티브 릴스 글래스 캡슐 · 핸드헬드 미세 호흡'],
-      ['pro_split_reveal', '커튼 와이프 · 컷 전환', 'pro_split_reveal', 'pretM', '#090a0c', '#15171c', '#f4f0e8', '#ffffff', false, '비포·애프터', '이전 컷 위로 미끄러지는 커튼 와이프 · 좌하단 안전 자막'],
+      ['pro_rhythm_editorial', '프로 리듬 · 4단 구도 변화', 'pro_rhythm_editorial', 'diphylleia', '#09090b', '#141418', '#e8d5bc', '#ffffff', false, '고급', '컷마다 풀스크린 → 블러 액자 → 2분할 스플릿 → 와이드 시네마로 구도 전환 + 렌즈 포커스 풀'],
+      ['pro_focus_cinema', '포커스 풀 · 시네마 리듬', 'pro_focus_cinema', 'grandiflora', '#0b0a09', '#171512', '#f2e4cc', '#ffffff', false, '감성', '렌즈 초점 포커스 풀 + 컷별 액자·스플릿 구도 변화 + 35mm 필름 그레인'],
+      ['pro_karaoke', '단어 하이라이트 · 훅 자막', 'pro_karaoke', 'aggro', '#080808', '#141414', '#f4f0e8', '#ffffff', false, '타이포', '말하는 단어에 맞춰 실시간 하이라이트 · 0.18초 펀치 컷'],
+      ['pro_film_sub', '시네마 풀스크린 자막', 'pro_film_sub', 'hahmlet', '#090908', '#141311', '#e6d5b8', '#f4f0e8', false, '고급', '풀스크린 35mm 필름 그레인 · 안전 영역 명조 자막'],
+      ['pro_punch_hook', '0.2초 펀치 컷 · 키네틱', 'pro_punch_hook', 'blackhan', '#080809', '#141518', '#facc15', '#ffffff', false, '타이포', '빠른 줌 펀치 · 줄별 마스크 슬라이드 · 라이브 진행 바'],
+      ['pro_editorial_center', '매거진 센터 타이포', 'pro_editorial_center', 'diphylleia', '#080808', '#131210', '#f4f0e8', '#ffffff', false, '고급', '풀스크린 중앙 명조 타이포 · 1px 헤어라인 에디토리얼'],
+      ['pro_pov_caption', '인스타 감성 POV 자막', 'pro_pov_caption', 'dodum', '#0b0b0c', '#161618', '#f4f0e8', '#ffffff', false, '브이로그', '네이티브 릴스 글래스 캡슐 · 핸드헬드 미세 호흡'],
+      ['pro_split_reveal', '커튼 와이프 · 컷 전환', 'pro_split_reveal', 'paperlogy', '#090a0c', '#15171c', '#f4f0e8', '#ffffff', false, '비포·애프터', '이전 컷 위로 미끄러지는 커튼 와이프 · 좌하단 안전 자막'],
       ['pro_handwrite', '감성 손글씨 · 필름 드로잉', 'pro_handwrite', 'pen', '#0c0a09', '#191512', '#e8d5bc', '#f8f3ea', false, '손글씨', '풀스크린 35mm 필름 위 써 내려가는 손글씨 · 드로잉 밑줄'],
-      ['pro_trend_sticker', '트렌디 감성 · 타임스탬프', 'pro_trend_sticker', 'gowun', '#0a0a09', '#171513', '#f2e4cc', '#ffffff', false, '감성', '2026 인스타 릴스 감성 날짜 스탬프 · 부드러운 자막 플로트'],
-      ['pro_glass_card', '글래스모피즘 · 모던 카드', 'pro_glass_card', 'pretM', '#090a0f', '#151822', '#e2e8f0', '#ffffff', false, '브이로그', '반투명 다크 글래스 플로팅 카드 · 1px 헤어라인 보더'],
-      ['pro_neon_pulse', '미드나잇 에디토리얼 · 포인트 바', 'pro_neon_pulse', 'sans', '#07080d', '#111420', '#38bdf8', '#ffffff', false, '타이포', '좌측 수직 포인트 바 · 고대비 에디토리얼 타이포'],
-      ['pro_magazine_cover', '보그 · 럭셔리 매거진 커버', 'pro_magazine_cover', 'maru', '#090807', '#161412', '#e8d5bc', '#f8f3ea', false, '고급', '상단 매거진 마스트헤드 라인 · 하단 명조 에디토리얼'],
-      ['pro_warm_diary', '따뜻한 브이로그 · 크림 일기', 'pro_warm_diary', 'gowun', '#120e0b', '#1f1914', '#f8f3ea', '#231b15', false, '감성', '따뜻한 필름 톤 · 크림 라운드 자막 캡슐'],
-      ['pro_bold_badge', '숏폼 임팩트 · 형광펜 강조', 'pro_bold_badge', 'sans', '#08080a', '#14151a', '#facc15', '#111111', false, '타이포', '핵심 문장 뒤 붓터치 형광펜 하이라이트 · 빠른 펀치 줌'],
-      ['pro_minimal_mono', '라이카 모노크롬 · 미니멀 흑백', 'pro_minimal_mono', 'maru', '#060606', '#141414', '#e5e5e5', '#ffffff', false, '고급', '고대비 흑백 시네마 필름 · 미니멀 자막과 얇은 진행 바']
+      ['pro_trend_sticker', '트렌디 감성 · 타임스탬프', 'pro_trend_sticker', 'sunflower', '#0a0a09', '#171513', '#f2e4cc', '#ffffff', false, '감성', '2026 인스타 릴스 감성 날짜 스탬프 · 부드러운 자막 플로트'],
+      ['pro_glass_card', '글래스모피즘 · 모던 카드', 'pro_glass_card', 'gmarket', '#090a0f', '#151822', '#e2e8f0', '#ffffff', false, '브이로그', '반투명 다크 글래스 플로팅 카드 · 1px 헤어라인 보더'],
+      ['pro_neon_pulse', '미드나잇 에디토리얼 · 포인트 바', 'pro_neon_pulse', 'orbit', '#07080d', '#111420', '#38bdf8', '#ffffff', false, '타이포', '좌측 수직 포인트 바 · 고대비 에디토리얼 타이포'],
+      ['pro_magazine_cover', '보그 · 럭셔리 매거진 커버', 'pro_magazine_cover', 'hahmlet', '#090807', '#161412', '#e8d5bc', '#f8f3ea', false, '고급', '상단 매거진 마스트헤드 라인 · 하단 명조 에디토리얼'],
+      ['pro_warm_diary', '따뜻한 브이로그 · 크림 일기', 'pro_warm_diary', 'gaegu', '#120e0b', '#1f1914', '#f8f3ea', '#231b15', false, '감성', '따뜻한 필름 톤 · 크림 라운드 자막 캡슐'],
+      ['pro_bold_badge', '숏폼 임팩트 · 형광펜 강조', 'pro_bold_badge', 'cafe24', '#08080a', '#14151a', '#facc15', '#111111', false, '타이포', '핵심 문장 뒤 붓터치 형광펜 하이라이트 · 빠른 펀치 줌'],
+      ['pro_minimal_mono', '라이카 모노크롬 · 미니멀 흑백', 'pro_minimal_mono', 'songmyung', '#060606', '#141414', '#e5e5e5', '#ffffff', false, '고급', '고대비 흑백 시네마 필름 · 미니멀 자막과 얇은 진행 바']
     ];
     // 모션 디자인도 별도 분류를 만들지 않고 기존 분류에 넣음
     const MOTION_CAT = {
@@ -712,44 +712,171 @@
       c.restore();
     }
     // 컷이 바뀔 때 앞 사진에서 부드럽게 겹쳐 바뀜
+    // ★ 스타일별 시그니처 사진 등장·전환 애니메이션 12종 (스타일을 바꿀 때마다 사진 연출 자체가 확연히 달라짐)
+    const AR_STYLE_PHOTO_ANIM = {
+      // 장르별 기본 시그니처 [첫컷·짝수컷 메인 연출, 홀수컷 보조 연출, 카메라 무브]
+      // 연출 코드: 0=줌플래시, 1=원형아이리스, 2=5단셔터블라인드, 3=사선슬래시, 4=휩슬라이드,
+      //           5=릴스스와이프업, 6=좌우커튼분할, 7=회전틸트드롭, 8=다이아몬드리빌,
+      //           9=4분할모자이크, 10=포커스풀블러, 11=시네마상하셔터
+      art:       [1, 10, 'panY'],
+      film:      [11, 0, 'zoomOut'],
+      editorial: [2, 6, 'panX'],
+      kinetic:   [3, 8, 'punch'],
+      tv:        [4, 5, 'zoomIn'],
+      game:      [9, 8, 'punch'],
+      note:      [7, 5, 'panY'],
+      food:      [5, 1, 'zoomIn'],
+      life:      [10, 1, 'diag'],
+      biz:       [6, 2, 'panX']
+    };
+    const AR_CAT_PHOTO_ANIM = {
+      '감성': [10, 1, 'diag'],
+      '고급': [6, 2, 'zoomOut'],
+      '브이로그': [4, 5, 'panX'],
+      '타이포': [3, 8, 'punch'],
+      '손글씨': [7, 10, 'panY'],
+      '뉴스·방송': [4, 11, 'zoomIn'],
+      '카드뉴스': [5, 9, 'panX'],
+      '비포·애프터': [2, 3, 'panX'],
+      '재미': [7, 9, 'punch'],
+      '테크': [8, 9, 'zoomIn'],
+      '럭셔리': [6, 11, 'zoomOut']
+    };
+    function arResolvePhotoMotionSpec(cutIdx) {
+      const ds = typeof getActiveDesign === 'function' ? getActiveDesign() : null;
+      const id = (ds && ds.id) ? String(ds.id) : '';
+      let h = 0;
+      for (let i = 0; i < id.length; i++) h = ((h * 33) ^ id.charCodeAt(i)) >>> 0;
+      // 특정 스타일 성격에 맞춘 세부 연출 매핑
+      let base = (ds && ds.s100Genre && AR_STYLE_PHOTO_ANIM[ds.s100Genre])
+        || (ds && ds.cat && AR_CAT_PHOTO_ANIM[ds.cat])
+        || [h % 12, (h + 5) % 12, ['zoomIn', 'zoomOut', 'panX', 'panY', 'diag', 'punch'][h % 6]];
+      // 같은 장르 안에서도 스타일마다 고유한 사진 등장 연출이 나오도록 해시 오프셋 적용
+      const poolByGenre = {
+        art:       [1, 10, 7, 6, 11, 1, 10, 8, 7, 3],
+        film:      [11, 4, 10, 7, 8, 2, 3, 5, 9, 6],
+        editorial: [6, 2, 10, 0, 11, 2, 3, 1, 6, 5],
+        kinetic:   [3, 6, 8, 9, 1, 0, 9, 4, 10, 1],
+        tv:        [4, 5, 11, 1, 3, 2, 4, 9, 7, 5],
+        game:      [9, 8, 3, 5, 11, 1, 7, 9, 8, 7],
+        note:      [7, 5, 2, 8, 7, 9, 5, 4, 2, 1],
+        food:      [6, 10, 3, 1, 11, 10, 7, 5, 6, 1],
+        life:      [10, 5, 2, 4, 3, 6, 1, 10, 7, 4],
+        biz:       [2, 8, 5, 6, 10, 9, 0, 3, 11, 6]
+      };
+      let primary = base[0];
+      let secondary = base[1];
+      let cam = base[2];
+      if (ds && ds.s100Genre && poolByGenre[ds.s100Genre]) {
+        const list = poolByGenre[ds.s100Genre];
+        primary = list[h % list.length];
+        secondary = list[(h + 3) % list.length];
+        if (secondary === primary) secondary = (primary + 4) % 12;
+      } else if (id) {
+        primary = (base[0] + (h % 4)) % 12;
+        secondary = (base[1] + ((h >> 2) % 4)) % 12;
+        if (secondary === primary) secondary = (primary + 3) % 12;
+      }
+      const mode = cutIdx % 2 === 0 ? primary : secondary;
+      const cams = ['zoomIn', 'zoomOut', 'panX', 'panY', 'diag', 'punch'];
+      const camMode = cutIdx % 2 === 0 ? cam : cams[(h + cutIdx) % cams.length];
+      return { mode, camMode, accent: (ds && ds.accent) || '#ffffff' };
+    }
+
     function inPhotoFade(c, S, cutIdx, local, x, y, w, h, scale, warm = 1) {
       const img = kitImg(S, 0);
       const isVid = !!(img && img._isVideo);
       const easeCubic = (v) => 1 - Math.pow(1 - mClamp(v), 3);
       const easeQuart = (v) => 1 - Math.pow(1 - mClamp(v), 4);
+      const easeOutBack = (v) => {
+        const t = mClamp(v);
+        const c1 = 1.45, c3 = c1 + 1;
+        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+      };
       const dir = cutIdx % 2 === 0 ? 1 : -1;
       const lp = mClamp(local / 3.0);
-      // 흔들림(sin/cos)과 회전(tilt) 없이, 한 방향으로만 매끄럽게 미끄러지는 시네마 Ken Burns 벡터
-      const baseScale = isVid ? Math.min(1.04, Math.max(1.0, scale || 1.02)) : Math.max(1.08, (scale || 1.04) + 0.04);
-      const steadyZoom = isVid ? baseScale : (cutIdx % 2 === 0 ? baseScale + lp * 0.08 : baseScale + (1 - lp) * 0.08);
-      const steadyPx = isVid ? 0 : (lp - 0.5) * Math.min(34, w * 0.068) * dir;
-      const steadyPy = isVid ? 0 : (lp - 0.5) * Math.min(16, h * 0.024) * (cutIdx % 3 === 0 ? 1 : -1);
-      const tDur = 0.40;
-      const p = cutIdx > 0 ? easeQuart(local / tDur) : 1;
-      const rem = 1 - p; // tDur 경계에서 정확히 0.000으로 수렴 (끊김·튐 현상 0%)
-      const mode = cutIdx % 5;
+      const spec = arResolvePhotoMotionSpec(cutIdx);
+      const mode = spec.mode;
+      const camMode = spec.camMode;
+
+      // 스타일별 차별화된 카메라 무브 (줌인 / 풀백 / 좌우팬 / 상하크레인 / 대각선 / 비트펀치)
+      const baseScale = isVid ? Math.min(1.04, Math.max(1.0, scale || 1.02)) : Math.max(1.09, (scale || 1.04) + 0.05);
+      let steadyZoom = baseScale;
+      let steadyPx = 0;
+      let steadyPy = 0;
+      if (!isVid) {
+        if (camMode === 'zoomIn') {
+          steadyZoom = baseScale + lp * 0.11;
+          steadyPx = (lp - 0.5) * Math.min(20, w * 0.036) * dir;
+        } else if (camMode === 'zoomOut') {
+          steadyZoom = baseScale + (1 - lp) * 0.12;
+          steadyPy = (lp - 0.5) * Math.min(18, h * 0.028) * -dir;
+        } else if (camMode === 'panX') {
+          steadyZoom = baseScale + 0.06;
+          steadyPx = (lp - 0.5) * Math.min(54, w * 0.105) * dir;
+        } else if (camMode === 'panY') {
+          steadyZoom = baseScale + 0.06;
+          steadyPy = (lp - 0.5) * Math.min(48, h * 0.075) * dir;
+        } else if (camMode === 'diag') {
+          steadyZoom = baseScale + lp * 0.07;
+          steadyPx = (lp - 0.5) * Math.min(38, w * 0.072) * dir;
+          steadyPy = (lp - 0.5) * Math.min(30, h * 0.048) * -dir;
+        } else {
+          // punch: 120BPM 미세 펌프 + 빠른 줌 착지
+          const beat = arPmBeat(local).pulse;
+          steadyZoom = baseScale + lp * 0.06 + beat * 0.028;
+          steadyPx = (lp - 0.5) * Math.min(26, w * 0.048) * dir;
+        }
+      }
+
+      // 첫 컷(cutIdx === 0)도 스타일 시그니처 등장 애니메이션을 재생해 스타일 전환 즉시 차이를 체감!
+      const tDur = cutIdx === 0 ? 0.56 : 0.46;
+      const rawP = mClamp(local / tDur);
+      const p = easeQuart(rawP);
+      const rem = 1 - p;
+      const hasPrev = cutIdx > 0;
 
       c.save();
       c.beginPath();
       c.rect(x, y, w, h);
       c.clip();
 
-      if (cutIdx === 0) {
-        const z0 = isVid ? steadyZoom : steadyZoom + (1 - easeCubic(local / 0.42)) * 0.08;
-        mPhoto(c, S, 0, x, y, w, h, z0, steadyPx, steadyPy);
-      } else if (rem > 0.001) {
+      if (rem > 0.001) {
         if (mode === 1) {
-          // 1) 풀 슬라이드 푸시 (좌우 시원하게 밀어내기 + 경계 헤어라인)
-          const oldX = x - Math.round(w * p) * dir;
-          const newX = x + Math.round(w * rem) * dir;
-          mPhoto(c, S, -1, oldX, y, w, h, baseScale + 0.04, 0, 0);
-          mPhoto(c, S, 0, newX, y, w, h, steadyZoom + rem * 0.04, steadyPx, steadyPy);
-          c.fillStyle = 'rgba(255,255,255,0.55)';
-          c.fillRect(dir > 0 ? newX - 1 : newX + w - 1, y, 2, h);
+          // 1) 원형 아이리스 렌즈 확장 (중앙에서 둥글게 펼쳐지는 시네마 아이리스)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
+          const maxR = Math.hypot(w, h) * 0.62;
+          const r = Math.max(8, maxR * p);
+          c.save();
+          c.beginPath();
+          c.arc(x + w / 2, y + h / 2, r, 0, Math.PI * 2);
+          c.clip();
+          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.14, steadyPx, steadyPy);
+          c.restore();
+          c.strokeStyle = 'rgba(255,255,255,0.45)';
+          c.lineWidth = Math.max(1.5, 4 * rem);
+          c.beginPath();
+          c.arc(x + w / 2, y + h / 2, r, 0, Math.PI * 2);
+          c.stroke();
         } else if (mode === 2) {
-          // 2) 대각선 시네마 슬래시 와이프 (15° 사선 리빌)
-          mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04, 0, 0);
-          const slant = Math.round(w * 0.28);
+          // 2) 5단 에디토리얼 셔터 블라인드 (세로 루버가 동시에 열리며 리빌)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
+          const strips = 5;
+          const sw = w / strips;
+          c.save();
+          c.beginPath();
+          for (let i = 0; i < strips; i++) {
+            const sp2 = easeCubic(mClamp((rawP - i * 0.05) / 0.75));
+            const curW = Math.ceil(sw * sp2) + 1;
+            c.rect(x + i * sw, y, curW, h);
+          }
+          c.clip();
+          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.08, steadyPx, steadyPy);
+          c.restore();
+        } else if (mode === 3) {
+          // 3) 사선 시네마 슬래시 와이프 (18° 날카로운 대각선 컷 + 빛줄기)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04, 0, 0);
+          const slant = Math.round(w * 0.30);
           const edgeX = x - slant + (w + slant * 2) * p;
           c.save();
           c.beginPath();
@@ -759,42 +886,122 @@
           c.lineTo(x - slant, y + h);
           c.closePath();
           c.clip();
-          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.06, steadyPx, steadyPy);
+          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.09, steadyPx, steadyPy);
           c.restore();
-          c.strokeStyle = 'rgba(255,250,240,0.75)';
-          c.lineWidth = 2;
+          c.strokeStyle = spec.accent || 'rgba(255,250,240,0.85)';
+          c.lineWidth = 3;
           c.beginPath();
           c.moveTo(edgeX, y);
           c.lineTo(edgeX - slant, y + h);
           c.stroke();
-        } else if (mode === 3) {
-          // 3) 상하 셔터 오픈 (중앙에서 위아래로 영화관 셔터 리빌)
-          mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04, 0, 0);
+        } else if (mode === 4) {
+          // 4) 좌우 휩-슬라이드 푸시 (시원하게 밀고 들어오는 모션)
+          const oldX = x - Math.round(w * p) * dir;
+          const newX = x + Math.round(w * rem) * dir;
+          if (hasPrev) mPhoto(c, S, -1, oldX, y, w, h, baseScale + 0.04, 0, 0);
+          mPhoto(c, S, 0, newX, y, w, h, steadyZoom + rem * 0.06, steadyPx, steadyPy);
+          c.fillStyle = 'rgba(255,255,255,0.6)';
+          c.fillRect(dir > 0 ? newX - 1 : newX + w - 1, y, 2, h);
+        } else if (mode === 5) {
+          // 5) 수직 릴스 스와이프 업 (아래에서 탄력 있게 올라옴)
+          const oldY = y - Math.round(h * p * 0.55);
+          const newY = y + Math.round(h * rem);
+          if (hasPrev) mPhoto(c, S, -1, x, oldY, w, h, baseScale + 0.04, 0, 0);
+          mPhoto(c, S, 0, x, newY, w, h, steadyZoom + rem * 0.06, steadyPx, steadyPy);
+          c.fillStyle = 'rgba(255,255,255,0.55)';
+          c.fillRect(x, newY - 1, w, 2);
+        } else if (mode === 6) {
+          // 6) 중앙→좌우 시어터 커튼 오픈 (양옆으로 우아하게 열리는 막)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04, 0, 0);
+          const openW = Math.round(w * p);
+          const leftX = x + Math.round((w - openW) / 2);
+          c.save();
+          c.beginPath();
+          c.rect(leftX, y, openW, h);
+          c.clip();
+          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.10, steadyPx, steadyPy);
+          c.restore();
+          c.fillStyle = 'rgba(255,255,255,0.45)';
+          c.fillRect(leftX, y, 1.5, h);
+          c.fillRect(leftX + openW - 1.5, y, 1.5, h);
+        } else if (mode === 7) {
+          // 7) 회전 틸트 드롭 (폴라로이드/카드처럼 살짝 기울며 탄성 착지)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
+          const bp = easeOutBack(rawP);
+          const ang = (1 - p) * 0.11 * dir;
+          const dropY = (1 - bp) * h * 0.24;
+          const scDrop = 0.84 + 0.16 * bp;
+          c.save();
+          c.translate(x + w / 2, y + h / 2 + dropY);
+          c.rotate(ang);
+          c.scale(scDrop, scDrop);
+          c.globalAlpha = easeCubic(rawP * 1.4);
+          mPhoto(c, S, 0, -w / 2, -h / 2, w, h, steadyZoom, steadyPx, steadyPy);
+          c.restore();
+        } else if (mode === 8) {
+          // 8) 다이아몬드 마름모 기하학 리빌 (중앙 마름모가 회전하며 확장)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
+          const rad = Math.hypot(w, h) * 0.78 * p;
+          const cx0 = x + w / 2, cy0 = y + h / 2;
+          c.save();
+          c.beginPath();
+          c.moveTo(cx0, cy0 - rad);
+          c.lineTo(cx0 + rad, cy0);
+          c.lineTo(cx0, cy0 + rad);
+          c.lineTo(cx0 - rad, cy0);
+          c.closePath();
+          c.clip();
+          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.14, steadyPx, steadyPy);
+          c.restore();
+          c.strokeStyle = spec.accent || 'rgba(255,255,255,0.6)';
+          c.lineWidth = Math.max(1.5, 3.5 * rem);
+          c.beginPath();
+          c.moveTo(cx0, cy0 - rad); c.lineTo(cx0 + rad, cy0); c.lineTo(cx0, cy0 + rad); c.lineTo(cx0 - rad, cy0); c.closePath();
+          c.stroke();
+        } else if (mode === 9) {
+          // 9) 4분할 모자이크 타일 리빌 (4개 사분면이 시간차로 딱딱 맞춰짐)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
+          const hw = Math.ceil(w / 2), hh = Math.ceil(h / 2);
+          const quads = [[0, 0, 0], [hw, 0, 0.08], [0, hh, 0.14], [hw, hh, 0.20]];
+          quads.forEach(([qx, qy, delay]) => {
+            const qp = easeQuart(mClamp((rawP - delay) / 0.72));
+            if (qp <= 0.01) return;
+            c.save();
+            c.beginPath();
+            c.rect(x + qx, y + qy, hw + 1, Math.ceil(hh * qp) + 1);
+            c.clip();
+            mPhoto(c, S, 0, x, y, w, h, steadyZoom + (1 - qp) * 0.12, steadyPx, steadyPy);
+            c.restore();
+          });
+        } else if (mode === 10) {
+          // 10) 시네마 포커스 풀 (렌즈 아웃포커스 블러에서 또렷하게 초점 착지)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.03, 0, 0);
+          const blurPx = Math.max(0, rem * 14);
+          c.save();
+          c.globalAlpha = easeCubic(rawP * 1.35);
+          if (blurPx > 0.4) c.filter = `blur(${blurPx.toFixed(1)}px) brightness(${(1 + rem * 0.18).toFixed(2)})`;
+          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.14, steadyPx, steadyPy);
+          c.restore();
+        } else if (mode === 11) {
+          // 11) 상하 시네마 필름 셔터 오픈 (중앙에서 위아래로 영화관 셔터 리빌)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04, 0, 0);
           const openH = Math.round(h * p);
           const topY = y + Math.round((h - openH) / 2);
           c.save();
           c.beginPath();
           c.rect(x, topY, w, openH);
           c.clip();
-          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.07, steadyPx, steadyPy);
+          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.09, steadyPx, steadyPy);
           c.restore();
-        } else if (mode === 4) {
-          // 4) 수직 풀-업 슬라이드 (아래에서 위로 시원하게 밀어 올리기)
-          const oldY = y - Math.round(h * p * 0.55);
-          const newY = y + Math.round(h * rem);
-          mPhoto(c, S, -1, x, oldY, w, h, baseScale + 0.04, 0, 0);
-          mPhoto(c, S, 0, x, newY, w, h, steadyZoom + rem * 0.04, steadyPx, steadyPy);
-          c.fillStyle = 'rgba(255,255,255,0.5)';
-          c.fillRect(x, newY - 1, w, 2);
         } else {
-          // 0) 크리스프 노출 줌-스냅 (속도감 있는 줌 착지 + 은은한 카메라 플래시)
-          mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04 + p * 0.14, 0, 0);
+          // 0) 크리스프 노출 줌-스냅 (속도감 있는 줌 착지 + 카메라 플래시)
+          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale + 0.04 + p * 0.16, 0, 0);
           c.save();
-          c.globalAlpha = easeCubic(local / (tDur * 0.72));
-          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.14, steadyPx, steadyPy);
+          c.globalAlpha = easeCubic(rawP * 1.35);
+          mPhoto(c, S, 0, x, y, w, h, steadyZoom + rem * 0.22, steadyPx, steadyPy);
           c.restore();
-          if (local < 0.18) {
-            c.fillStyle = `rgba(255,252,245,${((1 - local / 0.18) * 0.28).toFixed(3)})`;
+          if (local < 0.20) {
+            c.fillStyle = `rgba(255,252,245,${((1 - local / 0.20) * 0.34).toFixed(3)})`;
             c.fillRect(x, y, w, h);
           }
         }

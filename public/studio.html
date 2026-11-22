@@ -38,6 +38,13 @@
   <link rel="stylesheet" href="https://hangeul.pstatic.net/hangeul_static/css/maru-buri.css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Black+Han+Sans&family=Noto+Serif+KR:wght@700;900&family=Do+Hyeon&family=Jua&family=Nanum+Pen+Script&family=Gugi&family=Gaegu:wght@700&family=Hi+Melody&family=East+Sea+Dokdo&family=Single+Day&family=Yeon+Sung&family=Poor+Story&family=Gamja+Flower&family=Gasoek+One&family=Bagel+Fat+One&family=Song+Myung&family=Black+And+White+Picture&family=Dongle:wght@700&family=Great+Vibes&family=Pinyon+Script&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Brush+Script&family=Hahmlet:wght@500;700;900&family=Orbit&family=Diphylleia&family=Grandiflora+One&family=Kirang+Haerang&family=Sunflower:wght@500;700&family=Stylish&family=Cute+Font&family=Dokdo&display=swap" />
+  <style id="arKoreanDisplayFonts">
+    @font-face { font-family: 'GmarketSans'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff'); font-weight: 700; font-style: normal; font-display: swap; }
+    @font-face { font-family: 'Cafe24Ssurround'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/Cafe24Ssurround.woff') format('woff'); font-weight: 700; font-style: normal; font-display: swap; }
+    @font-face { font-family: 'SBAggroB'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/SBAggroB.woff') format('woff'); font-weight: 700; font-style: normal; font-display: swap; }
+    @font-face { font-family: 'Paperlogy'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-8ExtraBold.woff2') format('woff2'); font-weight: 800; font-style: normal; font-display: swap; }
+  </style>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
@@ -1098,9 +1105,14 @@
                   <label class="ar-custom-color">포인트색<input type="color" name="accent" value="#756452"><output data-custom-color="accent">#756452</output></label>
                 </div></fieldset>
                 <fieldset><legend>03 · 글꼴</legend><div class="ar-custom-choices">
-                  <label><input type="radio" name="fontKey" value="maru" checked><span>마루부리<small>차분한 명조</small></span></label>
-                  <label><input type="radio" name="fontKey" value="pretM"><span>프리텐다드<small>또렷한 고딕</small></span></label>
-                  <label><input type="radio" name="fontKey" value="pen"><span>나눔손글씨 펜<small>손으로 쓴 듯</small></span></label>
+                  <label><input type="radio" name="fontKey" value="maru" checked><span style="font-family:'MaruBuri',serif">마루부리<small>차분한 명조</small></span></label>
+                  <label><input type="radio" name="fontKey" value="paperlogy"><span style="font-family:'Paperlogy',sans-serif;font-weight:800">페이퍼로지<small>트렌디 타이틀</small></span></label>
+                  <label><input type="radio" name="fontKey" value="gmarket"><span style="font-family:'GmarketSans',sans-serif;font-weight:700">지마켓산스<small>또렷한 홍보</small></span></label>
+                  <label><input type="radio" name="fontKey" value="aggro"><span style="font-family:'SBAggroB',sans-serif;font-weight:700">어그로체<small>강렬한 훅</small></span></label>
+                  <label><input type="radio" name="fontKey" value="cafe24"><span style="font-family:'Cafe24Ssurround',sans-serif;font-weight:700">써라운드<small>통통 예능 자막</small></span></label>
+                  <label><input type="radio" name="fontKey" value="hahmlet"><span style="font-family:'Hahmlet',serif;font-weight:900">햄릿 명조<small>매거진 화보</small></span></label>
+                  <label><input type="radio" name="fontKey" value="diphylleia"><span style="font-family:'Diphylleia',serif">럭셔리 세리프<small>고급 감성</small></span></label>
+                  <label><input type="radio" name="fontKey" value="pen"><span style="font-family:'Nanum Pen Script',cursive">나눔손글씨 펜<small>손으로 쓴 듯</small></span></label>
                 </div></fieldset>
                 <fieldset><legend>04 · 로고</legend>
                   <div class="ar-custom-upload"><img id="arCustomLogoThumb" alt="선택한 로고" hidden><label>로고 불러오기<input type="file" id="arCustomLogoFile" accept="image/*,.heic,.heif"></label><button type="button" data-custom-action="remove-logo">제거</button></div>
@@ -2235,7 +2247,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-styles100-fullbleed"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-fonts-rich"><\/script>');
     }
   </script>
   <!--

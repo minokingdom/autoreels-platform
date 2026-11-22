@@ -83,48 +83,77 @@
     //   색상은 여기서 정하지 않습니다 (COLOR_PALETTES에서 따로 선택).
     // ==========================================================================
     const KIT_FONTS = {
-      impact: { f: GENRE_FONTS.sans, w: 800, k: 0.96 },
-      serif: { f: GENRE_FONTS.serif, w: 700, k: 1 },
-      sans: { f: GENRE_FONTS.sans, w: 800, k: 1 },
-      mono: { f: GENRE_FONTS.mono, w: 700, k: 0.9 },
-      dohyeon: { f: '"Do Hyeon", "Pretendard Variable", sans-serif', w: 400, k: 1.05 },
-      jua: { f: '"Jua", "Pretendard Variable", sans-serif', w: 400, k: 1 },
-      pen: { f: '"Nanum Pen Script", "Pretendard Variable", cursive', w: 400, k: 1.35 },
-      gugi: { f: '"Gugi", "Pretendard Variable", sans-serif', w: 400, k: 0.92 },
-      gaegu: { f: '"Gaegu", "Pretendard Variable", cursive', w: 700, k: 1.15 },
-      himelody: { f: '"Hi Melody", "Pretendard Variable", cursive', w: 400, k: 1.25 },
-      dokdo: { f: '"East Sea Dokdo", "Pretendard Variable", cursive', w: 400, k: 1.4 },
-      singleday: { f: '"Single Day", "Pretendard Variable", cursive', w: 400, k: 1.0 },
-      yeonsung: { f: '"Yeon Sung", "Pretendard Variable", cursive', w: 400, k: 1.05 },
-      poorstory: { f: '"Poor Story", "Pretendard Variable", cursive', w: 400, k: 1.12 },
-      gamja: { f: '"Gamja Flower", "Pretendard Variable", cursive', w: 400, k: 1.12 },
-      brush: { f: '"Nanum Brush Script", "Pretendard Variable", cursive', w: 400, k: 1.4 },
-      gasoek: { f: '"Pretendard Variable", Pretendard, "Do Hyeon", sans-serif', w: 900, k: 0.96 },
-      bagel: { f: '"Jua", "Do Hyeon", "Pretendard Variable", sans-serif', w: 400, k: 0.96 },
-      songmyung: { f: '"Song Myung", "Noto Serif KR", serif', w: 400, k: 1.0 },
-      bwpicture: { f: '"Black And White Picture", "Pretendard Variable", sans-serif', w: 400, k: 1.1 },
-      dongle: { f: '"Dongle", "Pretendard Variable", sans-serif', w: 700, k: 1.6 },
-      serif7: { f: GENRE_FONTS.serif, w: 700, k: 1 },
-      greatvibes: { f: '"Great Vibes", "Nanum Brush Script", cursive', w: 400, k: 1.15 },
-      pinyon: { f: '"Pinyon Script", "Nanum Brush Script", cursive', w: 400, k: 1.0 },
-      // 인스타 감성 스타일용: 얇은 명조·얇은 고딕
+      // ── 임팩트 · 트렌디 타이틀 (대한민국 릴스·유튜브 상업용 무료 대표 서체) ──
+      impact: { f: '"Black Han Sans", "SBAggroB", "Do Hyeon", sans-serif', w: 400, k: 1.06 },
+      blackhan: { f: '"Black Han Sans", "SBAggroB", sans-serif', w: 400, k: 1.06 },
+      gasoek: { f: '"Gasoek One", "SBAggroB", sans-serif', w: 400, k: 0.94 },
+      aggro: { f: '"SBAggroB", "Black Han Sans", sans-serif', w: 700, k: 0.98 },
+      gmarket: { f: '"GmarketSans", "Pretendard Variable", sans-serif', w: 700, k: 0.98 },
+      paperlogy: { f: '"Paperlogy", "Pretendard Variable", sans-serif', w: 800, k: 0.98 },
+      cafe24: { f: '"Cafe24Ssurround", "Bagel Fat One", sans-serif', w: 700, k: 1.02 },
+      bagel: { f: '"Bagel Fat One", "Cafe24Ssurround", sans-serif', w: 400, k: 1.02 },
+      // ── 에디토리얼 · 럭셔리 명조 ──
+      hahmlet: { f: '"Hahmlet", "Noto Serif KR", serif', w: 900, k: 1.0 },
+      diphylleia: { f: '"Diphylleia", "MaruBuri", serif', w: 400, k: 1.06 },
+      grandiflora: { f: '"Grandiflora One", "Gowun Batang", serif', w: 400, k: 1.12 },
+      serif: { f: '"Hahmlet", "Noto Serif KR", "MaruBuri", serif', w: 700, k: 1.0 },
+      serif7: { f: '"Noto Serif KR", "Hahmlet", serif', w: 900, k: 1.0 },
+      songmyung: { f: '"Song Myung", "Noto Serif KR", serif', w: 400, k: 1.04 },
       maru: { f: '"MaruBuri", "Gowun Batang", serif', w: 600, k: 1 },
       maruL: { f: '"MaruBuri", "Gowun Batang", serif', w: 400, k: 1 },
       gowun: { f: '"Gowun Batang", "MaruBuri", serif', w: 400, k: 1.02 },
+      batang: { f: '"Gowun Batang", "MaruBuri", serif', w: 700, k: 1.02 },
+      // ── 모던 · 테크 · 레트로 · 팝 ──
+      sans: { f: GENRE_FONTS.sans, w: 800, k: 1 },
       pretL: { f: '"Pretendard Variable", Pretendard, sans-serif', w: 500, k: 1 },
-      pretM: { f: '"Pretendard Variable", Pretendard, sans-serif', w: 600, k: 1 }
+      pretM: { f: '"Pretendard Variable", Pretendard, sans-serif', w: 600, k: 1 },
+      dodum: { f: '"Gowun Dodum", "Pretendard Variable", sans-serif', w: 400, k: 1.02 },
+      mono: { f: '"JetBrains Mono", "Orbit", "Gowun Dodum", monospace', w: 700, k: 0.94 },
+      orbit: { f: '"Orbit", "Gowun Dodum", sans-serif', w: 400, k: 0.98 },
+      dohyeon: { f: '"Do Hyeon", "Pretendard Variable", sans-serif', w: 400, k: 1.06 },
+      jua: { f: '"Jua", "Pretendard Variable", sans-serif', w: 400, k: 1.04 },
+      gugi: { f: '"Gugi", "Pretendard Variable", sans-serif', w: 400, k: 0.96 },
+      sunflower: { f: '"Sunflower", "Gowun Dodum", sans-serif', w: 700, k: 1.06 },
+      stylish: { f: '"Stylish", "Jua", sans-serif', w: 400, k: 1.16 },
+      bwpicture: { f: '"Black And White Picture", "Pretendard Variable", sans-serif', w: 400, k: 1.16 },
+      dongle: { f: '"Dongle", "Pretendard Variable", sans-serif', w: 700, k: 1.56 },
+      cute: { f: '"Cute Font", "Dongle", cursive', w: 400, k: 1.48 },
+      // ── 손글씨 · 붓글씨 · 스트릿 캘리 · 영문 필기 ──
+      kirang: { f: '"Kirang Haerang", "East Sea Dokdo", cursive', w: 400, k: 1.24 },
+      dokdo: { f: '"East Sea Dokdo", "Dokdo", cursive', w: 400, k: 1.42 },
+      dokdo2: { f: '"Dokdo", "East Sea Dokdo", cursive', w: 400, k: 1.28 },
+      brush: { f: '"Nanum Brush Script", "East Sea Dokdo", cursive', w: 400, k: 1.42 },
+      pen: { f: '"Nanum Pen Script", "Pretendard Variable", cursive', w: 400, k: 1.38 },
+      gaegu: { f: '"Gaegu", "Pretendard Variable", cursive', w: 700, k: 1.18 },
+      himelody: { f: '"Hi Melody", "Pretendard Variable", cursive', w: 400, k: 1.28 },
+      singleday: { f: '"Single Day", "Pretendard Variable", cursive', w: 400, k: 1.06 },
+      yeonsung: { f: '"Yeon Sung", "Pretendard Variable", cursive', w: 400, k: 1.1 },
+      poorstory: { f: '"Poor Story", "Pretendard Variable", cursive', w: 400, k: 1.14 },
+      gamja: { f: '"Gamja Flower", "Pretendard Variable", cursive', w: 400, k: 1.16 },
+      greatvibes: { f: '"Great Vibes", "Nanum Brush Script", cursive', w: 400, k: 1.15 },
+      script: { f: '"Great Vibes", "Pinyon Script", "Nanum Brush Script", cursive', w: 400, k: 1.15 },
+      pinyon: { f: '"Pinyon Script", "Nanum Brush Script", cursive', w: 400, k: 1.0 }
     };
-    // 디자인에 쓰인 글꼴만 그때그때 내려받음 (처음 화면을 무겁게 하지 않도록)
+    // 디자인에 쓰인 글꼴을 Canvas에서 자동으로 내려받고, 완료 즉시 화면을 다시 그려 기본 고딕 폴백을 방지함
     const kitFontLoads = {};
     function kitEnsureFont(key) {
       const F = KIT_FONTS[key];
       if (!F || !document.fonts || !document.fonts.load) return Promise.resolve();
       if (!kitFontLoads[key]) {
-        const fam = F.f.split(',')[0];
-        kitFontLoads[key] = document.fonts.load(`${F.w} 40px ${fam}`, '가나다AB12').catch(() => null);
+        const fams = F.f.split(',').slice(0, 2).map((s) => s.trim()).filter((s) => !/^(sans-serif|serif|cursive|monospace)$/i.test(s));
+        kitFontLoads[key] = Promise.all(
+          fams.map((fam) => document.fonts.load(`${F.w} 44px ${fam}`, '가나다라마바사아자차카타파하AB12').catch(() => null))
+        ).then(() => {
+          try {
+            if (window.__timelines && window.__timelines.main) {
+              window.__timelines.main.seek(window.__timelines.main.currentTime);
+            }
+          } catch (e) {}
+        });
       }
       return kitFontLoads[key];
     }
+    if (typeof window !== 'undefined') window.kitEnsureFont = kitEnsureFont;
     Object.assign(GENRE_FILTERS, {
       none: 'none',
       vivid: 'saturate(1.45) contrast(1.1)',
@@ -134,15 +163,18 @@
     });
 
     function kFont(key, size) {
+      kitEnsureFont(key);
       const F = KIT_FONTS[key] || KIT_FONTS.sans;
       return gFont(F.w, Math.round(size * F.k), F.f);
     }
     function kWrap(c, text, maxW, maxLines, size, minSize, key) {
+      kitEnsureFont(key);
       const F = KIT_FONTS[key] || KIT_FONTS.sans;
       const r = gWrap(c, text, maxW, maxLines, Math.round(size * F.k), Math.round(minSize * F.k), F.f, F.w);
       return { lines: r.lines, size: r.size, lh: Math.round(r.size * 1.28) };
     }
     function kLine(c, text, x, y, maxW, size, minSize, key) {
+      kitEnsureFont(key);
       const F = KIT_FONTS[key] || KIT_FONTS.sans;
       return gDrawLine(c, text, x, y, maxW, Math.round(size * F.k), Math.round(minSize * F.k), F.f, F.w);
     }
@@ -4863,14 +4895,29 @@
       if (typeof recordDesignUse === 'function') recordDesignUse(id);
       applyDesignBgm(dsel, true);
       if (dsel && (dsel.engine === 'kit' || dsel.engine === 'motion')) {
-        Promise.all([dsel.font, dsel.sfont, dsel.engine === 'kit' ? 'brush' : null, dsel.insta ? 'maruL' : null, dsel.insta ? 'pretL' : null, dsel.insta ? 'maru' : null, dsel.insta ? 'pretM' : null].filter(Boolean).map(kitEnsureFont)).then(() => {
+        const s100Fk = (typeof S100_RICH_FONTS !== 'undefined' && S100_RICH_FONTS[dsel.id]) || null;
+        Promise.all([s100Fk, dsel.font, dsel.sfont, dsel.engine === 'kit' ? 'brush' : null, dsel.insta ? 'maruL' : null, dsel.insta ? 'pretL' : null, dsel.insta ? 'maru' : null, dsel.insta ? 'pretM' : null].filter(Boolean).map(kitEnsureFont)).then(() => {
           if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
         });
       }
       renderDesignStylePicker();
       renderColorPalettePicker();
       arRenderLookbookPhotoTools();
-      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+      if (window.__timelines && window.__timelines.main) {
+        const tl = window.__timelines.main;
+        let seekT = tl.currentTime;
+        // 일반 재생 중 스타일을 바꾸면 현재 컷 시작점으로 살짝 되감아 새 스타일의 사진·자막 등장 애니메이션을 즉시 감상
+        if (typeof isPlaying !== 'undefined' && isPlaying && !(typeof arEditSheetOpen !== 'undefined' && arEditSheetOpen)) {
+          const totalC = typeof getTargetCutCount === 'function' ? Math.max(1, getTargetCutCount()) : 4;
+          const mainD = typeof getMainDuration === 'function' ? Math.max(1, getMainDuration()) : Math.max(1, (tl.duration || 12) - 3);
+          const cutD = mainD / totalC;
+          if (seekT < mainD) {
+            const curC = Math.min(totalC - 1, Math.max(0, Math.floor(seekT / cutD)));
+            seekT = curC * cutD;
+          }
+        }
+        tl.seek(seekT);
+      }
     }
     function selectColorPalette(id) {
       if (!COLOR_PALETTES.some((p) => p.id === id)) return;

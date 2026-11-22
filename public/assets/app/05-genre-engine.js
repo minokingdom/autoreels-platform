@@ -155,10 +155,10 @@
     const USE_GENRE_ENGINE = true;
 
     const GENRE_FONTS = {
-      impact: '"Pretendard Variable", Pretendard, "Do Hyeon", sans-serif', // Black Han Sans 획 뭉개짐 방지 → 선명한 Pretendard ExtraBold
-      serif: '"MaruBuri", "Gowun Batang", "Noto Serif KR", serif', // 인스타 감성: 굵은 Noto Serif 대신 마루부리
+      impact: '"Black Han Sans", "SBAggroB", "Do Hyeon", sans-serif',
+      serif: '"Hahmlet", "MaruBuri", "Gowun Batang", "Noto Serif KR", serif',
       sans: '"Pretendard Variable", Pretendard, sans-serif',
-      mono: '"JetBrains Mono", ui-monospace, monospace'
+      mono: '"JetBrains Mono", "Orbit", "Gowun Dodum", monospace'
     };
 
     // 구성(layoutMode) → 장르 + 변형
@@ -196,11 +196,35 @@
       return GENRE_VARIANTS[mode] || GENRE_VARIANTS.CLASSIC_SHOWROOM;
     }
 
-    // 웹폰트를 미리 불러와 첫 화면·추출 영상에서 기본 글꼴로 나오지 않게 함
+    // 웹폰트를 미리 불러와 첫 화면·서랍 썸네일·추출 영상에서 기본 고딕으로 뭉개지지 않게 함
     (function preloadGenreFonts() {
       if (!document.fonts || !document.fonts.load) return;
-      const specs = ['400 40px "Black Han Sans"', '700 40px "Noto Serif KR"', '900 40px "Noto Serif KR"', '500 20px "JetBrains Mono"', '400 40px "Do Hyeon"', '400 40px "Jua"', '400 40px "Nanum Pen Script"', '400 40px "Gugi"'];
-      Promise.all(specs.map((s) => document.fonts.load(s, '가A1').catch(() => null))).then(() => {
+      const specs = [
+        '700 40px "GmarketSans"',
+        '700 40px "Cafe24Ssurround"',
+        '700 40px "SBAggroB"',
+        '800 40px "Paperlogy"',
+        '400 40px "Black Han Sans"',
+        '400 40px "Gasoek One"',
+        '400 40px "Bagel Fat One"',
+        '900 40px "Hahmlet"',
+        '400 40px "Orbit"',
+        '400 40px "Diphylleia"',
+        '400 40px "Grandiflora One"',
+        '400 40px "Kirang Haerang"',
+        '400 40px "Do Hyeon"',
+        '400 40px "Jua"',
+        '400 40px "Nanum Pen Script"',
+        '400 40px "Nanum Brush Script"',
+        '400 40px "East Sea Dokdo"',
+        '700 40px "Gaegu"',
+        '400 40px "Song Myung"',
+        '700 40px "Sunflower"',
+        '400 40px "Stylish"',
+        '400 40px "Gugi"',
+        '500 20px "JetBrains Mono"'
+      ];
+      Promise.all(specs.map((s) => document.fonts.load(s, '가나다라마바사A1').catch(() => null))).then(() => {
         window.__genreFontsReady = true;
         try {
           if (typeof renderDesignStylePicker === 'function') renderDesignStylePicker();

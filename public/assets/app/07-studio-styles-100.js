@@ -105,11 +105,69 @@
       }
     }
 
+    // 100종 스타일별 개성 있는 전용 한국어 디스플레이/에디토리얼/손글씨/테크 폰트 매핑 (26종 서체 골고루 분산)
+    const S100_RICH_FONTS = {
+      // 아트 10종
+      s100_art_watercolor: 'grandiflora', s100_art_ukiyoe: 'songmyung', s100_art_oil: 'diphylleia',
+      s100_art_sumi: 'dokdo', s100_art_risograph: 'kirang', s100_art_pastel: 'gaegu',
+      s100_art_botanical: 'gowun', s100_art_stainedglass: 'hahmlet', s100_art_pencil: 'pen',
+      s100_art_acrylic: 'aggro',
+      // 필름 10종
+      s100_film_super8: 'sunflower', s100_film_vhs: 'orbit', s100_film_kodak35: 'gowun',
+      s100_film_polaroid: 'singleday', s100_film_crt: 'orbit', s100_film_newspaper: 'hahmlet',
+      s100_film_poster: 'blackhan', s100_film_cassette: 'gugi', s100_film_90smag: 'aggro',
+      s100_film_docu: 'diphylleia',
+      // 매거진 10종
+      s100_ed_vogue: 'diphylleia', s100_ed_swiss: 'paperlogy', s100_ed_museum: 'grandiflora',
+      s100_ed_goldfoil: 'hahmlet', s100_ed_noir: 'songmyung', s100_ed_monochrome: 'paperlogy',
+      s100_ed_brutalist: 'blackhan', s100_ed_whitegallery: 'gowun', s100_ed_lookbook: 'diphylleia',
+      s100_ed_arch: 'gmarket',
+      // 키네틱 10종
+      s100_kin_slam: 'aggro', s100_kin_curtain: 'paperlogy', s100_kin_cyber: 'orbit',
+      s100_kin_glitch: 'gugi', s100_kin_wave: 'stylish', s100_kin_stamp: 'blackhan',
+      s100_kin_iso: 'gmarket', s100_kin_marquee: 'gasoek', s100_kin_liquid: 'diphylleia',
+      s100_kin_spotlight: 'hahmlet',
+      // 방송·TV 10종
+      s100_tv_breaking: 'aggro', s100_tv_variety: 'cafe24', s100_tv_docu_nar: 'hahmlet',
+      s100_tv_podcast: 'paperlogy', s100_tv_sports: 'blackhan', s100_tv_finance: 'gmarket',
+      s100_tv_interview: 'dodum', s100_tv_top5: 'gasoek', s100_tv_review: 'cafe24',
+      s100_tv_qa: 'jua',
+      // 게임·만화 10종
+      s100_gm_rpg: 'gugi', s100_gm_arcade: 'orbit', s100_gm_manga: 'kirang',
+      s100_gm_webtoon: 'cafe24', s100_gm_gameboy: 'gugi', s100_gm_popart: 'bagel',
+      s100_gm_stickerbook: 'cute', s100_gm_toyblock: 'bagel', s100_gm_terminal: 'orbit',
+      s100_gm_tcg: 'aggro',
+      // 노트·학습 10종
+      s100_nt_chalkboard: 'gaegu', s100_nt_whiteboard: 'poorstory', s100_nt_gridnote: 'pen',
+      s100_nt_blueprint: 'orbit', s100_nt_postit: 'gamja', s100_nt_infograph: 'gmarket',
+      s100_nt_checklist: 'singleday', s100_nt_highlighter: 'cafe24', s100_nt_calendar: 'sunflower',
+      s100_nt_mindmap: 'paperlogy',
+      // 푸드·카페 10종
+      s100_fd_michelin: 'hahmlet', s100_fd_brunch: 'sunflower', s100_fd_pocha: 'cafe24',
+      s100_fd_dessert: 'cute', s100_fd_espresso: 'diphylleia', s100_fd_omakase: 'dokdo',
+      s100_fd_recipe: 'yeonsung', s100_fd_delivery: 'aggro', s100_fd_wine: 'grandiflora',
+      s100_fd_bakery: 'poorstory',
+      // 라이프·뷰티 10종
+      s100_lf_glassskin: 'grandiflora', s100_lf_beautyrev: 'stylish', s100_lf_looktag: 'paperlogy',
+      s100_lf_roomtour: 'dodum', s100_lf_beforeafter: 'gmarket', s100_lf_perfume: 'diphylleia',
+      s100_lf_wedding: 'grandiflora', s100_lf_wellness: 'gowun', s100_lf_pet: 'dongle',
+      s100_lf_boarding: 'orbit',
+      // 비즈니스·프로 10종
+      s100_bz_showroom: 'paperlogy', s100_bz_hud: 'orbit', s100_bz_property: 'gmarket',
+      s100_bz_report: 'hahmlet', s100_bz_clinic: 'dodum', s100_bz_academy: 'cafe24',
+      s100_bz_bodypro: 'blackhan', s100_bz_timesale: 'aggro', s100_bz_ceo: 'hahmlet',
+      s100_bz_vip: 'diphylleia'
+    };
+    let _s100ActiveStyleId = '';
+
     function s100DrawCaption(c, W, H, caption, opts) {
       if (!caption || opts.capHidden) return;
       const { cutIdx, local, fontKey, x, y, maxW, maxLines, maxSize, minSize, color, align = 'center', shadow, boxBg, boxBorder, boxRadius = 12, padX = 20, padY = 12, strokeCol, strokeW = 0, offsetColor, offsetDx = 0, offsetDy = 0, ent = 1 } = opts;
-      const F = KIT_FONTS[mCapFont(cutIdx, fontKey)] || KIT_FONTS.sans;
-      const fit = mFit(c, caption, maxW, maxLines || 3, maxSize || 40, minSize || 24, fontKey);
+      const baseFontKey = (_s100ActiveStyleId && S100_RICH_FONTS[_s100ActiveStyleId]) || fontKey;
+      const resolvedKey = mCapFont(cutIdx, baseFontKey);
+      if (typeof kitEnsureFont === 'function') kitEnsureFont(resolvedKey);
+      const F = KIT_FONTS[resolvedKey] || KIT_FONTS.sans;
+      const fit = mFit(c, caption, maxW, maxLines || 3, maxSize || 40, minSize || 24, resolvedKey);
       if (!fit.lines.length) return;
       const fillCol = mCapColor(cutIdx, color);
       const totalH = fit.lines.length * fit.lh;
@@ -179,7 +237,12 @@
       c.fillRect(0, 0, W, H);
 
       if (typeof STUDIO_100_RENDERERS[M] === 'function') {
-        STUDIO_100_RENDERERS[M]({ c, W, H, t, mainDuration, totalCuts, d, sp, cutDur, cutIdx, local, lp, S, caption, capHidden, ent, rem, accent, fg, brandName });
+        _s100ActiveStyleId = M;
+        try {
+          STUDIO_100_RENDERERS[M]({ c, W, H, t, mainDuration, totalCuts, d, sp, cutDur, cutIdx, local, lp, S, caption, capHidden, ent, rem, accent, fg, brandName });
+        } finally {
+          _s100ActiveStyleId = '';
+        }
         c.restore();
         return;
       }
