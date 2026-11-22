@@ -89,12 +89,25 @@ byId('editor').addEventListener('toggle',() => { if (session && byId('editor').o
 const SHORTS_CAPTION_FONTS = {
   pretendard: '"Pretendard Variable", Pretendard, sans-serif',
   dohyeon: '"Do Hyeon", "Pretendard Variable", sans-serif',
+  blackhan: '"Black Han Sans", sans-serif',
   jua: '"Jua", "Pretendard Variable", sans-serif',
+  gugi: '"Gugi", "Pretendard Variable", sans-serif',
+  bagel: '"Bagel Fat One", "Jua", sans-serif',
+  gasoek: '"Gasoek One", "Black Han Sans", sans-serif',
   gowun: '"Gowun Batang", serif',
   songmyung: '"Song Myung", serif',
+  hahmlet: '"Hahmlet", serif',
   pen: '"Nanum Pen Script", cursive',
-  blackhan: '"Black Han Sans", sans-serif'
+  brush: '"Nanum Brush Script", cursive',
+  gaegu: '"Gaegu", cursive',
+  himelody: '"Hi Melody", cursive',
+  gamja: '"Gamja Flower", cursive',
+  poorstory: '"Poor Story", cursive',
+  yeonsung: '"Yeon Sung", cursive',
+  dokdo: '"East Sea Dokdo", cursive'
 };
+const SHORTS_FONT_SCALE = { pen: 1.28, brush: 1.30, dokdo: 1.36, himelody: 1.20, gaegu: 1.12, gamja: 1.10, poorstory: 1.08 };
+const SHORTS_NORMAL_WEIGHT = new Set(['dohyeon','blackhan','jua','gugi','bagel','gasoek','songmyung','pen','brush','himelody','gamja','poorstory','yeonsung','dokdo']);
 function drawTitles(ctx,clip,caption,cueOrStyle) {
   if (!clip) return;
   caption = caption || '';
@@ -106,13 +119,15 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
     const style = isTitle ? 'box' : (cueObj.style && cueObj.style !== 'inherit' ? cueObj.style : (clip.captionStyle || clip.style || 'box'));
     const fontKey = isTitle ? 'pretendard' : (cueObj.font || clip.captionFont || 'pretendard');
     const fontFam = SHORTS_CAPTION_FONTS[fontKey] || SHORTS_CAPTION_FONTS.pretendard;
-    const sizeMul = isTitle ? 1 : Math.max(0.7, Math.min(1.6, Number(cueObj.size || clip.captionSize) || 1));
+    const sizeMul = isTitle ? 1 : Math.max(0.5, Math.min(2.0, Number(cueObj.size || clip.captionSize) || 1));
     const textCol = isTitle ? '#ffffff' : (cueObj.color || clip.captionColor || '#ffffff');
+    const posX = isTitle ? 0.5 : Math.max(0.12, Math.min(0.88, Number(typeof cueObj.posX === 'number' ? cueObj.posX : clip.captionPosX) || 0.5));
     const posY = isTitle ? 0.085 : Math.max(0.10, Math.min(0.92, Number(typeof cueObj.posY === 'number' ? cueObj.posY : clip.captionPosY) || 0.82));
     const cinema = !isTitle && style === 'cinema';
-    let size = w * (cinema ? .072 : isTitle ? .060 : .054) * sizeMul * (fontKey === 'pen' ? 1.24 : 1);
-    const limit = w * .86, lines = [];
-    const weight = (fontKey === 'dohyeon' || fontKey === 'jua' || fontKey === 'pen' || fontKey === 'blackhan' || fontKey === 'songmyung') ? '400 ' : (cinema ? 'italic 600 ' : '800 ');
+    let size = w * (cinema ? .072 : isTitle ? .060 : .054) * sizeMul * (SHORTS_FONT_SCALE[fontKey] || 1);
+    const limit = w * .90, lines = [];
+    const maxLineCount = isTitle ? 3 : (sizeMul > 1.25 ? 6 : 4);
+    const weight = SHORTS_NORMAL_WEIGHT.has(fontKey) ? '400 ' : (cinema ? 'italic 600 ' : '800 ');
     do {
       lines.length = 0; let row = '';
       ctx.font = weight + size + 'px ' + fontFam;
@@ -122,12 +137,15 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
         else row=next;
       }
       if(row) lines.push(row);
-      if (lines.length <= (isTitle ? 3 : 4) || size <= w*.028) break;
-      size *= .9;
+      if (lines.length <= maxLineCount || size <= w*.024) break;
+      size *= .92;
     } while (true);
     const step = size*1.30;
     const totalH = lines.length * step;
     const top = isTitle ? h*.085 : Math.max(h*0.06, Math.min(h - totalH - h*0.04, h * posY - totalH * 0.5));
+    let maxW = 0;
+    lines.forEach(ln => { maxW = Math.max(maxW, Math.min(limit, ctx.measureText(ln).width) + w * .052); });
+    const cx = isTitle ? w / 2 : Math.max(maxW / 2 + w * .03, Math.min(w - maxW / 2 - w * .03, w * posX));
     ctx.textAlign='center';ctx.textBaseline='middle';
     lines.forEach((line,i) => {
       const y=top+i*step, width=Math.min(limit,ctx.measureText(line).width)+w*.052;
@@ -135,27 +153,27 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
         ctx.shadowColor='rgba(0,0,0,.85)';ctx.shadowBlur=size*.19;ctx.shadowOffsetY=size*.05;
         if(i===lines.length-1){
           const underline=Math.min(limit,width-w*.052);ctx.fillStyle=textCol;
-          ctx.fillRect((w-underline)/2,y+step*.96,underline,Math.max(2,size*.055));
+          ctx.fillRect(cx - underline/2,y+step*.96,underline,Math.max(2,size*.055));
         }
-        ctx.fillStyle=textCol;ctx.fillText(line,w/2,y+step*.52,limit);
+        ctx.fillStyle=textCol;ctx.fillText(line,cx,y+step*.52,limit);
       } else if (style === 'outline') {
         ctx.lineJoin='round'; ctx.lineWidth=size*.14; ctx.strokeStyle='#111111';
-        ctx.strokeText(line,w/2,y+step*.52,limit);
-        ctx.fillStyle=textCol;ctx.fillText(line,w/2,y+step*.52,limit);
+        ctx.strokeText(line,cx,y+step*.52,limit);
+        ctx.fillStyle=textCol;ctx.fillText(line,cx,y+step*.52,limit);
       } else if (style === 'shadow') {
         ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=size*.28;ctx.shadowOffsetY=size*.06;
-        ctx.fillStyle=textCol;ctx.fillText(line,w/2,y+step*.52,limit);
+        ctx.fillStyle=textCol;ctx.fillText(line,cx,y+step*.52,limit);
       } else if (style === 'yellowBox' || style === 'pinkBox') {
         ctx.fillStyle = style === 'yellowBox' ? '#facc15' : '#e11d48';
-        const rx = (w-width)/2, ry = y + step*.06, rh = step*.88;
+        const rx = cx - width/2, ry = y + step*.06, rh = step*.88;
         ctx.beginPath(); ctx.roundRect ? ctx.roundRect(rx, ry, width, rh, 10) : ctx.rect(rx, ry, width, rh); ctx.fill();
         ctx.fillStyle = style === 'yellowBox' ? '#111111' : '#ffffff';
-        ctx.fillText(line,w/2,y+step*.52,limit);
+        ctx.fillText(line,cx,y+step*.52,limit);
       } else {
         ctx.fillStyle='rgba(12,14,18,.72)';
-        const rx = (w-width)/2, ry = y + step*.04, rh = step*.92;
+        const rx = cx - width/2, ry = y + step*.04, rh = step*.92;
         ctx.beginPath(); ctx.roundRect ? ctx.roundRect(rx, ry, width, rh, 10) : ctx.rect(rx, ry, width, rh); ctx.fill();
-        ctx.fillStyle=textCol;ctx.fillText(line,w/2,y+step*.52,limit);
+        ctx.fillStyle=textCol;ctx.fillText(line,cx,y+step*.52,limit);
       }
     });
     ctx.restore();
@@ -164,7 +182,7 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
   if (clip.customTitle || !clip.showCaptions || title !== caption.trim()) block(title,true);
   if (clip.showCaptions) block(caption || '',false);
 }
-// 미리보기 화면에서 스티커(상하좌우) 또는 자막(위/아래)을 직접 드래그해 위치 조절
+// 미리보기 화면에서 스티커·자막 모두 상하좌우(2D) 자유롭게 드래그해 위치 조절 (중앙 스냅 지원)
 (function bindShortsCaptionDrag(){
   const ov=document.getElementById('overlay');
   if(!ov || ov.dataset.capDragBound)return;
@@ -189,11 +207,12 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
         return;
       }
     }
-    // 2) 자막 세로 드래그
+    // 2) 자막 2D(상하좌우) 자유 드래그
     const cue=typeof activeCue==='function'?activeCue(s,curT):null;
+    const curX=typeof cue?.posX==='number'?cue.posX:(s.clip.captionPosX||0.5);
     const curY=typeof cue?.posY==='number'?cue.posY:(s.clip.captionPosY||0.82);
-    if(Math.abs(ny-curY)>0.16)return;
-    drag={type:'caption',cue,startY:e.clientY,origPos:curY,h:rect.height};
+    if(Math.abs(ny-curY)>0.20)return;
+    drag={type:'caption',cue,startX:e.clientX,startY:e.clientY,origX:curX,origY:curY,w:rect.width,h:rect.height};
     try{ov.setPointerCapture(e.pointerId);}catch(_){}
   });
   ov.addEventListener('pointermove',e=>{
@@ -202,9 +221,11 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
       drag.st.x=Math.max(0.08,Math.min(0.92,drag.origX+(e.clientX-drag.startX)/drag.w));
       drag.st.y=Math.max(0.08,Math.min(0.92,drag.origY+(e.clientY-drag.startY)/drag.h));
     }else{
-      const next=Math.max(0.12,Math.min(0.90,drag.origPos+(e.clientY-drag.startY)/drag.h));
-      if(drag.cue)drag.cue.posY=next;
-      else session.clip.captionPosY=next;
+      let nextX=Math.max(0.12,Math.min(0.88,drag.origX+(e.clientX-drag.startX)/drag.w));
+      if(Math.abs(nextX-0.5)<0.025)nextX=0.5; // 중앙 자동 스냅
+      const nextY=Math.max(0.10,Math.min(0.92,drag.origY+(e.clientY-drag.startY)/drag.h));
+      if(drag.cue){drag.cue.posX=nextX;drag.cue.posY=nextY;}
+      else{session.clip.captionPosX=nextX;session.clip.captionPosY=nextY;}
     }
     if(session.joined||session.timelineCuts){if(typeof seekCutTrack==='function')seekCutTrack(session,session.trackTime||0);}
     else renderPreview();

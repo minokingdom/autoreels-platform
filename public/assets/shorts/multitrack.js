@@ -228,11 +228,22 @@ function drawCues(s,type,total){
 const MIX_CAPTION_FONTS=[
   {id:'pretendard',name:'프리텐다드',css:'"Pretendard Variable", Pretendard, sans-serif',w:700},
   {id:'dohyeon',name:'도현체',css:'"Do Hyeon", sans-serif',w:400},
+  {id:'blackhan',name:'블랙한산스',css:'"Black Han Sans", sans-serif',w:400},
   {id:'jua',name:'주아체',css:'"Jua", sans-serif',w:400},
+  {id:'bagel',name:'베이글팻',css:'"Bagel Fat One", sans-serif',w:400},
+  {id:'gasoek',name:'가석체',css:'"Gasoek One", sans-serif',w:400},
+  {id:'gugi',name:'구기체',css:'"Gugi", sans-serif',w:400},
   {id:'gowun',name:'고운바탕',css:'"Gowun Batang", serif',w:700},
   {id:'songmyung',name:'송명체',css:'"Song Myung", serif',w:400},
+  {id:'hahmlet',name:'함렛 세리프',css:'"Hahmlet", serif',w:700},
   {id:'pen',name:'나눔손글씨 펜',css:'"Nanum Pen Script", cursive',w:400,sz:19},
-  {id:'blackhan',name:'블랙한산스',css:'"Black Han Sans", sans-serif',w:400}
+  {id:'brush',name:'나눔손글씨 붓',css:'"Nanum Brush Script", cursive',w:400,sz:19},
+  {id:'gaegu',name:'개구쟁이',css:'"Gaegu", cursive',w:700,sz:17},
+  {id:'himelody',name:'하이멜로디',css:'"Hi Melody", cursive',w:400,sz:18},
+  {id:'gamja',name:'감자꽃',css:'"Gamja Flower", cursive',w:400,sz:17},
+  {id:'poorstory',name:'푸어스토리',css:'"Poor Story", cursive',w:400,sz:16},
+  {id:'yeonsung',name:'연성체',css:'"Yeon Sung", cursive',w:400,sz:16},
+  {id:'dokdo',name:'동해독도체',css:'"East Sea Dokdo", cursive',w:400,sz:20}
 ];
 function buildCaptionStylePicker(box,opts){
   const state={
@@ -240,16 +251,24 @@ function buildCaptionStylePicker(box,opts){
     style:(opts.style&&opts.style!=='inherit')?opts.style:'box',
     size:Number(opts.size)||1,
     color:opts.color||'#ffffff',
+    posX:typeof opts.posX==='number'?opts.posX:0.5,
     posY:typeof opts.posY==='number'?opts.posY:0.82
   };
   const emit=()=>{if(typeof opts.onLive==='function')opts.onLive({...state});};
-  // 1) 라이브 폰트 미리보기 카드 (위 자막 입력 내용 실시간 반영)
-  const fLbl=document.createElement('span');fLbl.className='ar-cap-sec-lbl';fLbl.textContent='글꼴 미리보기 (위 자막 입력 시 실시간 반영)';
-  const fGrid=document.createElement('div');fGrid.className='ar-font-grid';
+  // 1) 라이브 폰트 미리보기: 기본 접힘(가로 캐러셀 18종) ↔ 전체 펼치기 토글
+  const fHead=document.createElement('div');fHead.className='ar-font-head';
+  const fLbl=document.createElement('span');fLbl.className='ar-cap-sec-lbl';fLbl.textContent=`글꼴 미리보기 (${MIX_CAPTION_FONTS.length}종)`;
+  const toggleBtn=document.createElement('button');toggleBtn.type='button';toggleBtn.className='ar-font-toggle';toggleBtn.textContent='전체 펼치기 ▾';
+  fHead.append(fLbl,toggleBtn);
+
+  const carWrap=document.createElement('div');carWrap.className='ar-font-carousel-wrap';
+  const prevNav=document.createElement('button');prevNav.type='button';prevNav.className='ar-font-nav';prevNav.textContent='‹';prevNav.setAttribute('aria-label','이전 폰트');
+  const nextNav=document.createElement('button');nextNav.type='button';nextNav.className='ar-font-nav';nextNav.textContent='›';nextNav.setAttribute('aria-label','다음 폰트');
+  const fList=document.createElement('div');fList.className='ar-font-carousel';
   const sampleEls=[];
   const getSampleText=()=>{
     const v=opts.textInput?opts.textInput.value.trim():(opts.sampleFallback||'');
-    return v?v.slice(0,16):'가나다 릴스 자막';
+    return v?v.slice(0,14):'가나다 릴스 자막';
   };
   MIX_CAPTION_FONTS.forEach(f=>{
     const card=document.createElement('button');card.type='button';card.className='ar-font-card';
@@ -257,25 +276,38 @@ function buildCaptionStylePicker(box,opts){
     const sample=document.createElement('span');sample.className='ar-font-sample';
     sample.style.fontFamily=f.css;sample.style.fontWeight=String(f.w);
     if(f.sz)sample.style.fontSize=f.sz+'px';
-    sample.style.color=state.color;
+    sample.style.color=state.color==='#111111'?'#e5e7eb':state.color;
     sample.textContent=getSampleText();
     const nm=document.createElement('span');nm.className='ar-font-name';nm.textContent=f.name;
     card.append(sample,nm);
     card.addEventListener('click',()=>{
       state.font=f.id;
-      [...fGrid.children].forEach(c=>c.setAttribute('aria-pressed','false'));
+      [...fList.children].forEach(c=>c.setAttribute('aria-pressed','false'));
       card.setAttribute('aria-pressed','true');
       emit();
     });
     sampleEls.push(sample);
-    fGrid.append(card);
+    fList.append(card);
   });
+  prevNav.addEventListener('click',()=>{fList.scrollBy({left:-276,behavior:'smooth'});});
+  nextNav.addEventListener('click',()=>{fList.scrollBy({left:276,behavior:'smooth'});});
+  carWrap.append(prevNav,fList,nextNav);
+
+  let expanded=false;
+  toggleBtn.addEventListener('click',()=>{
+    expanded=!expanded;
+    toggleBtn.textContent=expanded?'캐러셀로 접기 ▴':'전체 펼치기 ▾';
+    prevNav.style.display=expanded?'none':'flex';
+    nextNav.style.display=expanded?'none':'flex';
+    fList.className=expanded?'ar-font-grid':'ar-font-carousel';
+  });
+
   const refreshSamples=()=>{
     const txt=getSampleText();
     sampleEls.forEach(el=>{el.textContent=txt;el.style.color=state.color==='#111111'?'#e5e7eb':state.color;});
   };
   if(opts.textInput)opts.textInput.addEventListener('input',()=>{refreshSamples();emit();});
-  box.append(fLbl,fGrid);
+  box.append(fHead,carWrap);
 
   // 2) 자막 모양 비주얼 칩
   const sLbl=document.createElement('span');sLbl.className='ar-cap-sec-lbl';sLbl.textContent='자막 모양';
@@ -320,22 +352,43 @@ function buildCaptionStylePicker(box,opts){
   cRow.append(colPick);
   box.append(cLbl,cRow);
 
-  const szRow=document.createElement('div');szRow.className='ar-chip-row';
-  [['작게',0.8],['보통',1],['크게',1.25],['특대',1.45]].forEach(([lbl,val])=>{
-    const b=document.createElement('button');b.type='button';b.className='ar-mini-chip';b.textContent=lbl;
-    b.setAttribute('aria-pressed',String(Math.abs(state.size-val)<0.05));
+  const szRow=document.createElement('div');szRow.className='ar-chip-row';szRow.style.alignItems='center';
+  const szRange=document.createElement('input');szRange.type='range';szRange.min='55';szRange.max='200';szRange.step='5';
+  szRange.value=String(Math.round(state.size*100));
+  szRange.style.cssText='flex:1;min-width:90px;';
+  const szVal=document.createElement('span');szVal.style.cssText='font-size:11px;color:#cbd5e1;min-width:34px;text-align:right;font-variant-numeric:tabular-nums;';
+  szVal.textContent=Math.round(state.size*100)+'%';
+  const syncSzChips=()=>{
+    const cur=Math.round(state.size*100);
+    szVal.textContent=cur+'%';
+    szRow.querySelectorAll('.ar-mini-chip').forEach(c=>c.setAttribute('aria-pressed',String(Math.abs(Number(c.dataset.sz)-cur)<=5)));
+  };
+  [['작게',75],['보통',100],['크게',135],['특대',175]].forEach(([lbl,pct])=>{
+    const b=document.createElement('button');b.type='button';b.className='ar-mini-chip';b.textContent=lbl;b.dataset.sz=String(pct);
     b.addEventListener('click',()=>{
-      state.size=val;
-      [...szRow.children].forEach(c=>c.setAttribute('aria-pressed','false'));
-      b.setAttribute('aria-pressed','true');
-      emit();
+      state.size=pct/100;szRange.value=String(pct);syncSzChips();emit();
     });
     szRow.append(b);
   });
+  szRange.addEventListener('input',()=>{state.size=Number(szRange.value)/100;syncSzChips();emit();});
+  szRow.append(szRange,szVal);
+  syncSzChips();
   box.append(szRow);
 
-  // 4) 세로 위치 칩 + 슬라이더
-  const pLbl=document.createElement('span');pLbl.className='ar-cap-sec-lbl';pLbl.textContent='세로 위치 (미리보기 화면에서 직접 드래그도 가능)';
+  // 4) 가로·세로 위치 칩 + 슬라이더 (상하좌우 자유 드래그)
+  const pLbl=document.createElement('span');pLbl.className='ar-cap-sec-lbl';pLbl.textContent='위치 (미리보기 화면에서 상하좌우 직접 드래그 가능)';
+  const xRow=document.createElement('div');xRow.className='ar-chip-row';
+  const syncXChips=()=>{
+    const curX=Math.round(state.posX*100);
+    [...xRow.children].forEach(c=>c.setAttribute('aria-pressed',String(Math.abs(Number(c.dataset.xpct)-curX)<=8)));
+  };
+  [['← 왼쪽',26],['가운데',50],['오른쪽 →',74]].forEach(([lbl,pct])=>{
+    const xb=document.createElement('button');xb.type='button';xb.className='ar-mini-chip';xb.textContent=lbl;xb.dataset.xpct=String(pct);
+    xb.addEventListener('click',()=>{state.posX=pct/100;syncXChips();emit();});
+    xRow.append(xb);
+  });
+  syncXChips();
+
   const pRow=document.createElement('div');pRow.className='ar-chip-row';
   const pRange=document.createElement('input');pRange.type='range';pRange.min='12';pRange.max='90';pRange.step='1';
   pRange.value=String(Math.round(state.posY*100));
@@ -351,7 +404,7 @@ function buildCaptionStylePicker(box,opts){
   });
   pRange.addEventListener('input',()=>{state.posY=Number(pRange.value)/100;syncPosChips();emit();});
   syncPosChips();
-  box.append(pLbl,pRow,pRange);
+  box.append(pLbl,xRow,pRow,pRange);
   return ()=>({...state});
 }
 function editSourceCaption(s,line){
@@ -361,15 +414,15 @@ function editSourceCaption(s,line){
   const box=mixDialog('자막 편집 · 폰트·위치',()=>{
     const st=getStyle();
     line.text=input.value.trim();
-    clip.captionFont=st.font;clip.captionStyle=st.style;clip.captionSize=st.size;clip.captionColor=st.color;clip.captionPosY=st.posY;
+    clip.captionFont=st.font;clip.captionStyle=st.style;clip.captionSize=st.size;clip.captionColor=st.color;clip.captionPosX=st.posX;clip.captionPosY=st.posY;
     mixChanged(s);
   });
   input=mixField(box,'자막',document.createElement('input'));input.maxLength=240;input.value=line.text;
   getStyle=buildCaptionStylePicker(box,{
-    textInput:input,font:clip.captionFont,style:clip.captionStyle||clip.style,size:clip.captionSize,color:clip.captionColor,posY:clip.captionPosY,
+    textInput:input,font:clip.captionFont,style:clip.captionStyle||clip.style,size:clip.captionSize,color:clip.captionColor,posX:clip.captionPosX,posY:clip.captionPosY,
     onLive:(st)=>{
       line.text=input.value.trim()||line.text;
-      clip.captionFont=st.font;clip.captionStyle=st.style;clip.captionSize=st.size;clip.captionColor=st.color;clip.captionPosY=st.posY;
+      clip.captionFont=st.font;clip.captionStyle=st.style;clip.captionSize=st.size;clip.captionColor=st.color;clip.captionPosX=st.posX;clip.captionPosY=st.posY;
       if(s.joined||s.timelineCuts)seekCutTrack(s,s.trackTime||0);else renderPreview();
     }
   });
@@ -390,7 +443,7 @@ function editCue(s,type,cue){
     }else{
       if(!text.value.trim())throw Error('자막을 입력해 주세요.');
       const st=getCapStyle();
-      data={text:text.value.trim(),style:st.style,font:st.font,size:st.size,color:st.color,posY:st.posY};
+      data={text:text.value.trim(),style:st.style,font:st.font,size:st.size,color:st.color,posX:st.posX,posY:st.posY};
       duration=len.valueAsNumber;
       if(!Number.isFinite(duration)||duration<=0)throw Error('자막 길이를 입력해 주세요.');
     }
@@ -451,10 +504,11 @@ function editCue(s,type,cue){
       style:(cue?.style&&cue.style!=='inherit')?cue.style:(s.clip.captionStyle||'box'),
       size:cue?.size||s.clip.captionSize||1,
       color:cue?.color||s.clip.captionColor||'#ffffff',
+      posX:typeof cue?.posX==='number'?cue.posX:(s.clip.captionPosX||0.5),
       posY:typeof cue?.posY==='number'?cue.posY:(s.clip.captionPosY||0.82),
       onLive:(st)=>{
         if(cue){
-          Object.assign(cue,{text:text.value.trim()||cue.text,font:st.font,style:st.style,size:st.size,color:st.color,posY:st.posY});
+          Object.assign(cue,{text:text.value.trim()||cue.text,font:st.font,style:st.style,size:st.size,color:st.color,posX:st.posX,posY:st.posY});
           if(s.joined||s.timelineCuts)seekCutTrack(s,s.trackTime||0);else renderPreview();
         }
       }
@@ -685,17 +739,17 @@ function editGlobalCaptionStyle(s){
   let getStyle;
   const box=mixDialog('전체 자막 폰트·위치',()=>{
     const st=getStyle();
-    clip.captionFont=st.font;clip.captionStyle=st.style;clip.captionSize=st.size;clip.captionColor=st.color;clip.captionPosY=st.posY;
-    for(const c of s.captions||[]){c.font=st.font;c.style=st.style;c.size=st.size;c.color=st.color;c.posY=st.posY;}
+    clip.captionFont=st.font;clip.captionStyle=st.style;clip.captionSize=st.size;clip.captionColor=st.color;clip.captionPosX=st.posX;clip.captionPosY=st.posY;
+    for(const c of s.captions||[]){c.font=st.font;c.style=st.style;c.size=st.size;c.color=st.color;c.posX=st.posX;c.posY=st.posY;}
     mixChanged(s);
     showMixHint('전체 자막 폰트와 위치를 적용했어요!');
   });
   getStyle=buildCaptionStylePicker(box,{
     sampleFallback:activeSample,
-    font:clip.captionFont,style:clip.captionStyle||clip.style,size:clip.captionSize,color:clip.captionColor,posY:clip.captionPosY,
+    font:clip.captionFont,style:clip.captionStyle||clip.style,size:clip.captionSize,color:clip.captionColor,posX:clip.captionPosX,posY:clip.captionPosY,
     onLive:(st)=>{
-      clip.captionFont=st.font;clip.captionStyle=st.style;clip.captionSize=st.size;clip.captionColor=st.color;clip.captionPosY=st.posY;
-      for(const c of s.captions||[]){c.font=st.font;c.style=st.style;c.size=st.size;c.color=st.color;c.posY=st.posY;}
+      clip.captionFont=st.font;clip.captionStyle=st.style;clip.captionSize=st.size;clip.captionColor=st.color;clip.captionPosX=st.posX;clip.captionPosY=st.posY;
+      for(const c of s.captions||[]){c.font=st.font;c.style=st.style;c.size=st.size;c.color=st.color;c.posX=st.posX;c.posY=st.posY;}
       if(s.joined||s.timelineCuts)seekCutTrack(s,s.trackTime||0);else renderPreview();
     }
   });

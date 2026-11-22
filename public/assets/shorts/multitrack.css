@@ -6,7 +6,8 @@
 .quick-video header b span{color:inherit}
 .quick-video header [data-studio-back]{order:-1;width:32px;height:32px;display:grid;place-items:center;font-size:0;text-decoration:none;color:white}
 .quick-video header [data-studio-back]::before{content:'‹';font:32px/1 sans-serif}
-#mixPublish,#mixDone{margin-left:auto;color:white;background:#166cec;border:0;border-radius:7px;padding:6px 12px;font-weight:700}
+#mixPublish,#mixDone{margin-left:0;color:white;background:#166cec;border:0;border-radius:7px;padding:6px 12px;font-weight:700}
+.quick-video:not(:has(#cutTimeline.has-media)) #headerStudioEdit{display:none}
 .quick-video .stage{background:#090a0c;padding:3px 0 0}
 .quick-video #frame{border-radius:0;max-height:none}
 .quick-video:not(.show-tools):has(#cutTimeline.has-media) .sheet{display:none}
@@ -116,7 +117,16 @@
 .track-mute-btn[aria-pressed=true]{opacity:1;color:#f87171;background:transparent}
 .mix-row.is-muted{opacity:.36;filter:grayscale(.7)}
 .ar-cap-sec-lbl{font-size:11.5px;color:#9ca3af;margin:8px 0 5px;display:block}
-.ar-font-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:8px}
+.ar-font-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 5px}
+.ar-font-head .ar-cap-sec-lbl{margin:0}
+.ar-font-toggle{padding:3px 8px;border-radius:999px;border:1px solid #3f4250;background:#262830;color:#93c5fd;font-size:11px;font-weight:600;cursor:pointer}
+.ar-font-carousel-wrap{position:relative;display:flex;align-items:center;gap:4px;margin-bottom:8px}
+.ar-font-nav{width:24px;height:52px;border-radius:8px;border:1px solid #353742;background:#1a1c23;color:#d4d4d8;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.ar-font-nav:hover{background:#262834;color:#fff}
+.ar-font-carousel{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;flex:1;min-width:0;padding:1px 0}
+.ar-font-carousel::-webkit-scrollbar{display:none}
+.ar-font-carousel .ar-font-card{flex:0 0 132px;scroll-snap-align:start}
+.ar-font-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:8px;max-height:210px;overflow-y:auto}
 .ar-font-card{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:3px;padding:8px 10px;border-radius:10px;border:1.5px solid #353742;background:#17181e;color:#f4f4f6;cursor:pointer;text-align:left;min-height:54px;overflow:hidden;transition:border-color 120ms,background-color 120ms}
 .ar-font-card:hover{border-color:#525566;background:#1e2028}
 .ar-font-card[aria-pressed=true]{border-color:#60a5fa;background:#172540;box-shadow:0 0 0 1px rgba(96,165,250,.35)}
