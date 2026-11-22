@@ -19,7 +19,7 @@ const meta=JSON.parse(execFileSync(ffprobe,['-v','error','-select_streams','v:0'
 const duration=Number(meta.format.duration),starts=candidate.starts;
 assert(duration>0&&duration<=180);assert(Array.isArray(starts)&&starts.length>=2&&starts.length<=21&&starts[0]===0);
 assert(Math.abs(starts.at(-1)-duration)<.15);for(let i=1;i<starts.length;i++)assert(starts[i]>starts[i-1]);
-const W=360,H=2*Math.round(W*meta.streams[0].height/meta.streams[0].width/2),previewDuration=Math.min(30,duration);
+const W=360,H=2*Math.round(W*meta.streams[0].height/meta.streams[0].width/2),previewDuration=duration;
 assert(H>=180&&H<=800);buildApp(repo);
 const server=http.createServer((req,res)=>{
  const pathname=new URL(req.url,'http://local').pathname;
