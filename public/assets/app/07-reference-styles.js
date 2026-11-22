@@ -1,7 +1,7 @@
 // URL 분석 스타일. 검증된 선언형 데이터만 빌드에 포함하며 원본 영상/문구는 포함하지 않습니다.
 for (const ref of AR_REFERENCE_STYLES) {
-  // 배경 3줄 반복 타이포 + 중앙 사각 박스·화살표 보드 패턴(repeat-poster, type-rail, chevron-type)은 디자인 품질 기준에서 제외
-  if (ref && (ref.layout === 'repeat-poster' || ref.layout === 'type-rail' || ref.layout === 'chevron-type')) continue;
+  // 디자인 품질 기준에서 제외된 레퍼런스 레이아웃(repeat-poster, type-rail, chevron-type, brush-frame)
+  if (ref && (ref.layout === 'repeat-poster' || ref.layout === 'type-rail' || ref.layout === 'chevron-type' || ref.layout === 'brush-frame')) continue;
   DESIGN_STYLES.push({id:ref.id,name:ref.name,label:ref.name,cat:ref.category,engine:'motion',
     mstyle:'reference',addedAt:ref.addedAt,font:ref.font,bg1:ref.background,bg2:ref.background,accent:ref.accent,
     accent2:ref.foreground,light:false,insta:true,genre:'motion',grade:'none',seed:1500,
