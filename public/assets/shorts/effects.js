@@ -62,7 +62,27 @@ const effectRecipes=[
   {kind:'vignette',duration:Infinity,strength:.7,tab:'theme'},
   {kind:'flash',duration:.9,strength:.9,tint:'#f4ece0',label:'인화 페이드인',tab:'theme'}
 ];
-let grainTile=null;
+let grainTile=null, scanlineTile=null, bokehSprite=null, fxMiniBlur=null;
+function getScanlineTile(){
+  if(scanlineTile)return scanlineTile;
+  scanlineTile=document.createElement('canvas');scanlineTile.width=4;scanlineTile.height=64;
+  const g=scanlineTile.getContext('2d');g.fillStyle='#000';
+  for(let y=0;y<64;y+=4)g.fillRect(0,y,4,1.5);
+  return scanlineTile;
+}
+function getBokehSprite(){
+  if(bokehSprite)return bokehSprite;
+  bokehSprite=document.createElement('canvas');bokehSprite.width=bokehSprite.height=64;
+  const g=bokehSprite.getContext('2d'),rg=g.createRadialGradient(32,32,0,32,32,32);
+  rg.addColorStop(0,'rgba(255,232,188,0.45)');rg.addColorStop(0.65,'rgba(255,232,188,0.14)');rg.addColorStop(1,'rgba(255,232,188,0)');
+  g.fillStyle=rg;g.fillRect(0,0,64,64);
+  return bokehSprite;
+}
+function getFxBlurCanvas(w,h){
+  if(!fxMiniBlur)fxMiniBlur=document.createElement('canvas');
+  if(fxMiniBlur.width!==w||fxMiniBlur.height!==h){fxMiniBlur.width=w;fxMiniBlur.height=h;}
+  return fxMiniBlur;
+}
 function paintLook(ctx,kind,amount,time,w,h){
   if(kind==='grain'){
     if(!grainTile){
@@ -126,40 +146,46 @@ function paintLook(ctx,kind,amount,time,w,h){
   }else if(kind==='vhs'){
     ctx.globalCompositeOperation='screen';ctx.fillStyle=`rgba(128,48,148,${.14*amount})`;ctx.fillRect(0,0,w,h);
     ctx.globalCompositeOperation='soft-light';ctx.fillStyle=`rgba(92,164,196,${.26*amount})`;ctx.fillRect(0,0,w,h);
-    ctx.globalCompositeOperation='source-over';ctx.fillStyle=`rgba(0,0,0,${.14*amount})`;
-    for(let y=0;y<h;y+=4)ctx.fillRect(0,y,w,1);
+    ctx.globalCompositeOperation='source-over';ctx.globalAlpha=.18*amount;
+    const pat=ctx.createPattern(getScanlineTile(),'repeat');
+    if(pat){ctx.fillStyle=pat;ctx.fillRect(0,0,w,h);}
   }else if(kind==='bokeh'){
-    ctx.globalCompositeOperation='screen';
-    for(let i=0;i<14;i++){
+    ctx.globalCompositeOperation='screen';ctx.globalAlpha=.72*amount;
+    const spr=getBokehSprite();
+    for(let i=0;i<10;i++){
       const x=((Math.sin(i*12.7+time*.28)*.5+.5)*w),y=((Math.cos(i*9.3+time*.22)*.5+.5)*h);
-      const r=w*(.04+(i%4)*.022);
-      const g=ctx.createRadialGradient(x,y,0,x,y,r);
-      g.addColorStop(0,`rgba(255,232,188,${.28*amount})`);g.addColorStop(1,'rgba(255,232,188,0)');
-      ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+      const d=w*(.09+(i%4)*.045);
+      ctx.drawImage(spr,x-d/2,y-d/2,d,d);
     }
   }else if(kind==='snow'){
     ctx.fillStyle=`rgba(255,255,255,${.78*amount})`;
-    for(let i=0;i<36;i++){
+    ctx.beginPath();
+    for(let i=0;i<28;i++){
       const sx=((i*97.3+Math.sin(time*1.3+i)*22)%w+w)%w;
       const sy=((i*53.1+time*(55+(i%4)*24))%h+h)%h;
-      ctx.beginPath();ctx.arc(sx,sy,1.4+(i%3)*1.1,0,Math.PI*2);ctx.fill();
+      const r=1.4+(i%3)*1.1;
+      ctx.moveTo(sx+r,sy);ctx.arc(sx,sy,r,0,Math.PI*2);
     }
+    ctx.fill();
   }else if(kind==='sparks'){
     ctx.globalCompositeOperation='screen';
-    for(let i=0;i<18;i++){
+    ctx.strokeStyle=`rgba(255,236,168,${.85*amount})`;ctx.lineWidth=1.5;
+    ctx.beginPath();
+    for(let i=0;i<14;i++){
       const pulse=Math.pow(Math.sin(time*3.2+i*1.9)*.5+.5,3);
-      if(pulse<.15)continue;
+      if(pulse<.2)continue;
       const sx=(Math.sin(i*43.1)*.45+.5)*w,sy=(Math.cos(i*29.7)*.45+.5)*h;
       const r=w*.018*pulse;
-      ctx.strokeStyle=`rgba(255,236,168,${.85*amount*pulse})`;ctx.lineWidth=1.5;
-      ctx.beginPath();ctx.moveTo(sx-r,sy);ctx.lineTo(sx+r,sy);ctx.moveTo(sx,sy-r);ctx.lineTo(sx,sy+r);ctx.stroke();
+      ctx.moveTo(sx-r,sy);ctx.lineTo(sx+r,sy);ctx.moveTo(sx,sy-r);ctx.lineTo(sx,sy+r);
     }
+    ctx.stroke();
   }else if(kind==='letterbox'){
     const bar=Math.round(h*.105*amount);
     ctx.fillStyle='#050507';ctx.fillRect(0,0,w,bar);ctx.fillRect(0,h-bar,w,bar);
   }else if(kind==='scanline'){
-    ctx.fillStyle=`rgba(0,0,0,${.24*amount})`;
-    for(let y=0;y<h;y+=4)ctx.fillRect(0,y,w,1.5);
+    ctx.globalAlpha=.28*amount;
+    const pat=ctx.createPattern(getScanlineTile(),'repeat');
+    if(pat){ctx.fillStyle=pat;ctx.fillRect(0,0,w,h);}
   }else if(kind==='prism'){
     const g=ctx.createLinearGradient(0,0,w,h*.55);
     g.addColorStop(0,`rgba(255,80,150,${.26*amount})`);
@@ -208,7 +234,9 @@ function paintEffects(ctx,s,time,activeText){
       const z=1+(1-phase)*effect.strength*.24;
       ctx.drawImage(ctx.canvas,(w-w/z)/2,(h-h/z)/2,w/z,h/z,0,0,w,h);
     }else if(effect.kind==='blurPull'){
-      try{ctx.filter=`blur(${(amount*9).toFixed(1)}px)`;ctx.drawImage(ctx.canvas,0,0,w,h);ctx.filter='none';}catch(_){}
+      const bw=Math.max(42,Math.round(w*(0.35-0.25*amount))),bh=Math.max(74,Math.round(h*(0.35-0.25*amount)));
+      const mini=getFxBlurCanvas(bw,bh);mini.getContext('2d').drawImage(ctx.canvas,0,0,bw,bh);
+      ctx.imageSmoothingEnabled=true;ctx.drawImage(mini,0,0,w,h);
     }else if(effect.kind==='rgbSplit'){
       const off=Math.round(w*.024*amount);
       ctx.globalCompositeOperation='screen';ctx.globalAlpha=.38*amount;
@@ -216,8 +244,9 @@ function paintEffects(ctx,s,time,activeText){
       ctx.fillStyle='rgba(255,40,90,0.14)';ctx.fillRect(0,0,w,h);
       ctx.drawImage(ctx.canvas,off,0,w,h);
     }else if(effect.kind==='bloom'){
+      const mini=getFxBlurCanvas(90,160);mini.getContext('2d').drawImage(ctx.canvas,0,0,90,160);
       ctx.globalCompositeOperation='screen';ctx.globalAlpha=.42*amount;
-      try{ctx.filter='blur(10px) brightness(1.25)';ctx.drawImage(ctx.canvas,0,0,w,h);ctx.filter='none';}catch(_){}
+      ctx.imageSmoothingEnabled=true;ctx.drawImage(mini,0,0,w,h);
     }else{
       ctx.globalAlpha=.48*amount;ctx.drawImage(ctx.canvas,w*.045*amount,0,w,h);
     }

@@ -1,5 +1,5 @@
 // 트랙 위치는 원본 시간이 아니라 최종 편집본의 초 단위 위치로 저장한다.
-const mixNames={video:'영상',effect:'효과',sfx:'효과음',source:'원본 소리',music:'음악',caption:'자막'};
+const mixNames={video:'영상',effect:'효과',sticker:'스티커',sfx:'효과음',source:'원본 소리',music:'음악',caption:'자막'};
 let mixLibrary, mixDialogSave, mixAudio;
 const soundBuffers=new Map();
 const mixButton=(name,action,cls)=>{
@@ -160,7 +160,7 @@ function editSourceCaption(s,line){
 function editCue(s,type,cue){
   if(!editableEffects())return;
   const sound=type==='sfx',total=mixTotal(s);
-  let choice,text,start,len,style;
+  let choice,text,start,len,style,fontSel,sizeSel,colorInp,posRange;
   const box=mixDialog(mixNames[type],async()=>{
     const at=start.valueAsNumber;if(!Number.isFinite(at)||at<0||at>=total)throw Error('영상 안의 시작 시간을 입력해 주세요.');
     let data,duration;
@@ -172,7 +172,15 @@ function editCue(s,type,cue){
       data={buffer,id,name:choice.selectedOptions[0].text};duration=buffer.duration;
     }else{
       if(!text.value.trim())throw Error('자막을 입력해 주세요.');
-      data={text:text.value.trim(),style:style.value};duration=len.valueAsNumber;
+      data={
+        text:text.value.trim(),
+        style:style.value,
+        font:fontSel.value,
+        size:Number(sizeSel.value)||1,
+        color:colorInp.value||'#ffffff',
+        posY:(Number(posRange.value)||82)/100
+      };
+      duration=len.valueAsNumber;
       if(!Number.isFinite(duration)||duration<=0)throw Error('자막 길이를 입력해 주세요.');
     }
     if(session!==s)return;
@@ -225,10 +233,28 @@ function editCue(s,type,cue){
     }).catch(()=>{byId('mixError').textContent='효과음 목록을 불러올 수 없어요.';});
   }else{
     text=mixField(box,'자막',document.createElement('input'));text.maxLength=240;text.value=cue?.text||'';
+    fontSel=mixField(box,'글꼴 (폰트)',document.createElement('select'));
+    [['pretendard','프리텐다드 (깔끔한 고딕)'],['dohyeon','도현체 (임팩트 타이틀)'],['jua','주아체 (둥근 팝)'],['gowun','고운바탕 (감성 명조)'],['songmyung','송명체 (매거진 명조)'],['pen','나눔손글씨 펜'],['blackhan','블랙한산스 (초굵은 강조)']].forEach(([v,l])=>fontSel.add(new Option(l,v)));
+    fontSel.value=cue?.font||s.clip.captionFont||'pretendard';
     style=mixField(box,'자막 모양',document.createElement('select'));
-    style.add(new Option('시네마 · 흰 글씨와 밑줄','cinema'));
-    style.add(new Option('영상의 자막 스타일','inherit'));
-    style.value=cue ? (cue.style||'inherit') : 'cinema';
+    [['box','어두운 라운드 박스'],['cinema','시네마 · 흰 글씨와 밑줄'],['outline','흰 글씨 · 검정 테두리'],['yellowBox','노란 포인트 박스'],['pinkBox','네온 핑크 박스'],['shadow','배경 없는 그림자']].forEach(([v,l])=>style.add(new Option(l,v)));
+    style.value=cue?.style&&cue.style!=='inherit'?cue.style:(s.clip.captionStyle||'box');
+    sizeSel=mixField(box,'글자 크기',document.createElement('select'));
+    [['0.8','작게 (80%)'],['1','보통 (100%)'],['1.25','크게 (125%)'],['1.45','특대 (145%)']].forEach(([v,l])=>sizeSel.add(new Option(l,v)));
+    sizeSel.value=String(cue?.size||s.clip.captionSize||1);
+    colorInp=mixField(box,'글자 색상',document.createElement('input'));
+    colorInp.type='color';colorInp.value=cue?.color||s.clip.captionColor||'#ffffff';colorInp.style.height='36px';
+    posRange=mixField(box,'세로 위치 (화면 위↔아래 · 미리보기에서 직접 드래그 가능)',document.createElement('input'));
+    posRange.type='range';posRange.min='12';posRange.max='90';posRange.step='1';
+    posRange.value=String(Math.round((typeof cue?.posY==='number'?cue.posY:(s.clip.captionPosY||0.82))*100));
+    const posChips=document.createElement('div');posChips.style.cssText='display:flex;gap:5px;flex-wrap:wrap;margin:-2px 0 8px;';
+    [['상단',18],['중상단',35],['정중앙',50],['중하단',68],['하단',82]].forEach(([lbl,pct])=>{
+      const pb=document.createElement('button');pb.type='button';pb.textContent=lbl;
+      pb.style.cssText='padding:4px 9px;border-radius:999px;border:1px solid #454750;background:#262830;color:#fff;font-size:11px;cursor:pointer;';
+      pb.addEventListener('click',()=>{posRange.value=String(pct);});
+      posChips.append(pb);
+    });
+    box.append(posChips);
   }
   start=numField(box,'시작(초)',cue?.start??Math.max(0,Math.min(s.trackTime||0,total-.1)),total);
   if(!sound)len=numField(box,'길이(초)',cue?.duration||Math.min(2,total),total,.01);
@@ -430,6 +456,79 @@ function showMixHint(text){
   tip.textContent=text;tip.classList.add('show');
   clearTimeout(showMixHint.timer);showMixHint.timer=setTimeout(()=>tip.classList.remove('show'),2600);
 }
+function editGlobalCaptionStyle(s){
+  if(!editableEffects())return;
+  const clip=s.clip;
+  let fontSel,styleSel,sizeSel,colorInp,posRange;
+  const box=mixDialog('전체 자막 폰트·위치',()=>{
+    clip.captionFont=fontSel.value;
+    clip.captionStyle=styleSel.value;
+    clip.captionSize=Number(sizeSel.value)||1;
+    clip.captionColor=colorInp.value||'#ffffff';
+    clip.captionPosY=(Number(posRange.value)||82)/100;
+    for(const c of s.captions||[]){c.font=clip.captionFont;c.style=clip.captionStyle;c.size=clip.captionSize;c.color=clip.captionColor;c.posY=clip.captionPosY;}
+    mixChanged(s);
+    showMixHint('전체 자막 폰트와 위치를 적용했어요!');
+  });
+  fontSel=mixField(box,'글꼴 (폰트)',document.createElement('select'));
+  [['pretendard','프리텐다드 (깔끔한 고딕)'],['dohyeon','도현체 (임팩트 타이틀)'],['jua','주아체 (둥근 팝)'],['gowun','고운바탕 (감성 명조)'],['songmyung','송명체 (매거진 명조)'],['pen','나눔손글씨 펜'],['blackhan','블랙한산스 (초굵은 강조)']].forEach(([v,l])=>fontSel.add(new Option(l,v)));
+  fontSel.value=clip.captionFont||'pretendard';
+  styleSel=mixField(box,'자막 모양',document.createElement('select'));
+  [['box','어두운 라운드 박스'],['cinema','시네마 · 흰 글씨와 밑줄'],['outline','흰 글씨 · 검정 테두리'],['yellowBox','노란 포인트 박스'],['pinkBox','네온 핑크 박스'],['shadow','배경 없는 그림자']].forEach(([v,l])=>styleSel.add(new Option(l,v)));
+  styleSel.value=clip.captionStyle||clip.style||'box';
+  sizeSel=mixField(box,'글자 크기',document.createElement('select'));
+  [['0.8','작게 (80%)'],['1','보통 (100%)'],['1.25','크게 (125%)'],['1.45','특대 (145%)']].forEach(([v,l])=>sizeSel.add(new Option(l,v)));
+  sizeSel.value=String(clip.captionSize||1);
+  colorInp=mixField(box,'글자 색상',document.createElement('input'));colorInp.type='color';colorInp.value=clip.captionColor||'#ffffff';colorInp.style.height='36px';
+  posRange=mixField(box,'세로 위치 (화면 위↔아래 · 미리보기 직접 드래그 가능)',document.createElement('input'));
+  posRange.type='range';posRange.min='12';posRange.max='90';posRange.step='1';
+  posRange.value=String(Math.round((clip.captionPosY||0.82)*100));
+  const posChips=document.createElement('div');posChips.style.cssText='display:flex;gap:5px;flex-wrap:wrap;margin:-2px 0 8px;';
+  [['상단',18],['중상단',35],['정중앙',50],['중하단',68],['하단',82]].forEach(([lbl,pct])=>{
+    const pb=document.createElement('button');pb.type='button';pb.textContent=lbl;
+    pb.style.cssText='padding:4px 9px;border-radius:999px;border:1px solid #454750;background:#262830;color:#fff;font-size:11px;cursor:pointer;';
+    pb.addEventListener('click',()=>{posRange.value=String(pct);});
+    posChips.append(pb);
+  });
+  box.append(posChips);
+}
+function openAddTrackDialog(s){
+  if(!editableEffects())return;
+  const box=mixDialog('트랙 추가',null);
+  const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;';
+  const items=[
+    ['🎬 영상 클립 추가','타임라인에 영상 이어붙이기',()=>{byId('mixDialog').close();byId('joinFiles').click();}],
+    ['★ 스티커 트랙 추가','인스타 스토리 스티커 전용 트랙',()=>{s.showStickerTrack=true;byId('mixDialog').close();renderMix(s);selectMix(s,'sticker');if(typeof window.openShortsStickerDialog==='function')window.openShortsStickerDialog(s);}],
+    ['✧ 효과 레이어 추가','색감·컷아웃·영상 효과 겹쳐 쌓기',()=>{byId('mixDialog').close();selectMix(s,'effect');effectDialog('영상 효과');}],
+    ['T 자막 트랙 추가','폰트·위치 자유 지정 자막 추가',()=>{byId('mixDialog').close();selectMix(s,'caption');editCue(s,'caption');}],
+    ['⌁ 효과음 트랙 추가','효과음 미리듣고 구간 배치',()=>{byId('mixDialog').close();selectMix(s,'sfx');editCue(s,'sfx');}],
+    ['♫ 음악·스트리밍 추가','실시간 노래 검색 또는 내 MP3',()=>{byId('mixDialog').close();selectMix(s,'music');pickMusic(s,'실시간 스트리밍');}]
+  ];
+  items.forEach(([title,desc,fn])=>{
+    const b=document.createElement('button');b.type='button';
+    b.style.cssText='display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:11px 10px;border-radius:10px;border:1px solid #3a3d48;background:#22242c;color:#fff;text-align:left;cursor:pointer;';
+    b.innerHTML=`<strong style="font-size:12.5px;">${title}</strong><span style="font-size:11px;color:#9ca3af;">${desc}</span>`;
+    b.addEventListener('click',fn);
+    grid.append(b);
+  });
+  box.append(grid);
+}
+function drawStickerLane(s,total){
+  const label=document.querySelector('[data-track="sticker"]'),row=byId('stickerRow'),lane=byId('stickerLane');
+  if(!label||!row||!lane)return;
+  const list=s?.stickers||[];
+  const show=Boolean(s?.showStickerTrack||list.length);
+  label.hidden=!show;row.hidden=!show;
+  if(!show)return;
+  lane.replaceChildren();
+  for(const st of list){
+    const btn=mixButton(st.label+(st.text?' · '+st.text:''),()=>{selectMix(s,'sticker');if(typeof window.openShortsStickerDialog==='function')window.openShortsStickerDialog(s);},'cue-block');
+    btn.style.left=(100*(st.start||0)/Math.max(0.1,total))+'%';
+    btn.style.width=(100*Math.min(st.duration||2,total)/Math.max(0.1,total))+'%';
+    lane.append(btn);
+  }
+  if(!lane.children.length)lane.append(mixButton('＋ 스티커 추가',()=>{selectMix(s,'sticker');if(typeof window.openShortsStickerDialog==='function')window.openShortsStickerDialog(s);},'mix-empty'));
+}
 function renderMixActions(s){
   const type=s.mixTrack||'video',panel=byId('mixActions');
   const call=id=>()=>byId(id).click();
@@ -439,10 +538,11 @@ function renderMixActions(s){
   const tools={
     video:[['✂','분할',call('trackSplit')],['⇄','전환',()=>openCutPicker(s)],['◴','속도',()=>pickSpeed(s)],['replace','교체',()=>byId('mixReplace').click()],['⌫','삭제',call('trackDelete')]],
     effect:[['✧','효과 추가',()=>effectDialog('영상 효과')],['✦','컷아웃',()=>effectDialog('컷아웃')],['★','스티커',()=>effectDialog('스티커')],['▣','복제',call('fxCopy')],['⌫','삭제',call('fxRemove')]],
+    sticker:[['＋','스티커 추가',()=>{if(typeof window.openShortsStickerDialog==='function')window.openShortsStickerDialog(s);}],['⌫','마지막 삭제',()=>{if(s.stickers?.length){s.stickers.pop();mixChanged(s);}}]],
     sfx:[['＋','효과음 추가',()=>editCue(s,'sfx')],['⌁','효과음 편집',()=>editCue(s,'sfx',item)],['⌫','삭제',remove]],
     source:[['♩',currentTake(s)?.take.owner.keepAudio===false?'소리 켜기':'음소거',()=>changeTake(s,t=>({...t,owner:{...t.owner,keepAudio:t.owner.keepAudio===false}}))]],
-    music:[['♫','곡 선택',()=>pickMusic(s)],['⌫','음악 제거',()=>{byId('music').value='';byId('music').dispatchEvent(new Event('input',{bubbles:true}));}]],
-    caption:[['＋','자막 추가',()=>editCue(s,'caption')],['★','스티커',()=>effectDialog('스티커')],['T','문구·시간',()=>editCue(s,'caption',item)],['⌫','삭제',remove]]
+    music:[['♫','곡·스트리밍',()=>pickMusic(s,'실시간 스트리밍')],['📁','내 음원',()=>pickMusic(s,'내 음원·가요')],['⌫','음악 제거',()=>{byId('music').value='';byId('music').dispatchEvent(new Event('input',{bubbles:true}));}]],
+    caption:[['＋','자막 추가',()=>editCue(s,'caption')],['Aa','폰트·위치',()=>item?editCue(s,'caption',item):editGlobalCaptionStyle(s)],['T','전체 스타일',()=>editGlobalCaptionStyle(s)],['⌫','삭제',remove]]
   };
   panel.replaceChildren(...tools[type].map(([icon,label,fn])=>{
     const button=mixButton(label,()=>{
@@ -467,7 +567,10 @@ function selectMix(s,key){
 function renderMix(s){
   if(!s?.clip)return;
   const total=mixTotal(s);
-  drawCues(s,'sfx',total);drawCues(s,'caption',total);renderMusicWave(s,total);
+  drawStickerLane(s,total);drawCues(s,'sfx',total);drawCues(s,'caption',total);renderMusicWave(s,total);
+  // 효과 트랙에 여러 레이어가 쌓였을 때 왼쪽 라벨 높이 동기화
+  const fxRow=byId('fxLanes')?.closest('.mix-row'), fxLbl=document.querySelector('[data-track="effect"]');
+  if(fxRow&&fxLbl){const h=fxRow.offsetHeight;if(h>0)fxLbl.style.height=h+'px';}
   byId('sourceLane').setAttribute('aria-label',currentTake(s)?.take.owner.keepAudio===false?'원본 소리 꺼짐':'원본 소리 편집');
   selectMix(s,s.mixTrack||'video');
 }
@@ -507,6 +610,8 @@ if(quickEdit){
   }));
   byId('sourceLane').addEventListener('click',()=>{if(editableEffects())selectMix(session,'source');});
   byId('musicLane').addEventListener('click',()=>{if(editableEffects()){selectMix(session,'music');pickMusic(session);}});
+  const addTrk=byId('addTrackBtn');
+  if(addTrk)addTrk.addEventListener('click',()=>{if(editableEffects())openAddTrackDialog(session);});
   byId('mixClose').addEventListener('click',()=>byId('mixDialog').close());
   byId('mixDone').addEventListener('click',async()=>{
     if(!editableEffects())return;

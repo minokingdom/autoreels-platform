@@ -201,7 +201,7 @@ function paintClip(ctx, source, text, clip=session.clip, outputTime=0) {
     const activeTxt=cue?.text||text;
     paintEffects(ctx,session,outputTime,activeTxt);
     if(typeof window.arPaintShortsStickers==='function')window.arPaintShortsStickers(ctx,session,outputTime);
-    drawTitles(ctx,cue?{...clip,showCaptions:true}:clip,activeTxt,cue?.style); return;
+    drawTitles(ctx,cue?{...clip,showCaptions:true}:clip,activeTxt,cue); return;
   }
   const scale = Math.max(w/source.videoWidth,h/source.videoHeight);
   const sw = w/scale, sh = h/scale;
