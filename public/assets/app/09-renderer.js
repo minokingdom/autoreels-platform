@@ -3977,19 +3977,15 @@
       vid._continuousVideo = true;
       vid._keepAudio = true;
       vid._origName = '편집기에서 다듬은 영상';
-      // 사용자가 스튜디오에서 대본을 직접 만들지 않았다면 업종 기본 예시 대본·성우가 자동으로 얹히지 않게 비움
-      const hasUserScript = Boolean(campaign._userWroteScript || (typeof arStepsVisited !== 'undefined' && arStepsVisited.has('script')));
+      // 사용자가 스튜디오에서 대본을 직접 쓰거나 생성한 적이 없다면 업종 기본 예시 대본·추가 컷 자동 문구·성우가 절대 얹히지 않게 비움
+      const hasUserScript = Boolean(campaign._userWroteScript);
       if (!hasUserScript) {
+        campaign.noDefaultCaptions = true;
         campaign.hook = '';
         campaign.sub = '';
         campaign.priceTag = '';
-        const nCuts = Math.max(4, Array.isArray(campaign.cutCaptions) ? campaign.cutCaptions.length : 4);
-        campaign.cutCaptions = Array.from({ length: nCuts }, () => '');
-        campaign.ttsLines = Array.from({ length: nCuts }, () => '');
-        for (let i = 0; i < nCuts; i++) {
-          const sEl = document.getElementById(`cutSub${i}`); if (sEl) sEl.value = '';
-          const tEl = document.getElementById(`cutTts${i}`); if (tEl) tEl.value = '';
-        }
+        campaign.cutCaptions = [];
+        campaign.ttsLines = [];
         if (typeof AudioEngine !== 'undefined') {
           AudioEngine.ttsVoice = 'off';
           AudioEngine.masterBuffer = null;
@@ -3998,10 +3994,19 @@
           const vSel = document.getElementById('ttsVoiceSelect');
           if (vSel) vSel.value = 'off';
         }
-        if (typeof designThumbCache !== 'undefined' && designThumbCache) designThumbCache.fresh = {};
       }
       document.querySelector('dialog.ar-video-editor[open]')?.close();
       arUpdateShortVideoEdit({});
+      if (!hasUserScript) {
+        const nCuts = Math.max(4, typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4);
+        campaign.hook = '';
+        campaign.sub = '';
+        campaign.priceTag = '';
+        campaign.cutCaptions = Array.from({ length: nCuts }, () => '');
+        campaign.ttsLines = Array.from({ length: nCuts }, () => '');
+        if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+        if (typeof designThumbCache !== 'undefined' && designThumbCache) designThumbCache.fresh = {};
+      }
       if (typeof renderUploadedPhotoThumbs === 'function') renderUploadedPhotoThumbs();
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0);
       if (typeof openPresetDrawer === 'function') openPresetDrawer('right');

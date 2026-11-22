@@ -389,13 +389,19 @@
 
       while (campaign.cutCaptions.length < targetCuts) {
         const idx = campaign.cutCaptions.length;
-        const bp = arExtraBp(idx);
-        campaign.cutCaptions.push(bp.sub(campaign, d));
+        if (campaign.noDefaultCaptions) {
+          campaign.cutCaptions.push('');
+        } else {
+          const bp = arExtraBp(idx);
+          campaign.cutCaptions.push(bp.sub(campaign, d));
+        }
       }
       if (!Array.isArray(campaign.ttsLines)) campaign.ttsLines = [];
       while (campaign.ttsLines.length < targetCuts) {
         const idx = campaign.ttsLines.length;
-        if (idx < 4 && campaign.cutCaptions[idx]) {
+        if (campaign.noDefaultCaptions) {
+          campaign.ttsLines.push('');
+        } else if (idx < 4 && campaign.cutCaptions[idx]) {
           campaign.ttsLines.push(campaign.cutCaptions[idx]);
         } else {
           const bp = arExtraBp(idx);

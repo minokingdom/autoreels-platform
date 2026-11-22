@@ -3712,7 +3712,7 @@
         st.added.unshift(obj);
         saveTrendSwapState(st);
       }
-      if (t.hookCaption && Array.isArray(campaign.cutCaptions) && campaign.cutCaptions.length > 0) {
+      if (!campaign.noDefaultCaptions && t.hookCaption && Array.isArray(campaign.cutCaptions) && campaign.cutCaptions.length > 0) {
         campaign.cutCaptions[0] = t.hookCaption;
         if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
       }
