@@ -15,12 +15,17 @@ KNOWN=Path.home()/'.ssh/known_hosts-eatspay-restored-20261023'
 os.environ.update(PYTHONUTF8='1',REA_VIDEO_HOME=str(ROOT/'memory'),REA_VIDEO_MODELS=str(ROOT/'models'))
 
 def run(args,cwd=None,timeout=180,input=None):
-    p=subprocess.run([str(x) for x in args],cwd=cwd,input=input,capture_output=True,text=True,encoding='utf-8',errors='replace',timeout=timeout,
+    p=subprocess.Popen([str(x) for x in args],cwd=cwd,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,encoding='utf-8',errors='replace',
         creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
+    try:stdout,stderr=p.communicate(input,timeout=timeout)
+    except subprocess.TimeoutExpired:
+        if os.name=='nt':subprocess.run(['taskkill','/PID',str(p.pid),'/T','/F'],capture_output=True,creationflags=subprocess.CREATE_NO_WINDOW)
+        else:p.kill()
+        p.communicate();raise RuntimeError(Path(str(args[0])).name+' 실행 시간 초과') from None
     if p.returncode:
         # 로그에 토큰/원본 메시지는 남기지 않습니다. 도구 오류 상세는 작업 폴더에만 저장합니다.
-        raise RuntimeError(Path(str(args[0])).name+' 실행 실패: '+p.stderr[-500:].replace(str(KEY),'[key-path]'))
-    return p.stdout
+        raise RuntimeError(Path(str(args[0])).name+' 실행 실패: '+stderr[-500:].replace(str(KEY),'[key-path]'))
+    return stdout
 
 def rpc(data):
     return json.loads(run(['ssh','-o','BatchMode=yes','-o','StrictHostKeyChecking=yes','-o','ConnectTimeout=10',
@@ -184,9 +189,13 @@ def request_style(frames,timeline,eid):
             raise ValueError('영상 분석기 인증 연결에 문제가 있어 중단했습니다. 사용자 로그인 문제가 아닙니다. 운영자가 연결을 확인해야 합니다.') from None
         try:result=json.load(exc)
         except Exception:result={}
+        if exc.code==422 and result.get('error')=='reference_needs_custom_renderer':
+            raise NeedsImplementation(result.get('message') or '별도 효과 구현 필요') from None
         raise ValueError(result.get('message') or result.get('error') or f'분석 API 오류 {exc.code}') from None
     if not result.get('ok'):raise ValueError(result.get('error','분석 실패'))
     return result['style']
+
+class NeedsImplementation(ValueError):pass
 
 def validate_catalog(catalog,directory):
     file=directory/'catalog-candidate.json';write(file,catalog)
@@ -207,7 +216,7 @@ def require_live_style(style_id,version):
         if style_id.encode() not in response.read(8_000_000):
             raise RuntimeError('라이브 스타일 반영을 확인하지 못했습니다.')
 
-def publish(style,url,directory):
+def publish(style,url,directory,renderer=''):
     sid=reference_id(url)
     checkpoint=directory/'published.json'
     if checkpoint.exists():return json.loads(checkpoint.read_text(encoding='utf-8'))
@@ -216,6 +225,24 @@ def publish(style,url,directory):
     catalog_sha,catalog=remote_catalog()
     if any(row['id']==sid for row in catalog):raise ValueError('이 영상에서 만든 스타일이 이미 등록되어 있습니다.')
     result=validate_catalog(catalog+[entry],directory)
+    if renderer:
+        # 승인된 렌더 함수와 카탈로그를 하나의 Git 커밋으로 반영합니다.
+        code=directory/'proposal/renderer-approved.js';code.write_text(renderer,encoding='utf-8')
+        run(['node',REPO/'scripts/alerts/validate-style-renderer.cjs',code,style['renderer']])
+        parent=json.loads(run(['gh','api',f'repos/{REMOTE}/git/ref/heads/main']))['object']['sha']
+        current=json.loads(run(['gh','api',f'repos/{REMOTE}/git/commits/{parent}']))
+        # 카탈로그를 읽은 뒤 main이 바뀌었으면 최신 파일 SHA가 같은지 다시 확인합니다.
+        now_sha,_=remote_catalog()
+        if now_sha!=catalog_sha:raise ValueError('다른 스타일이 먼저 등록돼 최신 카탈로그로 재검증이 필요합니다. 승인본은 보관했습니다.')
+        changes=[{'path':CATALOG,'mode':'100644','type':'blob','content':json.dumps(result,ensure_ascii=False,indent=2)+'\n'},
+                 {'path':'public/assets/app/07-reference-custom-'+sid[4:]+'.js','mode':'100644','type':'blob','content':renderer+'\n'}]
+        payload=directory/'publish-tree.json';write(payload,{'base_tree':current['tree']['sha'],'tree':changes})
+        tree=json.loads(run(['gh','api','--method','POST',f'repos/{REMOTE}/git/trees','--input',payload]))
+        write(payload,{'message':'feat: register owner-approved reference style '+sid,'tree':tree['sha'],'parents':[parent]})
+        commit=json.loads(run(['gh','api','--method','POST',f'repos/{REMOTE}/git/commits','--input',payload]))
+        write(payload,{'sha':commit['sha'],'force':False})
+        run(['gh','api','--method','PATCH',f'repos/{REMOTE}/git/refs/heads/main','--input',payload])
+        saved={'id':sid,'name':style['name'],'sha':commit['sha']};write(checkpoint,saved);return saved
     payload={'message':'feat: add analysed reference style '+sid,'sha':catalog_sha,'branch':'main','content':base64.b64encode((json.dumps(result,ensure_ascii=False,indent=2)+'\n').encode()).decode()}
     file=directory/'publish-request.json';write(file,payload)
     committed=json.loads(run(['gh','api','--method','PUT',f'repos/{REMOTE}/contents/{CATALOG}','--input',file]))
@@ -234,6 +261,24 @@ def deployed(commit):
 
 def process(job):
     directory=ROOT/'jobs'/job['id'];directory.mkdir(parents=True,exist_ok=True)
+    phase=job.get('phase','analyse')
+    if phase in ('develop','publish'):
+        from style_development import prepare,approved_candidate
+        try:
+            if phase=='develop':
+                metadata=directory/'source-info.json'
+                if metadata.exists():job={**job,'url':json.loads(metadata.read_text(encoding='utf-8'))['url']}
+                prepare(job,directory,REPO,run,write,rpc)
+                return {'proposed':True}
+            candidate=approved_candidate(job,directory,REPO,run)
+            style=candidate['style'];pub=publish(style,candidate['sourceUrl'],directory,candidate.get('renderer',''))
+            deployed(pub['sha']);require_live_style(pub['id'],pub['sha'][:10])
+            result={'status':'done','message':f"승인한 스타일 등록·배포 확인 완료\n{pub['name']}\n{SITE}/studio?v={pub['sha'][:10]}"}
+        except Exception as exc:
+            write(directory/'proposal/stage-error.json',{'phase':phase,'type':type(exc).__name__,'detail':str(exc)[:1500]})
+            message=str(exc) if isinstance(exc,ValueError) else '효과 구현·검증 단계에서 멈췄습니다. 작업 기록을 확인해야 합니다.' if phase=='develop' else '등록 또는 배포 검증을 완료하지 못했습니다. 실제 반영 상태를 확인해야 합니다.'
+            result={'status':'failed','message':message[:700]+'\n작업: '+job['id']}
+        write(directory/('development-result.json' if phase=='develop' else 'approval-result.json'),result);return result
     receipt=directory/'result.json'
     if receipt.exists():return json.loads(receipt.read_text(encoding='utf-8'))
     # 재시작 뒤 중단된 모델/등록 작업은 자동으로 다시 돌리지 않습니다.
@@ -242,6 +287,7 @@ def process(job):
     mark.write_text(str(time.time()))
     try:
         video,source_url=download(job['url'],directory)
+        write(directory/'source-info.json',{'url':source_url})
         if urlsplit(source_url).hostname in CAPCUT_HOSTS | FACEBOOK_HOSTS:
             catalog_sha,catalog=remote_catalog()
             sid=reference_id(source_url)
@@ -259,11 +305,14 @@ def process(job):
         style.pop('effects',None)
         if events:style['effects']=flash_recipe(events)
         write(directory/'style.json',style)
-        pub=publish(style,source_url,directory)
-        deployed(pub['sha'])
-        require_live_style(pub['id'],pub['sha'][:10])
-        effect_note='영상 편집기 → 효과에서 수집한 플래시를 선택할 수 있어요.' if events else '별도로 측정된 플래시 효과는 없습니다.'
-        result={'status':'done','message':f"오토릴스메이커 스타일 추가 완료\n{pub['name']}\n{style['summary']}\n스타일 목록에서 이름으로 선택하세요.\n{effect_note}\n{SITE}/studio?v={pub['sha'][:10]}\n음성 기준 길이·컷별 사진·엔딩 설정은 그대로 적용됩니다."}
+        measurements=json.loads((directory/'measurements.json').read_text(encoding='utf-8'))
+        starts=sorted(set([0]+[s['start'] for s in measurements['shots']]+[measurements['duration']]))
+        if len(starts)>21:starts=[0,measurements['duration']]
+        write(directory/'proposal/candidate.json',{'style':style,'starts':starts,'renderer':'','sourceUrl':source_url})
+        result={'status':'development','message':'분석을 마쳤습니다. 원본 비교 영상을 만들고 있습니다. 승인 전에는 등록하지 않습니다.'}
+    except NeedsImplementation as exc:
+        write(directory/'implementation-needed.json',{'reason':str(exc)})
+        result={'status':'development','message':'분석을 마쳤습니다. 필요한 효과를 구현·검증한 뒤 원본 비교 영상을 보내겠습니다. 승인 전에는 등록하지 않습니다.'}
     except Exception as exc:
         write(directory/'error.json',{'type':type(exc).__name__,'detail':str(exc)[:1500]})
         message=str(exc) if isinstance(exc,ValueError) else '다운로드·분석·배포 중 완료하지 못했습니다. 작업 기록을 확인해야 합니다.'
@@ -294,6 +343,9 @@ def main():
             job=rpc({'op':'claim'})
             if job:
                 result=process(job)
+                if result.get('proposed'):
+                    if args.once:break
+                    continue
                 write(pending,{'op':'complete','id':job['id'],'token':job['token'],**result})
                 rpc(json.loads(pending.read_text(encoding='utf-8')));pending.unlink()
         except Exception as exc:print(time.strftime('%Y-%m-%d %H:%M:%S'),type(exc).__name__,flush=True)

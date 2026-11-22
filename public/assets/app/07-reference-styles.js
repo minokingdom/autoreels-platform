@@ -16,6 +16,20 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
   const caption=gCleanCaption((campaign.cutCaptions||[])[idx]||campaign.hook||'');
   c.save();
   c.fillStyle=r.background;c.fillRect(0,0,W,H);
+  if(r.layout==='custom') {
+    const render=window[r.renderer];
+    if(typeof render!=='function')throw Error('reference renderer missing');
+    render(c,W,H,S,r,idx,p,local,dur);
+    arReferenceCaption(c,caption,W,H,H*.73,H*.15,r,entry);
+    inSign(c,d,W/2,H*.94,r.foreground,'center',W*.03);
+    c.restore();return;
+  }
+  if(r.layout==='photo-montage') {
+    arReferencePhotoMontage(c,W,H,S,r,idx,p,local,dur);
+    arReferenceCaption(c,caption,W,H,H*.73,H*.15,r,entry);
+    inSign(c,d,W/2,H*.94,r.foreground,'center',W*.03);
+    c.restore();return;
+  }
   if(r.layout==='diagonal-fan') {
     // 여러 컷 사진이 겹치는 마스크는 단일 사진 사선 띠와 별도 처리합니다.
     arReferenceDiagonalFan(c,W,H,S,r,idx,p,local,dur);
@@ -64,6 +78,58 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
 function arReferenceFanScene(S,cut) {
   const cuts=Math.max(1,S.cuts||1),target=Math.max(0,Math.min(cuts-1,cut));
   return {...S,cutIdx:target,idx:Math.min(Math.max(0,S.n-1),Math.floor(target*Math.max(1,S.n)/cuts))};
+}
+function makeCanvas(W,H) {const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.min(2048,Math.round(W)));canvas.height=Math.max(1,Math.min(2048,Math.round(H)));return canvas;}
+// 사진 콜라주 → 사선 선명 마스크 → 겹침 → 초점 표시. 원본 인물/문구는 포함하지 않습니다.
+// 모든 상태는 현재 시간에서 계산해 되감기·내보내기 결과가 같습니다.
+function arReferenceMontageCard(c,W,H,S,cut,x,y,w,h,angle,alpha=1) {
+  c.save();c.translate(x,y);c.rotate(angle);c.globalAlpha*=alpha;
+  const border=W*.012;c.fillStyle='#ffffff';c.fillRect(-w/2-border,-h/2-border,w+2*border,h+2*border);
+  mPhoto(c,arReferenceFanScene(S,cut),0,-w/2,-h/2,w,h,1.02);c.restore();
+}
+function arReferenceMontageCollage(c,W,H,S,cut,spread) {
+  // 화면 바깥 카드까지 배치해 이동 중 검은 빈 곳과 흰 프레임이 원본처럼 드러납니다.
+  const cards=[[-.30,-.55,-.34],[.65,-.72,.28],[-.78,.15,-.4],[.82,.38,.35],[-.50,.91,.30],[.55,1.16,-.32]];
+  c.fillStyle='#08090b';c.fillRect(0,0,W,H);
+  for(const [x,y,a] of cards)arReferenceMontageCard(c,W,H,S,cut,W/2+x*W*spread,H/2+y*H*spread,W*.55,H*.55,a*spread);
+  const grow=1-spread;
+  arReferenceMontageCard(c,W,H,S,cut,W/2,H/2,W*(.58+.42*grow),H*(.70+.30*grow),-.24*spread);
+}
+function arReferenceMontageFocus(c,W,H,p) {
+  const pulse=Math.sin(Math.PI*mClamp(p/.82));
+  const size=W*(.075+.14*pulse),x=W*.53,y=H*.58,k=size*.27;
+  c.save();c.globalAlpha*=mClamp((1-p)*9);c.strokeStyle='#ffffff';c.lineWidth=Math.max(1,W*.005);
+  for(const [sx,sy] of [[-1,-1],[1,-1],[-1,1],[1,1]]) {
+    const xx=x+sx*size/2,yy=y+sy*size/2;
+    c.beginPath();c.moveTo(xx-sx*k,yy);c.lineTo(xx,yy);c.lineTo(xx,yy-sy*k);c.stroke();
+  }
+  c.lineWidth=Math.max(1,W*.003);c.beginPath();c.moveTo(x-W*.011,y);c.lineTo(x+W*.011,y);c.moveTo(x,y-W*.011);c.lineTo(x,y+W*.011);c.stroke();c.restore();
+}
+function arReferencePhotoMontage(c,W,H,S,r,idx,p,local,dur) {
+  c.save();c.fillStyle=r.background;c.fillRect(0,0,W,H);
+  const photo=(cut,alpha=1,zoom=1.02)=>{c.save();c.globalAlpha*=alpha;mPhoto(c,arReferenceFanScene(S,cut),0,0,0,W,H,zoom);c.restore();};
+  const blend=arReferenceFanEase(local/Math.max(.001,Math.min(.5,dur*.25)));
+  if(idx===0) {
+    const spread=arReferenceFanEase((p-.43)/.35);
+    if(spread===0)photo(0);else arReferenceMontageCollage(c,W,H,S,0,spread);
+  } else if(idx===1) {
+    const spread=1-arReferenceFanEase((p-.20)/.77);
+    arReferenceMontageCollage(c,W,H,S,idx-1,Math.max(.01,spread));
+    c.save();c.globalAlpha*=blend;arReferenceMontageCollage(c,W,H,S,idx,Math.max(.01,spread));c.restore();
+  } else if(idx%6===3) {
+    // 흐린 배경은 새 사진. 좁은 사선 띠가 회전·확대되며 같은 사진의 선명한 부분을 드러냅니다.
+    c.save();c.filter=`blur(${W*.022*(1-arReferenceFanEase(p/.8))}px)`;photo(idx,1,1.12);c.restore();
+    if(blend<1)photo(idx-1,1-blend);
+    const q=arReferenceFanEase(p/.83),angle=-.85*Math.sin(Math.PI*q),width=W*(.025+1.55*q);
+    c.save();c.translate(W/2,H/2);c.rotate(angle);c.beginPath();c.rect(-width/2,-H,width,H*2);c.clip();
+    c.rotate(-angle);c.translate(-W/2,-H/2);photo(idx);c.restore();
+    if(q<.999){c.save();c.translate(W/2,H/2);c.rotate(angle);c.strokeStyle='rgba(255,255,255,.85)';c.lineWidth=Math.max(1,W*.003);c.strokeRect(-width/2,-H,width,H*2);c.restore();}
+  } else {
+    photo(idx-1);photo(idx,blend,1.02+(idx%3===2?.035*p:0));
+    if(idx%3===2&&idx>2)arReferenceMontageFocus(c,W,H,p);
+  }
+  if(r.shade){c.fillStyle=`rgba(0,0,0,${r.shade})`;c.fillRect(0,0,W,H);}
+  c.restore();
 }
 function arReferenceFanEase(v) {v=mClamp(v);return v*v*(3-2*v);}
 function arReferenceFanRay(slope) {

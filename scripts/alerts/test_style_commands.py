@@ -1,4 +1,5 @@
-import json,tempfile,time,unittest
+import hashlib,json,tempfile,time,unittest
+from pathlib import Path
 from autoreels_style_commands import Queue,Commands,extract_url,ROOM,OWNER
 
 class Tests(unittest.TestCase):
@@ -53,5 +54,38 @@ class Tests(unittest.TestCase):
         self.q.enqueue('6','url')
         def fail(*args):raise TimeoutError()
         self.q.deliver(lambda:True,fail);sent=[];self.q.deliver(lambda:True,lambda *a:sent.append(a));self.assertFalse(sent)
+    def proposal(self):
+        self.q.enqueue('10','url');job=self.q.rpc({'op':'claim'})
+        video=b'video-test'*200
+        manifest={'tested':True,'videoSha256':hashlib.sha256(video).hexdigest(),'candidateSha256':'a'*64}
+        revision=hashlib.sha256(json.dumps(manifest,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+        folder=Path(self.tmp.name)/'previews';folder.mkdir();(folder/f'10-{revision}.mp4').write_bytes(video)
+        data={'op':'propose',**job,'revision':revision,'manifest':manifest}
+        self.q.rpc(data);return data
+    def test_proposal_requires_video_and_exact_hash(self):
+        data=self.proposal();self.assertEqual(self.q.rpc({'op':'status'})[0]['status'],'awaiting_approval')
+        self.assertTrue(self.q.rpc(data)['accepted'])
+        data['manifest']['tested']=False
+        with self.assertRaises(ValueError):self.q.rpc(data)
+    def test_approval_cannot_precede_video_delivery(self):
+        data=self.proposal();self.q.decision('11',data['revision'][:10],True)
+        self.assertEqual(self.q.rpc({'op':'status'})[0]['status'],'awaiting_approval')
+    def test_approved_revision_claim_and_duplicate_approval(self):
+        data=self.proposal()
+        for _ in range(3):self.q.deliver(lambda:True,lambda *a:None,lambda *a:None)
+        self.q.decision('11',data['revision'][:10],True);self.q.decision('11',data['revision'][:10],True)
+        job=self.q.rpc({'op':'claim'});self.assertEqual(job['phase'],'publish');self.assertEqual(job['proposal']['revision'],data['revision'])
+        self.q.decision('12',data['revision'][:10],True);self.assertIsNone(self.q.rpc({'op':'claim'}))
+    def test_non_owner_cannot_approve(self):
+        data=self.proposal();msg='!스타일승인 '+data['revision'][:10]
+        class Verifier:
+            def private_room(self):return True
+            def message(self,eid):return {'user_id':'other','message':msg,'type':1,'created_at':time.time(),'deleted_at':0}
+        Commands(self.q,Verifier(),lambda *a:None).handle({'msg':msg,'json':{'chat_id':ROOM,'user_id':OWNER,'id':'12'}})
+        self.assertEqual(self.q.rpc({'op':'status'})[0]['status'],'awaiting_approval')
+    def test_development_is_a_new_stage_not_registration(self):
+        self.q.enqueue('1','url');job=self.q.rpc({'op':'claim'})
+        self.q.rpc({'op':'complete',**job,'status':'development','message':'구현 시작'})
+        self.assertEqual(self.q.rpc({'op':'claim'})['phase'],'develop')
 
 if __name__=='__main__':unittest.main()

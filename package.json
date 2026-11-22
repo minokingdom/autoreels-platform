@@ -25,6 +25,7 @@
   "devDependencies": {
     "@astryxdesign/cli": "0.7.16",
     "@astryxdesign/core": "0.7.16",
-    "@astryxdesign/theme-neutral": "0.7.16"
+    "@astryxdesign/theme-neutral": "0.7.16",
+    "acorn": "^8.15.0"
   }
 }
