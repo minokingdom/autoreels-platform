@@ -197,9 +197,11 @@ function paintClip(ctx, source, text, clip=session.clip, outputTime=0) {
       if(outputTime>=transition.start && outputTime<transition.start+transition.duration)
         compositeCut(ctx,transition.frame,transition.kind,(outputTime-transition.start)/transition.duration);
     }
-    paintEffects(ctx,session,outputTime);
     const cue=activeCue(session,outputTime);
-    drawTitles(ctx,cue?{...clip,showCaptions:true}:clip,cue?.text||text,cue?.style); return;
+    const activeTxt=cue?.text||text;
+    paintEffects(ctx,session,outputTime,activeTxt);
+    if(typeof window.arPaintShortsStickers==='function')window.arPaintShortsStickers(ctx,session,outputTime);
+    drawTitles(ctx,cue?{...clip,showCaptions:true}:clip,activeTxt,cue?.style); return;
   }
   const scale = Math.max(w/source.videoWidth,h/source.videoHeight);
   const sw = w/scale, sh = h/scale;

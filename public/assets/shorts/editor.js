@@ -134,7 +134,7 @@ function drawTitles(ctx,clip,caption,cueStyle) {
 function renderPreview(at=video.currentTime) {
   if (session?.joined || session?.timelineCuts) return;
   const overlay=byId('overlay'),ctx=overlay.getContext('2d');
-  const composite=session?.clip?.montage || session?.effects?.length || session?.captions?.length;
+  const composite=session?.clip?.montage || session?.effects?.length || session?.captions?.length || session?.stickers?.length;
   if (composite && (video.seeking || video.readyState < 2)) return;
   ctx.clearRect(0,0,overlay.width,overlay.height);
   if (composite && video.readyState >= 2) paintClip(ctx,video,activeCaption(session.clip,at),session.clip,outputTimeAt(session,at));

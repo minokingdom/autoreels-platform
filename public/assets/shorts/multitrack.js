@@ -182,7 +182,47 @@ function editCue(s,type,cue){
   });
   if(sound){
     choice=mixField(box,'효과음 선택',document.createElement('select'));
-    mixLibrary.then(library=>{for(const e of library.effects)choice.add(new Option(e.name,e.id));if(cue)choice.value=cue.id;}).catch(()=>{byId('mixError').textContent='효과음 목록을 불러올 수 없어요.';});
+    const sfxBar=document.createElement('div');
+    sfxBar.style.cssText='display:flex;gap:5px;flex-wrap:wrap;margin:6px 0 8px;';
+    const previewBtn=document.createElement('button');
+    previewBtn.type='button';previewBtn.textContent='▶ 미리듣기';
+    previewBtn.style.cssText='padding:5px 10px;border-radius:7px;border:1px solid #4cc38a;background:#112920;color:#86efac;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:6px;';
+    let previewSrc=null;
+    previewBtn.addEventListener('click',async()=>{
+      const id=choice.value;if(!id)return;
+      try{
+        if(previewSrc){try{previewSrc.stop();}catch(_){}}
+        mixAudio||=new AudioContext();if(mixAudio.state==='suspended')await mixAudio.resume();
+        const url='/assets/sfx/'+id+'.wav';
+        let buf=soundBuffers.get(url);
+        if(!buf){buf=await loadMixBuffer(url,s.controller.signal);soundBuffers.set(url,buf);}
+        const src=mixAudio.createBufferSource();src.buffer=buf;src.connect(mixAudio.destination);src.start();previewSrc=src;
+      }catch(_){}
+    });
+    box.append(previewBtn,sfxBar);
+    const cats=[['all','전체'],['transition','전환'],['impact','임팩트'],['sparkle','반짝임'],['camera','카메라'],['click','클릭'],['deal','강조'],['outro','아웃트로'],['texture','질감']];
+    mixLibrary.then(library=>{
+      const allFx=library.effects||[];
+      const fillCat=(catKey)=>{
+        const prev=choice.value;
+        choice.replaceChildren();
+        const list=catKey==='all'?allFx:allFx.filter(e=>String(e.id||'').includes('-'+catKey+'-'));
+        for(const e of list)choice.add(new Option(e.name,e.id));
+        if(cue&&list.some(e=>e.id===cue.id))choice.value=cue.id;
+        else if(prev&&list.some(e=>e.id===prev))choice.value=prev;
+      };
+      cats.forEach(([k,lbl],idx)=>{
+        const b=document.createElement('button');b.type='button';b.textContent=lbl;
+        b.style.cssText='padding:4px 8px;border-radius:999px;border:1px solid #454750;background:'+(idx===0?'#3b82f6':'#262830')+';color:#fff;font-size:11px;cursor:pointer;';
+        b.addEventListener('click',()=>{
+          [...sfxBar.children].forEach(c=>c.style.background='#262830');
+          b.style.background='#3b82f6';
+          fillCat(k);
+        });
+        sfxBar.append(b);
+      });
+      fillCat('all');
+    }).catch(()=>{byId('mixError').textContent='효과음 목록을 불러올 수 없어요.';});
   }else{
     text=mixField(box,'자막',document.createElement('input'));text.maxLength=240;text.value=cue?.text||'';
     style=mixField(box,'자막 모양',document.createElement('select'));
@@ -195,8 +235,9 @@ function editCue(s,type,cue){
 }
 function effectDialog(tab='영상 효과'){
   if(tab==='전환'){openCutPicker(session);return;}
+  if(tab==='스티커'){if(typeof window.openShortsStickerDialog==='function')window.openShortsStickerDialog(session);return;}
   const box=mixDialog('효과',null),nav=document.createElement('div');nav.className='fx-tabs';
-  for(const name of ['영상 효과','테마 색감','전환','효과음']){
+  for(const name of ['영상 효과','테마 색감','컷아웃','스티커','전환','효과음']){
     const b=mixButton(name,()=>{if(name==='효과음'){selectMix(session,'sfx');editCue(session,'sfx');}else effectDialog(name);});
     b.setAttribute('aria-pressed',String(name===tab));nav.append(b);
   }
@@ -210,9 +251,10 @@ function effectDialog(tab='영상 효과'){
     still.getContext('2d').drawImage(source,(96-w*scale)/2,(84-h*scale)/2,w*scale,h*scale);
   }
   const list=byId('fxPresetList'),previews=[];
+  const tabKey=tab==='테마 색감'?'theme':tab==='컷아웃'?'cutout':'fx';
   for(const button of list.children){
-    // '테마 색감' 탭에는 스튜디오 테마의 색감·질감만, '영상 효과' 탭에는 순간 효과만
-    button.hidden=(effectRecipes[Number(button.dataset.recipe)]?.tab==='theme')!==(tab==='테마 색감');
+    const rTab=effectRecipes[Number(button.dataset.recipe)]?.tab||'fx';
+    button.hidden=rTab!==tabKey;
     if(button.hidden)continue;
     let thumb=button.querySelector('canvas');
     if(!thumb){thumb=document.createElement('canvas');thumb.width=96;thumb.height=84;button.prepend(thumb);}
@@ -278,11 +320,11 @@ function renderMixActions(s){
   const remove=()=>{if(item){selected.splice(selected.indexOf(item),1);s.activeCue=null;mixChanged(s);}};
   const tools={
     video:[['✂','분할',call('trackSplit')],['⇄','전환',()=>openCutPicker(s)],['◴','속도',()=>pickSpeed(s)],['replace','교체',()=>byId('mixReplace').click()],['⌫','삭제',call('trackDelete')]],
-    effect:[['✧','효과 추가',effectDialog],['☷','강도',effectDialog],['▣','복제',call('fxCopy')],['⌫','삭제',call('fxRemove')]],
+    effect:[['✧','효과 추가',()=>effectDialog('영상 효과')],['✦','컷아웃',()=>effectDialog('컷아웃')],['★','스티커',()=>effectDialog('스티커')],['▣','복제',call('fxCopy')],['⌫','삭제',call('fxRemove')]],
     sfx:[['＋','효과음 추가',()=>editCue(s,'sfx')],['⌁','효과음 편집',()=>editCue(s,'sfx',item)],['⌫','삭제',remove]],
     source:[['♩',currentTake(s)?.take.owner.keepAudio===false?'소리 켜기':'음소거',()=>changeTake(s,t=>({...t,owner:{...t.owner,keepAudio:t.owner.keepAudio===false}}))]],
     music:[['♫','곡 선택',()=>pickMusic(s)],['⌫','음악 제거',()=>{byId('music').value='';byId('music').dispatchEvent(new Event('input',{bubbles:true}));}]],
-    caption:[['＋','자막 추가',()=>editCue(s,'caption')],['T','문구·시간',()=>editCue(s,'caption',item)],['⌫','삭제',remove]]
+    caption:[['＋','자막 추가',()=>editCue(s,'caption')],['★','스티커',()=>effectDialog('스티커')],['T','문구·시간',()=>editCue(s,'caption',item)],['⌫','삭제',remove]]
   };
   panel.replaceChildren(...tools[type].map(([icon,label,fn])=>{
     const button=mixButton(label,()=>{
@@ -294,7 +336,7 @@ function renderMixActions(s){
       button.dataset.mirrors=label==='분할'?'trackSplit':'trackDelete';
       mixOff(button,byId(button.dataset.mirrors).disabled,label==='분할'?'클립을 누르고 재생선을 클립 가운데에 두면 나눌 수 있어요.':'클립이 두 개 이상일 때 지울 수 있어요. 먼저 분할해 보세요.');
     }
-    if(type==='effect' && label!=='효과 추가' && !s.selectedEffect)mixOff(button,true,'효과 트랙에서 효과 블록을 먼저 눌러 주세요.');
+    if(type==='effect' && label!=='효과 추가' && label!=='컷아웃' && label!=='스티커' && !s.selectedEffect)mixOff(button,true,'효과 트랙에서 효과 블록을 먼저 눌러 주세요.');
     if((type==='sfx'||type==='caption')&&label==='삭제'&&!item)mixOff(button,true,'지울 블록을 먼저 눌러 주세요.');
     return button;
   }));

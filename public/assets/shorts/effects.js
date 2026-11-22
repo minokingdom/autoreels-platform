@@ -2,6 +2,8 @@ const effectNames={
   flash:'플래시',zoom:'펀치 줌',echo:'이중상',dip:'딥 전환',leak:'빛 번짐',slice:'슬라이스 스텝',
   rgbSplit:'글리치 RGB',bloom:'소프트 블룸',bokeh:'보케 빛망울',snow:'눈 내림',sparks:'스파크 반짝임',
   letterbox:'필름 레터박스',scanline:'스캔라인',prism:'프리즘 빛갈림',zoomOut:'줌 아웃 펄스',blurPull:'렌즈 포커스',
+  cutoutBlur:'인물 배경 블러',cutoutDark:'배경 제거 · 다크',cutoutCream:'배경 제거 · 크림',
+  cutoutOutline:'인물 흰 테두리',cutoutBehindText:'인물 뒤 대형 자막',
   grain:'필름 그레인',warm:'따뜻한 필름',matte:'크림 매트',mono:'흑백',vignette:'비네팅',
   kodak:'코닥 골드',tealOrange:'시네마 틸&오렌지',kyoto:'교토 페이퍼',blush:'소프트 로즈',
   moody:'무디 다크',forest:'에메랄드 포레스트',sunset:'선셋 앰버',midnight:'미드나잇 블루',
@@ -11,9 +13,16 @@ const effectNames={
 const lookKinds=new Set([
   'grain','warm','matte','mono','vignette',
   'kodak','tealOrange','kyoto','blush','moody','forest','sunset','midnight','pastel','vivid','vhs','leicaMono',
-  'bokeh','snow','sparks','letterbox','scanline','prism'
+  'bokeh','snow','sparks','letterbox','scanline','prism',
+  'cutoutBlur','cutoutDark','cutoutCream','cutoutOutline','cutoutBehindText'
 ]);
 const effectRecipes=[
+  // 인물 컷아웃 (AI 배경 제거 5종 — 무료 브라우저 GPU 처리)
+  {kind:'cutoutBlur',duration:Infinity,strength:.85,tab:'cutout'},
+  {kind:'cutoutBehindText',duration:Infinity,strength:1,tab:'cutout'},
+  {kind:'cutoutDark',duration:Infinity,strength:1,tab:'cutout'},
+  {kind:'cutoutCream',duration:Infinity,strength:1,tab:'cutout'},
+  {kind:'cutoutOutline',duration:Infinity,strength:.9,tab:'cutout'},
   // 영상 효과 (18종)
   {kind:'leak',duration:.85,strength:.9},
   {kind:'slice',duration:.46,strength:.8},
@@ -169,7 +178,7 @@ function outputTimeAt(s,sourceTime){
   return offset;
 }
 
-function paintEffects(ctx,s,time){
+function paintEffects(ctx,s,time,activeText){
   const {width:w,height:h}=ctx.canvas;
   for(const effect of s?.effects||[]){
     const phase=(time-effect.start)/effect.duration;
@@ -178,7 +187,9 @@ function paintEffects(ctx,s,time){
     const amount=look?effect.strength:effect.strength*(effect.kind==='flash'||effect.kind==='blurPull'?1-phase:Math.sin(Math.PI*phase));
     if(!amount)continue;
     ctx.save();
-    if(look){
+    if(window.arCutoutKinds && window.arCutoutKinds.has(effect.kind) && typeof window.arPaintCutoutEffect==='function'){
+      window.arPaintCutoutEffect(ctx,effect.kind,amount,time,s?.clip,activeText);
+    }else if(look){
       paintLook(ctx,effect.kind,amount,time,w,h);
     }else if(effect.kind==='flash' || effect.kind==='dip'){
       ctx.globalAlpha=amount;ctx.fillStyle=effect.tint||'white';ctx.fillRect(0,0,w,h);
@@ -317,6 +328,9 @@ if(quickEdit){
     if(!editableEffects())return;
     const s=session,total=sequenceDuration(sequenceTakes(s));
     if(!recipe||total<.05)return;
+    if(window.arCutoutKinds && window.arCutoutKinds.has(recipe.kind) && typeof window.arEnsureCutoutModel==='function'){
+      window.arEnsureCutoutModel(false);
+    }
     const duration=Math.min(recipe.duration,total);
     const effect={...recipe,start:Math.min(s.trackTime||0,total-duration),duration};
     (s.effects||=[]).push(effect);s.selectedEffect=effect;redrawEffects(s);
