@@ -4974,6 +4974,12 @@
       { id: 'ocean_breeze', name: '오션 브리즈', stops: ['#f0f9ff', '#bae6fd', '#c7d2fe'], mesh: [{ x: 0.2, y: 0.2, r: 0.65, c: 'rgba(14,165,233,0.28)' }, { x: 0.82, y: 0.8, r: 0.6, c: 'rgba(99,102,241,0.24)' }], dark: false, fg: '#0f172a', accent: '#0284c7' },
       { id: 'noir_silver', name: '느와르 실버', stops: ['#0a0a0c', '#1c1d24', '#2d303c'], mesh: [{ x: 0.8, y: 0.15, r: 0.65, c: 'rgba(226,232,240,0.18)' }, { x: 0.2, y: 0.85, r: 0.6, c: 'rgba(148,163,184,0.16)' }], dark: true, fg: '#f8fafc', accent: '#e2e8f0' }
     ];
+    function arHexToRgba(hex, alpha) {
+      const m = String(hex || '').replace('#', '');
+      if (m.length !== 6) return `rgba(20,20,24,${alpha})`;
+      const r = parseInt(m.slice(0, 2), 16), g = parseInt(m.slice(2, 4), 16), b = parseInt(m.slice(4, 6), 16);
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
     function arCnGetGradient(id) {
       return AR_CN_GRADIENTS.find((g) => g.id === id) || null;
     }
@@ -5009,17 +5015,17 @@
       { id: 'big_pop_bubble', cat: '빅타이포', name: '팝 볼드 중앙 빅타이포', bg: '#121216', card: '#222229', fg: '#fef08a', muted: '#ffffff', accent: '#fb7185', pillBg: '#fb7185', pillFg: '#ffffff', fontKey: 'bagel', style: 'dark', coverLayout: 'photo_big_center', bodyLayout: 'photo_big_box', samplePhoto: '/assets/landing/ed-beauty.jpg', scenePack: 'beauty', sampleTitle: '진짜 꿀팁만\n쏙쏙 골랐어요' },
       { id: 'big_cyber_outline', cat: '빅타이포', name: '테크 아웃라인 빅타이포', bg: '#070b14', card: '#121a2d', fg: '#f0f9ff', muted: '#bae6fd', accent: '#22d3ee', pillBg: '#22d3ee', pillFg: '#070b14', fontKey: 'orbit', style: 'news', coverLayout: 'photo_big_outline', bodyLayout: 'photo_big_top', samplePhoto: '/assets/landing/hero-cinema-kv.jpg', scenePack: 'clinic', sampleTitle: '차이를 만드는\n결정적 디테일' },
 
-      // 그라데이션 (10종 — 애플 오라·선셋 피치·미드나잇·말차·로즈·에메랄드 메쉬 그라데이션!)
-      { id: 'grad_sunset_peach', cat: '그라데이션', name: '선셋 피치 오로라', bg: '#fed7aa', gradient: 'sunset_peach', card: 'rgba(255,255,255,0.52)', fg: '#2b1815', muted: '#6b4238', accent: '#c2410c', pillBg: '#2b1815', pillFg: '#fff7ed', fontKey: 'gowun', style: 'soft', coverLayout: 'photo_frame', bodyLayout: 'text_only', samplePhoto: '/assets/landing/ed-cafe.jpg', scenePack: 'cafe', sampleTitle: '따뜻한 색감으로\n시선을 잡는 법' },
-      { id: 'grad_apple_aura', cat: '그라데이션', name: '애플 오라 타이포', bg: '#eef6ff', gradient: 'apple_aura', card: 'rgba(255,255,255,0.68)', fg: '#141824', muted: '#4b5563', accent: '#0071e3', pillBg: '#141824', pillFg: '#ffffff', fontKey: 'pretM', style: 'clean', coverLayout: 'text_only', bodyLayout: 'photo_frame', samplePhoto: '/assets/landing/ed-auto.jpg', scenePack: 'auto', sampleTitle: '군더더기 없는\n핵심 정리 5가지' },
-      { id: 'grad_midnight_blue', cat: '그라데이션', name: '미드나잇 코발트', bg: '#0f2254', gradient: 'midnight_cobalt', card: 'rgba(255,255,255,0.10)', fg: '#f8fafc', muted: '#cbd5e1', accent: '#38bdf8', pillBg: '#38bdf8', pillFg: '#060914', fontKey: 'gmarket', style: 'news', coverLayout: 'text_only', bodyLayout: 'photo_window', samplePhoto: '/assets/scenes/academy/3.jpg', scenePack: 'academy', sampleTitle: '저장 수 폭발하는\n인사이트 브리핑' },
-      { id: 'grad_amber_cinema', cat: '그라데이션', name: '앰버 골드 시네마', bg: '#2c1810', gradient: 'amber_cinema', card: 'rgba(255,255,255,0.09)', fg: '#faf3e6', muted: '#d6c3ac', accent: '#f59e0b', pillBg: '#f59e0b', pillFg: '#120d0a', fontKey: 'songmyung', style: 'editorial', coverLayout: 'photo_frame', bodyLayout: 'text_only', samplePhoto: '/assets/landing/ed-dining.jpg', scenePack: 'restaurant', sampleTitle: '깊은 여운이 남는\n브랜드 스토리' },
-      { id: 'grad_matcha_mist', cat: '그라데이션', name: '말차 민트 미스트', bg: '#dcfce7', gradient: 'matcha_mist', card: 'rgba(255,255,255,0.58)', fg: '#132a1e', muted: '#3b5c49', accent: '#15803d', pillBg: '#15803d', pillFg: '#ffffff', fontKey: 'diphylleia', style: 'soft', coverLayout: 'photo_arch', bodyLayout: 'text_only', samplePhoto: '/assets/scenes/clinic/3.jpg', scenePack: 'clinic', sampleTitle: '매일 가벼워지는\n데일리 웰니스' },
-      { id: 'grad_rose_silk', cat: '그라데이션', name: '로즈 실크 글로우', bg: '#fce7f3', gradient: 'rose_silk', card: 'rgba(255,255,255,0.60)', fg: '#2c131a', muted: '#7a4957', accent: '#be185d', pillBg: '#be185d', pillFg: '#ffffff', fontKey: 'grandiflora', style: 'soft', coverLayout: 'photo_circle', bodyLayout: 'text_only', samplePhoto: '/assets/landing/ed-beauty.jpg', scenePack: 'beauty', sampleTitle: '은은하게 빛나는\n뷰티 큐레이션' },
-      { id: 'grad_terracotta_sun', cat: '그라데이션', name: '테라코타 노을', bg: '#f3ddc1', gradient: 'terracotta_sun', card: 'rgba(255,255,255,0.50)', fg: '#2b1b13', muted: '#6e4e3f', accent: '#b45309', pillBg: '#2b1b13', pillFg: '#fbf5ec', fontKey: 'hahmlet', style: 'editorial', coverLayout: 'photo_polaroid', bodyLayout: 'text_only', samplePhoto: '/assets/scenes/cafe/6.jpg', scenePack: 'cafe', sampleTitle: '노을빛 감성을 담은\n주말 추천 리스트' },
-      { id: 'grad_emerald_glass', cat: '그라데이션', name: '에메랄드 글래스', bg: '#0a2e28', gradient: 'emerald_glass', card: 'rgba(255,255,255,0.10)', fg: '#ecfdf5', muted: '#a7f3d0', accent: '#34d399', pillBg: '#34d399', pillFg: '#051512', fontKey: 'paperlogy', style: 'clean', coverLayout: 'text_only', bodyLayout: 'photo_frame', samplePhoto: '/assets/scenes/interior/5.jpg', scenePack: 'interior', sampleTitle: '실무에서 바로 쓰는\n고효율 체크리스트' },
-      { id: 'grad_butter_lemon', cat: '그라데이션', name: '버터 레몬 크림', bg: '#fef08a', gradient: 'butter_lemon', card: 'rgba(255,255,255,0.56)', fg: '#291f0e', muted: '#6b5732', accent: '#b45309', pillBg: '#291f0e', pillFg: '#fefce8', fontKey: 'cafe24', style: 'soft', coverLayout: 'photo_scrapbook', bodyLayout: 'text_only', samplePhoto: '/assets/scenes/shop/7.jpg', scenePack: 'shop', sampleTitle: '초보자도 쉽게 따라하는\n친절한 가이드' },
-      { id: 'grad_obsidian_crimson', cat: '그라데이션', name: '옵시디언 크림슨', bg: '#240c16', gradient: 'obsidian_crimson', card: 'rgba(255,255,255,0.09)', fg: '#fff1f2', muted: '#fecdd3', accent: '#fb7185', pillBg: '#fb7185', pillFg: '#0b090c', fontKey: 'aggro', style: 'dark', coverLayout: 'text_only', bodyLayout: 'photo_band', samplePhoto: '/assets/scenes/fitness/5.jpg', scenePack: 'fitness', sampleTitle: '한 번에 각인되는\n강렬한 임팩트' },
+      // 그라데이션 (10종 — 사진이 배경색·컬러 그라데이션으로 자연스럽게 녹아드는 페이드 화보!)
+      { id: 'grad_fade_cream', cat: '그라데이션', name: '크림 사진 페이드', bg: '#f7f1e6', card: 'rgba(44,31,22,0.07)', fg: '#231912', muted: '#6b5849', accent: '#c2603f', pillBg: '#231912', pillFg: '#f7f1e6', fontKey: 'gowun', style: 'editorial', coverLayout: 'photo_fade_bottom', bodyLayout: 'photo_fade_bottom', samplePhoto: '/assets/landing/ed-cafe.jpg', scenePack: 'cafe', sampleTitle: '부드럽게 녹아드는\n감성 카페 기록' },
+      { id: 'grad_fade_noir', cat: '그라데이션', name: '느와르 블랙 페이드', bg: '#0d0e11', card: 'rgba(255,255,255,0.09)', fg: '#ffffff', muted: '#d4d4d8', accent: '#f59e0b', pillBg: '#f59e0b', pillFg: '#0d0e11', fontKey: 'hahmlet', style: 'dark', coverLayout: 'photo_fade_bottom', bodyLayout: 'photo_fade_bottom', samplePhoto: '/assets/landing/ed-interior.jpg', scenePack: 'interior', sampleTitle: '공간에 깊이를 더하는\n조명과 여백의 힘' },
+      { id: 'grad_fade_top_sage', cat: '그라데이션', name: '세이지 상단 페이드', bg: '#eaf1ea', card: 'rgba(20,45,30,0.07)', fg: '#14291d', muted: '#466151', accent: '#2f6f4e', pillBg: '#2f6f4e', pillFg: '#ffffff', fontKey: 'diphylleia', style: 'soft', coverLayout: 'photo_fade_top', bodyLayout: 'photo_fade_top', samplePhoto: '/assets/scenes/clinic/3.jpg', scenePack: 'clinic', sampleTitle: '몸과 마음이 가벼운\n데일리 웰니스 루틴' },
+      { id: 'grad_fade_top_navy', cat: '그라데이션', name: '네이비 상단 페이드', bg: '#0b1633', card: 'rgba(255,255,255,0.10)', fg: '#f8fafc', muted: '#bfdbfe', accent: '#38bdf8', pillBg: '#38bdf8', pillFg: '#0b1633', fontKey: 'gmarket', style: 'news', coverLayout: 'photo_fade_top', bodyLayout: 'photo_fade_bottom', samplePhoto: '/assets/landing/ed-auto.jpg', scenePack: 'auto', sampleTitle: '놓치면 손해보는\n핵심 체크포인트 5' },
+      { id: 'grad_duo_sunset', cat: '그라데이션', name: '선셋 틴트 사진', bg: '#2b1419', gradient: 'sunset_peach', card: 'rgba(255,255,255,0.16)', fg: '#ffffff', muted: '#ffedd5', accent: '#fb923c', pillBg: '#fb923c', pillFg: '#1c100d', fontKey: 'songmyung', style: 'editorial', coverLayout: 'photo_fade_duotone', bodyLayout: 'photo_fade_duotone', samplePhoto: '/assets/scenes/cafe/6.jpg', scenePack: 'cafe', sampleTitle: '노을빛 색감으로\n시선을 사로잡는 법' },
+      { id: 'grad_duo_cobalt', cat: '그라데이션', name: '코발트 틴트 사진', bg: '#08122b', gradient: 'midnight_cobalt', card: 'rgba(255,255,255,0.14)', fg: '#ffffff', muted: '#bae6fd', accent: '#38bdf8', pillBg: '#38bdf8', pillFg: '#08122b', fontKey: 'paperlogy', style: 'news', coverLayout: 'photo_fade_duotone', bodyLayout: 'photo_fade_duotone', samplePhoto: '/assets/scenes/academy/3.jpg', scenePack: 'academy', sampleTitle: '저장 수 폭발하는\n실전 인사이트 정리' },
+      { id: 'grad_duo_emerald', cat: '그라데이션', name: '에메랄드 틴트 사진', bg: '#061c18', gradient: 'emerald_glass', card: 'rgba(255,255,255,0.14)', fg: '#ffffff', muted: '#a7f3d0', accent: '#34d399', pillBg: '#34d399', pillFg: '#061c18', fontKey: 'pretM', style: 'clean', coverLayout: 'photo_fade_duotone', bodyLayout: 'photo_fade_bottom', samplePhoto: '/assets/scenes/interior/5.jpg', scenePack: 'interior', sampleTitle: '한눈에 신뢰를 주는\n프리미엄 브랜딩' },
+      { id: 'grad_duo_wine', cat: '그라데이션', name: '와인 크림슨 틴트', bg: '#1e0912', gradient: 'obsidian_crimson', card: 'rgba(255,255,255,0.14)', fg: '#ffffff', muted: '#fecdd3', accent: '#fb7185', pillBg: '#fb7185', pillFg: '#1e0912', fontKey: 'aggro', style: 'dark', coverLayout: 'photo_fade_duotone', bodyLayout: 'photo_fade_duotone', samplePhoto: '/assets/scenes/fitness/5.jpg', scenePack: 'fitness', sampleTitle: '단 3초 만에 각인되는\n강렬한 비주얼 전략' },
+      { id: 'grad_radial_rose', cat: '그라데이션', name: '로즈 미스트 페이드', bg: '#fdf2f5', card: 'rgba(190,24,93,0.08)', fg: '#2b131b', muted: '#7f4d5d', accent: '#be185d', pillBg: '#be185d', pillFg: '#ffffff', fontKey: 'grandiflora', style: 'soft', coverLayout: 'photo_fade_radial', bodyLayout: 'photo_fade_radial', samplePhoto: '/assets/landing/ed-beauty.jpg', scenePack: 'beauty', sampleTitle: '은은하게 번지는\n뷰티 무드 큐레이션' },
+      { id: 'grad_radial_amber', cat: '그라데이션', name: '에스프레소 미스트', bg: '#18120e', card: 'rgba(255,255,255,0.09)', fg: '#faf3e8', muted: '#d2bfaa', accent: '#e09f3e', pillBg: '#e09f3e', pillFg: '#18120e', fontKey: 'songmyung', style: 'editorial', coverLayout: 'photo_fade_radial', bodyLayout: 'photo_fade_bottom', samplePhoto: '/assets/landing/ed-dining.jpg', scenePack: 'restaurant', sampleTitle: '깊은 여운을 남기는\n밤의 미식 가이드' },
 
       // 핀터레스트 (12종 — 영자신문·영수증·스크랩북·OS창·필름스트립·5:5분할·바이닐·무드보드·스위스포스터)
       { id: 'pin_newspaper', cat: '핀터레스트', name: '영자신문 브로드시트', bg: '#f4efe6', card: '#e8e0d2', fg: '#171512', muted: '#575046', accent: '#991b1b', pillBg: '#171512', pillFg: '#f4efe6', fontKey: 'songmyung', style: 'editorial', coverLayout: 'photo_newspaper', bodyLayout: 'photo_newspaper', samplePhoto: '/assets/landing/ed-cafe.jpg', scenePack: 'cafe', sampleTitle: '오늘 꼭 읽어둘\n핵심 트렌드 리포트' },
@@ -5100,6 +5106,7 @@
       { name: '모노·블랙', bg: '#121212', accent: '#e5e5e5', fg: '#fafafa' }
     ];
     const AR_CN_PHOTO_LAYOUT_KEYS = [
+      'photo_fade_bottom', 'photo_fade_top', 'photo_fade_duotone', 'photo_fade_radial',
       'photo_big_center', 'photo_big_bottom', 'photo_big_top', 'photo_big_outline', 'photo_big_box', 'photo_big_editorial',
       'photo_top', 'photo_full', 'photo_polaroid', 'photo_arch', 'photo_band', 'photo_frame', 'photo_bottom',
       'photo_split_left', 'photo_split_right', 'photo_newspaper', 'photo_receipt', 'photo_scrapbook',
@@ -5264,7 +5271,9 @@
       const wantLayout = (slide && slide.photoLayout) || (slideIdx === 0 ? tpl.coverLayout : tpl.bodyLayout) || 'photo_top';
       const pLayout = (hasPhoto && wantLayout !== 'text_only') ? wantLayout : 'text_only';
       const isBigTypo = pLayout.startsWith('photo_big_');
-      const isFullPhoto = pLayout === 'photo_full' || isBigTypo;
+      const isPhotoFade = pLayout.startsWith('photo_fade_');
+      const isFullPhoto = pLayout === 'photo_full' || isBigTypo || pLayout === 'photo_fade_duotone';
+      const topOnPhoto = isFullPhoto || pLayout === 'photo_fade_bottom';
       const fg = isFullPhoto ? (pLayout === 'photo_big_box' ? tpl.fg : (arCnIsDarkHex(tpl.fg) ? '#ffffff' : tpl.fg)) : tpl.fg;
       const muted = isFullPhoto ? 'rgba(255,255,255,0.88)' : tpl.muted;
       const accent = isFullPhoto ? (pLayout === 'photo_big_box' ? tpl.accent : (arCnIsDarkHex(tpl.accent) ? '#facc15' : tpl.accent)) : tpl.accent;
@@ -5274,14 +5283,88 @@
       const padY = Math.round(78 * sc);
 
       ctx.save();
-      // 1) 배경 (템플릿 단색 / 메쉬 그라데이션 / 풀사진)
+      // 1) 배경 (템플릿 단색 / 메쉬 그라데이션 / 사진 페이드 그라데이션 / 풀사진)
       if (!isFullPhoto && tpl.gradSpec) {
         arCnDrawGradientBg(ctx, W, H, tpl.gradSpec);
       } else {
         ctx.fillStyle = tpl.bg;
         ctx.fillRect(0, 0, W, H);
       }
-      if (isFullPhoto) {
+      if (pLayout === 'photo_fade_bottom') {
+        // 상단 풀사진 → 하단 배경색으로 경계선 없이 부드럽게 녹아드는 페이드 그라데이션!
+        const photoH = Math.round(H * 0.66);
+        arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, photoH, 0, null);
+        // 상단 헤더 가독성용 미세 상단 그림자
+        const topSc = ctx.createLinearGradient(0, 0, 0, Math.round(180 * sc));
+        topSc.addColorStop(0, 'rgba(0,0,0,0.44)');
+        topSc.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = topSc;
+        ctx.fillRect(0, 0, W, Math.round(180 * sc));
+        // 핵심: 사진 하단이 배경색(tpl.bg)으로 5단계 실키 페이드 아웃!
+        const fadeG = ctx.createLinearGradient(0, Math.round(H * 0.22), 0, photoH + 2);
+        fadeG.addColorStop(0, arHexToRgba(tpl.bg, 0));
+        fadeG.addColorStop(0.32, arHexToRgba(tpl.bg, 0.22));
+        fadeG.addColorStop(0.60, arHexToRgba(tpl.bg, 0.68));
+        fadeG.addColorStop(0.84, arHexToRgba(tpl.bg, 0.95));
+        fadeG.addColorStop(1, arHexToRgba(tpl.bg, 1));
+        ctx.fillStyle = fadeG;
+        ctx.fillRect(0, Math.round(H * 0.22), W, photoH - Math.round(H * 0.22) + 4);
+      } else if (pLayout === 'photo_fade_top') {
+        // 상단 배경색 → 하단 풀사진으로 경계선 없이 부드럽게 녹아드는 페이드 그라데이션!
+        const photoTop = Math.round(H * 0.34);
+        arCollageDrawCover(ctx, slide.bgImg, 0, photoTop, W, H - photoTop, 0, null);
+        const fadeG = ctx.createLinearGradient(0, photoTop - 2, 0, Math.round(H * 0.78));
+        fadeG.addColorStop(0, arHexToRgba(tpl.bg, 1));
+        fadeG.addColorStop(0.22, arHexToRgba(tpl.bg, 0.92));
+        fadeG.addColorStop(0.50, arHexToRgba(tpl.bg, 0.54));
+        fadeG.addColorStop(0.78, arHexToRgba(tpl.bg, 0.14));
+        fadeG.addColorStop(1, arHexToRgba(tpl.bg, 0));
+        ctx.fillStyle = fadeG;
+        ctx.fillRect(0, photoTop - 2, W, Math.round(H * 0.78) - photoTop + 4);
+        // 하단 푸터 가독성용 미세 하단 페이드
+        const footG = ctx.createLinearGradient(0, H - Math.round(145 * sc), 0, H);
+        footG.addColorStop(0, 'rgba(0,0,0,0)');
+        footG.addColorStop(1, 'rgba(0,0,0,0.52)');
+        ctx.fillStyle = footG;
+        ctx.fillRect(0, H - Math.round(145 * sc), W, Math.round(145 * sc));
+      } else if (pLayout === 'photo_fade_radial') {
+        // 사진 사방이 배경색으로 몽환적으로 녹아드는 스포트라이트 미스트 페이드!
+        const photoH = Math.round(H * 0.64);
+        arCollageDrawCover(ctx, slide.bgImg, 0, Math.round(60 * sc), W, photoH, 0, null);
+        // 사방 원형 비네트 페이드
+        const cx = W / 2, cy = Math.round(60 * sc + photoH * 0.46);
+        const rG = ctx.createRadialGradient(cx, cy, W * 0.16, cx, cy, W * 0.62);
+        rG.addColorStop(0, arHexToRgba(tpl.bg, 0));
+        rG.addColorStop(0.52, arHexToRgba(tpl.bg, 0.28));
+        rG.addColorStop(0.82, arHexToRgba(tpl.bg, 0.86));
+        rG.addColorStop(1, arHexToRgba(tpl.bg, 1));
+        ctx.fillStyle = rG;
+        ctx.fillRect(0, 0, W, photoH + Math.round(80 * sc));
+        // 상단·하단 추가 클린 블렌드
+        const tG = ctx.createLinearGradient(0, 0, 0, Math.round(170 * sc));
+        tG.addColorStop(0, arHexToRgba(tpl.bg, 1));
+        tG.addColorStop(0.45, arHexToRgba(tpl.bg, 0.72));
+        tG.addColorStop(1, arHexToRgba(tpl.bg, 0));
+        ctx.fillStyle = tG;
+        ctx.fillRect(0, 0, W, Math.round(170 * sc));
+        const bG = ctx.createLinearGradient(0, Math.round(H * 0.42), 0, Math.round(H * 0.66) + Math.round(60 * sc));
+        bG.addColorStop(0, arHexToRgba(tpl.bg, 0));
+        bG.addColorStop(0.65, arHexToRgba(tpl.bg, 0.82));
+        bG.addColorStop(1, arHexToRgba(tpl.bg, 1));
+        ctx.fillStyle = bG;
+        ctx.fillRect(0, Math.round(H * 0.42), W, Math.round(H * 0.32));
+      } else if (pLayout === 'photo_fade_duotone') {
+        // 사진 전체를 감성 컬러 그라데이션 틴트로 녹여낸 풀포토 화보!
+        arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
+        const stops = (tpl.gradSpec && tpl.gradSpec.stops) ? tpl.gradSpec.stops : [tpl.bg, tpl.accent, '#0a0b10'];
+        const dg = ctx.createLinearGradient(0, 0, W * 0.85, H);
+        dg.addColorStop(0, arHexToRgba(stops[0], 0.56));
+        dg.addColorStop(0.45, arHexToRgba(stops[1] || tpl.accent, 0.34));
+        dg.addColorStop(0.82, arHexToRgba(stops[2] || stops[0], 0.78));
+        dg.addColorStop(1, arHexToRgba(tpl.bg, 0.94));
+        ctx.fillStyle = dg;
+        ctx.fillRect(0, 0, W, H);
+      } else if (isFullPhoto) {
         arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
         const scrim = ctx.createLinearGradient(0, 0, 0, H);
         if (pLayout === 'photo_big_top') {
@@ -5323,7 +5406,7 @@
       // 2) 상단 진행바 + 배지 + 페이지 번호
       if (tw.showProgress !== false) {
         const topBarH = Math.max(2, Math.round(6 * sc));
-        ctx.fillStyle = isFullPhoto ? 'rgba(255,255,255,0.24)' : tpl.card;
+        ctx.fillStyle = topOnPhoto ? 'rgba(255,255,255,0.24)' : tpl.card;
         ctx.fillRect(padX, Math.round(48 * sc), W - padX * 2, topBarH);
         ctx.fillStyle = accent;
         ctx.fillRect(padX, Math.round(48 * sc), Math.round((W - padX * 2) * ((slideIdx + 1) / Math.max(1, totalSlides))), topBarH);
@@ -5336,19 +5419,19 @@
         ctx.font = `700 ${kFs}px ${tpl.fontBody}`;
         const kw = ctx.measureText(kickerTxt).width + Math.round(36 * sc);
         const kh = Math.round(46 * sc);
-        ctx.fillStyle = isFullPhoto ? 'rgba(255,255,255,0.22)' : tpl.pillBg;
+        ctx.fillStyle = topOnPhoto ? 'rgba(0,0,0,0.42)' : tpl.pillBg;
         ctx.beginPath();
         if (ctx.roundRect) ctx.roundRect(padX, headerY - kh / 2, kw, kh, kh / 2);
         else ctx.rect(padX, headerY - kh / 2, kw, kh);
         ctx.fill();
-        ctx.fillStyle = isFullPhoto ? '#ffffff' : tpl.pillFg;
+        ctx.fillStyle = topOnPhoto ? '#ffffff' : tpl.pillFg;
         ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
         ctx.fillText(kickerTxt, padX + Math.round(18 * sc), headerY + 1);
       }
       if (tw.showPageNum !== false) {
         const pageTxt = `${String(slideIdx + 1).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
         ctx.font = `700 ${Math.round(25 * sc)}px 'Pretendard', monospace`;
-        ctx.fillStyle = muted;
+        ctx.fillStyle = topOnPhoto ? 'rgba(255,255,255,0.9)' : muted;
         ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
         ctx.fillText(pageTxt, W - padX, headerY);
       }
@@ -5362,7 +5445,84 @@
       let curY = Math.round(170 * sc);
       let skipBottomHl = false;
 
-      if (pLayout === 'photo_top') {
+      if (pLayout === 'photo_fade_bottom') {
+        // 상단 사진이 하단 배경색으로 녹아든 영역 위에 깔끔한 에디토리얼 타이포 배치
+        const titleFs = Math.round((isCover ? 74 : 64) * sc * fsMul * tMul);
+        const bodyFs = Math.round(33 * sc * fsMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.24);
+        curY = Math.round(H * 0.54);
+        ctx.fillStyle = accent;
+        ctx.fillRect(padX, curY - Math.round(24 * sc), Math.round(68 * sc), Math.max(3, Math.round(6 * sc)));
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(20 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+      } else if (pLayout === 'photo_fade_top') {
+        // 상단 배경색이 하단 사진으로 자연 페이드 — 상단에 강렬한 헤드라인+본문
+        const titleFs = Math.round((isCover ? 76 : 66) * sc * fsMul * tMul);
+        const bodyFs = Math.round(33 * sc * fsMul);
+        curY = Math.round(162 * sc);
+        ctx.fillStyle = accent;
+        ctx.fillRect(padX, curY - Math.round(22 * sc), Math.round(68 * sc), Math.max(3, Math.round(6 * sc)));
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.24);
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(20 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_fade_radial') {
+        // 사방 미스트 페이드 사진 아래에 우아한 중앙 정렬 타이포
+        const titleFs = Math.round((isCover ? 66 : 58) * sc * fsMul * tMul);
+        const bodyFs = Math.round(32 * sc * fsMul);
+        curY = Math.round(H * 0.56);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.26);
+        ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += tLH; });
+        curY += Math.round(18 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.9).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += bLH; });
+      } else if (pLayout === 'photo_fade_duotone') {
+        // 컬러 그라데이션 틴트 풀포토 위 선명한 초대형 화이트 타이포
+        const titleFs = Math.round((isCover ? 92 : 78) * sc * fsMul * tMul);
+        const bodyFs = Math.round(34 * sc * fsMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 3);
+        const tLH = Math.round(titleFs * 1.2);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        const blockH = tLines.length * tLH + Math.round(32 * sc) + bLines.length * bLH;
+        curY = Math.max(Math.round(H * 0.44), H - Math.round(235 * sc) - blockH);
+        ctx.save();
+        ctx.fillStyle = accent;
+        ctx.fillRect(padX, curY - Math.round(28 * sc), Math.round(80 * sc), Math.max(3, Math.round(7 * sc)));
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.shadowColor = 'rgba(0,0,0,0.48)'; ctx.shadowBlur = Math.round(26 * sc); ctx.shadowOffsetY = Math.round(6 * sc);
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(24 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+        ctx.restore();
+      } else if (pLayout === 'photo_top') {
         const photoY = Math.round(146 * sc);
         const photoH = Math.round(H * 0.43);
         arCollageDrawCover(ctx, slide.bgImg, padX, photoY, maxTextW, photoH, Math.round(22 * sc), null);
@@ -6165,11 +6325,12 @@
       }
 
       // 5) 하단 푸터: 계정명(@handle) + 캐러셀 페이지 도트
+      const bottomOnPhoto = isFullPhoto || pLayout === 'photo_fade_top';
       const footY = H - Math.round(70 * sc);
       const handleTxt = tw.showHandle !== false ? String(_arCnState.handle || '').trim() : '';
       if (handleTxt) {
         ctx.font = `600 ${Math.round(24 * sc)}px ${tpl.fontBody}`;
-        ctx.fillStyle = muted;
+        ctx.fillStyle = bottomOnPhoto ? 'rgba(255,255,255,0.9)' : muted;
         ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
         ctx.fillText(handleTxt.startsWith('@') ? handleTxt : `@${handleTxt}`, padX, footY);
       }
@@ -6179,7 +6340,7 @@
         const startDotX = W - padX - (totalSlides - 1) * dotGap;
         for (let i = 0; i < totalSlides; i++) {
           const active = i === slideIdx;
-          ctx.fillStyle = active ? accent : (isFullPhoto ? 'rgba(255,255,255,0.38)' : muted);
+          ctx.fillStyle = active ? accent : (bottomOnPhoto ? 'rgba(255,255,255,0.45)' : muted);
           ctx.globalAlpha = active ? 1 : 0.35;
           ctx.beginPath();
           ctx.arc(startDotX + i * dotGap, footY, active ? dotR * 1.35 : dotR, 0, Math.PI * 2);

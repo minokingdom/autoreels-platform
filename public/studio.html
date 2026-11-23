@@ -1888,8 +1888,12 @@
                 <button type="button" id="arCnClearBgPhotoBtn" onclick="arCnClearBgPhoto()" class="btn-secondary h-9 px-3 text-[12px] text-[#fca5a5] cursor-pointer">사진 빼기</button>
               </div>
               <div class="space-y-1.5">
-                <span class="text-[12px] font-semibold text-[#ededed]">이 장의 사진 배치 구도 (24종)</span>
+                <span class="text-[12px] font-semibold text-[#ededed]">이 장의 사진 배치 구도 (28종)</span>
                 <div id="arCnPhotoLayoutRow" class="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                  <button type="button" data-cn-playout="photo_fade_bottom" onclick="arCnSetPhotoLayout('photo_fade_bottom')" class="ar-cn-opt-btn">사진 하단페이드</button>
+                  <button type="button" data-cn-playout="photo_fade_top" onclick="arCnSetPhotoLayout('photo_fade_top')" class="ar-cn-opt-btn">사진 상단페이드</button>
+                  <button type="button" data-cn-playout="photo_fade_duotone" onclick="arCnSetPhotoLayout('photo_fade_duotone')" class="ar-cn-opt-btn">사진 컬러틴트</button>
+                  <button type="button" data-cn-playout="photo_fade_radial" onclick="arCnSetPhotoLayout('photo_fade_radial')" class="ar-cn-opt-btn">사진 미스트페이드</button>
                   <button type="button" data-cn-playout="photo_big_center" onclick="arCnSetPhotoLayout('photo_big_center')" class="ar-cn-opt-btn">중앙 빅타이포</button>
                   <button type="button" data-cn-playout="photo_big_bottom" onclick="arCnSetPhotoLayout('photo_big_bottom')" class="ar-cn-opt-btn">하단 빅타이포</button>
                   <button type="button" data-cn-playout="photo_big_top" onclick="arCnSetPhotoLayout('photo_big_top')" class="ar-cn-opt-btn">상단 빅타이포</button>
@@ -2906,7 +2910,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cn-grad64"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cn-photofade"><\/script>');
     }
   </script>
   <!--
