@@ -1,0 +1,73 @@
+.service-settings-icon { display: none; }
+body:has(#viewPreview.ar-service-home:not(.hidden)) .studio-topbar {
+  width: min(100%, 640px);
+  margin-inline: auto;
+  padding: 6px 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  gap: 4px;
+}
+body:has(#viewPreview.ar-service-home:not(.hidden)) .studio-topbar > :first-child { flex: 1; }
+body:has(#viewPreview.ar-service-home:not(.hidden)) .studio-topbar > :first-child > :first-child { flex: 1; gap: 7px; }
+body:has(#viewPreview.ar-service-home:not(.hidden)) .service-brand-group { flex: 1; justify-content: space-between; align-items: center; }
+body:has(#viewPreview.ar-service-home:not(.hidden)) .service-brand-group button { text-decoration: none; }
+body:has(#viewPreview.ar-service-home:not(.hidden)) .studio-brand-name { color: #faf9f6; font-size: clamp(16px, 4.4vw, 21px); font-weight: 800; letter-spacing: -.045em; }
+body:has(#viewPreview.ar-service-home:not(.hidden)) #headerDrmDot { display: none; }
+body:has(#viewPreview.ar-service-home:not(.hidden)) .service-settings-icon { display: block; }
+#viewPreview.ar-service-home #studioServices {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  padding: 0 0 18px;
+  color: #f2f5fa;
+}
+#studioServices :is(.service-hero, .service-tool) {
+  position: relative;
+  min-width: 0;
+  text-align: left;
+  font-family: inherit;
+  border-radius: 10px;
+  cursor: pointer;
+}
+#studioServices :is(a,button):focus-visible { outline: 2px solid #93cdff; outline-offset: 2px; }
+#viewPreview.ar-service-home #startAutoReels {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  grid-column: 1 / -1;
+  min-height: clamp(136px, 37vw, 186px);
+  margin-bottom: 4px;
+  padding: 19px clamp(15px, 4vw, 28px);
+  background: linear-gradient(115deg, #102f78 0%, #09255e 55%, #061b44 100%);
+  border: 1px solid #213d75;
+}
+#viewPreview.ar-service-home #studioServices #startAutoReels:hover { background: linear-gradient(115deg, #173982, #0a2050); }
+#studioServices .service-hero-copy { display: grid; justify-items: start; gap: 5px; width: 62%; z-index: 1; }
+#studioServices strong, #studioServices small { display: block; }
+#studioServices .service-hero strong { color: #fafbff; font-size: clamp(19px, 5vw, 29px); font-weight: 800; letter-spacing: -.055em; line-height: 1.2; }
+#studioServices .service-hero small { color: #d0def3; font-size: clamp(11px, 2.9vw, 14px); }
+#studioServices .service-cta { margin-top: 8px; padding: 6px 12px; border-radius: 6px; background: #83caff; color: #082544; font-size: 12px; font-weight: 750; }
+.service-photos { position: absolute; inset: 10% 4% 10% auto; width: 34%; pointer-events: none; }
+.service-photos img { position: absolute; height: 90%; width: 59%; top: 7%; right: 2%; object-fit: cover; border: 1px solid #c5a987; border-radius: 7px; transform: rotate(6deg); box-shadow: 0 2px 6px #020c27aa; }
+.service-photos img + img { top: 0; right: 39%; height: 100%; transform: rotate(-5deg); }
+#studioServices .service-tool {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid #303744;
+  background: linear-gradient(135deg, #1c242f, #151b24);
+  text-decoration: none;
+}
+#studioServices .service-tool::after {
+  content: ''; position: absolute; top: 17px; right: 13px; width: 6px; height: 6px;
+  border: solid #a9b7c8; border-width: 1px 1px 0 0; transform: rotate(45deg);
+}
+#studioServices .service-tool:hover { border-color: #526782; }
+#studioServices .service-icon { width: 23px; height: 23px; color: #89cefc; fill: none; stroke: currentColor; stroke-width: 1.55; stroke-linejoin: round; stroke-linecap: round; }
+#studioServices .service-tool strong { color: #f2f4f7; font-size: clamp(14px, 3.7vw, 17px); line-height: 1.4; letter-spacing: -.04em; font-weight: 700; }
+#studioServices .service-tool small { margin-top: 2px; color: #b9c3d0; font-size: 12px; line-height: 1.4; word-break: keep-all; }
+#studioServices .service-wide { grid-column: 1 / -1; grid-template-columns: auto 1fr; align-items: center; gap: 12px; padding-right: 28px; }
+#studioServices .service-wide::after { top: calc(50% - 3px); }
