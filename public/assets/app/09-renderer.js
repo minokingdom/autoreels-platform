@@ -5060,7 +5060,13 @@
     }
 
     const AR_CN_TEMPLATES = [
-      // 바이럴 (20종 — 체커보드 교차 분할 · 45° 사선 슬래시 · 2×2 벤토 · 다이아몬드 포스터 + 한국 바이럴!)
+      // 바이럴 (26종 — 브랜드 앱/핀테크 팩 · 체커보드 · 45° 사선 슬래시 · 2×2 벤토 · 다이아 포스터 + 한국 바이럴!)
+      { id: 'brand_yellow_chips', cat: '바이럴', name: '옐로우 라인칩 스플릿', bg: '#ffc800', card: '#0d0d0d', fg: '#0d0d0d', muted: '#1f1f22', accent: '#0d0d0d', pillBg: '#0d0d0d', pillFg: '#ffffff', fontKey: 'suite', style: 'swiss', coverLayout: 'photo_brand_chiptags', bodyLayout: 'photo_brand_chiptags', samplePhoto: '/assets/scenes/shop/6.jpg', scenePack: 'shop', sampleTitle: '부담은 절반으로\n혜택은 두 배로' },
+      { id: 'brand_phone_banner', cat: '바이럴', name: '화이트 폰 플로팅 배너', bg: '#ffffff', card: '#f4f4f5', fg: '#0d0d0d', muted: '#3f3f46', accent: '#ffc800', pillBg: '#0d0d0d', pillFg: '#ffffff', fontKey: 'lineseed', style: 'minimal', coverLayout: 'photo_phone_banner', bodyLayout: 'photo_phone_banner', samplePhoto: '/assets/scenes/cafe/9.jpg', scenePack: 'cafe', sampleTitle: '지금 가장 주목받는\n스마트한 해결책' },
+      { id: 'brand_diagonal_wedge', cat: '바이럴', name: '사선 옐로우 폰 목업', bg: '#ffffff', card: '#f4f4f5', fg: '#0d0d0d', muted: '#3f3f46', accent: '#ffc800', pillBg: '#0d0d0d', pillFg: '#ffffff', fontKey: 'suite', style: 'minimal', coverLayout: 'photo_diagonal_wedge', bodyLayout: 'photo_diagonal_wedge', samplePhoto: '/assets/scenes/auto/6.jpg', scenePack: 'auto', sampleTitle: '복잡한 과정 없이\n한 번에 끝내세요' },
+      { id: 'brand_dual_compare', cat: '바이럴', name: '블랙×옐로우 듀얼카드', bg: '#ffffff', card: '#0d0d0d', fg: '#0d0d0d', muted: '#27272a', accent: '#ffc800', pillBg: '#0d0d0d', pillFg: '#ffffff', fontKey: 'paperlogy', style: 'minimal', coverLayout: 'photo_dual_compare', bodyLayout: 'photo_dual_compare', samplePhoto: '/assets/scenes/beauty/5.jpg', scenePack: 'beauty', sampleTitle: '고민하던 두 가지,\n한 번에 챙기세요' },
+      { id: 'brand_cobalt_wedge', cat: '바이럴', name: '코발트 블루 사선 앱', bg: '#ffffff', card: '#eff6ff', fg: '#0f172a', muted: '#475569', accent: '#2563eb', pillBg: '#0f172a', pillFg: '#ffffff', fontKey: 'ibmplex', style: 'minimal', coverLayout: 'photo_diagonal_wedge', bodyLayout: 'photo_phone_banner', samplePhoto: '/assets/scenes/clinic/5.jpg', scenePack: 'clinic', sampleTitle: '데이터로 증명하는\n신뢰의 기준' },
+      { id: 'brand_coral_chips', cat: '바이럴', name: '코랄 라인칩 스플릿', bg: '#ff5a36', card: '#111111', fg: '#111111', muted: '#271a16', accent: '#111111', pillBg: '#111111', pillFg: '#ffffff', fontKey: 'freesentation', style: 'swiss', coverLayout: 'photo_brand_chiptags', bodyLayout: 'photo_dual_compare', samplePhoto: '/assets/scenes/restaurant/5.jpg', scenePack: 'restaurant', sampleTitle: '한 번 보면 못 잊는\n압도적 시그니처' },
       { id: 'checker_lime_carbon', cat: '바이럴', name: '라임×카본 체커보드', bg: '#0f0f0f', card: '#1d1f1c', fg: '#ffffff', muted: '#d4d4d8', accent: '#a3e600', pillBg: '#a3e600', pillFg: '#0f0f0f', fontKey: 'freesentation', style: 'dark', coverLayout: 'photo_checker_split', bodyLayout: 'photo_checker_split', samplePhoto: '/assets/scenes/shop/10.jpg', scenePack: 'shop', sampleTitle: '단계별로 올리는\n스마트 활용법' },
       { id: 'gold_slash_kinetic', cat: '바이럴', name: '골드 45° 사선 슬래시', bg: '#0d0d0d', card: '#1c1c1e', fg: '#ffffff', muted: '#e5e5e5', accent: '#f5c400', pillBg: '#f5c400', pillFg: '#0d0d0d', fontKey: 'freesentation', style: 'dark', monoPhoto: true, coverLayout: 'photo_slash_kinetic', bodyLayout: 'photo_slash_kinetic', samplePhoto: '/assets/scenes/fitness/7.jpg', scenePack: 'fitness', sampleTitle: '결과가 달라지는\n결정적 한 끗' },
       { id: 'gold_bento_dark', cat: '바이럴', name: '골드×블랙 2×2 벤토', bg: '#0e0e10', card: '#1b1b1f', fg: '#ffffff', muted: '#d4d4d8', accent: '#f5c400', pillBg: '#f5c400', pillFg: '#0e0e10', fontKey: 'gangwon', style: 'dark', monoPhoto: true, coverLayout: 'photo_bento_dark', bodyLayout: 'photo_bento_dark', samplePhoto: '/assets/scenes/auto/8.jpg', scenePack: 'auto', sampleTitle: '프로들이 선택하는\n핵심 스펙 정리' },
@@ -5185,6 +5191,7 @@
       { name: '모노·블랙', bg: '#121212', accent: '#e5e5e5', fg: '#fafafa' }
     ];
     const AR_CN_PHOTO_LAYOUT_KEYS = [
+      'photo_brand_chiptags', 'photo_phone_banner', 'photo_diagonal_wedge', 'photo_dual_compare',
       'photo_checker_split', 'photo_slash_kinetic', 'photo_bento_dark', 'photo_diamond_pop',
       'photo_bold_stamp', 'photo_neon_studio', 'photo_neon_card', 'photo_agency_brand',
       'photo_viral_sidefade', 'photo_viral_darkfade', 'photo_viral_colorword', 'photo_viral_duotag', 'photo_viral_viewfinder', 'photo_viral_glowcard',
@@ -5652,7 +5659,399 @@
       let curY = Math.round(170 * sc);
       let skipBottomHl = false;
 
-      if (pLayout === 'photo_checker_split') {
+      if (pLayout === 'photo_brand_chiptags') {
+        // 핀터레스트 Equilibi R1C3/R3C1: 비비드 브랜드 바탕 + 우측 곡선 엣지 포토 + 좌측 줄별 블랙 하이라이트 칩 + 하단 CTA
+        const baseBg = tpl.bg || '#ffc800';
+        const inkCol = arCnIsDarkHex(baseBg) ? '#ffffff' : '#0d0d0d';
+        const chipBg = '#0d0d0d';
+        const chipFg = '#ffffff';
+        ctx.fillStyle = baseBg;
+        ctx.fillRect(0, 0, W, H);
+        // 배경 은은한 곡선 호 라인
+        ctx.save();
+        ctx.strokeStyle = arCnIsDarkHex(baseBg) ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.34)';
+        ctx.lineWidth = Math.max(2, 3 * sc);
+        ctx.beginPath(); ctx.arc(W * 0.14, H * 0.18, W * 0.48, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(W * 0.14, H * 0.18, W * 0.68, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+        // 우측 58% 유기적 곡선 엣지 포토 클립
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(W * 0.44, 0);
+        ctx.bezierCurveTo(W * 0.34, H * 0.30, W * 0.48, H * 0.68, W * 0.36, H);
+        ctx.lineTo(W, H);
+        ctx.lineTo(W, 0);
+        ctx.closePath();
+        ctx.clip();
+        arCollageDrawCover(ctx, slide.bgImg, Math.round(W * 0.30), 0, Math.round(W * 0.72), H, 0, null);
+        // 왼쪽 경계 부드러운 리프트 그림자
+        const seamG = ctx.createLinearGradient(W * 0.32, 0, W * 0.50, 0);
+        seamG.addColorStop(0, arHexToRgba(baseBg, 0.32));
+        seamG.addColorStop(1, arHexToRgba(baseBg, 0));
+        ctx.fillStyle = seamG;
+        ctx.fillRect(W * 0.32, 0, W * 0.20, H);
+        ctx.restore();
+        // 좌상단 미니 브랜드 리본 아이콘 + 라벨
+        const markY = Math.round(86 * sc);
+        ctx.save();
+        ctx.fillStyle = inkCol;
+        ctx.beginPath();
+        ctx.moveTo(padX, markY + Math.round(14 * sc));
+        ctx.lineTo(padX + Math.round(18 * sc), markY - Math.round(14 * sc));
+        ctx.lineTo(padX + Math.round(32 * sc), markY - Math.round(4 * sc));
+        ctx.lineTo(padX + Math.round(14 * sc), markY + Math.round(24 * sc));
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(padX + Math.round(30 * sc), markY + Math.round(14 * sc), Math.round(6 * sc), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.font = `800 ${Math.round(25 * sc)}px ${tpl.fontBody}`;
+        ctx.fillStyle = inkCol; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(String(kickerTxt || 'BRAND STORY').slice(0, 18), padX + Math.round(46 * sc), markY + Math.round(4 * sc));
+        ctx.restore();
+        // 우상단 페이지 배지
+        if (tw.showPageNum !== false) {
+          const pgTxt = `${String(slideIdx + 1).padStart(2, '0')}/${String(totalSlides).padStart(2, '0')}`;
+          ctx.font = `700 ${Math.round(22 * sc)}px 'JetBrains Mono', monospace`;
+          const pgW = ctx.measureText(pgTxt).width + Math.round(28 * sc);
+          const pgH = Math.round(38 * sc);
+          ctx.fillStyle = 'rgba(13,13,13,0.52)';
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(W - padX - pgW, markY - pgH / 2 + Math.round(4 * sc), pgW, pgH, pgH / 2);
+          else ctx.rect(W - padX - pgW, markY - pgH / 2 + Math.round(4 * sc), pgW, pgH);
+          ctx.fill();
+          ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(pgTxt, W - padX - pgW / 2, markY + Math.round(5 * sc));
+        }
+        // 좌측 줄별 블랙 하이라이트 칩 제목 (사진 경계를 살짝 넘나드는 시그니처 스택!)
+        const chipTitleFs = Math.round((isCover ? 66 : 58) * sc * fsMul * tMul);
+        ctx.font = `${tW} ${chipTitleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, Math.round(W * 0.56)).slice(0, 4);
+        const chipPadX = Math.round(18 * sc);
+        const chipPadY = Math.round(10 * sc);
+        const chipH = Math.round(chipTitleFs * 1.06) + chipPadY * 2;
+        const chipGap = Math.round(8 * sc);
+        curY = Math.round(H * 0.25);
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        tLines.forEach((ln) => {
+          const lw = Math.ceil(ctx.measureText(ln).width) + chipPadX * 2;
+          ctx.fillStyle = chipBg;
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(padX, curY, lw, chipH, Math.round(10 * sc));
+          else ctx.rect(padX, curY, lw, chipH);
+          ctx.fill();
+          ctx.fillStyle = chipFg;
+          ctx.fillText(ln, padX + chipPadX, curY + chipH / 2 + Math.round(2 * sc));
+          curY += chipH + chipGap;
+        });
+        // 좌측 하단 짧은 본문
+        if (bodyStr) {
+          curY += Math.round(18 * sc);
+          const bodyFs = Math.round(27 * sc * fsMul);
+          ctx.font = `600 ${bodyFs}px ${tpl.fontBody}`;
+          ctx.fillStyle = arCnIsDarkHex(baseBg) ? 'rgba(255,255,255,0.9)' : 'rgba(13,13,13,0.84)';
+          ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+          const bLines = arCnWrapLines(ctx, bodyStr, Math.round(W * 0.36)).slice(0, 4);
+          const bLH = Math.round(bodyFs * 1.44);
+          bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+        }
+        // 좌하단 콤팩트 블랙 CTA 캡슐
+        const ctaTxt = (hlStr || '자세히 보기').slice(0, 22);
+        const ctaFs = Math.round(24 * sc);
+        ctx.font = `800 ${ctaFs}px ${tpl.fontBody}`;
+        const ctaW = Math.min(Math.round(W * 0.42), ctx.measureText(ctaTxt).width + Math.round(44 * sc));
+        const ctaH = Math.round(58 * sc);
+        const ctaY = H - Math.round(124 * sc);
+        ctx.fillStyle = chipBg;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX, ctaY, ctaW, ctaH, Math.round(12 * sc));
+        else ctx.rect(padX, ctaY, ctaW, ctaH);
+        ctx.fill();
+        ctx.fillStyle = chipFg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(ctaTxt, padX + ctaW / 2, ctaY + ctaH / 2 + 1);
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_phone_banner') {
+        // 핀터레스트 Equilibi R1C2: 화이트 캔버스 + 상단 중앙 헤드라인 + 하단 스마트폰 목업 + 가로 플로팅 컬러 배너
+        const acCol = (tpl.accent && tpl.accent.toLowerCase() !== '#0d0d0d' && tpl.accent.toLowerCase() !== '#ffffff') ? tpl.accent : '#ffc800';
+        const acInk = arCnIsDarkHex(acCol) ? '#ffffff' : '#0d0d0d';
+        ctx.fillStyle = tpl.bg || '#ffffff';
+        ctx.fillRect(0, 0, W, H);
+        const topInk = arCnIsDarkHex(tpl.bg || '#ffffff') ? '#ffffff' : '#0d0d0d';
+        // 상단 중앙 브랜드 마크
+        const topY = Math.round(74 * sc);
+        const lbl = String(kickerTxt || 'FEATURE').slice(0, 18);
+        ctx.font = `800 ${Math.round(24 * sc)}px ${tpl.fontBody}`;
+        const lw = ctx.measureText(lbl).width;
+        const markX = W / 2 - (lw + Math.round(38 * sc)) / 2;
+        ctx.fillStyle = acCol;
+        ctx.beginPath();
+        ctx.moveTo(markX, topY + Math.round(12 * sc));
+        ctx.lineTo(markX + Math.round(15 * sc), topY - Math.round(12 * sc));
+        ctx.lineTo(markX + Math.round(26 * sc), topY - Math.round(4 * sc));
+        ctx.lineTo(markX + Math.round(11 * sc), topY + Math.round(20 * sc));
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = topInk; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(lbl, markX + Math.round(34 * sc), topY + Math.round(3 * sc));
+        // 상단 중앙 2줄 볼드 헤드라인
+        const titleFs = Math.round((isCover ? 66 : 58) * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW * 0.92).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.18);
+        curY = Math.round(134 * sc);
+        ctx.fillStyle = topInk; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += tLH; });
+        // 하단 중앙 다크 스마트폰 목업 프레임
+        const phW = Math.round(W * 0.62);
+        const phX = Math.round((W - phW) / 2);
+        const phY = Math.max(curY + Math.round(34 * sc), Math.round(H * 0.30));
+        const phH = H - phY + Math.round(56 * sc);
+        const bezel = Math.round(16 * sc);
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.22)'; ctx.shadowBlur = Math.round(40 * sc); ctx.shadowOffsetY = Math.round(16 * sc);
+        ctx.fillStyle = '#121215';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(phX, phY, phW, phH, Math.round(62 * sc));
+        else ctx.rect(phX, phY, phW, phH);
+        ctx.fill();
+        ctx.restore();
+        // 폰 스크린 내부 사진
+        arCollageDrawCover(ctx, slide.bgImg, phX + bezel, phY + bezel, phW - bezel * 2, phH - bezel * 2, Math.round(46 * sc), null);
+        // 스크린 하단 어두운 비네팅 (하단 CTA 가독성)
+        ctx.save();
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(phX + bezel, phY + bezel, phW - bezel * 2, phH - bezel * 2, Math.round(46 * sc));
+        else ctx.rect(phX + bezel, phY + bezel, phW - bezel * 2, phH - bezel * 2);
+        ctx.clip();
+        const scFade = ctx.createLinearGradient(0, H * 0.68, 0, H);
+        scFade.addColorStop(0, 'rgba(0,0,0,0)');
+        scFade.addColorStop(1, 'rgba(0,0,0,0.72)');
+        ctx.fillStyle = scFade;
+        ctx.fillRect(phX + bezel, H * 0.68, phW - bezel * 2, H * 0.34);
+        // 다이내믹 아일랜드 노치
+        ctx.fillStyle = '#0d0d10';
+        const islW = Math.round(138 * sc), islH = Math.round(32 * sc);
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(W / 2 - islW / 2, phY + bezel + Math.round(18 * sc), islW, islH, islH / 2);
+        else ctx.rect(W / 2 - islW / 2, phY + bezel + Math.round(18 * sc), islW, islH);
+        ctx.fill();
+        ctx.restore();
+        // 스마트폰을 가로지르는 플로팅 라운드 컬러 배너 (본문)
+        const banW = Math.round(W * 0.80);
+        const banX = Math.round((W - banW) / 2);
+        const bodyFs = Math.round(30 * sc * fsMul);
+        ctx.font = `700 ${bodyFs}px ${tpl.fontBody}`;
+        const bLines = arCnWrapLines(ctx, bodyStr || '지금 시작하면 가장 먼저 혜택을 받아보실 수 있어요.', banW - Math.round(76 * sc)).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.46);
+        const banH = Math.max(Math.round(146 * sc), bLines.length * bLH + Math.round(62 * sc));
+        const banY = Math.round(H * 0.56);
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.24)'; ctx.shadowBlur = Math.round(32 * sc); ctx.shadowOffsetY = Math.round(12 * sc);
+        ctx.fillStyle = acCol;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(banX, banY, banW, banH, Math.round(24 * sc));
+        else ctx.rect(banX, banY, banW, banH);
+        ctx.fill();
+        ctx.restore();
+        ctx.fillStyle = acInk; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const textStartY = banY + (banH - (bLines.length - 1) * bLH) / 2;
+        bLines.forEach((ln, bi) => { ctx.fillText(ln, W / 2, textStartY + bi * bLH); });
+        // 하단 중앙 콤팩트 CTA 버튼
+        const ctaTxt = (hlStr || '지금 시작하기').slice(0, 22);
+        ctx.font = `800 ${Math.round(24 * sc)}px ${tpl.fontBody}`;
+        const ctaW = Math.min(phW - Math.round(80 * sc), ctx.measureText(ctaTxt).width + Math.round(52 * sc));
+        const ctaH = Math.round(56 * sc);
+        const ctaY = H - Math.round(108 * sc);
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(W / 2 - ctaW / 2, ctaY, ctaW, ctaH, Math.round(12 * sc));
+        else ctx.rect(W / 2 - ctaW / 2, ctaY, ctaW, ctaH);
+        ctx.fill();
+        ctx.fillStyle = '#0d0d0d'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(ctaTxt, W / 2, ctaY + ctaH / 2 + 1);
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_diagonal_wedge') {
+        // 핀터레스트 Equilibi R2C3/R4C1: 화이트 상단 + 20° 사선 브랜드 컬러 웨지 + 틸트(-20°) 스마트폰 목업
+        const acCol = (tpl.accent && tpl.accent.toLowerCase() !== '#0d0d0d' && tpl.accent.toLowerCase() !== '#ffffff') ? tpl.accent : '#ffc800';
+        const bgCol = tpl.bg || '#ffffff';
+        const topInk = arCnIsDarkHex(bgCol) ? '#ffffff' : '#0d0d0d';
+        const topMut = arCnIsDarkHex(bgCol) ? 'rgba(255,255,255,0.78)' : '#4b5563';
+        ctx.fillStyle = bgCol;
+        ctx.fillRect(0, 0, W, H);
+        // 하단 20° 사선 웨지 (좌하 → 우중단 상승)
+        ctx.save();
+        ctx.fillStyle = acCol;
+        ctx.beginPath();
+        ctx.moveTo(0, H * 0.72);
+        ctx.lineTo(W, H * 0.45);
+        ctx.lineTo(W, H);
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        ctx.fill();
+        // 웨지 내부 은은한 원형 아크
+        ctx.clip();
+        ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+        ctx.lineWidth = Math.max(2, 3 * sc);
+        ctx.beginPath(); ctx.arc(W * 0.88, H * 0.96, W * 0.46, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+        // 우상단 브랜드 리본 + 페이지
+        const topY = Math.round(84 * sc);
+        const brandLbl = String(kickerTxt || 'APP GUIDE').slice(0, 16);
+        ctx.font = `800 ${Math.round(23 * sc)}px ${tpl.fontBody}`;
+        const blw = ctx.measureText(brandLbl).width;
+        const bx = W - padX - blw - Math.round(32 * sc);
+        ctx.fillStyle = acCol;
+        ctx.beginPath();
+        ctx.moveTo(bx, topY + Math.round(12 * sc));
+        ctx.lineTo(bx + Math.round(14 * sc), topY - Math.round(12 * sc));
+        ctx.lineTo(bx + Math.round(24 * sc), topY - Math.round(4 * sc));
+        ctx.lineTo(bx + Math.round(10 * sc), topY + Math.round(20 * sc));
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = topInk; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(brandLbl, bx + Math.round(30 * sc), topY + Math.round(3 * sc));
+        // 좌상단 3줄 볼드 제목 + 간결한 본문 + 블랙 CTA 버튼
+        const titleFs = Math.round((isCover ? 66 : 58) * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, Math.round(W * 0.60)).slice(0, 3);
+        const tLH = Math.round(titleFs * 1.18);
+        curY = Math.round(134 * sc);
+        ctx.fillStyle = topInk; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        if (bodyStr) {
+          curY += Math.round(14 * sc);
+          const bodyFs = Math.round(27 * sc * fsMul);
+          ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+          ctx.fillStyle = topMut;
+          const bLines = arCnWrapLines(ctx, bodyStr, Math.round(W * 0.56)).slice(0, 2);
+          bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += Math.round(bodyFs * 1.42); });
+        }
+        curY += Math.round(24 * sc);
+        const ctaTxt = (hlStr || '지금 신청하기').slice(0, 20);
+        ctx.font = `800 ${Math.round(24 * sc)}px ${tpl.fontBody}`;
+        const ctaW = Math.min(Math.round(W * 0.44), ctx.measureText(ctaTxt).width + Math.round(46 * sc));
+        const ctaH = Math.round(56 * sc);
+        ctx.fillStyle = '#0d0d0d';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX, curY, ctaW, ctaH, Math.round(11 * sc));
+        else ctx.rect(padX, curY, ctaW, ctaH);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(ctaTxt, padX + ctaW / 2, curY + ctaH / 2 + 1);
+        // 우하단 틸트(-24°) 스마트폰 목업 + 내부 사진 & 미니 상태바
+        ctx.save();
+        ctx.translate(W * 0.62, H * 0.72);
+        ctx.rotate(-0.42);
+        const mw = Math.round(W * 0.54);
+        const mh = Math.round(H * 0.52);
+        const mx = -mw / 2, my = -mh / 2;
+        const mb = Math.round(14 * sc);
+        ctx.shadowColor = 'rgba(0,0,0,0.32)'; ctx.shadowBlur = Math.round(42 * sc); ctx.shadowOffsetY = Math.round(22 * sc);
+        ctx.fillStyle = '#18181b';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(mx, my, mw, mh, Math.round(52 * sc));
+        else ctx.rect(mx, my, mw, mh);
+        ctx.fill();
+        ctx.shadowColor = 'transparent';
+        ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+        ctx.lineWidth = Math.max(1.5, 2.5 * sc);
+        ctx.stroke();
+        arCollageDrawCover(ctx, slide.bgImg, mx + mb, my + mb, mw - mb * 2, mh - mb * 2, Math.round(40 * sc), null);
+        // 다이내믹 아일랜드 노치
+        ctx.fillStyle = '#0d0d10';
+        const nw = Math.round(118 * sc), nh = Math.round(26 * sc);
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(-nw / 2, my + mb + Math.round(14 * sc), nw, nh, nh / 2);
+        else ctx.rect(-nw / 2, my + mb + Math.round(14 * sc), nw, nh);
+        ctx.fill();
+        ctx.restore();
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_dual_compare') {
+        // 핀터레스트 Equilibi R3C2: 화이트 캔버스 + 상단 라운드 블랙 카드(좌글·우사진) + 하단 라운드 컬러 카드(좌사진·우글+CTA)
+        const acCol = (tpl.accent && tpl.accent.toLowerCase() !== '#0d0d0d' && tpl.accent.toLowerCase() !== '#ffffff') ? tpl.accent : '#ffc800';
+        const acInk = arCnIsDarkHex(acCol) ? '#ffffff' : '#0d0d0d';
+        const bgCol = tpl.bg || '#ffffff';
+        const topInk = arCnIsDarkHex(bgCol) ? '#ffffff' : '#0d0d0d';
+        ctx.fillStyle = bgCol;
+        ctx.fillRect(0, 0, W, H);
+        // 상단 중앙 브랜드 마크
+        const topY = Math.round(72 * sc);
+        const lbl = String(kickerTxt || 'BEFORE & AFTER').slice(0, 20);
+        ctx.font = `800 ${Math.round(24 * sc)}px ${tpl.fontBody}`;
+        const lw = ctx.measureText(lbl).width;
+        const markX = W / 2 - (lw + Math.round(38 * sc)) / 2;
+        ctx.fillStyle = acCol;
+        ctx.beginPath();
+        ctx.moveTo(markX, topY + Math.round(12 * sc));
+        ctx.lineTo(markX + Math.round(15 * sc), topY - Math.round(12 * sc));
+        ctx.lineTo(markX + Math.round(26 * sc), topY - Math.round(4 * sc));
+        ctx.lineTo(markX + Math.round(11 * sc), topY + Math.round(20 * sc));
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = topInk; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(lbl, markX + Math.round(34 * sc), topY + Math.round(3 * sc));
+        const cardX = Math.round(64 * sc);
+        const cardW = W - cardX * 2;
+        const cardGap = Math.round(36 * sc);
+        const cardTopY = Math.round(136 * sc);
+        const cardH = Math.round((H - cardTopY - Math.round(102 * sc) - cardGap) / 2);
+        const cardR = Math.round(34 * sc);
+        // 카드 1: 상단 다크 라운드 카드 (좌측 화이트 헤드라인 + 우측 사진 프레임)
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.14)'; ctx.shadowBlur = Math.round(28 * sc); ctx.shadowOffsetY = Math.round(10 * sc);
+        ctx.fillStyle = '#0d0d0f';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(cardX, cardTopY, cardW, cardH, cardR);
+        else ctx.rect(cardX, cardTopY, cardW, cardH);
+        ctx.fill();
+        ctx.restore();
+        const padIn = Math.round(42 * sc);
+        const photoW1 = Math.round(cardW * 0.40);
+        const photoH1 = cardH - Math.round(40 * sc);
+        arCollageDrawCover(ctx, slide.bgImg, cardX + cardW - photoW1 - Math.round(20 * sc), cardTopY + Math.round(20 * sc), photoW1, photoH1, Math.round(24 * sc), null);
+        const tFs = Math.round((isCover ? 52 : 46) * sc * fsMul * tMul);
+        ctx.font = `${tW} ${tFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, cardW - photoW1 - padIn * 2 - Math.round(12 * sc)).slice(0, 3);
+        const tLH = Math.round(tFs * 1.24);
+        const tStartY = cardTopY + (cardH - tLines.length * tLH) / 2 + Math.round(4 * sc);
+        ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln, i) => { ctx.fillText(ln, cardX + padIn, tStartY + i * tLH); });
+        // 카드 2: 하단 브랜드 컬러 라운드 카드 (좌측 사진 프레임 + 우측 본문 & CTA 버튼)
+        const card2Y = cardTopY + cardH + cardGap;
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.14)'; ctx.shadowBlur = Math.round(28 * sc); ctx.shadowOffsetY = Math.round(10 * sc);
+        ctx.fillStyle = acCol;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(cardX, card2Y, cardW, cardH, cardR);
+        else ctx.rect(cardX, card2Y, cardW, cardH);
+        ctx.fill();
+        ctx.restore();
+        arCollageDrawCover(ctx, slide.bgImg, cardX + Math.round(20 * sc), card2Y + Math.round(20 * sc), photoW1, photoH1, Math.round(24 * sc), null);
+        const rightTextX = cardX + photoW1 + Math.round(48 * sc);
+        const rightTextW = cardW - photoW1 - Math.round(80 * sc);
+        const bFs = Math.round(32 * sc * fsMul);
+        ctx.font = `700 ${bFs}px ${tpl.fontBody}`;
+        const bLines = arCnWrapLines(ctx, bodyStr || '두 가지 장점을 한 번에 누리세요.', rightTextW).slice(0, 3);
+        const bLH = Math.round(bFs * 1.38);
+        const ctaH = Math.round(56 * sc);
+        const blockH = bLines.length * bLH + Math.round(24 * sc) + ctaH;
+        let ry2 = card2Y + (cardH - blockH) / 2;
+        ctx.fillStyle = acInk; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        bLines.forEach((ln) => { ctx.fillText(ln, rightTextX, ry2); ry2 += bLH; });
+        ry2 += Math.round(20 * sc);
+        const ctaTxt = (hlStr || '바로 시작하기').slice(0, 18);
+        ctx.font = `800 ${Math.round(24 * sc)}px ${tpl.fontBody}`;
+        const ctaW = Math.min(rightTextW, ctx.measureText(ctaTxt).width + Math.round(46 * sc));
+        ctx.fillStyle = arCnIsDarkHex(acCol) ? '#ffffff' : '#0d0d0d';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(rightTextX, ry2, ctaW, ctaH, Math.round(12 * sc));
+        else ctx.rect(rightTextX, ry2, ctaW, ctaH);
+        ctx.fill();
+        ctx.fillStyle = arCnIsDarkHex(acCol) ? '#0d0d0d' : '#ffffff';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(ctaTxt, rightTextX + ctaW / 2, ry2 + ctaH / 2 + 1);
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_checker_split') {
         // Pin #2: 짝수·홀수 카드마다 카본 블랙 ↔ 네온 라임(포인트색)이 교차 반전되는 체커보드 좌우 분할 캐러셀!
         const isAltBright = (slideIdx % 2 === 1);
         const bgCol = isAltBright ? (tpl.accent || '#a3e600') : (tpl.bg || '#0f0f0f');
@@ -8435,7 +8834,7 @@
       // 1) 배경·글자 명도 대비 (WCAG 4.5 기준, 풀배경 사진형 제외)
       const nonFullCount = slides.filter((s) => {
         const pl = s.photoLayout || eff.coverLayout || '';
-        return pl !== 'photo_full' && !pl.startsWith('photo_big_') && !pl.startsWith('photo_viral_') && pl !== 'photo_bold_stamp' && pl !== 'photo_neon_card' && pl !== 'photo_slash_kinetic' && pl !== 'photo_checker_split';
+        return pl !== 'photo_full' && !pl.startsWith('photo_big_') && !pl.startsWith('photo_viral_') && pl !== 'photo_bold_stamp' && pl !== 'photo_neon_card' && pl !== 'photo_slash_kinetic' && pl !== 'photo_checker_split' && pl !== 'photo_brand_chiptags';
       }).length;
       if (nonFullCount > 0 && /^#[0-9a-f]{6}$/i.test(eff.bg) && /^#[0-9a-f]{6}$/i.test(eff.fg)) {
         const cr = arContrastRatio(eff.bg, eff.fg);

@@ -1794,7 +1794,7 @@
               </div>
 
               <div id="arCnCatRow" class="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-                <button type="button" data-cn-cat="all" onclick="arCnSetCat('all')" class="ar-cn-tweak-btn active">전체 84</button>
+                <button type="button" data-cn-cat="all" onclick="arCnSetCat('all')" class="ar-cn-tweak-btn active">전체 90</button>
                 <button type="button" data-cn-cat="바이럴" onclick="arCnSetCat('바이럴')" class="ar-cn-tweak-btn">바이럴</button>
                 <button type="button" data-cn-cat="빅타이포" onclick="arCnSetCat('빅타이포')" class="ar-cn-tweak-btn">빅타이포</button>
                 <button type="button" data-cn-cat="그라데이션" onclick="arCnSetCat('그라데이션')" class="ar-cn-tweak-btn">그라데이션</button>
@@ -1897,8 +1897,12 @@
                 <button type="button" id="arCnClearBgPhotoBtn" onclick="arCnClearBgPhoto()" class="btn-secondary h-9 px-3 text-[12px] text-[#fca5a5] cursor-pointer">사진 빼기</button>
               </div>
               <div class="space-y-1.5">
-                <span class="text-[12px] font-semibold text-[#ededed]">이 장의 사진 배치 구도 (42종)</span>
+                <span class="text-[12px] font-semibold text-[#ededed]">이 장의 사진 배치 구도 (46종)</span>
                 <div id="arCnPhotoLayoutRow" class="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                  <button type="button" data-cn-playout="photo_brand_chiptags" onclick="arCnSetPhotoLayout('photo_brand_chiptags')" class="ar-cn-opt-btn">라인칩 스플릿</button>
+                  <button type="button" data-cn-playout="photo_phone_banner" onclick="arCnSetPhotoLayout('photo_phone_banner')" class="ar-cn-opt-btn">폰 플로팅배너</button>
+                  <button type="button" data-cn-playout="photo_diagonal_wedge" onclick="arCnSetPhotoLayout('photo_diagonal_wedge')" class="ar-cn-opt-btn">사선 폰 목업</button>
+                  <button type="button" data-cn-playout="photo_dual_compare" onclick="arCnSetPhotoLayout('photo_dual_compare')" class="ar-cn-opt-btn">듀얼 비교카드</button>
                   <button type="button" data-cn-playout="photo_checker_split" onclick="arCnSetPhotoLayout('photo_checker_split')" class="ar-cn-opt-btn">체커보드 교차</button>
                   <button type="button" data-cn-playout="photo_slash_kinetic" onclick="arCnSetPhotoLayout('photo_slash_kinetic')" class="ar-cn-opt-btn">45° 사선 슬래시</button>
                   <button type="button" data-cn-playout="photo_bento_dark" onclick="arCnSetPhotoLayout('photo_bento_dark')" class="ar-cn-opt-btn">2×2 벤토그리드</button>
@@ -2933,7 +2937,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cn-84-40fonts"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cn-90-brandapp"><\/script>');
     }
   </script>
   <!--
