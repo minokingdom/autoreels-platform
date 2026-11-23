@@ -273,7 +273,7 @@ async function openMedia(file, signal) {
     const thumb = document.createElement('canvas'); thumb.width=60; thumb.height=106;
     thumb.getContext('2d').drawImage(video,0,0,60,106);
     video.thumbnail = thumb.toDataURL('image/jpeg',.75);
-    video.addEventListener('seeked',()=>{if (!playing && !busy && photoAt(selected)===video) showFrame();});
+    video.addEventListener('seeked',()=>{if (byId('play').hidden && !busy && photoAt(selected)===video) showFrame();});
     return video;
   } catch (error) {releaseMedia([video]); throw error;}
 }
@@ -338,6 +338,7 @@ byId('replaceMedia').addEventListener('change',async event=>{
   finally {busy = false; byId('inputs').disabled = false;}
 });
 const cutAdapter = {
+  preview: () => preview,
   unit:'컷', count:()=>scenes.length, index:()=>selected, select:selectScene,
   read(i) {
     const scene = scenes[i];
@@ -389,18 +390,46 @@ function indexAt(seconds) {
   const i = scenes.findIndex(scene => seconds*30 < scene.end);
   return i >= 0 ? i : scenes.length-1;
 }
-byId('play').addEventListener('click',() => {
-  if (playing) {stopPreview(); return;}
-  const fail = () => {stopPreview(); status('영상 재생을 시작하지 못했어요. 다시 눌러 주세요.');};
+let previewSeconds = 0;
+function playPreview() {
+  const error = byId('previewError');
+  error.hidden = true;
+  const fail = () => {
+    if (byId('play').hidden) return;
+    stopPreview();
+    error.textContent = '영상 재생을 시작하지 못했어요. 다시 눌러 주세요.';
+    error.hidden = false;
+  };
   try {startAudio()?.catch(fail);} catch {fail(); return;}
-  const start = performance.now(); byId('play').textContent = 'Ⅱ'; byId('play').setAttribute('aria-label','일시정지');
+  const start = performance.now() - previewSeconds * 1000;
+  byId('play').textContent = 'Ⅱ'; byId('play').setAttribute('aria-label','일시정지');
   const tick = now => {
-    const seconds = (now-start)/1000;
-    selected = indexAt(seconds); advanceMedia(selected,seconds,fail); showFrame(seconds-scenes[selected].start/30);
-    if (seconds*30 >= scenes.at(-1).end) stopPreview();
+    previewSeconds = Math.max(0,(now-start)/1000);
+    const i = indexAt(previewSeconds);
+    advanceMedia(i,previewSeconds,fail);
+    paint(preview,i,'all',previewSeconds-scenes[i].start/30);
+    if (previewSeconds*30 >= scenes.at(-1).end) {stopPreview(); previewSeconds = 0;}
     else playing = requestAnimationFrame(tick);
   };
   playing = requestAnimationFrame(tick);
+}
+byId('play').addEventListener('click',() => {
+  if (playing) stopPreview(); else playPreview();
+});
+byId('openPreview').addEventListener('click',event => {
+  if (busy || byId('actions').hidden) return;
+  window.arWorkPreview.open({
+    title:'재구성한 영상 미리보기',node:byId('frame'),trigger:event.currentTarget,
+    onOpen() {
+      previewSeconds = 0;
+      byId('play').hidden = false;
+      playPreview();
+    },
+    onClose() {
+      byId('play').hidden = byId('previewError').hidden = true;
+      selectScene(selected);
+    }
+  });
 });
 async function recordMp4(mime) {
   const first = photoAt(0);
@@ -452,7 +481,7 @@ async function recordMp4(mime) {
 async function save(kind) {
   if (busy || !photos.length || !scenes.length) return;
   busy = true; stopPreview();
-  for (const id of ['inputs','play','project','save']) byId(id).disabled = true;
+  for (const id of ['inputs','openPreview','play','project','save']) byId(id).disabled = true;
   try {
     if (kind === 'project') {
       status('편집 프로젝트를 준비하고 있어요…');
@@ -475,7 +504,7 @@ async function save(kind) {
     byId('download').href = savedUrl; byId('download').hidden = false;
     status('MP4가 준비됐어요.');
   } catch (err) { status(err.message || '저장하지 못했어요. 다시 시도해 주세요.'); }
-  finally {busy = false; for (const id of ['inputs','play','project','save']) byId(id).disabled = false;}
+  finally {busy = false; for (const id of ['inputs','openPreview','play','project','save']) byId(id).disabled = false;}
 }
 byId('download').addEventListener('click',async event=>{
   if(!window.AutoReelsExport || !savedUrl)return;

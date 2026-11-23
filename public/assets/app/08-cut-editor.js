@@ -111,7 +111,7 @@
       { id: 'prism', label: '🌈 프리즘' }
     ];
     const CUT_TEXT_FONTS = window.arCutPanel.fonts;
-    window.__arFontPickerExpanded = window.__arFontPickerExpanded || {'cut-std-caption':true,'cut-std-chip':true};
+    window.__arFontPickerExpanded = window.__arFontPickerExpanded || {};
     function arRenderUnifiedFontPickerHtml(opts) {
       const items = opts.items || CUT_TEXT_FONTS;
       const pickerId = String(opts.pickerId || 'default');
@@ -145,7 +145,7 @@
             </div>
             <div class="ar-font-head-r">
               ${resetHtml}
-              <button type="button" onclick="arToggleUnifiedFontGrid(this)" class="ar-font-toggle">${expanded ? '캐러셀로 접기 ▴' : '전체 펼치기 ▾'}</button>
+              <button type="button" onclick="arToggleUnifiedFontGrid(this)" aria-label="글꼴 보기 방식 전환" class="ar-font-toggle">${expanded ? '☰' : '⊞'}</button>
             </div>
           </div>
           <div class="ar-font-carousel-wrap">
@@ -165,7 +165,7 @@
       const expanded = list.classList.contains('ar-font-carousel');
       window.__arFontPickerExpanded[pid] = expanded;
       list.className = expanded ? 'ar-font-grid' : 'ar-font-carousel';
-      btn.textContent = expanded ? '캐러셀로 접기 ▴' : '전체 펼치기 ▾';
+      btn.textContent = expanded ? '☰' : '⊞';
       picker.querySelectorAll('.ar-font-nav').forEach((n) => { n.style.display = expanded ? 'none' : 'flex'; });
     }
     function arScrollUnifiedFontRow(btn, dir) {
@@ -4979,11 +4979,11 @@
             <button type="button" class="ig-nav" onclick="openCutEditor(${Math.min(totalCuts - 1, cutIdx + 1)}, '${activeKey}')" ${cutIdx >= totalCuts - 1 ? 'disabled' : ''} aria-label="다음 컷">›</button>
             <span class="ig-flex"></span>
             <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'all')" class="ig-text-btn">처음대로</button>
-            <button type="button" onclick="closeCutEditor()" class="ig-text-btn" aria-label="편집창 접기">접기 ⌄</button>
+            <button type="button" onclick="closeCutEditor()" class="ig-text-btn" aria-label="편집창 닫기">×</button>
           </div>
           <div class="ig-cut-actions no-scrollbar">
-            <button type="button" onclick="arMoveCut(${cutIdx}, -1)" ${cutIdx === 0 ? 'disabled' : ''} class="ig-act"><span>◀</span>앞으로</button>
-            <button type="button" onclick="arMoveCut(${cutIdx}, 1)" ${cutIdx >= totalCuts - 1 ? 'disabled' : ''} class="ig-act"><span>▶</span>뒤로</button>
+            <div class="ar-cut-moves"><button type="button" onclick="arMoveCut(${cutIdx}, -1)" ${cutIdx === 0 ? 'disabled' : ''} class="ar-cut-move ar-cut-left">앞으로</button>
+            <button type="button" onclick="arMoveCut(${cutIdx}, 1)" ${cutIdx >= totalCuts - 1 ? 'disabled' : ''} class="ar-cut-move ar-cut-right">뒤로</button></div>
             <button type="button" onclick="arDuplicateCut(${cutIdx})" ${totalCuts >= 10 ? 'disabled' : ''} class="ig-act"><span>⧉</span>복사</button>
             <button type="button" onclick="arDeleteCut(${cutIdx})" ${totalCuts <= 2 ? 'disabled' : ''} class="ig-act"><span>🗑</span>빼기</button>
             <div class="ig-len">

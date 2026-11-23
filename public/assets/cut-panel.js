@@ -69,19 +69,41 @@
     const dialog = make('dialog','arcp');
     dialog.setAttribute('aria-label',adapter.unit==='장'?'카드 편집':'컷 편집');
     const panel = make('div','arcp-panel');
+    const grip=make('div','arcp-grip');
+    grip.setAttribute('aria-hidden','true');
+    dialog.append(grip);
+    const screen=adapter.preview && make('canvas','arcp-live-preview');
+    if(screen){screen.setAttribute('aria-label','현재 작업물 미리보기');dialog.append(screen);}
+    let frame, last=-100;
+    function draw(now){
+      if(!dialog.open || !screen)return;
+      if(now-last>=100){
+        last=now;
+        const src=adapter.preview();
+        const w=src?.videoWidth||src?.width,h=src?.videoHeight||src?.height;
+        if(w && h && (src.readyState==null || src.readyState>=2)){
+          const scale=Math.min(1,420/w);
+          const cw=Math.round(w*scale), ch=Math.round(h*scale);
+          if(screen.width!==cw || screen.height!==ch){screen.width=cw;screen.height=ch;}
+          screen.getContext('2d').drawImage(src,0,0,cw,ch);
+        }
+      }
+      frame=requestAnimationFrame(draw);
+    }
     dialog.append(panel);
     document.body.append(dialog);
     current=dialog;
     dialog.addEventListener('close',()=>{
       if(current===dialog) current=null;
-      dialog.remove();
+      cancelAnimationFrame(frame);dialog.remove();
       adapter.close?.();
     },{once:true});
-    let tab='caption', expanded=true, editing=false;
+    let tab='caption', expanded=false, editing=false;
     function render() {
       const i=adapter.index(), n=adapter.count(), item=adapter.read(i), unit=adapter.unit||'컷';
       const selected=item[tab]||{};
       const scroll=panel.scrollTop, gridScroll=panel.querySelector('.arcp-grid')?.scrollTop||0;
+      const horizontal=panel.querySelector('.arcp-strip')?.scrollLeft||0;
       panel.replaceChildren();
       function row(cls='') {
         const r=make('div','arcp-row '+cls);
@@ -104,11 +126,14 @@
       nav.append(make('strong','',(i+1)+' / '+n+unit));
       button(nav,'›',()=>go(i+1),{disabled:i===n-1,title:'다음 '+unit});
       button(nav,'처음대로',()=>commit({caption:{text:item.caption?.text||''},chip:{text:item.chip?.text||''}}),{cls:'arcp-end',title:'이 '+unit+'의 자막과 아래 이름 스타일 초기화'});
-      button(nav,'접기 ﹀',()=>dialog.close());
+      button(nav,'×',()=>dialog.close(),{title:'편집창 닫기'});
       const actions=row('arcp-actions');
+      const moves=make('div','ar-cut-moves');actions.append(moves);
       [['left','◀','앞으로',i===0],['right','▶','뒤로',i===n-1],['copy','⧉','복사',n>=(adapter.maxCount||Infinity)],['delete','⌫','빼기',n<=(adapter.minCount||1)]].forEach(([key,glyph,label,disabled])=>{
-        const b=button(actions,'',()=>{adapter.order(key,i);adapter.changed();editing=false;render();},{disabled,title:label});
-        b.append(make('b','',glyph),make('small','',label));
+        const move=key==='left'||key==='right';
+        const b=button(move?moves:actions,'',()=>{adapter.order(key,i);adapter.changed();editing=false;render();},{disabled,title:label});
+        if(move){b.className='ar-cut-move ar-cut-'+key;b.textContent=label;}
+        else b.append(make('b','',glyph),make('small','',label));
       });
       const duration=row('arcp-duration');
       duration.append(make('span','arcp-grow','이 '+unit+' 길이'));
@@ -139,13 +164,13 @@
         const head=row('arcp-font-head');
         head.append(make('span','arcp-grow','글꼴 미리보기 ('+fonts.length+'종)'),make('small','','상업용 무료'));
         button(head,'기본 ↺',()=>style({font:''}));
-        button(head,expanded?'캐러셀로 접기 ▴':'전체 펼치기 ▾',()=>{expanded=!expanded;render();});
+        button(head,expanded?'☰':'⊞',()=>{expanded=!expanded;render();},{title:expanded?'글꼴 캐러셀 보기':'모든 글꼴 보기'});
         const grid=make('div','arcp-grid'+(expanded?'':' arcp-strip'));panel.append(grid);
         for(const font of fonts){
           const b=button(grid,'',()=>style({font:font.id}),{active:selected.font===font.id,title:font.label});
           b.append(make('b','arcp-font-'+font.id,selected.text||tabs[tab]+' 미리보기'),make('small','',font.label));
         }
-        grid.scrollTop=gridScroll;
+        grid.scrollTop=gridScroll;grid.scrollLeft=horizontal;
         const palette=row('arcp-scroll arcp-palette');
         const custom=make('input');custom.type='color';custom.value=selected.color||'#ffffff';custom.setAttribute('aria-label','직접 색상 선택');custom.addEventListener('change',()=>style({color:custom.value}));palette.append(custom);
         colors.forEach((color,k)=>button(palette,'',()=>style({color}),{cls:'arcp-color-'+k,active:selected.color===color,title:color}));
@@ -170,7 +195,7 @@
       }
       panel.scrollTop=scroll;
     }
-    render();dialog.showModal();
+    render();dialog.showModal();if(screen)frame=requestAnimationFrame(draw);
   }
   function paint(ctx,style,defaultY,elapsed=1) {
     if(!style||style.hidden||!style.text)return;

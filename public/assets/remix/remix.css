@@ -11,3 +11,9 @@
 #linkProgress::after { content: ''; display: block; width: 38%; height: 100%; background: #70adff; border-radius: inherit; animation: remix-scan 1.4s ease-in-out infinite alternate; }
 @keyframes remix-scan { to { transform: translateX(163%); } }
 @media (prefers-reduced-motion: reduce) { #linkProgress::after { animation: none; margin-inline: auto; } }
+
+#stage > #frame, #openPreview { grid-area: 1 / 1; }
+#openPreview { align-self: end; z-index: 1; width: auto; margin: 0 0 8px; padding: 9px 16px; }
+.ar-work-preview-body:has(> #frame) { container-type: size; }
+.ar-work-preview-body #frame { flex: none; width: min(100cqw, 56.25cqh); height: auto; max-width: 100%; }
+#previewError { position: absolute; inset: auto 8px 56px; padding: 8px; background: #17191f; border-radius: 7px; color: white; font-size: 13px; }

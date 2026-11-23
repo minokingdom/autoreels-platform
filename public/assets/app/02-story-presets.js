@@ -4161,14 +4161,11 @@ function renderStoryArchetypesUI() {
       if (pop) return pop;
       pop = document.createElement('div');
       pop.id = 'arPreviewPop';
-      pop.className = 'ar-modal hidden fixed inset-0 z-[90]';
-      pop.setAttribute('role', 'dialog');
-      pop.setAttribute('aria-label', '영상 크게 보기');
+      pop.hidden = true;
       pop.innerHTML = `
         <div class="arpp-wrap">
           <div class="arpp-top">
             <span id="arPreviewPopCut" class="arpp-cut"></span>
-            <button type="button" class="ar-modal-x" aria-label="닫기">✕</button>
           </div>
           <div class="arpp-video"><canvas id="arPreviewPopCanvas" width="540" height="960"></canvas><span class="ar-play-feedback" aria-hidden="true"></span></div>
           <div class="arpp-ctl">
@@ -4177,8 +4174,6 @@ function renderStoryArchetypesUI() {
           </div>
         </div>`;
       document.body.appendChild(pop);
-      pop.querySelector('.ar-modal-x').onclick = arClosePreviewPop;
-      pop.addEventListener('click', (e) => { if (e.target === pop) arClosePreviewPop(); });
       pop.querySelector('#arPreviewPopPlay').onclick = () => { togglePlayPause(); arSyncPreviewPopBtn(); };
       pop.querySelector('#arPreviewPopReplay').onclick = () => {
         if (typeof seekToTime === 'function') seekToTime(0);
@@ -4193,21 +4188,26 @@ function renderStoryArchetypesUI() {
     }
     function arOpenPreviewPop() {
       const pop = arEnsurePreviewPop();
-      pop.classList.remove('hidden');
-      pop.style.display = 'flex';
-      if (!isPlaying) togglePlayPause();
-      arSyncPreviewPopBtn();
-      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
+      window.arWorkPreview.open({
+        title: '오토릴스 미리보기', node: pop,
+        onOpen() {
+          pop.hidden = false;
+          if (!isPlaying) togglePlayPause();
+          arSyncPreviewPopBtn();
+          const main=window.__timelines?.main;
+          if (main) main.seek(main.currentTime);
+        },
+        onClose() {
+          pop.hidden = true;
+          if (isPlaying) togglePlayPause();
+        }
+      });
     }
     function arClosePreviewPop() {
-      const pop = document.getElementById('arPreviewPop');
-      if (!pop) return;
-      pop.classList.add('hidden');
-      pop.style.display = 'none';
+      if (arPreviewPopOpen()) window.arWorkPreview.close();
     }
     function arPreviewPopOpen() {
-      const pop = document.getElementById('arPreviewPop');
-      return !!(pop && !pop.classList.contains('hidden'));
+      return document.getElementById('arPreviewPop')?.hidden === false;
     }
 
     function scrollToMainMonitor() {

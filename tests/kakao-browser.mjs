@@ -17,9 +17,9 @@ page.on('request',request=>{
 });
 try{
  await page.goto(`http://127.0.0.1:${srv.address().port}/studio`);await page.waitForFunction(()=>window.AR_SERVER?.mode===true);
- await page.locator('#dealerAuthModal').waitFor({state:'visible'});
- await page.locator('#arKakaoLoginBtn').waitFor({state:'visible'});
- await page.getByRole('button',{name:'로그인 없이 둘러보기'}).click();
+ await page.locator('#studioServices').waitFor();
+ assert.equal(await page.locator('#dealerAuthModal').isVisible(),false);
+ await page.locator('#startAutoReels').click();
  await page.locator('#arQuickBar [data-qb="settings"]').click();
  const settings=page.getByRole('dialog',{name:'스튜디오 설정'});
  assert.equal(await settings.locator('#settingsBusinessProfile').isVisible(),false);
@@ -27,7 +27,7 @@ try{
  const auth=page.getByRole('dialog',{name:'로그인 · 회원가입'});
  const kakao=auth.getByRole('link',{name:'카카오 로그인'});
  assert.equal(await kakao.isVisible(),true);
- assert.equal(await kakao.getAttribute('href'),'/api/account?action=kakao-start');
+ assert.equal(await kakao.getAttribute('href'),'/api/account?action=kakao-start&ind=auto');
  assert.equal(await auth.getByLabel('휴대폰 번호',{exact:true}).isVisible(),false);
  assert.equal(await auth.locator('#arPhoneVerification').isVisible(),false);
  assert.equal(await kakao.locator('img').evaluate(img=>img.naturalWidth>0),true);
@@ -99,11 +99,11 @@ try{
   return route.fulfill({response:await route.fetch({url:`http://127.0.0.1:${srv.address().port}${url.pathname}${url.search}`})});
  });
  await oldAddress.goto('https://autoreels-studio.vercel.app/studio',{waitUntil:'domcontentloaded'});
- await oldAddress.locator('#arQuickBar [data-qb="settings"]').click();
+ await oldAddress.locator('#headerSettingsBtn').click();
  await oldAddress.getByRole('button',{name:'로그인 · 가입'}).click();
  const pendingKakao=oldAddress.getByRole('link',{name:'카카오 로그인'});
  assert.equal(await pendingKakao.isVisible(),true);
- assert.equal(await pendingKakao.getAttribute('href'),'https://autoreelsmaker.kr/api/account?action=kakao-start');
+ assert.equal(await pendingKakao.getAttribute('href'),'https://autoreelsmaker.kr/api/account?action=kakao-start&ind=auto');
  sendConfig();
  await pendingKakao.waitFor({state:'hidden'});
  assert.equal(await oldAddress.getByLabel('휴대폰 번호',{exact:true}).isVisible(),true);

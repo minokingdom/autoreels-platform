@@ -2013,3 +2013,38 @@ body:not(.ar-cn-mode):has(#viewPreview.ar-service-home:not(.hidden)) #mobileLive
   body.ar-sheet:not(.ar-cn-mode):has(#viewPreview.ar-service-home:not(.hidden)) {overflow:auto}
   body.ar-sheet:not(.ar-cn-mode):has(#viewPreview.ar-service-home:not(.hidden)) .studio-topbar {display:flex!important}
 }
+
+.ar-menu-wordmark{margin:6px auto 2px;font:italic 800 21px/1.3 'Pretendard Variable',Pretendard,sans-serif;letter-spacing:-.06em;color:#f5f6fa}
+.ar-menu-wordmark span{color:#58a6ff}
+#arCnWorkStage,#arCollageWorkStage{display:contents}
+body.ar-cn-mode #arCnMonitorColumn .monitor-frame>#arCnWorkStage{display:contents!important}
+.ar-work-preview-body :is(#arCnWorkStage,#arCollageWorkStage){width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+body .ar-work-preview #arCnCanvasFrame,body .ar-work-preview #arCnCanvasFrame[data-ratio="1:1"],body .ar-work-preview #arCollageWorkStage>div:first-child{height:calc(100% - 36px);max-height:calc(100% - 36px);width:auto;max-width:100%;flex:0 1 auto;min-height:0}
+.ar-work-preview #arCnSlideNavRow{width:min(100%,440px);display:flex}
+.ar-work-preview #arCnSlideNavRow :is([title="카드 1장 추가"],[title="현재 카드 삭제"]){display:none}
+.ar-work-preview #arPreviewPop{display:flex;min-height:0;width:100%;height:100%;justify-content:center;padding:0}
+.ar-work-preview #arPreviewPop .arpp-wrap{height:100%;min-height:0;gap:4px;animation:none}
+.ar-work-preview #arPreviewPop .arpp-video{height:auto;flex:1;min-height:0}
+.ar-work-preview #arPreviewPop .arpp-ctl{flex:none;width:min(100%,320px)}
+.ar-work-preview #arPreviewPop .arpp-btn{height:36px}
+#arPhotoCollageModal:not(.hidden){align-items:flex-end;padding:0;justify-content:center}
+#arPhotoCollageModal>div:first-child{height:50vh;height:50dvh;max-height:50dvh;border-radius:18px 18px 0 0}
+#arPhotoCollageModal>div:first-child::before{content:'';display:block;width:38px;height:4px;border-radius:9px;background:#767c85;margin:8px auto;flex:none}
+#arPhotoCollageModal>div:first-child>div:first-child{padding-top:0}
+#arCnSheetHandle,.ar-fixed-grip{pointer-events:none}
+body.ar-sheet.ar-work-docked,body.ar-cn-mode{--ar-sheet:calc(50dvh - var(--ar-msb))}
+#studioWorkPreview,#arCnWorkPreview{white-space:nowrap}
+@media(max-width:1023px){
+  body.ar-sheet.ar-work-docked.ar-cut-editing #mainMonitorColumn{inset:auto 0 0;height:50dvh;box-sizing:border-box;border:1px solid var(--border);border-radius:18px 18px 0 0;padding:0 8px env(safe-area-inset-bottom);background:var(--card)}
+  body.ar-sheet.ar-work-docked.ar-cut-editing #mainMonitorColumn::before{content:'';width:38px;height:4px;margin:8px auto;flex:none;border-radius:8px;background:#767c85}
+  body.ar-sheet.ar-work-docked.ar-cut-editing #mainMonitorColumn>.monitor-frame{height:auto;flex:1;min-height:0}
+  body.ar-sheet.ar-work-docked.ar-cut-editing:has(#cutEditorPanel:not(.hidden)) #previewViewport{height:32%;width:auto;max-height:none;flex:0 0 32%}
+  body.ar-sheet.ar-work-docked.ar-cut-editing #cutEditorPanel:not(.hidden){min-height:0;flex:1;max-height:none}
+}
+@media(min-width:1024px){
+  body.ar-work-docked:not(.ar-cut-editing) #studioWorkflowColumn,body.ar-cn-mode #arCnWorkflowColumn{position:fixed;inset:auto 0 0;margin:auto;width:min(100%,800px);height:50dvh;box-sizing:border-box;overflow:auto;background:var(--card);border:1px solid var(--border);border-radius:18px 18px 0 0;z-index:42;overscroll-behavior:contain}
+  body.ar-work-docked:not(.ar-cut-editing) #mainMonitorColumn,body.ar-cn-mode #arCnMonitorColumn{grid-column:1/-1}
+  body.ar-work-docked:not(.ar-cut-editing) #mainMonitorColumn .monitor-frame,body.ar-cn-mode #arCnMonitorColumn .monitor-frame{width:min(240px,26vh);margin:auto}
+  body.ar-work-docked #arSheetHandle,body.ar-cn-mode #arCnSheetHandle{display:block;height:20px;width:100%;background:var(--card);border:0;position:sticky;top:0;z-index:22}
+  body.ar-work-docked #arSheetHandle span,body.ar-cn-mode #arCnSheetHandle span{display:block;width:38px;height:4px;border-radius:8px;background:#767c85;margin:auto}
+}

@@ -1,12 +1,15 @@
 const quickEdit = new URLSearchParams(location.search).get('mode') === 'edit';
 const byId = id => document.getElementById(id);
 const fileInput = byId('file'), video = byId('sourceVideo'), play = byId('play');
+const workPreviewButton = byId('shortsWorkPreview');
 const statusLine = byId('status'), save = byId('save'), download = byId('download');
 let session, sequence = 0;
 const clock = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2,'0');
 const detail = (s, text) => { if (s === session) { s.status = text; if (!s.exporting) statusLine.textContent = text; } };
 function reset() {
   const s = session;
+  if (byId('frame').closest('dialog.ar-work-preview')) window.arWorkPreview.close();
+  workPreviewButton.hidden = true;
   session = null;
   if (s) {
     stopMixSounds(s);for(const url of s.replacementUrls||[])URL.revokeObjectURL(url);
@@ -21,6 +24,7 @@ function reset() {
 }
 function selected(s, clip, button) {
   video.pause(); s.clip = clip; video.currentTime = clip.start; play.hidden = false; save.disabled = false;
+  workPreviewButton.hidden = false;
   for (const item of byId('clips').children) item.setAttribute('aria-pressed', String(item === button));
   download.hidden = true; mountEditor(clip); renderPreview(clip.start);
 }
@@ -37,7 +41,13 @@ function flush(s) {
   title.textContent = words.length > 44 ? words.slice(0,43) + '…' : words;
   meta.className = 'meta'; meta.textContent = clock(start) + ' – ' + clock(end) + ' · ' + Math.round(end-start) + '초';
   clip.button = button; clip.label = title; clip.meta = meta; clip.timeLabel = meta.textContent;
-  button.append(title,meta); button.addEventListener('click',() => { if (!s.exporting) { s.interacted = true; selected(s,clip,button); } });
+  button.append(title,meta);
+  button.addEventListener('click', () => {
+    if (s.exporting) return;
+    s.interacted = true;
+    selected(s,clip,button);
+    if (openShortsWorkPreview(button)) play.click();
+  });
   byId('clips').append(button); if (!s.clip) selected(s,clip,button);
   scheduleRank(s);
 }
@@ -118,8 +128,39 @@ byId('back').addEventListener('click',reset);
 function clipRanges(clip) { return clip.montage || [clip]; }
 function editedSeconds(clip) { return clipRanges(clip).reduce((total,r) => total+r.end-r.start,0)/(clip.rate||1); }
 function activeCaption(clip,t) {return clip?.lines.find(line => t >= line.start && t < line.end)?.text || '';}
+function openShortsWorkPreview(trigger) {
+  const s = session, frame = byId('frame');
+  if (!s?.clip || s.exporting || s.adding || play.disabled) return false;
+  if (frame.closest('dialog.ar-work-preview')) return true;
+  s.interacted = true;
+  if (s.trackAnalysisEdits) s.previewTouched = true;
+  // 갤러리 편집기의 재생 버튼은 타임라인에 있다. 같은 버튼을 시트에서 쓴다.
+  const anchor = frame.contains(play) ? null : document.createComment('재생 버튼 자리');
+  if (anchor) play.before(anchor);
+  window.arWorkPreview.open({
+    title: quickEdit ? '편집한 영상 미리보기' : '추천 구간 미리보기',
+    node: frame, trigger,
+    onOpen() {
+      if (anchor) frame.append(play);
+    },
+    onClose() {
+      stopJoinedPreview(s);
+      video.pause();
+      stopMixSounds(s);
+      if (anchor) {
+        anchor.replaceWith(play);
+        if (trigger === play) play.focus({preventScroll:true});
+      }
+    }
+  });
+  return true;
+}
+workPreviewButton.addEventListener('click', () => {
+  if (openShortsWorkPreview(workPreviewButton) && video.paused && !session.previewController) play.click();
+});
 play.addEventListener('click',async () => {
   const s = session; if (!s?.clip || s.exporting) return;
+  if (!openShortsWorkPreview(play)) return;
   s.interacted = true;
   if(s.trackAnalysisEdits)s.previewTouched=true;
   if (s.joined || s.timelineCuts) { await previewJoined(s); return; }

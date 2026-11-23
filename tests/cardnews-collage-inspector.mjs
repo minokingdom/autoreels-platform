@@ -17,14 +17,43 @@ const server = http.createServer((req, res) => {
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const browser = await chromium.launch(process.env.CHROME_PATH ? {executablePath:process.env.CHROME_PATH} : {});
 try {
-  const page = await browser.newPage({viewport:{width:1280,height:900},reducedMotion:'reduce'});
+  const mobile = {width:390,height:844};
+  const desktop = {width:1280,height:900};
+  const page = await browser.newPage({viewport:mobile,reducedMotion:'reduce'});
   page.setDefaultTimeout(15000);
   if (!process.env.INSPECTOR_SCREENSHOTS) await page.route(/^https:\/\//, route => route.abort());
   await page.goto('http://127.0.0.1:' + server.address().port + '/studio', {waitUntil:'domcontentloaded'});
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.locator('[onclick="arOpenCardNewsModal()"]:visible').first().click();
   const panel = page.getByRole('dialog', {name:'카드 편집'});
+  const preview = page.locator('dialog.ar-work-preview[open]');
+  const closePreview = () => preview.getByRole('button', {name:'미리보기 닫기'}).click();
+  const assertHalfHeight = async () => {
+    const box = await preview.boundingBox();
+    assert.ok(Math.abs(box.y - mobile.height / 2) <= 1 && Math.abs(box.height - mobile.height / 2) <= 1,
+      '미리보기 시트는 화면 하단 절반을 차지해야 합니다.');
+  };
+  await page.locator('#openCardNewsBtn').click();
+  assert.equal(await panel.isVisible(),false);
+  assert.equal(await page.locator('[data-cn-dock="ai"]').getAttribute('aria-selected'),'true');
+  const workflow = await page.locator('#arCnWorkflowColumn').boundingBox();
+  assert.ok(Math.abs(workflow.y - mobile.height / 2) <= 1, '카드뉴스 작성 시트는 화면 중앙에서 시작해야 합니다.');
+  await page.locator('#arCnTopicInput').fill('주말 시장 안내');
+  await page.locator('#arCnWorkPreview').click();
+  await preview.locator('#arCnPreviewCanvas').waitFor();
+  await assertHalfHeight();
+  const canvasRect = await preview.locator('#arCnPreviewCanvas').boundingBox();
+  assert.ok(canvasRect.width > 0 && Math.abs(canvasRect.width / canvasRect.height - .8) < .03);
+  await preview.getByRole('button',{name:'다음 장'}).click();
+  await closePreview();
+  assert.equal(await page.locator('#arCnTopicInput').inputValue(),'주말 시장 안내');
+  assert.equal(await page.locator('#arCnSlideMeta').textContent(),'2 / 7장');
+  await page.locator('#arCnCanvasFrame').click();
+  await preview.getByRole('button',{name:'이전 장'}).click();
+  await closePreview();
+  assert.equal(await page.locator('#arCnSlideMeta').textContent(),'1 / 7장');
+  await page.setViewportSize(desktop);
+  await page.locator('[data-cn-dock="text"]').click();
   const click = name => panel.getByRole('button', {name,exact:true}).click();
   await panel.waitFor();
   if (process.env.INSPECTOR_SCREENSHOTS) {
@@ -72,11 +101,30 @@ try {
   await page.evaluate(()=>closeCutEditor());
   await page.locator('#showStudioServices').click();
   await page.locator('#openPhotoCollageBtn').click();
+  assert.equal(await page.locator('#arCollageWorkPreview').isDisabled(),true);
   const photo = color => ({name:color+'.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="'+color+'"/></svg>')});
   await page.locator('#arCollageFileInput').setInputFiles(['purple','orange','blue','green'].map(photo));
   await page.waitForFunction(()=>_arCollageState.photos.length === 4);
   await page.locator('[data-cl-cnt="2"]').click();
   await page.locator('#arCollageSlotPills button').first().click();
+  await page.setViewportSize(mobile);
+  const collageCanvas = page.locator('#arCollagePreviewCanvas');
+  const canvasPixels = () => collageCanvas.evaluate(cv=>cv.toDataURL());
+  const withSlotSelection = await canvasPixels();
+  await page.locator('#arCollageWorkPreview').click();
+  await preview.locator('#arCollagePreviewCanvas').waitFor();
+  await assertHalfHeight();
+  const finishedPhoto = await canvasPixels();
+  assert.notEqual(finishedPhoto,withSlotSelection);
+  await closePreview();
+  assert.equal(await canvasPixels(),withSlotSelection);
+  assert.equal(await page.locator('#arCollageSlotEditBar').isVisible(),true);
+  await page.locator('#arCollageWorkPreview').click();
+  await preview.locator('[onclick="arCollageStepPreview(1)"]').click();
+  assert.notEqual(await canvasPixels(),finishedPhoto);
+  await closePreview();
+  assert.match(await page.locator('#arCollageSlideMeta').textContent(),/^2\/2컷/);
+  await page.setViewportSize(desktop);
   await page.locator('#arCollageApplyBtn').click();
   await reel.waitFor();
   assert.deepEqual(await page.evaluate(()=>[window.__arPinnedCut,window.__arActiveCutElKey]),[0,'caption']);
@@ -109,7 +157,7 @@ try {
   assert.ok(edited[2][0]>240 && edited[2][1]<10 && edited[2][2]<10);
   assert.equal(await page.evaluate(()=>window.__arPinnedCut),2);
   assert.deepEqual(errors,[]);
-  console.log('카드뉴스 편집, PNG, 릴스 변환 길이, 콜라주 슬롯 편집 통과');
+  console.log('모바일 카드뉴스 제작 진입·작업물 미리보기·장 이동, 콜라주 완성 미리보기·칸 편집 복귀, PNG·릴스 변환 통과');
 } finally {
   await browser.close();
   server.close();

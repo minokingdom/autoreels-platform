@@ -137,8 +137,20 @@ function openShortsCutInspector() {
     ];
     return [];
   }
+  const composite = document.createElement('canvas');
+  const overlay = byId('overlay');
+  composite.width = overlay.width;
+  composite.height = overlay.height;
+  function preview() {
+    if (s.joined || s.timelineCuts) return overlay;
+    if (video.readyState < 2) return null;
+    const ctx = composite.getContext('2d');
+    drawQuickFrame(ctx, video, 1);
+    ctx.drawImage(overlay, 0, 0);
+    return composite;
+  }
   window.arCutPanel.open({
-    unit: '컷', count: () => takes().length, index: currentIndex, select, read, write, order, tools,
+    unit: '컷', count: () => takes().length, index: currentIndex, select, read, write, order, tools, preview,
     changed: () => mixChanged(s)
   });
 }

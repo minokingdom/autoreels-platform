@@ -618,7 +618,7 @@
       else {
         arLockDemoDealers();
         const authModal = document.getElementById('dealerAuthModal');
-        if (!window.arToolReturn && me.body.guest && !callbackParams.has('plan') && authModal.classList.contains('hidden')) {
+        if (!window.arToolReturn && !document.getElementById('viewPreview')?.classList.contains('ar-service-home') && me.body.guest && !callbackParams.has('plan') && authModal.classList.contains('hidden')) {
           openDealerAuthModal('welcome');
         }
       }

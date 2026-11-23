@@ -56,8 +56,10 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/cut-panel.css" />
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261123-services" />
+  <link rel="stylesheet" href="/assets/work-preview.css" />
+  <script defer src="/assets/work-preview.js"></script>
+  <link rel="stylesheet" href="/assets/cut-panel.css?v=preview-sheet" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261123-work-sheet" />
   <link rel="stylesheet" href="/assets/app/splash.css?v=studio-return" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -418,6 +420,7 @@
           <input type="file" id="quickShortVideoInput" accept="video/*" multiple class="hidden" />
           <a class="bgm-now" data-studio-tool href="/assets/shorts/index.html"><span class="bgm-now-txt"><strong>내 영상으로 쇼츠 만들기</strong><small>긴 말하기 영상에서 핵심 발언 찾기</small></span><span class="bgm-now-go">열기 ›</span></a>
           <a class="bgm-now" data-studio-tool href="/assets/remix/index.html"><span class="bgm-now-txt"><strong>참고 쇼츠·릴스로 재구성하기</strong><small>참고 쇼츠의 컷 길이에 내 영상과 자막 맞추기</small></span><span class="bgm-now-go">열기 ›</span></a>
+        <div class="ar-menu-wordmark" aria-label="오토릴스메이커">오토릴스<span>메이커</span></div>
       </nav>
       <!-- 좌측(PC) / 하단(모바일): 9:16 프리뷰 모니터 (사진 탭부터 표시) -->
       <div id="mainMonitorColumn" class="lg:col-span-5 order-2 lg:order-1 flex flex-col items-center lg:sticky lg:top-6">
@@ -733,6 +736,7 @@
             <div class="flex items-center gap-2 min-w-0">
               <div class="ar-mode-switch" role="group" aria-label="제작 형식 전환">
                 <button type="button" id="showStudioServices" class="ar-mode-btn">제작 메뉴</button>
+                <button type="button" id="studioWorkPreview" class="ar-mode-btn">미리보기</button>
                 <button type="button" id="studioCutEdit" class="ar-mode-btn">컷 편집</button>
                 <button type="button" onclick="arOpenCardNewsModal()" class="ar-mode-btn" aria-pressed="false">카드뉴스</button>
               </div>
@@ -1633,7 +1637,8 @@
           </div>
 
           <!-- 실시간 4:5 / 1:1 카드뉴스 뷰포트 -->
-          <div id="arCnCanvasFrame" onclick="if(window.innerWidth<1024&&typeof arToggleSheet==='function')arToggleSheet()" class="ar-cn-canvas-frame relative w-full mx-auto aspect-[4/5] rounded-[12px] overflow-hidden bg-black border border-[var(--border)] shadow-xl select-none cursor-pointer">
+          <div id="arCnWorkStage">
+          <div id="arCnCanvasFrame" class="ar-cn-canvas-frame relative w-full mx-auto aspect-[4/5] rounded-[12px] overflow-hidden bg-black border border-[var(--border)] shadow-xl select-none cursor-pointer">
             <canvas id="arCnPreviewCanvas" width="540" height="675" class="w-full h-full block"></canvas>
           </div>
 
@@ -1648,6 +1653,7 @@
             <button type="button" onclick="arCnStepSlide(1)" class="btn-secondary h-7 w-7 px-0 text-[11px] shrink-0 cursor-pointer flex items-center justify-center" aria-label="다음 장">▶</button>
           </div>
 
+          </div>
           <!-- 빠른 저장 바 (PC 모니터 하단) -->
           <div class="hidden lg:grid grid-cols-2 gap-1.5 pt-0.5">
             <button type="button" onclick="arCnDownloadCurrentPng()" class="btn-secondary h-8 text-[11.5px] cursor-pointer">💾 이 장 PNG</button>
@@ -1691,12 +1697,13 @@
       <!-- 우측(PC) / 하단 드래그 바텀시트(모바일): 오토릴스 #studioWorkflowColumn 과 1:1 동일 -->
       <div id="arCnWorkflowColumn" class="lg:col-span-7 order-2">
         <!-- 모바일 전용 드래그 손잡이 (#arSheetHandle 과 100% 동일: 절반 ↔ 전체 ↔ 접기 3단계) -->
-        <button type="button" id="arCnSheetHandle" aria-label="편집 시트 전체화면으로 보기" aria-expanded="true"><span></span></button>
+        <div id="arCnSheetHandle" aria-hidden="true"><span></span></div>
         <div class="studio-card">
           <!-- 상단 모드 전환(릴스 | 카드뉴스) + 장수 선택 바 (오토릴스 '길이' 바 위치·스타일 100% 동일!) -->
           <div class="flex items-center justify-between gap-1.5 px-3 sm:px-6 pt-2 lg:pt-5">
             <div class="flex items-center gap-2 min-w-0">
               <div class="ar-mode-switch" role="group" aria-label="제작 형식 전환">
+                <button type="button" id="arCnWorkPreview" class="ar-mode-btn">미리보기</button>
                 <button type="button" onclick="arCloseCardNewsModal()" class="ar-mode-btn" aria-pressed="false">릴스</button>
                 <button type="button" class="ar-mode-btn active" aria-pressed="true">카드뉴스</button>
               </div>
@@ -1986,7 +1993,7 @@
       <!-- 모바일 하단 고정 단계 이동 바 (릴스 #mobileStepBar 와 100% 동일) -->
       <nav id="arCnMobileStepBar" aria-label="카드뉴스 단계 이동">
         <button type="button" id="arCnStepPrev" onclick="arCnStepTab(-1)" class="msb-btn">← 릴스</button>
-        <button type="button" id="arCnStepMid" onclick="if(typeof arToggleSheet==='function')arToggleSheet()" class="msb-mid" aria-label="미리보기 크기 전환">
+        <button type="button" id="arCnStepMid" class="msb-mid" aria-label="카드뉴스 미리보기">
           <span id="arCnStepCount" class="msb-count">1 / 5</span>
           <span id="arCnStepName" class="msb-name">주제</span>
         </button>
@@ -2789,6 +2796,7 @@
       </div>
       <div class="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-12 gap-4">
         <div class="md:col-span-5 flex flex-col items-center gap-2">
+          <div id="arCollageWorkStage">
           <div class="relative w-[224px] aspect-[9/16] rounded-[14px] overflow-hidden bg-[#0a0a0c] border border-white/15 shadow-xl select-none">
             <canvas id="arCollagePreviewCanvas" width="360" height="640" style="touch-action:none;" class="w-full h-full block cursor-pointer"></canvas>
             <div id="arCollageEmptyHint" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 text-[12px] text-[#85858b] pointer-events-none">
@@ -2796,12 +2804,15 @@
               <span>오른쪽에서 사진 1~18장을<br/>골라 주세요</span>
             </div>
           </div>
-          <p id="arCollageSlotHint" class="text-[11px] text-[#93c5fd] text-center">💡 각 사진 칸을 <strong>꾹 누르면</strong> 그 칸만 확대·이동·교체할 수 있어요</p>
+
           <div data-collage-batch class="flex items-center gap-2 text-[11.5px] text-[#a1a1aa]">
             <button type="button" onclick="arCollageStepPreview(-1)" class="btn-secondary h-7 px-2 text-[11px] cursor-pointer">◀</button>
             <span id="arCollageSlideMeta" class="font-mono text-[#ededed]">0컷 · 0.0초</span>
             <button type="button" onclick="arCollageStepPreview(1)" class="btn-secondary h-7 px-2 text-[11px] cursor-pointer">▶</button>
           </div>
+          </div>
+          <button type="button" id="arCollageWorkPreview" class="btn-secondary">미리보기</button>
+          <p id="arCollageSlotHint" class="text-[11px] text-[#93c5fd] text-center">💡 각 사진 칸을 <strong>꾹 누르면</strong> 그 칸만 확대·이동·교체할 수 있어요</p>
           <div id="arCollageSlotPills" class="flex items-center justify-center gap-1 flex-wrap"></div>
           <!-- 개별 사진 칸 편집 바 (칸을 꾹 누르거나 칸 번호 선택 시 열림) -->
           <div id="arCollageSlotEditBar" class="hidden w-full rounded-[11px] bg-[#1a1c24] border border-[#60a5fa]/50 p-2.5 space-y-2">
@@ -2937,7 +2948,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cut-panel-1"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-work-sheet"><\/script>');
     }
   </script>
   <!--

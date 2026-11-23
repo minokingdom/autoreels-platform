@@ -125,6 +125,11 @@ async function previewJoined(s) {
   source.playsInline=true;
   const music=s.clip.music ? new Audio(s.clip.music) : null;
   if(music){music.loop=true;music.volume=.25;}
+  controller.signal.addEventListener('abort', () => {
+    source.pause();
+    music?.pause();
+    stopMixSounds(s);
+  }, {once:true});
   const ctx=byId('overlay').getContext('2d');
   play.textContent='Ⅱ';play.setAttribute('aria-label','미리보기 정지');
   try {
@@ -138,7 +143,10 @@ async function previewJoined(s) {
       const take=i===pos.i ? {...original,start:pos.sourceTime} : original;
       await positionJoinedTake(source,take,controller.signal);
       source.muted=!!(s.muteSource || take.owner.keepAudio===false);
-      await source.play();previewSounds(s,offset+(take.start-original.start)/(original.owner.rate||1));music?.play().catch(()=>{});
+      controller.signal.throwIfAborted();
+      await source.play();
+      controller.signal.throwIfAborted();
+      previewSounds(s,offset+(take.start-original.start)/(original.owner.rate||1));music?.play().catch(()=>{});
       await new Promise((resolve,reject)=>{
         let raf;
         const finish=error=>{cancelAnimationFrame(raf);controller.signal.removeEventListener('abort',cancel);source.onerror=null;error?reject(error):resolve();};

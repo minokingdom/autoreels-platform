@@ -33,6 +33,7 @@ try {
     await page.goto(origin+'/studio',{waitUntil:'domcontentloaded',timeout:80000});
     const menu=page.getByRole('navigation',{name:'제작 메뉴',exact:true});
     await menu.waitFor();
+    assert.equal(await menu.locator('.ar-menu-wordmark').innerText(),'오토릴스메이커');
     const names=await menu.locator('strong').allTextContents();
     assert.deepEqual(names,['오토릴스 만들기','영상 편집기','사진 콜라주로 만들기','인스타 카드뉴스 만들기','내 영상으로 쇼츠 만들기','참고 쇼츠·릴스로 재구성하기']);
     if(width===390 && process.env.SERVICES_CAPTURE){
@@ -44,14 +45,21 @@ try {
     assert.equal(offscreen,false);
     await menu.getByRole('button',{name:/오토릴스 만들기/}).click({timeout:12000});
     await page.locator('#studioPanel_topic').waitFor();
+    await page.locator('#studioWorkPreview').click();
+    const preview=page.locator('dialog.ar-work-preview[open]');
+    await preview.locator('#arPreviewPopCanvas').waitFor();
+    const bounds=await preview.evaluate(el=>[el.getBoundingClientRect().height,innerHeight,el.getBoundingClientRect().bottom]);
+    assert.ok(Math.abs(bounds[0]-bounds[1]/2)<1 && Math.abs(bounds[2]-bounds[1])<1);
+    if(width===390 && process.env.WORK_PREVIEW_CAPTURE)await page.screenshot({path:process.env.WORK_PREVIEW_CAPTURE});
+    await preview.getByRole('button',{name:'미리보기 닫기'}).click();
     await page.locator('#studioCutEdit').click({timeout:8000});
     const inspector=page.locator('#cutEditorPanel');
-    await inspector.locator('.ar-font-grid').waitFor({timeout:8000});
-    assert.equal(await inspector.locator('.ar-font-grid button').count(),46);
+    await inspector.locator('.ar-font-carousel').waitFor({timeout:8000});
+    assert.equal(await inspector.locator('.ar-font-carousel button').count(),46);
     await inspector.getByRole('button',{name:'전환',exact:true}).click();
     await inspector.getByRole('button',{name:'자막',exact:true}).click();
     await page.reload({waitUntil:'domcontentloaded'});
-    await page.locator('#showStudioServices').click({timeout:10000});
+    await menu.waitFor();
     await menu.getByRole('button',{name:/영상 편집기/}).click();
     await page.frameLocator('dialog.ar-video-editor iframe').locator('#file').waitFor({state:'attached'});
     console.log(width+'px · 6개 메뉴, 오토릴스 주제, 컷 편집·전환·글꼴 46종, 영상 편집기 확인');

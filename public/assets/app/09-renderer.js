@@ -4483,6 +4483,7 @@
       };
 
       cv.addEventListener('pointerdown', (ev) => {
+        if (cv.closest('dialog.ar-work-preview')) return;
         const slides = arCollageBuildSlides(_arCollageState.photos, _arCollageState.layout);
         if (!slides.length) return;
         const slide = slides[_arCollageState.previewIdx];
@@ -4560,7 +4561,7 @@
       cv.addEventListener('pointercancel', endPtr);
       cv.addEventListener('contextmenu', (ev) => ev.preventDefault());
       cv.addEventListener('wheel', (ev) => {
-        if (_arCollageState.activeSlot < 0) return;
+        if (_arCollageState.activeSlot < 0 || cv.closest('dialog.ar-work-preview')) return;
         ev.preventDefault();
         const cur = arCollageGetEdit(_arCollageState.previewIdx, _arCollageState.activeSlot).scale || 1;
         const next = Math.max(1, Math.min(2.6, +(cur + (ev.deltaY < 0 ? 0.08 : -0.08)).toFixed(2)));
@@ -4613,6 +4614,12 @@
       } catch (_) {}
     }
 
+    function arCollageDrawCurrentSlide(slides = arCollageBuildSlides(_arCollageState.photos, _arCollageState.layout)) {
+      const cv = document.getElementById('arCollagePreviewCanvas');
+      const idx = _arCollageState.previewIdx;
+      if (cv && slides[idx]) arCollageRenderSlide(cv, slides[idx], _arCollageState.bg, idx, !cv.closest('dialog.ar-work-preview'));
+    }
+
     function arCollageRefreshUI() {
       const listEl = document.getElementById('arCollageSelectedList');
       const cntEl = document.getElementById('arCollagePickCount');
@@ -4626,6 +4633,7 @@
       const slotHint = document.getElementById('arCollageSlotHint');
       const cv = document.getElementById('arCollagePreviewCanvas');
       const n = _arCollageState.photos.length;
+      document.getElementById('arCollageWorkPreview').disabled = !n;
       if (cntEl) cntEl.textContent = `${n}/${AR_COLLAGE_MAX_PHOTOS}`;
       if (hintEl) hintEl.classList.toggle('hidden', n > 0);
       arCollageRenderLayoutPicker();
@@ -4688,8 +4696,18 @@
           if (scVal) scVal.textContent = `${Math.round((ed.scale || 1) * 100)}%`;
         }
       }
-      if (cv) arCollageRenderSlide(cv, curSlide, _arCollageState.bg, _arCollageState.previewIdx, true);
+      arCollageDrawCurrentSlide(slides);
     }
+
+    document.getElementById('arCollageWorkPreview')?.addEventListener('click', (event) => {
+      window.arWorkPreview.open({
+        title: '콜라주 미리보기',
+        node: document.getElementById('arCollageWorkStage'),
+        trigger: event.currentTarget,
+        onOpen: () => arCollageDrawCurrentSlide(),
+        onClose: () => arCollageDrawCurrentSlide()
+      });
+    });
 
     async function arOpenPhotoCollageModal(jumpSlideIdx) {
       const modal = document.getElementById('arPhotoCollageModal');
@@ -7685,33 +7703,6 @@
     const AR_CN_TAB_ORDER = ['ai', 'theme', 'text', 'photo', 'export'];
     const AR_CN_TAB_LABELS = { ai: '주제', theme: '테마', text: '폰트', photo: '사진', export: '저장' };
 
-    function arCnBindSheetHandle() {
-      const h = document.getElementById('arCnSheetHandle');
-      if (!h || h.dataset.bound) return;
-      h.dataset.bound = '1';
-      let y0 = null;
-      let dragged = false;
-      h.addEventListener('pointerdown', (e) => {
-        if (!e.isPrimary || e.button !== 0) return;
-        y0 = e.clientY;
-        dragged = false;
-        try { h.setPointerCapture(e.pointerId); } catch (_) {}
-      });
-      h.addEventListener('pointercancel', () => { y0 = null; });
-      h.addEventListener('pointerup', (e) => {
-        if (!e.isPrimary || y0 == null) return;
-        const dy = e.clientY - y0;
-        y0 = null;
-        dragged = Math.abs(dy) > 8;
-        if (!dragged || typeof arToggleSheet !== 'function') return;
-        if (dy > 0) arToggleSheet(!document.body.classList.contains('ar-sheet-full'));
-        else arToggleSheet(document.body.classList.contains('ar-sheet-min') ? false : 'full');
-      });
-      h.addEventListener('click', (e) => {
-        if ((!dragged || e.detail === 0) && typeof arToggleSheet === 'function') arToggleSheet();
-      });
-    }
-
     function arCnSyncSheetUI() {
       const curTab = _arCnState.sheetTab || 'ai';
       AR_CN_TAB_ORDER.forEach((k) => {
@@ -7749,6 +7740,7 @@
       if (!slides.length) return;
       window.arCutPanel.open({
         unit: '장', minCount: 3, maxCount: 10, motion: false, defaultY: {caption: .42, chip: .88},
+        preview: () => document.getElementById('arCnPreviewCanvas'),
         count: () => slides.length,
         index: () => _arCnState.activeIdx,
         select: arCnSelectSlide,
@@ -7802,10 +7794,6 @@
       const next = tab || 'ai';
       _arCnState.sheetOpen = true;
       _arCnState.sheetTab = next;
-      // 모바일에서 바텀시트가 접혀(min) 있으면 탭 선택 시 자연스럽게 펼침 (릴스 switchStudioTab과 동일)
-      if (window.innerWidth < 1024 && document.body.classList.contains('ar-sheet-min') && typeof arToggleSheet === 'function') {
-        arToggleSheet(false);
-      }
       arCnSyncSheetUI();
       const wf = document.getElementById('arCnWorkflowColumn');
       if (wf && window.innerWidth < 1024) wf.scrollTop = 0;
@@ -7821,12 +7809,6 @@
       if (delta < 0 && idx === 0) { arCloseCardNewsModal(); return; }
       if (delta > 0 && idx >= AR_CN_TAB_ORDER.length - 1) { arCnDownloadAllZip(); return; }
       arCnOpenSheet(AR_CN_TAB_ORDER[Math.max(0, Math.min(AR_CN_TAB_ORDER.length - 1, idx + delta))]);
-    }
-    function arCnCloseSheet() {
-      if (window.innerWidth < 1024 && typeof arToggleSheet === 'function') arToggleSheet(true);
-    }
-    function arCnToggleSheetCollapse() {
-      if (window.innerWidth < 1024 && typeof arToggleSheet === 'function') arToggleSheet();
     }
     function arCnSetCat(cat) {
       _arCnState.catFilter = cat || 'all';
@@ -8029,16 +8011,29 @@
       document.body.classList.add('ar-cn-mode');
       document.body.classList.remove('ar-sheet-min', 'ar-sheet-full');
       _arCnState.sheetOpen = true;
-      _arCnState.sheetTab = _arCnState.hasAiGenerated ? 'theme' : 'ai';
+      _arCnState.sheetTab = 'ai';
       arCnPopulateSamplePhotos(false);
       view.classList.remove('hidden');
-      arCnBindSheetHandle();
       arCnRefreshUI();
-      arCnOpenInspector();
+      document.getElementById('arCnWorkflowColumn').scrollTop = 0;
       if (window.innerWidth >= 1024) {
         try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
       }
     }
+    function arCnOpenWorkPreview(event) {
+      const stage = document.getElementById('arCnWorkStage');
+      if (stage.closest('dialog.ar-work-preview')) return;
+      window.arWorkPreview.open({
+        title: '카드뉴스 미리보기',
+        node: stage,
+        trigger: event.currentTarget
+      });
+    }
+    document.getElementById('arCnWorkPreview')?.addEventListener('click', arCnOpenWorkPreview);
+    document.getElementById('arCnStepMid')?.addEventListener('click', arCnOpenWorkPreview);
+    document.getElementById('arCnCanvasFrame')?.addEventListener('click', (event) => {
+      if (window.innerWidth < 1024) arCnOpenWorkPreview(event);
+    });
     function arCloseCardNewsModal() {
       document.body.classList.remove('ar-cn-mode', 'ar-sheet-min', 'ar-sheet-full');
       document.getElementById('viewCardNews')?.classList.add('hidden');
@@ -8879,8 +8874,6 @@
       window.arCloseCardNewsModal = arCloseCardNewsModal;
       window.arCnOpenSheet = arCnOpenSheet;
       window.arCnStepTab = arCnStepTab;
-      window.arCnCloseSheet = arCnCloseSheet;
-      window.arCnToggleSheetCollapse = arCnToggleSheetCollapse;
       window.arCnSetCat = arCnSetCat;
       window.arCnSetTargetCount = arCnSetTargetCount;
       window.arCnSetTemplate = arCnSetTemplate;

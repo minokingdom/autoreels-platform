@@ -28,6 +28,20 @@ try {
     s.pending = [{start:.4,end:2.2,text:'오늘 점심은 김치찌개'},{start:2.3,end:4.6,text:'국물이 진하게 우러났어요'}];
     flush(s);
   });
+  const preview = page.locator('dialog.ar-work-preview[open]');
+  assert.equal(await preview.count(), 0, '구간 추천만으로 미리보기를 열지 않는다.');
+  await page.getByRole('button', {name:'미리보기',exact:true}).click();
+  await page.waitForFunction(() => !video.paused && video.currentTime > .5 && video.currentTime < 4.6, null, {timeout:10000});
+  const size = await preview.locator('#frame').boundingBox();
+  assert.ok(size.width > 150 && size.height > 260 && Math.abs(size.width / size.height - 9 / 16) < .01);
+  assert.equal(await preview.locator('#overlay').count(), 1);
+  await preview.getByRole('button', {name:'미리보기 닫기'}).click();
+  assert.equal(await page.locator('.stage #sourceVideo').evaluate(media => media.paused), true);
+  await page.locator('#clips .choice').click();
+  await preview.locator('#sourceVideo').waitFor();
+  await page.keyboard.press('Escape');
+  await preview.waitFor({state:'detached'});
+  assert.equal(await page.locator('#clips .choice').evaluate(button => document.activeElement === button), true);
   await page.locator('#openInEditor').click();
   const frame = page.frameLocator('dialog.ar-video-editor iframe');
   await frame.locator('#cutTimeline.has-media').waitFor({timeout:20000});
@@ -36,6 +50,7 @@ try {
     captions: [...document.querySelectorAll('#captionLane .cue-block')].map(b => b.textContent).sort()
   }));
   await frame.locator('#trackWave:not([hidden])').waitFor({timeout:10000});
+  assert.equal(await frame.locator('dialog.ar-work-preview[open]').count(), 0);
   assert.deepEqual(state.takes, [[.4, 4.6]], '추천 구간만 타임라인에 올라가야 함');
   assert.deepEqual(state.captions, ['국물이 진하게 우러났어요', '오늘 점심은 김치찌개'], '받아쓴 대사가 자막 트랙에 올라가야 함');
   const inspector = frame.locator('dialog.arcp[open]');
@@ -54,7 +69,7 @@ try {
     cut.owner.cutCaption.text || '', Number(takeDuration(cut).toFixed(1)), cut.owner.lines[1].text
   ])), [['복사본의 자막', 4, '국물이 진하게 우러났어요'], ['', 4.2, '국물이 진하게 우러났어요']]);
   await inspector.getByRole('button', {name:'빼기',exact:true}).click();
-  await inspector.getByRole('button', {name:/^접기/}).click();
+  await inspector.getByRole('button', {name:'편집창 닫기'}).click();
   await frame.locator('[data-studio-back]').click();
   await page.locator('dialog.ar-video-editor').waitFor({state:'detached'});
   assert.equal(await page.locator('#clips button').count(), 1, '편집기를 닫으면 추천 목록으로 돌아와야 함');
@@ -85,6 +100,28 @@ try {
     }
     throw Error('컷 사진이 미리보기에 나타나지 않았어요.');
   });
+  await frame.locator('#headerStudioEdit').click();
+  const editedPreview = inspector.locator('canvas.arcp-live-preview');
+  await editedPreview.evaluate(async canvas => {
+    const ctx = canvas.getContext('2d');
+    for (let i=0; i<80; i++) {
+      const pixel = ctx.getImageData(canvas.width / 2,canvas.height / 2,1,1).data;
+      if (pixel[1] > 240 && pixel[0] < 20) return;
+      await new Promise(resolve => setTimeout(resolve,50));
+    }
+    throw Error('편집창 안에 선택한 컷의 사진이 나타나지 않았어요.');
+  });
+  await inspector.getByRole('button', {name:'편집창 닫기'}).click();
+  await frame.locator('#play').click();
+  const galleryPreview = frame.locator('dialog.ar-work-preview[open]');
+  await galleryPreview.getByRole('button', {name:'미리보기 정지'}).waitFor();
+  await galleryPreview.locator('#overlay').evaluate(canvas => {
+    const pixel = canvas.getContext('2d').getImageData(270,480,1,1).data;
+    if (pixel[1] < 240 || pixel[0] > 20) throw Error('시트에 편집한 컷이 나타나지 않았어요.');
+  });
+  await galleryPreview.getByRole('button', {name:'미리보기 닫기'}).click();
+  await frame.locator('.track-heading #play').waitFor();
+  assert.equal(await frame.locator('body').evaluate(() => !session.previewController && video.paused), true);
   await frame.locator('#mixPublish').click();
   await frame.locator('#save').click();
   await frame.locator('#download:not([hidden])').waitFor({timeout:20000});

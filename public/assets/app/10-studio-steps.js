@@ -995,6 +995,10 @@
     // ==========================================================================
     function arToggleSheet(force) {
       const classes = document.body.classList;
+      if(classes.contains('ar-work-docked') || classes.contains('ar-cn-mode')) {
+        classes.remove('ar-sheet-min','ar-sheet-full');
+        return;
+      }
       const wasMin = classes.contains('ar-sheet-min');
       const wasFull = classes.contains('ar-sheet-full');
       const min = force === true || (force === undefined && wasFull);
@@ -1027,7 +1031,7 @@
       const on = arUsesWorkflowSheet();
       document.body.classList.toggle('ar-sheet', on);
       arEnsureQuickBar();
-      if (!on) return;
+      if (!on && !document.body.classList.contains('ar-work-docked')) return;
       if (!wasOn && arWorkflowSheetExpanded()) {
         arPauseForStudioEdit();
         const play = document.getElementById('playPauseBtn');
@@ -1040,6 +1044,8 @@
         const h = document.createElement('button');
         h.type = 'button';
         h.id = 'arSheetHandle';
+        h.disabled=document.body.classList.contains('ar-work-docked');
+        if(h.disabled)h.tabIndex=-1;
         h.setAttribute('aria-label', '편집 시트 전체화면으로 보기');
         h.setAttribute('aria-expanded', 'true');
         h.innerHTML = '<span></span>';
@@ -3024,25 +3030,29 @@
     function arShowStudioServices(show) {
       const view = document.getElementById('viewPreview');
       view.classList.toggle('ar-service-home',show);
+      document.body.classList.toggle('ar-work-docked',!show);
+      const handle=document.getElementById('arSheetHandle');
+      if(handle){handle.disabled=!show;handle.tabIndex=show?0:-1;handle.classList.toggle('ar-fixed-grip',!show);}
       if (show) view.querySelector('#startAutoReels')?.focus({preventScroll:true});
     }
     (function initServiceMenu() {
       const view=document.getElementById('viewPreview');
       if(!view)return;
       const route=new URL(location.href);
-      const special=Array.from(route.searchParams.keys()).some(k=>!['v','mobile','utm_source','utm_medium','utm_campaign'].includes(k));
+      const special=Array.from(route.searchParams.keys()).some(k=>!['v','mobile','ind','utm_source','utm_medium','utm_campaign'].includes(k) && !(k==='from' && route.searchParams.get(k)==='shorts'));
+      document.getElementById('studioWorkPreview').addEventListener('click',arOpenPreviewPop);
       document.getElementById('studioCutEdit').addEventListener('click',()=>openCutEditor(window.__arPinnedCut >= 0 ? window.__arPinnedCut : getCutIndexAt(window.__timelines?.main?.currentTime || 0),'caption'));
-      const openHome=!special && !route.hash && !history.state?.arReelsWorkspace && !/^\/admin/.test(route.pathname);
+      const openHome=!special && !route.hash && !/^\/admin/.test(route.pathname);
       view.classList.toggle('ar-service-home',openHome);
       document.getElementById('startAutoReels').addEventListener('click',()=>{
-        history.replaceState({...history.state,arReelsWorkspace:true},'');
         arShowStudioServices(false);
+        arSetupSheetMode();
         switchStudioTab('topic');
-        if(document.body.classList.contains('ar-sheet'))arToggleSheet('full');
-        document.getElementById('studioPanel_topic')?.scrollIntoView({block:'nearest'});
+        arToggleSheet(false);
+        document.getElementById('studioWorkflowColumn').scrollTop=0;
+        document.getElementById('studioTabBtn_topic')?.focus({preventScroll:true});
       });
       document.getElementById('showStudioServices').addEventListener('click',()=>{
-        history.replaceState({...history.state,arReelsWorkspace:false},'');
         arShowStudioServices(true);
       });
     })();
