@@ -4691,6 +4691,51 @@
       if (cv) arCollageRenderSlide(cv, curSlide, _arCollageState.bg, _arCollageState.previewIdx, true);
     }
 
+    function arCollageSetSheetMode(mode) {
+      const modal = document.getElementById('arPhotoCollageModal');
+      if (!modal) return;
+      modal.classList.remove('ar-cl-sheet-full', 'ar-cl-sheet-min');
+      if (mode === 'full') modal.classList.add('ar-cl-sheet-full');
+      else if (mode === 'min') modal.classList.add('ar-cl-sheet-min');
+    }
+    function arCollageToggleSheet() {
+      const modal = document.getElementById('arPhotoCollageModal');
+      if (!modal) return;
+      if (modal.classList.contains('ar-cl-sheet-min')) arCollageSetSheetMode('half');
+      else if (modal.classList.contains('ar-cl-sheet-full')) arCollageSetSheetMode('half');
+      else arCollageSetSheetMode('full');
+    }
+    function arCollageBindSheetHandle() {
+      const h = document.getElementById('arCollageSheetHandle');
+      const modal = document.getElementById('arPhotoCollageModal');
+      if (!h || !modal || h.dataset.bound) return;
+      h.dataset.bound = '1';
+      let y0 = null;
+      let dragged = false;
+      h.addEventListener('pointerdown', (e) => {
+        if (!e.isPrimary || e.button !== 0) return;
+        y0 = e.clientY;
+        dragged = false;
+        try { h.setPointerCapture(e.pointerId); } catch (_) {}
+      });
+      h.addEventListener('pointercancel', () => { y0 = null; });
+      h.addEventListener('pointerup', (e) => {
+        if (!e.isPrimary || y0 == null) return;
+        const dy = e.clientY - y0;
+        y0 = null;
+        dragged = Math.abs(dy) > 8;
+        if (!dragged) return;
+        if (dy > 0) {
+          arCollageSetSheetMode(modal.classList.contains('ar-cl-sheet-full') ? 'half' : 'min');
+        } else {
+          arCollageSetSheetMode(modal.classList.contains('ar-cl-sheet-min') ? 'half' : 'full');
+        }
+      });
+      h.addEventListener('click', (e) => {
+        if (!dragged || e.detail === 0) arCollageToggleSheet();
+      });
+    }
+
     async function arOpenPhotoCollageModal(jumpSlideIdx) {
       const modal = document.getElementById('arPhotoCollageModal');
       if (!modal) return;
@@ -4708,7 +4753,9 @@
       modal.querySelectorAll('[data-collage-batch]').forEach(el => el.classList.toggle('hidden', Boolean(arCollageEditingCut)));
       document.getElementById('arCollageApplyBtn').textContent = arCollageEditingCut ? '이 컷에 적용 →' : '콜라주 완성 · 컷 편집 →';
       _arCollageState.activeSlot = -1;
+      arCollageSetSheetMode('half');
       modal.classList.remove('hidden');
+      arCollageBindSheetHandle();
       arCollageBindCanvasPointer();
       arCollageRefreshUI();
       const vWrap = document.getElementById('arCollageVaultWrap');

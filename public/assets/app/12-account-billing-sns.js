@@ -1304,6 +1304,8 @@
         if (cutEditing) list.push(document.getElementById('igEditorHud') || document.getElementById('cutEditorPanel'));
         const dr = document.getElementById('presetDrawer');
         if (dr && dr.classList.contains('open')) list.push(dr);
+        const collage = document.getElementById('arPhotoCollageModal');
+        if (collage && !collage.classList.contains('hidden')) list.push(collage);
         document.querySelectorAll('.ar-modal').forEach((m) => { if (!m.classList.contains('hidden')) list.push(m); });
         document.querySelectorAll('dialog[open]').forEach((d) => { list.push(d); });
         const igSheet = document.getElementById('igSheetBackdrop');
@@ -1318,6 +1320,7 @@
       const closeOverlay = (el) => {
         if (!el) return;
         if (el.id === 'presetDrawer') return typeof closePresetDrawer === 'function' && closePresetDrawer();
+        if (el.id === 'arPhotoCollageModal') return typeof arClosePhotoCollageModal === 'function' && arClosePhotoCollageModal();
         if (el.id === 'igEditorHud' || el.id === 'cutEditorPanel') {
           if (typeof closeCutEditor === 'function') closeCutEditor();
           if (typeof togglePinPreviewCut === 'function') togglePinPreviewCut(-1);

@@ -3039,8 +3039,10 @@
         switchStudioTab('topic',true);
         if(typeof window.arNavPush==='function') window.arNavPush({mode:'reels',tab:'topic'});
         else history.pushState({...history.state,arReelsWorkspace:true},'');
-        if(document.body.classList.contains('ar-sheet'))arToggleSheet('full');
-        document.getElementById('studioPanel_topic')?.scrollIntoView({block:'nearest'});
+        if(document.body.classList.contains('ar-sheet')){
+          document.body.classList.remove('ar-sheet-full','ar-sheet-min');
+          if(typeof arToggleSheet==='function') arToggleSheet(false);
+        }
       });
       document.getElementById('showStudioServices').addEventListener('click',()=>{
         arShowStudioServices(true);
