@@ -1,59 +1,78 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-23T06:00:54.849351+09:00",
+  "collectedAt": "2026-11-23T09:15:06.495081+09:00",
   "items": [
     {
-      "term": "대장동",
-      "startedAt": "2026-11-22T11:50:00-08:00",
+      "term": "조세호",
+      "startedAt": "2026-11-22T15:10:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "ลำดับของ ลิเวอร์พูล พบ แมนยู",
-      "startedAt": "2026-11-22T11:50:00-08:00",
+      "term": "편지",
+      "startedAt": "2026-11-22T15:00:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "잠수함",
-      "startedAt": "2026-11-22T11:30:00-08:00",
+      "term": "atalanta vs inter",
+      "startedAt": "2026-11-22T14:50:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "대학",
+      "startedAt": "2026-11-22T14:40:00-08:00",
       "traffic": "1000+"
     },
     {
-      "term": "비야디",
-      "startedAt": "2026-11-22T11:30:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "평택시장",
-      "startedAt": "2026-11-22T11:30:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "코스피",
-      "startedAt": "2026-11-22T11:20:00-08:00",
-      "traffic": "5000+"
-    },
-    {
-      "term": "헤타페 대 아틀레티코",
-      "startedAt": "2026-11-22T11:10:00-08:00",
-      "traffic": "20000+"
-    },
-    {
-      "term": "카를로스 알카라스",
-      "startedAt": "2026-11-22T11:10:00-08:00",
+      "term": "로스앤젤레스 fc",
+      "startedAt": "2026-11-22T14:30:00-08:00",
       "traffic": "500+"
     },
     {
-      "term": "휴게소",
-      "startedAt": "2026-11-22T11:10:00-08:00",
-      "traffic": "200+"
+      "term": "노시환",
+      "startedAt": "2026-11-22T14:20:00-08:00",
+      "traffic": "2000+"
     },
     {
-      "term": "통장",
-      "startedAt": "2026-11-22T11:00:00-08:00",
-      "traffic": "200+"
+      "term": "김호령",
+      "startedAt": "2026-11-22T14:20:00-08:00",
+      "traffic": "2000+"
+    },
+    {
+      "term": "쟁의행위",
+      "startedAt": "2026-11-22T14:20:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "메디게이트뉴스",
+      "startedAt": "2026-11-22T14:10:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "울릉도",
+      "startedAt": "2026-11-22T14:00:00-08:00",
+      "traffic": "1000+"
     }
   ],
-  "issues": [],
+  "issues": [
+    {
+      "term": "수능",
+      "day": "2026-11-23",
+      "kind": "보도",
+      "publisher": "연합뉴스",
+      "url": "https://www.yna.co.kr/view/AKR20261123026200001",
+      "publishedAt": "2026-11-23T09:08:13+09:00",
+      "headline": "野정성국 \"작년 수능시험지, 전남·인천·경기 일부 이미 폐기\""
+    },
+    {
+      "term": "전국법관회의 의장",
+      "day": "2026-11-23",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008858233",
+      "publishedAt": "2026-11-23T08:59:00+09:00",
+      "headline": "전국법관회의 의장 \"조희대 탄핵 도 넘어…행동으로 나서야\""
+    }
+  ],
   "previousIssues": [
     {
       "term": "수능",
