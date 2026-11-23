@@ -1337,6 +1337,35 @@
             <p id="customBgmStatusText" class="hidden text-[11px] font-mono text-[#4cc38a]"></p>
           </div>
 
+          <!-- ★ 음악 박자(BPM) 자동 컷 싱크 + 원테이크 모핑 전환 팩 -->
+          <div class="studio-sub p-4 space-y-3">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-[13px] font-semibold text-[#ededed]">🎵 음악 박자(BPM) 자동 컷 싱크</span>
+                  <span id="arBeatBpmBadge" class="px-2 py-0.5 rounded-full bg-white/8 text-[10.5px] font-mono text-[#93c5fd]">118 BPM 감지됨</span>
+                </div>
+                <p class="text-[11.5px] text-[#85858b] mt-0.5">배경음악의 정박에 맞춰 컷이 전환되고 미세한 리듬 줌 펀치가 들어갑니다.</p>
+              </div>
+              <label class="ig-switch shrink-0" aria-label="음악 박자 자동 컷 싱크 켜기/끄기">
+                <input id="arBeatSyncToggle" type="checkbox" onchange="arToggleBeatSync(this.checked)" />
+                <i></i>
+              </label>
+            </div>
+            <div class="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-[var(--border)]">
+              <div class="flex items-center gap-1 text-[11px]">
+                <span class="text-[#85858b] mr-1">비트 펀치</span>
+                <button type="button" data-beat-lvl="soft" onclick="arSetBeatPunchLevel('soft')" class="ar-beat-lvl-btn px-2 py-1 rounded-[6px] bg-white/6 text-[#a1a1aa] cursor-pointer">부드럽게</button>
+                <button type="button" data-beat-lvl="medium" onclick="arSetBeatPunchLevel('medium')" class="ar-beat-lvl-btn active px-2 py-1 rounded-[6px] bg-white/6 text-[#a1a1aa] cursor-pointer">선명하게</button>
+                <button type="button" data-beat-lvl="strong" onclick="arSetBeatPunchLevel('strong')" class="ar-beat-lvl-btn px-2 py-1 rounded-[6px] bg-white/6 text-[#a1a1aa] cursor-pointer">강하게</button>
+              </div>
+              <button type="button" onclick="arApplyOneTakeMorphPack()" class="btn-secondary h-8 px-3 text-[11.5px] font-semibold text-[#93c5fd] border-[#60a5fa]/40 cursor-pointer">✨ 원테이크 모핑 전환 적용</button>
+            </div>
+            <style>
+              .ar-beat-lvl-btn.active { background: #ededed !important; color: #141415 !important; font-weight: 700; }
+            </style>
+          </div>
+
           <div class="flex items-center justify-between gap-2 pt-1">
             <button type="button" onclick="switchStudioTab('photo')" class="btn-secondary h-9 px-3 text-[12px] cursor-pointer">← 사진</button>
             <button type="button" onclick="switchStudioTab('card')" class="btn-primary h-9 px-4 text-[12px] cursor-pointer">다음: 엔딩 →</button>
@@ -1412,6 +1441,14 @@
         </div>
 
         <div id="studioPanel_publish" role="tabpanel" aria-labelledby="studioTabBtn_publish" class="studio-panel hidden p-5 sm:p-6 space-y-5">
+          <!-- 발행 전 자동 디자인 검수 + 원클릭 자동 보정 -->
+          <div id="arReelsCriticCard" class="studio-sub p-4 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[12.5px] font-semibold text-[#ededed]">🔍 자동 디자인 검수</span>
+              <button type="button" onclick="arRunReelsCritic()" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer">지금 검수</button>
+            </div>
+          </div>
+
           <!-- 완성본 미리보기: 고른 배경음악 + 성우 목소리를 섞어 처음부터 재생 -->
           <div class="studio-sub p-4 flex items-center justify-between gap-3 flex-wrap">
             <div class="min-w-0">
@@ -1879,6 +1916,13 @@
 
             <!-- 5단계: 고화질 PNG / 전체 ZIP / 릴스 변환 -->
             <div id="arCnTab_export" class="hidden studio-panel p-4 sm:p-6 space-y-4">
+              <!-- 저장 전 카드뉴스 자동 디자인 검수 + 원클릭 보정 -->
+              <div id="arCnCriticCard" class="rounded-[12px] bg-white/[0.03] border border-[var(--border)] p-3.5 space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[12.5px] font-semibold text-[#ededed]">🔍 자동 디자인 검수</span>
+                  <button type="button" onclick="arRunCardNewsCritic()" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer">지금 검수</button>
+                </div>
+              </div>
               <p class="text-[12.5px] text-[#a1a1a6]">인스타그램 고화질 표준(1080×1350 / 1080×1080 PNG)으로 저장하거나, 만든 카드뉴스 전체를 바로 음악 릴스 영상으로 넘길 수 있어요.</p>
               <button type="button" id="arCnDownloadZipBtn" onclick="arCnDownloadAllZip()" class="btn-primary w-full h-11 text-[13.5px] font-bold cursor-pointer">📦 전체 7장 한 번에 저장 (.zip)</button>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -2848,7 +2892,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cn-pinterest44"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-beat-morph-critic"><\/script>');
     }
   </script>
   <!--

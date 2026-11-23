@@ -1824,6 +1824,10 @@
         AudioEngine.userPickedBgm = true;
         try { localStorage.setItem('autoreels_bgm_style', pickedBgm); } catch (e) {}
       }
+      if (typeof arSyncBeatSyncUI === 'function') setTimeout(() => {
+        arSyncBeatSyncUI();
+        if (typeof campaign !== 'undefined' && campaign && campaign.beatSyncMode && typeof syncDurationAndTimeline === 'function') syncDurationAndTimeline();
+      }, 60);
       if (typeof renderBgmRecommendations === 'function') renderBgmRecommendations(autoPlay);
       const trackId = arBgmPackId(pickedBgm);
       if (trackId) {
@@ -2472,3 +2476,84 @@
         if (typeof arToast === 'function') arToast('🎵 인스타 인기 가요용 모드 켜짐 (BGM 끔 · 나레이션/효과음 유지)', true);
       };
     })();
+
+    // ==========================================================================
+    // ★ 음악 박자(BPM) 자동 감지 & 비트 싱크 헬퍼 (2026-11)
+    // ==========================================================================
+    const AR_PRESET_BPM_MAP = {
+      showroom: 118, urban: 140, bright: 112, luxury: 90, lofi: 80, vlog: 104,
+      cinema: 70, drive: 100, edm: 128, funk: 108, ballad: 72, news: 120, jazz: 92,
+      ace_showroom: 118, ace_cafe: 92, ace_restaurant: 104, ace_beauty: 108, ace_fitness: 132,
+      ace_realestate: 116, ace_academy: 86, ace_clinic: 84, ace_shop: 114, ace_interior: 96,
+      lyria_showroom: 118, lyria_cafe: 92, lyria_restaurant: 104, lyria_beauty: 108, lyria_fitness: 132,
+      lyria_realestate: 116, lyria_academy: 86, lyria_clinic: 84, lyria_shop: 114, lyria_interior: 96
+    };
+    function arDetectBufferBpm(buffer) {
+      if (!buffer || typeof buffer.getChannelData !== 'function') return 116;
+      if (Number.isFinite(buffer._detectedBpm) && buffer._detectedBpm >= 60) return buffer._detectedBpm;
+      try {
+        const sr = buffer.sampleRate || 44100;
+        const ch = buffer.getChannelData(0);
+        // 20ms 프레임 에너지 온셋 포락선 계산 (최대 12초 구간)
+        const hop = Math.max(256, Math.round(sr * 0.02));
+        const maxSamples = Math.min(ch.length, Math.round(sr * 12));
+        const env = [];
+        for (let i = 0; i + hop <= maxSamples; i += hop) {
+          let sum = 0;
+          for (let j = 0; j < hop; j += 4) { const v = ch[i + j]; sum += v * v; }
+          env.push(Math.sqrt(sum / (hop / 4)));
+        }
+        const onset = new Float32Array(env.length);
+        for (let i = 1; i < env.length; i++) onset[i] = Math.max(0, env[i] - env[i - 1]);
+        const fps = sr / hop; // ~50 frames/sec
+        let bestBpm = 116, bestScore = -1;
+        for (let bpm = 74; bpm <= 156; bpm += 2) {
+          const lag = Math.round((60 / bpm) * fps);
+          if (lag <= 0 || lag >= onset.length) continue;
+          let score = 0;
+          for (let i = 0; i + lag < onset.length; i++) score += onset[i] * onset[i + lag];
+          // 96~132 BPM 실전 릴스 구간에 미세 가중치 (옥타브 오류 방지)
+          const prior = (bpm >= 92 && bpm <= 136) ? 1.08 : 1.0;
+          if (score * prior > bestScore) { bestScore = score * prior; bestBpm = bpm; }
+        }
+        buffer._detectedBpm = bestBpm;
+        return bestBpm;
+      } catch (_) {
+        return 116;
+      }
+    }
+    function arGetActiveBgmBpm() {
+      try {
+        if (typeof AudioEngine !== 'undefined' && AudioEngine) {
+          const style = String(AudioEngine.bgmStyle || 'showroom');
+          if (AudioEngine.customBgmBuffer && (style === 'custom_mp3' || style.startsWith('ace_') || style.startsWith('lyria_'))) {
+            if (style === 'custom_mp3') return arDetectBufferBpm(AudioEngine.customBgmBuffer);
+          }
+          if (AudioEngine.BGM_STYLES && AudioEngine.BGM_STYLES[style] && AudioEngine.BGM_STYLES[style].bpm) {
+            return AudioEngine.BGM_STYLES[style].bpm;
+          }
+          if (AR_PRESET_BPM_MAP[style]) return AR_PRESET_BPM_MAP[style];
+        }
+      } catch (_) {}
+      return 118;
+    }
+    function arSyncBeatSyncUI() {
+      const bpm = arGetActiveBgmBpm();
+      const on = Boolean(typeof campaign !== 'undefined' && campaign && campaign.beatSyncMode);
+      const lvl = (typeof campaign !== 'undefined' && campaign && campaign.beatPunchLevel) || 'medium';
+      const chk = document.getElementById('arBeatSyncToggle');
+      if (chk) chk.checked = on;
+      const badge = document.getElementById('arBeatBpmBadge');
+      if (badge) {
+        const barSec = ((60 / bpm) * 4).toFixed(2);
+        badge.textContent = on ? `🎵 ${bpm} BPM · ${barSec}초/마디 싱크 ON` : `${bpm} BPM 감지됨`;
+      }
+      document.querySelectorAll('[data-beat-lvl]').forEach((b) => {
+        b.classList.toggle('active', b.dataset.beatLvl === lvl);
+      });
+    }
+    if (typeof window !== 'undefined') {
+      window.arDetectBufferBpm = arDetectBufferBpm;
+      window.arGetActiveBgmBpm = arGetActiveBgmBpm;
+      window.arSyncBeatSyncUI = arSyncBeatSyncUI;
+    }

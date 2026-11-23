@@ -903,6 +903,19 @@
         });
         mainDur = lengths.reduce((p, q) => p + q, 0);
       }
+      // ★ 음악 박자(BPM) 자동 컷 싱크: 각 컷 전환이 정확히 2박자/4박자 정박에 떨어지도록 스냅
+      if (!exactMasterLocked && typeof campaign !== 'undefined' && campaign && campaign.beatSyncMode) {
+        const bpm = (typeof arGetActiveBgmBpm === 'function') ? arGetActiveBgmBpm() : 118;
+        const twoBeats = (60 / Math.max(60, Math.min(180, bpm))) * 2;
+        if (!lengths.length) lengths = new Array(cuts).fill(mainDur / cuts);
+        lengths = lengths.map((x) => {
+          const steps = Math.max(2, Math.round(x / twoBeats));
+          return +(steps * twoBeats).toFixed(3);
+        });
+        mainDur = +lengths.reduce((p, q) => p + q, 0).toFixed(3);
+        const beatOutro = outro > 0 ? +(Math.max(2, Math.round(outro / twoBeats)) * twoBeats).toFixed(3) : 0;
+        return { total: +(mainDur + beatOutro).toFixed(3), outro: beatOutro, lengths };
+      }
       const total = exactMasterLocked ? Math.round((mainDur + outro) * 100) / 100 : Math.round((mainDur + outro) * 10) / 10;
       const outroRounded = exactMasterLocked ? Math.round((total - mainDur) * 100) / 100 : Math.round(outro * 10) / 10;
       // 반올림한 전체 길이에 컷 길이 합이 정확히 맞도록 보정 (원테이크 싱크 고정 시에는 컷 경계를 흔들지 않음)

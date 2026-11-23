@@ -949,11 +949,15 @@
       arUpdateMobileStepBar(key);
       arSetupSheetMode();
       if (changed && arUsesWorkflowSheet() && wfCol) wfCol.scrollTop = 0;
-      if (key === 'publish' && !arFinalAudioUnlocked) {
-        if (arPreviewPausedForEdit) {
-          arFinalAudioUnlocked = true;
-          arSetFinalPreviewStatus('엔딩을 적용했어요. 재생을 누르면 멈춘 위치에서 이어집니다.');
-        } else arStartFinalPreview();
+      if (key === 'sound' && typeof arSyncBeatSyncUI === 'function') arSyncBeatSyncUI();
+      if (key === 'publish') {
+        if (typeof arRunReelsCritic === 'function') arRunReelsCritic();
+        if (!arFinalAudioUnlocked) {
+          if (arPreviewPausedForEdit) {
+            arFinalAudioUnlocked = true;
+            arSetFinalPreviewStatus('엔딩을 적용했어요. 재생을 누르면 멈춘 위치에서 이어집니다.');
+          } else arStartFinalPreview();
+        }
       }
     }
 

@@ -6094,6 +6094,7 @@
       if (next === 'theme') arCnRenderTemplateGallery();
       if (next === 'text') arCnRenderFontChips();
       if (next === 'photo') arCnLoadVaultStrip();
+      if (next === 'export') arRunCardNewsCritic();
     }
     function arCnStepTab(delta) {
       const curTab = _arCnState.sheetTab || 'ai';
@@ -6979,6 +6980,296 @@
       window.arCnDownloadCurrentPng = arCnDownloadCurrentPng;
       window.arCnDownloadAllZip = arCnDownloadAllZip;
       window.arCnApplyToStudioReels = arCnApplyToStudioReels;
+      window.arRunCardNewsCritic = arRunCardNewsCritic;
+      window.arAutoFixCardNewsCritic = arAutoFixCardNewsCritic;
+      window.arRunReelsCritic = arRunReelsCritic;
+      window.arAutoFixReelsCritic = arAutoFixReelsCritic;
+    }
+
+    // ==========================================================================
+    // ★ 저장·발행 전 자동 디자인 검수 + 원클릭 자동 보정 (릴스 & 카드뉴스 공용, 0원 실시간)
+    // ==========================================================================
+    function arHexLuminance(hex) {
+      const m = String(hex || '').replace('#', '');
+      if (m.length !== 6) return 0.5;
+      const toLin = (c) => {
+        const s = parseInt(c, 16) / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+      };
+      return 0.2126 * toLin(m.slice(0, 2)) + 0.7152 * toLin(m.slice(2, 4)) + 0.0722 * toLin(m.slice(4, 6));
+    }
+    function arContrastRatio(hex1, hex2) {
+      const l1 = arHexLuminance(hex1), l2 = arHexLuminance(hex2);
+      return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    }
+
+    function arRenderCriticBox(containerId, score, issues, fixFnName) {
+      const box = document.getElementById(containerId);
+      if (!box) return;
+      const tone = score >= 95 ? '#4ade80' : (score >= 75 ? '#facc15' : '#f87171');
+      const label = score >= 95 ? '발행 준비 완료' : (score >= 75 ? '가벼운 보정 추천' : '보정 필요');
+      const fixableCount = issues.filter((it) => it.fixable).length;
+      const rowsHtml = issues.length
+        ? issues.map((it) => `
+            <div class="flex items-start gap-2 text-[11.5px] leading-snug ${it.ok ? 'text-[#86efac]' : 'text-[#fde68a]'}">
+              <span class="shrink-0">${it.ok ? '✅' : '⚠️'}</span>
+              <span>${it.msg}</span>
+            </div>
+          `).join('')
+        : '<div class="text-[12px] text-[#86efac]">✅ 모든 항목이 깔끔하게 통과했어요! 바로 저장·발행하셔도 좋습니다.</div>';
+      box.innerHTML = `
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-2">
+            <span class="text-[12.5px] font-semibold text-[#ededed]">🔍 자동 디자인 검수</span>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold font-mono" style="background:rgba(255,255,255,0.07);color:${tone};">${score}점 · ${label}</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="${fixFnName === 'arAutoFixCardNewsCritic' ? 'arRunCardNewsCritic()' : 'arRunReelsCritic()'}" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer">다시 검수</button>
+            ${fixableCount > 0 ? `<button type="button" onclick="${fixFnName}()" class="btn-primary h-7 px-2.5 text-[11px] font-bold cursor-pointer">✨ 한 번에 보정 (${fixableCount})</button>` : ''}
+          </div>
+        </div>
+        <div class="space-y-1.5 pt-1">${rowsHtml}</div>
+      `;
+    }
+
+    function arRunCardNewsCritic() {
+      const eff = arCnEffectiveTheme();
+      const slides = _arCnState.slides || [];
+      const issues = [];
+      let score = 100;
+
+      // 1) 배경·글자 명도 대비 (WCAG 4.5 기준)
+      const nonFullCount = slides.filter((s) => (s.photoLayout || eff.coverLayout) !== 'photo_full').length;
+      if (nonFullCount > 0 && /^#[0-9a-f]{6}$/i.test(eff.bg) && /^#[0-9a-f]{6}$/i.test(eff.fg)) {
+        const cr = arContrastRatio(eff.bg, eff.fg);
+        if (cr < 4.5) {
+          score -= 18;
+          issues.push({ ok: false, fixable: true, key: 'contrast', msg: `배경과 글자 명도 대비가 낮아요 (${cr.toFixed(1)}:1). 가독성을 높일 수 있어요.` });
+        } else {
+          issues.push({ ok: true, msg: `배경·글자 가독성 대비 양호 (${cr.toFixed(1)}:1)` });
+        }
+      }
+
+      // 2) 실제 캔버스 폭 기준 줄바꿈 오버플로우 체크
+      const cv = document.getElementById('arCnPreviewCanvas');
+      const mctx = cv ? cv.getContext('2d') : null;
+      const overflowSlides = [];
+      if (mctx) {
+        const fsMul = _arCnState.fontScale === 'sm' ? 0.88 : (_arCnState.fontScale === 'lg' ? 1.12 : 1.0);
+        const maxW = 1080 - 168;
+        slides.forEach((s, i) => {
+          mctx.font = `${eff.fontTitleWeight || 700} ${Math.round(54 * fsMul * (eff.fontTitleMul || 1))}px ${eff.fontTitle}`;
+          const tLn = arCnWrapLines(mctx, s.title || '', maxW).length;
+          mctx.font = `500 ${Math.round(33 * fsMul)}px ${eff.fontBody}`;
+          const bLn = arCnWrapLines(mctx, s.body || '', maxW).length;
+          if (tLn > 2 || bLn > 4) overflowSlides.push(i + 1);
+        });
+      }
+      if (overflowSlides.length) {
+        score -= Math.min(24, overflowSlides.length * 8);
+        issues.push({ ok: false, fixable: true, key: 'overflow', msg: `${overflowSlides.join(', ')}번 카드 글자가 길어 잘릴 수 있어요 (글자 크기·줄 간격 자동 조절 가능).` });
+      } else {
+        issues.push({ ok: true, msg: `전체 ${slides.length}장 제목·본문 여백과 줄 수 안전` });
+      }
+
+      // 3) 기본 샘플 문구 / 빈 제목 체크
+      const emptySlides = slides.map((s, i) => (!String(s.title || '').trim() ? i + 1 : 0)).filter(Boolean);
+      const isDefaultSample = slides[0] && String(slides[0].title || '').trim() === '알아두면 바로 쓰는 핵심 가이드';
+      if (emptySlides.length) {
+        score -= 15;
+        issues.push({ ok: false, fixable: false, msg: `${emptySlides.join(', ')}번 카드에 제목이 비어 있어요. [3 글자] 탭에서 채워 주세요.` });
+      } else if (isDefaultSample) {
+        score -= 10;
+        issues.push({ ok: false, fixable: false, msg: '1번 카드가 아직 예시 제목이에요. [1 주제]에서 내 주제로 생성해 보세요.' });
+      }
+
+      // 4) 사진 누락 체크
+      const noPhotoSlides = slides.map((s, i) => ((s.photoLayout !== 'text_only' && !s.bgImg) ? i + 1 : 0)).filter(Boolean);
+      if (noPhotoSlides.length) {
+        score -= 12;
+        issues.push({ ok: false, fixable: true, key: 'photos', msg: `${noPhotoSlides.join(', ')}번 카드에 사진이 비어 있어요.` });
+      } else {
+        issues.push({ ok: true, msg: '모든 카드 사진이 정상적으로 연결됨' });
+      }
+
+      // 5) 하단 계정명 체크
+      if (_arCnState.tweaks && _arCnState.tweaks.showHandle !== false && !String(_arCnState.handle || '').trim()) {
+        score -= 6;
+        issues.push({ ok: false, fixable: true, key: 'handle', msg: '하단 @계정명이 비어 있어요. 보정 시 깔끔하게 숨길 수 있어요.' });
+      }
+
+      score = Math.max(40, Math.min(100, score));
+      arRenderCriticBox('arCnCriticCard', score, issues, 'arAutoFixCardNewsCritic');
+      return { score, issues };
+    }
+
+    function arAutoFixCardNewsCritic() {
+      const eff = arCnEffectiveTheme();
+      let fixed = 0;
+      if (/^#[0-9a-f]{6}$/i.test(eff.bg) && /^#[0-9a-f]{6}$/i.test(eff.fg) && arContrastRatio(eff.bg, eff.fg) < 4.5) {
+        _arCnState.customColors.fg = arCnIsDarkHex(eff.bg) ? '#fafafa' : '#141414';
+        fixed++;
+      }
+      const cv = document.getElementById('arCnPreviewCanvas');
+      const mctx = cv ? cv.getContext('2d') : null;
+      if (mctx) {
+        const maxW = 1080 - 168;
+        let hadOverflow = false;
+        _arCnState.slides.forEach((s) => {
+          mctx.font = `${eff.fontTitleWeight || 700} 54px ${eff.fontTitle}`;
+          if (arCnWrapLines(mctx, s.title || '', maxW).length > 2) hadOverflow = true;
+          if (String(s.body || '').length > 88) {
+            s.body = String(s.body).slice(0, 82).trim() + '…';
+            hadOverflow = true;
+          }
+        });
+        if (hadOverflow) { _arCnState.fontScale = 'sm'; fixed++; }
+      }
+      if (_arCnState.slides.some((s) => s.photoLayout !== 'text_only' && !s.bgImg)) {
+        _arCnState.slides.forEach((s) => { s.userClearedPhoto = false; });
+        arCnPopulateSamplePhotos(false);
+        fixed++;
+      }
+      if (_arCnState.tweaks && _arCnState.tweaks.showHandle !== false && !String(_arCnState.handle || '').trim()) {
+        _arCnState.tweaks.showHandle = false;
+        fixed++;
+      }
+      arCnRefreshUI(false);
+      arRunCardNewsCritic();
+      if (typeof arToast === 'function') arToast(`✨ 카드뉴스 자동 보정 ${fixed || 1}건을 완료했어요!`, true);
+    }
+
+    function arRunReelsCritic() {
+      if (typeof campaign === 'undefined' || !campaign) return { score: 100, issues: [] };
+      const cuts = Math.max(1, typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4);
+      const issues = [];
+      let score = 100;
+
+      // 1) 자막 길이·줄바꿈 과밀 체크
+      const caps = Array.isArray(campaign.cutCaptions) ? campaign.cutCaptions.slice(0, cuts) : [];
+      const longCuts = [];
+      caps.forEach((txt, i) => {
+        const clean = String(txt || '').trim();
+        if (clean.length > 36 || (clean.length > 24 && !clean.includes('\n'))) longCuts.push(i + 1);
+      });
+      if (longCuts.length) {
+        score -= Math.min(20, longCuts.length * 7);
+        issues.push({ ok: false, fixable: true, key: 'captions', msg: `${longCuts.join(', ')}컷 자막이 길어 한 줄에 넘칠 수 있어요 (자동 줄바꿈 보정 가능).` });
+      } else {
+        issues.push({ ok: true, msg: `전체 ${cuts}컷 자막 길이·가독성 양호` });
+      }
+
+      // 2) 사운드·박자 밸런스 체크
+      const bgmStyle = (typeof AudioEngine !== 'undefined' && AudioEngine) ? String(AudioEngine.bgmStyle || 'showroom') : 'showroom';
+      const ttsVoice = (typeof AudioEngine !== 'undefined' && AudioEngine) ? String(AudioEngine.ttsVoice || 'off') : 'off';
+      if (bgmStyle === 'off' && ttsVoice === 'off') {
+        score -= 15;
+        issues.push({ ok: false, fixable: true, key: 'audio', msg: '배경음악과 성우가 모두 꺼져 있어 무음 영상이 됩니다.' });
+      } else if (bgmStyle !== 'off' && !campaign.beatSyncMode && !campaign.isPhotoCollageMode) {
+        score -= 8;
+        issues.push({ ok: false, fixable: true, key: 'beat', msg: 'BGM 박자(BPM) 컷 싱크를 켜면 리듬감이 확 살아나요.' });
+      } else {
+        issues.push({ ok: true, msg: campaign.beatSyncMode ? `🎵 ${arGetActiveBgmBpm()} BPM 박자 컷 싱크 적용됨` : '사운드 구성 양호' });
+      }
+
+      // 3) 컷 전환 연속성 체크 (원테이크 모핑 추천)
+      if (cuts >= 2 && !campaign.isPhotoCollageMode) {
+        const trs = Array.isArray(campaign.cutTransitions) ? campaign.cutTransitions.slice(0, cuts) : [];
+        const hasMorphOrTrans = trs.some((x) => x && x !== 'default' && x !== 'none');
+        if (!hasMorphOrTrans) {
+          score -= 7;
+          issues.push({ ok: false, fixable: true, key: 'morph', msg: '컷 전환이 기본 상태예요. 원테이크 모핑 전환을 입히면 훨씬 부드러워져요.' });
+        } else {
+          issues.push({ ok: true, msg: '컷 전환 모션이 자연스럽게 설정됨' });
+        }
+      }
+
+      // 4) 텍스트 오버레이 크기·가독성 체크
+      const ovs = Array.isArray(campaign.cutOverlays) ? campaign.cutOverlays : [];
+      let tinyOverlay = false;
+      ovs.forEach((arr) => {
+        if (!Array.isArray(arr)) return;
+        arr.forEach((it) => {
+          if (it && it.type === 'text' && (Number(it.scale) || 1) < 0.72) tinyOverlay = true;
+        });
+      });
+      if (tinyOverlay) {
+        score -= 10;
+        issues.push({ ok: false, fixable: true, key: 'overlay', msg: '직접 넣은 글자 스티커 중 크기가 너무 작은 항목이 있어요.' });
+      }
+
+      // 5) 엔딩 정보 기본값 점검
+      if (!campaign.hideCardOnVideo && typeof getSelectedDealer === 'function') {
+        const d = getSelectedDealer();
+        if (d && (String(d.phone || '').includes('0000-0000') || String(d.name || '') === '홍길동')) {
+          score -= 8;
+          issues.push({ ok: false, fixable: false, msg: '엔딩 카드에 예시 정보(홍길동/0000)가 남아 있어요. [5 엔딩]에서 수정해 주세요.' });
+        }
+      }
+
+      score = Math.max(45, Math.min(100, score));
+      arRenderCriticBox('arReelsCriticCard', score, issues, 'arAutoFixReelsCritic');
+      return { score, issues };
+    }
+
+    function arAutoFixReelsCritic() {
+      if (typeof campaign === 'undefined' || !campaign) return;
+      const cuts = Math.max(1, typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4);
+      let fixed = 0;
+      // 1) 긴 자막 자연 줄바꿈 보정
+      if (Array.isArray(campaign.cutCaptions)) {
+        for (let i = 0; i < cuts; i++) {
+          const clean = String(campaign.cutCaptions[i] || '').trim();
+          if (clean.length > 24 && !clean.includes('\n')) {
+            const mid = Math.floor(clean.length / 2);
+            const sp = clean.indexOf(' ', Math.max(8, mid - 5));
+            if (sp > 6 && sp < clean.length - 4) {
+              campaign.cutCaptions[i] = clean.slice(0, sp) + '\n' + clean.slice(sp + 1);
+              fixed++;
+            }
+          }
+        }
+      }
+      // 2) 무음 방지 + BPM 박자 싱크 켜기
+      if (typeof AudioEngine !== 'undefined' && AudioEngine && AudioEngine.bgmStyle === 'off' && AudioEngine.ttsVoice === 'off') {
+        const sel = document.getElementById('bgmStyleSelect');
+        if (sel) { sel.value = 'showroom'; if (typeof onAudioConfigChange === 'function') onAudioConfigChange(); }
+        else AudioEngine.bgmStyle = 'showroom';
+        fixed++;
+      }
+      if (!campaign.isPhotoCollageMode && !campaign.beatSyncMode && typeof arToggleBeatSync === 'function') {
+        campaign.beatSyncMode = true;
+        if (typeof syncDurationAndTimeline === 'function') syncDurationAndTimeline();
+        if (typeof arSyncBeatSyncUI === 'function') arSyncBeatSyncUI();
+        fixed++;
+      }
+      // 3) 원테이크 모핑 전환 적용
+      if (cuts >= 2 && !campaign.isPhotoCollageMode) {
+        const trs = Array.isArray(campaign.cutTransitions) ? campaign.cutTransitions.slice(0, cuts) : [];
+        if (!trs.some((x) => x && x !== 'default' && x !== 'none') && typeof arApplyOneTakeMorphPack === 'function') {
+          const seq = ['morphIris', 'morphRibbon', 'morphLiquid', 'morphDoor', 'morphOrbit'];
+          campaign.cutTransitions = Array.from({ length: Math.max(10, cuts) }, (_, i) => i === 0 ? 'morphIris' : seq[i % seq.length]);
+          fixed++;
+        }
+      }
+      // 4) 작은 텍스트 오버레이 보정
+      if (Array.isArray(campaign.cutOverlays)) {
+        campaign.cutOverlays.forEach((arr) => {
+          if (!Array.isArray(arr)) return;
+          arr.forEach((it) => {
+            if (it && it.type === 'text' && (Number(it.scale) || 1) < 0.72) {
+              it.scale = 0.92;
+              if (!it.style || it.style === 'plain') it.style = 'box';
+              fixed++;
+            }
+          });
+        });
+      }
+      if (window.__timelines && window.__timelines.main) {
+        window.__timelines.main.seek(window.__timelines.main.currentTime || 0);
+      }
+      arRunReelsCritic();
+      if (typeof arToast === 'function') arToast(`✨ 릴스 자동 디자인 보정 ${fixed || 1}건을 완료했어요!`, true);
     }
 
     // 쇼츠 화면에서 연 편집기가 맡겨 둔 영상을 받아 테마 입히기 (/studio?applyTheme=1)

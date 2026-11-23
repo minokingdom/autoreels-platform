@@ -368,6 +368,11 @@
     const AR_CUT_TRANSITIONS = [
       { id: 'default',        label: '스타일 기본' },
       { id: 'none',           label: '없음(컷)' },
+      { id: 'morphIris',      label: '◎ 원테이크 원형 모핑' },
+      { id: 'morphRibbon',    label: '〰 원테이크 리본 흐름' },
+      { id: 'morphLiquid',    label: '💧 원테이크 물결 모핑' },
+      { id: 'morphDoor',      label: '◫ 원테이크 슬릿 열림' },
+      { id: 'morphOrbit',     label: '◐ 원테이크 궤도 회전' },
       { id: 'pingWipe',       label: '◎ 소나 핑 와이프' },
       { id: 'cineLightSweep', label: '✨ 시네마 빛 전환' },
       { id: 'crossfade',      label: '크로스페이드' },
@@ -5667,18 +5672,105 @@
       }
     })();
 
+    function arCapturePrevCutFrame(srcCanvas, cutIdx) {
+      if (!srcCanvas || !srcCanvas.width || !srcCanvas.height) return;
+      if (!window.__arPrevCutFrame) {
+        const oc = document.createElement('canvas');
+        oc.width = 540; oc.height = 960;
+        window.__arPrevCutFrame = oc;
+      }
+      try {
+        const octx = window.__arPrevCutFrame.getContext('2d');
+        octx.clearRect(0, 0, 540, 960);
+        octx.drawImage(srcCanvas, 0, 0, 540, 960);
+        window.__arPrevCutIdx = cutIdx;
+      } catch (_) {}
+    }
+
     function applyCutTransitionPre(c, W, H, transId, localSec) {
       if (!transId || transId === 'default' || transId === 'none') return false;
-      const dur = 0.82;
+      const isMorph = transId.startsWith('morph');
+      const dur = isMorph ? 0.78 : 0.82;
       if (typeof localSec !== 'number' || localSec < 0 || localSec >= dur) return false;
       const tp = Math.max(0, Math.min(1, localSec / dur));
       const ep = tp < 0.5 ? 4 * tp * tp * tp : 1 - Math.pow(-2 * tp + 2, 3) / 2;
 
-      c.fillStyle = '#09090b';
-      c.fillRect(0, 0, W, H);
+      // 원테이크 모핑: 직전 컷 스냅샷이 있으면 검은 화면 대신 이전 장면을 바닥에 그대로 깔아 끊김 없이 이어짐!
+      if (isMorph && window.__arPrevCutFrame && window.__arPrevCutIdx !== window.__arActiveRenderCutIdx) {
+        c.save();
+        const outZoom = 1 + ep * 0.08;
+        c.translate(W / 2, H / 2);
+        c.scale(outZoom, outZoom);
+        c.translate(-W / 2, -H / 2);
+        c.drawImage(window.__arPrevCutFrame, 0, 0, W, H);
+        c.restore();
+      } else {
+        c.fillStyle = '#09090b';
+        c.fillRect(0, 0, W, H);
+      }
       c.save();
 
-      if (transId === 'pushLeft') {
+      if (transId === 'morphIris') {
+        // 원테이크 원형 모핑: 중앙에서 숨 쉬듯 확장되며 살짝 줌 안착
+        const maxR = Math.hypot(W, H) * 0.62;
+        const r = Math.max(6, maxR * ep);
+        c.beginPath();
+        c.arc(W / 2, H / 2, r, 0, Math.PI * 2);
+        c.clip();
+        const z = 1.12 - 0.12 * ep;
+        c.translate(W / 2, H / 2); c.scale(z, z); c.translate(-W / 2, -H / 2);
+      } else if (transId === 'morphRibbon') {
+        // 원테이크 리본 흐름: 부드러운 S-곡선 사선 경계가 화면을 가로지르며 장면 전환
+        const sweepX = -W * 0.25 + (W * 1.65) * ep;
+        const slant = W * 0.28;
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.lineTo(sweepX, 0);
+        c.bezierCurveTo(sweepX + slant * 0.6, H * 0.32, sweepX - slant * 0.9, H * 0.68, sweepX - slant * 0.4, H);
+        c.lineTo(0, H);
+        c.closePath();
+        c.clip();
+        c.translate((1 - ep) * 24, 0);
+      } else if (transId === 'morphLiquid') {
+        // 원테이크 물결 모핑: 유기적인 사인파 물결 경계가 아래에서 위로 차오르며 이어짐
+        const baseY = H * (1.06 - 1.16 * ep);
+        const amp = Math.sin(ep * Math.PI) * 44;
+        c.beginPath();
+        c.moveTo(0, H);
+        c.lineTo(0, baseY);
+        const steps = 16;
+        for (let i = 0; i <= steps; i++) {
+          const px = (i / steps) * W;
+          const wy = baseY + Math.sin((i / steps) * Math.PI * 2.2 + ep * 5.2) * amp;
+          c.lineTo(px, wy);
+        }
+        c.lineTo(W, H);
+        c.closePath();
+        c.clip();
+        const z = 1.07 - 0.07 * ep;
+        c.translate(W / 2, H / 2); c.scale(z, z); c.translate(-W / 2, -H / 2);
+      } else if (transId === 'morphDoor') {
+        // 원테이크 슬릿 열림: 중앙에서 좌우로 커튼이 매끄럽게 갈라지며 다음 컷 등장
+        const halfW = (W / 2) * ep;
+        c.beginPath();
+        c.rect(W / 2 - halfW, 0, halfW * 2, H);
+        c.clip();
+        const z = 1.09 - 0.09 * ep;
+        c.translate(W / 2, H / 2); c.scale(z, z); c.translate(-W / 2, -H / 2);
+      } else if (transId === 'morphOrbit') {
+        // 원테이크 궤도 회전: 부채꼴 원호 스윕 + 미세 회전 안착
+        const maxR = Math.hypot(W, H) * 0.72;
+        const startA = -Math.PI / 2;
+        const endA = startA + Math.PI * 2 * ep;
+        c.beginPath();
+        c.moveTo(W / 2, H / 2);
+        c.arc(W / 2, H / 2, maxR, startA, endA);
+        c.closePath();
+        c.clip();
+        const ang = (1 - ep) * 0.14;
+        const z = 1.08 - 0.08 * ep;
+        c.translate(W / 2, H / 2); c.rotate(ang); c.scale(z, z); c.translate(-W / 2, -H / 2);
+      } else if (transId === 'pushLeft') {
         c.translate((1 - ep) * W, 0);
       } else if (transId === 'pushRight') {
         c.translate(-(1 - ep) * W, 0);
@@ -5738,13 +5830,64 @@
     function applyCutTransitionPost(c, W, H, transId, localSec, hadPre) {
       if (hadPre) c.restore();
       if (!transId || transId === 'default' || transId === 'none') return;
-      const dur = 0.82;
+      const isMorph = transId.startsWith('morph');
+      const dur = isMorph ? 0.78 : 0.82;
       if (typeof localSec !== 'number' || localSec < 0 || localSec >= dur) return;
       const tp = Math.max(0, Math.min(1, localSec / dur));
       const ep = tp < 0.5 ? 4 * tp * tp * tp : 1 - Math.pow(-2 * tp + 2, 3) / 2;
 
       c.save();
-      if (transId === 'whiteFlash') {
+      if (transId === 'morphIris') {
+        const maxR = Math.hypot(W, H) * 0.62;
+        const r = Math.max(6, maxR * ep);
+        const fade = Math.sin(ep * Math.PI);
+        c.strokeStyle = `rgba(255,255,255,${(fade * 0.85).toFixed(3)})`;
+        c.lineWidth = Math.max(1.5, 5 * (1 - ep * 0.6));
+        c.beginPath(); c.arc(W / 2, H / 2, r, 0, Math.PI * 2); c.stroke();
+        c.strokeStyle = `rgba(147,197,253,${(fade * 0.48).toFixed(3)})`;
+        c.lineWidth = 2;
+        c.beginPath(); c.arc(W / 2, H / 2, r * 0.92, 0, Math.PI * 2); c.stroke();
+      } else if (transId === 'morphRibbon') {
+        const sweepX = -W * 0.25 + (W * 1.65) * ep;
+        const slant = W * 0.28;
+        const fade = Math.sin(ep * Math.PI);
+        c.strokeStyle = `rgba(255,255,255,${(fade * 0.9).toFixed(3)})`;
+        c.lineWidth = 8 * fade + 2;
+        c.beginPath();
+        c.moveTo(sweepX, 0);
+        c.bezierCurveTo(sweepX + slant * 0.6, H * 0.32, sweepX - slant * 0.9, H * 0.68, sweepX - slant * 0.4, H);
+        c.stroke();
+      } else if (transId === 'morphLiquid') {
+        const baseY = H * (1.06 - 1.16 * ep);
+        const amp = Math.sin(ep * Math.PI) * 44;
+        const fade = Math.sin(ep * Math.PI);
+        c.strokeStyle = `rgba(255,255,255,${(fade * 0.85).toFixed(3)})`;
+        c.lineWidth = 4;
+        c.beginPath();
+        const steps = 16;
+        for (let i = 0; i <= steps; i++) {
+          const px = (i / steps) * W;
+          const wy = baseY + Math.sin((i / steps) * Math.PI * 2.2 + ep * 5.2) * amp;
+          if (i === 0) c.moveTo(px, wy); else c.lineTo(px, wy);
+        }
+        c.stroke();
+      } else if (transId === 'morphDoor') {
+        const halfW = (W / 2) * ep;
+        const fade = Math.sin(ep * Math.PI);
+        c.fillStyle = `rgba(255,255,255,${(fade * 0.85).toFixed(3)})`;
+        c.fillRect(W / 2 - halfW - 2, 0, 4, H);
+        c.fillRect(W / 2 + halfW - 2, 0, 4, H);
+      } else if (transId === 'morphOrbit') {
+        const fade = Math.sin(ep * Math.PI);
+        const ang = -Math.PI / 2 + Math.PI * 2 * ep;
+        const maxR = Math.hypot(W, H) * 0.65;
+        c.strokeStyle = `rgba(255,255,255,${(fade * 0.8).toFixed(3)})`;
+        c.lineWidth = 3;
+        c.beginPath();
+        c.moveTo(W / 2, H / 2);
+        c.lineTo(W / 2 + Math.cos(ang) * maxR, H / 2 + Math.sin(ang) * maxR);
+        c.stroke();
+      } else if (transId === 'whiteFlash') {
         c.fillStyle = `rgba(255,255,255,${((1 - ep) * 0.92).toFixed(3)})`;
         c.fillRect(0, 0, W, H);
       } else if (transId === 'blackDissolve') {
@@ -5857,6 +6000,22 @@
       c.globalAlpha = 1;
       c.setLineDash([]);
       c.shadowBlur = 0;
+      // ★ 음악 박자(BPM) 비트 줌 펀치: 정박마다 미세한 리듬 탄력
+      if (t < mainDuration && campaign && campaign.beatSyncMode && !campaign.isPhotoCollageMode) {
+        const bpm = (typeof arGetActiveBgmBpm === 'function') ? arGetActiveBgmBpm() : 118;
+        const beatSec = 60 / Math.max(60, Math.min(180, bpm));
+        const realT = (window.__timelines && window.__timelines.main && typeof window.__timelines.main.currentTime === 'number')
+          ? window.__timelines.main.currentTime : t;
+        const beatPos = ((realT % beatSec) + beatSec) % beatSec / beatSec;
+        const lvl = campaign.beatPunchLevel || 'medium';
+        const amp = lvl === 'soft' ? 0.015 : (lvl === 'strong' ? 0.042 : 0.026);
+        const punch = 1 + amp * Math.exp(-beatPos * 14);
+        if (punch > 1.001) {
+          c.translate(W / 2, H / 2);
+          c.scale(punch, punch);
+          c.translate(-W / 2, -H / 2);
+        }
+      }
       let hadTransPre = false;
       try {
         if (t < mainDuration) {
@@ -6046,7 +6205,63 @@
         }
         window.__arActiveRenderCutIdx = -1;
         c.restore();
+        // 원테이크 모핑용 직전 컷 스냅샷 캐시 (전환 완료 후 120ms 간격으로 가볍게 갱신)
+        if (activeCutIdx >= 0 && t < mainDuration && localSec >= 0.78 && typeof canvas !== 'undefined' && canvas) {
+          const prevSnapKey = `${activeCutIdx}:${Math.floor(localSec * 6)}`;
+          if (window.__arPrevCutSnapKey !== prevSnapKey) {
+            window.__arPrevCutSnapKey = prevSnapKey;
+            arCapturePrevCutFrame(canvas, activeCutIdx);
+          }
+        }
       }
+    }
+
+    // ==========================================================================
+    // ★ 음악 박자(BPM) 자동 컷 싱크 & 원테이크 모핑 팩 원클릭 컨트롤 (2026-11)
+    // ==========================================================================
+    function arToggleBeatSync(enabled) {
+      if (typeof campaign === 'undefined' || !campaign) return;
+      campaign.beatSyncMode = Boolean(enabled);
+      if (typeof syncDurationAndTimeline === 'function') syncDurationAndTimeline();
+      else if (typeof setVideoTotalDuration === 'function') setVideoTotalDuration(BASE_DURATION);
+      if (typeof arSyncBeatSyncUI === 'function') arSyncBeatSyncUI();
+      if (typeof arRunReelsCritic === 'function') arRunReelsCritic();
+      const bpm = (typeof arGetActiveBgmBpm === 'function') ? arGetActiveBgmBpm() : 118;
+      if (typeof arToast === 'function') {
+        arToast(campaign.beatSyncMode
+          ? `🎵 ${bpm} BPM 박자 컷 싱크 ON — 컷 전환과 줌 펀치가 비트에 맞춰집니다.`
+          : '음악 박자 싱크를 껐습니다.', true);
+      }
+    }
+    function arSetBeatPunchLevel(lvl) {
+      if (typeof campaign === 'undefined' || !campaign) return;
+      campaign.beatPunchLevel = ['soft', 'medium', 'strong'].includes(lvl) ? lvl : 'medium';
+      if (!campaign.beatSyncMode) {
+        arToggleBeatSync(true);
+        return;
+      }
+      if (typeof arSyncBeatSyncUI === 'function') arSyncBeatSyncUI();
+      if (typeof arToast === 'function') {
+        const names = { soft: '부드럽게', medium: '선명하게', strong: '강하게' };
+        arToast(`🎵 비트 펀치 강도: ${names[campaign.beatPunchLevel] || '선명하게'}`, true);
+      }
+    }
+    function arApplyOneTakeMorphPack() {
+      if (typeof campaign === 'undefined' || !campaign) return;
+      const cuts = Math.max(4, typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4);
+      const seq = ['morphIris', 'morphRibbon', 'morphLiquid', 'morphDoor', 'morphOrbit'];
+      campaign.cutTransitions = Array.from({ length: Math.max(10, cuts) }, (_, i) => i === 0 ? 'morphIris' : seq[i % seq.length]);
+      try { localStorage.setItem('autoreels_cut_transitions', JSON.stringify(campaign.cutTransitions)); } catch (_) {}
+      if (typeof arRunReelsCritic === 'function') arRunReelsCritic();
+      if (window.__timelines && window.__timelines.main) {
+        window.__timelines.main.seek(0);
+      }
+      if (typeof arToast === 'function') arToast('✨ 원테이크 모핑 전환 팩(원형·리본·물결·슬릿·궤도)을 모든 컷에 적용했어요!', true);
+    }
+    if (typeof window !== 'undefined') {
+      window.arToggleBeatSync = arToggleBeatSync;
+      window.arSetBeatPunchLevel = arSetBeatPunchLevel;
+      window.arApplyOneTakeMorphPack = arApplyOneTakeMorphPack;
     }
 
     // ─── Exact Bounding Box Hooks for Genre & Motion Card Styles + Clean Selection Overlay + Direct On-Canvas Text Editing ───
