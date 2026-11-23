@@ -4106,15 +4106,131 @@
     // =========================================================================
     // ★ 처음 시작할 때 "사진 콜라주로 만들기" → 6종 9:16 콜라주 생성 + 편집기 영상처럼 테마 바로 입히기
     // =========================================================================
+    const AR_COLLAGE_MAX_PHOTOS = 18;
+    const _arCollageGrid = (cols, rows) => {
+      const out = [];
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) out.push([c / cols, r / rows, 1 / cols, 1 / rows]);
+      return out;
+    };
+    const _arCollageRowsSpec = (rowSpecs) => {
+      // rowSpecs: [[cols, heightRatio], ...]
+      const out = [];
+      let y = 0;
+      rowSpecs.forEach(([cols, h]) => {
+        for (let c = 0; c < cols; c++) out.push([c / cols, y, 1 / cols, h]);
+        y += h;
+      });
+      return out;
+    };
+    const AR_COLLAGE_TEMPLATES = [
+      // 1장
+      { id: '1_full', count: 1, label: '풀화면', special: 'full', boxes: [[0, 0, 1, 1]] },
+      { id: '1_frame', count: 1, label: '감성 액자', boxes: [[0.06, 0.08, 0.88, 0.84]] },
+      // 2장
+      { id: '2_tb', count: 2, label: '상하 2분할', boxes: [[0, 0, 1, 0.5], [0, 0.5, 1, 0.5]] },
+      { id: '2_lr', count: 2, label: '좌우 2분할', boxes: [[0, 0, 0.5, 1], [0.5, 0, 0.5, 1]] },
+      { id: '2_bigtop', count: 2, label: '상단 크게', boxes: [[0, 0, 1, 0.66], [0, 0.66, 1, 0.34]] },
+      { id: '2_polaroid', count: 2, label: '폴라로이드', special: 'polaroid2', boxes: [[0.08, 0.12, 0.64, 0.36], [0.28, 0.52, 0.64, 0.36]] },
+      // 3장 (다양한 모양 8종!)
+      { id: '3_top1_bot2', count: 3, label: '상1 + 하2', boxes: [[0, 0, 1, 0.56], [0, 0.56, 0.5, 0.44], [0.5, 0.56, 0.5, 0.44]] },
+      { id: '3_top2_bot1', count: 3, label: '상2 + 하1', boxes: [[0, 0, 0.5, 0.44], [0.5, 0, 0.5, 0.44], [0, 0.44, 1, 0.56]] },
+      { id: '3_left1_right2', count: 3, label: '좌1 + 우2', boxes: [[0, 0, 0.56, 1], [0.56, 0, 0.44, 0.5], [0.56, 0.5, 0.44, 0.5]] },
+      { id: '3_right1_left2', count: 3, label: '좌2 + 우1', boxes: [[0, 0, 0.44, 0.5], [0, 0.5, 0.44, 0.5], [0.44, 0, 0.56, 1]] },
+      { id: '3_rows', count: 3, label: '가로 3단', boxes: _arCollageGrid(1, 3) },
+      { id: '3_cols', count: 3, label: '세로 3단', boxes: _arCollageGrid(3, 1) },
+      { id: '3_film', count: 3, label: '35mm 필름', special: 'filmstrip', boxes: [[0.1, 0.03, 0.8, 0.3], [0.1, 0.35, 0.8, 0.3], [0.1, 0.67, 0.8, 0.3]] },
+      { id: '3_polaroid', count: 3, label: '폴라로이드', special: 'polaroid3', boxes: [[0.08, 0.07, 0.58, 0.28], [0.34, 0.36, 0.58, 0.28], [0.12, 0.65, 0.58, 0.28]] },
+      // 4장
+      { id: '4_grid', count: 4, label: '2×2 기본', boxes: _arCollageGrid(2, 2) },
+      { id: '4_top1_bot3', count: 4, label: '상1 + 하3', boxes: _arCollageRowsSpec([[1, 0.58], [3, 0.42]]) },
+      { id: '4_left1_right3', count: 4, label: '좌1 + 우3', boxes: [[0, 0, 0.58, 1], [0.58, 0, 0.42, 1 / 3], [0.58, 1 / 3, 0.42, 1 / 3], [0.58, 2 / 3, 0.42, 1 / 3]] },
+      { id: '4_mosaic', count: 4, label: '화보 비대칭', boxes: [[0, 0, 0.62, 0.52], [0.62, 0, 0.38, 0.52], [0, 0.52, 0.38, 0.48], [0.38, 0.52, 0.62, 0.48]] },
+      { id: '4_rows', count: 4, label: '가로 4단', boxes: _arCollageGrid(1, 4) },
+      // 5장
+      { id: '5_top2_bot3', count: 5, label: '상2 + 하3', boxes: _arCollageRowsSpec([[2, 0.52], [3, 0.48]]) },
+      { id: '5_top3_bot2', count: 5, label: '상3 + 하2', boxes: _arCollageRowsSpec([[3, 0.48], [2, 0.52]]) },
+      { id: '5_top1_bot4', count: 5, label: '상1 + 2×2', boxes: _arCollageRowsSpec([[1, 0.46], [2, 0.27], [2, 0.27]]) },
+      { id: '5_2_1_2', count: 5, label: '2 + 중앙1 + 2', boxes: _arCollageRowsSpec([[2, 0.31], [1, 0.38], [2, 0.31]]) },
+      // 6장
+      { id: '6_2x3', count: 6, label: '2×3 그리드', boxes: _arCollageGrid(2, 3) },
+      { id: '6_3x2', count: 6, label: '3×2 그리드', boxes: _arCollageGrid(3, 2) },
+      { id: '6_mosaic', count: 6, label: '메인 + 5', boxes: [[0, 0, 2 / 3, 2 / 3], [2 / 3, 0, 1 / 3, 1 / 3], [2 / 3, 1 / 3, 1 / 3, 1 / 3], [0, 2 / 3, 1 / 3, 1 / 3], [1 / 3, 2 / 3, 1 / 3, 1 / 3], [2 / 3, 2 / 3, 1 / 3, 1 / 3]] },
+      { id: '6_1_2_3', count: 6, label: '1 + 2 + 3', boxes: _arCollageRowsSpec([[1, 0.40], [2, 0.32], [3, 0.28]]) },
+      // 7장
+      { id: '7_2_3_2', count: 7, label: '2 + 3 + 2', boxes: _arCollageRowsSpec([[2, 0.34], [3, 0.32], [2, 0.34]]) },
+      { id: '7_1_3_3', count: 7, label: '상1 + 3×2', boxes: _arCollageRowsSpec([[1, 0.42], [3, 0.29], [3, 0.29]]) },
+      { id: '7_3_1_3', count: 7, label: '3 + 중앙1 + 3', boxes: _arCollageRowsSpec([[3, 0.30], [1, 0.40], [3, 0.30]]) },
+      // 8장
+      { id: '8_2x4', count: 8, label: '2×4 그리드', boxes: _arCollageGrid(2, 4) },
+      { id: '8_3_2_3', count: 8, label: '3 + 2 + 3', boxes: _arCollageRowsSpec([[3, 0.31], [2, 0.38], [3, 0.31]]) },
+      { id: '8_2_3_3', count: 8, label: '2 + 3 + 3', boxes: _arCollageRowsSpec([[2, 0.40], [3, 0.30], [3, 0.30]]) },
+      // 9장
+      { id: '9_3x3', count: 9, label: '3×3 그리드', boxes: _arCollageGrid(3, 3) },
+      { id: '9_hero_top', count: 9, label: '상1 + 하8', boxes: _arCollageRowsSpec([[1, 0.44], [4, 0.28], [4, 0.28]]) },
+      { id: '9_center', count: 9, label: '4 + 중앙1 + 4', boxes: _arCollageRowsSpec([[4, 0.29], [1, 0.42], [4, 0.29]]) },
+      { id: '9_2_3_4', count: 9, label: '2 + 3 + 4', boxes: _arCollageRowsSpec([[2, 0.38], [3, 0.32], [4, 0.30]]) }
+    ];
+    function arCollageGetTemplate(id) {
+      return AR_COLLAGE_TEMPLATES.find((t) => t.id === id) || AR_COLLAGE_TEMPLATES[2]; // fallback 2_tb
+    }
+
     const _arCollageState = {
       photos: [],       // [{ id, img, src, fromVault }]
-      layout: 'split2', // split2 | magazine3 | grid4 | polaroid | filmstrip | slideshow
+      countTab: 2,      // 1..9
+      layout: '2_tb',   // template id from AR_COLLAGE_TEMPLATES
+      userPickedLayout: false,
       bg: 'dark',       // dark | cream | white
-      cutSec: 2.5,
+      cutSec: 3,
       previewIdx: 0,
-      activeSlot: -1,   // -1 = 전체 보기, 0..3 = 개별 사진 칸 편집 모드
+      activeSlot: -1,   // -1 = 전체 보기, 0..8 = 개별 사진 칸 편집 모드
       slotEdits: {}     // key: `${layout}:${slideIdx}:${slotIdx}` -> { scale, panX, panY, rot, flipX, imgOverride }
     };
+
+    function arCollageTemplateSvg(tpl) {
+      const W = 26, H = 44, pad = 2, g = 1.4;
+      const iw = W - pad * 2, ih = H - pad * 2;
+      if (tpl.special === 'polaroid2') {
+        return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="none"><rect x="3" y="4" width="14" height="17" rx="1.5" transform="rotate(-6 10 12)" fill="currentColor" opacity="0.28" stroke="currentColor" stroke-width="1.2"/><rect x="9" y="22" width="14" height="17" rx="1.5" transform="rotate(5 16 30)" fill="currentColor" opacity="0.28" stroke="currentColor" stroke-width="1.2"/></svg>`;
+      }
+      if (tpl.special === 'polaroid3') {
+        return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="none"><rect x="3" y="3" width="13" height="12" rx="1.3" transform="rotate(-6 9 9)" fill="currentColor" opacity="0.28" stroke="currentColor" stroke-width="1.1"/><rect x="10" y="16" width="13" height="12" rx="1.3" transform="rotate(5 16 22)" fill="currentColor" opacity="0.28" stroke="currentColor" stroke-width="1.1"/><rect x="4" y="29" width="13" height="12" rx="1.3" transform="rotate(-4 10 35)" fill="currentColor" opacity="0.28" stroke="currentColor" stroke-width="1.1"/></svg>`;
+      }
+      const rects = tpl.boxes.map(([bx, by, bw, bh]) => {
+        const x = pad + bx * iw + (bx > 0.001 ? g / 2 : 0);
+        const y = pad + by * ih + (by > 0.001 ? g / 2 : 0);
+        const x2 = pad + (bx + bw) * iw - (bx + bw < 0.999 ? g / 2 : 0);
+        const y2 = pad + (by + bh) * ih - (by + bh < 0.999 ? g / 2 : 0);
+        return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(2, x2 - x).toFixed(1)}" height="${Math.max(2, y2 - y).toFixed(1)}" rx="1.2" fill="currentColor" opacity="0.26" stroke="currentColor" stroke-width="1.1"/>`;
+      }).join('');
+      return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" fill="none">${rects}</svg>`;
+    }
+
+    function arCollageRenderLayoutPicker() {
+      document.querySelectorAll('#arCollageCountTabs [data-cl-cnt]').forEach((b) => {
+        b.classList.toggle('active', Number(b.dataset.clCnt) === _arCollageState.countTab);
+      });
+      const grid = document.getElementById('arCollageLayoutGrid');
+      if (!grid) return;
+      const list = AR_COLLAGE_TEMPLATES.filter((t) => t.count === _arCollageState.countTab);
+      grid.innerHTML = list.map((t) => {
+        const on = _arCollageState.layout === t.id;
+        return `<button type="button" data-cl-layout="${t.id}" onclick="arCollageSetLayout('${t.id}')" class="ar-cl-tpl-btn${on ? ' active' : ''}">${arCollageTemplateSvg(t)}<span>${t.label}</span></button>`;
+      }).join('');
+    }
+
+    function arCollageAutoMatchCount() {
+      if (_arCollageState.userPickedLayout) return;
+      const n = _arCollageState.photos.length;
+      if (!n) return;
+      const targetCnt = Math.max(1, Math.min(9, n));
+      const first = AR_COLLAGE_TEMPLATES.find((t) => t.count === targetCnt);
+      if (first) {
+        _arCollageState.countTab = targetCnt;
+        _arCollageState.layout = first.id;
+        _arCollageState.previewIdx = 0;
+        _arCollageState.activeSlot = -1;
+      }
+    }
 
     function arCollageEditKey(slideIdx, slotIdx) {
       return `${_arCollageState.layout}:${slideIdx}:${slotIdx}`;
@@ -4163,46 +4279,14 @@
       ctx.restore();
     }
 
-    // 슬라이드별 정확한 칸 좌표(렌더링 + 꾹 누르기/탭 히트테스트 공용)
+    // 슬라이드별 정확한 칸 좌표(렌더링 + 꾹 누르기/탭 히트테스트 공용, 1~9칸 모든 모양 지원)
     function arCollageGetSlotRects(slide, W, H) {
       if (!slide) return [];
-      const pad = Math.round(W * 0.036);
-      const gap = Math.round(W * 0.024);
-      const rad = Math.round(W * 0.026);
-      if (slide.type === 'single') {
+      const tpl = arCollageGetTemplate(slide.type);
+      if (tpl.special === 'full') {
         return [{ x: 0, y: 0, w: W, h: H, r: 0, rot: 0 }];
       }
-      if (slide.type === 'split2') {
-        const uw = W - pad * 2;
-        const uh = Math.round((H - pad * 2 - gap) / 2);
-        return [
-          { x: pad, y: pad, w: uw, h: uh, r: rad, rot: 0 },
-          { x: pad, y: pad + uh + gap, w: uw, h: H - pad * 2 - gap - uh, r: rad, rot: 0 }
-        ];
-      }
-      if (slide.type === 'magazine3') {
-        const uw = W - pad * 2;
-        const topH = Math.round((H - pad * 2 - gap) * 0.56);
-        const botY = pad + topH + gap;
-        const botH = H - pad - botY;
-        const halfW = Math.round((uw - gap) / 2);
-        return [
-          { x: pad, y: pad, w: uw, h: topH, r: rad, rot: 0 },
-          { x: pad, y: botY, w: halfW, h: botH, r: rad, rot: 0 },
-          { x: pad + halfW + gap, y: botY, w: uw - halfW - gap, h: botH, r: rad, rot: 0 }
-        ];
-      }
-      if (slide.type === 'grid4') {
-        const cellW = Math.round((W - pad * 2 - gap) / 2);
-        const cellH = Math.round((H - pad * 2 - gap) / 2);
-        return [
-          { x: pad, y: pad, w: cellW, h: cellH, r: rad, rot: 0 },
-          { x: pad + cellW + gap, y: pad, w: W - pad * 2 - gap - cellW, h: cellH, r: rad, rot: 0 },
-          { x: pad, y: pad + cellH + gap, w: cellW, h: H - pad * 2 - gap - cellH, r: rad, rot: 0 },
-          { x: pad + cellW + gap, y: pad + cellH + gap, w: W - pad * 2 - gap - cellW, h: H - pad * 2 - gap - cellH, r: rad, rot: 0 }
-        ];
-      }
-      if (slide.type === 'polaroid') {
+      if (tpl.special === 'polaroid2') {
         const pw = Math.round(W * 0.64), ph = Math.round(H * 0.34);
         const flip = (slide.idx || 0) % 2 === 0 ? 1 : -1;
         return [
@@ -4210,13 +4294,43 @@
           { isPolaroid: true, cx: W * (0.55 + 0.04 * flip), cy: H * 0.67, w: pw, h: ph, x: W * (0.55 + 0.04 * flip) - pw / 2, y: H * 0.67 - ph / 2, r: 0, rot: 0.048 * flip }
         ];
       }
-      if (slide.type === 'filmstrip') {
+      if (tpl.special === 'polaroid3') {
+        const pw = Math.round(W * 0.56), ph = Math.round(H * 0.255);
+        const flip = (slide.idx || 0) % 2 === 0 ? 1 : -1;
+        return [
+          { isPolaroid: true, cx: W * (0.41 - 0.03 * flip), cy: H * 0.21, w: pw, h: ph, x: W * (0.41 - 0.03 * flip) - pw / 2, y: H * 0.21 - ph / 2, r: 0, rot: -0.06 * flip },
+          { isPolaroid: true, cx: W * (0.59 + 0.03 * flip), cy: H * 0.495, w: pw, h: ph, x: W * (0.59 + 0.03 * flip) - pw / 2, y: H * 0.495 - ph / 2, r: 0, rot: 0.055 * flip },
+          { isPolaroid: true, cx: W * (0.42 - 0.02 * flip), cy: H * 0.78, w: pw, h: ph, x: W * (0.42 - 0.02 * flip) - pw / 2, y: H * 0.78 - ph / 2, r: 0, rot: -0.042 * flip }
+        ];
+      }
+      if (tpl.special === 'filmstrip') {
+        const pad = Math.round(W * 0.036);
+        const gap = Math.round(W * 0.024);
         const rail = Math.round(W * 0.095);
         const fw = W - rail * 2;
         const fh = Math.round((H - pad * 2 - gap * 2) / 3);
         return [0, 1, 2].map((i) => ({ x: rail, y: pad + i * (fh + gap), w: fw, h: fh, r: Math.round(W * 0.012), rot: 0 }));
       }
-      return [];
+      const dense = tpl.count >= 6;
+      const pad = Math.round(W * (dense ? 0.024 : 0.034));
+      const gap = Math.round(W * (dense ? 0.016 : 0.022));
+      const halfGap = gap / 2;
+      const rad = Math.round(W * (dense ? 0.014 : 0.024));
+      const iw = W - pad * 2, ih = H - pad * 2;
+      return tpl.boxes.map(([bx, by, bw, bh]) => {
+        const x1 = pad + bx * iw + (bx > 0.001 ? halfGap : 0);
+        const y1 = pad + by * ih + (by > 0.001 ? halfGap : 0);
+        const x2 = pad + (bx + bw) * iw - (bx + bw < 0.999 ? halfGap : 0);
+        const y2 = pad + (by + bh) * ih - (by + bh < 0.999 ? halfGap : 0);
+        return {
+          x: Math.round(x1),
+          y: Math.round(y1),
+          w: Math.max(10, Math.round(x2 - x1)),
+          h: Math.max(10, Math.round(y2 - y1)),
+          r: rad,
+          rot: 0
+        };
+      });
     }
 
     function arCollageHitSlot(slide, W, H, px, py) {
@@ -4238,65 +4352,32 @@
     function arCollageBuildSlides(photos, layout) {
       const n = photos.length;
       if (!n) return [];
+      const tpl = arCollageGetTemplate(layout);
+      const perSlide = Math.max(1, tpl.count || 1);
       const at = (i) => photos[((i % n) + n) % n].img;
       const slides = [];
-      if (layout === 'slideshow') {
-        for (let i = 0; i < n; i++) slides.push({ type: 'single', imgs: [at(i)] });
-      } else if (layout === 'split2') {
-        if (n === 1) slides.push({ type: 'split2', imgs: [at(0), at(0)] });
-        else if (n === 2) {
-          slides.push({ type: 'split2', imgs: [at(0), at(1)] });
-          slides.push({ type: 'single', imgs: [at(0)] });
-          slides.push({ type: 'single', imgs: [at(1)] });
-          slides.push({ type: 'split2', imgs: [at(1), at(0)] });
-        } else {
-          for (let i = 0; i < n; i += 2) slides.push({ type: 'split2', imgs: [at(i), at(i + 1)] });
-          if (slides.length < 3) slides.push({ type: 'split2', imgs: [at(n - 1), at(0)] });
-        }
-      } else if (layout === 'magazine3') {
-        if (n <= 3) {
-          slides.push({ type: 'magazine3', imgs: [at(0), at(1), at(2)] });
-          slides.push({ type: 'magazine3', imgs: [at(1), at(2), at(0)] });
-          slides.push({ type: 'magazine3', imgs: [at(2), at(0), at(1)] });
-        } else {
-          for (let i = 0; i < n; i += 3) slides.push({ type: 'magazine3', imgs: [at(i), at(i + 1), at(i + 2)] });
-        }
-      } else if (layout === 'grid4') {
-        if (n <= 4) {
-          slides.push({ type: 'grid4', imgs: [at(0), at(1), at(2), at(3)] });
-          slides.push({ type: 'split2', imgs: [at(0), at(1)] });
-          slides.push({ type: 'split2', imgs: [at(2), at(3)] });
-          slides.push({ type: 'grid4', imgs: [at(1), at(2), at(3), at(0)] });
-        } else {
-          for (let i = 0; i < n; i += 4) slides.push({ type: 'grid4', imgs: [at(i), at(i + 1), at(i + 2), at(i + 3)] });
-        }
-      } else if (layout === 'polaroid') {
-        const step = n >= 4 ? 2 : 1;
-        for (let i = 0; i < Math.max(3, Math.ceil(n / step)); i++) {
-          const base = i * step;
-          slides.push({ type: 'polaroid', imgs: [at(base), at(base + 1), at(base + 2)], idx: i });
-        }
-      } else if (layout === 'filmstrip') {
-        const count = Math.max(3, Math.ceil(n / 2));
-        for (let i = 0; i < count; i++) {
-          slides.push({ type: 'filmstrip', imgs: [at(i * 2), at(i * 2 + 1), at(i * 2 + 2)] });
-        }
+      const slideCount = Math.max(1, Math.ceil(n / perSlide));
+      for (let s = 0; s < slideCount && slides.length < 10; s++) {
+        const imgs = [];
+        for (let k = 0; k < perSlide; k++) imgs.push(at(s * perSlide + k));
+        slides.push({ type: tpl.id, imgs, idx: s });
       }
-      return slides.slice(0, 10);
+      return slides;
     }
 
     function arCollageRenderSlide(canvas, slide, bgTone, slideIdx = 0, showOverlayUI = false) {
       const ctx = canvas.getContext('2d');
       const W = canvas.width, H = canvas.height;
+      const tpl = arCollageGetTemplate(slide && slide.type);
       const bgMap = { dark: '#111114', cream: '#f3ece1', white: '#ffffff' };
-      ctx.fillStyle = slide && slide.type === 'filmstrip' ? '#0c0b0a' : (bgMap[bgTone] || '#111114');
+      ctx.fillStyle = tpl.special === 'filmstrip' ? '#0c0b0a' : (bgMap[bgTone] || '#111114');
       ctx.fillRect(0, 0, W, H);
       if (!slide || !slide.imgs || !slide.imgs.length) return;
       const imgs = slide.imgs;
       const rects = arCollageGetSlotRects(slide, W, H);
       const activeSlot = showOverlayUI ? _arCollageState.activeSlot : -1;
 
-      if (slide.type === 'filmstrip') {
+      if (tpl.special === 'filmstrip') {
         const rail = Math.round(W * 0.095);
         ctx.fillStyle = 'rgba(244,238,225,0.22)';
         const holeW = Math.round(rail * 0.44), holeH = Math.round(H * 0.018);
@@ -4316,7 +4397,7 @@
         if (rc.isPolaroid) {
           ctx.translate(rc.cx, rc.cy);
           ctx.rotate(rc.rot);
-          const b = Math.round(W * 0.025), bot = Math.round(W * 0.085);
+          const b = Math.round(W * 0.022), bot = Math.round(W * 0.074);
           ctx.shadowColor = 'rgba(0,0,0,0.34)';
           ctx.shadowBlur = Math.round(W * 0.045);
           ctx.shadowOffsetY = Math.round(W * 0.02);
@@ -4340,18 +4421,20 @@
         // 편집 모드 UI 배지(미리보기 캔버스 전용 — 완성 이미지에는 절대 안 그려짐)
         if (showOverlayUI) {
           ctx.save();
-          const bx = rc.isPolaroid ? rc.cx - rc.w * 0.42 : rc.x + 10;
-          const by = rc.isPolaroid ? rc.cy - rc.h * 0.42 : rc.y + 10;
-          const label = isOn ? `✏️ ${si + 1}번 칸 · 드래그 이동` : `${si + 1}`;
-          ctx.font = '700 12px Pretendard, sans-serif';
-          const tw = ctx.measureText(label).width + 14;
+          const compact = rects.length >= 5 || rc.w < 135;
+          const bx = rc.isPolaroid ? rc.cx - rc.w * 0.42 : rc.x + (compact ? 6 : 10);
+          const by = rc.isPolaroid ? rc.cy - rc.h * 0.42 : rc.y + (compact ? 6 : 10);
+          const label = isOn ? (compact ? `✏️ ${si + 1}` : `✏️ ${si + 1}번 칸 · 드래그`) : `${si + 1}`;
+          ctx.font = compact ? '700 11px Pretendard, sans-serif' : '700 12px Pretendard, sans-serif';
+          const bh = compact ? 18 : 22;
+          const tw = ctx.measureText(label).width + (compact ? 11 : 14);
           ctx.fillStyle = isOn ? '#2563eb' : 'rgba(0,0,0,0.68)';
           ctx.beginPath();
-          ctx.roundRect ? ctx.roundRect(bx, by, tw, 22, 11) : ctx.rect(bx, by, tw, 22);
+          ctx.roundRect ? ctx.roundRect(bx, by, tw, bh, bh / 2) : ctx.rect(bx, by, tw, bh);
           ctx.fill();
           ctx.fillStyle = '#ffffff';
           ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-          ctx.fillText(label, bx + 7, by + 11);
+          ctx.fillText(label, bx + (compact ? 5.5 : 7), by + bh / 2);
           ctx.restore();
         }
       });
@@ -4520,8 +4603,9 @@
       const slotHint = document.getElementById('arCollageSlotHint');
       const cv = document.getElementById('arCollagePreviewCanvas');
       const n = _arCollageState.photos.length;
-      if (cntEl) cntEl.textContent = `${n}/10`;
+      if (cntEl) cntEl.textContent = `${n}/${AR_COLLAGE_MAX_PHOTOS}`;
       if (hintEl) hintEl.classList.toggle('hidden', n > 0);
+      arCollageRenderLayoutPicker();
       if (listEl) {
         if (!n) {
           listEl.innerHTML = '<div class="text-[11.5px] text-[#71717a] px-2">아직 선택한 사진이 없습니다. [+ 사진 불러오기]나 아래 보관함에서 눌러 추가해 주세요.</div>';
@@ -4539,7 +4623,7 @@
             const del = document.createElement('button');
             del.type = 'button'; del.textContent = '×';
             del.style.cssText = 'position:absolute;right:2px;top:2px;width:18px;height:18px;border-radius:999px;background:rgba(0,0,0,0.75);color:#f87171;border:0;font-size:12px;line-height:1;cursor:pointer;';
-            del.onclick = () => { _arCollageState.photos.splice(idx, 1); _arCollageState.activeSlot = -1; arCollageRefreshUI(); };
+            del.onclick = () => { _arCollageState.photos.splice(idx, 1); _arCollageState.activeSlot = -1; arCollageAutoMatchCount(); arCollageRefreshUI(); };
             card.append(im, num, del);
             listEl.appendChild(card);
           });
@@ -4559,9 +4643,11 @@
       if (_arCollageState.activeSlot >= slotCount) _arCollageState.activeSlot = -1;
       if (metaEl) metaEl.textContent = `${_arCollageState.previewIdx + 1}/${slides.length}컷 · ${(slides.length * _arCollageState.cutSec).toFixed(1)}초`;
       if (pillsEl) {
+        const compactPill = slotCount >= 6;
         pillsEl.innerHTML = Array.from({ length: slotCount }, (_, si) => {
           const on = _arCollageState.activeSlot === si;
-          return `<button type="button" onclick="${on ? 'arCollageExitSlotEdit()' : `arCollageEnterSlotEdit(${si})`}" class="px-2 py-0.5 rounded-full text-[11px] font-semibold border cursor-pointer ${on ? 'bg-[#2563eb] text-white border-[#60a5fa]' : 'bg-[#1c1c21] text-[#a1a1aa] border-white/10'}">${si + 1}번 칸${on ? ' 편집중' : ''}</button>`;
+          const lbl = compactPill ? `${si + 1}${on ? '✓' : '번'}` : `${si + 1}번 칸${on ? ' 편집중' : ''}`;
+          return `<button type="button" onclick="${on ? 'arCollageExitSlotEdit()' : `arCollageEnterSlotEdit(${si})`}" class="px-2 py-0.5 rounded-full text-[11px] font-semibold border cursor-pointer ${on ? 'bg-[#2563eb] text-white border-[#60a5fa]' : 'bg-[#1c1c21] text-[#a1a1aa] border-white/10'}">${lbl}</button>`;
         }).join('');
       }
       if (editBar) {
@@ -4599,7 +4685,7 @@
           if (all && all.length) {
             vWrap.classList.remove('hidden');
             vStrip.replaceChildren();
-            all.slice(0, 18).forEach((item) => {
+            all.slice(0, 24).forEach((item) => {
               const b = document.createElement('button');
               b.type = 'button';
               b.style.cssText = 'flex:0 0 auto;width:48px;height:64px;border-radius:7px;overflow:hidden;border:1px solid rgba(255,255,255,0.16);padding:0;background:#18181b;cursor:pointer;';
@@ -4618,8 +4704,9 @@
                   if (typeof arToast === 'function') arToast(`${_arCollageState.activeSlot + 1}번 칸 사진을 바꿨어요.`, true);
                   return;
                 }
-                if (_arCollageState.photos.length >= 10) { if (typeof arToast === 'function') arToast('최대 10장까지 고를 수 있어요.'); return; }
+                if (_arCollageState.photos.length >= AR_COLLAGE_MAX_PHOTOS) { if (typeof arToast === 'function') arToast(`최대 ${AR_COLLAGE_MAX_PHOTOS}장까지 고를 수 있어요.`); return; }
                 _arCollageState.photos.push({ id: item.id + '_' + Date.now(), img: loaded, src: item.src, fromVault: true });
+                arCollageAutoMatchCount();
                 arCollageRefreshUI();
               };
               vStrip.appendChild(b);
@@ -4640,7 +4727,7 @@
       if (!files.length) return;
       const newUploaded = [];
       for (const f of files) {
-        if (_arCollageState.photos.length >= 10) break;
+        if (_arCollageState.photos.length >= AR_COLLAGE_MAX_PHOTOS) break;
         try {
           const dataUrl = await new Promise((resolve, reject) => {
             const r = new FileReader();
@@ -4660,13 +4747,36 @@
       if (newUploaded.length && typeof window.arVaultSaveImages === 'function') {
         window.arVaultSaveImages(newUploaded, 'upload');
       }
+      arCollageAutoMatchCount();
       arCollageRefreshUI();
     }
-    function arCollageClearPhotos() { _arCollageState.photos = []; _arCollageState.previewIdx = 0; _arCollageState.activeSlot = -1; _arCollageState.slotEdits = {}; arCollageRefreshUI(); }
+    function arCollageClearPhotos() {
+      _arCollageState.photos = [];
+      _arCollageState.previewIdx = 0;
+      _arCollageState.activeSlot = -1;
+      _arCollageState.slotEdits = {};
+      _arCollageState.userPickedLayout = false;
+      arCollageRefreshUI();
+    }
     function arCollageStepPreview(delta) { _arCollageState.previewIdx += delta; _arCollageState.activeSlot = -1; arCollageRefreshUI(); }
+    function arCollageSetCountTab(cnt) {
+      const n = Math.max(1, Math.min(9, Number(cnt) || 2));
+      _arCollageState.countTab = n;
+      _arCollageState.userPickedLayout = true;
+      const curTpl = arCollageGetTemplate(_arCollageState.layout);
+      if (curTpl.count !== n) {
+        const first = AR_COLLAGE_TEMPLATES.find((t) => t.count === n);
+        if (first) _arCollageState.layout = first.id;
+      }
+      _arCollageState.previewIdx = 0;
+      _arCollageState.activeSlot = -1;
+      arCollageRefreshUI();
+    }
     function arCollageSetLayout(layout) {
-      _arCollageState.layout = layout;
-      document.querySelectorAll('#arPhotoCollageModal [data-cl-layout]').forEach((b) => b.classList.toggle('active', b.dataset.clLayout === layout));
+      const tpl = arCollageGetTemplate(layout);
+      _arCollageState.layout = tpl.id;
+      _arCollageState.countTab = tpl.count;
+      _arCollageState.userPickedLayout = true;
       _arCollageState.previewIdx = 0;
       _arCollageState.activeSlot = -1;
       arCollageRefreshUI();
@@ -4677,7 +4787,7 @@
       arCollageRefreshUI();
     }
     function arCollageSetDur(sec) {
-      _arCollageState.cutSec = Number(sec) || 2.5;
+      _arCollageState.cutSec = Number(sec) || 3;
       document.querySelectorAll('#arPhotoCollageModal [data-cl-dur]').forEach((b) => b.classList.toggle('active', Number(b.dataset.clDur) === _arCollageState.cutSec));
       arCollageRefreshUI();
     }
@@ -4767,6 +4877,7 @@
       window.arCollageHandleFiles = arCollageHandleFiles;
       window.arCollageClearPhotos = arCollageClearPhotos;
       window.arCollageStepPreview = arCollageStepPreview;
+      window.arCollageSetCountTab = arCollageSetCountTab;
       window.arCollageSetLayout = arCollageSetLayout;
       window.arCollageSetBg = arCollageSetBg;
       window.arCollageSetDur = arCollageSetDur;

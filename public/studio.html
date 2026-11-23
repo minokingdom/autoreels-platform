@@ -2307,7 +2307,7 @@
             <canvas id="arCollagePreviewCanvas" width="360" height="640" style="touch-action:none;" class="w-full h-full block cursor-pointer"></canvas>
             <div id="arCollageEmptyHint" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 text-[12px] text-[#85858b] pointer-events-none">
               <span class="text-[24px] mb-1.5">🖼️</span>
-              <span>오른쪽에서 사진 2~10장을<br/>골라 주세요</span>
+              <span>오른쪽에서 사진 1~18장을<br/>골라 주세요</span>
             </div>
           </div>
           <p id="arCollageSlotHint" class="text-[11px] text-[#93c5fd] text-center">💡 각 사진 칸을 <strong>꾹 누르면</strong> 그 칸만 확대·이동·교체할 수 있어요</p>
@@ -2343,7 +2343,7 @@
         <div class="md:col-span-7 space-y-3.5 min-w-0">
           <div class="space-y-2">
             <div class="flex items-center justify-between gap-2 flex-wrap">
-              <span class="text-[12.5px] font-semibold text-[#ededed]">1. 사진 선택 <span id="arCollagePickCount" class="text-[#60a5fa] font-mono ml-1">0/10</span></span>
+              <span class="text-[12.5px] font-semibold text-[#ededed]">1. 사진 선택 <span id="arCollagePickCount" class="text-[#60a5fa] font-mono ml-1">0/18</span></span>
               <div class="flex items-center gap-1.5">
                 <label class="btn-primary h-8 px-3 text-[12px] inline-flex items-center cursor-pointer">
                   + 사진 불러오기
@@ -2359,16 +2359,23 @@
             </div>
           </div>
 
-          <div class="space-y-1.5">
-            <span class="text-[12.5px] font-semibold text-[#ededed]">2. 콜라주 레이아웃</span>
-            <div id="arCollageLayoutGrid" class="grid grid-cols-3 gap-1.5">
-              <button type="button" data-cl-layout="split2" onclick="arCollageSetLayout('split2')" class="ar-cl-btn active">🪟 상하 2분할</button>
-              <button type="button" data-cl-layout="magazine3" onclick="arCollageSetLayout('magazine3')" class="ar-cl-btn">🧩 3분할 화보</button>
-              <button type="button" data-cl-layout="grid4" onclick="arCollageSetLayout('grid4')" class="ar-cl-btn">🔲 4분할 그리드</button>
-              <button type="button" data-cl-layout="polaroid" onclick="arCollageSetLayout('polaroid')" class="ar-cl-btn">📷 폴라로이드</button>
-              <button type="button" data-cl-layout="filmstrip" onclick="arCollageSetLayout('filmstrip')" class="ar-cl-btn">🎬 35mm 필름</button>
-              <button type="button" data-cl-layout="slideshow" onclick="arCollageSetLayout('slideshow')" class="ar-cl-btn">🎞 풀화면 1장씩</button>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[12.5px] font-semibold text-[#ededed]">2. 한 화면 칸 수 &amp; 모양</span>
+              <span class="text-[11px] text-[#85858b]">1장~9장까지 다양한 모양 선택</span>
             </div>
+            <div id="arCollageCountTabs" class="grid grid-cols-9 gap-1">
+              <button type="button" data-cl-cnt="1" onclick="arCollageSetCountTab(1)" class="ar-cl-cnt-btn">1</button>
+              <button type="button" data-cl-cnt="2" onclick="arCollageSetCountTab(2)" class="ar-cl-cnt-btn active">2</button>
+              <button type="button" data-cl-cnt="3" onclick="arCollageSetCountTab(3)" class="ar-cl-cnt-btn">3</button>
+              <button type="button" data-cl-cnt="4" onclick="arCollageSetCountTab(4)" class="ar-cl-cnt-btn">4</button>
+              <button type="button" data-cl-cnt="5" onclick="arCollageSetCountTab(5)" class="ar-cl-cnt-btn">5</button>
+              <button type="button" data-cl-cnt="6" onclick="arCollageSetCountTab(6)" class="ar-cl-cnt-btn">6</button>
+              <button type="button" data-cl-cnt="7" onclick="arCollageSetCountTab(7)" class="ar-cl-cnt-btn">7</button>
+              <button type="button" data-cl-cnt="8" onclick="arCollageSetCountTab(8)" class="ar-cl-cnt-btn">8</button>
+              <button type="button" data-cl-cnt="9" onclick="arCollageSetCountTab(9)" class="ar-cl-cnt-btn">9</button>
+            </div>
+            <div id="arCollageLayoutGrid" class="grid grid-cols-4 gap-1.5"></div>
           </div>
 
           <div class="grid grid-cols-2 gap-2.5">
@@ -2382,10 +2389,11 @@
             </div>
             <div class="space-y-1">
               <span class="text-[11.5px] text-[#a1a1aa]">컷당 길이</span>
-              <div class="flex items-center gap-1.5">
-                <button type="button" data-cl-dur="1.8" onclick="arCollageSetDur(1.8)" class="ar-cl-dur-btn">1.8초</button>
-                <button type="button" data-cl-dur="2.5" onclick="arCollageSetDur(2.5)" class="ar-cl-dur-btn active">2.5초</button>
-                <button type="button" data-cl-dur="3.5" onclick="arCollageSetDur(3.5)" class="ar-cl-dur-btn">3.5초</button>
+              <div class="flex items-center gap-1">
+                <button type="button" data-cl-dur="2" onclick="arCollageSetDur(2)" class="ar-cl-dur-btn">2초</button>
+                <button type="button" data-cl-dur="3" onclick="arCollageSetDur(3)" class="ar-cl-dur-btn active">3초</button>
+                <button type="button" data-cl-dur="5" onclick="arCollageSetDur(5)" class="ar-cl-dur-btn">5초</button>
+                <button type="button" data-cl-dur="8" onclick="arCollageSetDur(8)" class="ar-cl-dur-btn">8초</button>
               </div>
             </div>
           </div>
@@ -2409,13 +2417,27 @@
       </div>
     </div>
     <style>
-      #arPhotoCollageModal .ar-cl-btn,
+      #arPhotoCollageModal .ar-cl-cnt-btn {
+        height: 28px; border-radius: 7px; font-size: 11.5px; font-weight: 700;
+        background: #1c1c21; color: #a1a1aa; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;
+      }
+      #arPhotoCollageModal .ar-cl-cnt-btn.active {
+        background: #2563eb; color: #ffffff; border-color: #60a5fa;
+      }
+      #arPhotoCollageModal .ar-cl-tpl-btn {
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+        padding: 7px 4px; border-radius: 9px; font-size: 10.5px; font-weight: 600;
+        background: #1c1c21; color: #b4b4bc; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;
+      }
+      #arPhotoCollageModal .ar-cl-tpl-btn:hover { border-color: rgba(255,255,255,0.28); color: #ededed; }
+      #arPhotoCollageModal .ar-cl-tpl-btn.active {
+        background: #ededed; color: #111113; border-color: #ededed;
+      }
       #arPhotoCollageModal .ar-cl-bg-btn,
       #arPhotoCollageModal .ar-cl-dur-btn {
-        height: 32px; padding: 0 8px; border-radius: 8px; font-size: 11.5px; font-weight: 600;
+        height: 32px; padding: 0 6px; border-radius: 8px; font-size: 11.5px; font-weight: 600;
         background: #1c1c21; color: #a1a1aa; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; flex: 1;
       }
-      #arPhotoCollageModal .ar-cl-btn.active,
       #arPhotoCollageModal .ar-cl-bg-btn.active,
       #arPhotoCollageModal .ar-cl-dur-btn.active {
         background: #ededed; color: #111113; border-color: #ededed;
@@ -2429,7 +2451,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-collage-slot-edit"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-collage-9grid"><\/script>');
     }
   </script>
   <!--
