@@ -4155,59 +4155,9 @@ function renderStoryArchetypesUI() {
       }
     }
 
-    // ★ 작은 미리보기를 누르면 아래로 내려가지 않고 그 자리에서 크게 보여 주는 팝업
-    function arEnsurePreviewPop() {
-      let pop = document.getElementById('arPreviewPop');
-      if (pop) return pop;
-      pop = document.createElement('div');
-      pop.id = 'arPreviewPop';
-      pop.hidden = true;
-      pop.innerHTML = `
-        <div class="arpp-wrap">
-          <div class="arpp-top">
-            <span id="arPreviewPopCut" class="arpp-cut"></span>
-          </div>
-          <div class="arpp-video"><canvas id="arPreviewPopCanvas" width="540" height="960"></canvas><span class="ar-play-feedback" aria-hidden="true"></span></div>
-          <div class="arpp-ctl">
-            <button type="button" id="arPreviewPopReplay" class="arpp-btn">↺ 처음부터</button>
-            <button type="button" id="arPreviewPopPlay" class="arpp-btn arpp-main"></button>
-          </div>
-        </div>`;
-      document.body.appendChild(pop);
-      pop.querySelector('#arPreviewPopPlay').onclick = () => { togglePlayPause(); arSyncPreviewPopBtn(); };
-      pop.querySelector('#arPreviewPopReplay').onclick = () => {
-        if (typeof seekToTime === 'function') seekToTime(0);
-        if (!isPlaying) togglePlayPause();
-        arSyncPreviewPopBtn();
-      };
-      return pop;
-    }
-    function arSyncPreviewPopBtn() {
-      const b = document.getElementById('arPreviewPopPlay');
-      if (b) b.textContent = isPlaying ? '⏸ 일시정지' : '▶ 재생';
-    }
+    // 작업물을 같은 화면에서 재생해 아래 편집 도구와 미리보기 위치를 유지한다.
     function arOpenPreviewPop() {
-      const pop = arEnsurePreviewPop();
-      window.arWorkPreview.open({
-        title: '오토릴스 미리보기', node: pop,
-        onOpen() {
-          pop.hidden = false;
-          if (!isPlaying) togglePlayPause();
-          arSyncPreviewPopBtn();
-          const main=window.__timelines?.main;
-          if (main) main.seek(main.currentTime);
-        },
-        onClose() {
-          pop.hidden = true;
-          if (isPlaying) togglePlayPause();
-        }
-      });
-    }
-    function arClosePreviewPop() {
-      if (arPreviewPopOpen()) window.arWorkPreview.close();
-    }
-    function arPreviewPopOpen() {
-      return document.getElementById('arPreviewPop')?.hidden === false;
+      togglePlayPause();
     }
 
     function scrollToMainMonitor() {

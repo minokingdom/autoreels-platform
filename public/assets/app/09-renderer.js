@@ -4483,7 +4483,6 @@
       };
 
       cv.addEventListener('pointerdown', (ev) => {
-        if (cv.closest('dialog.ar-work-preview')) return;
         const slides = arCollageBuildSlides(_arCollageState.photos, _arCollageState.layout);
         if (!slides.length) return;
         const slide = slides[_arCollageState.previewIdx];
@@ -4561,7 +4560,7 @@
       cv.addEventListener('pointercancel', endPtr);
       cv.addEventListener('contextmenu', (ev) => ev.preventDefault());
       cv.addEventListener('wheel', (ev) => {
-        if (_arCollageState.activeSlot < 0 || cv.closest('dialog.ar-work-preview')) return;
+        if (_arCollageState.activeSlot < 0) return;
         ev.preventDefault();
         const cur = arCollageGetEdit(_arCollageState.previewIdx, _arCollageState.activeSlot).scale || 1;
         const next = Math.max(1, Math.min(2.6, +(cur + (ev.deltaY < 0 ? 0.08 : -0.08)).toFixed(2)));
@@ -4614,12 +4613,6 @@
       } catch (_) {}
     }
 
-    function arCollageDrawCurrentSlide(slides = arCollageBuildSlides(_arCollageState.photos, _arCollageState.layout)) {
-      const cv = document.getElementById('arCollagePreviewCanvas');
-      const idx = _arCollageState.previewIdx;
-      if (cv && slides[idx]) arCollageRenderSlide(cv, slides[idx], _arCollageState.bg, idx, !cv.closest('dialog.ar-work-preview'));
-    }
-
     function arCollageRefreshUI() {
       const listEl = document.getElementById('arCollageSelectedList');
       const cntEl = document.getElementById('arCollagePickCount');
@@ -4633,7 +4626,6 @@
       const slotHint = document.getElementById('arCollageSlotHint');
       const cv = document.getElementById('arCollagePreviewCanvas');
       const n = _arCollageState.photos.length;
-      document.getElementById('arCollageWorkPreview').disabled = !n;
       if (cntEl) cntEl.textContent = `${n}/${AR_COLLAGE_MAX_PHOTOS}`;
       if (hintEl) hintEl.classList.toggle('hidden', n > 0);
       arCollageRenderLayoutPicker();
@@ -4661,6 +4653,7 @@
         }
       }
       const slides = arCollageBuildSlides(_arCollageState.photos, _arCollageState.layout);
+      document.getElementById('arCollageSlideNav').hidden = slides.length < 2 || Boolean(arCollageEditingCut);
       if (!slides.length) {
         if (metaEl) metaEl.textContent = '0컷 · 0.0초';
         if (pillsEl) pillsEl.innerHTML = '';
@@ -4696,18 +4689,8 @@
           if (scVal) scVal.textContent = `${Math.round((ed.scale || 1) * 100)}%`;
         }
       }
-      arCollageDrawCurrentSlide(slides);
+      if (cv) arCollageRenderSlide(cv, curSlide, _arCollageState.bg, _arCollageState.previewIdx, true);
     }
-
-    document.getElementById('arCollageWorkPreview')?.addEventListener('click', (event) => {
-      window.arWorkPreview.open({
-        title: '콜라주 미리보기',
-        node: document.getElementById('arCollageWorkStage'),
-        trigger: event.currentTarget,
-        onOpen: () => arCollageDrawCurrentSlide(),
-        onClose: () => arCollageDrawCurrentSlide()
-      });
-    });
 
     async function arOpenPhotoCollageModal(jumpSlideIdx) {
       const modal = document.getElementById('arPhotoCollageModal');
@@ -7740,7 +7723,6 @@
       if (!slides.length) return;
       window.arCutPanel.open({
         unit: '장', minCount: 3, maxCount: 10, motion: false, defaultY: {caption: .42, chip: .88},
-        preview: () => document.getElementById('arCnPreviewCanvas'),
         count: () => slides.length,
         index: () => _arCnState.activeIdx,
         select: arCnSelectSlide,
@@ -7790,16 +7772,20 @@
       });
     }
 
-    function arCnOpenSheet(tab, nativeTextTools = false) {
+    function arCnOpenSheet(tab, nativeTextTools = false, fromHistory = false) {
       const next = tab || 'ai';
+      const prev = _arCnState.sheetTab || 'ai';
       _arCnState.sheetOpen = true;
       _arCnState.sheetTab = next;
       arCnSyncSheetUI();
       const wf = document.getElementById('arCnWorkflowColumn');
       if (wf && window.innerWidth < 1024) wf.scrollTop = 0;
+      if (!fromHistory && next !== prev && typeof window.arNavPush === 'function') {
+        window.arNavPush({ mode: 'cardnews', cnTab: next });
+      }
       if (next === 'theme') { arCnRenderTemplateGallery(); arCnRenderGradientSwatches(); }
       if (next === 'text') arCnRenderFontChips();
-      if (next === 'text' && !nativeTextTools) arCnOpenInspector();
+      if (next === 'text' && !nativeTextTools && !fromHistory) arCnOpenInspector();
       if (next === 'photo') arCnLoadVaultStrip();
       if (next === 'export') arRunCardNewsCritic();
     }
@@ -7988,7 +7974,7 @@
       }
     }
 
-    function arOpenCardNewsModal() {
+    function arOpenCardNewsModal(fromHistory = false) {
       const view = document.getElementById('viewCardNews');
       if (!view) return;
       if (typeof arPauseForStudioEdit === 'function') arPauseForStudioEdit();
@@ -8011,34 +7997,28 @@
       document.body.classList.add('ar-cn-mode');
       document.body.classList.remove('ar-sheet-min', 'ar-sheet-full');
       _arCnState.sheetOpen = true;
-      _arCnState.sheetTab = 'ai';
+      if (!fromHistory) _arCnState.sheetTab = 'ai';
       arCnPopulateSamplePhotos(false);
       view.classList.remove('hidden');
       arCnRefreshUI();
       document.getElementById('arCnWorkflowColumn').scrollTop = 0;
+      if (!fromHistory && typeof window.arNavPush === 'function') {
+        window.arNavPush({ mode: 'cardnews', cnTab: _arCnState.sheetTab });
+      }
       if (window.innerWidth >= 1024) {
         try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
       }
     }
-    function arCnOpenWorkPreview(event) {
-      const stage = document.getElementById('arCnWorkStage');
-      if (stage.closest('dialog.ar-work-preview')) return;
-      window.arWorkPreview.open({
-        title: '카드뉴스 미리보기',
-        node: stage,
-        trigger: event.currentTarget
-      });
-    }
-    document.getElementById('arCnWorkPreview')?.addEventListener('click', arCnOpenWorkPreview);
-    document.getElementById('arCnStepMid')?.addEventListener('click', arCnOpenWorkPreview);
-    document.getElementById('arCnCanvasFrame')?.addEventListener('click', (event) => {
-      if (window.innerWidth < 1024) arCnOpenWorkPreview(event);
-    });
-    function arCloseCardNewsModal() {
+    function arCloseCardNewsModal(fromHistory = false) {
+      try { document.querySelectorAll('dialog.arcp[open]').forEach((d) => d.close()); } catch (_) {}
       document.body.classList.remove('ar-cn-mode', 'ar-sheet-min', 'ar-sheet-full');
       document.getElementById('viewCardNews')?.classList.add('hidden');
       document.getElementById('viewPreview')?.classList.remove('hidden');
       document.getElementById('mobileLiveDock')?.classList.remove('hidden');
+      if (!fromHistory) {
+        if (typeof arShowStudioServices === 'function') arShowStudioServices(false);
+        if (typeof window.arNavPush === 'function') window.arNavPush({ mode: 'reels' });
+      }
       if (typeof arSetupSheetMode === 'function') arSetupSheetMode();
       if (window.innerWidth >= 1024) {
         try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}

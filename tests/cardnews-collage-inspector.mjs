@@ -26,12 +26,14 @@ try {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   const panel = page.getByRole('dialog', {name:'카드 편집'});
-  const preview = page.locator('dialog.ar-work-preview[open]');
-  const closePreview = () => preview.getByRole('button', {name:'미리보기 닫기'}).click();
-  const assertHalfHeight = async () => {
-    const box = await preview.boundingBox();
-    assert.ok(Math.abs(box.y - mobile.height / 2) <= 1 && Math.abs(box.height - mobile.height / 2) <= 1,
-      '미리보기 시트는 화면 하단 절반을 차지해야 합니다.');
+  const checkUpperWork = async (selector, ratio) => {
+    const box = await page.locator(selector).boundingBox();
+    assert.ok(box && box.width > 70 && box.y >= -1 && box.y + box.height <= mobile.height / 2 + 1, selector + ' 상단 미리보기');
+    assert.ok(Math.abs(box.width / box.height - ratio) < .03, selector + ' 캔버스 비율');
+    assert.equal(await page.locator('dialog.ar-work-preview[open]').count(),0);
+  };
+  const screenshot = async name => {
+    if (process.env.INSPECTOR_SCREENSHOTS) await page.screenshot({path:path.join(process.env.INSPECTOR_SCREENSHOTS,name+'.png')});
   };
   await page.locator('#openCardNewsBtn').click();
   assert.equal(await panel.isVisible(),false);
@@ -39,23 +41,21 @@ try {
   const workflow = await page.locator('#arCnWorkflowColumn').boundingBox();
   assert.ok(Math.abs(workflow.y - mobile.height / 2) <= 1, '카드뉴스 작성 시트는 화면 중앙에서 시작해야 합니다.');
   await page.locator('#arCnTopicInput').fill('주말 시장 안내');
-  await page.locator('#arCnWorkPreview').click();
-  await preview.locator('#arCnPreviewCanvas').waitFor();
-  await assertHalfHeight();
-  const canvasRect = await preview.locator('#arCnPreviewCanvas').boundingBox();
-  assert.ok(canvasRect.width > 0 && Math.abs(canvasRect.width / canvasRect.height - .8) < .03);
-  await preview.getByRole('button',{name:'다음 장'}).click();
-  await closePreview();
+  await checkUpperWork('#arCnPreviewCanvas',.8);
+  await screenshot('cardnews-creation-mobile');
+  await page.locator('#arCnSlideNavRow').getByRole('button',{name:'다음 장'}).click();
   assert.equal(await page.locator('#arCnTopicInput').inputValue(),'주말 시장 안내');
   assert.equal(await page.locator('#arCnSlideMeta').textContent(),'2 / 7장');
-  await page.locator('#arCnCanvasFrame').click();
-  await preview.getByRole('button',{name:'이전 장'}).click();
-  await closePreview();
+  await page.locator('#arCnSlideNavRow').getByRole('button',{name:'이전 장'}).click();
   assert.equal(await page.locator('#arCnSlideMeta').textContent(),'1 / 7장');
-  await page.setViewportSize(desktop);
   await page.locator('[data-cn-dock="text"]').click();
   const click = name => panel.getByRole('button', {name,exact:true}).click();
   await panel.waitFor();
+  await checkUpperWork('#arCnPreviewCanvas',.8);
+  const inspectorBox = await panel.boundingBox();
+  assert.ok(Math.abs(inspectorBox.y - mobile.height / 2) <= 1 && Math.abs(inspectorBox.height - mobile.height / 2) <= 1);
+  if (process.env.CARDNEWS_MOBILE_CAPTURE) await page.screenshot({path:process.env.CARDNEWS_MOBILE_CAPTURE});
+  await page.setViewportSize(desktop);
   if (process.env.INSPECTOR_SCREENSHOTS) {
     await panel.scrollIntoViewIfNeeded();
     await panel.screenshot({path:path.join(process.env.INSPECTOR_SCREENSHOTS,'cardnews-inspector.png'),timeout:45000});
@@ -101,7 +101,7 @@ try {
   await page.evaluate(()=>closeCutEditor());
   await page.locator('#showStudioServices').click();
   await page.locator('#openPhotoCollageBtn').click();
-  assert.equal(await page.locator('#arCollageWorkPreview').isDisabled(),true);
+  assert.equal(await page.locator('#arCollageSlideNav').isVisible(),false);
   const photo = color => ({name:color+'.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="'+color+'"/></svg>')});
   await page.locator('#arCollageFileInput').setInputFiles(['purple','orange','blue','green'].map(photo));
   await page.waitForFunction(()=>_arCollageState.photos.length === 4);
@@ -111,18 +111,13 @@ try {
   const collageCanvas = page.locator('#arCollagePreviewCanvas');
   const canvasPixels = () => collageCanvas.evaluate(cv=>cv.toDataURL());
   const withSlotSelection = await canvasPixels();
-  await page.locator('#arCollageWorkPreview').click();
-  await preview.locator('#arCollagePreviewCanvas').waitFor();
-  await assertHalfHeight();
-  const finishedPhoto = await canvasPixels();
-  assert.notEqual(finishedPhoto,withSlotSelection);
-  await closePreview();
-  assert.equal(await canvasPixels(),withSlotSelection);
+  await checkUpperWork('#arCollagePreviewCanvas',9/16);
+  const sheetBox = await page.locator('#arCollageSheet').boundingBox();
+  assert.ok(Math.abs(sheetBox.y - mobile.height / 2) <= 1 && Math.abs(sheetBox.height - mobile.height / 2) <= 1);
   assert.equal(await page.locator('#arCollageSlotEditBar').isVisible(),true);
-  await page.locator('#arCollageWorkPreview').click();
-  await preview.locator('[onclick="arCollageStepPreview(1)"]').click();
-  assert.notEqual(await canvasPixels(),finishedPhoto);
-  await closePreview();
+  await screenshot('collage-creation-mobile');
+  await page.getByRole('button',{name:'다음 컷'}).click();
+  assert.notEqual(await canvasPixels(),withSlotSelection);
   assert.match(await page.locator('#arCollageSlideMeta').textContent(),/^2\/2컷/);
   await page.setViewportSize(desktop);
   await page.locator('#arCollageApplyBtn').click();
@@ -157,7 +152,7 @@ try {
   assert.ok(edited[2][0]>240 && edited[2][1]<10 && edited[2][2]<10);
   assert.equal(await page.evaluate(()=>window.__arPinnedCut),2);
   assert.deepEqual(errors,[]);
-  console.log('모바일 카드뉴스 제작 진입·작업물 미리보기·장 이동, 콜라주 완성 미리보기·칸 편집 복귀, PNG·릴스 변환 통과');
+  console.log('카드뉴스·콜라주 상단 실시간 미리보기 및 반높이 편집 시트, 장 이동·칸 편집, PNG·릴스 변환 통과');
 } finally {
   await browser.close();
   server.close();

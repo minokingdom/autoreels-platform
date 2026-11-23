@@ -7,11 +7,30 @@ import { chromium } from 'playwright';
 
 const root = fileURLToPath(new URL('../public/', import.meta.url));
 const isolated = {'Cross-Origin-Opener-Policy':'same-origin','Cross-Origin-Embedder-Policy':'require-corp'};
+async function checkSplit(view, controls) {
+  const state = await view.locator('body').evaluate((body, selector) => {
+    const lower = document.querySelector(selector).getBoundingClientRect();
+    const frame = document.getElementById('frame');
+    const upper = frame.getBoundingClientRect();
+    const stage = frame.closest('.stage').getBoundingClientRect();
+    return {
+      middle: innerHeight / 2, lower: lower.top, bottom: lower.bottom, stageBottom: stage.bottom,
+      imageWidth: upper.width, imageHeight: upper.height, imageBottom: upper.bottom,
+      visible: frame.contains(document.elementFromPoint(upper.left + upper.width / 2, upper.top + upper.height / 2)),
+      extraPreviews: body.querySelectorAll('canvas.arcp-live-preview,dialog.ar-work-preview').length,
+      modal: !!document.querySelector('dialog:modal')
+    };
+  }, controls);
+  assert.ok(Math.abs(state.lower-state.middle) <= 2 && Math.abs(state.bottom-state.middle*2) <= 2, JSON.stringify(state));
+  assert.ok(Math.abs(state.stageBottom-state.middle) <= 2 && state.imageBottom <= state.middle, JSON.stringify(state));
+  assert.ok(state.imageWidth > 140 && Math.abs(state.imageWidth/state.imageHeight-9/16) < .01 && state.visible, JSON.stringify(state));
+  assert.equal(state.modal,false); assert.equal(state.extraPreviews,0);
+}
 const browser = await chromium.launch(process.env.CHROME_PATH ? {executablePath:process.env.CHROME_PATH} : {});
 try {
   const page = await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
   const errors = [];
-  page.on('pageerror', e => errors.push(e.message));
+  page.on('pageerror', e => errors.push(e.stack || e.message));
   await page.route('**/*', async route => {
     const url = new URL(route.request().url());
     if (url.protocol === 'blob:' || url.protocol === 'data:') return route.continue();
@@ -28,20 +47,12 @@ try {
     s.pending = [{start:.4,end:2.2,text:'오늘 점심은 김치찌개'},{start:2.3,end:4.6,text:'국물이 진하게 우러났어요'}];
     flush(s);
   });
-  const preview = page.locator('dialog.ar-work-preview[open]');
-  assert.equal(await preview.count(), 0, '구간 추천만으로 미리보기를 열지 않는다.');
-  await page.getByRole('button', {name:'미리보기',exact:true}).click();
-  await page.waitForFunction(() => !video.paused && video.currentTime > .5 && video.currentTime < 4.6, null, {timeout:10000});
-  const size = await preview.locator('#frame').boundingBox();
-  assert.ok(size.width > 150 && size.height > 260 && Math.abs(size.width / size.height - 9 / 16) < .01);
-  assert.equal(await preview.locator('#overlay').count(), 1);
-  await preview.getByRole('button', {name:'미리보기 닫기'}).click();
-  assert.equal(await page.locator('.stage #sourceVideo').evaluate(media => media.paused), true);
+  await checkSplit(page,'.sheet');
   await page.locator('#clips .choice').click();
-  await preview.locator('#sourceVideo').waitFor();
-  await page.keyboard.press('Escape');
-  await preview.waitFor({state:'detached'});
-  assert.equal(await page.locator('#clips .choice').evaluate(button => document.activeElement === button), true);
+  await page.waitForFunction(() => !video.paused && video.currentTime > .5 && video.currentTime < 4.6, null, {timeout:10000});
+  await checkSplit(page,'.sheet');
+  await page.locator('.shorts-preview-actions #play').click();
+  assert.equal(await page.locator('.stage #sourceVideo').evaluate(media => media.paused), true);
   await page.locator('#openInEditor').click();
   const frame = page.frameLocator('dialog.ar-video-editor iframe');
   await frame.locator('#cutTimeline.has-media').waitFor({timeout:20000});
@@ -50,7 +61,7 @@ try {
     captions: [...document.querySelectorAll('#captionLane .cue-block')].map(b => b.textContent).sort()
   }));
   await frame.locator('#trackWave:not([hidden])').waitFor({timeout:10000});
-  assert.equal(await frame.locator('dialog.ar-work-preview[open]').count(), 0);
+  await checkSplit(frame,'dialog.arcp[open]');
   assert.deepEqual(state.takes, [[.4, 4.6]], '추천 구간만 타임라인에 올라가야 함');
   assert.deepEqual(state.captions, ['국물이 진하게 우러났어요', '오늘 점심은 김치찌개'], '받아쓴 대사가 자막 트랙에 올라가야 함');
   const inspector = frame.locator('dialog.arcp[open]');
@@ -101,28 +112,20 @@ try {
     throw Error('컷 사진이 미리보기에 나타나지 않았어요.');
   });
   await frame.locator('#headerStudioEdit').click();
-  const editedPreview = inspector.locator('canvas.arcp-live-preview');
-  await editedPreview.evaluate(async canvas => {
-    const ctx = canvas.getContext('2d');
-    for (let i=0; i<80; i++) {
-      const pixel = ctx.getImageData(canvas.width / 2,canvas.height / 2,1,1).data;
-      if (pixel[1] > 240 && pixel[0] < 20) return;
-      await new Promise(resolve => setTimeout(resolve,50));
-    }
-    throw Error('편집창 안에 선택한 컷의 사진이 나타나지 않았어요.');
-  });
+  await checkSplit(frame,'dialog.arcp[open]');
+  const canvas = frame.locator('.stage #overlay');
+  assert.ok(await canvas.evaluate(c => c.getContext('2d').getImageData(270,480,1,1).data[1] > 240));
+  await frame.locator('.shorts-preview-actions #play').click();
+  await frame.getByRole('button',{name:'미리보기 정지'}).waitFor();
+  await checkSplit(frame,'dialog.arcp[open]');
+  await frame.locator('#shortsRewind').click();
   await inspector.getByRole('button', {name:'편집창 닫기'}).click();
-  await frame.locator('#play').click();
-  const galleryPreview = frame.locator('dialog.ar-work-preview[open]');
-  await galleryPreview.getByRole('button', {name:'미리보기 정지'}).waitFor();
-  await galleryPreview.locator('#overlay').evaluate(canvas => {
-    const pixel = canvas.getContext('2d').getImageData(270,480,1,1).data;
-    if (pixel[1] < 240 || pixel[0] > 20) throw Error('시트에 편집한 컷이 나타나지 않았어요.');
-  });
-  await galleryPreview.getByRole('button', {name:'미리보기 닫기'}).click();
-  await frame.locator('.track-heading #play').waitFor();
-  assert.equal(await frame.locator('body').evaluate(() => !session.previewController && video.paused), true);
+  await checkSplit(frame,'#cutTimeline');
+  await frame.locator('#addTrackBtn').click();
+  await checkSplit(frame,'#mixDialog[open]');
+  await frame.locator('#mixClose').click();
   await frame.locator('#mixPublish').click();
+  await checkSplit(frame,'.sheet');
   await frame.locator('#save').click();
   await frame.locator('#download:not([hidden])').waitFor({timeout:20000});
   const exported = await frame.locator('#download').evaluate(async link => {

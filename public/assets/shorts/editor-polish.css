@@ -121,14 +121,48 @@ dialog.ar-video-editor iframe { display: block; width: 100%; height: 100%; borde
 
 .quick-video #headerStudioEdit { border: 1px solid #3b82f6; background: #132038; color: #bfdbfe; border-radius: 7px; padding: 5px 9px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
 
-.stage #shortsWorkPreview {
-  position: absolute; right: 10px; bottom: 10px; z-index: 2;
-  min-height: 40px; padding: 0 12px; border: 1px solid #515763; border-radius: 9px;
-  background: #181b22ed; color: #fff; font: inherit; font-size: 13px; font-weight: 600;
+/* 영상은 상단에 그대로 두고 하단 절반에서 목록·타임라인·편집 도구를 바꾼다. */
+body:has(#work:not([hidden])) #shortsScreen:has(#frame.loaded) {
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 42px minmax(0, calc(50dvh - 42px)) minmax(0, 1fr);
+  height: 100dvh; min-height: 0; overflow: hidden;
 }
-.ar-work-preview-body:has(> #frame) { container-type: size; }
-.ar-work-preview #frame {
-  flex: none; width: min(100cqw, 56.25cqh); height: auto; max-height: none;
-  margin: auto; border-radius: 8px;
+#shortsScreen:has(#frame.loaded) > header { grid-row: 1; }
+#shortsScreen:has(#frame.loaded) > .stage {
+  grid-area: 2 / 1; position: relative; min-height: 0; padding: 4px 0 8px;
+  background: #090a0c; container-type: size; overflow: hidden;
 }
-.quick-video .ar-work-preview #frame #overlay { pointer-events: none; }
+#shortsScreen .stage #frame.loaded {
+  width: min(calc(100cqw - 94px), 56.25cqh); height: auto; max-height: none; border-radius: 8px;
+}
+.shorts-preview-actions {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  display: grid; justify-items: center; gap: 7px;
+}
+.stage:not(:has(#play:not([hidden]))) .shorts-preview-actions { display: none; }
+.shorts-preview-actions button, .quick-video .shorts-preview-actions #headerStudioEdit {
+  position: static; width: 42px; height: 40px; margin: 0; padding: 0;
+  border: 1px solid #41454c; border-radius: 9px; color: #eee; background: #1b1c20;
+}
+.shorts-preview-actions #play { position: static; width: 42px; height: 40px; border-radius: 9px; }
+#shortsRewind { font-size: 20px; }
+#shortsScreen:has(#frame.loaded) > :is(.sheet, #cutTimeline) {
+  grid-area: 3 / 1; min-height: 0; height: 100%; max-height: none !important;
+  position: relative; inset: auto; border-radius: 16px 16px 0 0;
+  background: #17181c; border-top: 1px solid #34363c;
+}
+#shortsScreen:has(#frame.loaded) > .sheet { overflow: auto; overscroll-behavior: contain; }
+.quick-video.show-tools #shortsScreen:has(#frame.loaded) > #cutTimeline { visibility: hidden; }
+.quick-video #shortsScreen .sheet .handle { display: block; }
+#shortsScreen .sheet .handle, #cutTimeline.has-media::before, #mixDialog::before {
+  display: block; flex: none; width: 36px; height: 4px; border-radius: 8px;
+  margin: 9px auto; background: #85858b;
+}
+#cutTimeline.has-media::before, #mixDialog::before { content: ''; }
+#shortsScreen .sheet .handle, #mixDialog::before { position: sticky; top: 4px; z-index: 4; }
+.quick-video #mixDialog {
+  position: fixed; z-index: 30; inset: auto 0 0; margin: 0 auto;
+  width: min(100%, 540px); max-width: 100%; height: 50dvh; max-height: 50dvh;
+  padding: 0 14px max(12px, env(safe-area-inset-bottom)); box-sizing: border-box;
+  overflow: auto; overscroll-behavior: contain; border-radius: 16px 16px 0 0;
+}

@@ -163,7 +163,6 @@ if (quickEdit) {
   byId('previewPeak').addEventListener('click',async()=>{
     const s=session, peak=s?.clip?.peak;
     if (!Number.isFinite(peak) || s.exporting) return;
-    if (!openShortsWorkPreview(byId('previewPeak'))) return;
     video.currentTime=Math.max(0,peak-1.5); s.peakPreviewEnd=Math.min(video.duration,peak+1.2);
     try { await video.play(); } catch { detail(s,'강조 구간을 재생할 수 없어요.'); }
   });

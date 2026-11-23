@@ -45,19 +45,30 @@ try {
     assert.equal(offscreen,false);
     await menu.getByRole('button',{name:/오토릴스 만들기/}).click({timeout:12000});
     await page.locator('#studioPanel_topic').waitFor();
-    await page.locator('#studioWorkPreview').click();
-    const preview=page.locator('dialog.ar-work-preview[open]');
-    await preview.locator('#arPreviewPopCanvas').waitFor();
-    const bounds=await preview.evaluate(el=>[el.getBoundingClientRect().height,innerHeight,el.getBoundingClientRect().bottom]);
-    assert.ok(Math.abs(bounds[0]-bounds[1]/2)<1 && Math.abs(bounds[2]-bounds[1])<1);
-    if(width===390 && process.env.WORK_PREVIEW_CAPTURE)await page.screenshot({path:process.env.WORK_PREVIEW_CAPTURE});
-    await preview.getByRole('button',{name:'미리보기 닫기'}).click();
+    if(width===390){
+      await page.waitForFunction(()=>document.getElementById('reelCanvas').getBoundingClientRect().height>100);
+      const split=await page.evaluate(()=>({
+        h: innerHeight,
+        top: document.getElementById('studioWorkflowColumn').getBoundingClientRect().top,
+        bottom: document.getElementById('reelCanvas').getBoundingClientRect().bottom
+      }));
+      assert.ok(Math.abs(split.top-split.h/2)<2 && split.bottom<=split.top+1,JSON.stringify(split));
+      if(process.env.WORK_PREVIEW_CAPTURE)await page.screenshot({path:process.env.WORK_PREVIEW_CAPTURE});
+    }
     await page.locator('#studioCutEdit').click({timeout:8000});
     const inspector=page.locator('#cutEditorPanel');
     await inspector.locator('.ar-font-carousel').waitFor({timeout:8000});
     assert.equal(await inspector.locator('.ar-font-carousel button').count(),46);
     await inspector.getByRole('button',{name:'전환',exact:true}).click();
     await inspector.getByRole('button',{name:'자막',exact:true}).click();
+    if(width===390){
+      const split=await inspector.evaluate(el=>({sheet:el.getBoundingClientRect().top,canvas:document.getElementById('reelCanvas').getBoundingClientRect().bottom,half:innerHeight/2}));
+      assert.ok(Math.abs(split.sheet-split.half)<2 && split.canvas<=split.sheet+1,JSON.stringify(split));
+      await page.waitForFunction(()=>history.state?.arNav?.ov>0);
+      await page.goBack();
+      await inspector.waitFor({state:'hidden'});
+      await page.locator('#studioPanel_topic').waitFor();
+    }
     await page.reload({waitUntil:'domcontentloaded'});
     await menu.waitFor();
     await menu.getByRole('button',{name:/영상 편집기/}).click();

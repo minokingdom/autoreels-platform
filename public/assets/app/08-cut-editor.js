@@ -3949,10 +3949,13 @@
       let panel = document.getElementById('cutEditorPanel');
       const vp = document.getElementById('previewViewport');
       // 편집창은 영상을 덮지 않도록 영상 틀 바로 아래에 둠 (인스타 편집처럼 화면은 깨끗하게)
-      const container = vp ? vp.parentElement : document.body;
-      const place = (el) => { if (vp) vp.insertAdjacentElement('afterend', el); else document.body.appendChild(el); };
+      const docked=document.body.classList.contains('ar-work-docked');
+      const place=el=>{
+        if(docked || !vp)document.body.append(el);
+        else vp.insertAdjacentElement('afterend',el);
+      };
       if (panel) {
-        if (panel.previousElementSibling !== vp) place(panel);
+        if(docked ? panel.parentElement!==document.body : vp && panel.previousElementSibling!==vp)place(panel);
         panel.className = panel.classList.contains('hidden')
           ? 'hidden ar-preview-sheet-backdrop'
           : 'ar-preview-sheet-backdrop';
@@ -3962,7 +3965,7 @@
       panel.id = 'cutEditorPanel';
       panel.className = 'hidden ar-preview-sheet-backdrop';
       panel.setAttribute('role', 'dialog');
-      panel.setAttribute('aria-modal', 'true');
+      panel.setAttribute('aria-modal', 'false');
       panel.setAttribute('aria-label', '컷 요소별 편집 시트');
       panel.addEventListener('click', (ev) => {
         if (ev.target === panel) closeCutEditor();
@@ -4029,6 +4032,7 @@
       window.__arCutEditorOpen = false;
       const panel = document.getElementById('cutEditorPanel');
       if (panel) panel.classList.add('hidden');
+      if(document.body.classList.contains('ar-work-docked'))togglePinPreviewCut(-1);
       syncPreviewViewportFocusShift();
       renderCutOverlayEditorLayer();
     }

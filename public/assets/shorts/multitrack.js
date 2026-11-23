@@ -91,12 +91,14 @@ function renderMusicWave(s,total){
 }
 function showTools(target){
   if(!session?.clip)return;
+  document.querySelector('dialog.arcp[open]')?.close();
+  if (byId('mixDialog').open) byId('mixDialog').close();
   byId('editSettings').open=true;document.body.classList.add('show-tools');document.body.dataset.tools=target==='quickPublish'?'publish':'settings';
   requestAnimationFrame(()=>byId(target)?.scrollIntoView({block:'nearest'}));
 }
 function mixDialog(title,saveFn){
   const dialog=byId('mixDialog');
-  if(!dialog.open)dialog.showModal();
+  if(!dialog.open)dialog.show();
   byId('mixTitle').textContent=title;byId('mixError').textContent='';
   byId('mixOptions').replaceChildren();byId('fxPanel').hidden=true;
   mixDialogSave=saveFn;return byId('mixOptions');
@@ -961,11 +963,12 @@ if(quickEdit){
   const undo=byId('trackUndo');undo.textContent='↶';undo.setAttribute('aria-label','컷 편집 되돌리기');
   undo.addEventListener('click',()=>applyTrackTool('trackUndo'));
   const redo=mixButton('↷',()=>applyTrackTool('trackRedo'));redo.id='trackRedo';redo.disabled=true;redo.setAttribute('aria-label','컷 편집 다시 실행');
-  heading.prepend(undo,redo,settings);heading.append(play);
+  heading.prepend(undo,redo,settings);
+  document.querySelector('.shorts-preview-actions').append(cutEdit);
   const fx=byId('fxPanel');byId('mixOptions').after(fx);fx.hidden=true;
   byId('mixPublish').hidden=false;byId('mixPublish').addEventListener('click',()=>showTools('quickPublish'));
   const close=mixButton('닫기',()=>{document.body.classList.remove('show-tools');delete document.body.dataset.tools;});close.id='mixHideTools';
-  document.querySelector('.sheet').prepend(close);byId('trackTools').before(byId('mixActions'));byId('editSettings').append(byId('trackTools'));
+  document.querySelector('.sheet .handle').after(close);byId('trackTools').before(byId('mixActions'));byId('editSettings').append(byId('trackTools'));
   const replace=document.createElement('input');replace.id='mixReplace';replace.type='file';replace.accept='video/*';replace.hidden=true;document.body.append(replace);
   replace.addEventListener('change',async()=>{
     const s=session,file=replace.files[0];replace.value='';if(!file||!editableEffects())return;
@@ -1008,6 +1011,12 @@ if(quickEdit){
     });
     lbl.append(mb);
   }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && byId('mixDialog').open) {
+      e.preventDefault();
+      byId('mixDialog').close();
+    }
+  });
   byId('mixClose').addEventListener('click',()=>byId('mixDialog').close());
   byId('mixDone').addEventListener('click',async()=>{
     if(!editableEffects())return;

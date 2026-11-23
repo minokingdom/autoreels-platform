@@ -72,30 +72,12 @@
     const grip=make('div','arcp-grip');
     grip.setAttribute('aria-hidden','true');
     dialog.append(grip);
-    const screen=adapter.preview && make('canvas','arcp-live-preview');
-    if(screen){screen.setAttribute('aria-label','현재 작업물 미리보기');dialog.append(screen);}
-    let frame, last=-100;
-    function draw(now){
-      if(!dialog.open || !screen)return;
-      if(now-last>=100){
-        last=now;
-        const src=adapter.preview();
-        const w=src?.videoWidth||src?.width,h=src?.videoHeight||src?.height;
-        if(w && h && (src.readyState==null || src.readyState>=2)){
-          const scale=Math.min(1,420/w);
-          const cw=Math.round(w*scale), ch=Math.round(h*scale);
-          if(screen.width!==cw || screen.height!==ch){screen.width=cw;screen.height=ch;}
-          screen.getContext('2d').drawImage(src,0,0,cw,ch);
-        }
-      }
-      frame=requestAnimationFrame(draw);
-    }
     dialog.append(panel);
     document.body.append(dialog);
     current=dialog;
     dialog.addEventListener('close',()=>{
       if(current===dialog) current=null;
-      cancelAnimationFrame(frame);dialog.remove();
+      dialog.remove();
       adapter.close?.();
     },{once:true});
     let tab='caption', expanded=false, editing=false;
@@ -195,7 +177,10 @@
       }
       panel.scrollTop=scroll;
     }
-    render();dialog.showModal();if(screen)frame=requestAnimationFrame(draw);
+    render();dialog.show();
+    dialog.addEventListener('keydown',event=>{
+      if(event.key==='Escape'){event.preventDefault();dialog.close();}
+    });
   }
   function paint(ctx,style,defaultY,elapsed=1) {
     if(!style||style.hidden||!style.text)return;

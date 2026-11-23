@@ -3040,19 +3040,23 @@
       if(!view)return;
       const route=new URL(location.href);
       const special=Array.from(route.searchParams.keys()).some(k=>!['v','mobile','ind','utm_source','utm_medium','utm_campaign'].includes(k) && !(k==='from' && route.searchParams.get(k)==='shorts'));
-      document.getElementById('studioWorkPreview').addEventListener('click',arOpenPreviewPop);
+
       document.getElementById('studioCutEdit').addEventListener('click',()=>openCutEditor(window.__arPinnedCut >= 0 ? window.__arPinnedCut : getCutIndexAt(window.__timelines?.main?.currentTime || 0),'caption'));
       const openHome=!special && !route.hash && !/^\/admin/.test(route.pathname);
       view.classList.toggle('ar-service-home',openHome);
       document.getElementById('startAutoReels').addEventListener('click',()=>{
         arShowStudioServices(false);
         arSetupSheetMode();
-        switchStudioTab('topic');
+        switchStudioTab('topic',true);
+        if(typeof window.arNavPush==='function') window.arNavPush({mode:'reels',tab:'topic'});
+        else history.pushState({...history.state,arReelsWorkspace:true},'');
         arToggleSheet(false);
         document.getElementById('studioWorkflowColumn').scrollTop=0;
         document.getElementById('studioTabBtn_topic')?.focus({preventScroll:true});
       });
       document.getElementById('showStudioServices').addEventListener('click',()=>{
         arShowStudioServices(true);
+        if(typeof window.arNavPush==='function') window.arNavPush({mode:'home'});
+        else history.pushState({...history.state,arReelsWorkspace:false},'');
       });
     })();

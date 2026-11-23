@@ -51,7 +51,7 @@ try{
  assert.equal(await kakao.isVisible(),true);
  assert.equal(await page.locator('#scriptGeneratingStatus').isVisible(),false);
  await auth.getByRole('button',{name:'닫기'}).click();
- await page.evaluate(()=>toggleAudioMaster(true));
+ await page.evaluate(()=>{toggleAudioMaster(true);return AudioEngine.prefetchTtsBuffers(true);});
  assert.equal(await page.evaluate(()=>AudioEngine.ttsProvider),'browser');
  assert.deepEqual(guestGenerationRequests,[]);
  const user={id:'733',phone:null,name:'사용자',title:'',branch:'',promo:'',industry:'auto'};
