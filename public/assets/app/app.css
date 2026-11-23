@@ -2073,3 +2073,10 @@ body.ar-sheet.ar-work-docked,body.ar-cn-mode{--ar-sheet:calc(50dvh - var(--ar-ms
 body.ar-work-docked #cutEditorPanel.ar-preview-sheet-backdrop:not(.hidden){position:fixed;inset:auto 0 0;z-index:46;height:50dvh;max-height:50dvh;box-sizing:border-box;overflow:auto;overscroll-behavior:contain;border:1px solid var(--border);border-radius:18px 18px 0 0;background:var(--card);padding:0 10px max(8px,env(safe-area-inset-bottom));width:min(100%,800px);margin:0 auto}
 body.ar-work-docked #cutEditorPanel:not(.hidden)::before{content:'';display:block;position:sticky;top:8px;z-index:1;width:38px;height:4px;background:#767c85;border-radius:9px;margin:8px auto}
 body.ar-work-docked #cutEditorPanel .ar-preview-bottom-sheet{max-height:none;overflow:visible;width:100%;height:auto;border:0;background:transparent;box-shadow:none}
+
+/* Use the visible fixed viewport when mobile Chrome's toolbar changes height. */
+@media(max-width:1023px){
+  body.ar-cn-mode #arCnWorkflowColumn{top:50%;height:auto}
+  body.ar-cn-mode #arCnMonitorColumn{bottom:50%}
+  body.ar-cn-mode #arCnQuickBar{top:25%;max-height:49%;overflow-y:auto}
+}
