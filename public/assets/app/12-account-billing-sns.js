@@ -1442,7 +1442,7 @@
           if (typeof arShowStudioServices === 'function') arShowStudioServices(true);
         } else if (curNav.mode === 'cardnews') {
           if (prevMode !== 'cardnews' && typeof arOpenCardNewsModal === 'function') arOpenCardNewsModal(true);
-          if (typeof arCnOpenSheet === 'function') arCnOpenSheet(curNav.cnTab, true, true);
+          if (typeof arCnOpenSheet === 'function') arCnOpenSheet(curNav.cnTab, false, true);
         } else {
           if (prevMode === 'cardnews' && typeof arCloseCardNewsModal === 'function') arCloseCardNewsModal(true);
           if (typeof arShowStudioServices === 'function') arShowStudioServices(false);

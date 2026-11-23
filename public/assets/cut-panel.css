@@ -131,3 +131,19 @@ dialog.arcp[open]{display:flex;flex-direction:column;z-index:125;background:var(
 .ar-cut-right::before{transform:rotate(180deg);order:1}
 .arcp .arcp-strip{display:flex;overflow-x:auto;max-height:none;scroll-snap-type:x proximity}
 .arcp .arcp-strip button{scroll-snap-align:start}
+
+#arCnInspectorHost:empty { display:none }
+#arCnTab_text:has(.arcp-inline) {padding:0;min-width:0}
+#arCnTab_text:has(.arcp-inline) > :not(#arCnInspectorHost) {display:none}
+.arcp-inline {display:block;min-width:0;color:#f7f7f8;font:500 13px/1.4 "Pretendard Variable",Pretendard,system-ui,sans-serif}
+.arcp-inline .arcp-panel {overflow:visible;max-height:none;padding:10px 12px}
+.arcp-inline .arcp-row {margin-bottom:7px}
+.arcp-inline .arcp-nav .arcp-end {margin-left:auto}
+
+#arCnSheetBody > .studio-panel.hidden {display:none}
+@media(max-width:1023px) {
+  #arCnWorkflowColumn > .studio-card > div:first-child {display:flex;align-items:center;justify-content:space-between;gap:6px}
+  #arCnWorkflowColumn > .studio-card > div:first-child h2 {display:none}
+  #arCnCountRow {display:flex;align-items:center;min-width:0;overflow-x:auto}
+  #arCnCountRow > span {display:none}
+}

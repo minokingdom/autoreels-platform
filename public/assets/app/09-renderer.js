@@ -7699,7 +7699,7 @@
     };
 
     const AR_CN_TAB_ORDER = ['ai', 'theme', 'text', 'photo', 'export'];
-    const AR_CN_TAB_LABELS = { ai: '주제', theme: '테마', text: '폰트', photo: '사진', export: '저장' };
+    const AR_CN_TAB_LABELS = { ai: '주제', theme: '테마', text: '장 편집', photo: '사진', export: '저장' };
 
     function arCnSyncSheetUI() {
       const curTab = _arCnState.sheetTab || 'ai';
@@ -7733,16 +7733,19 @@
         document.body.style.setProperty('--ar-msb', `${bar.offsetHeight}px`);
       }
     }
+    let arCnInspector = null;
     function arCnOpenInspector() {
-      const slides = _arCnState.slides;
-      if (!slides.length) return;
-      window.arCutPanel.open({
+      if (!_arCnState.slides.length || arCnInspector) return;
+      arCnInspector = window.arCutPanel.open({
+        host: document.getElementById('arCnInspectorHost'),
+        close: () => { arCnInspector = null; },
+        identity: () => _arCnState.slides[_arCnState.activeIdx],
         unit: '장', minCount: 3, maxCount: 10, motion: false, defaultY: {caption: .42, chip: .88},
-        count: () => slides.length,
+        count: () => _arCnState.slides.length,
         index: () => _arCnState.activeIdx,
         select: arCnSelectSlide,
         read(i) {
-          const slide = slides[i];
+          const slide = _arCnState.slides[i];
           return {
             duration: slide.duration ?? 2.6, minDuration: .2, maxDuration: 60,
             caption: { ...slide.captionStyle, text: slide.title },
@@ -7750,7 +7753,7 @@
           };
         },
         write(i, patch) {
-          const slide = slides[i];
+          const slide = _arCnState.slides[i];
           if (patch.duration != null) slide.duration = patch.duration;
           for (const [key, field] of [['caption','title'], ['chip','handle']]) {
             if (!patch[key]) continue;
@@ -7762,6 +7765,7 @@
           }
         },
         order(action, i) {
+          const slides = _arCnState.slides;
           if (action === 'copy' && slides.length < 10) {
             slides.splice(i + 1, 0, {...slides[i]});
             _arCnState.activeIdx = i + 1;
@@ -7799,8 +7803,11 @@
         window.arNavPush({ mode: 'cardnews', cnTab: next });
       }
       if (next === 'theme') { arCnRenderTemplateGallery(); arCnRenderGradientSwatches(); }
-      if (next === 'text') arCnRenderFontChips();
-      if (next === 'text' && !nativeTextTools && !fromHistory) arCnOpenInspector();
+      if (next === 'text' && !nativeTextTools) arCnOpenInspector();
+      else {
+        arCnInspector?.close();
+        if (next === 'text') arCnRenderFontChips();
+      }
       if (next === 'photo') arCnLoadVaultStrip();
       if (next === 'export') arRunCardNewsCritic();
     }
@@ -7975,7 +7982,8 @@
         arCnRenderTemplateGallery();
         arCnRenderGradientSwatches();
       }
-      if (_arCnState.sheetTab === 'text') arCnRenderFontChips();
+      if (arCnInspector) arCnInspector.sync();
+      else if (_arCnState.sheetTab === 'text') arCnRenderFontChips();
 
       if (!skipInputSync && cur) {
         const kEl = document.getElementById('arCnKicker');
@@ -8025,6 +8033,7 @@
       }
     }
     function arCloseCardNewsModal(fromHistory = false) {
+      arCnInspector?.close();
       try { document.querySelectorAll('dialog.arcp[open]').forEach((d) => d.close()); } catch (_) {}
       document.body.classList.remove('ar-cn-mode', 'ar-sheet-min', 'ar-sheet-full');
       document.getElementById('viewCardNews')?.classList.add('hidden');

@@ -56,7 +56,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/cut-panel.css?v=preview-sheet" />
+  <link rel="stylesheet" href="/assets/cut-panel.css?v=card-page-inline" />
   <link rel="stylesheet" href="/assets/app/app.css?v=20261123-work-sheet-2" />
   <link rel="stylesheet" href="/assets/app/splash.css?v=studio-return" />
   <script>
@@ -1845,6 +1845,7 @@
 
             <!-- 3단계: 폰트 미리보기 (40종 상업용 무료) & 카드 문구 수정 -->
             <div id="arCnTab_text" class="hidden studio-panel p-4 sm:p-6 space-y-3.5">
+              <div id="arCnInspectorHost"></div>
               <div class="flex items-center justify-between gap-2 flex-wrap">
                 <span id="arCnEditCardLabel" class="text-[13px] font-semibold text-[#93c5fd]">1번 카드 폰트·문구</span>
                 <div class="flex items-center gap-1">
@@ -3018,7 +3019,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-collage-nine"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-card-page-inline"><\/script>');
     }
   </script>
   <!--

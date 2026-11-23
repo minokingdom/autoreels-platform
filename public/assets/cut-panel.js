@@ -66,23 +66,33 @@
   function open(adapter) {
     if (!adapter.count()) return;
     current?.close();
-    const dialog = make('dialog','arcp');
+    const host = adapter.host;
+    const dialog = host ? make('section','arcp arcp-inline') : make('dialog','arcp');
     dialog.setAttribute('aria-label',adapter.unit==='장'?'카드 편집':'컷 편집');
     const panel = make('div','arcp-panel');
     const grip=make('div','arcp-grip');
     grip.setAttribute('aria-hidden','true');
-    dialog.append(grip);
+    if (!host) dialog.append(grip);
     dialog.append(panel);
-    document.body.append(dialog);
-    current=dialog;
-    dialog.addEventListener('close',()=>{
-      if(current===dialog) current=null;
+    (host || document.body).append(dialog);
+    const session = {close: host ? dispose : () => dialog.close(), sync};
+    current=session;
+    function dispose() {
+      if(current===session) current=null;
       dialog.remove();
       adapter.close?.();
-    },{once:true});
+    }
+    if (!host) dialog.addEventListener('close',dispose,{once:true});
+    let lastIndex, lastCount, lastItem;
+    function sync() {
+      if (lastIndex === adapter.index() && lastCount === adapter.count() && lastItem === adapter.identity?.()) return;
+      editing=false;
+      render();
+    }
     let tab='caption', expanded=false, editing=false;
     function render() {
       const i=adapter.index(), n=adapter.count(), item=adapter.read(i), unit=adapter.unit||'컷';
+      lastIndex=i; lastCount=n; lastItem=adapter.identity?.();
       const selected=item[tab]||{};
       const scroll=panel.scrollTop, gridScroll=panel.querySelector('.arcp-grid')?.scrollTop||0;
       const horizontal=panel.querySelector('.arcp-strip')?.scrollLeft||0;
@@ -108,7 +118,7 @@
       nav.append(make('strong','',(i+1)+' / '+n+unit));
       button(nav,'›',()=>go(i+1),{disabled:i===n-1,title:'다음 '+unit});
       button(nav,'처음대로',()=>commit({caption:{text:item.caption?.text||''},chip:{text:item.chip?.text||''}}),{cls:'arcp-end',title:'이 '+unit+'의 자막과 아래 이름 스타일 초기화'});
-      button(nav,'×',()=>dialog.close(),{title:'편집창 닫기'});
+      if (!host) button(nav,'×',()=>dialog.close(),{title:'편집창 닫기'});
       const actions=row('arcp-actions');
       const moves=make('div','ar-cut-moves');actions.append(moves);
       [['left','◀','앞으로',i===0],['right','▶','뒤로',i===n-1],['copy','⧉','복사',n>=(adapter.maxCount||Infinity)],['delete','⌫','빼기',n<=(adapter.minCount||1)]].forEach(([key,glyph,label,disabled])=>{
@@ -129,7 +139,7 @@
       for(const [key,label] of Object.entries(tabs))button(switcher,label,()=>{tab=key;editing=false;render();},{active:tab===key});
       if(tab!=='caption'&&tab!=='chip'){
         const tools=row('arcp-tools');
-        for(const tool of adapter.tools(tab,i))button(tools,tool.label,()=>{dialog.close();tool.run();},{disabled:tool.disabled,active:tool.active});
+        for(const tool of adapter.tools(tab,i))button(tools,tool.label,()=>{session.close();tool.run();},{disabled:tool.disabled,active:tool.active});
       }else{
         const controls=row('arcp-controls');
         button(controls,'Aa 문구 고치기',()=>{editing=!editing;render();if(editing)panel.querySelector('textarea')?.focus();},{cls:'arcp-primary'});
@@ -175,9 +185,12 @@
         for(const [key,label,def] of [['x','가로',.5],['y','세로',adapter.defaultY?.[tab]??(tab==='caption'?.73:.87)]])slider(details,label,selected[key]??def,.05,.95,.01,v=>style({[key]:v}),v=>Math.round(v*100)+'%');
         button(details,'위치 초기화',()=>style({x:undefined,y:undefined}));
       }
+      if (host) panel.append(actions, duration);
       panel.scrollTop=scroll;
     }
-    render();dialog.show();
+    render();
+    if (host) return session;
+    dialog.show();
     dialog.addEventListener('keydown',event=>{
       if(event.key==='Escape'){event.preventDefault();dialog.close();}
     });

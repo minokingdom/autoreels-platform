@@ -25,7 +25,7 @@ try {
   await page.goto('http://127.0.0.1:' + server.address().port + '/studio', {waitUntil:'domcontentloaded'});
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  const panel = page.getByRole('dialog', {name:'카드 편집'});
+  const panel = page.getByRole('region', {name:'카드 편집'});
   const checkUpperWork = async (selector, ratio) => {
     const box = await page.locator(selector).boundingBox();
     assert.ok(box && box.width > 70 && box.y >= -1 && box.y + box.height <= mobile.height / 2 + 1, selector + ' 상단 미리보기');
@@ -52,8 +52,14 @@ try {
   const click = name => panel.getByRole('button', {name,exact:true}).click();
   await panel.waitFor();
   await checkUpperWork('#arCnPreviewCanvas',.8);
-  const inspectorBox = await panel.boundingBox();
-  assert.ok(Math.abs(inspectorBox.y - mobile.height / 2) <= 1 && Math.abs(inspectorBox.height - mobile.height / 2) <= 1);
+  const sheet = page.locator('#arCnWorkflowColumn');
+  assert.ok(Math.abs((await sheet.boundingBox()).y - mobile.height / 2) <= 1);
+  assert.equal(await sheet.getByRole('region',{name:'카드 편집'}).count(),1);
+  assert.equal(await page.locator('dialog.arcp[open]').count(),0);
+  assert.equal(await panel.locator('.arcp-strip button').count(),46);
+  await page.locator('#arCnSlideNavRow').getByRole('button',{name:'다음 장'}).click();
+  assert.equal(await panel.locator('.arcp-nav strong').textContent(),'2 / 7장');
+  await page.locator('#arCnSlideNavRow').getByRole('button',{name:'이전 장'}).click();
   if (process.env.CARDNEWS_MOBILE_CAPTURE) await page.screenshot({path:process.env.CARDNEWS_MOBILE_CAPTURE});
   await page.setViewportSize(desktop);
   if (process.env.INSPECTOR_SCREENSHOTS) {
