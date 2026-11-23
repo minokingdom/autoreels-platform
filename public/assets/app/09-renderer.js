@@ -4824,6 +4824,9 @@
         campaign._collageCutSec = _arCollageState.cutSec;
         campaign.hasCustomVideo = false;
         campaign.scenePlan = outImgs.map((_, i) => ({ photoIdx: i }));
+        if (typeof cutElementOverrides !== 'undefined' && cutElementOverrides) {
+          Object.keys(cutElementOverrides).forEach((k) => { if (cutElementOverrides[k]) delete cutElementOverrides[k].photo; });
+        }
         campaign.hideCardOnVideo = !includeCard;
         campaign.noDefaultCaptions = !includeScript;
 

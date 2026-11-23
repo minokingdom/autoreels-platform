@@ -5887,6 +5887,19 @@
         }
 
         if (t < mainDuration) {
+          if (typeof campaign !== 'undefined' && campaign && campaign.isPhotoCollageMode && typeof arRenderCollageThemedFullBleed === 'function') {
+            arRenderCollageThemedFullBleed(c, W, H, t, mainDuration, totalCuts, d, design, V);
+            const cutIdx = activeCutIdx;
+            const local = Math.min(1, Math.max(0, (t - cutIdx * cutDur) / cutDur));
+            const activePlan = (campaign.scenePlan && campaign.scenePlan[cutIdx]) || {};
+            if (activePlan._customWidget && activePlan.widget) {
+              drawCustomCutWidget(c, W, H, t, cutIdx, local, activePlan.widget, d, V);
+            }
+            drawCustomCutDecoOverlay(c, W, H, t, mainDuration, totalCuts, cutDur, design, V);
+            applyCutTransitionPost(c, W, H, transId, localSec, hadTransPre);
+            hadTransPre = false;
+            return;
+          }
           drawGenreBackground(c, W, H, t, mainDuration, V, false);
           const cutIdx = activeCutIdx;
           const local = Math.min(1, Math.max(0, (t - cutIdx * cutDur) / cutDur));

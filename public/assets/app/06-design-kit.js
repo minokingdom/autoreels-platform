@@ -322,6 +322,9 @@
       const cur = kitImg(S, k);
       const prev = kitImg(S, k - 1);
       const kb = (p, i) => {
+        if (typeof campaign !== 'undefined' && campaign && campaign.isPhotoCollageMode) {
+          return { s: 1.0 + 0.018 * p, x: 0, y: 0 };
+        }
         const m = (((i + (spec.seed || 0)) % 5) + 5) % 5;
         if (m === 0) return { s: 1.03 + 0.05 * p, x: 0, y: 0 };
         if (m === 1) return { s: 1.06, x: 12 - 24 * p, y: 0 };
@@ -519,7 +522,8 @@
       };
       if (L === 'full' || L === 'blinds') {
         kitPhoto(c, { x: 0, y: 0, w: W, h: H }, S, spec, L === 'blinds' ? { trans: 'blinds' } : null);
-        scrim(H * 0.42, 0.78);
+        const collageClean = typeof campaign !== 'undefined' && campaign && campaign.isPhotoCollageMode && campaign.noDefaultCaptions;
+        if (!collageClean) scrim(H * 0.42, 0.78);
         return { x: 30, y: 590, w: W - 60, h: 260, onPhoto: true };
       }
       if (L === 'duo') {
@@ -3228,8 +3232,9 @@
         const kineticCaps = ['words', 'stack', 'slam', 'marquee', 'longshadow'];
         const allowKineticCap = spec.deco === 'shapes' || spec.cat === '타이포' || spec.cat === '스포츠' || spec.isTrend;
         const autoCap = (cutIdx === 2 && allowKineticCap && !kineticCaps.includes(spec.cap)) ? 'words' : spec.cap;
+        const isCollageFull = typeof campaign !== 'undefined' && campaign && campaign.isPhotoCollageMode;
         const cutSpec = Object.assign({}, spec, {
-          layout: cutPlan.customLayout || autoLayout,
+          layout: cutPlan.customLayout || (isCollageFull ? 'full' : autoLayout),
           cap: cutPlan.customCap || autoCap,
           deco: cutPlan.customDeco || spec.deco
         });

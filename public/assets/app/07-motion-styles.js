@@ -852,10 +852,15 @@
       const mode = spec.mode;
 
       // 일정한 기준 스케일(baseScale) + 이전 컷의 정확한 최종 포즈(prevPose)를 이어받아 컷 경계에서 줄어들거나 툭 끊어짐 0%!
-      const baseScale = isVid ? 1.01 : 1.02;
-      const prevBaseScale = prevIsVid ? 1.01 : 1.02;
-      const curPose = arComputeSteadyPose(cutIdx, lp, w, h, baseScale, isVid);
-      const prevPose = arComputeSteadyPose(cutIdx - 1, 1.0, w, h, prevBaseScale, prevIsVid);
+      const isCollageSafe = typeof campaign !== 'undefined' && campaign && campaign.isPhotoCollageMode;
+      const baseScale = isCollageSafe ? 1.0 : (isVid ? 1.01 : 1.02);
+      const prevBaseScale = isCollageSafe ? 1.0 : (prevIsVid ? 1.01 : 1.02);
+      const curPose = isCollageSafe
+        ? { z: 1.0 + lp * 0.018, px: 0, py: 0 }
+        : arComputeSteadyPose(cutIdx, lp, w, h, baseScale, isVid);
+      const prevPose = isCollageSafe
+        ? { z: 1.018, px: 0, py: 0 }
+        : arComputeSteadyPose(cutIdx - 1, 1.0, w, h, prevBaseScale, prevIsVid);
       const steadyZoom = curPose.z;
       const steadyPx = curPose.px;
       const steadyPy = curPose.py;
@@ -1453,12 +1458,111 @@
       window.__arLastRenderedBoxes[cutIdx].badge = { cx: sx, cy: sy, w: Math.max(44, sw + 16), h: Math.max(44, sh + 16) };
     }
 
+    const AR_COLLAGE_INSET_S100 = new Set([
+      's100_art_sumi', 's100_film_super8', 's100_film_kodak35', 's100_film_polaroid',
+      's100_film_crt', 's100_film_newspaper', 's100_ed_museum', 's100_ed_whitegallery',
+      's100_ed_lookbook', 's100_gm_gameboy', 's100_gm_stickerbook', 's100_lf_perfume'
+    ]);
+    const AR_COLLAGE_FULL_MOTION = new Set([
+      'in_brush_seal', 'in_brush_letter', 'in_g_sub', 'in_g_cam', 'in_g_bookmark',
+      'in_h_plaque', 'in_mood', 'in_vlog', 'in_music', 'in_lock', 'in_cal',
+      'in_x_cover', 'in_x_tabs', 'in_x_walk', 'in_x_window', 'in_y_chat', 'in_y_torn',
+      'ed_vogue', 'ed_glasspill', 'stm_kinetic', 'stm_cinema', 'stm_sonar', 'stm_glint',
+      'stm_ticket', 'stm_glassbar', 'op_kinetic_bar', 'credits'
+    ]);
+    function arIsCollageNativeFullBleed(spec) {
+      if (!spec || spec.referenceStyle) return false;
+      const M = String(spec.mstyle || '');
+      if (M.startsWith('pro_')) return true;
+      if (M.startsWith('s100_')) return !AR_COLLAGE_INSET_S100.has(M);
+      return AR_COLLAGE_FULL_MOTION.has(M);
+    }
+    // 사진 콜라주(9:16 완성 프레임)에 액자/카드/분할/장르 테마를 입힐 때 작아지거나 잘리지 않고
+    // 풀화면(0,0,W,H)을 유지하면서 선택한 테마의 색감·필름 질감·테두리·자막 분위기를 입혀주는 전용 렌더러
+    function arRenderCollageThemedFullBleed(c, W, H, t, mainDuration, totalCuts, d, sp, V) {
+      const cutDur = mainDuration / Math.max(1, totalCuts);
+      const cutIdx = Math.min(totalCuts - 1, Math.floor(t / cutDur));
+      const local = t - cutIdx * cutDur;
+      const S = kitScene(t, mainDuration, false);
+      const M = String((sp && (sp.mstyle || sp.id)) || '');
+      const accent = (sp && sp.accent) || (V && V.accent) || '#f59e0b';
+      const isWarm = /film|kodak|polaroid|postcard|linen|diary|vintage|warm|cafe|arch|window|vinyl|brush|letter|sunset|autumn|retro/i.test(M);
+      const isDarkMood = /noir|night|cinema|dark|cyber|neon|tech|hud|crt|game|sports|racing/i.test(M);
+      const isFrameMood = /gallery|museum|magazine|vogue|editorial|poster|postcard|arch|window|linen|lookbook|luxury|classic|swiss|keynote/i.test(M);
+
+      // 1) 9:16 콜라주 100% 풀화면 유지 (잘림·축소 0%)
+      inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, 1.0, 0);
+
+      // 2) 선택한 테마의 분위기(색보정·필름 그레인·미세 비네팅·헤어라인 프레임)를 사진 가리지 않고 자연스럽게 얹기
+      if (isWarm) {
+        inWarm(c, 0, 0, W, H, 0.45);
+        inGrain(c, W, H, t, 0.08);
+      } else if (isDarkMood) {
+        c.save();
+        const vg = c.createRadialGradient(W / 2, H / 2, W * 0.28, W / 2, H / 2, H * 0.68);
+        vg.addColorStop(0, 'rgba(0,0,0,0)');
+        vg.addColorStop(1, 'rgba(5,7,14,0.34)');
+        c.fillStyle = vg;
+        c.fillRect(0, 0, W, H);
+        c.restore();
+        inGrain(c, W, H, t, 0.06);
+      } else {
+        c.save();
+        c.globalCompositeOperation = 'soft-light';
+        c.globalAlpha = 0.14;
+        c.fillStyle = accent;
+        c.fillRect(0, 0, W, H);
+        c.restore();
+      }
+      if (isFrameMood) {
+        c.save();
+        c.strokeStyle = accent;
+        c.globalAlpha = 0.45;
+        c.lineWidth = 1.5;
+        c.strokeRect(14, 14, W - 28, H - 28);
+        c.restore();
+      }
+
+      // 3) 자막이 켜져 있을 때만 선택한 테마 폰트·색상으로 깔끔하게 표시
+      const raw = (campaign.cutCaptions && campaign.cutCaptions[cutIdx]) || campaign.hook || '';
+      const caption = gCleanCaption(raw);
+      if (caption && !campaign.noDefaultCaptions) {
+        const bg = c.createLinearGradient(0, H * 0.66, 0, H);
+        bg.addColorStop(0, 'rgba(0,0,0,0)');
+        bg.addColorStop(1, 'rgba(0,0,0,0.68)');
+        c.fillStyle = bg;
+        c.fillRect(0, H * 0.66, W, H * 0.34);
+        const key = mCapFont(cutIdx, (sp && sp.font) || 'pretM');
+        const face = (typeof KIT_FONTS !== 'undefined' && KIT_FONTS[key]) || 'Pretendard, sans-serif';
+        const wr = kWrap(c, caption, W * 0.84, 3, W * 0.072, W * 0.044, key);
+        const ent = mEase(mClamp(local / 0.45));
+        c.save();
+        c.globalAlpha = ent;
+        c.font = `700 ${wr.size}px ${face}`;
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.shadowColor = 'rgba(0,0,0,0.55)';
+        c.shadowBlur = 12;
+        const lh = wr.size * 1.32;
+        const y0 = H * 0.82 - ((wr.lines.length - 1) * lh) / 2 + (1 - ent) * 10;
+        wr.lines.forEach((ln, i) => {
+          c.fillStyle = i === 0 ? '#ffffff' : accent;
+          c.fillText(ln, W / 2, y0 + i * lh);
+        });
+        c.restore();
+      }
+    }
+
     function renderMotionFrame(c, W, H, t, mainDuration, totalCuts, d, spec, V) {
       const custom = spec.custom;
       const userColor = campaign.colorKey && campaign.colorKey !== 'default';
       const pal = typeof IND !== 'undefined' && IND.key !== 'auto' ? AR_IND_PALETTE[IND.key] : null;
       const accent = custom ? custom.colors.accent : userColor ? ((V && V.accent) || spec.accent) : pal ? pal[0] : spec.accent;
       const sp = Object.assign({}, spec, { accent }, pal && !spec.light && !spec.insta && !userColor ? { bg1: pal[1], bg2: pal[2] } : {});
+      if (t < mainDuration && typeof campaign !== 'undefined' && campaign && campaign.isPhotoCollageMode && !arIsCollageNativeFullBleed(spec)) {
+        arRenderCollageThemedFullBleed(c, W, H, t, mainDuration, totalCuts, d, sp, V);
+        return;
+      }
       if (spec.mstyle === 'in_lookbook_still') {
         pauseAllCutVideos();
         const lookbook = userColor ? sp : spec;

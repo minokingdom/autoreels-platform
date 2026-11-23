@@ -92,16 +92,23 @@
       inPhotoFade(c, S, cutIdx, local, 0, 0, W, H, opts.zoom || 1.02, 0);
       if (opts.tint) { c.fillStyle = opts.tint; c.fillRect(0, 0, W, H); }
       if (opts.pattern) { c.fillStyle = s100Pattern(c, opts.pattern); c.fillRect(0, 0, W, H); }
+      const collageNoCap = typeof campaign !== 'undefined' && campaign && campaign.isPhotoCollageMode && campaign.noDefaultCaptions;
       if (opts.topScrim) {
+        c.save();
+        if (collageNoCap) c.globalAlpha *= 0.22;
         const tg = c.createLinearGradient(0, 0, 0, opts.topH || 210);
         tg.addColorStop(0, opts.topScrim); tg.addColorStop(1, 'rgba(0,0,0,0)');
         c.fillStyle = tg; c.fillRect(0, 0, W, opts.topH || 210);
+        c.restore();
       }
       if (opts.botScrim) {
+        c.save();
+        if (collageNoCap) c.globalAlpha *= 0.22;
         const bh = opts.botH || 340;
         const bg = c.createLinearGradient(0, H - bh, 0, H);
         bg.addColorStop(0, 'rgba(0,0,0,0)'); bg.addColorStop(1, opts.botScrim);
         c.fillStyle = bg; c.fillRect(0, H - bh, W, bh);
+        c.restore();
       }
     }
 
