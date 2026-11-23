@@ -106,8 +106,15 @@ try {
   assert.deepEqual(await page.evaluate(()=>[window.__arPinnedCut,window.__arActiveCutElKey,computeFittedDurations().lengths[2]]),[2,'transition',2.8]);
   await page.evaluate(()=>closeCutEditor());
   await page.locator('#showStudioServices').click();
+  await page.setViewportSize(mobile);
   await page.locator('#openPhotoCollageBtn').click();
   assert.equal(await page.locator('#arCollageSlideNav').isVisible(),false);
+  const emptySheet = await page.locator('#arCollageSheet').boundingBox();
+  assert.ok(emptySheet && Math.abs(emptySheet.y - mobile.height / 2) <= 1);
+  const picker = page.locator('#arCollageSheet label').filter({has:page.locator('#arCollageFileInput')});
+  const pickerBox = await picker.boundingBox();
+  assert.ok(pickerBox && pickerBox.x >= 0 && pickerBox.x + pickerBox.width <= mobile.width);
+  assert.equal(await page.locator('#arCollagePickCount').textContent(),'0/9');
   const photo = color => ({name:color+'.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="'+color+'"/></svg>')});
   await page.locator('#arCollageFileInput').setInputFiles(['purple','orange','blue','green'].map(photo));
   await page.waitForFunction(()=>_arCollageState.photos.length === 4);

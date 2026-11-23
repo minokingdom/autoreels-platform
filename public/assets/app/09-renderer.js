@@ -4616,7 +4616,7 @@
     function arCollageRefreshUI() {
       const listEl = document.getElementById('arCollageSelectedList');
       const cntEl = document.getElementById('arCollagePickCount');
-      const modal = document.getElementById('arPhotoCollageModal');
+      const hintEl = document.getElementById('arCollageEmptyHint');
       const metaEl = document.getElementById('arCollageSlideMeta');
       const pillsEl = document.getElementById('arCollageSlotPills');
       const editBar = document.getElementById('arCollageSlotEditBar');
@@ -4627,10 +4627,7 @@
       const cv = document.getElementById('arCollagePreviewCanvas');
       const n = _arCollageState.photos.length;
       if (cntEl) cntEl.textContent = `${n}/${AR_COLLAGE_MAX_PHOTOS}`;
-      modal?.classList.toggle('ar-cl-empty', n === 0);
-      const vault = document.getElementById('arCollageVaultWrap');
-      const vaultHome = n ? listEl?.parentElement : document.getElementById('arCollageEmptyActions');
-      if (vault && vaultHome && vault.parentElement !== vaultHome) vaultHome.append(vault);
+      hintEl?.classList.toggle('hidden', n > 0);
       arCollageRenderLayoutPicker();
       if (listEl) {
         if (!n) {
@@ -4801,9 +4798,6 @@
       arCollageRefreshUI();
       if (reachedLimit && typeof arToast === 'function') arToast(`최대 ${AR_COLLAGE_MAX_PHOTOS}장까지 고를 수 있어요.`);
     }
-    document.getElementById('arCollageEmptyPick')?.addEventListener('click', () => {
-      document.getElementById('arCollageFileInput')?.click();
-    });
     function arCollageClearPhotos() {
       _arCollageState.photos = [];
       _arCollageState.previewIdx = 0;

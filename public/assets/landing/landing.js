@@ -91,7 +91,7 @@
   }
   function schedule() {
     clearTimeout(cutTimer);
-    if (!reelVisible || document.hidden || heroP > 0.3) return;
+    if (!reelVisible || document.hidden || heroP > 0.12) return;
     cutTimer = setTimeout(function () { showCut(cutIdx + 1); schedule(); }, reducedMotion ? CUT_MS + 1500 : CUT_MS);
   }
   function setReel(key) {
@@ -121,6 +121,7 @@
       b.setAttribute('aria-checked', on ? 'true' : 'false');
     });
     applyTheme(key);
+    requestHeroFrame();
     if (soundOn) playBgm(r.bgm, null);
     showCut(0);
     schedule();
@@ -373,17 +374,18 @@
   var base = null;       // 휴대폰 원래 위치(고정 영역 기준)
   var tiltX = 0, tiltY = 0, tiltTX = 0, tiltTY = 0;
   var heroOn = true;
+  var heldFrame = null;
 
   function clamp01(v) { return v < 0 ? 0 : (v > 1 ? 1 : v); }
   function seg(p, a, b) { return clamp01((p - a) / (b - a)); }
-  function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+  function ease(t) { return t * t * (3 - 2 * t); }
   function lerp(a, b, t) { return a + (b - a) * t; }
 
   // 컷별 화면 구도 (휴대폰 미리보기와 같은 움직임을 스크롤로)
   var CUT_FRAMES = [
-    [1.16, 0, 0, 1.04, 0, 0],
-    [1.5, 9, 4, 1.42, 4, 2],
-    [1.32, -6, -6, 1.48, -7, -8]
+    [1.02, 0, 0, 1.08, 1, 0],
+    [1.08, 1, 0, 1.12, -1, -1],
+    [1.12, -1, -1, 1.05, 0, 0]
   ];
 
   function measure() {
@@ -401,7 +403,7 @@
   function measureHero() {
     if (!heroEl) return;
     heroTop = heroEl.getBoundingClientRect().top + window.scrollY;
-    heroSpan = Math.max(1, heroEl.offsetHeight - window.innerHeight);
+    heroSpan = Math.max(1, heroEl.offsetHeight - pinEl.offsetHeight);
   }
   function applyHero(now) {
     if (!heroEl || !base) return;
@@ -413,13 +415,26 @@
     smoothP += (target - smoothP) * k;
     if (Math.abs(target - smoothP) < 0.0004) smoothP = target;
     var p = smoothP;
+    var hold = p > 0.12;
+    var wasHeld = heroP > 0.12;
     heroP = p;
+    if (hold && (!wasHeld || !heldFrame || heldFrame.key !== reelKey)) {
+      clearTimeout(cutTimer);
+      imgEl.style.animationPlayState = 'paused';
+      var transform = getComputedStyle(imgEl).transform;
+      var pose = new DOMMatrixReadOnly(transform === 'none' ? undefined : transform);
+      heldFrame = {key: reelKey, zoom: pose.a, x: pose.e, y: pose.f};
+    } else if (!hold && wasHeld) {
+      imgEl.style.animationPlayState = '';
+      heldFrame = null;
+      schedule();
+    }
 
     var e1 = ease(seg(p, 0, 0.14));     // 제목 빠짐
-    var e2 = ease(seg(p, 0.04, 0.34));  // 휴대폰 가운데로, 카메라 다가감
-    var e3 = ease(seg(p, 0.34, 0.54));  // 릴스가 화면 전체로
-    var e4 = seg(p, 0.58, 0.94);        // 스크롤로 컷 넘김
-    var e5 = ease(seg(p, 0.9, 0.98));   // 마지막 버튼
+    var e2 = ease(seg(p, 0.025, 0.38));  // 휴대폰 가운데로, 카메라 다가감
+    var e3 = ease(seg(p, 0.30, 0.63));  // 릴스가 화면 전체로
+    var e4 = seg(p, 0.60, 0.88);        // 스크롤로 컷 넘김
+    var e5 = ease(seg(p, 0.83, 0.94));   // 마지막 버튼
 
     fadeEls.forEach(function (el, i) {
       if (!el) return;
@@ -431,14 +446,14 @@
     if (dimEl) dimEl.style.opacity = (0.35 * e2 + 0.5 * e3).toFixed(3);
 
     // 휴대폰: 원래 자리 → 화면 가운데, 조금 커짐
-    var targetH = base.H * 0.82;
-    var sc = lerp(1, Math.max(1, targetH / base.h), e2);
+    var fit = Math.min(base.W * 0.82 / base.w, base.H * 0.74 / base.h);
+    var sc = lerp(1, fit, e2);
     var cx0 = base.x + base.w / 2, cy0 = base.y + base.h / 2;
     var dx = (base.W / 2 - cx0) * e2, dy = (base.H / 2 - cy0) * e2;
     var tilt = 1 - e2;
     if (phoneEl) {
       phoneEl.style.transform = 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) scale(' + sc.toFixed(4) + ') perspective(900px) rotateY(' + (tiltX * 7 * tilt).toFixed(2) + 'deg) rotateX(' + (-tiltY * 5 * tilt).toFixed(2) + 'deg)';
-      phoneEl.style.opacity = String(1 - clamp01((e3 - 0.1) * 5));
+      phoneEl.style.opacity = String(1 - ease(seg(e3, 0.18, 0.78)));
     }
 
     // 전체 화면 레이어: 휴대폰 화면 크기에서 시작해 화면 끝까지 펼쳐짐
@@ -450,7 +465,7 @@
       var k = 1 - e3;
       var rad = 36 * sc * k;
       fullEl.style.clipPath = 'inset(' + (top * k).toFixed(1) + 'px ' + (right * k).toFixed(1) + 'px ' + (bottom * k).toFixed(1) + 'px ' + (left * k).toFixed(1) + 'px round ' + rad.toFixed(1) + 'px)';
-      fullEl.style.opacity = String(clamp01(e3 * 5));
+      fullEl.style.opacity = String(ease(seg(e3, 0, 0.58)));
       var live = e3 > 0.6;
       fullEl.classList.toggle('is-live', live);
       if (live) fullEl.removeAttribute('inert'); else fullEl.setAttribute('inert', '');
@@ -464,11 +479,20 @@
         fullCut = ci;
         if (fullSub) {
           fullSub.textContent = r.subs[ci];
-          fullSub.classList.remove('is-in'); void fullSub.offsetWidth; fullSub.classList.add('is-in');
+          fullSub.animate?.([{opacity:0}, {opacity:1}], {duration:180});
         }
       }
       var f = CUT_FRAMES[ci % CUT_FRAMES.length];
-      if (fullImg) fullImg.style.transform = 'scale(' + lerp(f[0], f[3], lt).toFixed(4) + ') translate(' + lerp(f[1], f[4], lt).toFixed(2) + '%,' + lerp(f[2], f[5], lt).toFixed(2) + '%)';
+      if (fullImg && fullImg.naturalHeight && e3 > 0) {
+        // 휴대폰에서 보이던 사진의 중심과 배율을 이어받아 같은 사진을 펼친다.
+        var imageW = base.H * fullImg.naturalWidth / fullImg.naturalHeight;
+        var pose = heldFrame || {zoom:1, x:0, y:0};
+        var startScale = Math.max((cw - 2*pad) / imageW, (ch - 2*pad) / base.H) * pose.zoom;
+        var endScale = Math.max(base.W / imageW, 1) * lerp(f[0], f[3], ease(lt));
+        var x = lerp(cx0 + dx - base.W / 2 + pose.x * sc, base.W * lerp(f[1], f[4], ease(lt)) / 100, e3);
+        var y = lerp(cy0 + dy - base.H / 2 + pose.y * sc, base.H * lerp(f[2], f[5], ease(lt)) / 100, e3);
+        fullImg.style.transform = 'translate(-50%, -50%) translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,0) scale(' + lerp(startScale,endScale,e3).toFixed(5) + ')';
+      }
       for (var b = 0; b < fullBars.length; b++) {
         fullBars[b].style.transform = 'scaleX(' + (b < ci ? 1 : (b === ci ? lt : 0)).toFixed(4) + ')';
       }
@@ -480,25 +504,35 @@
     }
   }
 
+  var framePending = false;
+  function requestHeroFrame() {
+    if (reducedMotion || !base || !heroOn || framePending) return;
+    framePending = true;
+    requestAnimationFrame(heroLoop);
+  }
   function heroLoop(now) {
+    framePending = false;
     if (!heroOn) { lastFrame = 0; return; }
     tiltX += (tiltTX - tiltX) * 0.08;
     tiltY += (tiltTY - tiltY) * 0.08;
     applyHero(now || performance.now());
-    requestAnimationFrame(heroLoop);
+    var target = clamp01((window.scrollY - heroTop) / heroSpan);
+    if (target !== smoothP || Math.abs(tiltTX - tiltX) + Math.abs(tiltTY - tiltY) > 0.002) requestHeroFrame();
+    else lastFrame = 0;
   }
 
   if (heroEl && pinEl && phoneEl && !reducedMotion) {
-    var remeasure = function () { measure(); measureHero(); };
+    var remeasure = function () { measure(); measureHero(); requestHeroFrame(); };
     remeasure();
     window.addEventListener('resize', remeasure);
     window.addEventListener('load', remeasure);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure).catch(function () {});
-    requestAnimationFrame(heroLoop);
+    window.addEventListener('scroll', requestHeroFrame, {passive:true});
+    fullImg?.addEventListener('load', requestHeroFrame);
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (ents) {
         var was = heroOn; heroOn = ents[0].isIntersecting;
-        if (heroOn && !was) requestAnimationFrame(heroLoop);
+        if (heroOn && !was) requestHeroFrame();
       }).observe(heroEl);
     }
     // 마우스 위치에 따라 장면과 휴대폰이 살짝 기욺
@@ -507,8 +541,9 @@
         var r = pinEl.getBoundingClientRect();
         tiltTX = ((e.clientX - r.left) / r.width - 0.5) * 2;
         tiltTY = ((e.clientY - r.top) / r.height - 0.5) * 2;
+        requestHeroFrame();
       });
-      pinEl.addEventListener('pointerleave', function () { tiltTX = 0; tiltTY = 0; });
+      pinEl.addEventListener('pointerleave', function () { tiltTX = 0; tiltTY = 0; requestHeroFrame(); });
     }
   }
 
