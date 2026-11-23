@@ -884,18 +884,32 @@
             <div id="arMemePane_radar" class="space-y-2.5">
               <div class="flex items-center gap-1 overflow-x-auto scrollbar-none pb-0.5">
                 <button type="button" data-meme-cat="all" onclick="arLoadMemeRadar('all')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white text-[#111113] shrink-0 cursor-pointer">Top 10 전체</button>
+                <button type="button" data-meme-cat="국내 예능" onclick="arLoadMemeRadar('국내 예능')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">📺 국내 예능</button>
+                <button type="button" data-meme-cat="드라마·영화" onclick="arLoadMemeRadar('드라마·영화')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🎬 드라마·영화</button>
+                <button type="button" data-meme-cat="공연·콘서트" onclick="arLoadMemeRadar('공연·콘서트')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🎤 공연·콘서트</button>
                 <button type="button" data-meme-cat="급상승 밈" onclick="arLoadMemeRadar('급상승 밈')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🔥 급상승 밈</button>
                 <button type="button" data-meme-cat="동물·유머" onclick="arLoadMemeRadar('동물·유머')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🐱 동물·유머</button>
-                <button type="button" data-meme-cat="실시간 이슈" onclick="arLoadMemeRadar('실시간 이슈')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">⚡ 실시간 이슈</button>
-                <button type="button" data-meme-cat="해외 바이럴" onclick="arLoadMemeRadar('해외 바이럴')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🌏 해외 바이럴</button>
                 <button type="button" onclick="arLoadMemeRadar(window.__arMemeCat||'all', true)" class="ml-auto px-2 py-1 rounded-lg text-[11px] text-[#93c5fd] bg-white/5 hover:bg-white/10 shrink-0 cursor-pointer">🔄 실시간 수집</button>
               </div>
+              <div class="flex items-center gap-1 overflow-x-auto scrollbar-none pb-0.5 text-[10.5px]">
+                <span class="text-[#9ca3af] shrink-0 mr-1">🇰🇷 국내 원본 바로 불러오기:</span>
+                <button type="button" onclick="document.getElementById('arMemeDirectUrlInput').value='무한도전';arImportMemeFromUrlInput('arMemeDirectUrlInput');" class="px-2 py-0.5 rounded-md bg-white/6 hover:bg-[#2563eb] text-[#e4e4e7] shrink-0 cursor-pointer">📺 무한도전</button>
+                <button type="button" onclick="document.getElementById('arMemeDirectUrlInput').value='런닝맨 이광수';arImportMemeFromUrlInput('arMemeDirectUrlInput');" class="px-2 py-0.5 rounded-md bg-white/6 hover:bg-[#2563eb] text-[#e4e4e7] shrink-0 cursor-pointer">🏃 런닝맨</button>
+                <button type="button" onclick="document.getElementById('arMemeDirectUrlInput').value='신서유기 강호동';arImportMemeFromUrlInput('arMemeDirectUrlInput');" class="px-2 py-0.5 rounded-md bg-white/6 hover:bg-[#2563eb] text-[#e4e4e7] shrink-0 cursor-pointer">🐉 신서유기</button>
+                <button type="button" onclick="document.getElementById('arMemeDirectUrlInput').value='도깨비 공유';arImportMemeFromUrlInput('arMemeDirectUrlInput');" class="px-2 py-0.5 rounded-md bg-white/6 hover:bg-[#2563eb] text-[#e4e4e7] shrink-0 cursor-pointer">🎬 도깨비</button>
+                <button type="button" onclick="document.getElementById('arMemeDirectUrlInput').value='더글로리';arImportMemeFromUrlInput('arMemeDirectUrlInput');" class="px-2 py-0.5 rounded-md bg-white/6 hover:bg-[#2563eb] text-[#e4e4e7] shrink-0 cursor-pointer">👏 더글로리</button>
+                <button type="button" onclick="document.getElementById('arMemeDirectUrlInput').value='선재업고튀어';arImportMemeFromUrlInput('arMemeDirectUrlInput');" class="px-2 py-0.5 rounded-md bg-white/6 hover:bg-[#2563eb] text-[#e4e4e7] shrink-0 cursor-pointer">☂️ 선업튀</button>
+                <button type="button" onclick="document.getElementById('arMemeDirectUrlInput').value='범죄도시 마동석';arImportMemeFromUrlInput('arMemeDirectUrlInput');" class="px-2 py-0.5 rounded-md bg-white/6 hover:bg-[#2563eb] text-[#e4e4e7] shrink-0 cursor-pointer">👊 범죄도시</button>
+                <button type="button" onclick="document.getElementById('arMemeDirectUrlInput').value='백종원';arImportMemeFromUrlInput('arMemeDirectUrlInput');" class="px-2 py-0.5 rounded-md bg-white/6 hover:bg-[#2563eb] text-[#e4e4e7] shrink-0 cursor-pointer">🍳 백종원</button>
+                <button type="button" onclick="document.getElementById('arMemeDirectUrlInput').value='아이유 콘서트';arImportMemeFromUrlInput('arMemeDirectUrlInput');" class="px-2 py-0.5 rounded-md bg-white/6 hover:bg-[#2563eb] text-[#e4e4e7] shrink-0 cursor-pointer">🎤 아이유 콘서트</button>
+                <button type="button" onclick="document.getElementById('arMemeDirectUrlInput').value='세븐틴 콘서트';arImportMemeFromUrlInput('arMemeDirectUrlInput');" class="px-2 py-0.5 rounded-md bg-white/6 hover:bg-[#2563eb] text-[#e4e4e7] shrink-0 cursor-pointer">🔥 세븐틴 콘서트</button>
+              </div>
               <div class="flex items-center gap-1.5">
-                <input id="arMemeSearchInput" type="text" placeholder="원하는 밈·이슈 검색 (예: 칠가이, 고양이 하?, 신조어 퀴즈)" onkeydown="if(event.key==='Enter'){event.preventDefault();arSearchCustomMeme();}" class="studio-input flex-1 h-8 px-3 text-[12px]" />
+                <input id="arMemeSearchInput" type="text" placeholder="국내 예능·드라마·영화·공연·밈 검색 (예: 무한도전, 도깨비, 마동석, 아이유 콘서트)" onkeydown="if(event.key==='Enter'){event.preventDefault();arSearchCustomMeme();}" class="studio-input flex-1 h-8 px-3 text-[12px]" />
                 <button type="button" onclick="arSearchCustomMeme()" class="btn-primary h-8 px-3 text-[11.5px] font-semibold shrink-0 cursor-pointer">밈 설계</button>
               </div>
               <div class="flex items-center gap-1.5">
-                <input id="arMemeDirectUrlInput" type="text" placeholder="🔗 원본 밈 링크(TikTok · Tenor · GIPHY · YouTube Shorts) 또는 영문 밈 이름 붙여넣기" onkeydown="if(event.key==='Enter'){event.preventDefault();arImportMemeFromUrlInput('arMemeDirectUrlInput');}" class="studio-input flex-1 h-8 px-3 text-[12px]" />
+                <input id="arMemeDirectUrlInput" type="text" placeholder="🔗 국내 예능·드라마·배우·콘서트 이름 또는 원본 링크(TikTok·Tenor·GIPHY·Shorts) 입력" onkeydown="if(event.key==='Enter'){event.preventDefault();arImportMemeFromUrlInput('arMemeDirectUrlInput');}" class="studio-input flex-1 h-8 px-3 text-[12px]" />
                 <button type="button" onclick="arImportMemeFromUrlInput('arMemeDirectUrlInput')" class="h-8 px-3 rounded-[8px] bg-[#16a34a] hover:bg-[#15803d] text-white text-[11.5px] font-bold shrink-0 cursor-pointer">🎬 원본 영상 가져오기</button>
               </div>
               <div id="arMemeRadarStatus" class="text-[11px] text-[#9ca3af]">YouTube · Google Trends · Tenor 실제 원본 밈 MP4 Top 10 보드입니다.</div>
@@ -3119,7 +3133,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-real-meme-mp4-origins"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-kr-meme-originals-sync"><\/script>');
     }
   </script>
   <!--

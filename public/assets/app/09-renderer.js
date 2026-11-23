@@ -9406,25 +9406,90 @@
       const hasCustomVid = Boolean(cutObj && cutObj._customCutVideo && cutObj._customCutVideo.readyState >= 2);
       const hasStoreImg = Boolean(cutObj && cutObj._storeImg && cutObj._storeImg.complete && cutObj._storeImg.naturalWidth > 0);
 
-      // 1) 만약 이 컷에 AI 1:1 생성 이미지나 원본 업로드 비디오, 또는 우리 가게 실사가 있으면 그 비주얼을 줌/패닝 모션으로 먼저 풀스크린 렌더링
+      // 1) 만약 이 컷에 실제 원본 밈 MP4나 AI 1:1 생성 이미지, 또는 우리 가게 실사가 있으면 한국 쇼츠 밈 프레임으로 렌더링
       if (hasCustomVid || hasAiImg || hasStoreImg) {
         const srcMedia = hasCustomVid ? cutObj._customCutVideo : (hasAiImg ? cutObj._aiSceneImg : cutObj._storeImg);
+        if (hasCustomVid && srcMedia.paused && typeof isPlaying !== 'undefined' && isPlaying) {
+          srcMedia.play().catch(() => {});
+        }
         const sw = srcMedia.videoWidth || srcMedia.naturalWidth || W;
         const sh = srcMedia.videoHeight || srcMedia.naturalHeight || H;
-        const zoom = hasCustomVid ? 1.0 : (1.04 + cutProg * 0.08);
-        const panX = hasCustomVid ? 0 : Math.sin(cutIdx * 1.7 + cutProg * Math.PI) * 14 * sc;
-        const panY = hasCustomVid ? 0 : Math.cos(cutIdx * 1.3 + cutProg * Math.PI) * 10 * sc;
-        const r = Math.max(W / sw, H / sh) * zoom;
+        const aspect = sw / Math.max(1, sh);
+
         ctx.save();
-        ctx.drawImage(srcMedia, (W - sw * r) / 2 + panX, (H - sh * r) / 2 + panY, sw * r, sh * r);
-        // 상하단 가독성 시네마 비네팅
-        const vig = ctx.createLinearGradient(0, 0, 0, H);
-        vig.addColorStop(0, 'rgba(6, 8, 15, 0.58)');
-        vig.addColorStop(0.25, 'rgba(6, 8, 15, 0.06)');
-        vig.addColorStop(0.62, 'rgba(6, 8, 15, 0.14)');
-        vig.addColorStop(1, 'rgba(6, 8, 15, 0.82)');
-        ctx.fillStyle = vig;
-        ctx.fillRect(0, 0, W, H);
+        if (hasCustomVid && aspect > 0.68) {
+          // ★ 핵심: 가로형/정방형(예능·드라마·영화·콘서트·밈) 원본 영상이 상단 제목이나 하단 자막과 부딪히거나 좌우 인물이 잘리지 않도록!
+          // 배경에는 다크 시네마 블러 백드롭을 깔고, 중앙 스테이지(Y: 16.5% ~ 71.5%)에 원본 비율을 살려 선명한 라운드 카드로 배치합니다.
+          const bgR = Math.max(W / sw, H / sh) * 1.15;
+          ctx.globalAlpha = 0.28;
+          ctx.drawImage(srcMedia, (W - sw * bgR) / 2, (H - sh * bgR) / 2, sw * bgR, sh * bgR);
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = 'rgba(7, 9, 15, 0.76)';
+          ctx.fillRect(0, 0, W, H);
+
+          const stageX = Math.round(W * 0.035);
+          const stageY = Math.round(H * 0.168);
+          const stageW = Math.round(W * 0.93);
+          const stageH = Math.round(H * 0.545);
+          const rad = Math.round(18 * sc);
+
+          ctx.save();
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
+          ctx.shadowBlur = Math.round(22 * sc);
+          ctx.fillStyle = '#090b10';
+          drawRoundedRect(ctx, stageX, stageY, stageW, stageH, rad);
+          ctx.fill();
+          ctx.restore();
+
+          ctx.save();
+          drawRoundedRect(ctx, stageX, stageY, stageW, stageH, rad);
+          ctx.clip();
+          // 중앙 스테이지 안을 꽉 채우되(적절한 cover/contain 균형) 얼굴·자막이 잘리지 않도록 스케일링
+          const fitContain = Math.min(stageW / sw, stageH / sh);
+          const fitCover = Math.max(stageW / sw, stageH / sh);
+          const drawScale = aspect > 1.38 ? (fitContain * 1.08) : (fitContain * 0.35 + fitCover * 0.65);
+          const dw = sw * drawScale;
+          const dh = sh * drawScale;
+          ctx.drawImage(srcMedia, stageX + (stageW - dw) / 2, stageY + (stageH - dh) / 2, dw, dh);
+          ctx.restore();
+
+          // 스테이지 테두리 & 현재 컷 배지
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+          ctx.lineWidth = Math.max(1.5, 2 * sc);
+          drawRoundedRect(ctx, stageX, stageY, stageW, stageH, rad);
+          ctx.stroke();
+
+          const badgeTxt = `CUT 0${cutIdx + 1} · ${mood}`;
+          ctx.font = `800 ${Math.round(11.5 * sc)}px "Pretendard Variable", sans-serif`;
+          const bw = ctx.measureText(badgeTxt).width + Math.round(20 * sc);
+          const bh = Math.round(23 * sc);
+          const bx = stageX + Math.round(12 * sc);
+          const by = stageY + Math.round(12 * sc);
+          ctx.fillStyle = 'rgba(10, 12, 18, 0.82)';
+          drawRoundedRect(ctx, bx, by, bw, bh, Math.round(8 * sc));
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(96, 165, 250, 0.5)';
+          ctx.lineWidth = 1 * sc;
+          ctx.stroke();
+          ctx.fillStyle = '#93c5fd';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(badgeTxt, bx + bw / 2, by + bh / 2);
+        } else {
+          // 9:16 세로형 원본 영상 또는 AI/매장 이미지는 풀스크린 + 상하단 시네마 비네팅
+          const zoom = hasCustomVid ? 1.0 : (1.04 + cutProg * 0.08);
+          const panX = hasCustomVid ? 0 : Math.sin(cutIdx * 1.7 + cutProg * Math.PI) * 14 * sc;
+          const panY = hasCustomVid ? 0 : Math.cos(cutIdx * 1.3 + cutProg * Math.PI) * 10 * sc;
+          const r = Math.max(W / sw, H / sh) * zoom;
+          ctx.drawImage(srcMedia, (W - sw * r) / 2 + panX, (H - sh * r) / 2 + panY, sw * r, sh * r);
+          const vig = ctx.createLinearGradient(0, 0, 0, H);
+          vig.addColorStop(0, 'rgba(6, 8, 15, 0.64)');
+          vig.addColorStop(0.22, 'rgba(6, 8, 15, 0.06)');
+          vig.addColorStop(0.66, 'rgba(6, 8, 15, 0.12)');
+          vig.addColorStop(1, 'rgba(6, 8, 15, 0.86)');
+          ctx.fillStyle = vig;
+          ctx.fillRect(0, 0, W, H);
+        }
         ctx.restore();
         if (hasCustomVid || hasAiImg) return;
       } else {
@@ -9747,68 +9812,108 @@
       ctx.restore();
     }
 
+    function arBalanceKoreanCaptionLines(text, ctx, maxW, maxCharsPerLine = 15) {
+      const clean = String(text || '').replace(/^\[[^\]]+\]\s*/, '').replace(/\s+/g, ' ').trim();
+      if (!clean) return [];
+      const words = clean.split(' ').filter(Boolean);
+      if (words.length <= 1 || (clean.length <= maxCharsPerLine && ctx.measureText(clean).width <= maxW)) {
+        return [clean];
+      }
+      // 2줄 균형 분할: 전체 글자수의 절반 지점에 가장 가까운 단어 경계에서 줄바꿈하여 "vs 현실"처럼 1~2단어만 2째줄에 남지 않게 함
+      let bestSplit = Math.max(1, Math.floor(words.length / 2));
+      let bestDiff = 999;
+      for (let i = 1; i < words.length; i++) {
+        const l1 = words.slice(0, i).join(' ');
+        const l2 = words.slice(i).join(' ');
+        if (ctx.measureText(l1).width <= maxW && ctx.measureText(l2).width <= maxW) {
+          const diff = Math.abs(l1.length - l2.length);
+          if (diff < bestDiff) {
+            bestDiff = diff;
+            bestSplit = i;
+          }
+        }
+      }
+      const line1 = words.slice(0, bestSplit).join(' ');
+      const line2 = words.slice(bestSplit).join(' ');
+      return [line1, line2].filter(Boolean);
+    }
+
     function arRenderMemeShortsOverlay(ctx, W, H, t, mainDuration) {
       const sc = W / 540;
       const isMemeMode = document.body.classList.contains('ar-meme-mode') && Boolean(window.__arCurrentMemeItem);
       const nCuts = Math.max(1, (campaign.ttsLines && campaign.ttsLines.length) || 6);
-      const cutDur = Math.max(0.2, mainDuration / nCuts);
-      const cIdx = Math.min(nCuts - 1, Math.max(0, Math.floor(t / cutDur)));
-      const cProg = Math.min(0.999, Math.max(0, (t - cIdx * cutDur) / cutDur));
 
-      // ★ 밈 쇼츠 모드일 때는 무관한 배경이나 이중 자막 박스 대신, 해당 컷 대사와 1:1로 맞물리는 밈 스테이지가 화면 전체를 책임집니다!
+      // ★ 핵심: 자막·음성·영상 1:1 싱크!
+      // AudioEngine(성우 음성)이 사용하는 실제 타임라인 시각(window.__realTimelineT)과 getCutIndexAt / getCutStart / getCutLengths를
+      // 그대로 공유하여, 성우가 n번째 문장을 읽는 순간 n번째 컷의 영상과 n번째 노래방 자막이 0.01초의 오차도 없이 정확히 함께 전환됩니다!
+      const realT = (typeof window.__realTimelineT === 'number' && Number.isFinite(window.__realTimelineT))
+        ? window.__realTimelineT
+        : (typeof toRealTime === 'function' ? toRealTime(t) : t);
+      const cutLens = (typeof getCutLengths === 'function') ? getCutLengths() : [];
+      let cIdx = 0;
+      let cProg = 0;
+      if (cutLens.length === nCuts && typeof getCutIndexAt === 'function' && typeof getCutStart === 'function') {
+        cIdx = Math.min(nCuts - 1, Math.max(0, getCutIndexAt(realT)));
+        const cStart = getCutStart(cIdx);
+        const cLen = Math.max(0.2, Number(cutLens[cIdx]) || (mainDuration / nCuts));
+        cProg = Math.min(0.999, Math.max(0, (realT - cStart) / cLen));
+        if (isMemeMode && typeof syncCutVideos === 'function') {
+          syncCutVideos(cIdx, Math.max(0, realT - cStart));
+        }
+      } else {
+        const cutDur = Math.max(0.2, mainDuration / nCuts);
+        cIdx = Math.min(nCuts - 1, Math.max(0, Math.floor(realT / cutDur)));
+        cProg = Math.min(0.999, Math.max(0, (realT - cIdx * cutDur) / cutDur));
+        if (isMemeMode && typeof syncCutVideos === 'function') {
+          syncCutVideos(cIdx, Math.max(0, realT - cIdx * cutDur));
+        }
+      }
+
+      // ★ 밈 쇼츠 모드일 때는 무관한 배경이나 이중 자막 박스 대신, 해당 컷 대사와 1:1로 맞물리는 원본 밈 스테이지가 화면 전체를 책임집니다!
       if (isMemeMode) {
         const memeItem = window.__arCurrentMemeItem;
         const cutObj = (memeItem.cuts && memeItem.cuts[cIdx]) || { line: campaign.ttsLines?.[cIdx] || '', mood: `컷 ${cIdx + 1}` };
-        arDrawMemeCharacterStage(ctx, W, H, t, cIdx, cProg, memeItem, cutObj);
+        arDrawMemeCharacterStage(ctx, W, H, realT, cIdx, cProg, memeItem, cutObj);
       }
 
-      // 1) 상단 고정 후킹 제목 배너 (해외·밈 영상 리메이크용)
+      // 1) 상단 고정 후킹 제목 배너 (2줄 균형 줄바꿈 적용 — "vs 현실"처럼 어색하게 한 단어만 떨어지지 않음)
       const hookBanner = String(window.__arMemeHookBanner || '').trim();
       if (hookBanner) {
         ctx.save();
-        const fs = Math.round(23 * sc);
+        const fs = Math.round(21 * sc);
         ctx.font = `900 ${fs}px "Pretendard Variable", sans-serif`;
-        const maxW = W * 0.88;
-        const words = hookBanner.split(/\s+/);
-        const lines = [];
-        let cur = '';
-        for (const w of words) {
-          const next = cur ? `${cur} ${w}` : w;
-          if (cur && ctx.measureText(next).width > maxW - 36 * sc) { lines.push(cur); cur = w; }
-          else cur = next;
-        }
-        if (cur) lines.push(cur);
-        const showLines = lines.slice(0, 2);
-        const lh = Math.round(fs * 1.28);
-        const boxH = showLines.length * lh + Math.round(24 * sc);
-        const boxW = Math.min(W * 0.92, Math.max(...showLines.map((l) => ctx.measureText(l).width)) + Math.round(44 * sc));
+        const maxW = W * 0.84;
+        const showLines = arBalanceKoreanCaptionLines(hookBanner, ctx, maxW, 15).slice(0, 2);
+        const lh = Math.round(fs * 1.32);
+        const boxH = showLines.length * lh + Math.round(20 * sc);
+        const boxW = Math.min(W * 0.92, Math.max(...showLines.map((l) => ctx.measureText(l).width)) + Math.round(38 * sc));
         const bx = (W - boxW) / 2;
-        const by = Math.round(H * 0.055);
-        ctx.shadowColor = 'rgba(0,0,0,0.55)';
-        ctx.shadowBlur = Math.round(16 * sc);
-        ctx.fillStyle = 'rgba(13, 14, 18, 0.94)';
-        drawRoundedRect(ctx, bx, by, boxW, boxH, Math.round(14 * sc));
+        const by = Math.round(H * 0.042);
+        ctx.shadowColor = 'rgba(0,0,0,0.65)';
+        ctx.shadowBlur = Math.round(14 * sc);
+        ctx.fillStyle = 'rgba(11, 13, 19, 0.95)';
+        drawRoundedRect(ctx, bx, by, boxW, boxH, Math.round(13 * sc));
         ctx.fill();
         ctx.strokeStyle = '#facc15';
-        ctx.lineWidth = Math.max(2, 2.5 * sc);
+        ctx.lineWidth = Math.max(2, 2.2 * sc);
         ctx.stroke();
         ctx.shadowBlur = 0;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#fef08a';
         showLines.forEach((ln, idx) => {
-          ctx.fillText(ln, W / 2, by + Math.round(14 * sc) + idx * lh + lh / 2 - 2);
+          ctx.fillText(ln, W / 2, by + Math.round(11 * sc) + idx * lh + lh / 2 - 1);
         });
         ctx.restore();
       }
 
-      // 2) 외국어 자막 덮어쓰기 마스크 + 노래방식 단어별 싱크 자막
+      // 2) 외국어 자막 덮어쓰기 마스크 + 노래방식 단어별 싱크 자막 (하이라이트 박스가 옆 글자와 절대 겹치지 않도록 단어 간격 & 패딩 정밀 설계!)
       const mask = window.__arCaptionCoverMask || {};
       const showMask = Boolean(mask.enabled);
       const showKaraoke = Boolean(window.__arKaraokeMode || showMask || isMemeMode);
       if (showMask || showKaraoke) {
         const rawLine = String((campaign.ttsLines && campaign.ttsLines[cIdx]) || (window.__arCurrentMemeItem?.cuts?.[cIdx]?.line) || '').replace(/\s+/g, ' ').trim();
-        const centerY = H * (showMask ? (Number(mask.maskY) || 0.81) : 0.74);
+        const centerY = H * (showMask ? (Number(mask.maskY) || 0.78) : 0.775);
         const maskH = H * (Number(mask.maskH) || 0.13);
 
         ctx.save();
@@ -9827,63 +9932,78 @@
         if (rawLine) {
           const tokens = rawLine.split(' ').filter(Boolean);
           const activeWordIdx = Math.min(tokens.length - 1, Math.floor(cProg * tokens.length));
-          const kFs = Math.round(25 * sc);
+          const kFs = Math.round(23.5 * sc);
           ctx.font = `900 ${kFs}px "Pretendard Variable", sans-serif`;
-          const maxLineW = W * 0.84;
-          const rows = [];
-          let curRow = [];
-          let curW = 0;
-          const spaceW = ctx.measureText(' ').width;
-          tokens.forEach((tok, ti) => {
-            const tw = ctx.measureText(tok).width;
-            if (curRow.length && curW + spaceW + tw > maxLineW) {
-              rows.push(curRow);
-              curRow = [{ tok, ti, tw }];
-              curW = tw;
-            } else {
-              curRow.push({ tok, ti, tw });
-              curW += (curRow.length > 1 ? spaceW : 0) + tw;
+          // ★ 핵심: 단어 사이 간격(wordGap)을 13px로 넉넉히 확보하고, 하이라이트 캡슐 padX는 4.5px로 설계하여
+          // 노란 하이라이트 박스가 앞뒤 단어("여러분도 [요리] 실패담")를 절대 침범하지 않게 합니다!
+          const wordGap = Math.round(13 * sc);
+          const pillPadX = Math.round(4.5 * sc);
+          const pillPadY = Math.round(3.5 * sc);
+          const maxLineW = W * 0.80;
+
+          // 14자 이상이거나 폭이 넓으면 2줄로 균형 있게 분할
+          const measuredTokens = tokens.map((tok, ti) => ({ tok, ti, tw: ctx.measureText(tok).width }));
+          const fullOneLineW = measuredTokens.reduce((a, b) => a + b.tw, 0) + Math.max(0, measuredTokens.length - 1) * wordGap;
+          let displayRows = [];
+          if (measuredTokens.length >= 4 && (fullOneLineW > maxLineW || rawLine.length >= 15)) {
+            let bestIdx = Math.ceil(measuredTokens.length / 2);
+            let minDiff = 99999;
+            for (let split = 1; split < measuredTokens.length; split++) {
+              const r1 = measuredTokens.slice(0, split);
+              const r2 = measuredTokens.slice(split);
+              const w1 = r1.reduce((a, b) => a + b.tw, 0) + (r1.length - 1) * wordGap;
+              const w2 = r2.reduce((a, b) => a + b.tw, 0) + (r2.length - 1) * wordGap;
+              if (w1 <= W * 0.86 && w2 <= W * 0.86 && Math.abs(w1 - w2) < minDiff) {
+                minDiff = Math.abs(w1 - w2);
+                bestIdx = split;
+              }
             }
-          });
-          if (curRow.length) rows.push(curRow);
-          const displayRows = rows.slice(0, 2);
-          const rowLH = Math.round(kFs * 1.42);
+            displayRows = [measuredTokens.slice(0, bestIdx), measuredTokens.slice(bestIdx)];
+          } else {
+            displayRows = [measuredTokens];
+          }
+
+          const rowLH = Math.round(kFs * 1.46);
           const startY = centerY - ((displayRows.length - 1) * rowLH) / 2;
 
           if (!showMask) {
-            const widest = Math.max(...displayRows.map((r) => r.reduce((acc, it) => acc + it.tw, 0) + (r.length - 1) * spaceW));
-            const bgW = Math.min(W * 0.92, widest + Math.round(38 * sc));
+            const widest = Math.max(...displayRows.map((r) => r.reduce((acc, it) => acc + it.tw, 0) + Math.max(0, r.length - 1) * wordGap));
+            const bgW = Math.min(W * 0.93, widest + Math.round(36 * sc));
             const bgH = displayRows.length * rowLH + Math.round(20 * sc);
-            ctx.fillStyle = 'rgba(10, 11, 15, 0.84)';
+            ctx.shadowColor = 'rgba(0,0,0,0.6)';
+            ctx.shadowBlur = Math.round(14 * sc);
+            ctx.fillStyle = 'rgba(10, 12, 18, 0.90)';
             drawRoundedRect(ctx, (W - bgW) / 2, centerY - bgH / 2, bgW, bgH, Math.round(14 * sc));
             ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+            ctx.lineWidth = Math.max(1, 1.2 * sc);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
           }
 
           ctx.textBaseline = 'middle';
           ctx.textAlign = 'left';
           displayRows.forEach((r, ri) => {
-            const totalW = r.reduce((acc, it) => acc + it.tw, 0) + (r.length - 1) * spaceW;
+            const totalW = r.reduce((acc, it) => acc + it.tw, 0) + Math.max(0, r.length - 1) * wordGap;
             let xCursor = (W - totalW) / 2;
             const yPos = startY + ri * rowLH;
             r.forEach((it) => {
               const isAct = it.ti === activeWordIdx;
               const isPast = it.ti < activeWordIdx;
               if (isAct) {
-                const padX = Math.round(7 * sc);
-                const padY = Math.round(4 * sc);
                 ctx.fillStyle = '#facc15';
-                drawRoundedRect(ctx, xCursor - padX, yPos - kFs / 2 - padY, it.tw + padX * 2, kFs + padY * 2, Math.round(7 * sc));
+                drawRoundedRect(ctx, xCursor - pillPadX, yPos - kFs / 2 - pillPadY, it.tw + pillPadX * 2, kFs + pillPadY * 2, Math.round(6 * sc));
                 ctx.fill();
                 ctx.fillStyle = '#09090b';
                 ctx.fillText(it.tok, xCursor, yPos + 1);
               } else {
                 ctx.lineWidth = Math.max(3, Math.round(4 * sc));
-                ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+                ctx.strokeStyle = 'rgba(0,0,0,0.92)';
                 ctx.strokeText(it.tok, xCursor, yPos + 1);
-                ctx.fillStyle = isPast ? '#fef08a' : '#ffffff';
+                ctx.fillStyle = isPast ? '#fde047' : '#ffffff';
                 ctx.fillText(it.tok, xCursor, yPos + 1);
               }
-              xCursor += it.tw + spaceW;
+              xCursor += it.tw + wordGap;
             });
           });
         }
@@ -10175,6 +10295,49 @@
       return im;
     }
 
+    // ★ 밈 쇼츠 전용: 6컷 자막·성우 음성·원본 영상 타임라인 1:1 완전 동기화 헬퍼
+    function arSyncMemeSixCutTimelineAndVoice(lines, durSec = 15) {
+      const cutCount = Math.max(4, (Array.isArray(lines) && lines.length) || 6);
+      const totalSec = Math.max(12, Number(durSec) || 15);
+      // 1) 밈 쇼츠에서는 기본으로 명함 엔딩 카드를 숨겨 6컷 전체가 영상+자막+음성에 100% 배정되도록 함
+      campaign.hideCardOnVideo = true;
+      if (typeof setVideoTotalDuration === 'function') {
+        setVideoTotalDuration(totalSec);
+      } else {
+        BASE_DURATION = totalSec;
+      }
+      // 2) setVideoTotalDuration이 지운 cutCountOverride를 6컷으로 고정하고 대사를 다시 주입
+      campaign.cutCountOverride = cutCount;
+      campaign.cutCaptions = lines.slice(0, cutCount);
+      campaign.ttsLines = lines.slice(0, cutCount);
+      campaign.scenePlan = lines.slice(0, cutCount).map((ln, i) => ({
+        cut: i + 1,
+        duration: +(totalSec / cutCount).toFixed(2),
+        photoIdx: i,
+        sub: ln,
+        badge: (window.__arCurrentMemeItem?.cuts?.[i]?.mediaType) || `CUT 0${i + 1}`,
+        effect: 'none'
+      }));
+      if (typeof applyVideoDurations === 'function') {
+        applyVideoDurations();
+      }
+      // 3) 이전 대본의 성우 음성 버퍼를 즉시 초기화하고, 사운드가 켜져 있으면 새 6컷 밈 대사로 즉시 TTS 프리페치 & 컷 길이 자동 맞춤
+      if (typeof AudioEngine !== 'undefined' && AudioEngine) {
+        try {
+          if (typeof AudioEngine.stopTts === 'function') AudioEngine.stopTts();
+          AudioEngine.masterBuffer = null;
+          AudioEngine.masterCutBounds = null;
+          AudioEngine.masterKey = '';
+          AudioEngine.masterWantKey = '';
+          AudioEngine.lastSpokenCut = -1;
+          AudioEngine.ttsDirty = true;
+          if (AudioEngine.enabled && typeof AudioEngine.prefetchTtsBuffers === 'function') {
+            AudioEngine.prefetchTtsBuffers(true).catch(() => {});
+          }
+        } catch (_) {}
+      }
+    }
+
     async function arApplyMemeItemToStudio(idx, forceMashupMode) {
       const baseItem = (window.__arMemeRadarItems || [])[idx];
       if (!baseItem) return;
@@ -10223,37 +10386,30 @@
       if (typeof pauseAllCutVideos === 'function') pauseAllCutVideos();
       if (statusEl) statusEl.textContent = `⏳ "${it.title}" 실제 원본 밈 영상(MP4) 6컷을 불러오고 있습니다...`;
 
-      // ★ 핵심: 직접 그린 캐릭터가 아니라 각 컷의 실제 원본 밈 MP4(c.videoUrl — 실제 칠 가이, 실제 하? 고양이, 실제 골든리트리버 등)를 즉시 로드해 장착!
+      // ★ 핵심: 각 컷의 실제 원본 밈 MP4(무한도전, 런닝맨, 도깨비, 범죄도시, 백종원, 아이유 콘서트, 칠 가이, 하? 고양이 등)를 즉시 로드해 장착!
       const loadedVideos = await Promise.all(cuts.slice(0, 6).map(async (c, i) => {
         const vUrl = c.videoUrl || (baseItem.cuts && baseItem.cuts[i] && baseItem.cuts[i].videoUrl) || '';
         c.videoUrl = vUrl;
         const vid = await arLoadRealMemeCutVideo(vUrl, `${i + 1}컷 · ${c.mood || '실제 원본 밈'}`);
         if (vid) {
           c._customCutVideo = vid;
-          c.mediaType = '🎬 실제 원본 밈 MP4';
+          c.mediaType = c.mediaType || '🎬 실제 원본 밈 MP4';
           return vid;
         }
         return arCreateMemeCutSnapshotImage(it, c, i);
       }));
 
       campaign.uploadedPhotos = loadedVideos;
-      campaign.vehicle = it.title.slice(0, 26);
+      campaign.vehicle = it.title.replace(/^\[[^\]]+\]\s*/, '').slice(0, 26);
       campaign.hook = it.title;
-      campaign.cutCaptions = lines.slice();
-      campaign.ttsLines = lines.slice();
       campaign.bullets = [it.why || '', it.factNote || ''].filter(Boolean);
-      window.__arMemeHookBanner = (Array.isArray(it.hookTitles) && it.hookTitles[0]) ? it.hookTitles[0] : it.title.slice(0, 32);
+      window.__arMemeHookBanner = (Array.isArray(it.hookTitles) && it.hookTitles[0])
+        ? it.hookTitles[0]
+        : it.title.replace(/^\[[^\]]+\]\s*/, '').slice(0, 28);
       arToggleKaraokeMode(true);
 
-      campaign.scenePlan = lines.map((ln, i) => ({
-        cut: i + 1,
-        duration: 2.0,
-        photoIdx: i,
-        sub: ln,
-        badge: cuts[i]?.mediaType || it.badge || `CUT 0${i + 1}`,
-        effect: 'none'
-      }));
-      if (typeof setVideoTotalDuration === 'function') setVideoTotalDuration(12);
+      // ★ 6컷 자막·음성·영상 1:1 타임라인 완전 동기화!
+      arSyncMemeSixCutTimelineAndVoice(lines, 15);
 
       const capEl = document.getElementById('snsCaptionInput');
       if (capEl) {
@@ -10272,8 +10428,8 @@
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0.05);
 
       const modeLabel = mode === 'store' ? '🏪 우리 가게×밈 패러디' : mode === 'keyword' ? '⚡ 오늘 키워드×밈 콜라보' : '🔥 실제 원본 밈';
-      if (statusEl) statusEl.textContent = `✅ [${modeLabel}] "${it.title}" 실제 원본 밈 영상(MP4) 6컷 로드 및 재생 완료!`;
-      if (typeof arToast === 'function') arToast(`🎬 ${modeLabel} 실제 원본 밈 영상 6컷이 재생됩니다!`, true);
+      if (statusEl) statusEl.textContent = `✅ [${modeLabel}] "${it.title}" 실제 원본 영상(MP4) 6컷 + 자막·음성 1:1 싱크 완료!`;
+      if (typeof arToast === 'function') arToast(`🎬 ${modeLabel} 실제 원본 영상 6컷이 재생됩니다!`, true);
     }
 
     function arRenderMemeAssembledStrip(it) {
@@ -10466,19 +10622,20 @@
         }
 
         const pool = Array.isArray(data.extraVideos) && data.extraVideos.length ? data.extraVideos : [data.videoUrl];
-        const curItem = window.__arCurrentMemeItem || (window.__arMemeRadarItems && window.__arMemeRadarItems[0]) || {
+        const cleanTitle = String(data.title || rawUrl || '레전드 명장면').replace(/^\[[^\]]+\]\s*/, '').trim();
+        const curItem = {
           id: 'url_meme_' + Date.now(),
-          title: data.title || '원본 밈 쇼츠',
-          badge: `🎬 ${data.sourceLabel || '원본 링크 반입'}`,
-          why: `${rawUrl} 원본 밈 클립 반입`,
-          factNote: `📌 출처: ${data.sourceLabel || '원본 밈 링크'} (${data.title || ''}) #밈쇼츠 #Shorts`,
+          title: `${cleanTitle} 레전드 하이라이트`,
+          badge: `🎬 ${data.sourceLabel || '원본 클립 반입'}`,
+          why: `"${cleanTitle}" 실제 원본 MP4 클립 6컷 반입`,
+          factNote: `📌 출처: ${data.sourceLabel || '원본 클립'} (${cleanTitle}) #${cleanTitle.replace(/\s+/g, '')} #밈쇼츠 #Shorts`,
           cuts: [
-            { line: `요즘 알고리즘 점령한 ${String(data.title || '레전드 밈').slice(0, 12)}!`, mood: '원본 1컷' },
-            { line: '처음엔 그냥 평범한 장면인 줄 알았는데', mood: '원본 2컷' },
-            { line: '볼수록 중독성 터지는 바로 이 표정!', mood: '원본 3컷' },
-            { line: '댓글창이 완전히 뒤집어진 이유가 있었네요', mood: '원본 4컷' },
-            { line: '어떤 상황에도 찰떡같이 어울리는 만능 밈!', mood: '원본 5컷' },
-            { line: '여러분은 이 장면 몇 점 주시겠어요?', mood: '원본 6컷' }
+            { line: `요즘 알고리즘 점령한 ${cleanTitle.slice(0, 10)}!`, mood: `${cleanTitle.slice(0, 8)} 1컷`, keyword: cleanTitle },
+            { line: '처음엔 그냥 평범한 장면인 줄 알았는데', mood: `${cleanTitle.slice(0, 8)} 2컷`, keyword: cleanTitle },
+            { line: '볼수록 중독성 터지는 바로 이 장면!', mood: `${cleanTitle.slice(0, 8)} 3컷`, keyword: cleanTitle },
+            { line: '댓글창이 완전히 뒤집어진 이유가 있었네요', mood: `${cleanTitle.slice(0, 8)} 4컷`, keyword: cleanTitle },
+            { line: '어떤 상황에도 찰떡같이 어울리는 레전드!', mood: `${cleanTitle.slice(0, 8)} 5컷`, keyword: cleanTitle },
+            { line: '여러분은 이 명장면 몇 점 주시겠어요?', mood: `${cleanTitle.slice(0, 8)} 6컷`, keyword: cleanTitle }
           ]
         };
 
@@ -10486,7 +10643,7 @@
           const u = pool[i % pool.length] || data.videoUrl;
           c.videoUrl = u;
           c.mediaType = `🎬 ${data.sourceLabel || '원본 밈 MP4'}`;
-          const vid = await arLoadRealMemeCutVideo(u, `${i + 1}컷 · ${data.title || '원본 밈'}`);
+          const vid = await arLoadRealMemeCutVideo(u, `${i + 1}컷 · ${cleanTitle}`);
           if (vid) {
             c._customCutVideo = vid;
             return vid;
@@ -10495,18 +10652,10 @@
         }));
 
         window.__arCurrentMemeItem = curItem;
+        window.__arMemeHookBanner = `${cleanTitle.slice(0, 14)} 레전드 모먼트`;
         campaign.uploadedPhotos = loadedVids;
         const lines = curItem.cuts.map((c) => c.line);
-        campaign.cutCaptions = lines.slice();
-        campaign.ttsLines = lines.slice();
-        campaign.scenePlan = lines.map((ln, i) => ({
-          cut: i + 1,
-          duration: 2.0,
-          photoIdx: i,
-          sub: ln,
-          badge: `CUT 0${i + 1}`,
-          effect: 'none'
-        }));
+        arSyncMemeSixCutTimelineAndVoice(lines, 15);
         arRenderMemeAssembledStrip(curItem);
         if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
         if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
@@ -10621,19 +10770,9 @@
         };
 
         campaign.uploadedPhotos = Array.from({ length: cutCount }, () => vid);
-        campaign.cutCaptions = finalLines.slice();
-        campaign.ttsLines = finalLines.slice();
         campaign.hook = hooks[0];
         campaign.vehicle = hooks[0].slice(0, 24);
-        campaign.scenePlan = finalLines.map((ln, idx) => ({
-          cut: idx + 1,
-          duration: +(dur / finalLines.length).toFixed(1),
-          photoIdx: idx,
-          sub: ln,
-          badge: `CUT 0${idx + 1}`,
-          effect: 'none'
-        }));
-        if (typeof setVideoTotalDuration === 'function') setVideoTotalDuration(dur);
+        arSyncMemeSixCutTimelineAndVoice(finalLines, dur);
 
         const mSpec = data.maskSpec || { enabled: true, maskY: 0.81, maskH: 0.13 };
         const mToggle = document.getElementById('arCaptionMaskToggle');
