@@ -3687,22 +3687,39 @@
           }
         } else {
           // ★ 깜빡임(디코더 스톨) 원천 차단:
-          // 짧은 루프 밈 영상(loop=true)은 매 프레임 currentTime을 강제로 덮어쓰면 브라우저 하드웨어 디코더가 끊기며 깜빡입니다!
-          // 따라서 컷이 처음 진입한 순간(_lastSyncedCutIdx !== activeIdx)이나 일시정지 상태에서 타임라인을 드래그할 때만 시크하고,
-          // 재생 중에는 브라우저 네이티브 loop 재생에 맡겨 60fps 무깜빡임으로 매끄럽게 돌아가게 합니다!
-          const cutJustEntered = window.__arLastSyncedVideoCut !== activeIdx;
+          // 짧은 루프 밈 영상(loop=true)은 currentTime=0 시크도 전혀 걸지 않고 브라우저 네이티브 loop 재생에만 맡겨야
+          // 컷 전환이나 루프 시 비디오 디코더가 프레임을 비우지 않고 60fps 무깜빡임으로 매끄럽게 재생됩니다!
           window.__arLastSyncedVideoCut = activeIdx;
-          if (cutJustEntered) {
-            try { m.currentTime = 0; } catch (e) {}
-          } else if (!isPlaying && dur > 0.2) {
+          const keepAud = Boolean(m._keepAudio && (typeof AudioEngine === 'undefined' || !AudioEngine || !window.__arUserMuted));
+          m.muted = !keepAud;
+          if (keepAud && typeof AudioEngine !== 'undefined' && AudioEngine.ctx && AudioEngine.streamDest && !m._arAudioNode) {
+            try {
+              m._arAudioNode = AudioEngine.ctx.createMediaElementSource(m);
+              m._arAudioGain = AudioEngine.ctx.createGain();
+              m._arAudioGain.gain.value = 0.85;
+              m._arAudioNode.connect(m._arAudioGain);
+              m._arAudioGain.connect(AudioEngine.ctx.destination);
+              m._arAudioGain.connect(AudioEngine.streamDest);
+            } catch (e) {}
+          }
+          if (m._arAudioGain) {
+            m._arAudioGain.gain.value = keepAud ? 0.85 : 0;
+          }
+          if (!isPlaying && dur > 0.2) {
             want = localSec % dur;
-            if (Math.abs(m.currentTime - want) > 0.25) {
+            if (Math.abs(m.currentTime - want) > 0.35) {
               try { m.currentTime = want; } catch (e) {}
             }
           }
         }
         if (isPlaying) {
-          if (m.paused) m.play().catch(() => {});
+          if (m.paused) {
+            m.play().catch(() => {
+              // 브라우저 자동재생 정책으로 소리 있는 영상이 막힌 경우 음소거로 즉시 폴백해 영상은 멈추지 않게 함
+              m.muted = true;
+              m.play().catch(() => {});
+            });
+          }
         } else if (!m.paused) {
           m.pause();
         }
@@ -9436,8 +9453,9 @@
 
         ctx.save();
         if (hasCustomVid && aspect > 0.68) {
-          // ★ 핵심: 상단 자막 영역(0 ~ 19%)과 하단 자막 영역(74% ~ 100%)을 위아래로 꽉 채우고,
-          // 가운데 영상 스테이지(19% ~ 74%)는 좌우 여백 없이 꽉 채워 원본 인물과 표정이 가장 크게 보이도록 설계!
+          // ★ 핵심: 왜 겹쳐 보였는가?
+          // 1) 기존에 배경에 같은 영상을 확대해 한 번 더 깔아서(bgR * 1.12, globalAlpha 0.32) 위에는 큰 머리통, 아래에는 큰 "컴온" 글자가 잔상처럼 겹쳐 보였음! -> 이중 배경 영상 완전 제거(100% 솔리드 다크 스테이지)!
+          // 2) drawScale이 fitCover 쪽으로 치우쳐 영상 위아래가 잘렸음 -> stageW에 100% 딱 맞는 정밀 스케일링으로 인물과 원본 자막이 1장으로만 선명하게 나오도록 수정!
           ctx.fillStyle = '#07090f';
           ctx.fillRect(0, 0, W, H);
 
@@ -9446,34 +9464,31 @@
           const stageW = W;
           const stageH = Math.round(H * 0.55);
 
-          // 스테이지 내부 은은한 블러 배경 (비율 차이로 남는 영역 자연스럽게 메움)
           ctx.save();
           ctx.beginPath();
           ctx.rect(stageX, stageY, stageW, stageH);
           ctx.clip();
-          const bgR = Math.max(stageW / sw, stageH / sh) * 1.12;
-          ctx.globalAlpha = 0.32;
-          ctx.drawImage(srcMedia, stageX + (stageW - sw * bgR) / 2, stageY + (stageH - sh * bgR) / 2, sw * bgR, sh * bgR);
-          ctx.globalAlpha = 1;
+          // 이중 잔상 배경을 완전히 제거하고 깔끔한 솔리드 다크 스테이지 위에 원본 영상 1장만 정중앙 배치
+          ctx.fillStyle = '#090b10';
+          ctx.fillRect(stageX, stageY, stageW, stageH);
 
-          // 중앙 스테이지 안을 꽉 채우되 얼굴·액션이 잘리지 않도록 최적 스케일링
           const fitContain = Math.min(stageW / sw, stageH / sh);
-          const fitCover = Math.max(stageW / sw, stageH / sh);
-          const drawScale = aspect > 1.35 ? (fitContain * 1.05) : (fitContain * 0.25 + fitCover * 0.75);
-          const dw = sw * drawScale;
-          const dh = sh * drawScale;
-          ctx.drawImage(srcMedia, stageX + (stageW - dw) / 2, stageY + (stageH - dh) / 2, dw, dh);
+          const dw = Math.round(sw * fitContain);
+          const dh = Math.round(sh * fitContain);
+          const dx = stageX + Math.round((stageW - dw) / 2);
+          const dy = stageY + Math.round((stageH - dh) / 2);
+          ctx.drawImage(srcMedia, dx, dy, dw, dh);
           ctx.restore();
 
-          // 현재 컷 배지 (영상 스테이지 좌상단)
+          // 현재 컷 배지 (영상 위를 가리지 않도록 스테이지 좌상단 모서리에 작고 깔끔하게 표시)
           const badgeTxt = `CUT 0${cutIdx + 1} · ${mood}`;
-          ctx.font = `800 ${Math.round(11.5 * sc)}px "Pretendard Variable", sans-serif`;
-          const bw = ctx.measureText(badgeTxt).width + Math.round(20 * sc);
-          const bh = Math.round(23 * sc);
-          const bx = Math.round(12 * sc);
-          const by = stageY + Math.round(10 * sc);
-          ctx.fillStyle = 'rgba(10, 12, 18, 0.82)';
-          drawRoundedRect(ctx, bx, by, bw, bh, Math.round(8 * sc));
+          ctx.font = `800 ${Math.round(11 * sc)}px "Pretendard Variable", sans-serif`;
+          const bw = ctx.measureText(badgeTxt).width + Math.round(18 * sc);
+          const bh = Math.round(21 * sc);
+          const bx = Math.round(10 * sc);
+          const by = stageY + Math.round(8 * sc);
+          ctx.fillStyle = 'rgba(10, 12, 18, 0.85)';
+          drawRoundedRect(ctx, bx, by, bw, bh, Math.round(7 * sc));
           ctx.fill();
           ctx.strokeStyle = 'rgba(250, 204, 21, 0.55)';
           ctx.lineWidth = 1 * sc;
@@ -9819,25 +9834,28 @@
       ctx.restore();
     }
 
-    function arBalanceKoreanCaptionLines(text, ctx, maxW, maxCharsPerLine = 15) {
-      const clean = String(text || '').replace(/^\[[^\]]+\]\s*/, '').replace(/\s+/g, ' ').trim();
+    function arBalanceKoreanCaptionLines(text, ctx, maxW, maxCharsPerLine = 14) {
+      let clean = String(text || '').replace(/^\[[^\]]+\]\s*/, '').replace(/\s+/g, ' ').trim();
       if (!clean) return [];
+      // ★ "무한도전(유재석·박명수)"처럼 괄호 부연설명이 붙어 제목이 22자를 넘어가면 괄호 안 부연설명을 정리해 절대 잘리지 않게 함
+      if (clean.length > 22 && /\([^)]+\)/.test(clean)) {
+        clean = clean.replace(/\s*\([^)]+\)/g, '').replace(/\s+/g, ' ').trim();
+      }
       const words = clean.split(' ').filter(Boolean);
-      if (words.length <= 1 || (clean.length <= maxCharsPerLine && ctx.measureText(clean).width <= maxW)) {
+      if (words.length <= 1 || clean.length <= maxCharsPerLine) {
         return [clean];
       }
-      // 2줄 균형 분할: 전체 글자수의 절반 지점에 가장 가까운 단어 경계에서 줄바꿈하여 "vs 현실"처럼 1~2단어만 2째줄에 남지 않게 함
+      // 2줄 균형 분할: 픽셀 폭 제한으로 어절이 탈락하지 않도록 전체 글자수의 정중앙에 가장 가까운 어절 경계에서 2줄로 분할!
+      // (폰트 크기는 이후 렌더링 단계에서 각 줄이 targetW 안에 100% 들어오도록 자동 축소/확대됨)
       let bestSplit = Math.max(1, Math.floor(words.length / 2));
-      let bestDiff = 999;
+      let bestDiff = 9999;
       for (let i = 1; i < words.length; i++) {
         const l1 = words.slice(0, i).join(' ');
         const l2 = words.slice(i).join(' ');
-        if (ctx.measureText(l1).width <= maxW && ctx.measureText(l2).width <= maxW) {
-          const diff = Math.abs(l1.length - l2.length);
-          if (diff < bestDiff) {
-            bestDiff = diff;
-            bestSplit = i;
-          }
+        const diff = Math.abs(l1.length - l2.length);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          bestSplit = i;
         }
       }
       const line1 = words.slice(0, bestSplit).join(' ');
@@ -9915,8 +9933,9 @@
 
         const baseFs = Math.round(34 * sc);
         ctx.font = `900 ${baseFs}px "Pretendard Variable", sans-serif`;
-        const showLines = arBalanceKoreanCaptionLines(hookBanner, ctx, W * 0.92, 11).slice(0, 2);
+        const showLines = arBalanceKoreanCaptionLines(hookBanner, ctx, W * 0.90, 11).slice(0, 2);
         const targetW = W * 0.90;
+        const maxSafeW = W * 0.92;
         const maxLineH = showLines.length === 1 ? Math.round(topBarH * 0.46) : Math.round(topBarH * 0.34);
 
         ctx.textAlign = 'center';
@@ -9927,11 +9946,15 @@
           : Math.round(topBarH * 0.50 - lineGap / 2);
 
         showLines.forEach((ln, idx) => {
-          // 각 줄이 상단 자막 영역의 가로 폭(90%)을 꽉 채우도록 폰트 크기 자동 계산
+          // ★ 글자가 좌우로 절대 잘리지 않으면서도 영역을 꽉 채우도록 폰트 크기 정밀 계산 (최소 14px까지 내려가서라도 100% 한 줄 안에 수납!)
           ctx.font = `900 ${baseFs}px "Pretendard Variable", sans-serif`;
           const mW = Math.max(10, ctx.measureText(ln).width);
-          const fittedFs = Math.max(Math.round(24 * sc), Math.min(maxLineH, Math.round(baseFs * (targetW / mW))));
+          let fittedFs = Math.min(maxLineH, Math.round(baseFs * (targetW / mW)));
           ctx.font = `900 ${fittedFs}px "Pretendard Variable", sans-serif`;
+          while (ctx.measureText(ln).width > maxSafeW && fittedFs > Math.round(13 * sc)) {
+            fittedFs -= 1;
+            ctx.font = `900 ${fittedFs}px "Pretendard Variable", sans-serif`;
+          }
           const yPos = capTheme === 'split_news' && showLines.length === 2
             ? Math.round(idx === 0 ? topBarH * 0.27 : topBarH * 0.76)
             : (startY + idx * lineGap);
@@ -10023,10 +10046,18 @@
             const refGap = Math.round(14 * sc);
             const refWordsW = r.reduce((acc, it) => acc + ctx.measureText(it.tok).width, 0) + Math.max(0, r.length - 1) * refGap;
             const maxRowFs = tokenRows.length === 1 ? Math.round(botBarH * 0.38) : Math.round(rowSlotH * 0.72);
-            const rowFs = Math.max(Math.round(28 * sc), Math.min(maxRowFs, Math.round(refFs * (targetRowW / Math.max(10, refWordsW)))));
+            let rowFs = Math.min(maxRowFs, Math.round(refFs * (targetRowW / Math.max(10, refWordsW))));
 
             ctx.font = `900 ${rowFs}px "Pretendard Variable", sans-serif`;
-            const wordGap = Math.max(Math.round(13 * sc), Math.round(rowFs * 0.34));
+            let wordGap = Math.max(Math.round(11 * sc), Math.round(rowFs * 0.32));
+            while (
+              (r.reduce((acc, it) => acc + ctx.measureText(it.tok).width, 0) + Math.max(0, r.length - 1) * wordGap) > W * 0.92 &&
+              rowFs > Math.round(14 * sc)
+            ) {
+              rowFs -= 1;
+              ctx.font = `900 ${rowFs}px "Pretendard Variable", sans-serif`;
+              wordGap = Math.max(Math.round(9 * sc), Math.round(rowFs * 0.30));
+            }
             const pillPadX = Math.round(wordGap * 0.34);
             const pillPadY = Math.round(rowFs * 0.14);
 
@@ -10286,17 +10317,41 @@
       arLoadMemeRadar('all', true, q);
     }
 
+    window.__arKeepMemeOrigAudio = true;
+    function arToggleMemeOrigAudio(forceVal) {
+      window.__arKeepMemeOrigAudio = typeof forceVal === 'boolean' ? forceVal : !window.__arKeepMemeOrigAudio;
+      const btn = document.getElementById('arMemeOrigAudioBtn');
+      if (btn) {
+        btn.textContent = window.__arKeepMemeOrigAudio ? '🔊 원본 영상 소리 ON' : '🔇 원본 영상 소리 OFF';
+        btn.className = window.__arKeepMemeOrigAudio
+          ? 'px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#16a34a] text-white border border-[#4ade80] cursor-pointer'
+          : 'px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#1e2028] text-[#a1a1aa] border border-white/15 cursor-pointer';
+      }
+      if (Array.isArray(campaign.uploadedPhotos)) {
+        campaign.uploadedPhotos.forEach((m) => {
+          if (m && m._isVideo) {
+            m._keepAudio = window.__arKeepMemeOrigAudio;
+            m.muted = !window.__arKeepMemeOrigAudio;
+          }
+        });
+      }
+      if (window.__arKeepMemeOrigAudio && typeof toggleAudioMaster === 'function' && typeof AudioEngine !== 'undefined' && !AudioEngine.enabled) {
+        toggleAudioMaster(true);
+      }
+    }
+
     // 실제 원본 밈 MP4(Tenor/GIPHY/TikTok 등 CORS 허용 스트림)를 <video _isVideo=true>로 로드해 캔버스에 실시간 재생
     function arLoadRealMemeCutVideo(videoUrl, label) {
       return new Promise((resolve) => {
         if (!videoUrl) { resolve(null); return; }
         const vid = document.createElement('video');
-        vid.muted = true;
+        vid.muted = true; // 첫 로드는 자동재생 정책 통과를 위해 muted로 시작하고 활성 컷 재생 시 _keepAudio 반영
         vid.playsInline = true;
         vid.loop = true;
         vid.preload = 'auto';
         vid.crossOrigin = 'anonymous';
         vid._isVideo = true;
+        vid._keepAudio = window.__arKeepMemeOrigAudio !== false;
         vid._videoSrc = videoUrl;
         vid._label = label || '실제 원본 밈 MP4';
         let settled = false;
@@ -10314,7 +10369,7 @@
               c.getContext('2d').drawImage(vid, (c.width - vw * r) / 2, (c.height - vh * r) / 2, vw * r, vh * r);
               vid._dataUrl = c.toDataURL('image/jpeg', 0.72);
             } catch (_) {}
-            vid.play().catch(() => {});
+            // ★ 로드 시점에 6개 비디오를 동시에 play()하지 않고 pause 상태로 대기시켜 GPU 디코더 경합 깜빡임을 방지!
             resolve(vid);
           } else {
             resolve(null);
@@ -10343,6 +10398,27 @@
       return im;
     }
 
+    // ★ 밈 쇼츠 전용: 클릭 1번에 소리(AI 성우 더빙 + BGM + 원본 영상 오디오)와 6컷 타임라인을 즉시 자동 활성화!
+    function arEnableMemeStudioAudioAndVoice() {
+      if (typeof AudioEngine === 'undefined' || !AudioEngine) return;
+      try {
+        window.__arUserMuted = false;
+        if (!AudioEngine.enabled && typeof toggleAudioMaster === 'function') {
+          toggleAudioMaster(true);
+        } else {
+          AudioEngine.enabled = true;
+          AudioEngine.ensureContext?.();
+          AudioEngine.startBgmLoop?.();
+        }
+        if (!AudioEngine.ttsVoice || AudioEngine.ttsVoice === 'off') {
+          AudioEngine.ttsVoice = 'ko-KR-Chirp3-HD-Puck';
+          const vSel = document.getElementById('ttsVoiceSelect');
+          if (vSel) vSel.value = AudioEngine.ttsVoice;
+        }
+        AudioEngine.prefetchTtsBuffers?.(true)?.catch?.(() => {});
+      } catch (_) {}
+    }
+
     // ★ 밈 쇼츠 전용: 6컷 자막·성우 음성·원본 영상 타임라인 1:1 완전 동기화 헬퍼
     function arSyncMemeSixCutTimelineAndVoice(lines, durSec = 15) {
       const cutCount = Math.max(4, (Array.isArray(lines) && lines.length) || 6);
@@ -10369,7 +10445,7 @@
       if (typeof applyVideoDurations === 'function') {
         applyVideoDurations();
       }
-      // 3) 이전 대본의 성우 음성 버퍼를 즉시 초기화하고, 사운드가 켜져 있으면 새 6컷 밈 대사로 즉시 TTS 프리페치 & 컷 길이 자동 맞춤
+      // 3) 이전 대본의 성우 음성 버퍼를 즉시 초기화하고, 새 6컷 밈 대사로 즉시 사운드 & 성우 더빙 자동 활성화!
       if (typeof AudioEngine !== 'undefined' && AudioEngine) {
         try {
           if (typeof AudioEngine.stopTts === 'function') AudioEngine.stopTts();
@@ -10379,9 +10455,7 @@
           AudioEngine.masterWantKey = '';
           AudioEngine.lastSpokenCut = -1;
           AudioEngine.ttsDirty = true;
-          if (AudioEngine.enabled && typeof AudioEngine.prefetchTtsBuffers === 'function') {
-            AudioEngine.prefetchTtsBuffers(true).catch(() => {});
-          }
+          arEnableMemeStudioAudioAndVoice();
         } catch (_) {}
       }
     }
@@ -10453,7 +10527,7 @@
       campaign.bullets = [it.why || '', it.factNote || ''].filter(Boolean);
       window.__arMemeHookBanner = (Array.isArray(it.hookTitles) && it.hookTitles[0])
         ? it.hookTitles[0]
-        : it.title.replace(/^\[[^\]]+\]\s*/, '').slice(0, 28);
+        : it.title.replace(/^\[[^\]]+\]\s*/, '').replace(/\s*\([^)]+\)/g, '').trim();
       arToggleKaraokeMode(true);
 
       // ★ 6컷 자막·음성·영상 1:1 타임라인 완전 동기화!
@@ -10500,9 +10574,9 @@
         return `
           <div class="rounded-[9px] bg-[#161924] border border-white/12 p-2 flex items-center gap-2">
             <button type="button" onclick="if(window.__timelines&&window.__timelines.main)window.__timelines.main.seek(${idx * 2.0 + 0.2});" class="relative w-11 h-16 rounded-[6px] overflow-hidden shrink-0 border border-[#60a5fa]/40 bg-black cursor-pointer">
-              ${vSrc
-                ? `<video src="${vSrc}" autoplay loop muted playsinline class="w-full h-full object-cover block"></video>`
-                : (thumbSrc ? `<img src="${thumbSrc}" class="w-full h-full object-cover block" alt="" />` : '')}
+              ${thumbSrc
+                ? `<img src="${thumbSrc}" class="w-full h-full object-cover block" alt="" />`
+                : (vSrc ? `<video src="${vSrc}" preload="metadata" muted playsinline class="w-full h-full object-cover block"></video>` : '')}
               <span class="absolute bottom-0 inset-x-0 bg-[#2563eb]/90 text-[8px] text-white font-bold text-center py-0.5">${statusBadge}</span>
             </button>
             <div class="min-w-0 flex-1 space-y-1">
@@ -10777,9 +10851,9 @@
         vid._trimStart = 0;
         vid._trimEnd = dur;
         vid._playRate = 1;
-        vid._keepAudio = false;
+        vid._keepAudio = window.__arKeepMemeOrigAudio !== false;
         vid.loop = true;
-        vid.muted = true;
+        vid.muted = !(window.__arKeepMemeOrigAudio !== false);
         try { await vid.play(); vid.pause(); } catch (_) {}
 
         const res = await fetch('/api/generate-script', {
@@ -10874,6 +10948,8 @@
       }
     }
 
+    window.arToggleMemeOrigAudio = arToggleMemeOrigAudio;
+    window.arEnableMemeStudioAudioAndVoice = arEnableMemeStudioAudioAndVoice;
     window.arSetMemeCaptionTheme = arSetMemeCaptionTheme;
     window.arRenderMemeShortsOverlay = arRenderMemeShortsOverlay;
     window.arOpenMemeShortsStudio = arOpenMemeShortsStudio;
