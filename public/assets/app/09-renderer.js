@@ -42,8 +42,13 @@
       }
       // ========================================================================
       // 구간 1 & 2 (0.0s ~ mainDuration): 프로모션 본편(4~10컷) + AI 성우 자막 + 하단 카마스터 실물바
+      // ★ 중요: 밈 쇼츠 모드(body.ar-meme-mode)일 때는 하부 장르 엔진(renderGenreFrame)이 먼저 그려졌다가 덮어씌워지며
+      //   비디오 currentTime 충돌 및 컷 경계 플래시(깜빡임)를 유발하므로, 밈 전용 렌더러만 단독 실행합니다!
       // ========================================================================
-      if (USE_GENRE_ENGINE) {
+      const isMemeShortsActive = document.body.classList.contains('ar-meme-mode') && Boolean(window.__arCurrentMemeItem);
+      if (isMemeShortsActive) {
+        // 밈 쇼츠 전용 단일 패스 렌더링 (이중 렌더링·하얀 플래시·비디오 강제 시크 0%)
+      } else if (USE_GENRE_ENGINE) {
         // 장르 엔진 v2 (위에서 정의). 아래 기존 그리기 코드는 USE_GENRE_ENGINE=false일 때만 사용
         try {
           renderGenreFrame(t, mainDuration, totalCuts, d);
@@ -3677,11 +3682,24 @@
           if (m._arAudioGain) {
             m._arAudioGain.gain.value = m._keepAudio ? 0.85 : 0;
           }
+          if (Math.abs(m.currentTime - want) > 0.35) {
+            try { m.currentTime = want; } catch (e) {}
+          }
         } else {
-          want = dur > 0.2 ? localSec % dur : 0;
-        }
-        if (Math.abs(m.currentTime - want) > (m._continuousVideo ? 0.32 : 0.4)) {
-          try { m.currentTime = want; } catch (e) {}
+          // ★ 깜빡임(디코더 스톨) 원천 차단:
+          // 짧은 루프 밈 영상(loop=true)은 매 프레임 currentTime을 강제로 덮어쓰면 브라우저 하드웨어 디코더가 끊기며 깜빡입니다!
+          // 따라서 컷이 처음 진입한 순간(_lastSyncedCutIdx !== activeIdx)이나 일시정지 상태에서 타임라인을 드래그할 때만 시크하고,
+          // 재생 중에는 브라우저 네이티브 loop 재생에 맡겨 60fps 무깜빡임으로 매끄럽게 돌아가게 합니다!
+          const cutJustEntered = window.__arLastSyncedVideoCut !== activeIdx;
+          window.__arLastSyncedVideoCut = activeIdx;
+          if (cutJustEntered) {
+            try { m.currentTime = 0; } catch (e) {}
+          } else if (!isPlaying && dur > 0.2) {
+            want = localSec % dur;
+            if (Math.abs(m.currentTime - want) > 0.25) {
+              try { m.currentTime = want; } catch (e) {}
+            }
+          }
         }
         if (isPlaying) {
           if (m.paused) m.play().catch(() => {});
@@ -9865,16 +9883,35 @@
         arDrawMemeCharacterStage(ctx, W, H, realT, cIdx, cProg, memeItem, cutObj);
       }
 
-      // 1) 상단 자막(후킹 제목) 영역: 화면 상단(0 ~ 19%)을 좌우·위아래 빈틈없이 꽉 채우고, 글자도 그 영역 안에 꽉 차게 자동 스케일링!
+      // 1) 상단 자막(후킹 제목) 영역: 화면 상단(0 ~ 19%)을 좌우·위아래 빈틈없이 꽉 채우고, 글자도 그 영역 안에 꽉 차게 자동 스케일링! (시안 A/B/C 지원)
+      const capTheme = window.__arMemeCaptionTheme || 'dark_full'; // 'dark_full' | 'yellow_viral' | 'split_news'
       const hookBanner = String(window.__arMemeHookBanner || (isMemeMode && window.__arCurrentMemeItem?.title) || '').trim();
       if (hookBanner) {
         ctx.save();
         const topBarH = Math.round(H * 0.19);
-        ctx.fillStyle = '#07090f';
-        ctx.fillRect(0, 0, W, topBarH);
-        // 하단 경계 골드 라인
-        ctx.fillStyle = '#facc15';
-        ctx.fillRect(0, topBarH - Math.max(2, Math.round(3 * sc)), W, Math.max(2, Math.round(3 * sc)));
+        const barLineH = Math.max(2, Math.round(3 * sc));
+
+        if (capTheme === 'yellow_viral') {
+          // 시안 B: 바이럴 옐로우 헤더
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(0, 0, W, topBarH);
+          ctx.fillStyle = '#09090b';
+          ctx.fillRect(0, topBarH - barLineH, W, barLineH);
+        } else if (capTheme === 'split_news') {
+          // 시안 C: 화이트/네이비 2단 뉴스바
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, W, Math.round(topBarH * 0.52));
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(0, Math.round(topBarH * 0.52), W, topBarH - Math.round(topBarH * 0.52));
+          ctx.fillStyle = '#38bdf8';
+          ctx.fillRect(0, topBarH - barLineH, W, barLineH);
+        } else {
+          // 시안 A: 다크 시네마 풀블리드
+          ctx.fillStyle = '#07090f';
+          ctx.fillRect(0, 0, W, topBarH);
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(0, topBarH - barLineH, W, barLineH);
+        }
 
         const baseFs = Math.round(34 * sc);
         ctx.font = `900 ${baseFs}px "Pretendard Variable", sans-serif`;
@@ -9884,7 +9921,7 @@
 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        const lineGap = Math.round(topBarH * 0.40);
+        const lineGap = Math.round(topBarH * 0.44);
         const startY = showLines.length === 1
           ? Math.round(topBarH * 0.52)
           : Math.round(topBarH * 0.50 - lineGap / 2);
@@ -9895,12 +9932,31 @@
           const mW = Math.max(10, ctx.measureText(ln).width);
           const fittedFs = Math.max(Math.round(24 * sc), Math.min(maxLineH, Math.round(baseFs * (targetW / mW))));
           ctx.font = `900 ${fittedFs}px "Pretendard Variable", sans-serif`;
-          const yPos = startY + idx * lineGap;
-          ctx.lineWidth = Math.max(4, Math.round(6 * sc));
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.95)';
-          ctx.strokeText(ln, W / 2, yPos);
-          ctx.fillStyle = idx === 0 ? '#ffffff' : '#facc15';
-          ctx.fillText(ln, W / 2, yPos);
+          const yPos = capTheme === 'split_news' && showLines.length === 2
+            ? Math.round(idx === 0 ? topBarH * 0.27 : topBarH * 0.76)
+            : (startY + idx * lineGap);
+
+          if (capTheme === 'yellow_viral') {
+            ctx.fillStyle = idx === 0 ? '#09090b' : '#b91c1c';
+            ctx.fillText(ln, W / 2, yPos);
+          } else if (capTheme === 'split_news') {
+            if (idx === 0 && showLines.length === 2) {
+              ctx.fillStyle = '#09090b';
+              ctx.fillText(ln, W / 2, yPos);
+            } else {
+              ctx.lineWidth = Math.max(3, Math.round(5 * sc));
+              ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+              ctx.strokeText(ln, W / 2, yPos);
+              ctx.fillStyle = '#38bdf8';
+              ctx.fillText(ln, W / 2, yPos);
+            }
+          } else {
+            ctx.lineWidth = Math.max(4, Math.round(6 * sc));
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.95)';
+            ctx.strokeText(ln, W / 2, yPos);
+            ctx.fillStyle = idx === 0 ? '#ffffff' : '#facc15';
+            ctx.fillText(ln, W / 2, yPos);
+          }
         });
         ctx.restore();
       }
@@ -9917,11 +9973,15 @@
         const botBarH = H - botTopY;
 
         ctx.save();
-        // 하단 자막 영역 전체를 위아래·좌우 빈틈없이 꽉 채우는 다크 스테이지 바
-        ctx.fillStyle = '#07090f';
+        // 하단 자막 영역 전체를 위아래·좌우 빈틈없이 꽉 채우는 스테이지 바 (시안 A / B / C 테마 반영)
+        ctx.fillStyle = capTheme === 'split_news' ? '#0f172a' : '#07090f';
         ctx.fillRect(0, botTopY, W, botBarH);
-        ctx.fillStyle = '#facc15';
+        ctx.fillStyle = capTheme === 'split_news' ? '#38bdf8' : '#facc15';
         ctx.fillRect(0, botTopY, W, Math.max(2, Math.round(3 * sc)));
+
+        const pillBgColor = capTheme === 'yellow_viral' ? '#ef4444' : (capTheme === 'split_news' ? '#38bdf8' : '#facc15');
+        const pillFgColor = capTheme === 'yellow_viral' ? '#ffffff' : '#09090b';
+        const pastFgColor = capTheme === 'split_news' ? '#bae6fd' : '#fde047';
 
         if (rawLine) {
           const tokens = rawLine.split(' ').filter(Boolean);
@@ -9979,16 +10039,16 @@
               const isAct = it.ti === activeWordIdx;
               const isPast = it.ti < activeWordIdx;
               if (isAct) {
-                ctx.fillStyle = '#facc15';
+                ctx.fillStyle = pillBgColor;
                 drawRoundedRect(ctx, xCursor - pillPadX, yPos - rowFs / 2 - pillPadY, it.tw + pillPadX * 2, rowFs + pillPadY * 2, Math.round(8 * sc));
                 ctx.fill();
-                ctx.fillStyle = '#09090b';
+                ctx.fillStyle = pillFgColor;
                 ctx.fillText(it.tok, xCursor, yPos + 1);
               } else {
                 ctx.lineWidth = Math.max(4, Math.round(5.5 * sc));
                 ctx.strokeStyle = 'rgba(0,0,0,0.95)';
                 ctx.strokeText(it.tok, xCursor, yPos + 1);
-                ctx.fillStyle = isPast ? '#fde047' : '#ffffff';
+                ctx.fillStyle = isPast ? pastFgColor : '#ffffff';
                 ctx.fillText(it.tok, xCursor, yPos + 1);
               }
               xCursor += it.tw + wordGap;
@@ -10798,6 +10858,23 @@
       }
     }
 
+    window.__arMemeCaptionTheme = 'dark_full'; // 'dark_full' | 'yellow_viral' | 'split_news'
+    function arSetMemeCaptionTheme(themeId) {
+      window.__arMemeCaptionTheme = ['dark_full', 'yellow_viral', 'split_news'].includes(themeId) ? themeId : 'dark_full';
+      ['dark_full', 'yellow_viral', 'split_news'].forEach((k) => {
+        const b = document.getElementById(`arMemeCapThemeBtn_${k}`);
+        if (!b) return;
+        const on = k === window.__arMemeCaptionTheme;
+        b.className = on
+          ? 'h-8 px-2 rounded-[7px] text-[11px] font-bold bg-[#2563eb] text-white border border-[#60a5fa] cursor-pointer'
+          : 'h-8 px-2 rounded-[7px] text-[11px] font-semibold bg-[#181a24] text-[#d4d4d8] border border-white/10 hover:text-white cursor-pointer';
+      });
+      if (window.__timelines && window.__timelines.main) {
+        window.__timelines.main.seek(window.__timelines.main.currentTime || 0.15);
+      }
+    }
+
+    window.arSetMemeCaptionTheme = arSetMemeCaptionTheme;
     window.arRenderMemeShortsOverlay = arRenderMemeShortsOverlay;
     window.arOpenMemeShortsStudio = arOpenMemeShortsStudio;
     window.arSetMemeMashupMode = arSetMemeMashupMode;

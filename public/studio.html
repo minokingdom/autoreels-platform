@@ -840,6 +840,19 @@
               </div>
             </div>
 
+            <!-- ★ 위·아래 꽉 찬 자막 디자인 시안 A / B / C 원클릭 선택 바 -->
+            <div class="rounded-[10px] bg-[#0c0e14] border border-white/10 p-2 space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-[#e4e4e7]">🎨 위·아래 꽉 찬 자막 스타일 선택 (시안 A · B · C)</span>
+                <span class="text-[10px] text-[#93c5fd]">클릭 즉시 상단 미리보기에 반영됩니다</span>
+              </div>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button type="button" id="arMemeCapThemeBtn_dark_full" onclick="arSetMemeCaptionTheme('dark_full')" class="h-8 px-2 rounded-[7px] text-[11px] font-bold bg-[#2563eb] text-white border border-[#60a5fa] cursor-pointer">시안 A · 다크 풀블리드</button>
+                <button type="button" id="arMemeCapThemeBtn_yellow_viral" onclick="arSetMemeCaptionTheme('yellow_viral')" class="h-8 px-2 rounded-[7px] text-[11px] font-semibold bg-[#181a24] text-[#fde047] border border-white/10 hover:text-white cursor-pointer">시안 B · 옐로우 헤더</button>
+                <button type="button" id="arMemeCapThemeBtn_split_news" onclick="arSetMemeCaptionTheme('split_news')" class="h-8 px-2 rounded-[7px] text-[11px] font-semibold bg-[#181a24] text-[#7dd3fc] border border-white/10 hover:text-white cursor-pointer">시안 C · 2단 뉴스바</button>
+              </div>
+            </div>
+
             <!-- ★ 핵심: 3가지 밈 활용 목적 선택 (순수 밈 부업 vs 오늘의 키워드×밈 vs 우리 가게 홍보×밈) -->
             <div class="space-y-2 rounded-[11px] bg-[#0c0e14] border border-white/10 p-2.5">
               <div class="flex items-center justify-between">
@@ -3133,7 +3146,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-fullbleed-meme-captions"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-meme-3styles-noflicker"><\/script>');
     }
   </script>
   <!--
