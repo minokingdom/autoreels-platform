@@ -1616,9 +1616,11 @@
     });
 
     function switchMainTab(tab) {
+      document.getElementById('viewCardNews')?.classList.add('hidden');
       document.getElementById('viewPreview').classList.toggle('hidden', tab !== 'preview');
       document.getElementById('viewAdmin').classList.toggle('hidden', tab !== 'admin');
       document.getElementById('viewTech').classList.toggle('hidden', tab !== 'tech');
+      if (tab === 'preview') document.getElementById('mobileLiveDock')?.classList.remove('hidden');
 
       const tabs = [
         { id: 'tabBtnPreview', key: 'preview' },

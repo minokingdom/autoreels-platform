@@ -5592,20 +5592,29 @@
     };
 
     function arCnSyncSheetUI() {
-      const modal = document.getElementById('arCardNewsModal');
-      if (modal) modal.classList.toggle('ar-cn-sheet-open', Boolean(_arCnState.sheetOpen));
+      const view = document.getElementById('viewCardNews');
+      const isDesktop = window.innerWidth >= 1024;
+      const open = isDesktop ? true : Boolean(_arCnState.sheetOpen);
+      if (view) view.classList.toggle('ar-cn-sheet-open', open);
       const titleEl = document.getElementById('arCnSheetTitle');
       if (titleEl) titleEl.textContent = AR_CN_SHEET_TITLES[_arCnState.sheetTab] || '';
+      const mobPreviewBtn = document.getElementById('arCnMobilePreviewToggleBtn');
+      if (mobPreviewBtn) mobPreviewBtn.textContent = open ? '크게 ▾' : '편집 ▴';
+      const mobSheetBtn = document.getElementById('arCnMobileSheetBtn');
+      if (mobSheetBtn) mobSheetBtn.textContent = open ? '미리보기 크게 ▾' : '편집 열기 ▴';
       ['ai', 'theme', 'text', 'photo', 'export'].forEach((k) => {
         const pane = document.getElementById(`arCnTab_${k}`);
         if (pane) pane.classList.toggle('hidden', _arCnState.sheetTab !== k);
       });
-      document.querySelectorAll('#arCardNewsModal [data-cn-dock]').forEach((b) => {
-        b.classList.toggle('active', Boolean(_arCnState.sheetOpen) && b.dataset.cnDock === _arCnState.sheetTab);
+      document.querySelectorAll('#viewCardNews [data-cn-dock]').forEach((b) => {
+        const on = b.dataset.cnDock === _arCnState.sheetTab && open;
+        b.setAttribute('aria-selected', String(on));
+        b.classList.toggle('active', on);
       });
     }
     function arCnOpenSheet(tab) {
-      if (_arCnState.sheetOpen && _arCnState.sheetTab === tab) {
+      const isDesktop = window.innerWidth >= 1024;
+      if (!isDesktop && _arCnState.sheetOpen && _arCnState.sheetTab === tab) {
         _arCnState.sheetOpen = false;
         arCnSyncSheetUI();
         return;
@@ -5725,9 +5734,9 @@
       const zipBtn = document.getElementById('arCnDownloadZipBtn');
       if (zipBtn) zipBtn.textContent = `📦 전체 ${total}장 한 번에 저장 (.zip)`;
       const genBtn = document.getElementById('arCnGenBtn');
-      if (genBtn && !genBtn.disabled) genBtn.textContent = `✨ ${_arCnState.targetCount}장 AI 카드뉴스 만들기`;
+      if (genBtn && !genBtn.disabled) genBtn.textContent = `✨ ${_arCnState.targetCount}장 만들기`;
       const bp = document.getElementById('arCnBlueprintNote');
-      if (bp) bp.innerHTML = `📋 구성 확인: <strong>표지 1장 + 핵심 본문 ${_arCnState.targetCount - 2}장 + 마무리 1장 = 총 ${_arCnState.targetCount}장</strong>`;
+      if (bp) bp.innerHTML = `📋 구성 확인: <strong>표지 1장 + 핵심 본문 ${_arCnState.targetCount - 2}장 + 마무리 1장 = 총 ${_arCnState.targetCount}장</strong> (위 <strong>장수</strong> 버튼에서 5~10장을 먼저 고르세요)`;
 
       const hasPhoto = Boolean(cur && cur.bgImg);
       const clrPhoto = document.getElementById('arCnClearBgPhotoBtn');
@@ -5751,9 +5760,9 @@
 
       // 장수 / 비율 / 글자크기 / 트윅 / 컬러 / 폰트칩 / 테마 갤러리 동기화
       document.querySelectorAll('#arCnCountRow [data-cn-cnt]').forEach((b) => b.classList.toggle('active', Number(b.dataset.cnCnt) === _arCnState.targetCount));
-      document.querySelectorAll('#arCardNewsModal [data-cn-ratio]').forEach((b) => b.classList.toggle('active', b.dataset.cnRatio === _arCnState.ratio));
-      document.querySelectorAll('#arCardNewsModal [data-cn-fsize]').forEach((b) => b.classList.toggle('active', b.dataset.cnFsize === _arCnState.fontScale));
-      document.querySelectorAll('#arCardNewsModal [data-cn-tweak]').forEach((b) => {
+      document.querySelectorAll('#viewCardNews [data-cn-ratio]').forEach((b) => b.classList.toggle('active', b.dataset.cnRatio === _arCnState.ratio));
+      document.querySelectorAll('#viewCardNews [data-cn-fsize]').forEach((b) => b.classList.toggle('active', b.dataset.cnFsize === _arCnState.fontScale));
+      document.querySelectorAll('#viewCardNews [data-cn-tweak]').forEach((b) => {
         const k = b.dataset.cnTweak;
         b.classList.toggle('active', _arCnState.tweaks[k] !== false);
       });
@@ -5781,8 +5790,8 @@
     }
 
     function arOpenCardNewsModal() {
-      const modal = document.getElementById('arCardNewsModal');
-      if (!modal) return;
+      const view = document.getElementById('viewCardNews');
+      if (!view) return;
       if (typeof arPauseForStudioEdit === 'function') arPauseForStudioEdit();
       arCnLoadBrandPreset();
       if (!_arCnState.handle) {
@@ -5796,15 +5805,22 @@
       if (!_arCnState.slides.length) {
         _arCnState.slides = arCnDefaultSlides(_arCnState.targetCount);
       }
-      // 처음 열 때는 장수 확인 → AI 생성 바텀시트를 자연스럽게 열어 미리보기를 컴팩트하게 맞춤
+      // 오토릴스 스튜디오 본 화면을 카드뉴스 스튜디오로 전환 (별도 팝업 모달 X)
+      ['viewPreview', 'viewAdmin', 'viewTech', 'mobileLiveDock'].forEach((id) => {
+        document.getElementById(id)?.classList.add('hidden');
+      });
       _arCnState.sheetOpen = true;
       _arCnState.sheetTab = _arCnState.hasAiGenerated ? 'theme' : 'ai';
       arCnPopulateSamplePhotos(false);
-      modal.classList.remove('hidden');
+      view.classList.remove('hidden');
       arCnRefreshUI();
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
     }
     function arCloseCardNewsModal() {
-      document.getElementById('arCardNewsModal')?.classList.add('hidden');
+      document.getElementById('viewCardNews')?.classList.add('hidden');
+      document.getElementById('viewPreview')?.classList.remove('hidden');
+      document.getElementById('mobileLiveDock')?.classList.remove('hidden');
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
     }
     function arCnSetTargetCount(n) {
       const next = Math.max(5, Math.min(10, Number(n) || 7));
@@ -6168,7 +6184,7 @@
         arCnRefreshUI(false);
         if (typeof arToast === 'function') arToast(`${_arCnState.slides.length}장 기본 템플릿을 채웠어요! 아래에서 테마·글자를 다듬어 보세요.`, true);
       } finally {
-        if (btn) { btn.disabled = false; btn.textContent = `✨ ${_arCnState.targetCount}장 AI 카드뉴스 만들기`; }
+        if (btn) { btn.disabled = false; btn.textContent = `✨ ${_arCnState.targetCount}장 만들기`; }
       }
     }
 
@@ -6226,7 +6242,7 @@
       } catch (_) {
         if (typeof arToast === 'function') arToast('사진 생성 중 오류가 발생했어요.');
       } finally {
-        if (btn) { btn.disabled = false; btn.textContent = '✨ AI 사진'; }
+        if (btn) { btn.disabled = false; btn.textContent = '✨ 주제 맞춤 AI 사진 채우기'; }
       }
     }
 
