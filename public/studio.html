@@ -1764,13 +1764,13 @@
                 </div>
               </div>
               <div class="ar-cn-panel-nav flex justify-end pt-2 border-t border-[var(--border)]">
-                <button type="button" onclick="arCnOpenSheet('theme')" class="btn-secondary h-9 px-4 text-[12.5px] cursor-pointer">다음: 핀터·빅타이포 테마 54종 →</button>
+                <button type="button" onclick="arCnOpenSheet('theme')" class="btn-secondary h-9 px-4 text-[12.5px] cursor-pointer">다음: 테마 64종 고르기 →</button>
               </div>
             </div>
 
-            <!-- 2단계: 핀터레스트·빅타이포·매거진 테마 54종 + 테마 섞기 + 레퍼런스 색감 + 트윅 -->
+            <!-- 2단계: 빅타이포·그라데이션·핀터레스트·매거진 테마 64종 + 테마 섞기 + 레퍼런스 색감 + 트윅 -->
             <div id="arCnTab_theme" class="hidden studio-panel p-4 sm:p-6 space-y-3.5">
-              <!-- 테마 섞기 바 (1탭으로 54종 테마·색감·폰트·구도 랜덤 조합!) -->
+              <!-- 테마 섞기 바 (1탭으로 64종 테마·색감·그라데이션·폰트·구도 랜덤 조합!) -->
               <div class="flex items-center gap-1.5 flex-wrap">
                 <button type="button" onclick="arCnShuffleDesign('all')" class="btn-primary h-8 px-3.5 text-[12px] font-bold cursor-pointer">🔀 테마 섞기</button>
                 <button type="button" onclick="arCnShuffleDesign('color')" class="btn-secondary h-8 px-2.5 text-[11.5px] cursor-pointer">🎨 색감만</button>
@@ -1786,8 +1786,9 @@
               </div>
 
               <div id="arCnCatRow" class="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-                <button type="button" data-cn-cat="all" onclick="arCnSetCat('all')" class="ar-cn-tweak-btn active">전체 54</button>
+                <button type="button" data-cn-cat="all" onclick="arCnSetCat('all')" class="ar-cn-tweak-btn active">전체 64</button>
                 <button type="button" data-cn-cat="빅타이포" onclick="arCnSetCat('빅타이포')" class="ar-cn-tweak-btn">빅타이포</button>
+                <button type="button" data-cn-cat="그라데이션" onclick="arCnSetCat('그라데이션')" class="ar-cn-tweak-btn">그라데이션</button>
                 <button type="button" data-cn-cat="핀터레스트" onclick="arCnSetCat('핀터레스트')" class="ar-cn-tweak-btn">핀터레스트</button>
                 <button type="button" data-cn-cat="감성·카페" onclick="arCnSetCat('감성·카페')" class="ar-cn-tweak-btn">감성·카페</button>
                 <button type="button" data-cn-cat="매거진" onclick="arCnSetCat('매거진')" class="ar-cn-tweak-btn">매거진</button>
@@ -1800,7 +1801,11 @@
               <div id="arCnTplGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2.5"></div>
 
               <div class="rounded-[12px] bg-white/[0.025] border border-[var(--border)] p-3 space-y-2.5">
-                <div class="flex items-center justify-between gap-2 flex-wrap">
+                <div class="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-none">
+                  <span class="text-[11px] text-[#a1a1a6] shrink-0">그라데이션</span>
+                  <div id="arCnGradSwatchRow" class="flex items-center gap-1.5"></div>
+                </div>
+                <div class="flex items-center justify-between gap-2 flex-wrap pt-2 border-t border-white/8">
                   <div class="flex items-center gap-2.5 text-[11.5px] text-[#a1a1a6]">
                     <label class="inline-flex items-center gap-1 cursor-pointer">배경 <input id="arCnColorBg" type="color" value="#f8f3eb" oninput="arCnSetCustomColor('bg', this.value)" class="w-5 h-5 rounded border-0 bg-transparent cursor-pointer" /></label>
                     <label class="inline-flex items-center gap-1 cursor-pointer">포인트 <input id="arCnColorAccent" type="color" value="#c2603f" oninput="arCnSetCustomColor('accent', this.value)" class="w-5 h-5 rounded border-0 bg-transparent cursor-pointer" /></label>
@@ -2901,7 +2906,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cn-bigtypo54"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cn-grad64"><\/script>');
     }
   </script>
   <!--

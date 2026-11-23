@@ -4960,6 +4960,42 @@
       }).catch(() => {});
     }
 
+    const AR_CN_GRADIENTS = [
+      { id: 'sunset_peach', name: '선셋 피치', stops: ['#fff7ed', '#fed7aa', '#fda4af'], mesh: [{ x: 0.85, y: 0.15, r: 0.65, c: 'rgba(251,146,60,0.34)' }, { x: 0.15, y: 0.85, r: 0.6, c: 'rgba(244,114,182,0.28)' }], dark: false, fg: '#2b1815', accent: '#c2410c' },
+      { id: 'apple_aura', name: '애플 오라', stops: ['#ffffff', '#eef6ff', '#ede9fe'], mesh: [{ x: 0.2, y: 0.18, r: 0.65, c: 'rgba(56,189,248,0.26)' }, { x: 0.84, y: 0.8, r: 0.62, c: 'rgba(167,139,250,0.26)' }], dark: false, fg: '#141824', accent: '#0071e3' },
+      { id: 'midnight_cobalt', name: '미드나잇 코발트', stops: ['#060914', '#0f2254', '#163570'], mesh: [{ x: 0.82, y: 0.16, r: 0.68, c: 'rgba(56,189,248,0.30)' }, { x: 0.18, y: 0.84, r: 0.6, c: 'rgba(99,102,241,0.28)' }], dark: true, fg: '#f8fafc', accent: '#38bdf8' },
+      { id: 'amber_cinema', name: '앰버 골드', stops: ['#120d0a', '#2c1810', '#4a2511'], mesh: [{ x: 0.78, y: 0.22, r: 0.68, c: 'rgba(245,158,11,0.34)' }, { x: 0.2, y: 0.86, r: 0.55, c: 'rgba(217,119,6,0.24)' }], dark: true, fg: '#faf3e6', accent: '#f59e0b' },
+      { id: 'matcha_mist', name: '말차 민트', stops: ['#f6faf5', '#dcfce7', '#ccfbf1'], mesh: [{ x: 0.18, y: 0.2, r: 0.62, c: 'rgba(74,222,128,0.24)' }, { x: 0.82, y: 0.82, r: 0.6, c: 'rgba(45,212,191,0.26)' }], dark: false, fg: '#132a1e', accent: '#15803d' },
+      { id: 'rose_silk', name: '로즈 실크', stops: ['#fff5f7', '#fce7f3', '#ffe4e6'], mesh: [{ x: 0.82, y: 0.22, r: 0.65, c: 'rgba(244,114,182,0.28)' }, { x: 0.16, y: 0.78, r: 0.58, c: 'rgba(251,191,36,0.18)' }], dark: false, fg: '#2c131a', accent: '#be185d' },
+      { id: 'terracotta_sun', name: '테라코타 노을', stops: ['#fbf5ec', '#f3ddc1', '#e8bfa0'], mesh: [{ x: 0.8, y: 0.18, r: 0.65, c: 'rgba(194,96,63,0.30)' }, { x: 0.18, y: 0.85, r: 0.58, c: 'rgba(217,119,6,0.22)' }], dark: false, fg: '#2b1b13', accent: '#b45309' },
+      { id: 'emerald_glass', name: '에메랄드 딥', stops: ['#051512', '#0a2e28', '#114b42'], mesh: [{ x: 0.8, y: 0.2, r: 0.66, c: 'rgba(52,211,153,0.28)' }, { x: 0.2, y: 0.84, r: 0.58, c: 'rgba(20,184,166,0.26)' }], dark: true, fg: '#ecfdf5', accent: '#34d399' },
+      { id: 'butter_lemon', name: '버터 레몬', stops: ['#fefce8', '#fef08a', '#fed7aa'], mesh: [{ x: 0.22, y: 0.2, r: 0.6, c: 'rgba(250,204,21,0.34)' }, { x: 0.82, y: 0.8, r: 0.6, c: 'rgba(251,146,60,0.24)' }], dark: false, fg: '#291f0e', accent: '#b45309' },
+      { id: 'obsidian_crimson', name: '옵시디언 와인', stops: ['#0b090c', '#240c16', '#3d1020'], mesh: [{ x: 0.82, y: 0.2, r: 0.66, c: 'rgba(225,29,72,0.34)' }, { x: 0.18, y: 0.82, r: 0.6, c: 'rgba(249,115,22,0.22)' }], dark: true, fg: '#fff1f2', accent: '#fb7185' },
+      { id: 'ocean_breeze', name: '오션 브리즈', stops: ['#f0f9ff', '#bae6fd', '#c7d2fe'], mesh: [{ x: 0.2, y: 0.2, r: 0.65, c: 'rgba(14,165,233,0.28)' }, { x: 0.82, y: 0.8, r: 0.6, c: 'rgba(99,102,241,0.24)' }], dark: false, fg: '#0f172a', accent: '#0284c7' },
+      { id: 'noir_silver', name: '느와르 실버', stops: ['#0a0a0c', '#1c1d24', '#2d303c'], mesh: [{ x: 0.8, y: 0.15, r: 0.65, c: 'rgba(226,232,240,0.18)' }, { x: 0.2, y: 0.85, r: 0.6, c: 'rgba(148,163,184,0.16)' }], dark: true, fg: '#f8fafc', accent: '#e2e8f0' }
+    ];
+    function arCnGetGradient(id) {
+      return AR_CN_GRADIENTS.find((g) => g.id === id) || null;
+    }
+    function arCnDrawGradientBg(ctx, W, H, gSpec) {
+      if (!gSpec || !Array.isArray(gSpec.stops) || gSpec.stops.length < 2) return false;
+      const lg = ctx.createLinearGradient(0, 0, W * 0.85, H);
+      const last = gSpec.stops.length - 1;
+      gSpec.stops.forEach((col, i) => lg.addColorStop(i / Math.max(1, last), col));
+      ctx.fillStyle = lg;
+      ctx.fillRect(0, 0, W, H);
+      if (Array.isArray(gSpec.mesh)) {
+        gSpec.mesh.forEach((m) => {
+          const rg = ctx.createRadialGradient(W * m.x, H * m.y, 10, W * m.x, H * m.y, W * (m.r || 0.62));
+          rg.addColorStop(0, m.c);
+          rg.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = rg;
+          ctx.fillRect(0, 0, W, H);
+        });
+      }
+      return true;
+    }
+
     const AR_CN_TEMPLATES = [
       // 빅타이포 (10종 — 사진 풀배경 + 초대형 타이포그래피!)
       { id: 'big_vogue_center', cat: '빅타이포', name: '보그 중앙 빅타이포', bg: '#101012', card: '#1e1e22', fg: '#ffffff', muted: '#e4e4e7', accent: '#f59e0b', pillBg: '#ffffff', pillFg: '#101012', fontKey: 'songmyung', style: 'editorial', coverLayout: 'photo_big_center', bodyLayout: 'photo_big_center', samplePhoto: '/assets/landing/ed-cafe.jpg', scenePack: 'cafe', sampleTitle: '취향이 곧\n브랜드가 된다' },
@@ -4972,6 +5008,18 @@
       { id: 'big_brush_poster', cat: '빅타이포', name: '붓글씨 풀포토 빅타이포', bg: '#14110f', card: '#26201c', fg: '#fff8ea', muted: '#e6d8c3', accent: '#ef4444', pillBg: '#ef4444', pillFg: '#ffffff', fontKey: 'brush', style: 'editorial', coverLayout: 'photo_big_center', bodyLayout: 'photo_big_bottom', samplePhoto: '/assets/scenes/cafe/7.jpg', scenePack: 'cafe', sampleTitle: '오늘 하루,\n온전히 나답게' },
       { id: 'big_pop_bubble', cat: '빅타이포', name: '팝 볼드 중앙 빅타이포', bg: '#121216', card: '#222229', fg: '#fef08a', muted: '#ffffff', accent: '#fb7185', pillBg: '#fb7185', pillFg: '#ffffff', fontKey: 'bagel', style: 'dark', coverLayout: 'photo_big_center', bodyLayout: 'photo_big_box', samplePhoto: '/assets/landing/ed-beauty.jpg', scenePack: 'beauty', sampleTitle: '진짜 꿀팁만\n쏙쏙 골랐어요' },
       { id: 'big_cyber_outline', cat: '빅타이포', name: '테크 아웃라인 빅타이포', bg: '#070b14', card: '#121a2d', fg: '#f0f9ff', muted: '#bae6fd', accent: '#22d3ee', pillBg: '#22d3ee', pillFg: '#070b14', fontKey: 'orbit', style: 'news', coverLayout: 'photo_big_outline', bodyLayout: 'photo_big_top', samplePhoto: '/assets/landing/hero-cinema-kv.jpg', scenePack: 'clinic', sampleTitle: '차이를 만드는\n결정적 디테일' },
+
+      // 그라데이션 (10종 — 애플 오라·선셋 피치·미드나잇·말차·로즈·에메랄드 메쉬 그라데이션!)
+      { id: 'grad_sunset_peach', cat: '그라데이션', name: '선셋 피치 오로라', bg: '#fed7aa', gradient: 'sunset_peach', card: 'rgba(255,255,255,0.52)', fg: '#2b1815', muted: '#6b4238', accent: '#c2410c', pillBg: '#2b1815', pillFg: '#fff7ed', fontKey: 'gowun', style: 'soft', coverLayout: 'photo_frame', bodyLayout: 'text_only', samplePhoto: '/assets/landing/ed-cafe.jpg', scenePack: 'cafe', sampleTitle: '따뜻한 색감으로\n시선을 잡는 법' },
+      { id: 'grad_apple_aura', cat: '그라데이션', name: '애플 오라 타이포', bg: '#eef6ff', gradient: 'apple_aura', card: 'rgba(255,255,255,0.68)', fg: '#141824', muted: '#4b5563', accent: '#0071e3', pillBg: '#141824', pillFg: '#ffffff', fontKey: 'pretM', style: 'clean', coverLayout: 'text_only', bodyLayout: 'photo_frame', samplePhoto: '/assets/landing/ed-auto.jpg', scenePack: 'auto', sampleTitle: '군더더기 없는\n핵심 정리 5가지' },
+      { id: 'grad_midnight_blue', cat: '그라데이션', name: '미드나잇 코발트', bg: '#0f2254', gradient: 'midnight_cobalt', card: 'rgba(255,255,255,0.10)', fg: '#f8fafc', muted: '#cbd5e1', accent: '#38bdf8', pillBg: '#38bdf8', pillFg: '#060914', fontKey: 'gmarket', style: 'news', coverLayout: 'text_only', bodyLayout: 'photo_window', samplePhoto: '/assets/scenes/academy/3.jpg', scenePack: 'academy', sampleTitle: '저장 수 폭발하는\n인사이트 브리핑' },
+      { id: 'grad_amber_cinema', cat: '그라데이션', name: '앰버 골드 시네마', bg: '#2c1810', gradient: 'amber_cinema', card: 'rgba(255,255,255,0.09)', fg: '#faf3e6', muted: '#d6c3ac', accent: '#f59e0b', pillBg: '#f59e0b', pillFg: '#120d0a', fontKey: 'songmyung', style: 'editorial', coverLayout: 'photo_frame', bodyLayout: 'text_only', samplePhoto: '/assets/landing/ed-dining.jpg', scenePack: 'restaurant', sampleTitle: '깊은 여운이 남는\n브랜드 스토리' },
+      { id: 'grad_matcha_mist', cat: '그라데이션', name: '말차 민트 미스트', bg: '#dcfce7', gradient: 'matcha_mist', card: 'rgba(255,255,255,0.58)', fg: '#132a1e', muted: '#3b5c49', accent: '#15803d', pillBg: '#15803d', pillFg: '#ffffff', fontKey: 'diphylleia', style: 'soft', coverLayout: 'photo_arch', bodyLayout: 'text_only', samplePhoto: '/assets/scenes/clinic/3.jpg', scenePack: 'clinic', sampleTitle: '매일 가벼워지는\n데일리 웰니스' },
+      { id: 'grad_rose_silk', cat: '그라데이션', name: '로즈 실크 글로우', bg: '#fce7f3', gradient: 'rose_silk', card: 'rgba(255,255,255,0.60)', fg: '#2c131a', muted: '#7a4957', accent: '#be185d', pillBg: '#be185d', pillFg: '#ffffff', fontKey: 'grandiflora', style: 'soft', coverLayout: 'photo_circle', bodyLayout: 'text_only', samplePhoto: '/assets/landing/ed-beauty.jpg', scenePack: 'beauty', sampleTitle: '은은하게 빛나는\n뷰티 큐레이션' },
+      { id: 'grad_terracotta_sun', cat: '그라데이션', name: '테라코타 노을', bg: '#f3ddc1', gradient: 'terracotta_sun', card: 'rgba(255,255,255,0.50)', fg: '#2b1b13', muted: '#6e4e3f', accent: '#b45309', pillBg: '#2b1b13', pillFg: '#fbf5ec', fontKey: 'hahmlet', style: 'editorial', coverLayout: 'photo_polaroid', bodyLayout: 'text_only', samplePhoto: '/assets/scenes/cafe/6.jpg', scenePack: 'cafe', sampleTitle: '노을빛 감성을 담은\n주말 추천 리스트' },
+      { id: 'grad_emerald_glass', cat: '그라데이션', name: '에메랄드 글래스', bg: '#0a2e28', gradient: 'emerald_glass', card: 'rgba(255,255,255,0.10)', fg: '#ecfdf5', muted: '#a7f3d0', accent: '#34d399', pillBg: '#34d399', pillFg: '#051512', fontKey: 'paperlogy', style: 'clean', coverLayout: 'text_only', bodyLayout: 'photo_frame', samplePhoto: '/assets/scenes/interior/5.jpg', scenePack: 'interior', sampleTitle: '실무에서 바로 쓰는\n고효율 체크리스트' },
+      { id: 'grad_butter_lemon', cat: '그라데이션', name: '버터 레몬 크림', bg: '#fef08a', gradient: 'butter_lemon', card: 'rgba(255,255,255,0.56)', fg: '#291f0e', muted: '#6b5732', accent: '#b45309', pillBg: '#291f0e', pillFg: '#fefce8', fontKey: 'cafe24', style: 'soft', coverLayout: 'photo_scrapbook', bodyLayout: 'text_only', samplePhoto: '/assets/scenes/shop/7.jpg', scenePack: 'shop', sampleTitle: '초보자도 쉽게 따라하는\n친절한 가이드' },
+      { id: 'grad_obsidian_crimson', cat: '그라데이션', name: '옵시디언 크림슨', bg: '#240c16', gradient: 'obsidian_crimson', card: 'rgba(255,255,255,0.09)', fg: '#fff1f2', muted: '#fecdd3', accent: '#fb7185', pillBg: '#fb7185', pillFg: '#0b090c', fontKey: 'aggro', style: 'dark', coverLayout: 'text_only', bodyLayout: 'photo_band', samplePhoto: '/assets/scenes/fitness/5.jpg', scenePack: 'fitness', sampleTitle: '한 번에 각인되는\n강렬한 임팩트' },
 
       // 핀터레스트 (12종 — 영자신문·영수증·스크랩북·OS창·필름스트립·5:5분할·바이닐·무드보드·스위스포스터)
       { id: 'pin_newspaper', cat: '핀터레스트', name: '영자신문 브로드시트', bg: '#f4efe6', card: '#e8e0d2', fg: '#171512', muted: '#575046', accent: '#991b1b', pillBg: '#171512', pillFg: '#f4efe6', fontKey: 'songmyung', style: 'editorial', coverLayout: 'photo_newspaper', bodyLayout: 'photo_newspaper', samplePhoto: '/assets/landing/ed-cafe.jpg', scenePack: 'cafe', sampleTitle: '오늘 꼭 읽어둘\n핵심 트렌드 리포트' },
@@ -5063,6 +5111,7 @@
       sheetOpen: true,
       sheetTab: 'ai',     // 'ai' | 'theme' | 'text' | 'photo' | 'export'
       customColors: { bg: '', accent: '', fg: '' },
+      bgGradient: '',     // '' = 템플릿 기본, 'none' = 단색 강제, 또는 AR_CN_GRADIENTS id
       fontKey: '',        // '' = 템플릿 고유 폰트, 또는 AR_CN_FONTS key
       ratio: '4:5',       // '4:5' (1080x1350) | '1:1' (1080x1080)
       fontScale: 'md',    // 'sm' | 'md' | 'lg'
@@ -5088,18 +5137,26 @@
     function arCnEffectiveTheme(overrideTpl) {
       const base = overrideTpl || arCnGetTemplate(_arCnState.templateId);
       const useCustom = !overrideTpl;
-      const bg = (useCustom && _arCnState.customColors.bg) || base.bg;
-      const accent = (useCustom && _arCnState.customColors.accent) || base.accent;
-      const fg = (useCustom && _arCnState.customColors.fg) || base.fg;
-      const dark = arCnIsDarkHex(bg);
-      const muted = (useCustom && _arCnState.customColors.fg) ? fg : (dark ? 'rgba(248,250,252,0.74)' : base.muted);
-      const card = (useCustom && _arCnState.customColors.bg) ? (dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.055)') : base.card;
-      const pillBg = (useCustom && _arCnState.customColors.accent) ? accent : base.pillBg;
-      const pillFg = (useCustom && _arCnState.customColors.accent) ? (arCnIsDarkHex(accent) ? '#ffffff' : '#111113') : base.pillFg;
+      const gradId = useCustom
+        ? (_arCnState.bgGradient === 'none' ? '' : (_arCnState.bgGradient || base.gradient || ''))
+        : (base.gradient || '');
+      const gradSpec = gradId ? arCnGetGradient(gradId) : null;
+      const bg = (useCustom && _arCnState.customColors.bg) || (gradSpec ? gradSpec.stops[1] : base.bg);
+      const accent = (useCustom && _arCnState.customColors.accent) || (useCustom && _arCnState.bgGradient && gradSpec ? gradSpec.accent : base.accent);
+      const fg = (useCustom && _arCnState.customColors.fg) || (useCustom && _arCnState.bgGradient && gradSpec ? gradSpec.fg : base.fg);
+      const dark = gradSpec ? Boolean(gradSpec.dark) : arCnIsDarkHex(bg);
+      const muted = (useCustom && _arCnState.customColors.fg) ? fg : (dark ? 'rgba(248,250,252,0.78)' : (gradSpec ? 'rgba(30,24,20,0.72)' : base.muted));
+      const card = (useCustom && (_arCnState.customColors.bg || _arCnState.bgGradient))
+        ? (dark ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.56)')
+        : base.card;
+      const pillBg = (useCustom && _arCnState.customColors.accent) ? accent : (useCustom && _arCnState.bgGradient && gradSpec ? gradSpec.accent : base.pillBg);
+      const pillFg = (useCustom && (_arCnState.customColors.accent || _arCnState.bgGradient)) ? (arCnIsDarkHex(pillBg) ? '#ffffff' : '#111113') : base.pillFg;
       const fKey = (useCustom && _arCnState.fontKey) || base.fontKey || 'pretM';
       const fSpec = arCnFontSpec(fKey);
       return {
         ...base, bg, accent, fg, muted, card, pillBg, pillFg,
+        gradientId: gradId,
+        gradSpec,
         fontKey: fKey,
         fontTitle: fSpec.family,
         fontTitleWeight: fSpec.weight,
@@ -5217,9 +5274,13 @@
       const padY = Math.round(78 * sc);
 
       ctx.save();
-      // 1) 배경 (템플릿 컬러 + 풀사진 또는 에디토리얼 프레임)
-      ctx.fillStyle = tpl.bg;
-      ctx.fillRect(0, 0, W, H);
+      // 1) 배경 (템플릿 단색 / 메쉬 그라데이션 / 풀사진)
+      if (!isFullPhoto && tpl.gradSpec) {
+        arCnDrawGradientBg(ctx, W, H, tpl.gradSpec);
+      } else {
+        ctx.fillStyle = tpl.bg;
+        ctx.fillRect(0, 0, W, H);
+      }
       if (isFullPhoto) {
         arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
         const scrim = ctx.createLinearGradient(0, 0, 0, H);
@@ -6200,6 +6261,7 @@
         if (saved.customColors && typeof saved.customColors === 'object') {
           _arCnState.customColors = { bg: saved.customColors.bg || '', accent: saved.customColors.accent || '', fg: saved.customColors.fg || '' };
         }
+        if (typeof saved.bgGradient === 'string') _arCnState.bgGradient = saved.bgGradient;
         if (typeof saved.fontKey === 'string') _arCnState.fontKey = saved.fontKey;
         if (saved.fontScale) _arCnState.fontScale = saved.fontScale;
         if (saved.ratio) _arCnState.ratio = saved.ratio;
@@ -6216,6 +6278,7 @@
         localStorage.setItem(AR_CN_BRAND_STORAGE_KEY, JSON.stringify({
           templateId: _arCnState.templateId,
           customColors: _arCnState.customColors,
+          bgGradient: _arCnState.bgGradient,
           fontKey: _arCnState.fontKey,
           fontScale: _arCnState.fontScale,
           ratio: _arCnState.ratio,
@@ -6309,7 +6372,7 @@
       arCnSyncSheetUI();
       const wf = document.getElementById('arCnWorkflowColumn');
       if (wf && window.innerWidth < 1024) wf.scrollTop = 0;
-      if (next === 'theme') arCnRenderTemplateGallery();
+      if (next === 'theme') { arCnRenderTemplateGallery(); arCnRenderGradientSwatches(); }
       if (next === 'text') arCnRenderFontChips();
       if (next === 'photo') arCnLoadVaultStrip();
       if (next === 'export') arRunCardNewsCritic();
@@ -6465,7 +6528,10 @@
       if (cFg && /^#[0-9a-f]{6}$/i.test(eff.fg)) cFg.value = eff.fg;
 
       arCnSyncSheetUI();
-      if (_arCnState.sheetTab === 'theme') arCnRenderTemplateGallery();
+      if (_arCnState.sheetTab === 'theme') {
+        arCnRenderTemplateGallery();
+        arCnRenderGradientSwatches();
+      }
       if (_arCnState.sheetTab === 'text') arCnRenderFontChips();
 
       if (!skipInputSync && cur) {
@@ -6533,9 +6599,23 @@
       }
       arCnRefreshUI(false);
     }
+    function arCnRenderGradientSwatches() {
+      const row = document.getElementById('arCnGradSwatchRow');
+      if (!row) return;
+      const curGrad = arCnEffectiveTheme().gradientId || '';
+      const solidOn = !curGrad;
+      row.innerHTML = `<button type="button" onclick="arCnSetGradient('none')" title="단색 배경" class="h-6 px-2 rounded-full text-[10.5px] font-semibold border shrink-0 cursor-pointer ${solidOn ? 'bg-[#ededed] text-[#141415] border-[#ededed]' : 'bg-[#1c1c21] text-[#a1a1aa] border-white/15'}">단색</button>` +
+        AR_CN_GRADIENTS.map((g) => {
+          const on = curGrad === g.id;
+          const cssBg = `linear-gradient(135deg, ${g.stops.join(', ')})`;
+          return `<button type="button" onclick="arCnSetGradient('${g.id}')" title="${g.name}" style="background:${cssBg};" class="w-6 h-6 rounded-full shrink-0 cursor-pointer transition ${on ? 'ring-2 ring-white ring-offset-2 ring-offset-[#141417] scale-105' : 'border border-white/25 hover:scale-105'}"></button>`;
+        }).join('');
+    }
+
     function arCnSetTemplate(id) {
       _arCnState.templateId = id;
       _arCnState.customColors = { bg: '', accent: '', fg: '' };
+      _arCnState.bgGradient = '';
       _arCnState.fontKey = '';
       _arCnState.slides.forEach((s) => { s.userLayoutLocked = false; });
       const tpl = arCnGetTemplate(id);
@@ -6543,12 +6623,29 @@
       arCnPopulateSamplePhotos(true);
       arCnRefreshUI(true);
     }
+    function arCnSetGradient(gradId) {
+      _arCnState.bgGradient = String(gradId || 'none');
+      if (_arCnState.bgGradient !== 'none') {
+        _arCnState.customColors = { bg: '', accent: '', fg: '' };
+      }
+      arCnRefreshUI(true);
+      const g = arCnGetGradient(_arCnState.bgGradient);
+      if (g && typeof arToast === 'function') arToast(`🌈 그라데이션 배경: ${g.name}`, true);
+    }
     function arCnShuffleDesign(mode = 'all') {
       const m = String(mode || 'all');
       if (m === 'color') {
+        if (Math.random() < 0.45) {
+          const curG = arCnEffectiveTheme().gradientId || '';
+          const gPool = AR_CN_GRADIENTS.filter((g) => g.id !== curG);
+          const gPick = gPool[Math.floor(Math.random() * gPool.length)] || AR_CN_GRADIENTS[0];
+          arCnSetGradient(gPick.id);
+          return;
+        }
         const curBg = (_arCnState.customColors.bg || arCnEffectiveTheme().bg || '').toLowerCase();
         const pool = AR_CN_SHUFFLE_PALETTES.filter((p) => p.bg.toLowerCase() !== curBg);
         const pick = pool[Math.floor(Math.random() * pool.length)] || AR_CN_SHUFFLE_PALETTES[0];
+        _arCnState.bgGradient = 'none';
         _arCnState.customColors = { bg: pick.bg, accent: pick.accent, fg: pick.fg };
         arCnRefreshUI(true);
         if (typeof arToast === 'function') arToast(`🎨 색감 섞기: ${pick.name}`, true);
@@ -6581,15 +6678,29 @@
       _arCnState.slides.forEach((s) => { s.userLayoutLocked = false; });
       // 45% 확률로 색감·폰트도 핀터레스트 조합으로 추가 믹스
       if (Math.random() < 0.45) {
-        const pal = AR_CN_SHUFFLE_PALETTES[Math.floor(Math.random() * AR_CN_SHUFFLE_PALETTES.length)];
-        _arCnState.customColors = { bg: pal.bg, accent: pal.accent, fg: pal.fg };
-        const fPick = AR_CN_FONTS[Math.floor(Math.random() * AR_CN_FONTS.length)];
-        _arCnState.fontKey = fPick.key;
-        arCnEnsureFont(fPick.key, () => arCnRefreshUI(true));
-        arCnPopulateSamplePhotos(true);
-        arCnRefreshUI(true);
-        if (typeof arToast === 'function') arToast(`🔀 믹스: ${pick.name} × ${pal.name}`, true);
+        if (Math.random() < 0.5) {
+          const gPick = AR_CN_GRADIENTS[Math.floor(Math.random() * AR_CN_GRADIENTS.length)];
+          _arCnState.bgGradient = gPick.id;
+          _arCnState.customColors = { bg: '', accent: '', fg: '' };
+          const fPick = AR_CN_FONTS[Math.floor(Math.random() * AR_CN_FONTS.length)];
+          _arCnState.fontKey = fPick.key;
+          arCnEnsureFont(fPick.key, () => arCnRefreshUI(true));
+          arCnPopulateSamplePhotos(true);
+          arCnRefreshUI(true);
+          if (typeof arToast === 'function') arToast(`🔀 믹스: ${pick.name} × ${gPick.name}`, true);
+        } else {
+          const pal = AR_CN_SHUFFLE_PALETTES[Math.floor(Math.random() * AR_CN_SHUFFLE_PALETTES.length)];
+          _arCnState.bgGradient = 'none';
+          _arCnState.customColors = { bg: pal.bg, accent: pal.accent, fg: pal.fg };
+          const fPick = AR_CN_FONTS[Math.floor(Math.random() * AR_CN_FONTS.length)];
+          _arCnState.fontKey = fPick.key;
+          arCnEnsureFont(fPick.key, () => arCnRefreshUI(true));
+          arCnPopulateSamplePhotos(true);
+          arCnRefreshUI(true);
+          if (typeof arToast === 'function') arToast(`🔀 믹스: ${pick.name} × ${pal.name}`, true);
+        }
       } else {
+        _arCnState.bgGradient = '';
         _arCnState.customColors = { bg: '', accent: '', fg: '' };
         _arCnState.fontKey = '';
         arCnEnsureFont(pick.fontKey, () => arCnRefreshUI(true));
@@ -6600,6 +6711,7 @@
     }
     function arCnSetCustomColor(key, hex) {
       if (!['bg', 'accent', 'fg'].includes(key)) return;
+      if (key === 'bg') _arCnState.bgGradient = 'none';
       _arCnState.customColors[key] = hex;
       if (key === 'bg' && !_arCnState.customColors.fg) {
         _arCnState.customColors.fg = arCnIsDarkHex(hex) ? '#f8fafc' : '#18181b';
@@ -6607,6 +6719,7 @@
       arCnRefreshUI(true);
     }
     function arCnResetCustomColors() {
+      _arCnState.bgGradient = '';
       _arCnState.customColors = { bg: '', accent: '', fg: '' };
       arCnRefreshUI(true);
     }
@@ -7302,6 +7415,7 @@
       window.arCnSetCat = arCnSetCat;
       window.arCnSetTargetCount = arCnSetTargetCount;
       window.arCnSetTemplate = arCnSetTemplate;
+      window.arCnSetGradient = arCnSetGradient;
       window.arCnShuffleDesign = arCnShuffleDesign;
       window.arCnSetCustomColor = arCnSetCustomColor;
       window.arCnResetCustomColors = arCnResetCustomColors;
