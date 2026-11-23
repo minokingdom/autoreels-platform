@@ -947,6 +947,18 @@
       return true;
     }
 
+    const topDurationPreset = document.getElementById('topDurationPreset');
+    const topDurationField = document.getElementById('topDurationCustomField');
+    const topDurationInput = document.getElementById('topCustomDurationInput');
+    topDurationPreset?.addEventListener('change', () => {
+      if (topDurationPreset.value === 'custom') {
+        topDurationField.hidden = false;
+        topDurationInput.focus();
+        topDurationInput.select();
+      } else setVideoTotalDuration(topDurationPreset.value);
+    });
+    topDurationInput?.addEventListener('change', () => setVideoTotalDuration(topDurationInput.value));
+
     function setVideoTotalDuration(sec) {
       const prevCuts = getTargetCutCount();
       BASE_DURATION = Math.max(6, Math.min(90, Number(sec) || 12));
@@ -1012,9 +1024,12 @@
       if (customIn) {
         customIn.value = String(Math.round(BASE_DURATION));
       }
-      const topCustomIn = document.getElementById('topCustomDurationInput');
-      if (topCustomIn) {
-        topCustomIn.value = String(Math.round(BASE_DURATION));
+      if (topDurationPreset && topDurationInput && topDurationField) {
+        const seconds = String(Math.round(BASE_DURATION));
+        const preset = Array.from(topDurationPreset.options).some(option => option.value === seconds);
+        topDurationPreset.value = preset ? seconds : 'custom';
+        topDurationField.hidden = preset;
+        topDurationInput.value = seconds;
       }
       const previewBadge = document.getElementById('previewDurationCutLabel');
       if (previewBadge) {
@@ -1029,12 +1044,6 @@
           btn.className = isActive
             ? 'h-6 px-2 rounded-[5px] text-[11px] font-mono bg-[#ededed] text-[#141415] font-semibold cursor-pointer'
             : 'h-6 px-2 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer';
-        }
-        const topBtn = document.getElementById(`topDurBtn_${dVal}`);
-        if (topBtn) {
-          topBtn.className = isActive
-            ? 'h-6 px-1.5 rounded-[5px] text-[11px] font-mono bg-[#ededed] text-[#141415] font-semibold cursor-pointer'
-            : 'h-6 px-1.5 rounded-[5px] text-[11px] font-mono text-[#a1a1a6] hover:text-[#ededed] cursor-pointer';
         }
       });
 

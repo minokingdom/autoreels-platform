@@ -2080,3 +2080,10 @@ body.ar-work-docked #cutEditorPanel .ar-preview-bottom-sheet{max-height:none;ove
   body.ar-cn-mode #arCnMonitorColumn{bottom:50%}
   body.ar-cn-mode #arCnQuickBar{top:25%;max-height:49%;overflow-y:auto}
 }
+
+.ar-duration-control{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:4px 6px;min-width:0;color:var(--text,#ededed);font-size:12px;white-space:nowrap}
+.ar-duration-control>label:first-child{color:#a9adb6}
+.ar-duration-control select,.ar-duration-control #topCustomDurationInput{font:inherit;color:inherit;color-scheme:dark;border:1px solid var(--border,#383c43);border-radius:8px;background:var(--raised,#25282e);height:36px}
+.ar-duration-control select{width:auto;min-width:64px;padding:0 5px;cursor:pointer}
+.ar-duration-control #topDurationCustomField:not([hidden]){display:inline-flex;align-items:center;gap:3px}
+.ar-duration-control #topCustomDurationInput{width:4ch;min-width:32px}
