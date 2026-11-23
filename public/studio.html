@@ -897,12 +897,16 @@
               <div id="arMemeRadarStatus" class="text-[11px] text-[#9ca3af]">YouTube · Google Trends · Reddit 기반 오늘의 밈 Top 10 보드입니다.</div>
               <div id="arMemeRadarList" class="space-y-2.5 max-h-[340px] overflow-y-auto pr-0.5"></div>
 
-              <!-- 조립된 6컷 밈 짤·스톡 클립 자동 매칭 확인 & 컷별 실시간 교체 바 -->
+              <!-- 조립된 6컷 밈 대사 1:1 매칭 장면 확인 & AI 1:1 씬 생성 / 원본 영상 올리기 바 -->
               <div id="arMemeAssembledBox" class="hidden rounded-[11px] bg-[#0c0e14] border border-[#4ade80]/40 p-3 space-y-2">
                 <div class="flex items-center justify-between gap-2 flex-wrap">
-                  <span id="arMemeAssembledTitle" class="text-[12px] font-bold text-[#4ade80]">✅ 6컷 고속 밈 쇼츠 조립 완료 (업로드 0번)</span>
-                  <div class="flex items-center gap-1.5">
-                    <button type="button" onclick="arFetchLiveVisualsForCurrentMeme()" class="px-2.5 py-1 rounded-lg bg-[#2563eb]/25 border border-[#60a5fa]/40 text-[11px] font-semibold text-[#93c5fd] cursor-pointer">🔄 무료 밈 짤·스톡 다시 매칭</button>
+                  <span id="arMemeAssembledTitle" class="text-[12px] font-bold text-[#4ade80]">✅ 6컷 대사 1:1 매칭 밈 쇼츠 조립 완료</span>
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <button type="button" onclick="arFetchLiveVisualsForCurrentMeme()" class="px-2.5 py-1 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] border border-[#60a5fa] text-[11px] font-bold text-white cursor-pointer">✨ 6컷 AI 1:1 맞춤 씬 생성</button>
+                    <label class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 text-[11px] font-semibold text-[#e4e4e7] cursor-pointer">
+                      📁 원본 영상(MP4) 6구간 동기화
+                      <input type="file" accept="video/*" class="hidden" onchange="arHandleForeignRemakeVideo(event)" />
+                    </label>
                     <button type="button" onclick="switchStudioTab('sound');setTimeout(()=>{if(typeof generateAllCutsTts==='function')generateAllCutsTts();},200);" class="btn-primary h-7 px-2.5 text-[11px] font-bold cursor-pointer">🔊 AI 더빙 입히기 →</button>
                   </div>
                 </div>
@@ -3107,7 +3111,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-meme-real-videos"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-meme-1to1-scenes"><\/script>');
     }
   </script>
   <!--
