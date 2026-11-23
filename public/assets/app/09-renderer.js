@@ -4961,32 +4961,88 @@
     }
 
     const AR_CN_TEMPLATES = [
-      // 감성·카페 (4)
+      // 핀터레스트 (12종 — 영자신문·영수증·스크랩북·OS창·필름스트립·5:5분할·바이닐·무드보드·스위스포스터)
+      { id: 'pin_newspaper', cat: '핀터레스트', name: '영자신문 브로드시트', bg: '#f4efe6', card: '#e8e0d2', fg: '#171512', muted: '#575046', accent: '#991b1b', pillBg: '#171512', pillFg: '#f4efe6', fontKey: 'songmyung', style: 'editorial', coverLayout: 'photo_newspaper', bodyLayout: 'photo_newspaper', samplePhoto: '/assets/landing/ed-cafe.jpg', scenePack: 'cafe', sampleTitle: '오늘 꼭 읽어둘\n핵심 트렌드 리포트' },
+      { id: 'pin_receipt', cat: '핀터레스트', name: '성수 영수증 티켓', bg: '#ece7df', card: '#ffffff', fg: '#1c1917', muted: '#78716c', accent: '#c2410c', pillBg: '#1c1917', pillFg: '#ffffff', fontKey: 'orbit', style: 'clean', coverLayout: 'photo_receipt', bodyLayout: 'photo_receipt', samplePhoto: '/assets/scenes/cafe/5.jpg', scenePack: 'cafe', sampleTitle: '주문 번호 01\n실패 없는 체크리스트' },
+      { id: 'pin_scrapbook', cat: '핀터레스트', name: '마스킹테이프 스크랩', bg: '#f7f3eb', card: '#ebe4d6', fg: '#2b221c', muted: '#6e5e52', accent: '#b45309', pillBg: '#2b221c', pillFg: '#f7f3eb', fontKey: 'pen', style: 'soft', coverLayout: 'photo_scrapbook', bodyLayout: 'photo_scrapbook', samplePhoto: '/assets/scenes/cafe/4.jpg', scenePack: 'cafe', sampleTitle: '취향이 묻어나는\n작은 일상 스크랩' },
+      { id: 'pin_window', cat: '핀터레스트', name: '레트로 OS 윈도우', bg: '#e9edf5', card: '#ffffff', fg: '#111827', muted: '#4b5563', accent: '#2563eb', pillBg: '#111827', pillFg: '#ffffff', fontKey: 'paperlogy', style: 'clean', coverLayout: 'photo_window', bodyLayout: 'photo_window', samplePhoto: '/assets/scenes/shop/4.jpg', scenePack: 'shop', sampleTitle: '저장해 두고 쓰는\n실전 아카이브 모음' },
+      { id: 'pin_filmstrip', cat: '핀터레스트', name: '코닥 35mm 필름롤', bg: '#141312', card: '#22201d', fg: '#f6efe4', muted: '#b5a898', accent: '#f59e0b', pillBg: '#f59e0b', pillFg: '#141312', fontKey: 'hahmlet', style: 'dark', coverLayout: 'photo_filmstrip', bodyLayout: 'photo_filmstrip', samplePhoto: '/assets/scenes/restaurant/5.jpg', scenePack: 'restaurant', sampleTitle: '필름 한 롤에 담은\n가장 선명한 순간' },
+      { id: 'pin_kinfolk_left', cat: '핀터레스트', name: '킨포크 좌우 5:5', bg: '#f5f1ea', card: '#eae3d6', fg: '#1f1d1a', muted: '#6b655c', accent: '#8c5a3c', pillBg: '#1f1d1a', pillFg: '#f5f1ea', fontKey: 'diphylleia', style: 'editorial', coverLayout: 'photo_split_left', bodyLayout: 'photo_split_left', samplePhoto: '/assets/landing/ed-interior.jpg', scenePack: 'interior', sampleTitle: '여백이 살아있는\n공간 큐레이션' },
+      { id: 'pin_cereal_right', cat: '핀터레스트', name: '시리얼 우측 5:5', bg: '#f2f3f0', card: '#e3e6df', fg: '#191d19', muted: '#5a635a', accent: '#3f6212', pillBg: '#3f6212', pillFg: '#ffffff', fontKey: 'grandiflora', style: 'editorial', coverLayout: 'photo_split_right', bodyLayout: 'photo_split_right', samplePhoto: '/assets/scenes/interior/6.jpg', scenePack: 'interior', sampleTitle: '오래 머물고 싶은\n미니멀 무드 가이드' },
+      { id: 'pin_vinyl', cat: '핀터레스트', name: '바이닐 원형 커버', bg: '#f8f0ec', card: '#efe0d8', fg: '#231618', muted: '#7a5a5f', accent: '#be123c', pillBg: '#be123c', pillFg: '#ffffff', fontKey: 'songmyung', style: 'soft', coverLayout: 'photo_circle', bodyLayout: 'photo_circle', samplePhoto: '/assets/scenes/beauty/5.jpg', scenePack: 'beauty', sampleTitle: '매일 꺼내 듣고 싶은\n오늘의 취향 리스트' },
+      { id: 'pin_moodboard', cat: '핀터레스트', name: '2컷 핀터 무드보드', bg: '#f6f3ee', card: '#eae4da', fg: '#1e1c1a', muted: '#6b655e', accent: '#1d4ed8', pillBg: '#1e1c1a', pillFg: '#ffffff', fontKey: 'pretM', style: 'editorial', coverLayout: 'photo_duo', bodyLayout: 'photo_duo', samplePhoto: '/assets/scenes/shop/6.jpg', scenePack: 'shop', sampleTitle: '한눈에 비교하는\n디테일 무드보드' },
+      { id: 'pin_swiss_grid', cat: '핀터레스트', name: '코펜하겐 포스터', bg: '#f7f7f5', card: '#e7e7e2', fg: '#111111', muted: '#525252', accent: '#ea580c', pillBg: '#ea580c', pillFg: '#ffffff', fontKey: 'aggro', style: 'swiss', coverLayout: 'photo_poster', bodyLayout: 'photo_poster', samplePhoto: '/assets/scenes/realestate/4.jpg', scenePack: 'realestate', sampleTitle: '핵심만 굵게 짚는\n스위스 포스터 카드' },
+      { id: 'pin_paris_paper', cat: '핀터레스트', name: '파리 모닝 페이퍼', bg: '#faf6ef', card: '#efe7d8', fg: '#1f2937', muted: '#6b7280', accent: '#1e3a8a', pillBg: '#1e3a8a', pillFg: '#ffffff', fontKey: 'gowun', style: 'editorial', coverLayout: 'photo_newspaper', bodyLayout: 'photo_split_left', samplePhoto: '/assets/scenes/cafe/8.jpg', scenePack: 'cafe', sampleTitle: '파리 아침처럼\n감도 높은 기록' },
+      { id: 'pin_tokyo_zine', cat: '핀터레스트', name: '도쿄 인디 잡지', bg: '#161b22', card: '#21262d', fg: '#f0f6fc', muted: '#8b949e', accent: '#f97316', pillBg: '#f97316', pillFg: '#161b22', fontKey: 'kirang', style: 'dark', coverLayout: 'photo_poster', bodyLayout: 'photo_split_right', samplePhoto: '/assets/scenes/shop/8.jpg', scenePack: 'shop', sampleTitle: '남들과 다르게 보는\n로컬 인디 매거진' },
+
+      // 감성·카페 (6)
       { id: 'bakery_curation', cat: '감성·카페', name: '베이커리 큐레이션', bg: '#f8f3eb', card: '#efe5d6', fg: '#2c1f16', muted: '#756254', accent: '#c2603f', pillBg: '#2c1f16', pillFg: '#f8f3eb', fontKey: 'gowun', style: 'editorial', coverLayout: 'photo_top', bodyLayout: 'photo_top', samplePhoto: '/assets/landing/ed-cafe.jpg', scenePack: 'cafe', sampleTitle: '성수동 카페\n추천 베스트 5' },
       { id: 'polaroid_diary', cat: '감성·카페', name: '폴라로이드 일기', bg: '#f4efe6', card: '#e9e0d2', fg: '#2b241e', muted: '#78685a', accent: '#b45309', pillBg: '#ffffff', pillFg: '#2b241e', fontKey: 'pen', style: 'soft', coverLayout: 'photo_polaroid', bodyLayout: 'photo_polaroid', samplePhoto: '/assets/landing/ed-dining.jpg', scenePack: 'restaurant', sampleTitle: '주말에 가기 좋은\n숨은 맛집 기록' },
       { id: 'seoul_film35', cat: '감성·카페', name: '성수 35mm 필름', bg: '#1b1815', card: '#28231e', fg: '#f6efe4', muted: '#b8aa96', accent: '#e09f3e', pillBg: '#e09f3e', pillFg: '#1b1815', fontKey: 'songmyung', style: 'editorial', coverLayout: 'photo_frame', bodyLayout: 'photo_frame', samplePhoto: '/assets/scenes/cafe/2.jpg', scenePack: 'cafe', sampleTitle: '오후 4시 햇살,\n필름에 담은 기록' },
       { id: 'cafe_handwrite', cat: '감성·카페', name: '손글씨 붓엽서', bg: '#f5ede0', card: '#eadcc7', fg: '#251d17', muted: '#6b5a4b', accent: '#a92c21', pillBg: '#a92c21', pillFg: '#fff8ea', fontKey: 'brush', style: 'editorial', coverLayout: 'photo_polaroid', bodyLayout: 'photo_top', samplePhoto: '/assets/scenes/cafe/3.jpg', scenePack: 'cafe', sampleTitle: '오늘 하루를 채운\n작은 순간들' },
-      // 매거진 (3)
+      { id: 'butter_cream', cat: '감성·카페', name: '버터 크림 노트', bg: '#fdf8e6', card: '#f6ecc9', fg: '#322617', muted: '#7d694c', accent: '#ca8a04', pillBg: '#322617', pillFg: '#fdf8e6', fontKey: 'cafe24', style: 'soft', coverLayout: 'photo_scrapbook', bodyLayout: 'photo_duo', samplePhoto: '/assets/scenes/cafe/9.jpg', scenePack: 'cafe', sampleTitle: '달콤하게 정리한\n오늘의 카페 메모' },
+      { id: 'oatmeal_ticket', cat: '감성·카페', name: '오트밀 티켓 엽서', bg: '#ede8df', card: '#fbf9f5', fg: '#27231e', muted: '#70685f', accent: '#92400e', pillBg: '#92400e', pillFg: '#ffffff', fontKey: 'diphylleia', style: 'editorial', coverLayout: 'photo_receipt', bodyLayout: 'photo_polaroid', samplePhoto: '/assets/scenes/restaurant/4.jpg', scenePack: 'restaurant', sampleTitle: '예약 전 꼭 확인하는\n다이닝 체크포인트' },
+
+      // 매거진 (6)
       { id: 'magazine_hero', cat: '매거진', name: '매거진 풀포토', bg: '#161514', card: '#242220', fg: '#ffffff', muted: '#d6d3d1', accent: '#f59e0b', pillBg: '#f59e0b', pillFg: '#141210', fontKey: 'hahmlet', style: 'editorial', coverLayout: 'photo_full', bodyLayout: 'photo_full', samplePhoto: '/assets/landing/ed-interior.jpg', scenePack: 'interior', sampleTitle: '공간이 달라지는\n조명 배치 법칙' },
       { id: 'busan_magazine', cat: '매거진', name: '로컬 매거진', bg: '#f4f1ea', card: '#e8e2d5', fg: '#141414', muted: '#57534e', accent: '#1d4ed8', pillBg: '#1d4ed8', pillFg: '#ffffff', fontKey: 'paperlogy', style: 'editorial', coverLayout: 'photo_bottom', bodyLayout: 'photo_bottom', samplePhoto: '/assets/scenes/realestate/1.jpg', scenePack: 'realestate', sampleTitle: '지금 주목해야 할\n로컬 핫플레이스' },
       { id: 'vogue_monochrome', cat: '매거진', name: '보그 모노 화보', bg: '#121212', card: '#222222', fg: '#fafafa', muted: '#a3a3a3', accent: '#e5e5e5', pillBg: '#fafafa', pillFg: '#121212', fontKey: 'songmyung', style: 'editorial', coverLayout: 'photo_full', bodyLayout: 'photo_frame', samplePhoto: '/assets/scenes/interior/2.jpg', scenePack: 'interior', sampleTitle: '유행 타지 않는\n클래식 스타일링' },
-      // 뷰티·라이프 (3)
+      { id: 'arch_journal', cat: '매거진', name: '아키텍처 저널', bg: '#f0efeb', card: '#e2e0d9', fg: '#1c1b18', muted: '#605e56', accent: '#334155', pillBg: '#1c1b18', pillFg: '#f0efeb', fontKey: 'hahmlet', style: 'editorial', coverLayout: 'photo_split_left', bodyLayout: 'photo_poster', samplePhoto: '/assets/scenes/realestate/5.jpg', scenePack: 'realestate', sampleTitle: '집의 인상을 바꾸는\n구조와 채광의 비밀' },
+      { id: 'harpers_duo', cat: '매거진', name: '하퍼스 에디토리얼', bg: '#181414', card: '#292121', fg: '#faf5f5', muted: '#c7b8b8', accent: '#e11d48', pillBg: '#e11d48', pillFg: '#ffffff', fontKey: 'grandiflora', style: 'editorial', coverLayout: 'photo_duo', bodyLayout: 'photo_split_right', samplePhoto: '/assets/scenes/beauty/7.jpg', scenePack: 'beauty', sampleTitle: '에디터가 직접 고른\n이번 달 시그니처' },
+      { id: 'monocle_brief', cat: '매거진', name: '모노클 브리핑', bg: '#f7f5f0', card: '#eae6dc', fg: '#141414', muted: '#525252', accent: '#d97706', pillBg: '#141414', pillFg: '#f7f5f0', fontKey: 'pretM', style: 'swiss', coverLayout: 'photo_newspaper', bodyLayout: 'photo_bottom', samplePhoto: '/assets/scenes/auto/4.jpg', scenePack: 'auto', sampleTitle: '알아두면 격이 다른\n라이프스타일 브리핑' },
+
+      // 뷰티·라이프 (5)
       { id: 'beauty_arch', cat: '뷰티·라이프', name: '뷰티 아치 화보', bg: '#fff6f4', card: '#ffe8e3', fg: '#24171a', muted: '#7a575c', accent: '#be185d', pillBg: '#fce7f3', pillFg: '#9d174d', fontKey: 'grandiflora', style: 'editorial', coverLayout: 'photo_arch', bodyLayout: 'photo_arch', samplePhoto: '/assets/landing/ed-beauty.jpg', scenePack: 'beauty', sampleTitle: '아침 5분 완성\n광채 스킨 루틴' },
       { id: 'matcha_wellness', cat: '뷰티·라이프', name: '말차 웰니스', bg: '#ecf2ec', card: '#dde8dd', fg: '#16291e', muted: '#4a6253', accent: '#2f6f4e', pillBg: '#2f6f4e', pillFg: '#ffffff', fontKey: 'diphylleia', style: 'soft', coverLayout: 'photo_top', bodyLayout: 'photo_arch', samplePhoto: '/assets/scenes/clinic/2.jpg', scenePack: 'clinic', sampleTitle: '몸이 가벼워지는\n아침 습관 5가지' },
       { id: 'peach_lookbook', cat: '뷰티·라이프', name: '피치 룩북', bg: '#fff3ee', card: '#ffe1d6', fg: '#2b1815', muted: '#855850', accent: '#ea580c', pillBg: '#ea580c', pillFg: '#ffffff', fontKey: 'cafe24', style: 'soft', coverLayout: 'photo_arch', bodyLayout: 'photo_top', samplePhoto: '/assets/scenes/beauty/3.jpg', scenePack: 'beauty', sampleTitle: '올 시즌 꼭 챙길\n데일리 룩북' },
-      // 볼드·비즈 (4)
+      { id: 'rose_medallion', cat: '뷰티·라이프', name: '로즈 원형 화보', bg: '#fdf2f4', card: '#fce1e7', fg: '#2c131a', muted: '#885360', accent: '#db2777', pillBg: '#db2777', pillFg: '#ffffff', fontKey: 'songmyung', style: 'soft', coverLayout: 'photo_circle', bodyLayout: 'photo_arch', samplePhoto: '/assets/scenes/beauty/8.jpg', scenePack: 'beauty', sampleTitle: '피부과 원장이 추천한\n보습 레이어링 공식' },
+      { id: 'lavender_daily', cat: '뷰티·라이프', name: '라벤더 데일리 창', bg: '#f4f2fc', card: '#e8e3fa', fg: '#1f1933', muted: '#5c527a', accent: '#7c3aed', pillBg: '#7c3aed', pillFg: '#ffffff', fontKey: 'sunflower', style: 'soft', coverLayout: 'photo_window', bodyLayout: 'photo_duo', samplePhoto: '/assets/scenes/clinic/5.jpg', scenePack: 'clinic', sampleTitle: '하루 10분 투자하는\n마음·건강 케어 루틴' },
+
+      // 볼드·비즈 (5)
       { id: 'nike_editorial', cat: '볼드·비즈', name: '나이키 볼드 밴드', bg: '#111111', card: '#1c1c1e', fg: '#ffffff', muted: '#a1a1aa', accent: '#f97316', pillBg: '#f97316', pillFg: '#111111', fontKey: 'aggro', style: 'dark', coverLayout: 'photo_band', bodyLayout: 'photo_band', samplePhoto: '/assets/scenes/fitness/1.jpg', scenePack: 'fitness', sampleTitle: '체지방 태우는\n핵심 루틴 5가지' },
       { id: 'cobalt_news', cat: '볼드·비즈', name: '뉴스 카드브리핑', bg: '#0c1c42', card: '#142a60', fg: '#ffffff', muted: '#93c5fd', accent: '#facc15', pillBg: '#facc15', pillFg: '#0c1c42', fontKey: 'gmarket', style: 'news', coverLayout: 'photo_bottom', bodyLayout: 'photo_top', samplePhoto: '/assets/scenes/academy/1.jpg', scenePack: 'academy', sampleTitle: '놓치면 손해보는\n핵심 정보 총정리' },
       { id: 'pop_yellow', cat: '볼드·비즈', name: '팝 옐로우 팁', bg: '#fef08a', card: '#fde047', fg: '#111113', muted: '#3f3f46', accent: '#111113', pillBg: '#111113', pillFg: '#fef08a', fontKey: 'bagel', style: 'swiss', coverLayout: 'photo_top', bodyLayout: 'photo_frame', samplePhoto: '/assets/scenes/shop/1.jpg', scenePack: 'shop', sampleTitle: '초보자도 바로 쓰는\n실전 꿀팁 모음' },
       { id: 'street_calli', cat: '볼드·비즈', name: '스트릿 캘리 포스터', bg: '#18181b', card: '#27272a', fg: '#fafafa', muted: '#a1a1aa', accent: '#ef4444', pillBg: '#ef4444', pillFg: '#ffffff', fontKey: 'dokdo', style: 'dark', coverLayout: 'photo_band', bodyLayout: 'photo_full', samplePhoto: '/assets/scenes/fitness/3.jpg', scenePack: 'fitness', sampleTitle: '오늘부터 달라지는\n나만의 돌파구' },
-      // 다크·시네마 (3)
+      { id: 'bauhaus_red', cat: '볼드·비즈', name: '바우하우스 포스터', bg: '#f6f1e7', card: '#eae2d3', fg: '#111111', muted: '#44403c', accent: '#dc2626', pillBg: '#dc2626', pillFg: '#ffffff', fontKey: 'aggro', style: 'swiss', coverLayout: 'photo_poster', bodyLayout: 'photo_band', samplePhoto: '/assets/scenes/academy/4.jpg', scenePack: 'academy', sampleTitle: '성과가 바로 나오는\n실무 기획의 정석' },
+
+      // 다크·시네마 (5)
       { id: 'dark_insight', cat: '다크·시네마', name: '다크 비즈니스', bg: '#0d0f14', card: '#181c26', fg: '#f8fafc', muted: '#94a3b8', accent: '#facc15', pillBg: '#facc15', pillFg: '#0f172a', fontKey: 'gmarket', style: 'news', coverLayout: 'photo_bottom', bodyLayout: 'photo_top', samplePhoto: '/assets/landing/hero-cinema-kv.jpg', scenePack: 'clinic', sampleTitle: '매출 2배 만드는\n핵심 전략 정리' },
-      { id: 'neon_cyber', cat: '다크·시네마', name: '네온 테크 브리핑', bg: '#070b18', card: '#111830', fg: '#f0f9ff', muted: '#7dd3fc', accent: '#22d3ee', pillBg: '#22d3ee', pillFg: '#082f49', fontKey: 'orbit', style: 'news', coverLayout: 'photo_top', bodyLayout: 'photo_band', samplePhoto: '/assets/scenes/auto/2.jpg', scenePack: 'auto', sampleTitle: 'AI 시대에 알아둘\n업무 자동화 팁' },
+      { id: 'neon_cyber', cat: '다크·시네마', name: '네온 테크 브리핑', bg: '#070b18', card: '#111830', fg: '#f0f9ff', muted: '#7dd3fc', accent: '#22d3ee', pillBg: '#22d3ee', pillFg: '#082f49', fontKey: 'orbit', style: 'news', coverLayout: 'photo_window', bodyLayout: 'photo_band', samplePhoto: '/assets/scenes/auto/2.jpg', scenePack: 'auto', sampleTitle: 'AI 시대에 알아둘\n업무 자동화 팁' },
       { id: 'espresso_mood', cat: '다크·시네마', name: '에스프레소 무드', bg: '#1e1612', card: '#2e221c', fg: '#f5ebe0', muted: '#cbb8a6', accent: '#d97706', pillBg: '#d97706', pillFg: '#ffffff', fontKey: 'diphylleia', style: 'editorial', coverLayout: 'photo_frame', bodyLayout: 'photo_polaroid', samplePhoto: '/assets/scenes/restaurant/2.jpg', scenePack: 'restaurant', sampleTitle: '깊은 여운이 남는\n밤의 취향 기록' },
-      // 미니멀 (3)
+      { id: 'midnight_film', cat: '다크·시네마', name: '미드나잇 필름', bg: '#0e1116', card: '#1a202c', fg: '#f1f5f9', muted: '#94a3b8', accent: '#fb923c', pillBg: '#fb923c', pillFg: '#0e1116', fontKey: 'songmyung', style: 'dark', coverLayout: 'photo_filmstrip', bodyLayout: 'photo_full', samplePhoto: '/assets/scenes/auto/6.jpg', scenePack: 'auto', sampleTitle: '밤 드라이브에서 찾은\n디테일의 차이' },
+      { id: 'obsidian_gold', cat: '다크·시네마', name: '옵시디언 골드', bg: '#111110', card: '#1f1e1b', fg: '#faf7f0', muted: '#b8b0a0', accent: '#d4af37', pillBg: '#d4af37', pillFg: '#111110', fontKey: 'hahmlet', style: 'editorial', coverLayout: 'photo_circle', bodyLayout: 'photo_split_left', samplePhoto: '/assets/scenes/interior/7.jpg', scenePack: 'interior', sampleTitle: '프리미엄 브랜드가\n선택하는 디테일' },
+
+      // 미니멀 (5)
       { id: 'apple_clean', cat: '미니멀', name: '애플 클린 액자', bg: '#fbfbfd', card: '#f0f1f5', fg: '#1d1d1f', muted: '#6e6e73', accent: '#0071e3', pillBg: '#e8f2ff', pillFg: '#005bb5', fontKey: 'pretM', style: 'clean', coverLayout: 'photo_frame', bodyLayout: 'photo_frame', samplePhoto: '/assets/landing/ed-auto.jpg', scenePack: 'auto', sampleTitle: '실패 없는 선택\n핵심 체크리스트' },
       { id: 'swiss_poster', cat: '미니멀', name: '스위스 포스터', bg: '#f3f3f5', card: '#e4e4e7', fg: '#09090b', muted: '#52525b', accent: '#dc2626', pillBg: '#dc2626', pillFg: '#ffffff', fontKey: 'sunflower', style: 'swiss', coverLayout: 'photo_band', bodyLayout: 'photo_bottom', samplePhoto: '/assets/scenes/shop/2.jpg', scenePack: 'shop', sampleTitle: '군더더기 없이\n핵심만 요약하기' },
-      { id: 'atelier_linen', cat: '미니멀', name: '아틀리에 리넨', bg: '#f2efe9', card: '#e6e1d6', fg: '#23221f', muted: '#6b685f', accent: '#4d7c0f', pillBg: '#4d7c0f', pillFg: '#ffffff', fontKey: 'jua', style: 'editorial', coverLayout: 'photo_arch', bodyLayout: 'photo_top', samplePhoto: '/assets/scenes/interior/3.jpg', scenePack: 'interior', sampleTitle: '차분한 하루를 위한\n미니멀 라이프' }
+      { id: 'atelier_linen', cat: '미니멀', name: '아틀리에 리넨', bg: '#f2efe9', card: '#e6e1d6', fg: '#23221f', muted: '#6b685f', accent: '#4d7c0f', pillBg: '#4d7c0f', pillFg: '#ffffff', fontKey: 'jua', style: 'editorial', coverLayout: 'photo_arch', bodyLayout: 'photo_top', samplePhoto: '/assets/scenes/interior/3.jpg', scenePack: 'interior', sampleTitle: '차분한 하루를 위한\n미니멀 라이프' },
+      { id: 'nordic_white', cat: '미니멀', name: '노르딕 화이트 분할', bg: '#ffffff', card: '#f4f4f5', fg: '#18181b', muted: '#71717a', accent: '#0f172a', pillBg: '#0f172a', pillFg: '#ffffff', fontKey: 'paperlogy', style: 'clean', coverLayout: 'photo_split_right', bodyLayout: 'photo_split_left', samplePhoto: '/assets/scenes/clinic/7.jpg', scenePack: 'clinic', sampleTitle: '깨끗한 여백으로\n신뢰감을 높이는 법' },
+      { id: 'muji_note', cat: '미니멀', name: '무인양품 노트', bg: '#f6f4ee', card: '#ebe7dc', fg: '#292524', muted: '#78716c', accent: '#7f1d1d', pillBg: '#7f1d1d', pillFg: '#ffffff', fontKey: 'gowun', style: 'editorial', coverLayout: 'photo_duo', bodyLayout: 'photo_top', samplePhoto: '/assets/scenes/cafe/11.jpg', scenePack: 'cafe', sampleTitle: '꼭 필요한 것만 남긴\n심플 정리 노트' }
+    ];
+    const AR_CN_SHUFFLE_PALETTES = [
+      { name: '아이보리·테라코타', bg: '#f8f3eb', accent: '#c2603f', fg: '#2c1f16' },
+      { name: '세이지·포레스트', bg: '#ecf2ec', accent: '#2f6f4e', fg: '#16291e' },
+      { name: '버터·에스프레소', bg: '#fdf8e6', accent: '#b45309', fg: '#2e2214' },
+      { name: '로즈·버건디', bg: '#fdf2f4', accent: '#be185d', fg: '#2c131a' },
+      { name: '페이퍼·코발트', bg: '#f4f1ea', accent: '#1d4ed8', fg: '#141414' },
+      { name: '오트밀·크림슨', bg: '#f5ede0', accent: '#991b1b', fg: '#231b15' },
+      { name: '차콜·앰버', bg: '#161514', accent: '#f59e0b', fg: '#faf7f2' },
+      { name: '딥네이비·레몬', bg: '#0c1c42', accent: '#facc15', fg: '#ffffff' },
+      { name: '옵시디언·오렌지', bg: '#111113', accent: '#f97316', fg: '#ffffff' },
+      { name: '미드나잇·시안', bg: '#070b18', accent: '#22d3ee', fg: '#f0f9ff' },
+      { name: '에스프레소·골드', bg: '#1e1612', accent: '#d4af37', fg: '#f5ebe0' },
+      { name: '스위스·레드', bg: '#f5f5f4', accent: '#dc2626', fg: '#09090b' },
+      { name: '라벤더·바이올렛', bg: '#f4f2fc', accent: '#7c3aed', fg: '#1f1933' },
+      { name: '민트·딥그린', bg: '#eef7f4', accent: '#0f766e', fg: '#112a26' },
+      { name: '피치·코랄', bg: '#fff3ee', accent: '#ea580c', fg: '#2b1815' },
+      { name: '팝·옐로우', bg: '#fef08a', accent: '#111113', fg: '#111113' },
+      { name: '클라우드·블루', bg: '#f0f5fb', accent: '#0071e3', fg: '#141c2b' },
+      { name: '모노·블랙', bg: '#121212', accent: '#e5e5e5', fg: '#fafafa' }
+    ];
+    const AR_CN_PHOTO_LAYOUT_KEYS = [
+      'photo_top', 'photo_full', 'photo_polaroid', 'photo_arch', 'photo_band', 'photo_frame', 'photo_bottom',
+      'photo_split_left', 'photo_split_right', 'photo_newspaper', 'photo_receipt', 'photo_scrapbook',
+      'photo_circle', 'photo_window', 'photo_filmstrip', 'photo_poster', 'photo_duo'
     ];
     const _arCnState = {
       templateId: 'bakery_curation',
@@ -5042,7 +5098,7 @@
     function arCnSlideSampleUrl(tpl, slideIdx) {
       if (slideIdx === 0 && tpl.samplePhoto) return tpl.samplePhoto;
       const pack = tpl.scenePack || 'cafe';
-      const num = ((slideIdx) % 9) + 1;
+      const num = ((slideIdx) % 15) + 1;
       return `/assets/scenes/${pack}/${num}.jpg`;
     }
     function arCnPopulateSamplePhotos(applyLayouts = true) {
@@ -5394,6 +5450,377 @@
           ctx.fillText(hlStr, padX + Math.round(38 * sc), photoTop + photoH - hh / 2 - Math.round(18 * sc));
         }
         skipBottomHl = true;
+      } else if (pLayout === 'photo_split_left' || pLayout === 'photo_split_right') {
+        // 핀터레스트 킨포크·시리얼 5:5 좌우 분할 에디토리얼
+        const leftPhoto = pLayout === 'photo_split_left';
+        const splitX = Math.round(W * 0.48);
+        const topY = Math.round(138 * sc);
+        const areaH = H - topY - Math.round(118 * sc);
+        const px = leftPhoto ? padX : splitX + Math.round(24 * sc);
+        const pw = leftPhoto ? (splitX - padX - Math.round(20 * sc)) : (W - padX - (splitX + Math.round(24 * sc)));
+        const tx = leftPhoto ? (splitX + Math.round(26 * sc)) : padX;
+        const twW = leftPhoto ? (W - padX - tx) : (splitX - padX - Math.round(24 * sc));
+        arCollageDrawCover(ctx, slide.bgImg, px, topY, pw, areaH, Math.round(16 * sc), null);
+        // 중앙 세로 헤어라인 구분선
+        ctx.strokeStyle = tpl.dark ? 'rgba(255,255,255,0.16)' : 'rgba(20,18,16,0.16)';
+        ctx.lineWidth = Math.max(1, 2 * sc);
+        ctx.beginPath(); ctx.moveTo(splitX, topY); ctx.lineTo(splitX, topY + areaH); ctx.stroke();
+        // 대형 배경 숫자 워터마크
+        ctx.save();
+        ctx.font = `${tW} ${Math.round(150 * sc)}px ${tpl.fontTitle}`;
+        ctx.fillStyle = accent; ctx.globalAlpha = 0.14;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.fillText(String(slideIdx + 1).padStart(2, '0'), tx, topY - Math.round(8 * sc));
+        ctx.restore();
+        curY = topY + Math.round(158 * sc);
+        ctx.fillStyle = accent;
+        ctx.fillRect(tx, curY - Math.round(22 * sc), Math.round(52 * sc), Math.max(2, Math.round(5 * sc)));
+        const titleFs = Math.round(48 * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, twW).slice(0, 4);
+        const tLH = Math.round(titleFs * 1.3);
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, tx, curY); curY += tLH; });
+        curY += Math.round(22 * sc);
+        const bodyFs = Math.round(30 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, twW).slice(0, 5);
+        const bLH = Math.round(bodyFs * 1.52);
+        bLines.forEach((ln) => { ctx.fillText(ln, tx, curY); curY += bLH; });
+        if (hlStr) {
+          const hlY = topY + areaH - Math.round(74 * sc);
+          if (hlY > curY + Math.round(16 * sc)) {
+            ctx.fillStyle = tpl.card;
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(tx, hlY, twW, Math.round(62 * sc), Math.round(12 * sc));
+            else ctx.rect(tx, hlY, twW, Math.round(62 * sc));
+            ctx.fill();
+            ctx.fillStyle = accent;
+            ctx.fillRect(tx, hlY, Math.round(7 * sc), Math.round(62 * sc));
+            ctx.font = `700 ${Math.round(24 * sc)}px ${tpl.fontBody}`;
+            ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+            const oneLine = arCnWrapLines(ctx, hlStr, twW - Math.round(32 * sc))[0] || hlStr;
+            ctx.fillText(oneLine, tx + Math.round(20 * sc), hlY + Math.round(31 * sc));
+          }
+        }
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_newspaper') {
+        // 핀터레스트 영자신문 브로드시트 (더블 룰 + 매스트헤드 + 사진 + 2단 캡션)
+        const ruleCol = tpl.dark ? 'rgba(255,255,255,0.34)' : 'rgba(20,18,16,0.42)';
+        const mastY = Math.round(134 * sc);
+        ctx.strokeStyle = ruleCol;
+        ctx.lineWidth = Math.max(2, 4 * sc);
+        ctx.beginPath(); ctx.moveTo(padX, mastY); ctx.lineTo(W - padX, mastY); ctx.stroke();
+        ctx.lineWidth = Math.max(1, 1.5 * sc);
+        ctx.beginPath(); ctx.moveTo(padX, mastY + Math.round(8 * sc)); ctx.lineTo(W - padX, mastY + Math.round(8 * sc)); ctx.stroke();
+        ctx.font = `700 ${Math.round(20 * sc)}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = muted; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(`THE DAILY EDITION  ·  ISSUE NO.${String(slideIdx + 1).padStart(2, '0')}  ·  ARCHIVE`, W / 2, mastY + Math.round(28 * sc));
+        ctx.beginPath(); ctx.moveTo(padX, mastY + Math.round(46 * sc)); ctx.lineTo(W - padX, mastY + Math.round(46 * sc)); ctx.stroke();
+        curY = mastY + Math.round(68 * sc);
+        const titleFs = Math.round(56 * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.24);
+        ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += tLH; });
+        curY += Math.round(22 * sc);
+        const photoH = Math.round(H * 0.36);
+        arCollageDrawCover(ctx, slide.bgImg, padX, curY, maxTextW, photoH, 0, null);
+        ctx.strokeStyle = ruleCol; ctx.lineWidth = Math.max(1, 2 * sc);
+        ctx.strokeRect(padX, curY, maxTextW, photoH);
+        curY += photoH + Math.round(28 * sc);
+        // 본문 위 얇은 구분선 + 본문
+        ctx.beginPath(); ctx.moveTo(padX, curY - Math.round(10 * sc)); ctx.lineTo(W - padX, curY - Math.round(10 * sc)); ctx.stroke();
+        const bodyFs = Math.round(31 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+      } else if (pLayout === 'photo_receipt') {
+        // 핀터레스트 영수증·티켓 카드 (양쪽 펀치 노치 + 점선 절취선 + 모노 메타 + 바코드)
+        const tx = Math.round(92 * sc), ty = Math.round(134 * sc);
+        const twW = W - tx * 2, th = H - ty - Math.round(118 * sc);
+        const notchY = ty + Math.round(th * 0.56);
+        const nr = Math.round(24 * sc);
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.18)'; ctx.shadowBlur = Math.round(32 * sc); ctx.shadowOffsetY = Math.round(12 * sc);
+        ctx.fillStyle = tpl.dark ? '#1f1f24' : '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(tx, ty); ctx.lineTo(tx + twW, ty);
+        ctx.lineTo(tx + twW, notchY - nr); ctx.arc(tx + twW, notchY, nr, -Math.PI / 2, Math.PI / 2, true);
+        ctx.lineTo(tx + twW, ty + th); ctx.lineTo(tx, ty + th);
+        ctx.lineTo(tx, notchY + nr); ctx.arc(tx, notchY, nr, Math.PI / 2, -Math.PI / 2, true);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+        // 점선 절취선
+        ctx.save();
+        ctx.strokeStyle = tpl.dark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.2)';
+        ctx.setLineDash([Math.round(10 * sc), Math.round(8 * sc)]);
+        ctx.lineWidth = Math.max(1, 2 * sc);
+        ctx.beginPath(); ctx.moveTo(tx + nr + Math.round(12 * sc), notchY); ctx.lineTo(tx + twW - nr - Math.round(12 * sc), notchY); ctx.stroke();
+        ctx.restore();
+        const innerPad = Math.round(44 * sc);
+        const innerW = twW - innerPad * 2;
+        // 상단 사진
+        const photoY = ty + Math.round(36 * sc);
+        const photoH = notchY - photoY - Math.round(32 * sc);
+        arCollageDrawCover(ctx, slide.bgImg, tx + innerPad, photoY, innerW, photoH, Math.round(14 * sc), null);
+        // 하단 티켓 텍스트
+        curY = notchY + Math.round(34 * sc);
+        const titleFs = Math.round(46 * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, innerW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.26);
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, tx + innerPad, curY); curY += tLH; });
+        curY += Math.round(14 * sc);
+        const bodyFs = Math.round(29 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, innerW).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.45);
+        bLines.forEach((ln) => { ctx.fillText(ln, tx + innerPad, curY); curY += bLH; });
+        // 하단 미니 바코드 장식
+        const barY = ty + th - Math.round(56 * sc);
+        const barH = Math.round(28 * sc);
+        ctx.fillStyle = fg; ctx.globalAlpha = 0.28;
+        let bx = tx + innerPad;
+        const widths = [4, 2, 6, 3, 2, 5, 3, 2, 7, 2, 4, 3, 5, 2, 3, 6, 2, 4, 2, 5, 3, 4];
+        for (let bi = 0; bi < widths.length && bx < tx + innerPad + innerW * 0.56; bi++) {
+          const bw = Math.max(1, Math.round(widths[bi] * sc));
+          ctx.fillRect(bx, barY, bw, barH);
+          bx += bw + Math.max(2, Math.round((widths[(bi + 3) % widths.length] + 1) * sc));
+        }
+        ctx.globalAlpha = 0.65;
+        ctx.font = `700 ${Math.round(20 * sc)}px 'JetBrains Mono', monospace`;
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        ctx.fillText(`NO.${String(slideIdx + 1).padStart(3, '0')}`, tx + twW - innerPad, barY + barH / 2);
+        ctx.globalAlpha = 1;
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_scrapbook') {
+        // 핀터레스트 마스킹테이프 스크랩북 (도트 페이퍼 + 기울어진 사진 + 반투명 마스킹테이프 2개)
+        ctx.save();
+        ctx.fillStyle = tpl.dark ? 'rgba(255,255,255,0.08)' : 'rgba(40,30,20,0.09)';
+        const step = Math.round(42 * sc);
+        for (let gx = Math.round(54 * sc); gx < W - Math.round(40 * sc); gx += step) {
+          for (let gy = Math.round(130 * sc); gy < H - Math.round(100 * sc); gy += step) {
+            ctx.beginPath(); ctx.arc(gx, gy, Math.max(1, 2 * sc), 0, Math.PI * 2); ctx.fill();
+          }
+        }
+        ctx.restore();
+        const pw = Math.round(W * 0.72), ph = Math.round(H * 0.39);
+        const cx = W / 2, cy = Math.round(176 * sc + ph / 2);
+        const tilt = slideIdx % 2 === 0 ? -0.032 : 0.028;
+        ctx.save();
+        ctx.translate(cx, cy); ctx.rotate(tilt);
+        const bd = Math.round(18 * sc);
+        ctx.shadowColor = 'rgba(0,0,0,0.20)'; ctx.shadowBlur = Math.round(28 * sc); ctx.shadowOffsetY = Math.round(10 * sc);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-pw / 2 - bd, -ph / 2 - bd, pw + bd * 2, ph + bd * 2);
+        ctx.shadowColor = 'transparent';
+        arCollageDrawCover(ctx, slide.bgImg, -pw / 2, -ph / 2, pw, ph, 0, null);
+        // 반투명 와시 마스킹테이프 좌상/우상 2개
+        const drawTape = (tx0, ty0, rot) => {
+          ctx.save();
+          ctx.translate(tx0, ty0); ctx.rotate(rot);
+          ctx.fillStyle = accent; ctx.globalAlpha = 0.55;
+          ctx.fillRect(-Math.round(68 * sc), -Math.round(19 * sc), Math.round(136 * sc), Math.round(38 * sc));
+          ctx.restore();
+        };
+        drawTape(-pw / 2 + Math.round(24 * sc), -ph / 2 - Math.round(6 * sc), -0.45);
+        drawTape(pw / 2 - Math.round(24 * sc), -ph / 2 - Math.round(6 * sc), 0.42);
+        ctx.restore();
+        curY = Math.round(176 * sc + ph + 66 * sc);
+        const titleFs = Math.round(52 * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.28);
+        ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += tLH; });
+        curY += Math.round(16 * sc);
+        const bodyFs = Math.round(32 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.92).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += bLH; });
+      } else if (pLayout === 'photo_circle') {
+        // 핀터레스트 원형 메달리온 / 바이닐 커버
+        const rad = Math.round(Math.min(W * 0.34, H * 0.23));
+        const cx = W / 2, cy = Math.round(158 * sc + rad);
+        ctx.save();
+        ctx.strokeStyle = accent; ctx.globalAlpha = 0.5; ctx.lineWidth = Math.max(1.5, 3 * sc);
+        ctx.beginPath(); ctx.arc(cx, cy, rad + Math.round(14 * sc), 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+        ctx.save();
+        ctx.beginPath(); ctx.arc(cx, cy, rad, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+        arCollageDrawCover(ctx, slide.bgImg, cx - rad, cy - rad, rad * 2, rad * 2, 0, null);
+        ctx.restore();
+        curY = cy + rad + Math.round(52 * sc);
+        const titleFs = Math.round(54 * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.28);
+        ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += tLH; });
+        curY += Math.round(18 * sc);
+        const bodyFs = Math.round(32 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.9).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += bLH; });
+      } else if (pLayout === 'photo_window') {
+        // 핀터레스트 레트로 OS / 브라우저 창 프레임
+        const wx = padX, wy = Math.round(146 * sc), ww = maxTextW;
+        const barH = Math.round(54 * sc), photoH = Math.round(H * 0.39);
+        const totalH = barH + photoH;
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.18)'; ctx.shadowBlur = Math.round(30 * sc); ctx.shadowOffsetY = Math.round(12 * sc);
+        ctx.fillStyle = tpl.dark ? '#1e2230' : '#ffffff';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(wx, wy, ww, totalH, Math.round(18 * sc));
+        else ctx.rect(wx, wy, ww, totalH);
+        ctx.fill();
+        ctx.restore();
+        ctx.save();
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(wx, wy, ww, totalH, Math.round(18 * sc));
+        else ctx.rect(wx, wy, ww, totalH);
+        ctx.clip();
+        // 상단 3개 신호등 도트 + 주소창
+        const dotColors = ['#ff5f57', '#febc2e', '#28c840'];
+        dotColors.forEach((dc, di) => {
+          ctx.fillStyle = dc;
+          ctx.beginPath(); ctx.arc(wx + Math.round((28 + di * 24) * sc), wy + barH / 2, Math.round(7 * sc), 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.fillStyle = tpl.dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(wx + Math.round(108 * sc), wy + Math.round(13 * sc), ww - Math.round(136 * sc), barH - Math.round(26 * sc), Math.round(10 * sc));
+        else ctx.rect(wx + Math.round(108 * sc), wy + Math.round(13 * sc), ww - Math.round(136 * sc), barH - Math.round(26 * sc));
+        ctx.fill();
+        ctx.font = `600 ${Math.round(18 * sc)}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = muted; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(`archive / card-${String(slideIdx + 1).padStart(2, '0')}`, wx + Math.round(108 * sc) + (ww - Math.round(136 * sc)) / 2, wy + barH / 2);
+        arCollageDrawCover(ctx, slide.bgImg, wx, wy + barH, ww, photoH, 0, null);
+        ctx.restore();
+        ctx.strokeStyle = tpl.dark ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.14)';
+        ctx.lineWidth = Math.max(1, 2 * sc);
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(wx, wy, ww, totalH, Math.round(18 * sc));
+        else ctx.rect(wx, wy, ww, totalH);
+        ctx.stroke();
+        curY = wy + totalH + Math.round(40 * sc);
+        const titleFs = Math.round(52 * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.28);
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(16 * sc);
+        const bodyFs = Math.round(32 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+      } else if (pLayout === 'photo_filmstrip') {
+        // 핀터레스트 35mm 코닥 필름 스트립 (좌우 스프로킷 구멍 + 오렌지 날짜 스탬프)
+        const fy = Math.round(146 * sc), fh = Math.round(H * 0.43);
+        const stripW = Math.round(56 * sc);
+        ctx.fillStyle = '#09090a';
+        ctx.fillRect(0, fy - Math.round(14 * sc), W, fh + Math.round(28 * sc));
+        // 좌우 스프로킷 구멍
+        ctx.fillStyle = 'rgba(255,255,255,0.78)';
+        const holeW = Math.round(24 * sc), holeH = Math.round(32 * sc), holeGap = Math.round(54 * sc);
+        for (let hy = fy + Math.round(8 * sc); hy + holeH < fy + fh; hy += holeGap) {
+          ctx.beginPath();
+          if (ctx.roundRect) {
+            ctx.roundRect(Math.round(16 * sc), hy, holeW, holeH, Math.round(5 * sc));
+            ctx.roundRect(W - Math.round(16 * sc) - holeW, hy, holeW, holeH, Math.round(5 * sc));
+          } else {
+            ctx.rect(Math.round(16 * sc), hy, holeW, holeH);
+            ctx.rect(W - Math.round(16 * sc) - holeW, hy, holeW, holeH);
+          }
+          ctx.fill();
+        }
+        arCollageDrawCover(ctx, slide.bgImg, stripW, fy, W - stripW * 2, fh, Math.round(6 * sc), null);
+        // 아날로그 필름 날짜 스탬프
+        ctx.font = `700 ${Math.round(22 * sc)}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = '#ff922b'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+        ctx.fillText(`'26 11 ${String(10 + slideIdx).padStart(2, '0')}  ·  ${String(slideIdx + 1).padStart(2, '0')}A`, W - stripW - Math.round(18 * sc), fy + fh - Math.round(14 * sc));
+        curY = fy + fh + Math.round(50 * sc);
+        const titleFs = Math.round(52 * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.28);
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(16 * sc);
+        const bodyFs = Math.round(32 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+      } else if (pLayout === 'photo_poster') {
+        // 스위스 포스터 그리드 (초대형 상단 타이포 + 굵은 가로선 + 하단 풀폭 포토 블록)
+        curY = Math.round(148 * sc);
+        const titleFs = Math.round(68 * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.18);
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(18 * sc);
+        ctx.fillStyle = fg;
+        ctx.fillRect(padX, curY, maxTextW, Math.max(2, Math.round(5 * sc)));
+        curY += Math.round(18 * sc);
+        const bodyFs = Math.round(31 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 2);
+        const bLH = Math.round(bodyFs * 1.44);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+        const photoY = Math.max(curY + Math.round(24 * sc), Math.round(H * 0.45));
+        const photoH = Math.max(Math.round(H * 0.30), H - photoY - Math.round(124 * sc));
+        arCollageDrawCover(ctx, slide.bgImg, padX, photoY, maxTextW, photoH, Math.round(6 * sc), null);
+        // 포스터 좌상단 컬러 블록
+        ctx.fillStyle = accent;
+        ctx.fillRect(padX, photoY, Math.round(16 * sc), Math.round(92 * sc));
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_duo') {
+        // 핀터레스트 2컷 무드보드 (좌우 2프레임 큐레이션 + 하단 타이포)
+        const photoY = Math.round(148 * sc);
+        const photoH = Math.round(H * 0.42);
+        const gap = Math.round(18 * sc);
+        const leftW = Math.round((maxTextW - gap) * 0.58);
+        const rightW = maxTextW - gap - leftW;
+        const nextSlide = (!overrideTpl && _arCnState.slides.length > 1) ? _arCnState.slides[(slideIdx + 1) % _arCnState.slides.length] : null;
+        const img2 = (nextSlide && nextSlide.bgImg && nextSlide.bgImg.naturalWidth) ? nextSlide.bgImg : slide.bgImg;
+        arCollageDrawCover(ctx, slide.bgImg, padX, photoY, leftW, photoH, Math.round(18 * sc), null);
+        arCollageDrawCover(ctx, img2, padX + leftW + gap, photoY + Math.round(26 * sc), rightW, photoH - Math.round(26 * sc), Math.round(18 * sc), null);
+        // 우측 상단 작은 무드 라벨
+        ctx.font = `700 ${Math.round(18 * sc)}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = accent; ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+        ctx.fillText(`FIG.${String(slideIdx + 1).padStart(2, '0')}`, padX + maxTextW, photoY);
+        curY = photoY + photoH + Math.round(40 * sc);
+        const titleFs = Math.round(52 * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.28);
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(16 * sc);
+        const bodyFs = Math.round(32 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
       } else {
         // 풀배경 사진형 (photo_full) 또는 순수 타이포형 (text_only)
         if (!isCover && !isCta && !isFullPhoto) {
@@ -5896,6 +6323,61 @@
       arCnEnsureFont(tpl.fontKey, () => arCnRefreshUI(true));
       arCnPopulateSamplePhotos(true);
       arCnRefreshUI(true);
+    }
+    function arCnShuffleDesign(mode = 'all') {
+      const m = String(mode || 'all');
+      if (m === 'color') {
+        const curBg = (_arCnState.customColors.bg || arCnEffectiveTheme().bg || '').toLowerCase();
+        const pool = AR_CN_SHUFFLE_PALETTES.filter((p) => p.bg.toLowerCase() !== curBg);
+        const pick = pool[Math.floor(Math.random() * pool.length)] || AR_CN_SHUFFLE_PALETTES[0];
+        _arCnState.customColors = { bg: pick.bg, accent: pick.accent, fg: pick.fg };
+        arCnRefreshUI(true);
+        if (typeof arToast === 'function') arToast(`🎨 색감 섞기: ${pick.name}`, true);
+        return;
+      }
+      if (m === 'font') {
+        const curKey = _arCnState.fontKey || arCnEffectiveTheme().fontKey || '';
+        const pool = AR_CN_FONTS.filter((f) => f.key !== curKey);
+        const pick = pool[Math.floor(Math.random() * pool.length)] || AR_CN_FONTS[0];
+        arCnSetFontKey(pick.key);
+        if (typeof arToast === 'function') arToast(`🔤 폰트 섞기: ${pick.label}`, true);
+        return;
+      }
+      if (m === 'layout') {
+        const cur = _arCnState.slides[_arCnState.activeIdx];
+        const curL = (cur && cur.photoLayout) || '';
+        const pool = AR_CN_PHOTO_LAYOUT_KEYS.filter((k) => k !== curL);
+        const pick = pool[Math.floor(Math.random() * pool.length)] || 'photo_top';
+        _arCnState.slides.forEach((s) => { s.photoLayout = pick; s.userLayoutLocked = true; });
+        arCnRefreshUI(true);
+        if (typeof arToast === 'function') arToast('📐 카드 사진 구도를 새로 섞었어요!', true);
+        return;
+      }
+      // 기본 전체 테마 섞기: 44종 핀터레스트·매거진·감성 테마 + 색감·폰트 조합 랜덤 믹스
+      const cat = _arCnState.catFilter || 'all';
+      let pool = (cat !== 'all') ? AR_CN_TEMPLATES.filter((t) => t.cat === cat && t.id !== _arCnState.templateId) : [];
+      if (pool.length < 2) pool = AR_CN_TEMPLATES.filter((t) => t.id !== _arCnState.templateId);
+      const pick = pool[Math.floor(Math.random() * pool.length)] || AR_CN_TEMPLATES[0];
+      _arCnState.templateId = pick.id;
+      _arCnState.slides.forEach((s) => { s.userLayoutLocked = false; });
+      // 45% 확률로 색감·폰트도 핀터레스트 조합으로 추가 믹스
+      if (Math.random() < 0.45) {
+        const pal = AR_CN_SHUFFLE_PALETTES[Math.floor(Math.random() * AR_CN_SHUFFLE_PALETTES.length)];
+        _arCnState.customColors = { bg: pal.bg, accent: pal.accent, fg: pal.fg };
+        const fPick = AR_CN_FONTS[Math.floor(Math.random() * AR_CN_FONTS.length)];
+        _arCnState.fontKey = fPick.key;
+        arCnEnsureFont(fPick.key, () => arCnRefreshUI(true));
+        arCnPopulateSamplePhotos(true);
+        arCnRefreshUI(true);
+        if (typeof arToast === 'function') arToast(`🔀 믹스: ${pick.name} × ${pal.name}`, true);
+      } else {
+        _arCnState.customColors = { bg: '', accent: '', fg: '' };
+        _arCnState.fontKey = '';
+        arCnEnsureFont(pick.fontKey, () => arCnRefreshUI(true));
+        arCnPopulateSamplePhotos(true);
+        arCnRefreshUI(true);
+        if (typeof arToast === 'function') arToast(`🔀 테마 섞기: ${pick.name}`, true);
+      }
     }
     function arCnSetCustomColor(key, hex) {
       if (!['bg', 'accent', 'fg'].includes(key)) return;
@@ -6467,6 +6949,7 @@
       window.arCnSetCat = arCnSetCat;
       window.arCnSetTargetCount = arCnSetTargetCount;
       window.arCnSetTemplate = arCnSetTemplate;
+      window.arCnShuffleDesign = arCnShuffleDesign;
       window.arCnSetCustomColor = arCnSetCustomColor;
       window.arCnResetCustomColors = arCnResetCustomColors;
       window.arCnSetFontKey = arCnSetFontKey;
