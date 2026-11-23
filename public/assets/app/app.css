@@ -2087,3 +2087,5 @@ body.ar-work-docked #cutEditorPanel .ar-preview-bottom-sheet{max-height:none;ove
 .ar-duration-control select{width:auto;min-width:64px;padding:0 5px;cursor:pointer}
 .ar-duration-control #topDurationCustomField:not([hidden]){display:inline-flex;align-items:center;gap:3px}
 .ar-duration-control #topCustomDurationInput{width:4ch;min-width:32px}
+body.ar-meme-mode #studioPanel_topic > :not(#arMemeShortsBox){display:none!important}
+body.ar-meme-mode #arMemeShortsBox{display:block!important}

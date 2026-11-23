@@ -3045,7 +3045,10 @@
       const openHome=!special && !route.hash && !/^\/admin/.test(route.pathname);
       view.classList.toggle('ar-service-home',openHome);
       document.getElementById('startAutoReels').addEventListener('click',()=>{
+        document.body.classList.remove('ar-meme-mode');
         document.getElementById('arMemeShortsBox')?.classList.add('hidden');
+        const hTitle = document.getElementById('previewDealerHeader');
+        if (hTitle) hTitle.textContent = '오늘의 릴스 만들기';
         arShowStudioServices(false);
         arSetupSheetMode();
         switchStudioTab('topic',true);

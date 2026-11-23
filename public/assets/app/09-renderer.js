@@ -9603,17 +9603,87 @@
       if (bRemake) bRemake.className = isRemake ? 'h-8 rounded-[7px] text-[12px] font-bold bg-[#2563eb] text-white cursor-pointer' : 'h-8 rounded-[7px] text-[12px] font-semibold text-[#a1a1aa] hover:text-white cursor-pointer';
     }
 
+    window.__arMemeMashupMode = 'pure'; // 'pure' | 'keyword' | 'store'
+    window.__arCurrentMemeItem = null;
+
+    function arSyncMemeKeywordAndStoreInputs() {
+      // 1) 오늘의 키워드(#dailyKeywords)에서 실시간 키워드 칩 동기화 + 시즈널 트렌드 키워드 제공
+      const chipRow = document.getElementById('arMemeIssueChipRow');
+      if (chipRow) {
+        const domKeywords = Array.from(document.querySelectorAll('#dailyKeywords .daily-keyword-list button, #dailyKeywords .daily-keyword-chip'))
+          .map((el) => String(el.textContent || '').replace(/^#/, '').trim())
+          .filter(Boolean);
+        const defaults = ['블랙프라이데이 특가', '첫눈·영하 한파', '연말 모임·회식', '월요병 출근길', '점심 메뉴 고민', '다이어트 작심삼일'];
+        const merged = Array.from(new Set([...domKeywords, ...defaults])).slice(0, 8);
+        const inp = document.getElementById('arMemeIssueCustomInput');
+        if (inp && !inp.value && merged[0]) inp.value = merged[0];
+        chipRow.innerHTML = merged.map((kw) => {
+          const safe = kw.replace(/'/g, "\\'");
+          return `<button type="button" onclick="document.getElementById('arMemeIssueCustomInput').value='${safe}';arHighlightMemeIssueChip(this);" class="px-2.5 py-1 rounded-full bg-[#2563eb]/20 hover:bg-[#2563eb] border border-[#60a5fa]/40 text-[11px] text-[#dbeafe] whitespace-nowrap shrink-0 cursor-pointer">#${kw}</button>`;
+        }).join('');
+      }
+      // 2) 현재 선택된 업종·매장·내 상품 정보로 가게 홍보×밈 입력칸 자동 세팅
+      const sNameEl = document.getElementById('arMemeStoreNameInput');
+      const sPointEl = document.getElementById('arMemeStorePointInput');
+      const d = typeof getSelectedDealer === 'function' ? getSelectedDealer() : null;
+      const indName = (typeof IND !== 'undefined' && IND && IND.name) ? IND.name : '우리 매장';
+      if (sNameEl && !sNameEl.value) {
+        sNameEl.value = (d && (d.branch || d.name)) ? `${d.branch || d.name}` : `우리 ${indName}`;
+      }
+      if (sPointEl && !sPointEl.value) {
+        sPointEl.value = (campaign && campaign.vehicle) ? `${campaign.vehicle}` : `${indName} 시그니처 메뉴·특가 혜택`;
+      }
+    }
+
+    function arHighlightMemeIssueChip(btn) {
+      if (!btn || !btn.parentElement) return;
+      Array.from(btn.parentElement.children).forEach((c) => {
+        c.className = c === btn
+          ? 'px-2.5 py-1 rounded-full bg-[#2563eb] border border-[#60a5fa] text-[11px] text-white font-bold whitespace-nowrap shrink-0 cursor-pointer'
+          : 'px-2.5 py-1 rounded-full bg-[#2563eb]/20 hover:bg-[#2563eb] border border-[#60a5fa]/40 text-[11px] text-[#dbeafe] whitespace-nowrap shrink-0 cursor-pointer';
+      });
+    }
+
+    function arSetMemeMashupMode(mode) {
+      window.__arMemeMashupMode = ['pure', 'keyword', 'store'].includes(mode) ? mode : 'pure';
+      ['pure', 'keyword', 'store'].forEach((m) => {
+        const b = document.getElementById(`arMemeModeBtn_${m}`);
+        if (!b) return;
+        const on = m === window.__arMemeMashupMode;
+        b.className = on
+          ? 'h-9 px-2 rounded-[8px] text-[11.5px] font-bold bg-[#2563eb] text-white border border-[#60a5fa] cursor-pointer'
+          : 'h-9 px-2 rounded-[8px] text-[11.5px] font-semibold bg-[#181a24] text-[#d4d4d8] border border-white/10 hover:text-white cursor-pointer';
+      });
+      document.getElementById('arMemeKeywordMashupBox')?.classList.toggle('hidden', window.__arMemeMashupMode !== 'keyword');
+      document.getElementById('arMemeStoreMashupBox')?.classList.toggle('hidden', window.__arMemeMashupMode !== 'store');
+      const badge = document.getElementById('arMemeMashupModeBadge');
+      if (badge) {
+        badge.textContent = window.__arMemeMashupMode === 'store'
+          ? '🏪 선택한 밈을 우리 가게 B급 홍보 쇼츠로 자동 패러디합니다'
+          : window.__arMemeMashupMode === 'keyword'
+            ? '⚡ 선택한 밈을 오늘의 실시간 키워드·이슈와 결합합니다'
+            : '🔥 유행 밈 해설·유머 쇼츠를 업로드 없이 6컷 조립합니다';
+      }
+      arSyncMemeKeywordAndStoreInputs();
+    }
+
     function arOpenMemeShortsStudio() {
+      document.body.classList.add('ar-meme-mode');
       if (typeof arShowStudioServices === 'function') arShowStudioServices(false);
       if (typeof arSetupSheetMode === 'function') arSetupSheetMode();
       if (typeof switchStudioTab === 'function') switchStudioTab('topic', true);
       if (typeof window.arNavPush === 'function') window.arNavPush({ mode: 'reels', tab: 'topic' });
       else try { history.pushState({ ...history.state, arReelsWorkspace: true }, ''); } catch (_) {}
       if (typeof arToggleSheet === 'function') arToggleSheet(false);
+      const hTitle = document.getElementById('previewDealerHeader');
+      if (hTitle) hTitle.textContent = '⚡ 밈 쇼츠 스튜디오';
+      const eTitle = document.getElementById('easyStepTitle');
+      if (eTitle) eTitle.textContent = '오늘의 밈 Top 10 · 키워드 · 가게 패러디';
       const box = document.getElementById('arMemeShortsBox');
       if (box) box.classList.remove('hidden');
       const wf = document.getElementById('studioWorkflowColumn');
       if (wf) wf.scrollTop = 0;
+      arSyncMemeKeywordAndStoreInputs();
       arToggleKaraokeMode(true);
       if (!window.__arMemeRadarItems || !window.__arMemeRadarItems.length) {
         arLoadMemeRadar('all', false);
@@ -9631,7 +9701,7 @@
       const statusEl = document.getElementById('arMemeRadarStatus');
       const listEl = document.getElementById('arMemeRadarList');
       if (!listEl) return;
-      if (statusEl) statusEl.textContent = customQuery ? `"${customQuery}" 맞춤 6컷 고속 밈 쇼츠 설계 중...` : '실시간 떡상 밈·트렌드 레이더 불러오는 중...';
+      if (statusEl) statusEl.textContent = customQuery ? `"${customQuery}" 맞춤 6컷 고속 밈 쇼츠 설계 중...` : 'YouTube · Google Trends · Reddit 실시간 밈 Top 10 수집 중...';
 
       try {
         const res = await fetch('/api/generate-script', {
@@ -9648,23 +9718,34 @@
       const items = window.__arMemeRadarItems || [];
       if (statusEl) {
         statusEl.textContent = items.length
-          ? `🔥 총 ${items.length}개 밈·이슈 설계도 준비 완료 (탭하면 20자×6컷 대본·화면·노래방 자막이 즉시 조립됩니다)`
-          : '밈 목록을 불러오지 못했습니다. 새로고침을 눌러 주세요.';
+          ? `🔥 오늘의 밈·트렌드 Top ${items.length} (카드마다 ① 3줄 요약 · ② 팩트/출처 · ③ 20자×6컷 대본 + 키워드/가게 홍보 결합 완비)`
+          : '밈 목록을 불러오지 못했습니다. 실시간 수집을 눌러 주세요.';
       }
       listEl.innerHTML = items.map((it, idx) => {
-        const cutsPreview = (it.cuts || []).slice(0, 3).map((c, ci) => `<span class="inline-block mr-2 text-[10.5px] text-[#93c5fd]">#${ci + 1} ${c.line}</span>`).join('');
+        const summaryHtml = Array.isArray(it.summary3) && it.summary3.length
+          ? `<div class="rounded-[8px] bg-black/30 border border-white/5 p-2 space-y-0.5 text-[11px] text-[#d4d4d8]">${it.summary3.map((s) => `<div>${s}</div>`).join('')}</div>`
+          : `<p class="text-[11.5px] text-[#a1a1aa] leading-relaxed">${it.why || ''}</p>`;
+        const cutsHtml = (it.cuts || []).slice(0, 6).map((c, ci) =>
+          `<div class="flex items-center justify-between gap-1 text-[10.5px] bg-white/[0.03] rounded px-2 py-0.5"><span class="text-[#e4e4e7] truncate"><b class="text-[#60a5fa]">${ci + 1}컷</b> ${c.line}</span><span class="text-[#9ca3af] shrink-0">[${c.mediaType || '밈 리액션'}]</span></div>`
+        ).join('');
         return `
-          <div class="rounded-[11px] bg-[#1a1d27] hover:bg-[#202432] border border-white/10 p-3 space-y-1.5 transition">
-            <div class="flex items-center justify-between gap-2">
-              <span class="px-2 py-0.5 rounded-md bg-[#2563eb]/25 border border-[#60a5fa]/40 text-[#93c5fd] text-[10.5px] font-bold">${it.badge || it.cat || '🔥 인기 밈'}</span>
-              <span class="text-[10.5px] text-[#4ade80]">✓ 팩트·출처 확인됨 · 6컷</span>
+          <div class="rounded-[12px] bg-[#181b26] hover:bg-[#1d2130] border border-white/12 p-3 space-y-2 transition">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div class="flex items-center gap-1.5">
+                <span class="px-2 py-0.5 rounded-md bg-[#2563eb] text-white text-[10.5px] font-extrabold">TOP ${it.rank || (idx + 1)}</span>
+                <span class="px-2 py-0.5 rounded-md bg-[#2563eb]/20 border border-[#60a5fa]/40 text-[#93c5fd] text-[10.5px] font-bold">${it.badge || it.cat || '🔥 인기 밈'}</span>
+                <span class="text-[10px] text-[#9ca3af]">${it.sourceTag || '트렌드 레이더'}</span>
+              </div>
+              <span class="text-[10.5px] text-[#4ade80] font-semibold">✓ 팩트·출처 검증됨</span>
             </div>
-            <div class="text-[13px] font-bold text-white leading-snug">${it.title}</div>
-            <p class="text-[11.5px] text-[#a1a1aa] leading-relaxed">${it.why || ''}</p>
-            <div class="pt-0.5 truncate">${cutsPreview}</div>
-            <div class="flex items-center justify-between gap-2 pt-1">
-              <span class="text-[10.5px] text-[#85858b] truncate">${it.factNote || ''}</span>
-              <button type="button" onclick="arApplyMemeItemToStudio(${idx})" class="btn-primary h-7 px-3 text-[11.5px] font-bold shrink-0 cursor-pointer">⚡ 6컷 쇼츠 조립 ›</button>
+            <div class="text-[13.5px] font-extrabold text-white leading-snug">${it.title}</div>
+            ${summaryHtml}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1 pt-0.5">${cutsHtml}</div>
+            <div class="text-[10.5px] text-[#9ca3af] truncate">${it.factNote || ''}</div>
+            <div class="grid grid-cols-3 gap-1.5 pt-1">
+              <button type="button" onclick="arApplyMemeItemToStudio(${idx}, 'pure')" class="h-8 px-2 rounded-[8px] bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-[11px] font-bold cursor-pointer">🔥 원본 밈 조립</button>
+              <button type="button" onclick="arApplyMemeItemToStudio(${idx}, 'keyword')" class="h-8 px-2 rounded-[8px] bg-[#1e293b] hover:bg-[#334155] border border-[#60a5fa]/45 text-[#93c5fd] text-[11px] font-bold cursor-pointer">⚡ 오늘 키워드×밈</button>
+              <button type="button" onclick="arApplyMemeItemToStudio(${idx}, 'store')" class="h-8 px-2 rounded-[8px] bg-[#14291e] hover:bg-[#1b3829] border border-[#4ade80]/45 text-[#4ade80] text-[11px] font-bold cursor-pointer">🏪 우리 가게×밈</button>
             </div>
           </div>
         `;
@@ -9677,9 +9758,48 @@
       arLoadMemeRadar('all', true, q);
     }
 
-    async function arApplyMemeItemToStudio(idx) {
-      const it = (window.__arMemeRadarItems || [])[idx];
-      if (!it) return;
+    async function arApplyMemeItemToStudio(idx, forceMashupMode) {
+      const baseItem = (window.__arMemeRadarItems || [])[idx];
+      if (!baseItem) return;
+      const mode = forceMashupMode || window.__arMemeMashupMode || 'pure';
+      if (forceMashupMode && forceMashupMode !== window.__arMemeMashupMode) {
+        arSetMemeMashupMode(forceMashupMode);
+      }
+
+      const statusEl = document.getElementById('arMemeRadarStatus');
+      let it = baseItem;
+
+      // 오늘의 키워드×밈 또는 우리 가게 홍보×밈 모드면 AI 패러디 결합 엔진 호출!
+      if (mode === 'keyword' || mode === 'store') {
+        const issueKw = String(document.getElementById('arMemeIssueCustomInput')?.value || '오늘의 실시간 이슈').trim();
+        const indName = (typeof IND !== 'undefined' && IND && IND.name) ? IND.name : '우리 매장';
+        const storeName = String(document.getElementById('arMemeStoreNameInput')?.value || indName).trim();
+        const productPoint = String(document.getElementById('arMemeStorePointInput')?.value || '시그니처 혜택').trim();
+        if (statusEl) {
+          statusEl.textContent = mode === 'store'
+            ? `🏪 "${baseItem.title.slice(0, 16)}..." 밈을 [${storeName} · ${productPoint}] 홍보 쇼츠로 패러디 조립 중...`
+            : `⚡ "${baseItem.title.slice(0, 16)}..." 밈과 오늘의 키워드 [${issueKw}] 콜라보 대본 조립 중...`;
+        }
+        try {
+          const res = await fetch('/api/generate-script', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              mode: 'meme-mashup',
+              meme: baseItem,
+              mashupType: mode,
+              issueKeyword: issueKw,
+              industryLabel: indName,
+              storeName,
+              productPoint
+            })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (data && data.ok && data.item) it = data.item;
+        } catch (_) {}
+      }
+
+      window.__arCurrentMemeItem = it;
       const cuts = Array.isArray(it.cuts) && it.cuts.length ? it.cuts : [];
       const lines = cuts.map((c) => String(c.line || '').trim()).filter(Boolean);
       if (!lines.length) return;
@@ -9688,43 +9808,115 @@
       campaign.hook = it.title;
       campaign.ttsLines = lines;
       campaign.bullets = [it.why || '', it.factNote || ''].filter(Boolean);
-      window.__arMemeHookBanner = it.title.slice(0, 32);
+      window.__arMemeHookBanner = (Array.isArray(it.hookTitles) && it.hookTitles[0]) ? it.hookTitles[0] : it.title.slice(0, 32);
       arToggleKaraokeMode(true);
 
-      // 업종 기본 스톡 사진 팩에서 6장 자동 매칭 (업로드 0번으로 즉시 재생!)
-      const pack = it.scenePack || 'cafe';
+      // 1차로 즉시 내장 바이럴/업종 스톡 6장 로드 후, 백그라운드로 GIPHY/Pixabay/Wikimedia 무료 밈 짤 자동 매칭!
+      const pack = it.scenePack || ((typeof IND !== 'undefined' && IND && IND.key) ? IND.key : 'cafe');
       const loadedImgs = [];
-      for (let i = 1; i <= Math.max(6, lines.length); i++) {
-        const src = `/assets/scenes/${pack}/${((i - 1) % 10) + 1}.jpg`;
+      for (let i = 0; i < lines.length; i++) {
+        const src = cuts[i]?.fallbackImg || `/assets/scenes/${pack}/${(i % 10) + 1}.jpg`;
         const im = new Image();
         im.crossOrigin = 'anonymous';
         im.src = src;
-        await new Promise((r) => { im.onload = r; im.onerror = r; setTimeout(r, 1200); });
+        await new Promise((r) => { im.onload = r; im.onerror = r; setTimeout(r, 900); });
         if (im.naturalWidth) loadedImgs.push(im);
       }
-      if (loadedImgs.length) {
-        campaign.uploadedPhotos = loadedImgs;
-      }
+      if (loadedImgs.length) campaign.uploadedPhotos = loadedImgs;
+
       campaign.scenePlan = lines.map((ln, i) => ({
         cut: i + 1,
         duration: 2.0,
         photoIdx: i % Math.max(1, campaign.uploadedPhotos.length),
         sub: ln,
-        badge: it.badge || `CUT 0${i + 1}`,
+        badge: cuts[i]?.mediaType || it.badge || `CUT 0${i + 1}`,
         effect: ['zoom-in', 'pan-right', 'zoom-out', 'pan-left'][i % 4]
       }));
       if (typeof setVideoTotalDuration === 'function') setVideoTotalDuration(12);
 
-      // 유튜브·인스타 설명글에 확인된 출처와 해시태그 자동 입력
       const capEl = document.getElementById('snsCaptionInput');
       if (capEl) {
         capEl.value = `${it.title}\n\n${it.why || ''}\n\n${it.factNote || ''}\n#쇼츠 #밈 #트렌드 #Shorts`;
       }
+
+      arRenderMemeAssembledStrip(it);
       if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
       if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
       if (typeof syncPreviewPanel === 'function') syncPreviewPanel();
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0.25);
-      if (typeof arToast === 'function') arToast(`⚡ "${it.title.slice(0, 18)}..." 6컷 밈 쇼츠가 자동 조립되었어요!`, true);
+
+      const modeLabel = mode === 'store' ? '🏪 우리 가게×밈 패러디' : mode === 'keyword' ? '⚡ 오늘 키워드×밈 콜라보' : '🔥 원본 밈';
+      if (statusEl) statusEl.textContent = `✅ [${modeLabel}] "${it.title}" 6컷 조립 완료! 위 미리보기에서 바로 확인하세요.`;
+      if (typeof arToast === 'function') arToast(`${modeLabel} 6컷 쇼츠가 자동 조립되었어요!`, true);
+
+      // 비동기로 GIPHY / Pixabay / Wikimedia Commons 무료 밈 리액션·스톡 클립 자동 매칭
+      arFetchLiveVisualsForCurrentMeme(true);
+    }
+
+    function arRenderMemeAssembledStrip(it) {
+      const box = document.getElementById('arMemeAssembledBox');
+      const strip = document.getElementById('arMemeCutVisualStrip');
+      const titleEl = document.getElementById('arMemeAssembledTitle');
+      if (!box || !strip || !it) return;
+      box.classList.remove('hidden');
+      if (titleEl) titleEl.textContent = `✅ 조립된 6컷 (${it.title.slice(0, 22)})`;
+      strip.innerHTML = (it.cuts || []).slice(0, 6).map((c, idx) => {
+        const curImg = campaign.uploadedPhotos[idx];
+        const thumbSrc = (curImg && curImg.src) || c.fallbackImg || '/assets/scenes/cafe/1.jpg';
+        return `
+          <div class="rounded-[9px] bg-[#161924] border border-white/10 p-2 flex items-center gap-2">
+            <img src="${thumbSrc}" alt="" class="w-10 h-14 rounded-[6px] object-cover shrink-0 border border-white/15" />
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-[10.5px] font-bold text-[#60a5fa]">${idx + 1}컷 · ${c.mediaType || '밈 짤'}</span>
+                <span class="text-[10px] text-[#9ca3af]">${(c.line || '').length}자</span>
+              </div>
+              <div class="text-[11px] text-white font-medium truncate">${c.line || ''}</div>
+              <div class="text-[10px] text-[#85858b] truncate">🔍 ${c.keyword || 'reaction'}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function arFetchLiveVisualsForCurrentMeme(silent = false) {
+      const it = window.__arCurrentMemeItem;
+      if (!it || !Array.isArray(it.cuts)) return;
+      const queries = it.cuts.slice(0, 6).map((c) => c.keyword || 'funny cat reaction');
+      try {
+        const res = await fetch('/api/generate-script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'meme-visuals', queries })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!data || !Array.isArray(data.visualsByCut)) return;
+        let replaced = 0;
+        await Promise.all(data.visualsByCut.map(async (candidates, ci) => {
+          if (!Array.isArray(candidates) || !candidates.length) return;
+          const pick = candidates[Math.floor(Math.random() * candidates.length)];
+          if (!pick || !pick.url) return;
+          const im = new Image();
+          im.crossOrigin = 'anonymous';
+          im.src = pick.url;
+          const ok = await new Promise((r) => {
+            im.onload = () => r(true);
+            im.onerror = () => r(false);
+            setTimeout(() => r(false), 2500);
+          });
+          if (ok && im.naturalWidth && campaign.uploadedPhotos[ci]) {
+            campaign.uploadedPhotos[ci] = im;
+            if (it.cuts[ci]) it.cuts[ci].mediaType = pick.source || '무료 밈 짤';
+            replaced++;
+          }
+        }));
+        if (replaced > 0) {
+          arRenderMemeAssembledStrip(it);
+          if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+          if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime || 0.25);
+          if (!silent && typeof arToast === 'function') arToast(`🔄 ${replaced}개 컷에 새 무료 밈 짤·스톡 이미지를 매칭했어요!`, true);
+        }
+      } catch (_) {}
     }
 
     function arSetMemeHookBanner(txt) {
@@ -9848,6 +10040,9 @@
 
     window.arRenderMemeShortsOverlay = arRenderMemeShortsOverlay;
     window.arOpenMemeShortsStudio = arOpenMemeShortsStudio;
+    window.arSetMemeMashupMode = arSetMemeMashupMode;
+    window.arHighlightMemeIssueChip = arHighlightMemeIssueChip;
+    window.arFetchLiveVisualsForCurrentMeme = arFetchLiveVisualsForCurrentMeme;
     window.arSwitchMemeTab = arSwitchMemeTab;
     window.arToggleKaraokeMode = arToggleKaraokeMode;
     window.arToggleSafeZoneGuide = arToggleSafeZoneGuide;

@@ -35,13 +35,13 @@ try {
     await menu.waitFor();
     assert.equal(await page.locator('.studio-topbar .studio-brand-name').innerText(),'AutoReelsMaker');
     const geometry=await menu.evaluate(el=>{
-      const [hero,video,collage,cards,shorts,remix]=Array.from(el.querySelectorAll('button,a'),node=>node.getBoundingClientRect());
-      return hero.width>video.width && video.top===collage.top && cards.top===shorts.top && remix.width===hero.width;
+      const [hero,video,collage,cards,meme,shorts,remix]=Array.from(el.querySelectorAll('button,a'),node=>node.getBoundingClientRect());
+      return hero.width>video.width && video.top===collage.top && cards.top===meme.top && shorts.width===hero.width && remix.width===hero.width;
     });
     assert.ok(geometry,'service cards follow the approved two-column layout');
     for(const photo of await menu.locator('.service-photos img').all()) await photo.evaluate(image=>image.decode());
     const names=await menu.locator('strong').allTextContents();
-    assert.deepEqual(names,['오토릴스 만들기','영상 편집기','사진 콜라주','인스타 카드뉴스','밈 쇼츠 만들기','참고 쇼츠·릴스 재구성']);
+    assert.deepEqual(names,['오토릴스 만들기','영상 편집기','사진 콜라주','인스타 카드뉴스','밈 쇼츠 만들기','내 영상으로 쇼츠','참고 쇼츠·릴스 재구성']);
     if(width===390 && process.env.SERVICES_CAPTURE){
       await page.locator('#arSplashIntro').waitFor({state:'hidden'});
       await menu.getByRole('button',{name:/오토릴스 만들기/}).click({trial:true});
@@ -85,7 +85,7 @@ try {
     await page.locator('#arMemeShortsBox').waitFor();
     await page.locator('#showStudioServices').click();
     await menu.waitFor();
-    for(const [label,path] of [['참고 쇼츠·릴스 재구성','/assets/remix/index.html']]){
+    for(const [label,path] of [['내 영상으로 쇼츠','/assets/shorts/index.html'],['참고 쇼츠·릴스 재구성','/assets/remix/index.html']]){
       await menu.getByRole('link',{name:new RegExp(label)}).click();
       await page.waitForURL(u=>u.pathname===path);
       await page.locator('[data-studio-back]').click();
