@@ -413,8 +413,9 @@ function drawTitles(ctx,clip,caption,cueOrStyle) {
       const act=btn.dataset.se;
       hud.querySelectorAll('.se-tool-row button').forEach(b=>b.classList.toggle('is-active',b===btn));
       if(act==='detail'){
-        const applyBtn=document.getElementById('applyTheme');
-        if(applyBtn){setShortsEditMode(false);applyBtn.click();}
+        setShortsEditMode(false);
+        if (quickEdit) openShortsCutInspector();
+        else byId('openInEditor').click();
       }else if(act==='caption'){
         const cue=typeof activeCue==='function'?activeCue(session,session.trackTime||0):null;
         if(typeof selectMix==='function')selectMix(session,'caption');

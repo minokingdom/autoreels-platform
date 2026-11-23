@@ -4030,13 +4030,12 @@
       } else if (kind === 'card') {
         campaign.hideCardOnVideo = !campaign.hideCardOnVideo;
         if (campaign.isPhotoCollageMode) {
-          const cutN = Math.max(1, (campaign.uploadedPhotos || []).length);
-          const perCut = Number(campaign._collageCutSec) || 10;
-          const mainD = Math.max(2, +(cutN * perCut).toFixed(2));
-          const outroD = campaign.hideCardOnVideo ? 0 : 3.2;
+          const fitted = computeFittedDurations();
+          const mainD = fitted.lengths.reduce((sum, length) => sum + length, 0);
+          const outroD = fitted.outro;
           if (typeof OUTRO_DURATION !== 'undefined') OUTRO_DURATION = outroD;
           if (typeof BASE_DURATION !== 'undefined') BASE_DURATION = +(mainD + outroD).toFixed(2);
-          if (typeof CUT_LENGTHS !== 'undefined') CUT_LENGTHS = Array.from({ length: cutN }, () => perCut);
+          if (typeof CUT_LENGTHS !== 'undefined') CUT_LENGTHS = fitted.lengths;
           if (typeof TOTAL_DURATION !== 'undefined') TOTAL_DURATION = +(mainD + outroD).toFixed(2);
           if (window.__timelines && window.__timelines.main) window.__timelines.main.duration = TOTAL_DURATION;
           if (typeof updateDurationIndicator === 'function') updateDurationIndicator();
@@ -4189,6 +4188,26 @@
       activeSlot: -1,   // -1 = 전체 보기, 0..8 = 개별 사진 칸 편집 모드
       slotEdits: {}     // key: `${layout}:${slideIdx}:${slotIdx}` -> { scale, panX, panY, rot, flipX, imgOverride }
     };
+    // 합성된 이미지와 원본 칸을 연결한다. 컷 순서와 복사본은 scenePlan의 사진 참조를 따른다.
+    const arCollageSources = new WeakMap();
+    let arCollageEditingCut = null;
+    function arCollageCanEditSlots(cutIdx) {
+      const photoIdx = campaign.scenePlan?.[cutIdx]?.photoIdx;
+      return Boolean(campaign.isPhotoCollageMode && arCollageSources.has(campaign.uploadedPhotos?.[photoIdx]));
+    }
+
+    function arCollageRememberSource(image, slide, slideIdx) {
+      const slotEdits = {};
+      const photos = slide.imgs.map((img, index) => {
+        const edit = _arCollageState.slotEdits[arCollageEditKey(slideIdx, index)];
+        if (edit) slotEdits[slide.type + ':0:' + index] = {...edit};
+        return {id: String(index), img, src: img.src};
+      });
+      arCollageSources.set(image, {
+        layout: slide.type, countTab: photos.length, userPickedLayout: true,
+        photos, slotEdits, bg: _arCollageState.bg, previewIdx: 0, activeSlot: -1
+      });
+    }
 
     function arCollageTemplateSvg(tpl) {
       const W = 26, H = 44, pad = 2, g = 1.4;
@@ -4676,7 +4695,18 @@
       const modal = document.getElementById('arPhotoCollageModal');
       if (!modal) return;
       if (typeof arPauseForStudioEdit === 'function') arPauseForStudioEdit();
-      if (typeof jumpSlideIdx === 'number' && jumpSlideIdx >= 0) _arCollageState.previewIdx = jumpSlideIdx;
+      if (Number.isInteger(jumpSlideIdx) && jumpSlideIdx >= 0) {
+        if (!arCollageCanEditSlots(jumpSlideIdx)) {
+          arToast('이 컷의 원본 콜라주 사진을 찾을 수 없어요.');
+          return;
+        }
+        const photo = campaign.uploadedPhotos[campaign.scenePlan[jumpSlideIdx].photoIdx];
+        const source = arCollageSources.get(photo);
+        arCollageEditingCut = {index: jumpSlideIdx, builder: {..._arCollageState}};
+        Object.assign(_arCollageState, source, {slotEdits: {...source.slotEdits}});
+      }
+      modal.querySelectorAll('[data-collage-batch]').forEach(el => el.classList.toggle('hidden', Boolean(arCollageEditingCut)));
+      document.getElementById('arCollageApplyBtn').textContent = arCollageEditingCut ? '이 컷에 적용 →' : '콜라주 완성 · 컷 편집 →';
       _arCollageState.activeSlot = -1;
       modal.classList.remove('hidden');
       arCollageBindCanvasPointer();
@@ -4723,6 +4753,10 @@
     }
     function arClosePhotoCollageModal() {
       _arCollageState.activeSlot = -1;
+      if (arCollageEditingCut) {
+        Object.assign(_arCollageState, arCollageEditingCut.builder);
+        arCollageEditingCut = null;
+      }
       document.getElementById('arPhotoCollageModal')?.classList.add('hidden');
     }
     async function arCollageHandleFiles(ev) {
@@ -4819,13 +4853,32 @@
           im._skipVault = true;
           im._label = `콜라주 ${i + 1}컷`;
           await im.decode();
+          arCollageRememberSource(im, slides[i], i);
           outImgs.push(im);
+        }
+        if (arCollageEditingCut) {
+          const cut = arCollageEditingCut.index;
+          const plan = campaign.scenePlan[cut];
+          const photoIdx = plan.photoIdx;
+          if (campaign.scenePlan.some((p, i) => i !== cut && p?.photoIdx === photoIdx)) {
+            plan.photoIdx = campaign.uploadedPhotos.push(outImgs[0]) - 1;
+          } else {
+            arReleasePhoto(campaign.uploadedPhotos[photoIdx]);
+            campaign.uploadedPhotos[photoIdx] = outImgs[0];
+          }
+          if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+          if (typeof renderUploadedPhotoThumbs === 'function') renderUploadedPhotoThumbs();
+          if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+          arClosePhotoCollageModal();
+          openCutEditor(cut, 'photo');
+          return;
         }
         (campaign.uploadedPhotos || []).forEach(arReleasePhoto);
         campaign.uploadedPhotos = outImgs;
         campaign.isUserCustomPhotos = true;
         campaign.isPhotoCollageMode = true;
         campaign._collageCutSec = _arCollageState.cutSec;
+        campaign.cutLenScale = [];
         campaign.cutCountOverride = outImgs.length;
         campaign.hasCustomVideo = false;
         campaign.scenePlan = outImgs.map((_, i) => ({ photoIdx: i }));
@@ -4870,13 +4923,11 @@
         arSyncEditedVideoOptionUI();
         arClosePhotoCollageModal();
         if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0);
-        if (typeof isPlaying !== 'undefined') isPlaying = true;
-        if (typeof openPresetDrawer === 'function') openPresetDrawer('right');
-        if (typeof arToast === 'function') arToast('콜라주 완성! 테마·노래를 고르고 [✏️ 텍스트·스티커 넣기]로 꾸며 보세요.', true);
+        openCutEditor(0, 'caption');
       } catch (e) {
         if (typeof arToast === 'function') arToast('콜라주를 만들지 못했어요. 다른 사진으로 다시 시도해 주세요.');
       } finally {
-        if (btn) { btn.disabled = false; btn.textContent = '✨ 콜라주 완성 · 테마 입히기 →'; }
+        if (btn) { btn.disabled = false; btn.textContent = '콜라주 완성 · 컷 편집 →'; }
       }
     }
 
@@ -5651,7 +5702,7 @@
       }
 
       const maxTextW = W - padX * 2;
-      const titleStr = String((slide && slide.title) || '').trim();
+      const titleStr = !overrideTpl && slide.captionStyle ? '' : String((slide && slide.title) || '').trim();
       const bodyStr = String((slide && slide.body) || '').trim();
       const hlStr = tw.showHighlight !== false ? String((slide && slide.highlight) || '').trim() : '';
 
@@ -7491,7 +7542,7 @@
       // 5) 하단 푸터: 계정명(@handle) + 캐러셀 페이지 도트
       const bottomOnPhoto = isFullPhoto || pLayout === 'photo_fade_top';
       const footY = H - Math.round(70 * sc);
-      const handleTxt = tw.showHandle !== false ? String(_arCnState.handle || '').trim() : '';
+      const handleTxt = !slide.chipStyle && tw.showHandle !== false ? String(slide.handle ?? _arCnState.handle ?? '').trim() : '';
       if (handleTxt) {
         ctx.font = `600 ${Math.round(24 * sc)}px ${tpl.fontBody}`;
         ctx.fillStyle = bottomOnPhoto ? 'rgba(255,255,255,0.9)' : muted;
@@ -7512,6 +7563,13 @@
         }
       }
       ctx.restore();
+      if (!overrideTpl) {
+        if (slide.captionStyle) window.arCutPanel.paint(ctx, {color: fg, ...slide.captionStyle, text: slide.title}, .42);
+        if (slide.chipStyle && tw.showHandle !== false) {
+          const name = String(slide.handle ?? _arCnState.handle ?? '').trim();
+          window.arCutPanel.paint(ctx, {color: bottomOnPhoto ? '#ffffff' : fg, ...slide.chipStyle, text: name}, .88);
+        }
+      }
     }
 
     // 순수 JS 무압축 ZIP 생성기 (외부 CDN 없이 전체 5~10장 PNG를 한 번에 .zip 저장)
@@ -7686,7 +7744,61 @@
         document.body.style.setProperty('--ar-msb', `${bar.offsetHeight}px`);
       }
     }
-    function arCnOpenSheet(tab) {
+    function arCnOpenInspector() {
+      const slides = _arCnState.slides;
+      if (!slides.length) return;
+      window.arCutPanel.open({
+        unit: '장', minCount: 3, maxCount: 10, motion: false, defaultY: {caption: .42, chip: .88},
+        count: () => slides.length,
+        index: () => _arCnState.activeIdx,
+        select: arCnSelectSlide,
+        read(i) {
+          const slide = slides[i];
+          return {
+            duration: slide.duration ?? 2.6, minDuration: .2, maxDuration: 60,
+            caption: { ...slide.captionStyle, text: slide.title },
+            chip: { ...slide.chipStyle, text: slide.handle ?? _arCnState.handle }
+          };
+        },
+        write(i, patch) {
+          const slide = slides[i];
+          if (patch.duration != null) slide.duration = patch.duration;
+          for (const [key, field] of [['caption','title'], ['chip','handle']]) {
+            if (!patch[key]) continue;
+            const {text, ...style} = patch[key];
+            if (field === 'title' || slide.handle != null || text !== _arCnState.handle) slide[field] = text;
+            const active = Object.entries(style).filter(([k, v]) => v != null && v !== '' && !(k === 'hidden' && !v));
+            if (active.length) slide[key + 'Style'] = Object.fromEntries(active);
+            else delete slide[key + 'Style'];
+          }
+        },
+        order(action, i) {
+          if (action === 'copy' && slides.length < 10) {
+            slides.splice(i + 1, 0, {...slides[i]});
+            _arCnState.activeIdx = i + 1;
+          } else if (action === 'delete' && slides.length > 3) {
+            slides.splice(i, 1);
+            _arCnState.activeIdx = Math.min(i, slides.length - 1);
+          } else if (action === 'left' || action === 'right') {
+            const j = i + (action === 'left' ? -1 : 1);
+            if (j < 0 || j >= slides.length) return;
+            [slides[i], slides[j]] = [slides[j], slides[i]];
+            _arCnState.activeIdx = j;
+          }
+        },
+        changed: () => arCnRefreshUI(false),
+        tools(tab, i) {
+          if (tab === 'photo') return [{label:'사진 교체 · 배치', run: () => arCnOpenSheet('photo')}];
+          if (tab === 'transition') return [{label:'릴스로 변환하고 이 장의 전환 편집', run: () => arCnApplyToStudioReels(i)}];
+          return [
+            {label:'본문 · 상단 배지 · 강조 문구', run: () => arCnOpenSheet('text', true)},
+            {label:'카드 테마 · 색상 · 장식', run: () => arCnOpenSheet('theme')}
+          ];
+        }
+      });
+    }
+
+    function arCnOpenSheet(tab, nativeTextTools = false) {
       const next = tab || 'ai';
       _arCnState.sheetOpen = true;
       _arCnState.sheetTab = next;
@@ -7699,6 +7811,7 @@
       if (wf && window.innerWidth < 1024) wf.scrollTop = 0;
       if (next === 'theme') { arCnRenderTemplateGallery(); arCnRenderGradientSwatches(); }
       if (next === 'text') arCnRenderFontChips();
+      if (next === 'text' && !nativeTextTools) arCnOpenInspector();
       if (next === 'photo') arCnLoadVaultStrip();
       if (next === 'export') arRunCardNewsCritic();
     }
@@ -7921,6 +8034,7 @@
       view.classList.remove('hidden');
       arCnBindSheetHandle();
       arCnRefreshUI();
+      arCnOpenInspector();
       if (window.innerWidth >= 1024) {
         try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
       }
@@ -8692,7 +8806,7 @@
         if (btn) { btn.disabled = false; btn.textContent = '📊 PPT 파일 저장'; }
       }
     }
-    async function arCnApplyToStudioReels() {
+    async function arCnApplyToStudioReels(transitionSlide = null) {
       const total = _arCnState.slides.length;
       if (!total) return;
       const btn = document.getElementById('arCnToReelsBtn');
@@ -8720,9 +8834,11 @@
         campaign.isUserCustomPhotos = true;
         campaign.isPhotoCollageMode = true;
         campaign._collageCutSec = 2.6;
+        campaign.cutLenScale = [];
         campaign.cutCountOverride = outImgs.length;
         campaign.hasCustomVideo = false;
-        campaign.scenePlan = outImgs.map((_, i) => ({ photoIdx: i }));
+        const lengths = _arCnState.slides.map(slide => slide.duration ?? 2.6);
+        campaign.scenePlan = lengths.map((cardDuration, photoIdx) => ({ photoIdx, cardDuration }));
         campaign.hideCardOnVideo = true;
         campaign.noDefaultCaptions = true;
         campaign.hook = '';
@@ -8733,10 +8849,10 @@
         if (typeof AudioEngine !== 'undefined') {
           AudioEngine.ttsVoice = 'off'; AudioEngine.masterBuffer = null; AudioEngine.masterDuration = 0; AudioEngine.ttsDirty = false;
         }
-        const mainD = +(outImgs.length * 2.6).toFixed(2);
+        const mainD = +lengths.reduce((sum, length) => sum + length, 0).toFixed(2);
         if (typeof OUTRO_DURATION !== 'undefined') OUTRO_DURATION = 0;
         if (typeof BASE_DURATION !== 'undefined') BASE_DURATION = mainD;
-        if (typeof CUT_LENGTHS !== 'undefined') CUT_LENGTHS = Array.from({ length: outImgs.length }, () => 2.6);
+        if (typeof CUT_LENGTHS !== 'undefined') CUT_LENGTHS = lengths;
         if (typeof TOTAL_DURATION !== 'undefined') TOTAL_DURATION = mainD;
         if (window.__timelines && window.__timelines.main) window.__timelines.main.duration = TOTAL_DURATION;
         if (typeof updateDurationIndicator === 'function') updateDurationIndicator();
@@ -8748,7 +8864,8 @@
         arSyncEditedVideoOptionUI();
         arCloseCardNewsModal();
         if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0);
-        if (typeof isPlaying !== 'undefined') isPlaying = true;
+        if (Number.isInteger(transitionSlide)) openCutEditor(transitionSlide, 'transition');
+        else if (typeof isPlaying !== 'undefined') isPlaying = true;
         if (typeof arToast === 'function') arToast(`카드뉴스 ${total}장을 릴스 영상으로 불러왔어요! 노래를 입혀 바로 저장해 보세요.`, true);
       } catch (_) {
         if (typeof arToast === 'function') arToast('릴스로 변환하지 못했어요. 다시 시도해 주세요.');

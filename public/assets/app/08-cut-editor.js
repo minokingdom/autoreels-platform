@@ -110,60 +110,8 @@
       { id: 'scanline', label: '⚡ 스캔라인' },
       { id: 'prism', label: '🌈 프리즘' }
     ];
-    const CUT_TEXT_FONTS = [
-      // ── 임팩트 · 포스터 · 바이럴 볼드 (상업용 무료 42종) ──
-      { id: 'sans', label: '프리텐다드', css: "'Pretendard Variable', 'Pretendard', sans-serif", weight: 800 },
-      { id: 'freesentation', label: '프리젠테이션', css: "'Freesentation', 'Paperlogy', sans-serif", weight: 900 },
-      { id: 'paperlogy', label: '페이퍼로지', css: "'Paperlogy', 'Pretendard Variable', sans-serif", weight: 800 },
-      { id: 'suite', label: '스위트 헤비', css: "'SUITE', 'Pretendard Variable', sans-serif", weight: 900 },
-      { id: 'gmarket', label: '지마켓산스', css: "'GmarketSans', 'Pretendard Variable', sans-serif", weight: 700 },
-      { id: 'aggro', label: '어그로 볼드', css: "'SBAggroB', 'Paperlogy', sans-serif", weight: 700 },
-      { id: 'jalnan', label: '잘난체', css: "'yg-jalnan', 'SBAggroB', sans-serif", weight: 700 },
-      { id: 'blackhansans', label: '검은고딕', css: "'Black Han Sans', 'Paperlogy', sans-serif", weight: 400 },
-      { id: 'gasoekone', label: '가석원 울트라', css: "'Gasoek One', 'SBAggroB', sans-serif", weight: 400 },
-      { id: 'gangwon', label: '강원파워', css: "'GangwonEduPower', 'Paperlogy', sans-serif", weight: 800 },
-      { id: 'lineseed', label: '라인 시드', css: "'LINESeedKR', 'Pretendard Variable', sans-serif", weight: 700 },
-      { id: 'ibmplex', label: 'IBM 플렉스', css: "'IBM Plex Sans KR', 'Pretendard Variable', sans-serif", weight: 700 },
-      { id: 'tenada', label: '테나다 볼드', css: "'Tenada', 'Cafe24Ssurround', sans-serif", weight: 800 },
-      { id: 'cafe24ohsquare', label: '카페24 아네모네', css: "'Cafe24Ohsquare', 'SBAggroB', sans-serif", weight: 700 },
-      // ── 예능 · 팝 · 둥근체 ──
-      { id: 'cafe24', label: '카페24 둥근', css: "'Cafe24Ssurround', 'Bagel Fat One', sans-serif", weight: 700 },
-      { id: 'bagel', label: '베이글 팻', css: "'Bagel Fat One', 'Cafe24Ssurround', sans-serif", weight: 400 },
-      { id: 'dohyeon', label: '배민 도현체', css: "'Do Hyeon', sans-serif", weight: 400 },
-      { id: 'jua', label: '배민 주아체', css: "'Jua', sans-serif", weight: 400 },
-      { id: 'dongle', label: '동글', css: "'Dongle', sans-serif", weight: 700, sz: 20 },
-      { id: 'cute', label: '큐트폰트', css: "'Cute Font', cursive", weight: 400, sz: 20 },
-      { id: 'stylish', label: '스타일리시', css: "'Stylish', sans-serif", weight: 400, sz: 16 },
-      // ── 매거진 · 에디토리얼 명조 ──
-      { id: 'hahmlet', label: '함렛 명조', css: "'Hahmlet', 'Noto Serif KR', serif", weight: 900 },
-      { id: 'serif', label: '본명조 볼드', css: "'Noto Serif KR', serif", weight: 900 },
-      { id: 'chosun', label: '조선일보명조', css: "'Chosunilbo_myungjo', 'MaruBuri', serif", weight: 400 },
-      { id: 'songmyung', label: '송명 세리프', css: "'Song Myung', serif", weight: 400 },
-      { id: 'maru', label: '마루부리', css: "'MaruBuri', 'Gowun Batang', serif", weight: 600 },
-      { id: 'diphylleia', label: '디필레이아', css: "'Diphylleia', 'MaruBuri', serif", weight: 400 },
-      { id: 'grandiflora', label: '그란디플로라', css: "'Grandiflora One', 'Gowun Batang', serif", weight: 400 },
-      { id: 'batang', label: '고운바탕', css: "'Gowun Batang', serif", weight: 700 },
-      { id: 'dodum', label: '고운돋움', css: "'Gowun Dodum', sans-serif", weight: 400 },
-      { id: 'sunflower', label: '해바라기', css: "'Sunflower', sans-serif", weight: 700 },
-      // ── 테크 · 레트로 · 스트릿 ──
-      { id: 'orbit', label: '오르빗 테크', css: "'Orbit', 'Gowun Dodum', sans-serif", weight: 400 },
-      { id: 'gugi', label: '구기체', css: "'Gugi', sans-serif", weight: 400 },
-      { id: 'bwpicture', label: '흑백사진체', css: "'Black And White Picture', sans-serif", weight: 400, sz: 17 },
-      { id: 'moirai', label: '모이라이', css: "'Moirai One', cursive", weight: 400, sz: 16 },
-      { id: 'kirang', label: '기랑해랑', css: "'Kirang Haerang', cursive", weight: 400, sz: 17 },
-      // ── 손글씨 · 붓글씨 · 캘리 ──
-      { id: 'dokdo', label: '동해독도체', css: "'East Sea Dokdo', cursive", weight: 400, sz: 20 },
-      { id: 'brush', label: '나눔붓글씨', css: "'Nanum Brush Script', cursive", weight: 400, sz: 19 },
-      { id: 'pen', label: '나눔손글씨 펜', css: "'Nanum Pen Script', cursive", weight: 400, sz: 19 },
-      { id: 'gaegu', label: '개구쟁이', css: "'Gaegu', cursive", weight: 700, sz: 17 },
-      { id: 'singleday', label: '싱글데이', css: "'Single Day', cursive", weight: 400, sz: 17 },
-      { id: 'yeonsung', label: '연성체', css: "'Yeon Sung', cursive", weight: 400, sz: 16 },
-      { id: 'himelody', label: '하이멜로디', css: "'Hi Melody', cursive", weight: 400, sz: 18 },
-      { id: 'gamja', label: '감자꽃', css: "'Gamja Flower', cursive", weight: 400, sz: 17 },
-      { id: 'poorstory', label: '푸어스토리', css: "'Poor Story', cursive", weight: 400, sz: 16 },
-      { id: 'script', label: '영문필기', css: "'Great Vibes', 'Pinyon Script', cursive", weight: 400, sz: 18 }
-    ];
-    window.__arFontPickerExpanded = window.__arFontPickerExpanded || {};
+    const CUT_TEXT_FONTS = window.arCutPanel.fonts;
+    window.__arFontPickerExpanded = window.__arFontPickerExpanded || {'cut-std-caption':true,'cut-std-chip':true};
     function arRenderUnifiedFontPickerHtml(opts) {
       const items = opts.items || CUT_TEXT_FONTS;
       const pickerId = String(opts.pickerId || 'default');
@@ -3392,21 +3340,8 @@
         if (ppBtn) ppBtn.textContent = isPlaying ? '⏸ 일시정지' : '▶️ 재생';
         if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
       } else {
-        window.__arPinnedCut = idx;
-        window.__arSelectedOverlayIdx = -1;
-        window.__arActiveCutElKey = '';
-        window.__arCutEditorOpen = false;
-        window.__arInlineEditActive = false;
-        window.__arDirectCanvasMode = true;
-        isPlaying = false;
-        const ppBtn = document.getElementById('playPauseBtn');
-        if (ppBtn) ppBtn.textContent = '▶️ 재생';
-        if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
-        const mainDur = getMainDuration();
-        const totalCuts = getTargetCutCount();
-        const cutDur = mainDur / totalCuts;
-        const seekT = idx * cutDur + Math.min(0.55, cutDur * 0.35);
-        if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(seekT);
+        openCutEditor(idx, 'caption');
+        return;
       }
       renderPreviewCutPinBar();
     }
@@ -3858,7 +3793,7 @@
             <span class="ar-el-label">확대</span>
             <input type="range" min="0.8" max="2.4" step="0.05" value="${Number(ph.scale) || 1}"
                    oninput="updateCutElementOverride(${cutIdx}, 'photo', 'scale', this.value, false)" class="flex-1" />
-            ${campaign && campaign.isPhotoCollageMode ? `<button type="button" onclick="closeInlineQuickEdit();arOpenPhotoCollageModal(${cutIdx});" class="ar-el-badge blue">🧩 칸별 사진 맞추기</button>` : ''}
+            ${arCollageCanEditSlots(cutIdx) ? `<button type="button" onclick="closeInlineQuickEdit();arOpenPhotoCollageModal(${cutIdx});" class="ar-el-badge blue">🧩 칸별 사진 맞추기</button>` : ''}
             <button type="button" onclick="openCutPhotoReplaceModal(${cutIdx})" class="ar-el-badge blue">📷 이 컷 사진 교체</button>
             <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'photo')" class="ar-el-badge muted">↺</button>
           </div>
@@ -4040,6 +3975,7 @@
     }
 
     function openCutEditor(cutIdx, elKey) {
+      arShowStudioServices(false);
       arPauseForStudioEdit();
       if (typeof closePresetDrawer === 'function') closePresetDrawer();
       const n = typeof getTargetCutCount === 'function' ? getTargetCutCount() : 4;
@@ -4671,8 +4607,8 @@
       if (!Array.isArray(campaign.cutLenScale)) campaign.cutLenScale = [];
       const curK = Number(campaign.cutLenScale[i]) || 1;
       const base = (lens[i] || 3) / curK;
-      const want = Math.max(1, Math.min(8, (lens[i] || 3) + delta));
-      campaign.cutLenScale[i] = Math.max(0.3, Math.min(4, want / base));
+      const want = campaign.isPhotoCollageMode ? Math.max(.2, Math.min(60, (lens[i] || 3) + delta)) : Math.max(1, Math.min(8, (lens[i] || 3) + delta));
+      campaign.cutLenScale[i] = campaign.isPhotoCollageMode ? want / base : Math.max(0.3, Math.min(4, want / base));
       if (typeof applyVideoDurations === 'function') applyVideoDurations();
       if (typeof seekToTime === 'function') seekToTime(getCutStart(i) + 0.1);
       renderCutEditorPanel();
@@ -4722,12 +4658,12 @@
 
       const baseChips = [
         { key: 'caption',    label: '자막',     hidden: !!ov.caption.hidden, mod: isCutElementModified(cutIdx, 'caption') },
-        { key: 'badge',      label: '위 라벨',  hidden: !!ov.badge.hidden,   mod: isCutElementModified(cutIdx, 'badge') },
-        { key: 'price',      label: '혜택',     hidden: !!ov.price.hidden,   mod: isCutElementModified(cutIdx, 'price') },
         { key: 'chip',       label: '아래 이름', hidden: !!ov.chip.hidden,    mod: isCutElementModified(cutIdx, 'chip') },
         { key: 'photo',      label: '사진',     hidden: false,               mod: isCutElementModified(cutIdx, 'photo') },
         { key: 'transition', label: '전환',     hidden: false,               mod: isCutElementModified(cutIdx, 'transition') },
-        { key: 'deco',       label: '꾸밈',     hidden: false,               mod: isCutElementModified(cutIdx, 'deco') }
+        { key: 'deco',       label: '꾸밈',     hidden: false,               mod: isCutElementModified(cutIdx, 'deco') },
+        { key: 'badge',      label: '위 라벨',  hidden: !!ov.badge.hidden,   mod: isCutElementModified(cutIdx, 'badge') },
+        { key: 'price',      label: '혜택',     hidden: !!ov.price.hidden,   mod: isCutElementModified(cutIdx, 'price') }
       ];
 
       const overlayChipsHtml = overlays.map((it, ii) => {
@@ -4744,7 +4680,7 @@
       // 지금 디자인에 실제로 그려지는 요소만 보여 줌 (없는 요소를 골라도 아무 변화가 없어 헷갈렸음)
       const drawn = (window.__arLastRenderedBoxes && window.__arLastRenderedBoxes[cutIdx]) || null;
       const presentChips = baseChips.filter((ch) => {
-        if (!['caption', 'badge', 'price', 'chip'].includes(ch.key)) return true;
+        if (ch.key !== 'badge' && ch.key !== 'price') return true;
         if (ch.key === activeKey || ch.mod) return true;
         return !drawn || !!drawn[ch.key];
       });
@@ -4818,7 +4754,7 @@
               📷 사진·영상 바꾸기
               <input type="file" accept="image/*,video/*" class="hidden" onchange="replaceCutMedia(${cutIdx}, event);renderCutEditorPanel();if(typeof renderInlineQuickEditBar==='function')renderInlineQuickEditBar();" />
             </label>
-            ${campaign && campaign.isPhotoCollageMode ? `<button type="button" onclick="closeCutEditor();arOpenPhotoCollageModal(${cutIdx});" class="ig-pill ig-pill-main">🧩 콜라주 칸별 맞추기</button>` : ''}
+            ${arCollageCanEditSlots(cutIdx) ? `<button type="button" onclick="closeCutEditor();arOpenPhotoCollageModal(${cutIdx});" class="ig-pill ig-pill-main">🧩 콜라주 칸별 맞추기</button>` : ''}
             <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'photo')" class="ar-el-badge muted ml-auto">↺ 초기화</button>
           </div>
           <div class="ar-el-row">
@@ -6043,7 +5979,8 @@
       const baseDesign = getActiveDesign();
       const localSec = activeCutIdx >= 0 ? (t - activeCutIdx * cutDur) : 0;
       const isStillLookbook = baseDesign?.mstyle === 'in_lookbook_still';
-      const transId = (isStillLookbook || (campaign && campaign.isPhotoCollageMode)) ? 'none' : (campaign.cutTransitions?.[activeCutIdx] || 'default');
+      const chosenTransition = campaign.cutTransitions?.[activeCutIdx];
+      const transId = campaign.isPhotoCollageMode ? (chosenTransition && chosenTransition !== 'default' ? chosenTransition : 'none') : isStillLookbook ? 'none' : (chosenTransition || 'default');
       window.__arActiveRenderCutIdx = activeCutIdx;
       window.__arActiveRenderLocalSec = localSec;
       window.__arInsideMotionCaptionCard = false;

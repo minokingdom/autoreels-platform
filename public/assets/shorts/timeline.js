@@ -224,7 +224,7 @@ function applyTrackTool(action) {
     const {i,take,sourceTime}=pos;
     if(action==='trackSplit') {
       if(sourceTime-take.start<.1 || take.end-sourceTime<.1) return;
-      cuts.splice(i,1,{...take,end:sourceTime},{...take,start:sourceTime});
+      cuts.splice(i,1,{...take,end:sourceTime,sourceLimit:sourceTime},{...take,start:sourceTime});
     } else if(action==='trackDelete') {
       if(cuts.length<2) return;
       cuts.splice(i,1);cursor=Math.min(pos.offset,sequenceDuration(cuts));

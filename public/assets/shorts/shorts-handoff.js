@@ -22,7 +22,7 @@ function arStashThemeVideo(blob) {
       // 쇼츠 화면(부모 창)의 File은 이 창에서 Blob으로 인식되지 않아 파형을 읽지 못한다.
       // 데이터 복사 없이 이 창의 File로 다시 감싸서 넘긴다.
       const own = new File([file], file.name || '쇼츠 원본.mp4', { type: file.type || 'video/mp4', lastModified: file.lastModified || Date.now() });
-      await openQuickFiles([own]);
+      await openShortsFile(own, true);
       const s = session;
       if (!s?.clip || !pick) return;
       const duration = video.duration;
@@ -40,6 +40,7 @@ function arStashThemeVideo(blob) {
       markEdited();
       renderCutTrack(s);
       seekCutTrack(s, 0);
+      openShortsCutInspector();
       detail(s, '추천 구간 ' + clock(start) + ' – ' + clock(end) + ' · ' + (end - start).toFixed(1) + '초를 불러왔어요.');
     };
     // 스튜디오 안에서 연 편집기: 다듬은 영상을 제작 화면으로 넘겨 테마·대본·성우·명함을 입힌다.

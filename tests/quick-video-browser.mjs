@@ -113,7 +113,7 @@ try {
       return {gap:Math.abs(stage.bottom-board.top),bottom:board.bottom,height:innerHeight};
     });
     assert.ok(geometry.gap<3 && geometry.bottom<=geometry.height,'미리보기 아래에 타임라인 전체가 보여야 함');
-    assert.equal(await frame.locator('[data-track]').count(),6);
+    assert.equal(await frame.locator('[data-track]:visible').count(),6);
     await frame.locator('#mixSettings').click();
   };
   const chooser = page.waitForEvent('filechooser');

@@ -185,7 +185,8 @@ function drawQuickScene(ctx,source,clip) {
 function paintClip(ctx, source, text, clip=session.clip, outputTime=0) {
   const w = ctx.canvas.width, h = ctx.canvas.height;
   if (quickEdit) {
-    drawQuickScene(ctx,source,clip);
+    if (clip.cutPhoto) drawQuickFrame(ctx,clip.cutPhoto,1);
+    else drawQuickScene(ctx,source,clip);
     const strength=peakEnvelope(clip,source.currentTime);
     if (strength>0) {
       const shade=ctx.createRadialGradient(w/2,h/2,w*.18,w/2,h/2,Math.hypot(w,h)/2);
@@ -200,9 +201,11 @@ function paintClip(ctx, source, text, clip=session.clip, outputTime=0) {
     }
     const cue=activeCue(session,outputTime);
     const activeTxt=cue?.text||text;
+    if (clip.cutLook) paintLook(ctx, clip.cutLook, .8, outputTime, w, h);
     paintEffects(ctx,session,outputTime,activeTxt);
+    if (clip.cutFrame) window.arPaintShortsStickers(ctx,{activeFrame:clip.cutFrame},outputTime);
     if(typeof window.arPaintShortsStickers==='function')window.arPaintShortsStickers(ctx,session,outputTime);
-    drawTitles(ctx,cue?{...clip,showCaptions:true}:clip,activeTxt,cue); return;
+    paintShortsCutTitles(ctx,clip,activeTxt,cue,outputTime); return;
   }
   const scale = Math.max(w/source.videoWidth,h/source.videoHeight);
   const sw = w/scale, sh = h/scale;

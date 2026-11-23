@@ -5,6 +5,7 @@
 #referenceStory{padding:16px 0;border-block:1px solid #343942}#sourceTopic{margin:6px 0 12px}#sourceDetails summary{display:inline-block;font-size:13px}#sourceLines{padding-inline-start:22px}#sourceLines li{margin-block:10px}#sourceLines p{font-size:13px;color:#bcc1cb;overflow-wrap:anywhere}
 
 #linkFeedback { margin: 10px 0; }
+.scene > .secondary { grid-column: 2; width: fit-content; margin: 0; padding: 7px 14px; }
 #linkMessage { margin: 0; color: #c9dfff; font-size: 14px; line-height: 1.5; }
 #linkProgress { height: 5px; margin-top: 7px; background: #2b3d58; border-radius: 4px; overflow: hidden; }
 #linkProgress::after { content: ''; display: block; width: 38%; height: 100%; background: #70adff; border-radius: inherit; animation: remix-scan 1.4s ease-in-out infinite alternate; }

@@ -954,6 +954,9 @@ function renderMix(s){
 if(quickEdit){
   for(const label of document.querySelectorAll('.mix-label'))label.firstElementChild.replaceWith(mixIcon(label.dataset.track));
   const heading=document.querySelector('.track-heading');
+  const cutEdit = byId('headerStudioEdit');
+  cutEdit.hidden = false;
+  cutEdit.addEventListener('click', () => openShortsCutInspector());
   const settings=mixButton('☷',()=>showTools('editSettings'));settings.id='mixSettings';settings.setAttribute('aria-label','세부 편집 열기');
   const undo=byId('trackUndo');undo.textContent='↶';undo.setAttribute('aria-label','컷 편집 되돌리기');
   undo.addEventListener('click',()=>applyTrackTool('trackUndo'));
@@ -972,7 +975,7 @@ if(quickEdit){
       await awaitMedia(probe,'loadedmetadata',()=>{probe.src=url;},s.controller.signal);
       if(!Number.isFinite(probe.duration)||probe.duration<=0)throw Error();
       (s.replacementUrls||=[]).push(url);
-      const owner={...currentTake(s).take.owner,start:0,end:probe.duration,lines:[],montage:null,waveform:null};
+      const owner={...currentTake(s).take.owner,start:0,end:probe.duration,lines:[],montage:null,waveform:null,cutPhoto:null};
       changeTake(s,t=>({url,start:0,end:Math.min(t.end-t.start,probe.duration),owner}));
       queueSourceWave(s,owner,file,probe.duration);
     }catch{URL.revokeObjectURL(url);if(session===s){byId('mixError').textContent='다른 영상을 선택해 주세요.';detail(s,'교체할 영상을 열 수 없어요.');showTools('status');}}

@@ -41,7 +41,8 @@ export function buildApp(repoRoot) {
     }
   }
   const audioData = 'const AR_AUDIO_LIBRARY = ' + JSON.stringify(audio) + ';\n';
-  const out = referenceData + audioData + `// 자동 생성 파일 — 고치지 마세요. 원본: public/assets/app/NN-*.js (scripts/build-app.mjs)\n` + body;
+  const sharedInspector = fs.readFileSync(path.join(assets, 'cut-panel.js'), 'utf8');
+  const out = referenceData + audioData + sharedInspector + '\n' + `// 자동 생성 파일 — 고치지 마세요. 원본: public/assets/app/NN-*.js (scripts/build-app.mjs)\n` + body;
   fs.writeFileSync(path.join(dir, 'app.js'), out);
   const lp = buildLandingIndustries(repoRoot);
   return { parts: parts.length, bytes: Buffer.byteLength(out), landingIndustries: lp };

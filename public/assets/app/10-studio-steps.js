@@ -895,6 +895,7 @@
       triggerFullAudioPreview();
     }
     function switchStudioTab(key) {
+      if (key !== 'topic') arShowStudioServices(false);
       if (key !== 'sound' && document.querySelector('#arOptionSheet[data-source-select="ttsVoiceSelect"]:not(.hidden)')) arCloseOptionSheet();
       if (!STUDIO_TABS.includes(key)) return;
       // 발행 단계는 명함까지 순서대로 마쳐야 열림
@@ -3018,3 +3019,30 @@
         else activity.end();
       }
     }
+
+    // 작업별 직접 링크와 외부 서비스 인증 복귀는 해당 편집 화면을 유지한다.
+    function arShowStudioServices(show) {
+      const view = document.getElementById('viewPreview');
+      view.classList.toggle('ar-service-home',show);
+      if (show) view.querySelector('#startAutoReels')?.focus({preventScroll:true});
+    }
+    (function initServiceMenu() {
+      const view=document.getElementById('viewPreview');
+      if(!view)return;
+      const route=new URL(location.href);
+      const special=Array.from(route.searchParams.keys()).some(k=>!['v','mobile','utm_source','utm_medium','utm_campaign'].includes(k));
+      document.getElementById('studioCutEdit').addEventListener('click',()=>openCutEditor(window.__arPinnedCut >= 0 ? window.__arPinnedCut : getCutIndexAt(window.__timelines?.main?.currentTime || 0),'caption'));
+      const openHome=!special && !route.hash && !history.state?.arReelsWorkspace && !/^\/admin/.test(route.pathname);
+      view.classList.toggle('ar-service-home',openHome);
+      document.getElementById('startAutoReels').addEventListener('click',()=>{
+        history.replaceState({...history.state,arReelsWorkspace:true},'');
+        arShowStudioServices(false);
+        switchStudioTab('topic');
+        if(document.body.classList.contains('ar-sheet'))arToggleSheet('full');
+        document.getElementById('studioPanel_topic')?.scrollIntoView({block:'nearest'});
+      });
+      document.getElementById('showStudioServices').addEventListener('click',()=>{
+        history.replaceState({...history.state,arReelsWorkspace:false},'');
+        arShowStudioServices(true);
+      });
+    })();

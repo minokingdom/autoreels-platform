@@ -118,3 +118,5 @@ dialog.ar-video-editor iframe { display: block; width: 100%; height: 100%; borde
 #applyTheme:disabled { opacity: .45; }
 #applyTheme[hidden] { display: none; }
 .quick-video:not(:has(#cutTimeline.has-media)) #applyTheme { display: none; }
+
+.quick-video #headerStudioEdit { border: 1px solid #3b82f6; background: #132038; color: #bfdbfe; border-radius: 7px; padding: 5px 9px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }

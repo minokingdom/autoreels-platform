@@ -232,12 +232,12 @@
 
     // 영상 길이에 따른 본편 컷(사진·장면) 수 계산: 8~12초=4컷, 15초=6컷, 20초=8컷, 30초+=10컷
     function getTargetCutCount() {
+      // 컷 편집에서 컷을 복사·삭제하면 그 수를 그대로 씀 (영상 길이 버튼을 다시 누르면 풀림)
+      if (typeof campaign !== 'undefined' && campaign && campaign.cutCountOverride >= 1) return Math.min(10, campaign.cutCountOverride);
       // 사진 콜라주 모드: 만든 콜라주 장수(예: 1장)를 그대로 1컷으로 유지
       if (typeof campaign !== 'undefined' && campaign && campaign.isPhotoCollageMode && Array.isArray(campaign.uploadedPhotos) && campaign.uploadedPhotos.length) {
         return Math.min(10, campaign.uploadedPhotos.length);
       }
-      // 컷 편집에서 컷을 복사·삭제하면 그 수를 그대로 씀 (영상 길이 버튼을 다시 누르면 풀림)
-      if (typeof campaign !== 'undefined' && campaign && campaign.cutCountOverride >= 1) return Math.min(10, campaign.cutCountOverride);
       // 컷(자막·성우 대사) 수는 고른 영상 길이로 정함: 길이를 늘리면 컷과 대사가 늘어남.
       // 사진·영상은 따로 "장면"으로 나뉘어 깔리며, 같은 사진을 반복해 채우지 않음
       if (BASE_DURATION >= 26) return 10;
@@ -809,8 +809,11 @@
       if (typeof campaign !== 'undefined' && campaign && campaign.isPhotoCollageMode) {
         const perCut = Math.max(1.5, Number(campaign._collageCutSec) || 10);
         const outro = hideOutro ? 0 : 3.2;
-        const lengths = Array.from({ length: cuts }, () => perCut);
-        const mainDur = +(cuts * perCut).toFixed(2);
+        const lengths = Array.from({ length: cuts }, (_, i) => {
+          const duration = Number(campaign.scenePlan?.[i]?.cardDuration) || perCut;
+          return Math.max(0.2, duration * (Number(campaign.cutLenScale?.[i]) || 1));
+        });
+        const mainDur = +lengths.reduce((sum, duration) => sum + duration, 0).toFixed(2);
         return { total: +(mainDur + outro).toFixed(2), outro, lengths };
       }
       const baseOutro = hideOutro ? 0 : (BASE_DURATION <= 8 ? 2.4 : BASE_DURATION >= 20 ? 4.0 : 3.5);

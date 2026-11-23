@@ -1,0 +1,86 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import http from 'node:http';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {chromium} from 'playwright';
+import {unzipSync,strFromU8} from '../public/assets/remix/fflate.mjs';
+
+const root = fileURLToPath(new URL('../public/',import.meta.url));
+const mime = {'.css':'text/css','.js':'text/javascript','.mjs':'text/javascript','.html':'text/html; charset=utf-8'};
+const server = http.createServer((req,res)=>{
+  const file = path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);
+  if (!file.startsWith(root) || !fs.existsSync(file)) return res.writeHead(404).end();
+  res.writeHead(200,{'Content-Type':mime[path.extname(file)] || 'application/octet-stream'});
+  fs.createReadStream(file).pipe(res);
+});
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+const browser = await chromium.launch(process.env.CHROME_PATH ? {executablePath:process.env.CHROME_PATH} : {});
+try {
+  const page = await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+  const errors = [];
+  page.on('pageerror',error=>errors.push(error.message));
+  await page.route(/^https:\/\//,route=>route.abort());
+  await page.route('**/api/account*',route=>route.fulfill({json:{ok:true,user:{id:1},entitlement:{pro:true}}}));
+  const sceneNames = ['첫 문구','두 번째','마지막'];
+  const story = {scenes:sceneNames.map((caption,i)=>({start:i*18,end:i*18+18,caption,screen:caption,position:'bottom'})),context:{topic:'원본 이야기'},expires:Date.now()+100000};
+  const url = 'http://127.0.0.1:'+server.address().port+'/assets/remix/index.html';
+  await page.goto(url);
+  await page.evaluate(saved=>sessionStorage.setItem('ar_remix_phone_story_v1',JSON.stringify(saved)),story);
+  await page.reload();
+  const still = {name:'red.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20" fill="red"/></svg>')};
+  const video = {name:'sample.mp4',mimeType:'video/mp4',buffer:fs.readFileSync(path.join(root,'assets/remix/fixtures/remix-spoken-ko.mp4'))};
+  await page.locator('#photos').setInputFiles([video,still]);
+  await page.getByRole('button',{name:'3컷 편집'}).click();
+  const panel = page.getByRole('dialog');
+  const click = name=>panel.getByRole('button',{name,exact:true}).click();
+  await click('앞으로'); await click('복사'); await click('길이 늘리기');
+  await click('Aa 문구 고치기');
+  await panel.getByLabel('자막 문구').fill('바꾼 자막'); await click('적용');
+  await click('페이드인'); await click('아래 이름'); await click('Aa 문구 고치기');
+  await panel.getByLabel('아래 이름 문구').fill('가게 이름'); await click('적용');
+  await click('꾸밈'); await click('흰색 프레임');
+  await page.getByRole('button',{name:'3컷 편집'}).click();
+  await click('전환'); await click('검정에서 페이드인');
+  await page.getByRole('button',{name:'1컷 편집'}).click(); await click('빼기'); await click('접기 ﹀');
+  await page.getByRole('button',{name:'3컷 편집'}).click(); await click('사진');
+  const picking = page.waitForEvent('filechooser');
+  await click('이 컷 영상·사진 교체'); await (await picking).setFiles(still);
+  await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('교체'));
+  const transcript = await page.locator('#sourceLines li').allTextContents();
+  assert.equal(transcript.length,3); assert.ok(transcript[0].includes('첫 문구'));
+  const captions = await page.locator('.scene input').evaluateAll(items=>items.map(el=>el.value));
+  assert.deepEqual(captions,['마지막','바꾼 자막','두 번째']);
+  await page.locator('#play').click();
+  await page.waitForFunction(()=>document.querySelector('#play').textContent==='▶');
+  const downloadPromise = page.waitForEvent('download'); await page.locator('#project').click();
+  const download = await downloadPromise;
+  const zip = fs.readFileSync(await download.path());
+  if (process.env.REMIX_TEST_ZIP) fs.writeFileSync(process.env.REMIX_TEST_ZIP,zip);
+  const files = unzipSync(zip);
+  const scenes = JSON.parse(strFromU8(files['scenes.json'])).scenes;
+  assert.deepEqual(scenes.map(s=>[s.start,s.end,s.mediaOffset]),[[0,18,18],[18,42,18],[42,60,0]]);
+  assert.equal(scenes[0].mediaIndex,scenes[1].mediaIndex);
+  assert.notEqual(scenes[1].mediaIndex,scenes[2].mediaIndex);
+  assert.equal(scenes[1].chip.text,'가게 이름');
+  assert.equal(scenes[1].captionStyle.motion,'fade');
+  const project = strFromU8(files['main.svml']);
+  assert.match(project,/source-at="18f"/);
+  assert.match(project,/id="overlay1end" from="overlay1f10.end" for="13f"/);
+  assert.ok(files['assets/caption1f0.png']); assert.ok(files['assets/caption1.png']);
+  assert.ok(files['assets/photo2.jpg']); assert.equal(files['assets/photo0.jpg'],undefined);
+  if (await page.evaluate(()=>MediaRecorder.isTypeSupported('video/mp4'))) {
+    await page.locator('#save').click();
+    await page.locator('#download').waitFor({timeout:20000});
+    const result = await page.evaluate(async()=>{
+      const blob = await (await fetch(document.querySelector('#download').href)).blob();
+      return {magic:await blob.slice(4,8).text(),size:blob.size};
+    });
+    assert.equal(result.magic,'ftyp');assert.ok(result.size>2000);
+    console.log('MP4 생성 및 검증 통과');
+  }
+  await page.reload(); assert.deepEqual(await page.locator('#sourceLines li').allTextContents(),transcript);
+  assert.deepEqual(await page.locator('.scene input').evaluateAll(items=>items.map(el=>el.value)),captions);
+  assert.deepEqual(errors,[]);
+  console.log('리믹스 컷 순서·복사·삭제·길이, 영상 오프셋, 사진 교체, 자막·이름·전환·프레임, 원본 대사 복구, 미리보기 및 Hypit 출력 확인');
+} finally {await browser.close(); server.close();}

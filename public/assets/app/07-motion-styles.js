@@ -1529,7 +1529,7 @@
       // 3) 자막이 켜져 있을 때만 선택한 테마 폰트·색상으로 깔끔하게 표시
       const raw = (campaign.cutCaptions && campaign.cutCaptions[cutIdx]) || campaign.hook || '';
       const caption = gCleanCaption(raw);
-      if (caption && !campaign.noDefaultCaptions) {
+      if (caption && (!campaign.noDefaultCaptions || campaign.cutCaptions?.[cutIdx]?.trim())) {
         const bg = c.createLinearGradient(0, H * 0.66, 0, H);
         bg.addColorStop(0, 'rgba(0,0,0,0)');
         bg.addColorStop(1, 'rgba(0,0,0,0.68)');
