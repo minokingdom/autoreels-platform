@@ -10118,6 +10118,48 @@
       arLoadMemeRadar('all', true, q);
     }
 
+    // 실제 원본 밈 MP4(Tenor/GIPHY/TikTok 등 CORS 허용 스트림)를 <video _isVideo=true>로 로드해 캔버스에 실시간 재생
+    function arLoadRealMemeCutVideo(videoUrl, label) {
+      return new Promise((resolve) => {
+        if (!videoUrl) { resolve(null); return; }
+        const vid = document.createElement('video');
+        vid.muted = true;
+        vid.playsInline = true;
+        vid.loop = true;
+        vid.preload = 'auto';
+        vid.crossOrigin = 'anonymous';
+        vid._isVideo = true;
+        vid._videoSrc = videoUrl;
+        vid._label = label || '실제 원본 밈 MP4';
+        let settled = false;
+        const finish = (ok) => {
+          if (settled) return;
+          settled = true;
+          if (ok) {
+            try {
+              const c = document.createElement('canvas');
+              c.width = 180;
+              c.height = 280;
+              const vw = vid.videoWidth || 360;
+              const vh = vid.videoHeight || 640;
+              const r = Math.max(c.width / vw, c.height / vh);
+              c.getContext('2d').drawImage(vid, (c.width - vw * r) / 2, (c.height - vh * r) / 2, vw * r, vh * r);
+              vid._dataUrl = c.toDataURL('image/jpeg', 0.72);
+            } catch (_) {}
+            vid.play().catch(() => {});
+            resolve(vid);
+          } else {
+            resolve(null);
+          }
+        };
+        vid.addEventListener('loadeddata', () => finish(true), { once: true });
+        vid.addEventListener('error', () => finish(false), { once: true });
+        setTimeout(() => finish(vid.readyState >= 2), 3800);
+        vid.src = videoUrl;
+        try { vid.load(); } catch (_) {}
+      });
+    }
+
     // 각 컷의 1:1 캐릭터 모션 스테이지를 정적 스냅샷으로도 뽑아 컷 편집/썸네일 스트립에 동기화
     function arCreateMemeCutSnapshotImage(memeItem, cutObj, cutIdx) {
       const off = document.createElement('canvas');
@@ -10129,7 +10171,7 @@
       const im = new Image();
       im.src = dataUrl;
       im._dataUrl = dataUrl;
-      im._label = `${cutIdx + 1}컷 · ${cutObj?.mediaType || '1:1 밈 씬'}`;
+      im._label = `${cutIdx + 1}컷 · ${cutObj?.mediaType || '원본 밈 씬'}`;
       return im;
     }
 
@@ -10151,8 +10193,8 @@
         const productPoint = String(document.getElementById('arMemeStorePointInput')?.value || '시그니처 혜택').trim();
         if (statusEl) {
           statusEl.textContent = mode === 'store'
-            ? `🏪 "${baseItem.title.slice(0, 16)}..." 밈을 [${storeName} · ${productPoint}] 홍보 쇼츠로 패러디 조립 중...`
-            : `⚡ "${baseItem.title.slice(0, 16)}..." 밈과 오늘의 키워드 [${issueKw}] 콜라보 쇼츠 조립 중...`;
+            ? `🏪 "${baseItem.title.slice(0, 16)}..." 실제 원본 밈 영상에 [${storeName} · ${productPoint}] 패러디 결합 중...`
+            : `⚡ "${baseItem.title.slice(0, 16)}..." 실제 원본 밈 영상과 오늘의 키워드 [${issueKw}] 결합 중...`;
         }
         try {
           const res = await fetch('/api/generate-script', {
@@ -10178,22 +10220,23 @@
       const lines = cuts.map((c) => String(c.line || '').trim()).filter(Boolean);
       if (!lines.length) return;
 
-      // 우리 가게×밈 모드일 때는 매장 실사 사진(2, 3, 5컷)에 밈 리액션 캐릭터가 함께 합성되도록 연결
-      const indKey = (typeof IND !== 'undefined' && IND && IND.key) ? IND.key : 'cafe';
-      if (mode === 'store') {
-        await Promise.all(cuts.map((c, ci) => new Promise((resolve) => {
-          if (!c.useStorePhoto && ci !== 1 && ci !== 2) { resolve(); return; }
-          const im = new Image();
-          im.crossOrigin = 'anonymous';
-          im.onload = () => { c._storeImg = im; resolve(); };
-          im.onerror = () => resolve();
-          im.src = `/assets/scenes/${indKey}/${(ci % 8) + 1}.jpg`;
-        })));
-      }
-
       if (typeof pauseAllCutVideos === 'function') pauseAllCutVideos();
-      // 각 컷의 대사와 1:1로 일치하는 밈 모션 씬 스냅샷을 6컷 슬롯에 장착
-      campaign.uploadedPhotos = cuts.slice(0, 6).map((c, i) => arCreateMemeCutSnapshotImage(it, c, i));
+      if (statusEl) statusEl.textContent = `⏳ "${it.title}" 실제 원본 밈 영상(MP4) 6컷을 불러오고 있습니다...`;
+
+      // ★ 핵심: 직접 그린 캐릭터가 아니라 각 컷의 실제 원본 밈 MP4(c.videoUrl — 실제 칠 가이, 실제 하? 고양이, 실제 골든리트리버 등)를 즉시 로드해 장착!
+      const loadedVideos = await Promise.all(cuts.slice(0, 6).map(async (c, i) => {
+        const vUrl = c.videoUrl || (baseItem.cuts && baseItem.cuts[i] && baseItem.cuts[i].videoUrl) || '';
+        c.videoUrl = vUrl;
+        const vid = await arLoadRealMemeCutVideo(vUrl, `${i + 1}컷 · ${c.mood || '실제 원본 밈'}`);
+        if (vid) {
+          c._customCutVideo = vid;
+          c.mediaType = '🎬 실제 원본 밈 MP4';
+          return vid;
+        }
+        return arCreateMemeCutSnapshotImage(it, c, i);
+      }));
+
+      campaign.uploadedPhotos = loadedVideos;
       campaign.vehicle = it.title.slice(0, 26);
       campaign.hook = it.title;
       campaign.cutCaptions = lines.slice();
@@ -10228,9 +10271,9 @@
       if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0.05);
 
-      const modeLabel = mode === 'store' ? '🏪 우리 가게×밈 패러디' : mode === 'keyword' ? '⚡ 오늘 키워드×밈 콜라보' : '🔥 원본 밈';
-      if (statusEl) statusEl.textContent = `✅ [${modeLabel}] "${it.title}" 6컷 1:1 상황 일치 모션 씬 조립 완료! (더 리얼한 실사/3D 씬이 필요하면 [✨ 6컷 AI 1:1 맞춤 씬 생성]을 눌러 주세요)`;
-      if (typeof arToast === 'function') arToast(`🎬 ${modeLabel} 6컷 1:1 밈 쇼츠가 재생됩니다!`, true);
+      const modeLabel = mode === 'store' ? '🏪 우리 가게×밈 패러디' : mode === 'keyword' ? '⚡ 오늘 키워드×밈 콜라보' : '🔥 실제 원본 밈';
+      if (statusEl) statusEl.textContent = `✅ [${modeLabel}] "${it.title}" 실제 원본 밈 영상(MP4) 6컷 로드 및 재생 완료!`;
+      if (typeof arToast === 'function') arToast(`🎬 ${modeLabel} 실제 원본 밈 영상 6컷이 재생됩니다!`, true);
     }
 
     function arRenderMemeAssembledStrip(it) {
@@ -10241,25 +10284,28 @@
       box.classList.remove('hidden');
       const ytUrl = it.ytSearchUrl || `https://www.youtube.com/results?search_query=${encodeURIComponent(it.title + ' 쇼츠')}`;
       if (titleEl) {
-        titleEl.innerHTML = `🎬 컷별 대사 1:1 매칭 장면 (${it.title.slice(0, 18)}) <a href="${ytUrl}" target="_blank" rel="noopener noreferrer" class="ml-1.5 underline text-[#fca5a5] text-[11px]">▶️ 유튜브 원본 밈 참고 ↗</a>`;
+        titleEl.innerHTML = `🎬 실제 원본 밈 영상 6컷 (${it.title.slice(0, 18)}) <a href="${ytUrl}" target="_blank" rel="noopener noreferrer" class="ml-1.5 underline text-[#fca5a5] text-[11px]">▶️ 유튜브 쇼츠 검색 ↗</a>`;
       }
       strip.innerHTML = (it.cuts || []).slice(0, 6).map((c, idx) => {
+        const vSrc = (c._customCutVideo && c._customCutVideo._videoSrc) || c.videoUrl || '';
         const snap = campaign.uploadedPhotos[idx];
         const thumbSrc = (c._aiSceneImg && c._aiSceneImg.src) || (snap && (snap._dataUrl || snap.src)) || '';
-        const statusBadge = c._generatingAi
-          ? '⏳ AI 생성중'
-          : (c._customCutVideo ? '🎬 원본 영상' : (c._aiSceneImg ? '✨ AI 1:1 씬' : '🎭 1:1 모션'));
+        const statusBadge = c._swapping
+          ? '⏳ 원본 교체중'
+          : (vSrc ? '🎬 실제 원본 MP4' : (c._aiSceneImg ? '✨ AI 1:1 씬' : '🎬 원본 밈'));
         return `
           <div class="rounded-[9px] bg-[#161924] border border-white/12 p-2 flex items-center gap-2">
             <button type="button" onclick="if(window.__timelines&&window.__timelines.main)window.__timelines.main.seek(${idx * 2.0 + 0.2});" class="relative w-11 h-16 rounded-[6px] overflow-hidden shrink-0 border border-[#60a5fa]/40 bg-black cursor-pointer">
-              ${thumbSrc ? `<img src="${thumbSrc}" class="w-full h-full object-cover block" alt="" />` : ''}
+              ${vSrc
+                ? `<video src="${vSrc}" autoplay loop muted playsinline class="w-full h-full object-cover block"></video>`
+                : (thumbSrc ? `<img src="${thumbSrc}" class="w-full h-full object-cover block" alt="" />` : '')}
               <span class="absolute bottom-0 inset-x-0 bg-[#2563eb]/90 text-[8px] text-white font-bold text-center py-0.5">${statusBadge}</span>
             </button>
             <div class="min-w-0 flex-1 space-y-1">
               <div class="flex items-center justify-between gap-1">
-                <span class="text-[10.5px] font-bold text-[#60a5fa]">${idx + 1}컷 · ${c.mood || '1:1 씬'}</span>
+                <span class="text-[10.5px] font-bold text-[#60a5fa]">${idx + 1}컷 · ${c.mood || '원본 밈'}</span>
                 <div class="flex items-center gap-1">
-                  <button type="button" onclick="arSwapSingleMemeCutVideo(${idx})" class="px-1.5 py-0.5 rounded bg-[#2563eb]/25 hover:bg-[#2563eb] text-[9.5px] text-[#93c5fd] hover:text-white cursor-pointer" title="이 컷의 대사·상황을 그리는 AI 1:1 맞춤 씬 생성">✨ AI 씬</button>
+                  <button type="button" onclick="arSwapSingleMemeCutVideo(${idx})" class="px-1.5 py-0.5 rounded bg-[#2563eb]/25 hover:bg-[#2563eb] text-[9.5px] text-[#93c5fd] hover:text-white cursor-pointer" title="이 컷을 Tenor/GIPHY의 다른 실제 원본 밈 클립으로 교체">🔄 다른 원본</button>
                   <label class="px-1.5 py-0.5 rounded bg-white/8 hover:bg-white/15 text-[9.5px] text-[#d4d4d8] cursor-pointer" title="이 컷만 내 영상(MP4) 또는 짤 이미지로 교체">
                     📁
                     <input type="file" accept="video/*,image/*" class="hidden" onchange="arUploadSingleMemeCutMedia(${idx}, event)" />
@@ -10267,7 +10313,7 @@
                 </div>
               </div>
               <div class="text-[11px] text-white font-medium truncate">${c.line || ''}</div>
-              <div class="text-[9.5px] text-[#9ca3af] truncate">${c.mediaType || '대사 1:1 매칭'}</div>
+              <div class="text-[9.5px] text-[#4ade80] truncate">${c.mediaType || '🎬 실제 원본 밈 MP4'}</div>
             </div>
           </div>
         `;
@@ -10283,17 +10329,13 @@
       const c = it.cuts[cutIdx];
       if (file.type.startsWith('video/')) {
         const url = URL.createObjectURL(file);
-        const vid = document.createElement('video');
-        vid.src = url;
-        vid.muted = true;
-        vid.loop = true;
-        vid.playsInline = true;
-        vid._isVideo = true;
-        await new Promise((r) => { vid.onloadeddata = r; vid.onerror = r; setTimeout(r, 3000); });
-        vid.play().catch(() => {});
-        c._customCutVideo = vid;
-        c.mediaType = '내 영상 클립';
-        campaign.uploadedPhotos[cutIdx] = vid;
+        const vid = await arLoadRealMemeCutVideo(url, `${cutIdx + 1}컷 · 내 원본 클립`);
+        if (vid) {
+          c._customCutVideo = vid;
+          c.videoUrl = url;
+          c.mediaType = '🎬 내 원본 MP4';
+          campaign.uploadedPhotos[cutIdx] = vid;
+        }
       } else {
         const dataUrl = await new Promise((resolve) => {
           const r = new FileReader();
@@ -10304,6 +10346,8 @@
         im.src = dataUrl;
         im._dataUrl = dataUrl;
         await im.decode().catch(() => {});
+        c._customCutVideo = null;
+        c.videoUrl = '';
         c._aiSceneImg = im;
         c.mediaType = '직접 올린 짤';
         campaign.uploadedPhotos[cutIdx] = im;
@@ -10314,76 +10358,167 @@
       if (typeof arToast === 'function') arToast(`✅ ${cutIdx + 1}번 컷 비주얼을 교체했어요!`, true);
     }
 
-    // 개별 컷의 대사(c.line)와 scenePrompt에 1:1로 일치하는 AI 맞춤 이미지를 즉시 생성 (KIE z-image)
+    // 개별 컷을 Tenor/GIPHY 실시간 검색으로 다른 실제 원본 밈 MP4 클립으로 즉시 교체
     async function arSwapSingleMemeCutVideo(cutIdx) {
       const it = window.__arCurrentMemeItem;
-      if (!it || !Array.isArray(it.cuts) || !it.cuts[cutIdx]) return;
+      if (!it || !Array.isArray(it.cuts) || !it.cuts[cutIdx]) return false;
       const c = it.cuts[cutIdx];
-      c._generatingAi = true;
+      c._swapping = true;
       arRenderMemeAssembledStrip(it);
-      const statusEl = document.getElementById('arMemeRadarStatus');
-      if (statusEl) statusEl.textContent = `⏳ ${cutIdx + 1}번 컷 ("${c.line}") 1:1 맞춤 AI 씬을 생성하고 있습니다...`;
-
+      const q = c.keyword || it.title || 'chill guy meme';
       try {
-        const promptText = c.scenePrompt || `Vertical 9:16 expressive meme scene directly depicting: ${c.line} (${it.title}), clean wordless photography`;
         const res = await fetch('/api/generate-script', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            mode: 'scene-image',
-            imagePrompt: promptText,
-            index: cutIdx,
-            aspectRatio: '9:16',
-            industry: (typeof IND !== 'undefined' && IND && IND.key) ? IND.key : 'cafe'
-          })
+          body: JSON.stringify({ mode: 'meme-visuals', queries: [q] })
         });
         const data = await res.json().catch(() => ({}));
-        c._generatingAi = false;
-        if (data && data.ok && data.image && data.image.dataUrl) {
-          const compactUrl = typeof arDownscaleSceneDataUrl === 'function'
-            ? await arDownscaleSceneDataUrl(data.image.dataUrl)
-            : data.image.dataUrl;
-          const im = new Image();
-          im.src = compactUrl;
-          im._dataUrl = compactUrl;
-          im._label = `${cutIdx + 1}컷 · AI 1:1 씬`;
-          await im.decode().catch(() => {});
-          c._aiSceneImg = im;
-          c.mediaType = '✨ AI 1:1 씬';
-          campaign.uploadedPhotos[cutIdx] = im;
-          arRenderMemeAssembledStrip(it);
-          if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
-          if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(cutIdx * 2.0 + 0.15);
-          if (statusEl) statusEl.textContent = `✅ ${cutIdx + 1}번 컷 ("${c.line}") AI 1:1 맞춤 씬 생성 완료!`;
-          if (typeof arToast === 'function') arToast(`✨ ${cutIdx + 1}번 컷 AI 1:1 맞춤 씬이 적용되었어요!`, true);
-          return true;
+        const list = (data && Array.isArray(data.visualsByCut) && data.visualsByCut[0]) || [];
+        c._swapIdx = ((Number(c._swapIdx) || 0) + 1);
+        const pick = list.length ? list[c._swapIdx % list.length] : null;
+        if (pick && pick.url) {
+          const vid = await arLoadRealMemeCutVideo(pick.url, `${cutIdx + 1}컷 · ${pick.title || '원본 밈'}`);
+          if (vid) {
+            c._swapping = false;
+            c._customCutVideo = vid;
+            c.videoUrl = pick.url;
+            c.mediaType = `🎬 ${pick.source || 'Tenor 원본 밈 MP4'}`;
+            campaign.uploadedPhotos[cutIdx] = vid;
+            arRenderMemeAssembledStrip(it);
+            if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+            if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(cutIdx * 2.0 + 0.15);
+            if (typeof arToast === 'function') arToast(`🎬 ${cutIdx + 1}번 컷을 새 실제 원본 밈 클립으로 교체했어요!`, true);
+            return true;
+          }
         }
       } catch (_) {}
-      c._generatingAi = false;
+      c._swapping = false;
       arRenderMemeAssembledStrip(it);
-      if (statusEl) statusEl.textContent = `💡 현재 KIE 이미지 생성 한도 또는 로그인 상태를 확인해 주세요. (1:1 모션 캐릭터 스테이지가 유지됩니다)`;
       return false;
     }
 
-    // 6컷 전체를 각 컷의 대사·밈 캐릭터(scenePrompt)에 맞춰 1:1 AI 씬으로 일괄 생성
+    // 6컷 전체를 Tenor/GIPHY 실시간 원본 밈 MP4 클립으로 다시 매칭
     async function arFetchLiveVisualsForCurrentMeme() {
       const it = window.__arCurrentMemeItem;
       if (!it || !Array.isArray(it.cuts)) return;
       const statusEl = document.getElementById('arMemeRadarStatus');
-      if (statusEl) statusEl.textContent = `⏳ "${it.title}" 6개 컷 각각의 대사에 1:1로 맞춘 AI 씬을 생성하고 있습니다...`;
-      if (typeof arToast === 'function') arToast('✨ 6개 컷 대사에 1:1로 맞춘 AI 씬 생성을 시작합니다!', true);
+      if (statusEl) statusEl.textContent = `⏳ "${it.title}" 6개 컷의 새로운 실제 원본 밈 MP4 클립을 실시간 수집 중...`;
+      const queries = it.cuts.slice(0, 6).map((c) => c.keyword || it.title || 'chill guy meme');
+      try {
+        const res = await fetch('/api/generate-script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'meme-visuals', queries })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (data && Array.isArray(data.visualsByCut)) {
+          let count = 0;
+          await Promise.all(data.visualsByCut.map(async (list, ci) => {
+            if (!Array.isArray(list) || !list.length || !it.cuts[ci]) return;
+            const c = it.cuts[ci];
+            c._swapIdx = ((Number(c._swapIdx) || ci) + 1);
+            const pick = list[c._swapIdx % list.length];
+            if (!pick || !pick.url) return;
+            const vid = await arLoadRealMemeCutVideo(pick.url, `${ci + 1}컷 · ${pick.title || '원본 밈'}`);
+            if (vid) {
+              c._customCutVideo = vid;
+              c.videoUrl = pick.url;
+              c.mediaType = `🎬 ${pick.source || 'Tenor 원본 밈 MP4'}`;
+              campaign.uploadedPhotos[ci] = vid;
+              count++;
+            }
+          }));
+          arRenderMemeAssembledStrip(it);
+          if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+          if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0.05);
+          if (statusEl) statusEl.textContent = `✅ 총 ${count}/6컷을 새로운 실제 원본 밈 MP4 클립으로 교체했습니다!`;
+          if (typeof arToast === 'function') arToast(`🎬 ${count}개 컷을 새 실제 원본 밈 클립으로 교체했어요!`, true);
+        }
+      } catch (_) {}
+    }
 
-      const cuts = it.cuts.slice(0, 6);
-      let okCount = 0;
-      // 서버 부하 방지를 위해 2개씩 병렬 생성
-      for (let i = 0; i < cuts.length; i += 2) {
-        const batch = [i, i + 1].filter((idx) => idx < cuts.length);
-        const results = await Promise.all(batch.map((idx) => arSwapSingleMemeCutVideo(idx)));
-        okCount += results.filter(Boolean).length;
+    // ★ 신규: 링크(URL) 또는 밈 이름 한 줄만 붙여넣으면 실제 원본 밈 MP4 스트림을 즉시 추출해 6컷에 장착!
+    async function arImportMemeFromUrlInput(inputId) {
+      const inp = document.getElementById(inputId || 'arMemeDirectUrlInput');
+      const rawUrl = String(inp?.value || '').trim();
+      if (!rawUrl) {
+        if (typeof arToast === 'function') arToast('가져올 밈 영상 링크(TikTok / Tenor / GIPHY / YouTube Shorts)나 밈 이름을 입력해 주세요.');
+        return;
       }
-      if (okCount > 0) {
-        if (statusEl) statusEl.textContent = `✅ 총 ${okCount}/6컷을 대사와 1:1로 일치하는 AI 맞춤 씬으로 생성 완료했습니다!`;
-        if (typeof arToast === 'function') arToast(`✨ ${okCount}개 컷 AI 1:1 맞춤 씬 생성 완료!`, true);
+      const statusEl = document.getElementById('arMemeRadarStatus');
+      const fStatusEl = document.getElementById('arForeignRemakeStatus');
+      if (statusEl) statusEl.textContent = `⏳ "${rawUrl.slice(0, 36)}..."에서 실제 원본 밈 MP4 스트림을 추출하고 있습니다...`;
+      if (fStatusEl) fStatusEl.textContent = `⏳ "${rawUrl.slice(0, 36)}..."에서 실제 원본 밈 MP4 스트림을 추출하고 있습니다...`;
+
+      try {
+        const res = await fetch('/api/generate-script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'meme-url-import', url: rawUrl })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!data || !data.ok || !data.videoUrl) {
+          const msg = data?.message || '해당 링크에서 영상을 가져오지 못했습니다. Tenor/GIPHY/TikTok 링크나 밈 이름을 넣어 보세요.';
+          if (statusEl) statusEl.textContent = `⚠️ ${msg}`;
+          if (fStatusEl) fStatusEl.textContent = `⚠️ ${msg}`;
+          if (typeof arToast === 'function') arToast(msg);
+          return;
+        }
+
+        const pool = Array.isArray(data.extraVideos) && data.extraVideos.length ? data.extraVideos : [data.videoUrl];
+        const curItem = window.__arCurrentMemeItem || (window.__arMemeRadarItems && window.__arMemeRadarItems[0]) || {
+          id: 'url_meme_' + Date.now(),
+          title: data.title || '원본 밈 쇼츠',
+          badge: `🎬 ${data.sourceLabel || '원본 링크 반입'}`,
+          why: `${rawUrl} 원본 밈 클립 반입`,
+          factNote: `📌 출처: ${data.sourceLabel || '원본 밈 링크'} (${data.title || ''}) #밈쇼츠 #Shorts`,
+          cuts: [
+            { line: `요즘 알고리즘 점령한 ${String(data.title || '레전드 밈').slice(0, 12)}!`, mood: '원본 1컷' },
+            { line: '처음엔 그냥 평범한 장면인 줄 알았는데', mood: '원본 2컷' },
+            { line: '볼수록 중독성 터지는 바로 이 표정!', mood: '원본 3컷' },
+            { line: '댓글창이 완전히 뒤집어진 이유가 있었네요', mood: '원본 4컷' },
+            { line: '어떤 상황에도 찰떡같이 어울리는 만능 밈!', mood: '원본 5컷' },
+            { line: '여러분은 이 장면 몇 점 주시겠어요?', mood: '원본 6컷' }
+          ]
+        };
+
+        const loadedVids = await Promise.all((curItem.cuts || []).slice(0, 6).map(async (c, i) => {
+          const u = pool[i % pool.length] || data.videoUrl;
+          c.videoUrl = u;
+          c.mediaType = `🎬 ${data.sourceLabel || '원본 밈 MP4'}`;
+          const vid = await arLoadRealMemeCutVideo(u, `${i + 1}컷 · ${data.title || '원본 밈'}`);
+          if (vid) {
+            c._customCutVideo = vid;
+            return vid;
+          }
+          return arCreateMemeCutSnapshotImage(curItem, c, i);
+        }));
+
+        window.__arCurrentMemeItem = curItem;
+        campaign.uploadedPhotos = loadedVids;
+        const lines = curItem.cuts.map((c) => c.line);
+        campaign.cutCaptions = lines.slice();
+        campaign.ttsLines = lines.slice();
+        campaign.scenePlan = lines.map((ln, i) => ({
+          cut: i + 1,
+          duration: 2.0,
+          photoIdx: i,
+          sub: ln,
+          badge: `CUT 0${i + 1}`,
+          effect: 'none'
+        }));
+        arRenderMemeAssembledStrip(curItem);
+        if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+        if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+        isPlaying = true;
+        if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0.05);
+
+        const doneMsg = `✅ [${data.sourceLabel}] "${data.title}" 실제 원본 밈 MP4 반입 완료! 상단 미리보기에서 바로 재생 중입니다.`;
+        if (statusEl) statusEl.textContent = doneMsg;
+        if (fStatusEl) fStatusEl.textContent = doneMsg;
+        if (typeof arToast === 'function') arToast(`🎬 실제 원본 밈 영상("${data.title}")을 가져왔어요!`, true);
+      } catch (e) {
+        if (statusEl) statusEl.textContent = '⚠️ 링크에서 원본 밈을 가져오는 중 오류가 발생했습니다.';
       }
     }
 
@@ -10552,3 +10687,4 @@
     window.arSetMemeHookBanner = arSetMemeHookBanner;
     window.arUpdateCaptionMaskSpec = arUpdateCaptionMaskSpec;
     window.arHandleForeignRemakeVideo = arHandleForeignRemakeVideo;
+    window.arImportMemeFromUrlInput = arImportMemeFromUrlInput;

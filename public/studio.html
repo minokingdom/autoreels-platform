@@ -894,17 +894,21 @@
                 <input id="arMemeSearchInput" type="text" placeholder="원하는 밈·이슈 검색 (예: 칠가이, 고양이 하?, 신조어 퀴즈)" onkeydown="if(event.key==='Enter'){event.preventDefault();arSearchCustomMeme();}" class="studio-input flex-1 h-8 px-3 text-[12px]" />
                 <button type="button" onclick="arSearchCustomMeme()" class="btn-primary h-8 px-3 text-[11.5px] font-semibold shrink-0 cursor-pointer">밈 설계</button>
               </div>
-              <div id="arMemeRadarStatus" class="text-[11px] text-[#9ca3af]">YouTube · Google Trends · Reddit 기반 오늘의 밈 Top 10 보드입니다.</div>
+              <div class="flex items-center gap-1.5">
+                <input id="arMemeDirectUrlInput" type="text" placeholder="🔗 원본 밈 링크(TikTok · Tenor · GIPHY · YouTube Shorts) 또는 영문 밈 이름 붙여넣기" onkeydown="if(event.key==='Enter'){event.preventDefault();arImportMemeFromUrlInput('arMemeDirectUrlInput');}" class="studio-input flex-1 h-8 px-3 text-[12px]" />
+                <button type="button" onclick="arImportMemeFromUrlInput('arMemeDirectUrlInput')" class="h-8 px-3 rounded-[8px] bg-[#16a34a] hover:bg-[#15803d] text-white text-[11.5px] font-bold shrink-0 cursor-pointer">🎬 원본 영상 가져오기</button>
+              </div>
+              <div id="arMemeRadarStatus" class="text-[11px] text-[#9ca3af]">YouTube · Google Trends · Tenor 실제 원본 밈 MP4 Top 10 보드입니다.</div>
               <div id="arMemeRadarList" class="space-y-2.5 max-h-[340px] overflow-y-auto pr-0.5"></div>
 
-              <!-- 조립된 6컷 밈 대사 1:1 매칭 장면 확인 & AI 1:1 씬 생성 / 원본 영상 올리기 바 -->
+              <!-- 조립된 6컷 실제 원본 밈 MP4 확인 & 다른 원본 밈 교체 / 원본 영상 올리기 바 -->
               <div id="arMemeAssembledBox" class="hidden rounded-[11px] bg-[#0c0e14] border border-[#4ade80]/40 p-3 space-y-2">
                 <div class="flex items-center justify-between gap-2 flex-wrap">
-                  <span id="arMemeAssembledTitle" class="text-[12px] font-bold text-[#4ade80]">✅ 6컷 대사 1:1 매칭 밈 쇼츠 조립 완료</span>
+                  <span id="arMemeAssembledTitle" class="text-[12px] font-bold text-[#4ade80]">✅ 실제 원본 밈 영상(MP4) 6컷 조립 완료</span>
                   <div class="flex items-center gap-1.5 flex-wrap">
-                    <button type="button" onclick="arFetchLiveVisualsForCurrentMeme()" class="px-2.5 py-1 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] border border-[#60a5fa] text-[11px] font-bold text-white cursor-pointer">✨ 6컷 AI 1:1 맞춤 씬 생성</button>
+                    <button type="button" onclick="arFetchLiveVisualsForCurrentMeme()" class="px-2.5 py-1 rounded-lg bg-[#2563eb] hover:bg-[#1d4ed8] border border-[#60a5fa] text-[11px] font-bold text-white cursor-pointer">🔄 다른 실제 원본 밈 클립으로 6컷 교체</button>
                     <label class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 text-[11px] font-semibold text-[#e4e4e7] cursor-pointer">
-                      📁 원본 영상(MP4) 6구간 동기화
+                      📁 내 원본 MP4 올리기
                       <input type="file" accept="video/*" class="hidden" onchange="arHandleForeignRemakeVideo(event)" />
                     </label>
                     <button type="button" onclick="switchStudioTab('sound');setTimeout(()=>{if(typeof generateAllCutsTts==='function')generateAllCutsTts();},200);" class="btn-primary h-7 px-2.5 text-[11px] font-bold cursor-pointer">🔊 AI 더빙 입히기 →</button>
@@ -919,15 +923,19 @@
               <div class="rounded-[10px] bg-black/35 border border-white/10 p-3 space-y-2">
                 <div class="flex items-center justify-between gap-2 flex-wrap">
                   <div>
-                    <div class="text-[12.5px] font-bold text-white">1. 특정 해외·원본 클립 직접 올리기 (선택 기능)</div>
-                    <p class="text-[11px] text-[#9ca3af]">원본 음악 자동 제거 · 외국어 자막 OCR 번역 · 자막 덮어쓰기 마스크 · 상단 후킹 문구까지 30초 만에 처리합니다.</p>
+                    <div class="text-[12.5px] font-bold text-white">1. 원본 밈 링크(URL) 붙여넣기 또는 MP4 직접 올리기</div>
+                    <p class="text-[11px] text-[#9ca3af]">TikTok · Tenor · GIPHY · YouTube Shorts 링크만 붙여넣어도 원본 MP4를 바로 가져오며, MP4 파일을 올리면 외국어 자막 번역·마스크까지 30초 만에 처리합니다.</p>
                   </div>
                   <label class="btn-primary h-8 px-3 text-[12px] font-semibold inline-flex items-center cursor-pointer shrink-0">
-                    📁 MP4 영상 선택
+                    📁 MP4 파일 선택
                     <input id="arForeignRemakeFileInput" type="file" accept="video/*" class="hidden" onchange="arHandleForeignRemakeVideo(event)" />
                   </label>
                 </div>
-                <div id="arForeignRemakeStatus" class="text-[11.5px] text-[#93c5fd]">💡 2차 재사용이 허용되었거나 본인이 권리를 보유한 영상을 선택해 주세요.</div>
+                <div class="flex items-center gap-1.5 pt-1">
+                  <input id="arForeignRemakeUrlInput" type="text" placeholder="🔗 TikTok / Tenor / GIPHY / YouTube Shorts 링크 붙여넣기" onkeydown="if(event.key==='Enter'){event.preventDefault();arImportMemeFromUrlInput('arForeignRemakeUrlInput');}" class="studio-input flex-1 h-8 px-3 text-[12px]" />
+                  <button type="button" onclick="arImportMemeFromUrlInput('arForeignRemakeUrlInput')" class="h-8 px-3 rounded-[8px] bg-[#16a34a] hover:bg-[#15803d] text-white text-[11.5px] font-bold shrink-0 cursor-pointer">🎬 링크에서 원본 가져오기</button>
+                </div>
+                <div id="arForeignRemakeStatus" class="text-[11.5px] text-[#93c5fd]">💡 링크를 붙여넣거나 MP4 파일을 선택해 주세요.</div>
               </div>
 
               <div id="arForeignRemakeControls" class="space-y-2.5">
@@ -3111,7 +3119,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-meme-1to1-scenes"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-real-meme-mp4-origins"><\/script>');
     }
   </script>
   <!--
