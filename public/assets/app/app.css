@@ -1659,6 +1659,141 @@ body.ar-cut-editing #arQuickBar { display: none; }
   }
 }
 
+/* ========================================================================== */
+/* 릴스 ↔ 인스타 카드뉴스 공통 모드 전환 칩 & 카드뉴스 네이티브 바텀시트 (2026-11) */
+/* ========================================================================== */
+.ar-mode-switch {
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 2px; border-radius: 8px;
+  background: #141415; border: 1px solid var(--border); flex-shrink: 0;
+}
+.ar-mode-switch .ar-mode-btn {
+  height: 24px; padding: 0 8px; border-radius: 6px; border: 0;
+  background: transparent; color: #a1a1a6; font-size: 11px; font-weight: 600;
+  white-space: nowrap; cursor: pointer; transition: background .15s, color .15s;
+}
+.ar-mode-switch .ar-mode-btn:hover { color: #ededed; }
+.ar-mode-switch .ar-mode-btn.active { background: #ededed; color: #141415; font-weight: 700; }
+
+#viewCardNews .ar-cn-tablist {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+#arCnSheetHandle { display: none; }
+#arCnMobileStepBar { display: none; }
+#arCnQuickBar { display: none; }
+
+@media (min-width: 1024px) {
+  #arCnMonitorColumn > .monitor-frame { margin-right: 54px; position: relative; }
+  #arCnQuickBar {
+    display: flex; flex-direction: column; gap: 10px;
+    position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); z-index: 15;
+  }
+}
+#arCnQuickBar .aq-btn {
+  width: 52px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  border: 0; background: transparent; color: #fff; cursor: pointer; padding: 0; font-family: inherit;
+}
+#arCnQuickBar .aq-dot {
+  width: 40px; height: 40px; border: 1px solid var(--border); border-radius: var(--studio-control);
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--card) 86%, transparent);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  transition: transform var(--astryx-duration-fast), background var(--astryx-duration-fast);
+}
+#arCnQuickBar .aq-btn:active .aq-dot { transform: scale(0.9); }
+#arCnQuickBar .aq-label { font-size: 11px; font-weight: 700; line-height: 1.1; text-shadow: 0 1px 4px rgba(0,0,0,.6); white-space: nowrap; }
+
+/* 모바일(<1024px) 카드뉴스: 오토릴스 body.ar-sheet 와 100% 동일한 상단 가변 미리보기 + 하단 드래그 바텀시트 + 하단 단계바 */
+@media (max-width: 1023px) {
+  body.ar-cn-mode { --ar-msb: 64px; --ar-sheet: calc(52dvh - var(--ar-msb)); overflow: hidden; overscroll-behavior: none; }
+  body.ar-cn-mode.ar-sheet-min { --ar-sheet: 82px; }
+  body.ar-cn-mode.ar-sheet-full { --ar-sheet: calc(100dvh - var(--ar-msb)); --ar-handle-inset: env(safe-area-inset-top, 0px); }
+  body.ar-cn-mode.ar-sheet-full #arCnMonitorColumn { visibility: hidden; }
+  body.ar-cn-mode.ar-sheet-full #arCnWorkflowColumn { border-radius: 0; }
+  body.ar-cn-mode.ar-sheet-min #arCnWorkflowColumn > .studio-card > div:first-child { display: none; }
+
+  body.ar-cn-mode header,
+  body.ar-cn-mode #mobileLiveDock,
+  body.ar-cn-mode footer,
+  body.ar-cn-mode #dealerQuickSelectorBar,
+  body.ar-cn-mode #mobileStepBar { display: none !important; }
+
+  /* 위: 카드뉴스 미리보기 (바텀시트 높이에 맞춰 부드럽게 자동 확대·축소!) */
+  body.ar-cn-mode #arCnMonitorColumn {
+    display: flex !important; position: fixed; left: 0; right: 0; top: 0;
+    bottom: calc(var(--ar-sheet) + var(--ar-msb)); z-index: 30;
+    padding: max(8px, env(safe-area-inset-top)) 54px 8px 12px; box-sizing: border-box;
+    align-items: center; justify-content: center; background: var(--bg-deep); transition: bottom .3s ease;
+  }
+  body.ar-cn-mode #arCnMonitorColumn > .monitor-frame {
+    padding: 0; border: 0; background: transparent; box-shadow: none;
+    height: 100%; width: 100%; max-width: none; min-height: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  }
+  body.ar-cn-mode #arCnMonitorColumn .ar-cn-desk-meta { display: none !important; }
+  body.ar-cn-mode #arCnCanvasFrame {
+    flex: 1 1 auto; min-height: 0;
+    height: 100%; width: auto; max-width: 100%;
+    max-height: calc(100% - 34px);
+    aspect-ratio: 4 / 5;
+  }
+  body.ar-cn-mode #arCnSlideNavRow {
+    flex: 0 0 auto; width: 100%; max-width: 310px;
+  }
+  body.ar-cn-mode #arCnQuickBar {
+    display: flex; flex-direction: column;
+    position: fixed; left: auto; right: 4px; top: calc((100dvh - var(--ar-sheet) - var(--ar-msb)) / 2);
+    transform: translateY(-50%); z-index: 36; gap: 2px; transition: top .3s ease;
+  }
+  body.ar-cn-mode #arCnQuickBar .aq-btn { min-width: 44px; min-height: 42px; padding: 1px; justify-content: center; }
+  body.ar-cn-mode #arCnQuickBar .aq-dot { width: 32px; height: 32px; }
+  body.ar-cn-mode #arCnQuickBar .aq-label { font-size: 9.5px; }
+  body.ar-cn-mode.ar-sheet-min #arCnQuickBar {
+    top: auto; bottom: calc(var(--ar-sheet) + var(--ar-msb) + 14px); transform: none; right: 8px; gap: 6px;
+  }
+
+  /* 아래: 실제 드래그 가능한 바텀시트 (릴스 #studioWorkflowColumn 과 100% 동일) */
+  body.ar-cn-mode #arCnWorkflowColumn {
+    position: fixed; left: 0; right: 0; bottom: var(--ar-msb); height: var(--ar-sheet); z-index: 35;
+    overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent;
+    background: var(--card); border-radius: var(--studio-sheet) var(--studio-sheet) 0 0; border-top: 1px solid var(--border);
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.35); transition: height .3s ease;
+  }
+  body.ar-cn-mode.ar-sheet-min #arCnWorkflowColumn { overflow: hidden; }
+  body.ar-cn-mode #arCnWorkflowColumn > .studio-card { border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+  body.ar-cn-mode #arCnWorkflowColumn > .studio-card > div:first-child { padding: 2px 12px 4px; }
+  body.ar-cn-mode #arCnWorkflowColumn > .studio-card > div.sticky { padding-top: 6px; padding-bottom: 6px; top: calc(30px + var(--ar-handle-inset, 0px)) !important; }
+  body.ar-cn-mode #arCnSheetHandle {
+    display: flex; position: sticky; top: 0; z-index: 25; width: 100%; align-items: center; justify-content: center;
+    background: var(--card); border: 0; cursor: pointer; touch-action: none;
+    height: calc(30px + var(--ar-handle-inset, 0px)); padding: var(--ar-handle-inset, 0px) 0 0;
+  }
+  #arCnSheetHandle span { width: 42px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.34); display: block; }
+  body.ar-cn-mode #viewCardNews .studio-panel { padding: 12px 12px 20px !important; }
+  body.ar-cn-mode #viewCardNews .studio-tab { min-height: 36px; font-size: 12.5px; gap: 4px; padding: 0 2px; }
+  body.ar-cn-mode #viewCardNews .ar-cn-panel-nav { display: none !important; }
+
+  /* 맨 아래 고정 단계 이동 바 (#mobileStepBar 와 100% 동일) */
+  body.ar-cn-mode #arCnMobileStepBar {
+    display: flex; align-items: center; gap: 8px;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 46;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    background: var(--bg-deep);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+    border-top: 1px solid var(--border);
+  }
+  #arCnMobileStepBar .msb-btn {
+    height: 44px; min-width: 82px; padding: 0 var(--astryx-spacing-3); border-radius: var(--studio-control);
+    background: var(--raised); color: var(--foreground); font-size: var(--astryx-font-size-base); font-weight: var(--astryx-font-weight-semibold); border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  #arCnMobileStepBar .msb-next { background: var(--primary); color: var(--primary-foreground); border-color: transparent; min-width: 118px; }
+  #arCnMobileStepBar .msb-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; line-height: 1.15; background: transparent; border: 0; cursor: pointer; }
+  #arCnMobileStepBar .msb-count { font-size: var(--astryx-font-size-sm); color: var(--secondary-foreground); }
+  #arCnMobileStepBar .msb-name { font-size: var(--astryx-font-size-base); font-weight: var(--astryx-font-weight-semibold); color: var(--foreground); }
+}
+
 /* 상품 카드도 현재 상품에 맞는 사진을 사용합니다. */
 .ar-product-cover { width: 44px; height: 44px; overflow: hidden; background: #1c1c1e; }
 .ar-product-photo { width: 100%; height: 100%; object-fit: cover; display: block; }

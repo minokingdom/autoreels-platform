@@ -5591,48 +5591,95 @@
       export: '💾 고화질 PNG · 전체 ZIP · 릴스 변환'
     };
 
+    const AR_CN_TAB_ORDER = ['ai', 'theme', 'text', 'photo', 'export'];
+    const AR_CN_TAB_LABELS = { ai: '주제', theme: '테마', text: '글자', photo: '사진', export: '저장' };
+
+    function arCnBindSheetHandle() {
+      const h = document.getElementById('arCnSheetHandle');
+      if (!h || h.dataset.bound) return;
+      h.dataset.bound = '1';
+      let y0 = null;
+      let dragged = false;
+      h.addEventListener('pointerdown', (e) => {
+        if (!e.isPrimary || e.button !== 0) return;
+        y0 = e.clientY;
+        dragged = false;
+        try { h.setPointerCapture(e.pointerId); } catch (_) {}
+      });
+      h.addEventListener('pointercancel', () => { y0 = null; });
+      h.addEventListener('pointerup', (e) => {
+        if (!e.isPrimary || y0 == null) return;
+        const dy = e.clientY - y0;
+        y0 = null;
+        dragged = Math.abs(dy) > 8;
+        if (!dragged || typeof arToggleSheet !== 'function') return;
+        if (dy > 0) arToggleSheet(!document.body.classList.contains('ar-sheet-full'));
+        else arToggleSheet(document.body.classList.contains('ar-sheet-min') ? false : 'full');
+      });
+      h.addEventListener('click', (e) => {
+        if ((!dragged || e.detail === 0) && typeof arToggleSheet === 'function') arToggleSheet();
+      });
+    }
+
     function arCnSyncSheetUI() {
-      const view = document.getElementById('viewCardNews');
-      const isDesktop = window.innerWidth >= 1024;
-      const open = isDesktop ? true : Boolean(_arCnState.sheetOpen);
-      if (view) view.classList.toggle('ar-cn-sheet-open', open);
-      const titleEl = document.getElementById('arCnSheetTitle');
-      if (titleEl) titleEl.textContent = AR_CN_SHEET_TITLES[_arCnState.sheetTab] || '';
-      const mobPreviewBtn = document.getElementById('arCnMobilePreviewToggleBtn');
-      if (mobPreviewBtn) mobPreviewBtn.textContent = open ? '크게 ▾' : '편집 ▴';
-      const mobSheetBtn = document.getElementById('arCnMobileSheetBtn');
-      if (mobSheetBtn) mobSheetBtn.textContent = open ? '미리보기 크게 ▾' : '편집 열기 ▴';
-      ['ai', 'theme', 'text', 'photo', 'export'].forEach((k) => {
+      const curTab = _arCnState.sheetTab || 'ai';
+      AR_CN_TAB_ORDER.forEach((k) => {
         const pane = document.getElementById(`arCnTab_${k}`);
-        if (pane) pane.classList.toggle('hidden', _arCnState.sheetTab !== k);
+        if (pane) pane.classList.toggle('hidden', curTab !== k);
       });
       document.querySelectorAll('#viewCardNews [data-cn-dock]').forEach((b) => {
-        const on = b.dataset.cnDock === _arCnState.sheetTab && open;
+        const on = b.dataset.cnDock === curTab;
         b.setAttribute('aria-selected', String(on));
         b.classList.toggle('active', on);
       });
+      const ratioLbl = document.getElementById('arCnQuickRatioLabel');
+      if (ratioLbl) ratioLbl.textContent = _arCnState.ratio || '4:5';
+      // 모바일 하단 단계 이동 바 (#arCnMobileStepBar) 동기화
+      const idx = Math.max(0, AR_CN_TAB_ORDER.indexOf(curTab));
+      const prevBtn = document.getElementById('arCnStepPrev');
+      const cntEl = document.getElementById('arCnStepCount');
+      const nameEl = document.getElementById('arCnStepName');
+      const nextBtn = document.getElementById('arCnStepNext');
+      if (prevBtn) prevBtn.textContent = idx === 0 ? '← 릴스' : `← ${AR_CN_TAB_LABELS[AR_CN_TAB_ORDER[idx - 1]]}`;
+      if (cntEl) cntEl.textContent = `${idx + 1} / ${AR_CN_TAB_ORDER.length}`;
+      if (nameEl) nameEl.textContent = AR_CN_TAB_LABELS[curTab] || '주제';
+      if (nextBtn) {
+        nextBtn.textContent = idx < AR_CN_TAB_ORDER.length - 1
+          ? `다음: ${AR_CN_TAB_LABELS[AR_CN_TAB_ORDER[idx + 1]]} →`
+          : '📦 ZIP 저장';
+      }
+      const bar = document.getElementById('arCnMobileStepBar');
+      if (bar && bar.offsetHeight && window.innerWidth < 1024) {
+        document.body.style.setProperty('--ar-msb', `${bar.offsetHeight}px`);
+      }
     }
     function arCnOpenSheet(tab) {
-      const isDesktop = window.innerWidth >= 1024;
-      if (!isDesktop && _arCnState.sheetOpen && _arCnState.sheetTab === tab) {
-        _arCnState.sheetOpen = false;
-        arCnSyncSheetUI();
-        return;
-      }
+      const next = tab || 'ai';
       _arCnState.sheetOpen = true;
-      _arCnState.sheetTab = tab || 'ai';
+      _arCnState.sheetTab = next;
+      // 모바일에서 바텀시트가 접혀(min) 있으면 탭 선택 시 자연스럽게 펼침 (릴스 switchStudioTab과 동일)
+      if (window.innerWidth < 1024 && document.body.classList.contains('ar-sheet-min') && typeof arToggleSheet === 'function') {
+        arToggleSheet(false);
+      }
       arCnSyncSheetUI();
-      if (tab === 'theme') arCnRenderTemplateGallery();
-      if (tab === 'text') arCnRenderFontChips();
-      if (tab === 'photo') arCnLoadVaultStrip();
+      const wf = document.getElementById('arCnWorkflowColumn');
+      if (wf && window.innerWidth < 1024) wf.scrollTop = 0;
+      if (next === 'theme') arCnRenderTemplateGallery();
+      if (next === 'text') arCnRenderFontChips();
+      if (next === 'photo') arCnLoadVaultStrip();
+    }
+    function arCnStepTab(delta) {
+      const curTab = _arCnState.sheetTab || 'ai';
+      const idx = Math.max(0, AR_CN_TAB_ORDER.indexOf(curTab));
+      if (delta < 0 && idx === 0) { arCloseCardNewsModal(); return; }
+      if (delta > 0 && idx >= AR_CN_TAB_ORDER.length - 1) { arCnDownloadAllZip(); return; }
+      arCnOpenSheet(AR_CN_TAB_ORDER[Math.max(0, Math.min(AR_CN_TAB_ORDER.length - 1, idx + delta))]);
     }
     function arCnCloseSheet() {
-      _arCnState.sheetOpen = false;
-      arCnSyncSheetUI();
+      if (window.innerWidth < 1024 && typeof arToggleSheet === 'function') arToggleSheet(true);
     }
     function arCnToggleSheetCollapse() {
-      _arCnState.sheetOpen = !_arCnState.sheetOpen;
-      arCnSyncSheetUI();
+      if (window.innerWidth < 1024 && typeof arToggleSheet === 'function') arToggleSheet();
     }
     function arCnSetCat(cat) {
       _arCnState.catFilter = cat || 'all';
@@ -5805,22 +5852,31 @@
       if (!_arCnState.slides.length) {
         _arCnState.slides = arCnDefaultSlides(_arCnState.targetCount);
       }
-      // 오토릴스 스튜디오 본 화면을 카드뉴스 스튜디오로 전환 (별도 팝업 모달 X)
+      // 오토릴스 스튜디오 본 화면·바텀시트를 카드뉴스 모드로 전환
       ['viewPreview', 'viewAdmin', 'viewTech', 'mobileLiveDock'].forEach((id) => {
         document.getElementById(id)?.classList.add('hidden');
       });
+      document.body.classList.add('ar-cn-mode');
+      document.body.classList.remove('ar-sheet-min', 'ar-sheet-full');
       _arCnState.sheetOpen = true;
       _arCnState.sheetTab = _arCnState.hasAiGenerated ? 'theme' : 'ai';
       arCnPopulateSamplePhotos(false);
       view.classList.remove('hidden');
+      arCnBindSheetHandle();
       arCnRefreshUI();
-      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
+      if (window.innerWidth >= 1024) {
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
+      }
     }
     function arCloseCardNewsModal() {
+      document.body.classList.remove('ar-cn-mode', 'ar-sheet-min', 'ar-sheet-full');
       document.getElementById('viewCardNews')?.classList.add('hidden');
       document.getElementById('viewPreview')?.classList.remove('hidden');
       document.getElementById('mobileLiveDock')?.classList.remove('hidden');
-      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
+      if (typeof arSetupSheetMode === 'function') arSetupSheetMode();
+      if (window.innerWidth >= 1024) {
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
+      }
     }
     function arCnSetTargetCount(n) {
       const next = Math.max(5, Math.min(10, Number(n) || 7));
@@ -6407,6 +6463,7 @@
       window.arOpenCardNewsModal = arOpenCardNewsModal;
       window.arCloseCardNewsModal = arCloseCardNewsModal;
       window.arCnOpenSheet = arCnOpenSheet;
+      window.arCnStepTab = arCnStepTab;
       window.arCnCloseSheet = arCnCloseSheet;
       window.arCnToggleSheetCollapse = arCnToggleSheetCollapse;
       window.arCnSetCat = arCnSetCat;

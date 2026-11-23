@@ -998,16 +998,23 @@
       const savedEnding = closing && arEndingTabActive() && (updateCurrentDealerFromPreview() || arEndingSavedInSheet);
       classes.toggle('ar-sheet-min', min);
       classes.toggle('ar-sheet-full', full);
-      if (closing) document.getElementById('studioWorkflowColumn').scrollTop = 0;
+      if (closing) {
+        const wf = document.getElementById('studioWorkflowColumn');
+        if (wf) wf.scrollTop = 0;
+        const cnWf = document.getElementById('arCnWorkflowColumn');
+        if (cnWf) cnWf.scrollTop = 0;
+      }
       if ((wasMin || (full && !wasFull)) && arWorkflowSheetExpanded()) {
         if (wasMin) arEndingSavedInSheet = false;
         arPauseForStudioEdit();
       }
-      const h = document.getElementById('arSheetHandle');
-      if (h) {
-        h.setAttribute('aria-expanded', String(!min));
-        h.setAttribute('aria-label', min ? '편집 시트 펼치기' : full ? '편집 시트 접기' : '편집 시트 전체화면으로 보기');
-      }
+      ['arSheetHandle', 'arCnSheetHandle'].forEach((hid) => {
+        const h = document.getElementById(hid);
+        if (h) {
+          h.setAttribute('aria-expanded', String(!min));
+          h.setAttribute('aria-label', min ? '편집 시트 펼치기' : full ? '편집 시트 접기' : '편집 시트 전체화면으로 보기');
+        }
+      });
       if (savedEnding && !arEditSheetOpen && !isPlaying) togglePlayPause();
     }
     function arSetupSheetMode() {
@@ -1616,6 +1623,7 @@
     });
 
     function switchMainTab(tab) {
+      document.body.classList.remove('ar-cn-mode');
       document.getElementById('viewCardNews')?.classList.add('hidden');
       document.getElementById('viewPreview').classList.toggle('hidden', tab !== 'preview');
       document.getElementById('viewAdmin').classList.toggle('hidden', tab !== 'admin');
