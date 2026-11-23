@@ -1764,13 +1764,13 @@
                 </div>
               </div>
               <div class="ar-cn-panel-nav flex justify-end pt-2 border-t border-[var(--border)]">
-                <button type="button" onclick="arCnOpenSheet('theme')" class="btn-secondary h-9 px-4 text-[12.5px] cursor-pointer">다음: 핀터레스트 테마 44종 →</button>
+                <button type="button" onclick="arCnOpenSheet('theme')" class="btn-secondary h-9 px-4 text-[12.5px] cursor-pointer">다음: 핀터·빅타이포 테마 54종 →</button>
               </div>
             </div>
 
-            <!-- 2단계: 핀터레스트·매거진 테마 44종 + 테마 섞기 + 레퍼런스 색감 + 트윅 -->
+            <!-- 2단계: 핀터레스트·빅타이포·매거진 테마 54종 + 테마 섞기 + 레퍼런스 색감 + 트윅 -->
             <div id="arCnTab_theme" class="hidden studio-panel p-4 sm:p-6 space-y-3.5">
-              <!-- 테마 섞기 바 (1탭으로 44종 테마·색감·폰트·구도 랜덤 조합!) -->
+              <!-- 테마 섞기 바 (1탭으로 54종 테마·색감·폰트·구도 랜덤 조합!) -->
               <div class="flex items-center gap-1.5 flex-wrap">
                 <button type="button" onclick="arCnShuffleDesign('all')" class="btn-primary h-8 px-3.5 text-[12px] font-bold cursor-pointer">🔀 테마 섞기</button>
                 <button type="button" onclick="arCnShuffleDesign('color')" class="btn-secondary h-8 px-2.5 text-[11.5px] cursor-pointer">🎨 색감만</button>
@@ -1786,7 +1786,8 @@
               </div>
 
               <div id="arCnCatRow" class="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-                <button type="button" data-cn-cat="all" onclick="arCnSetCat('all')" class="ar-cn-tweak-btn active">전체 44</button>
+                <button type="button" data-cn-cat="all" onclick="arCnSetCat('all')" class="ar-cn-tweak-btn active">전체 54</button>
+                <button type="button" data-cn-cat="빅타이포" onclick="arCnSetCat('빅타이포')" class="ar-cn-tweak-btn">빅타이포</button>
                 <button type="button" data-cn-cat="핀터레스트" onclick="arCnSetCat('핀터레스트')" class="ar-cn-tweak-btn">핀터레스트</button>
                 <button type="button" data-cn-cat="감성·카페" onclick="arCnSetCat('감성·카페')" class="ar-cn-tweak-btn">감성·카페</button>
                 <button type="button" data-cn-cat="매거진" onclick="arCnSetCat('매거진')" class="ar-cn-tweak-btn">매거진</button>
@@ -1882,8 +1883,14 @@
                 <button type="button" id="arCnClearBgPhotoBtn" onclick="arCnClearBgPhoto()" class="btn-secondary h-9 px-3 text-[12px] text-[#fca5a5] cursor-pointer">사진 빼기</button>
               </div>
               <div class="space-y-1.5">
-                <span class="text-[12px] font-semibold text-[#ededed]">이 장의 사진 배치 구도 (18종)</span>
+                <span class="text-[12px] font-semibold text-[#ededed]">이 장의 사진 배치 구도 (24종)</span>
                 <div id="arCnPhotoLayoutRow" class="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                  <button type="button" data-cn-playout="photo_big_center" onclick="arCnSetPhotoLayout('photo_big_center')" class="ar-cn-opt-btn">중앙 빅타이포</button>
+                  <button type="button" data-cn-playout="photo_big_bottom" onclick="arCnSetPhotoLayout('photo_big_bottom')" class="ar-cn-opt-btn">하단 빅타이포</button>
+                  <button type="button" data-cn-playout="photo_big_top" onclick="arCnSetPhotoLayout('photo_big_top')" class="ar-cn-opt-btn">상단 빅타이포</button>
+                  <button type="button" data-cn-playout="photo_big_outline" onclick="arCnSetPhotoLayout('photo_big_outline')" class="ar-cn-opt-btn">아웃라인 빅</button>
+                  <button type="button" data-cn-playout="photo_big_box" onclick="arCnSetPhotoLayout('photo_big_box')" class="ar-cn-opt-btn">형광펜 빅박스</button>
+                  <button type="button" data-cn-playout="photo_big_editorial" onclick="arCnSetPhotoLayout('photo_big_editorial')" class="ar-cn-opt-btn">글래스 빅세리프</button>
                   <button type="button" data-cn-playout="photo_newspaper" onclick="arCnSetPhotoLayout('photo_newspaper')" class="ar-cn-opt-btn">영자신문</button>
                   <button type="button" data-cn-playout="photo_receipt" onclick="arCnSetPhotoLayout('photo_receipt')" class="ar-cn-opt-btn">영수증 티켓</button>
                   <button type="button" data-cn-playout="photo_scrapbook" onclick="arCnSetPhotoLayout('photo_scrapbook')" class="ar-cn-opt-btn">스크랩북</button>
@@ -1923,11 +1930,13 @@
                   <button type="button" onclick="arRunCardNewsCritic()" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer">지금 검수</button>
                 </div>
               </div>
-              <p class="text-[12.5px] text-[#a1a1a6]">인스타그램 고화질 표준(1080×1350 / 1080×1080 PNG)으로 저장하거나, 만든 카드뉴스 전체를 바로 음악 릴스 영상으로 넘길 수 있어요.</p>
+              <p class="text-[12.5px] text-[#a1a1a6]">인스타그램 고화질 표준(1080×1350 / 1080×1080) <strong>PNG · PDF · PPT</strong>로 바로 저장하거나, 만든 카드뉴스 전체를 음악 릴스 영상으로 넘길 수 있어요.</p>
               <button type="button" id="arCnDownloadZipBtn" onclick="arCnDownloadAllZip()" class="btn-primary w-full h-11 text-[13.5px] font-bold cursor-pointer">📦 전체 7장 한 번에 저장 (.zip)</button>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <button type="button" onclick="arCnDownloadCurrentPng()" class="btn-secondary h-10 text-[12.5px] font-semibold cursor-pointer">💾 현재 카드만 PNG 저장</button>
-                <button type="button" id="arCnToReelsBtn" onclick="arCnApplyToStudioReels()" class="btn-secondary h-10 text-[12.5px] font-semibold text-[#93c5fd] border-[#60a5fa]/40 cursor-pointer">🎬 릴스 영상으로도 만들기 →</button>
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" onclick="arCnDownloadCurrentPng()" class="btn-secondary h-10 text-[12px] font-semibold cursor-pointer">💾 이 장만 PNG</button>
+                <button type="button" id="arCnDownloadPdfBtn" onclick="arCnDownloadPdf()" class="btn-secondary h-10 text-[12px] font-semibold cursor-pointer">📄 PDF 문서 저장</button>
+                <button type="button" id="arCnDownloadPptBtn" onclick="arCnDownloadPptx()" class="btn-secondary h-10 text-[12px] font-semibold cursor-pointer">📊 PPT 파일 저장</button>
+                <button type="button" id="arCnToReelsBtn" onclick="arCnApplyToStudioReels()" class="btn-secondary h-10 text-[12px] font-semibold text-[#93c5fd] border-[#60a5fa]/40 cursor-pointer">🎬 릴스 영상 변환 →</button>
               </div>
               <div class="ar-cn-panel-nav flex items-center justify-between pt-2 border-t border-[var(--border)]">
                 <button type="button" onclick="arCnOpenSheet('photo')" class="btn-secondary h-9 px-3 text-[12px] cursor-pointer">← 사진·배치</button>
@@ -2892,7 +2901,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-beat-morph-critic"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cn-bigtypo54"><\/script>');
     }
   </script>
   <!--

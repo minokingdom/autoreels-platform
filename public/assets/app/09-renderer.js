@@ -4961,6 +4961,18 @@
     }
 
     const AR_CN_TEMPLATES = [
+      // 빅타이포 (10종 — 사진 풀배경 + 초대형 타이포그래피!)
+      { id: 'big_vogue_center', cat: '빅타이포', name: '보그 중앙 빅타이포', bg: '#101012', card: '#1e1e22', fg: '#ffffff', muted: '#e4e4e7', accent: '#f59e0b', pillBg: '#ffffff', pillFg: '#101012', fontKey: 'songmyung', style: 'editorial', coverLayout: 'photo_big_center', bodyLayout: 'photo_big_center', samplePhoto: '/assets/landing/ed-cafe.jpg', scenePack: 'cafe', sampleTitle: '취향이 곧\n브랜드가 된다' },
+      { id: 'big_hype_bottom', cat: '빅타이포', name: '하단 임팩트 빅타이포', bg: '#0c0c0e', card: '#1c1c20', fg: '#ffffff', muted: '#d4d4d8', accent: '#f97316', pillBg: '#f97316', pillFg: '#111111', fontKey: 'aggro', style: 'dark', coverLayout: 'photo_big_bottom', bodyLayout: 'photo_big_bottom', samplePhoto: '/assets/scenes/fitness/2.jpg', scenePack: 'fitness', sampleTitle: '지금 시작해야\n바뀌는 5가지' },
+      { id: 'big_cover_top', cat: '빅타이포', name: '매거진 상단 빅타이포', bg: '#141210', card: '#24201c', fg: '#fffbeb', muted: '#e7e5e4', accent: '#eab308', pillBg: '#eab308', pillFg: '#141210', fontKey: 'hahmlet', style: 'editorial', coverLayout: 'photo_big_top', bodyLayout: 'photo_big_top', samplePhoto: '/assets/landing/ed-interior.jpg', scenePack: 'interior', sampleTitle: '공간을 바꾸는\n단 하나의 기준' },
+      { id: 'big_outline_street', cat: '빅타이포', name: '스트릿 아웃라인 빅타이포', bg: '#0b0b0d', card: '#18181b', fg: '#ffffff', muted: '#d4d4d8', accent: '#a3e635', pillBg: '#a3e635', pillFg: '#111113', fontKey: 'aggro', style: 'dark', coverLayout: 'photo_big_outline', bodyLayout: 'photo_big_outline', samplePhoto: '/assets/scenes/auto/5.jpg', scenePack: 'auto', sampleTitle: '남들과 다른\n압도적 디테일' },
+      { id: 'big_marker_viral', cat: '빅타이포', name: '형광펜 박스 빅타이포', bg: '#0f1014', card: '#1f2229', fg: '#111113', muted: '#f4f4f5', accent: '#facc15', pillBg: '#facc15', pillFg: '#111113', fontKey: 'gmarket', style: 'news', coverLayout: 'photo_big_box', bodyLayout: 'photo_big_box', samplePhoto: '/assets/scenes/shop/5.jpg', scenePack: 'shop', sampleTitle: '알고 쓰면\n무조건 이득인 팁' },
+      { id: 'big_blackbox_news', cat: '빅타이포', name: '블랙라벨 박스 빅타이포', bg: '#09090b', card: '#18181b', fg: '#ffffff', muted: '#e4e4e7', accent: '#111113', pillBg: '#ffffff', pillFg: '#09090b', fontKey: 'paperlogy', style: 'swiss', coverLayout: 'photo_big_box', bodyLayout: 'photo_big_bottom', samplePhoto: '/assets/scenes/realestate/6.jpg', scenePack: 'realestate', sampleTitle: '실패 없는 선택\n핵심만 정리' },
+      { id: 'big_serif_mood', cat: '빅타이포', name: '감성 세리프 빅타이포', bg: '#151210', card: '#241f1c', fg: '#faf6f0', muted: '#e5ddd3', accent: '#e09f3e', pillBg: '#e09f3e', pillFg: '#151210', fontKey: 'diphylleia', style: 'editorial', coverLayout: 'photo_big_editorial', bodyLayout: 'photo_big_editorial', samplePhoto: '/assets/landing/ed-dining.jpg', scenePack: 'restaurant', sampleTitle: '오래 기억되는\n한 장면의 힘' },
+      { id: 'big_brush_poster', cat: '빅타이포', name: '붓글씨 풀포토 빅타이포', bg: '#14110f', card: '#26201c', fg: '#fff8ea', muted: '#e6d8c3', accent: '#ef4444', pillBg: '#ef4444', pillFg: '#ffffff', fontKey: 'brush', style: 'editorial', coverLayout: 'photo_big_center', bodyLayout: 'photo_big_bottom', samplePhoto: '/assets/scenes/cafe/7.jpg', scenePack: 'cafe', sampleTitle: '오늘 하루,\n온전히 나답게' },
+      { id: 'big_pop_bubble', cat: '빅타이포', name: '팝 볼드 중앙 빅타이포', bg: '#121216', card: '#222229', fg: '#fef08a', muted: '#ffffff', accent: '#fb7185', pillBg: '#fb7185', pillFg: '#ffffff', fontKey: 'bagel', style: 'dark', coverLayout: 'photo_big_center', bodyLayout: 'photo_big_box', samplePhoto: '/assets/landing/ed-beauty.jpg', scenePack: 'beauty', sampleTitle: '진짜 꿀팁만\n쏙쏙 골랐어요' },
+      { id: 'big_cyber_outline', cat: '빅타이포', name: '테크 아웃라인 빅타이포', bg: '#070b14', card: '#121a2d', fg: '#f0f9ff', muted: '#bae6fd', accent: '#22d3ee', pillBg: '#22d3ee', pillFg: '#070b14', fontKey: 'orbit', style: 'news', coverLayout: 'photo_big_outline', bodyLayout: 'photo_big_top', samplePhoto: '/assets/landing/hero-cinema-kv.jpg', scenePack: 'clinic', sampleTitle: '차이를 만드는\n결정적 디테일' },
+
       // 핀터레스트 (12종 — 영자신문·영수증·스크랩북·OS창·필름스트립·5:5분할·바이닐·무드보드·스위스포스터)
       { id: 'pin_newspaper', cat: '핀터레스트', name: '영자신문 브로드시트', bg: '#f4efe6', card: '#e8e0d2', fg: '#171512', muted: '#575046', accent: '#991b1b', pillBg: '#171512', pillFg: '#f4efe6', fontKey: 'songmyung', style: 'editorial', coverLayout: 'photo_newspaper', bodyLayout: 'photo_newspaper', samplePhoto: '/assets/landing/ed-cafe.jpg', scenePack: 'cafe', sampleTitle: '오늘 꼭 읽어둘\n핵심 트렌드 리포트' },
       { id: 'pin_receipt', cat: '핀터레스트', name: '성수 영수증 티켓', bg: '#ece7df', card: '#ffffff', fg: '#1c1917', muted: '#78716c', accent: '#c2410c', pillBg: '#1c1917', pillFg: '#ffffff', fontKey: 'orbit', style: 'clean', coverLayout: 'photo_receipt', bodyLayout: 'photo_receipt', samplePhoto: '/assets/scenes/cafe/5.jpg', scenePack: 'cafe', sampleTitle: '주문 번호 01\n실패 없는 체크리스트' },
@@ -5040,6 +5052,7 @@
       { name: '모노·블랙', bg: '#121212', accent: '#e5e5e5', fg: '#fafafa' }
     ];
     const AR_CN_PHOTO_LAYOUT_KEYS = [
+      'photo_big_center', 'photo_big_bottom', 'photo_big_top', 'photo_big_outline', 'photo_big_box', 'photo_big_editorial',
       'photo_top', 'photo_full', 'photo_polaroid', 'photo_arch', 'photo_band', 'photo_frame', 'photo_bottom',
       'photo_split_left', 'photo_split_right', 'photo_newspaper', 'photo_receipt', 'photo_scrapbook',
       'photo_circle', 'photo_window', 'photo_filmstrip', 'photo_poster', 'photo_duo'
@@ -5193,10 +5206,11 @@
       const hasPhoto = Boolean(slide && slide.bgImg && slide.bgImg.naturalWidth);
       const wantLayout = (slide && slide.photoLayout) || (slideIdx === 0 ? tpl.coverLayout : tpl.bodyLayout) || 'photo_top';
       const pLayout = (hasPhoto && wantLayout !== 'text_only') ? wantLayout : 'text_only';
-      const isFullPhoto = pLayout === 'photo_full';
-      const fg = isFullPhoto ? '#ffffff' : tpl.fg;
-      const muted = isFullPhoto ? 'rgba(255,255,255,0.86)' : tpl.muted;
-      const accent = isFullPhoto ? (arCnIsDarkHex(tpl.accent) ? '#facc15' : tpl.accent) : tpl.accent;
+      const isBigTypo = pLayout.startsWith('photo_big_');
+      const isFullPhoto = pLayout === 'photo_full' || isBigTypo;
+      const fg = isFullPhoto ? (pLayout === 'photo_big_box' ? tpl.fg : (arCnIsDarkHex(tpl.fg) ? '#ffffff' : tpl.fg)) : tpl.fg;
+      const muted = isFullPhoto ? 'rgba(255,255,255,0.88)' : tpl.muted;
+      const accent = isFullPhoto ? (pLayout === 'photo_big_box' ? tpl.accent : (arCnIsDarkHex(tpl.accent) ? '#facc15' : tpl.accent)) : tpl.accent;
       const isCover = slideIdx === 0 || (slide && slide.role === 'cover');
       const isCta = slideIdx === totalSlides - 1 || (slide && slide.role === 'cta');
       const padX = Math.round(84 * sc);
@@ -5209,10 +5223,26 @@
       if (isFullPhoto) {
         arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
         const scrim = ctx.createLinearGradient(0, 0, 0, H);
-        scrim.addColorStop(0, 'rgba(8,10,16,0.34)');
-        scrim.addColorStop(0.42, 'rgba(8,10,16,0.28)');
-        scrim.addColorStop(0.72, 'rgba(8,10,16,0.72)');
-        scrim.addColorStop(1, 'rgba(8,10,16,0.88)');
+        if (pLayout === 'photo_big_top') {
+          scrim.addColorStop(0, 'rgba(6,8,12,0.78)');
+          scrim.addColorStop(0.45, 'rgba(6,8,12,0.34)');
+          scrim.addColorStop(0.75, 'rgba(6,8,12,0.18)');
+          scrim.addColorStop(1, 'rgba(6,8,12,0.74)');
+        } else if (pLayout === 'photo_big_bottom') {
+          scrim.addColorStop(0, 'rgba(6,8,12,0.34)');
+          scrim.addColorStop(0.42, 'rgba(6,8,12,0.12)');
+          scrim.addColorStop(0.68, 'rgba(6,8,12,0.64)');
+          scrim.addColorStop(1, 'rgba(6,8,12,0.90)');
+        } else if (isBigTypo) {
+          scrim.addColorStop(0, 'rgba(6,8,12,0.46)');
+          scrim.addColorStop(0.5, 'rgba(6,8,12,0.42)');
+          scrim.addColorStop(1, 'rgba(6,8,12,0.78)');
+        } else {
+          scrim.addColorStop(0, 'rgba(8,10,16,0.34)');
+          scrim.addColorStop(0.42, 'rgba(8,10,16,0.28)');
+          scrim.addColorStop(0.72, 'rgba(8,10,16,0.72)');
+          scrim.addColorStop(1, 'rgba(8,10,16,0.88)');
+        }
         ctx.fillStyle = scrim;
         ctx.fillRect(0, 0, W, H);
       } else {
@@ -5821,6 +5851,194 @@
         const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 3);
         const bLH = Math.round(bodyFs * 1.48);
         bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+      } else if (pLayout === 'photo_big_center') {
+        // 풀배경 + 화면 정중앙 초대형 118px 빅타이포 (보그·핀터레스트·인스타 바이럴 표지)
+        const titleFs = Math.round((isCover ? 118 : 104) * sc * fsMul * tMul);
+        const bodyFs = Math.round(35 * sc * fsMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 3);
+        const tLH = Math.round(titleFs * 1.18);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.88).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.5);
+        const totalBlock = tLines.length * tLH + Math.round(44 * sc) + bLines.length * bLH;
+        curY = Math.max(Math.round(210 * sc), Math.round((H - totalBlock) * 0.46));
+        ctx.save();
+        ctx.fillStyle = accent;
+        ctx.fillRect(W / 2 - Math.round(46 * sc), curY - Math.round(32 * sc), Math.round(92 * sc), Math.max(3, Math.round(7 * sc)));
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.shadowColor = 'rgba(0,0,0,0.62)'; ctx.shadowBlur = Math.round(34 * sc); ctx.shadowOffsetY = Math.round(10 * sc);
+        tLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += tLH; });
+        ctx.shadowBlur = Math.round(18 * sc); ctx.shadowOffsetY = Math.round(4 * sc);
+        curY += Math.round(28 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        bLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += bLH; });
+        ctx.restore();
+      } else if (pLayout === 'photo_big_bottom') {
+        // 풀배경 상단 55% 사진 오픈 + 하단 112px 초대형 헤드라인
+        const titleFs = Math.round((isCover ? 112 : 98) * sc * fsMul * tMul);
+        const bodyFs = Math.round(33 * sc * fsMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 3);
+        const tLH = Math.round(titleFs * 1.16);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.46);
+        const blockH = tLines.length * tLH + Math.round(28 * sc) + bLines.length * bLH;
+        const bottomMargin = hlStr ? Math.round(220 * sc) : Math.round(140 * sc);
+        curY = Math.max(Math.round(H * 0.44), H - bottomMargin - blockH);
+        ctx.save();
+        ctx.fillStyle = accent;
+        ctx.fillRect(padX, curY - Math.round(26 * sc), Math.round(88 * sc), Math.max(3, Math.round(8 * sc)));
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.shadowColor = 'rgba(0,0,0,0.68)'; ctx.shadowBlur = Math.round(32 * sc); ctx.shadowOffsetY = Math.round(8 * sc);
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(22 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+        ctx.restore();
+      } else if (pLayout === 'photo_big_top') {
+        // 매거진 커버형: 상단 120px 초대형 타이틀 + 중앙 사진 + 하단 본문
+        const titleFs = Math.round((isCover ? 120 : 104) * sc * fsMul * tMul);
+        curY = Math.round(154 * sc);
+        ctx.save();
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.15);
+        ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.shadowColor = 'rgba(0,0,0,0.62)'; ctx.shadowBlur = Math.round(30 * sc); ctx.shadowOffsetY = Math.round(8 * sc);
+        tLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += tLH; });
+        ctx.fillStyle = accent;
+        ctx.shadowColor = 'transparent';
+        ctx.fillRect(W / 2 - Math.round(42 * sc), curY + Math.round(12 * sc), Math.round(84 * sc), Math.max(2, Math.round(5 * sc)));
+        // 하단 본문 스트립
+        const bodyFs = Math.round(34 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.9).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        let by = H - Math.round(136 * sc) - bLines.length * bLH;
+        ctx.fillStyle = 'rgba(255,255,255,0.94)'; ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(0,0,0,0.72)'; ctx.shadowBlur = Math.round(18 * sc);
+        bLines.forEach((ln) => { ctx.fillText(ln, W / 2, by); by += bLH; });
+        ctx.restore();
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_big_outline') {
+        // 스트릿·테크 풀배경: 1줄 초대형 아웃라인(외곽선) + 2줄 솔리드 122px 빅타이포
+        const titleFs = Math.round((isCover ? 122 : 106) * sc * fsMul * tMul);
+        const bodyFs = Math.round(34 * sc * fsMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 3);
+        const tLH = Math.round(titleFs * 1.15);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.9).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        const blockH = tLines.length * tLH + Math.round(36 * sc) + bLines.length * bLH;
+        curY = Math.max(Math.round(205 * sc), Math.round((H - blockH) * 0.48));
+        ctx.save();
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.lineJoin = 'round';
+        tLines.forEach((ln, li) => {
+          if (li === 0 && tLines.length > 1) {
+            ctx.strokeStyle = accent;
+            ctx.lineWidth = Math.max(2, Math.round(5.5 * sc));
+            ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = Math.round(22 * sc);
+            ctx.strokeText(ln, W / 2, curY);
+          } else {
+            ctx.fillStyle = li === tLines.length - 1 && tLines.length > 1 ? '#ffffff' : fg;
+            ctx.shadowColor = 'rgba(0,0,0,0.68)'; ctx.shadowBlur = Math.round(30 * sc); ctx.shadowOffsetY = Math.round(8 * sc);
+            ctx.fillText(ln, W / 2, curY);
+          }
+          curY += tLH;
+        });
+        curY += Math.round(26 * sc);
+        ctx.font = `600 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        ctx.shadowBlur = Math.round(16 * sc);
+        bLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += bLH; });
+        ctx.restore();
+      } else if (pLayout === 'photo_big_box') {
+        // 인스타 바이럴 1위: 풀배경 위 줄별 하이라이트 형광펜/블랙라벨 빅박스 타이포
+        const titleFs = Math.round((isCover ? 94 : 84) * sc * fsMul * tMul);
+        const bodyFs = Math.round(33 * sc * fsMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW - Math.round(56 * sc)).slice(0, 3);
+        const boxPadX = Math.round(28 * sc), boxPadY = Math.round(16 * sc);
+        const rowH = Math.round(titleFs * 1.12) + boxPadY * 2;
+        const rowGap = Math.round(14 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.9).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        const blockH = tLines.length * (rowH + rowGap) + Math.round(24 * sc) + bLines.length * bLH;
+        curY = Math.max(Math.round(205 * sc), Math.round((H - blockH) * 0.50));
+        ctx.save();
+        const boxBg = tpl.accent || '#facc15';
+        const boxFg = arCnIsDarkHex(boxBg) ? '#ffffff' : '#111113';
+        tLines.forEach((ln, li) => {
+          ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+          const lw = Math.min(maxTextW, ctx.measureText(ln).width + boxPadX * 2);
+          const bx = Math.round((W - lw) / 2);
+          ctx.fillStyle = (li === 0 && arCnIsDarkHex(boxBg)) ? '#ffffff' : boxBg;
+          ctx.shadowColor = 'rgba(0,0,0,0.42)'; ctx.shadowBlur = Math.round(24 * sc); ctx.shadowOffsetY = Math.round(8 * sc);
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(bx, curY, lw, rowH, Math.round(14 * sc));
+          else ctx.rect(bx, curY, lw, rowH);
+          ctx.fill();
+          ctx.shadowColor = 'transparent';
+          ctx.fillStyle = (li === 0 && arCnIsDarkHex(boxBg)) ? '#111113' : boxFg;
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(ln, W / 2, curY + rowH / 2 + Math.round(2 * sc));
+          curY += rowH + rowGap;
+        });
+        curY += Math.round(20 * sc);
+        ctx.font = `600 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = 'rgba(255,255,255,0.94)';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.shadowColor = 'rgba(0,0,0,0.72)'; ctx.shadowBlur = Math.round(18 * sc);
+        bLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += bLH; });
+        ctx.restore();
+      } else if (pLayout === 'photo_big_editorial') {
+        // 풀배경 + 거대 반투명 세리프 넘버 + 108px 빅 세리프 + 하단 글래스 카드
+        ctx.save();
+        ctx.font = `${tW} ${Math.round(260 * sc)}px ${tpl.fontTitle}`;
+        ctx.fillStyle = '#ffffff'; ctx.globalAlpha = 0.14;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.fillText(String(slideIdx + 1).padStart(2, '0'), padX - Math.round(12 * sc), Math.round(138 * sc));
+        ctx.restore();
+        const titleFs = Math.round((isCover ? 108 : 96) * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 3);
+        const tLH = Math.round(titleFs * 1.2);
+        curY = Math.round(H * 0.42);
+        ctx.save();
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.shadowColor = 'rgba(0,0,0,0.62)'; ctx.shadowBlur = Math.round(30 * sc); ctx.shadowOffsetY = Math.round(8 * sc);
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        ctx.restore();
+        // 하단 반투명 글래스 본문 바
+        const bodyFs = Math.round(31 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW - Math.round(56 * sc)).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        const gH = Math.round(bLines.length * bLH + 44 * sc);
+        const gY = Math.min(H - Math.round(126 * sc) - gH, Math.max(curY + Math.round(26 * sc), H - Math.round(136 * sc) - gH));
+        ctx.save();
+        ctx.fillStyle = 'rgba(14,16,22,0.58)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+        ctx.lineWidth = Math.max(1, 2 * sc);
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX, gY, maxTextW, gH, Math.round(18 * sc));
+        else ctx.rect(padX, gY, maxTextW, gH);
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        let by = gY + Math.round(22 * sc);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX + Math.round(28 * sc), by); by += bLH; });
+        ctx.restore();
+        skipBottomHl = true;
       } else {
         // 풀배경 사진형 (photo_full) 또는 순수 타이포형 (text_only)
         if (!isCover && !isCta && !isFullPhoto) {
@@ -6875,6 +7093,140 @@
         if (btn) { btn.disabled = false; btn.textContent = `📦 전체 ${total}장 한 번에 저장 (.zip)`; }
       }
     }
+    async function arCnExportSlideJpegBytes(slide, idx, total) {
+      const off = document.createElement('canvas');
+      off.width = 1080;
+      off.height = _arCnState.ratio === '1:1' ? 1080 : 1350;
+      arCnRenderSlide(off, slide, idx, total);
+      const blob = await new Promise((resolve) => off.toBlob(resolve, 'image/jpeg', 0.93));
+      return { bytes: new Uint8Array(await blob.arrayBuffer()), w: off.width, h: off.height };
+    }
+    // 순수 JS 멀티페이지 PDF 생성기 (/DCTDecode JPEG 임베딩 · 외부 CDN 0개)
+    function arCnBuildPdfBlob(jpegs) {
+      const enc = new TextEncoder();
+      const parts = [];
+      let pos = 0;
+      const pushStr = (s) => { const b = enc.encode(s); parts.push(b); pos += b.length; };
+      const pushBytes = (u8) => { parts.push(u8); pos += u8.length; };
+      const offsets = [0]; // 1-indexed object offsets
+      pushStr('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+      const n = jpegs.length;
+      // Obj 1: Catalog, Obj 2: Pages
+      // Per slide i (0..n-1): Image = 3 + i*3, Content = 4 + i*3, Page = 5 + i*3
+      const pageIds = [];
+      for (let i = 0; i < n; i++) pageIds.push(5 + i * 3);
+      offsets[1] = pos; pushStr('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+      offsets[2] = pos; pushStr(`2 0 obj\n<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${n} >>\nendobj\n`);
+      for (let i = 0; i < n; i++) {
+        const { bytes, w, h } = jpegs[i];
+        const ptW = 540, ptH = Math.round(540 * (h / w));
+        const imgId = 3 + i * 3, cntId = 4 + i * 3, pgId = 5 + i * 3;
+        offsets[imgId] = pos;
+        pushStr(`${imgId} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${w} /Height ${h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${bytes.length} >>\nstream\n`);
+        pushBytes(bytes);
+        pushStr('\nendstream\nendobj\n');
+        const contentStr = `q ${ptW} 0 0 ${ptH} 0 0 cm /Im${i} Do Q\n`;
+        offsets[cntId] = pos;
+        pushStr(`${cntId} 0 obj\n<< /Length ${contentStr.length} >>\nstream\n${contentStr}endstream\nendobj\n`);
+        offsets[pgId] = pos;
+        pushStr(`${pgId} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${ptW} ${ptH}] /Resources << /XObject << /Im${i} ${imgId} 0 R >> >> /Contents ${cntId} 0 R >>\nendobj\n`);
+      }
+      const xrefPos = pos;
+      const totalObjs = 2 + n * 3;
+      pushStr(`xref\n0 ${totalObjs + 1}\n0000000000 65535 f \n`);
+      for (let id = 1; id <= totalObjs; id++) {
+        pushStr(String(offsets[id]).padStart(10, '0') + ' 00000 n \n');
+      }
+      pushStr(`trailer\n<< /Size ${totalObjs + 1} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF\n`);
+      return new Blob(parts, { type: 'application/pdf' });
+    }
+    async function arCnDownloadPdf() {
+      const total = _arCnState.slides.length;
+      if (!total) return;
+      const btn = document.getElementById('arCnDownloadPdfBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'PDF 생성 중...'; }
+      try {
+        const jpegs = [];
+        for (let i = 0; i < total; i++) jpegs.push(await arCnExportSlideJpegBytes(_arCnState.slides[i], i, total));
+        const pdfBlob = arCnBuildPdfBlob(jpegs);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(pdfBlob);
+        a.download = `인스타_카드뉴스_${total}장.pdf`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        if (typeof arToast === 'function') arToast(`카드뉴스 ${total}장을 고화질 PDF로 저장했어요!`, true);
+      } catch (_) {
+        if (typeof arToast === 'function') arToast('PDF 저장 중 오류가 발생했어요.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '📄 PDF 문서 저장'; }
+      }
+    }
+    // 순수 JS OOXML PPTX(파워포인트/키노트/구글슬라이드) 생성기
+    function arCnBuildPptxBlob(jpegs) {
+      const enc = new TextEncoder();
+      const n = jpegs.length;
+      const isSquare = jpegs[0] && jpegs[0].w === jpegs[0].h;
+      const cx = isSquare ? 9144000 : 7315200;
+      const cy = 9144000;
+      const files = [];
+      const addXml = (name, xml) => files.push({ name, data: enc.encode(xml) });
+      const slideOverrides = [];
+      const sldIdLst = [];
+      const presRels = [
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>'
+      ];
+      for (let i = 1; i <= n; i++) {
+        slideOverrides.push(`<Override PartName="/ppt/slides/slide${i}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`);
+        sldIdLst.push(`<p:sldId id="${255 + i}" r:id="rId${i + 1}"/>`);
+        presRels.push(`<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide${i}.xml"/>`);
+        files.push({ name: `ppt/media/image${i}.jpg`, data: jpegs[i - 1].bytes });
+        addXml(`ppt/slides/_rels/slide${i}.xml.rels`,
+          `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image${i}.jpg"/></Relationships>`);
+        addXml(`ppt/slides/slide${i}.xml`,
+          `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr><p:pic><p:nvPicPr><p:cNvPr id="2" name="Card ${i}"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="rId2"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>`);
+      }
+      addXml('[Content_Types].xml',
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/><Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/><Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>${slideOverrides.join('')}</Types>`);
+      addXml('_rels/.rels',
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/></Relationships>`);
+      addXml('ppt/_rels/presentation.xml.rels',
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${presRels.join('')}</Relationships>`);
+      addXml('ppt/presentation.xml',
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:presentation xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst><p:sldIdLst>${sldIdLst.join('')}</p:sldIdLst><p:sldSz cx="${cx}" cy="${cy}" type="custom"/><p:notesSz cx="6858000" cy="9144000"/></p:presentation>`);
+      addXml('ppt/slideMasters/_rels/slideMaster1.xml.rels',
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="../theme/theme1.xml"/></Relationships>`);
+      addXml('ppt/slideMasters/slideMaster1.xml',
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:sldMaster xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr></p:spTree></p:cSld><p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/><p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst></p:sldMaster>`);
+      addXml('ppt/slideLayouts/_rels/slideLayout1.xml.rels',
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="../slideMasters/slideMaster1.xml"/></Relationships>`);
+      addXml('ppt/slideLayouts/slideLayout1.xml',
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><p:sldLayout xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" type="blank"><p:cSld name="Blank"><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>`);
+      addXml('ppt/theme/theme1.xml',
+        `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="AutoReels"><a:themeElements><a:clrScheme name="AutoReels"><a:dk1><a:srgbClr val="000000"/></a:dk1><a:lt1><a:srgbClr val="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="1F2937"/></a:dk2><a:lt2><a:srgbClr val="F3F4F6"/></a:lt2><a:accent1><a:srgbClr val="2563EB"/></a:accent1><a:accent2><a:srgbClr val="EA580C"/></a:accent2><a:accent3><a:srgbClr val="16A34A"/></a:accent3><a:accent4><a:srgbClr val="D97706"/></a:accent4><a:accent5><a:srgbClr val="7C3AED"/></a:accent5><a:accent6><a:srgbClr val="DB2777"/></a:accent6><a:hlink><a:srgbClr val="2563EB"/></a:hlink><a:folHlink><a:srgbClr val="7C3AED"/></a:folHlink></a:clrScheme><a:fontScheme name="AutoReels"><a:majorFont><a:latin typeface="Arial"/><a:ea typeface="Malgun Gothic"/><a:cs typeface="Arial"/></a:majorFont><a:minorFont><a:latin typeface="Arial"/><a:ea typeface="Malgun Gothic"/><a:cs typeface="Arial"/></a:minorFont></a:fontScheme><a:fmtScheme name="AutoReels"><a:fillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:fillStyleLst><a:lnStyleLst><a:ln w="9525"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln w="9525"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln><a:ln w="9525"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln></a:lnStyleLst><a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst><a:bgFillStyleLst><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:bgFillStyleLst></a:fmtScheme></a:themeElements></a:theme>`);
+      const zipBlob = arCnBuildZipBlob(files);
+      return new Blob([zipBlob], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' });
+    }
+    async function arCnDownloadPptx() {
+      const total = _arCnState.slides.length;
+      if (!total) return;
+      const btn = document.getElementById('arCnDownloadPptBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'PPT 생성 중...'; }
+      try {
+        const jpegs = [];
+        for (let i = 0; i < total; i++) jpegs.push(await arCnExportSlideJpegBytes(_arCnState.slides[i], i, total));
+        const pptBlob = arCnBuildPptxBlob(jpegs);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(pptBlob);
+        a.download = `인스타_카드뉴스_${total}장.pptx`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        if (typeof arToast === 'function') arToast(`카드뉴스 ${total}장을 파워포인트(.pptx) 파일로 저장했어요!`, true);
+      } catch (_) {
+        if (typeof arToast === 'function') arToast('PPT 저장 중 오류가 발생했어요.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '📊 PPT 파일 저장'; }
+      }
+    }
     async function arCnApplyToStudioReels() {
       const total = _arCnState.slides.length;
       if (!total) return;
@@ -6979,6 +7331,8 @@
       window.arCnApplyCommentEdit = arCnApplyCommentEdit;
       window.arCnDownloadCurrentPng = arCnDownloadCurrentPng;
       window.arCnDownloadAllZip = arCnDownloadAllZip;
+      window.arCnDownloadPdf = arCnDownloadPdf;
+      window.arCnDownloadPptx = arCnDownloadPptx;
       window.arCnApplyToStudioReels = arCnApplyToStudioReels;
       window.arRunCardNewsCritic = arRunCardNewsCritic;
       window.arAutoFixCardNewsCritic = arAutoFixCardNewsCritic;
@@ -7038,8 +7392,11 @@
       const issues = [];
       let score = 100;
 
-      // 1) 배경·글자 명도 대비 (WCAG 4.5 기준)
-      const nonFullCount = slides.filter((s) => (s.photoLayout || eff.coverLayout) !== 'photo_full').length;
+      // 1) 배경·글자 명도 대비 (WCAG 4.5 기준, 풀배경 사진형 제외)
+      const nonFullCount = slides.filter((s) => {
+        const pl = s.photoLayout || eff.coverLayout || '';
+        return pl !== 'photo_full' && !pl.startsWith('photo_big_');
+      }).length;
       if (nonFullCount > 0 && /^#[0-9a-f]{6}$/i.test(eff.bg) && /^#[0-9a-f]{6}$/i.test(eff.fg)) {
         const cr = arContrastRatio(eff.bg, eff.fg);
         if (cr < 4.5) {
