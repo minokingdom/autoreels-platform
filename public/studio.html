@@ -2779,16 +2779,13 @@
   </div>
 
   <!-- 사진 콜라주로 만들기 (모바일: 상단 9:16 고정 미리보기 + 하단 반높이 바텀시트 / PC: 2열 다이얼로그) -->
-  <div id="arPhotoCollageModal" data-noind class="hidden fixed inset-0 z-[120] bg-[#0b0b0d] lg:bg-black/80 lg:backdrop-blur-sm flex lg:items-center lg:justify-center lg:p-5" role="dialog" aria-modal="true" aria-labelledby="arCollageModalTitle">
+  <div id="arPhotoCollageModal" data-noind class="ar-cl-empty hidden fixed inset-0 z-[120] bg-[#0b0b0d] lg:bg-black/80 lg:backdrop-blur-sm flex lg:items-center lg:justify-center lg:p-5" role="dialog" aria-modal="true" aria-labelledby="arCollageModalTitle">
     <div class="ar-cl-shell w-full lg:max-w-[820px] lg:max-h-[92dvh] flex flex-col lg:rounded-[16px] bg-[#0b0b0d] lg:bg-[#141416] lg:border lg:border-white/12 lg:shadow-2xl overflow-hidden">
       <!-- 상단 컴팩트 헤더 -->
       <div class="ar-cl-topbar flex items-center justify-between gap-2 px-3.5 lg:px-4 py-2 lg:py-3 border-b border-white/10 shrink-0 bg-[#111114] lg:bg-transparent">
-        <div class="min-w-0">
-          <h3 id="arCollageModalTitle" class="text-[14px] lg:text-[15px] font-semibold text-[#ededed] truncate">사진 콜라주로 만들기</h3>
-          <p class="hidden lg:block text-[11.5px] text-[#85858b]">흔들림·엔딩 없이 깔끔한 9:16 콜라주에 테마·노래를 입히고, 편집 모드에서 텍스트·스티커만 올리면 끝!</p>
-        </div>
-        <div class="flex items-center gap-1.5 shrink-0">
-          <button type="button" onclick="arClosePhotoCollageModal()" class="w-8 h-8 rounded-lg bg-white/8 hover:bg-white/15 text-[#e4e4e7] text-[16px] cursor-pointer" aria-label="닫기">×</button>
+        <div class="flex items-center gap-2 min-w-0">
+          <button type="button" onclick="arClosePhotoCollageModal()" class="ar-cl-back" aria-label="닫기"></button>
+          <h3 id="arCollageModalTitle" class="font-semibold text-[#ededed] truncate">사진 콜라주</h3>
         </div>
       </div>
 
@@ -2798,10 +2795,14 @@
         <div class="ar-cl-stage lg:col-span-5 flex flex-col items-center justify-center gap-1.5 lg:gap-2 px-3 py-2 lg:p-0">
           <div class="ar-cl-canvas-frame relative w-[224px] aspect-[9/16] rounded-[14px] overflow-hidden bg-[#0a0a0c] border border-white/15 shadow-xl select-none shrink-0">
             <canvas id="arCollagePreviewCanvas" width="360" height="640" style="touch-action:none;" class="w-full h-full block cursor-pointer"></canvas>
-            <div id="arCollageEmptyHint" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 text-[12px] text-[#85858b] pointer-events-none">
-              <span class="text-[24px] mb-1.5">🖼️</span>
-              <span>사진을 선택해 주세요</span>
+            <div id="arCollageEmptyHint" class="ar-cl-empty-hint">
+              <span class="ar-cl-photo-mark" aria-hidden="true"><i></i></span>
+              <strong>사진을 추가해 주세요</strong>
+              <span>1장부터 9장까지 선택할 수 있어요</span>
             </div>
+          </div>
+          <div id="arCollageEmptyActions" class="ar-cl-empty-actions">
+            <button type="button" id="arCollageEmptyPick" class="btn-primary">사진 고르기</button>
           </div>
           <div id="arCollageSlideNav" hidden class="ar-cl-slide-nav">
             <button type="button" onclick="arCollageStepPreview(-1)" class="btn-secondary h-7 px-2 text-[11px] cursor-pointer" aria-label="이전 컷">이전</button>
@@ -2843,7 +2844,7 @@
             <div data-collage-batch class="space-y-3.5 min-w-0">
               <div class="space-y-2">
                 <div class="flex items-center justify-between gap-2 flex-wrap">
-                  <span class="text-[12.5px] font-semibold text-[#ededed]">1. 사진 선택 <span id="arCollagePickCount" class="text-[#60a5fa] font-mono ml-1">0/18</span></span>
+                  <span class="text-[12.5px] font-semibold text-[#ededed]">1. 사진 선택 <span id="arCollagePickCount" class="text-[#60a5fa] font-mono ml-1">0/9</span></span>
                   <div class="flex items-center gap-1.5">
                     <label class="btn-primary h-8 px-3 text-[12px] inline-flex items-center cursor-pointer">
                       + 사진 불러오기
@@ -2945,6 +2946,69 @@
       #arPhotoCollageModal .ar-cl-dur-btn.active {
         background: #ededed; color: #111113; border-color: #ededed;
       }
+      #arPhotoCollageModal .ar-cl-back {
+        width: 36px; height: 36px; display: grid; place-items: center; flex: none;
+        border: 0; border-radius: 8px; background: transparent; color: #ededed; cursor: pointer;
+      }
+      #arPhotoCollageModal .ar-cl-back::before {
+        content: ""; width: 10px; height: 10px; border: solid currentColor;
+        border-width: 0 0 2px 2px; transform: translateX(2px) rotate(45deg);
+      }
+      #arPhotoCollageModal .ar-cl-back:hover { background: var(--raised); }
+      #arPhotoCollageModal .ar-cl-topbar #arCollageModalTitle { font-size: 16px; }
+      #arPhotoCollageModal .ar-cl-empty-hint,
+      #arPhotoCollageModal .ar-cl-empty-actions { display: none; }
+      #arPhotoCollageModal.ar-cl-empty .ar-cl-sheet,
+      #arPhotoCollageModal.ar-cl-empty #arCollageSlideNav,
+      #arPhotoCollageModal.ar-cl-empty #arCollageSlotPills { display: none; }
+      #arPhotoCollageModal.ar-cl-empty .ar-cl-workspace { display: flex; flex-direction: column; }
+      #arPhotoCollageModal.ar-cl-empty .ar-cl-stage {
+        flex: 1 1 auto; padding: 14px 16px max(14px, env(safe-area-inset-bottom)); gap: 14px;
+      }
+      #arPhotoCollageModal.ar-cl-empty .ar-cl-canvas-frame {
+        width: min(100%, 400px); height: auto; aspect-ratio: auto;
+        flex: 1 1 auto; min-height: min(220px, 48dvh);
+        border-color: #353d49; box-shadow: none;
+      }
+      #arPhotoCollageModal.ar-cl-empty .ar-cl-canvas-frame canvas { display: none; }
+      #arPhotoCollageModal.ar-cl-empty .ar-cl-empty-hint {
+        position: absolute; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 6px; padding: 12px;
+        background: #10141b; color: #aeb6c3; text-align: center; font-size: 13px;
+      }
+      #arPhotoCollageModal .ar-cl-empty-hint strong { color: #f2f4f7; font-size: 18px; font-weight: 600; }
+      #arPhotoCollageModal .ar-cl-photo-mark {
+        position: relative; width: 42px; height: 35px; margin-bottom: 7px; color: #8c9db5;
+      }
+      #arPhotoCollageModal .ar-cl-photo-mark::before,
+      #arPhotoCollageModal .ar-cl-photo-mark i {
+        position: absolute; width: 32px; height: 25px; border: 1.5px solid currentColor;
+        border-radius: 5px; background: #10141b;
+      }
+      #arPhotoCollageModal .ar-cl-photo-mark::before {
+        content: ""; left: 1px; top: 3px; transform: rotate(-9deg);
+      }
+      #arPhotoCollageModal .ar-cl-photo-mark i { right: 0; bottom: 0; overflow: hidden; }
+      #arPhotoCollageModal .ar-cl-photo-mark i::before {
+        content: ""; position: absolute; left: 3px; bottom: -7px; width: 16px; height: 16px;
+        border: solid currentColor; border-width: 1.5px 0 0 1.5px; transform: rotate(45deg);
+      }
+      #arPhotoCollageModal .ar-cl-photo-mark i::after {
+        content: ""; position: absolute; width: 5px; height: 5px; right: 5px; top: 4px;
+        border: 1.5px solid currentColor; border-radius: 50%;
+      }
+      #arPhotoCollageModal.ar-cl-empty .ar-cl-empty-actions {
+        display: grid; gap: 10px; width: min(100%, 400px); flex: none;
+      }
+      #arCollageEmptyPick {
+        min-height: 44px; border-radius: 9px; background: #83bbff; color: #101e35;
+        font-size: 14px; font-weight: 700; cursor: pointer;
+      }
+      #arCollageEmptyPick:hover { background: #a1ccff; }
+      @media (min-width: 1024px) {
+        #arPhotoCollageModal.ar-cl-empty .ar-cl-shell { max-width: 456px; height: min(76dvh, 640px); }
+        #arPhotoCollageModal.ar-cl-empty .ar-cl-workspace { padding: 0; }
+      }
     </style>
   </div>
 
@@ -2954,7 +3018,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-work-sheet-2"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-collage-nine"><\/script>');
     }
   </script>
   <!--

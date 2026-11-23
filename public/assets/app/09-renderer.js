@@ -4109,7 +4109,7 @@
     // =========================================================================
     // ★ 처음 시작할 때 "사진 콜라주로 만들기" → 6종 9:16 콜라주 생성 + 편집기 영상처럼 테마 바로 입히기
     // =========================================================================
-    const AR_COLLAGE_MAX_PHOTOS = 18;
+    const AR_COLLAGE_MAX_PHOTOS = 9;
     const _arCollageGrid = (cols, rows) => {
       const out = [];
       for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) out.push([c / cols, r / rows, 1 / cols, 1 / rows]);
@@ -4616,7 +4616,7 @@
     function arCollageRefreshUI() {
       const listEl = document.getElementById('arCollageSelectedList');
       const cntEl = document.getElementById('arCollagePickCount');
-      const hintEl = document.getElementById('arCollageEmptyHint');
+      const modal = document.getElementById('arPhotoCollageModal');
       const metaEl = document.getElementById('arCollageSlideMeta');
       const pillsEl = document.getElementById('arCollageSlotPills');
       const editBar = document.getElementById('arCollageSlotEditBar');
@@ -4627,7 +4627,10 @@
       const cv = document.getElementById('arCollagePreviewCanvas');
       const n = _arCollageState.photos.length;
       if (cntEl) cntEl.textContent = `${n}/${AR_COLLAGE_MAX_PHOTOS}`;
-      if (hintEl) hintEl.classList.toggle('hidden', n > 0);
+      modal?.classList.toggle('ar-cl-empty', n === 0);
+      const vault = document.getElementById('arCollageVaultWrap');
+      const vaultHome = n ? listEl?.parentElement : document.getElementById('arCollageEmptyActions');
+      if (vault && vaultHome && vault.parentElement !== vaultHome) vaultHome.append(vault);
       arCollageRenderLayoutPicker();
       if (listEl) {
         if (!n) {
@@ -4765,8 +4768,12 @@
       if (ev?.target) ev.target.value = '';
       if (!files.length) return;
       const newUploaded = [];
+      let reachedLimit = false;
       for (const f of files) {
-        if (_arCollageState.photos.length >= AR_COLLAGE_MAX_PHOTOS) break;
+        if (_arCollageState.photos.length >= AR_COLLAGE_MAX_PHOTOS) {
+          reachedLimit = true;
+          break;
+        }
         try {
           const dataUrl = await new Promise((resolve, reject) => {
             const r = new FileReader();
@@ -4779,6 +4786,10 @@
           im._dataUrl = dataUrl;
           im._label = f.name || '내 사진';
           await im.decode();
+          if (_arCollageState.photos.length >= AR_COLLAGE_MAX_PHOTOS) {
+            reachedLimit = true;
+            break;
+          }
           _arCollageState.photos.push({ id: 'u_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), img: im, src: dataUrl, fromVault: false });
           newUploaded.push(im);
         } catch (_) {}
@@ -4788,7 +4799,11 @@
       }
       arCollageAutoMatchCount();
       arCollageRefreshUI();
+      if (reachedLimit && typeof arToast === 'function') arToast(`최대 ${AR_COLLAGE_MAX_PHOTOS}장까지 고를 수 있어요.`);
     }
+    document.getElementById('arCollageEmptyPick')?.addEventListener('click', () => {
+      document.getElementById('arCollageFileInput')?.click();
+    });
     function arCollageClearPhotos() {
       _arCollageState.photos = [];
       _arCollageState.previewIdx = 0;
