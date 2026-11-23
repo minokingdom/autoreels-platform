@@ -5774,11 +5774,10 @@
         arCnRenderSlide(cv, cur, idx, total);
       }
 
-      const roleLabel = idx === 0 ? '표지' : (idx === total - 1 ? '마무리' : `본문 ${idx}`);
       const meta = document.getElementById('arCnSlideMeta');
-      if (meta) meta.textContent = `${idx + 1} / ${total}장 · ${roleLabel}`;
+      if (meta) meta.textContent = `${idx + 1} / ${total}장`;
       const editLbl = document.getElementById('arCnEditCardLabel');
-      if (editLbl) editLbl.textContent = `${idx + 1}번 카드(${roleLabel}) 글자 수정`;
+      if (editLbl) editLbl.textContent = `${idx + 1}번 카드 글자 수정`;
       const zipBtn = document.getElementById('arCnDownloadZipBtn');
       if (zipBtn) zipBtn.textContent = `📦 전체 ${total}장 한 번에 저장 (.zip)`;
       const genBtn = document.getElementById('arCnGenBtn');
@@ -5795,14 +5794,12 @@
         pLayoutRow.querySelectorAll('[data-cn-playout]').forEach((b) => b.classList.toggle('active', b.dataset.cnPlayout === curPL));
       }
 
-      // 장 번호 칩
+      // 장 번호 버튼 (1, 2, 3... 깔끔한 숫자 표기)
       const pills = document.getElementById('arCnSlidePills');
       if (pills) {
         pills.innerHTML = _arCnState.slides.map((s, i) => {
           const on = i === idx;
-          const lbl = i === 0 ? '1 표지' : (i === total - 1 ? `${i + 1} 끝` : String(i + 1));
-          const dot = s.bgImg && s.photoLayout !== 'text_only' ? '📷' : '';
-          return `<button type="button" onclick="arCnSelectSlide(${i})" class="px-2 py-0.5 rounded-full text-[11px] font-semibold border shrink-0 cursor-pointer ${on ? 'bg-[#2563eb] text-white border-[#60a5fa]' : 'bg-[#1c1c21] text-[#a1a1aa] border-white/10'}">${lbl}${dot}</button>`;
+          return `<button type="button" onclick="arCnSelectSlide(${i})" aria-label="${i + 1}번 카드" class="w-7 h-7 rounded-[7px] text-[12px] font-mono font-bold border shrink-0 cursor-pointer flex items-center justify-center transition ${on ? 'bg-[#ededed] text-[#141415] border-[#ededed]' : 'bg-[#1c1c21] text-[#a1a1aa] border-white/10 hover:text-white'}">${i + 1}</button>`;
         }).join('');
       }
 
