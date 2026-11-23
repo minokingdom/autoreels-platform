@@ -783,6 +783,9 @@
     };
     function arResolvePhotoMotionSpec(cutIdx) {
       const ds = typeof getActiveDesign === 'function' ? getActiveDesign() : null;
+      if (typeof campaign !== 'undefined' && campaign && campaign.isPhotoCollageMode) {
+        return { mode: -1, camMode: 'still', accent: (ds && ds.accent) || '#ffffff' };
+      }
       const id = (ds && ds.id) ? String(ds.id) : '';
       let h = 0;
       for (let i = 0; i < id.length; i++) h = ((h * 33) ^ id.charCodeAt(i)) >>> 0;
@@ -856,10 +859,10 @@
       const baseScale = isCollageSafe ? 1.0 : (isVid ? 1.01 : 1.02);
       const prevBaseScale = isCollageSafe ? 1.0 : (prevIsVid ? 1.01 : 1.02);
       const curPose = isCollageSafe
-        ? { z: 1.0 + lp * 0.018, px: 0, py: 0 }
+        ? { z: 1.0, px: 0, py: 0 }
         : arComputeSteadyPose(cutIdx, lp, w, h, baseScale, isVid);
       const prevPose = isCollageSafe
-        ? { z: 1.018, px: 0, py: 0 }
+        ? { z: 1.0, px: 0, py: 0 }
         : arComputeSteadyPose(cutIdx - 1, 1.0, w, h, prevBaseScale, prevIsVid);
       const steadyZoom = curPose.z;
       const steadyPx = curPose.px;

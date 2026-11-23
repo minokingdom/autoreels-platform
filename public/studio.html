@@ -544,6 +544,10 @@
                   <button type="button" id="pdToggleScriptBtn" onclick="arToggleEditedVideoOption('script')" class="h-8 px-2 rounded-[8px] border text-[11.5px] font-bold cursor-pointer transition" style="background:#1f2027;border-color:rgba(255,255,255,0.14);color:#a1a1aa">📝 대본 자막: 끄기</button>
                   <button type="button" id="pdToggleCardBtn" onclick="arToggleEditedVideoOption('card')" class="h-8 px-2 rounded-[8px] border text-[11.5px] font-bold cursor-pointer transition" style="background:#1f2027;border-color:rgba(255,255,255,0.14);color:#a1a1aa">🪪 명함·상호: 끄기</button>
                 </div>
+                <div id="pdCollageQuickRow" class="hidden grid grid-cols-2 gap-1.5 pt-0.5">
+                  <button type="button" onclick="openCutEditor(0, 'deco')" class="h-8 px-2 rounded-[8px] border text-[11.5px] font-bold cursor-pointer transition" style="background:#2563eb;border-color:#60a5fa;color:#ffffff">✏️ 텍스트·스티커 넣기</button>
+                  <button type="button" onclick="if(typeof closePresetDrawer==='function')closePresetDrawer();arOpenPhotoCollageModal(0);" class="h-8 px-2 rounded-[8px] border text-[11.5px] font-bold cursor-pointer transition" style="background:#1f2027;border-color:rgba(255,255,255,0.18);color:#ededed">🧩 콜라주 다시 맞추기</button>
+                </div>
               </div>
               <div id="pdSearchWrap" class="px-2.5 py-2 border-b border-[var(--border)] bg-[#121215] space-y-1.5">
                 <div class="flex items-center gap-1.5">
@@ -2297,7 +2301,7 @@
       <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div>
           <h3 id="arCollageModalTitle" class="text-[15px] font-semibold text-[#ededed]">사진 콜라주로 만들기</h3>
-          <p class="text-[11.5px] text-[#85858b]">사진을 고르면 9:16 콜라주 영상으로 묶고, 편집기 영상처럼 원하는 테마·음악을 바로 입힐 수 있어요.</p>
+          <p class="text-[11.5px] text-[#85858b]">흔들림·엔딩 없이 깔끔한 9:16 콜라주에 테마·노래를 입히고, 편집 모드에서 텍스트·스티커만 올리면 끝!</p>
         </div>
         <button type="button" onclick="arClosePhotoCollageModal()" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-[#d4d4d8] text-[16px] cursor-pointer" aria-label="닫기">×</button>
       </div>
@@ -2388,12 +2392,12 @@
               </div>
             </div>
             <div class="space-y-1">
-              <span class="text-[11.5px] text-[#a1a1aa]">컷당 길이</span>
+              <span class="text-[11.5px] text-[#a1a1aa]">영상 길이 (컷당)</span>
               <div class="flex items-center gap-1">
-                <button type="button" data-cl-dur="2" onclick="arCollageSetDur(2)" class="ar-cl-dur-btn">2초</button>
-                <button type="button" data-cl-dur="3" onclick="arCollageSetDur(3)" class="ar-cl-dur-btn active">3초</button>
                 <button type="button" data-cl-dur="5" onclick="arCollageSetDur(5)" class="ar-cl-dur-btn">5초</button>
-                <button type="button" data-cl-dur="8" onclick="arCollageSetDur(8)" class="ar-cl-dur-btn">8초</button>
+                <button type="button" data-cl-dur="10" onclick="arCollageSetDur(10)" class="ar-cl-dur-btn active">10초</button>
+                <button type="button" data-cl-dur="15" onclick="arCollageSetDur(15)" class="ar-cl-dur-btn">15초</button>
+                <button type="button" data-cl-dur="20" onclick="arCollageSetDur(20)" class="ar-cl-dur-btn">20초</button>
               </div>
             </div>
           </div>
@@ -2451,7 +2455,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-collage-fullbleed"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-collage-still"><\/script>');
     }
   </script>
   <!--

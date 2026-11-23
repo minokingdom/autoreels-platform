@@ -323,7 +323,7 @@
       const prev = kitImg(S, k - 1);
       const kb = (p, i) => {
         if (typeof campaign !== 'undefined' && campaign && campaign.isPhotoCollageMode) {
-          return { s: 1.0 + 0.018 * p, x: 0, y: 0 };
+          return { s: 1.0, x: 0, y: 0 };
         }
         const m = (((i + (spec.seed || 0)) % 5) + 5) % 5;
         if (m === 0) return { s: 1.03 + 0.05 * p, x: 0, y: 0 };
@@ -334,7 +334,8 @@
       };
       const mc = kb(o.still ? 0.5 : S.p, S.idx + k);
       const mp = kb(1, S.idx + k - 1);
-      const tp = o.still ? 1 : S.tp;
+      const isStillCollage = typeof campaign !== 'undefined' && campaign && campaign.isPhotoCollageMode && S.cuts <= 1;
+      const tp = (o.still || isStillCollage) ? 1 : S.tp;
       const e = tp < 0.5 ? 4 * tp * tp * tp : 1 - Math.pow(-2 * tp + 2, 3) / 2;
       const kitAccents = ['wipe', 'slide', 'blinds'];
       const cutK = S.idx + k;

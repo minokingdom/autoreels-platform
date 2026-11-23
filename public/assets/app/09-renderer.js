@@ -3972,6 +3972,8 @@
       const bar = document.getElementById('pdOverlayChoiceBar');
       const isShort = Boolean((typeof arGetShortVideoMedia === 'function' && arGetShortVideoMedia()) || campaign.isPhotoCollageMode);
       if (bar) bar.classList.toggle('hidden', !isShort);
+      const clRow = document.getElementById('pdCollageQuickRow');
+      if (clRow) clRow.classList.toggle('hidden', !campaign.isPhotoCollageMode);
       const scriptOn = !campaign.noDefaultCaptions;
       const cardOn = !campaign.hideCardOnVideo;
       const styleBtn = (id, on, label) => {
@@ -4029,9 +4031,11 @@
         campaign.hideCardOnVideo = !campaign.hideCardOnVideo;
         if (campaign.isPhotoCollageMode) {
           const cutN = Math.max(1, (campaign.uploadedPhotos || []).length);
-          const perCut = Number(campaign._collageCutSec) || 2.5;
+          const perCut = Number(campaign._collageCutSec) || 10;
           const mainD = Math.max(2, +(cutN * perCut).toFixed(2));
           const outroD = campaign.hideCardOnVideo ? 0 : 3.2;
+          if (typeof OUTRO_DURATION !== 'undefined') OUTRO_DURATION = outroD;
+          if (typeof BASE_DURATION !== 'undefined') BASE_DURATION = +(mainD + outroD).toFixed(2);
           if (typeof CUT_LENGTHS !== 'undefined') CUT_LENGTHS = Array.from({ length: cutN }, () => perCut);
           if (typeof TOTAL_DURATION !== 'undefined') TOTAL_DURATION = +(mainD + outroD).toFixed(2);
           if (window.__timelines && window.__timelines.main) window.__timelines.main.duration = TOTAL_DURATION;
@@ -4180,7 +4184,7 @@
       layout: '2_tb',   // template id from AR_COLLAGE_TEMPLATES
       userPickedLayout: false,
       bg: 'dark',       // dark | cream | white
-      cutSec: 3,
+      cutSec: 10,
       previewIdx: 0,
       activeSlot: -1,   // -1 = 전체 보기, 0..8 = 개별 사진 칸 편집 모드
       slotEdits: {}     // key: `${layout}:${slideIdx}:${slotIdx}` -> { scale, panX, panY, rot, flipX, imgOverride }
@@ -4787,7 +4791,7 @@
       arCollageRefreshUI();
     }
     function arCollageSetDur(sec) {
-      _arCollageState.cutSec = Number(sec) || 3;
+      _arCollageState.cutSec = Number(sec) || 10;
       document.querySelectorAll('#arPhotoCollageModal [data-cl-dur]').forEach((b) => b.classList.toggle('active', Number(b.dataset.clDur) === _arCollageState.cutSec));
       arCollageRefreshUI();
     }
@@ -4822,6 +4826,7 @@
         campaign.isUserCustomPhotos = true;
         campaign.isPhotoCollageMode = true;
         campaign._collageCutSec = _arCollageState.cutSec;
+        campaign.cutCountOverride = outImgs.length;
         campaign.hasCustomVideo = false;
         campaign.scenePlan = outImgs.map((_, i) => ({ photoIdx: i }));
         if (typeof cutElementOverrides !== 'undefined' && cutElementOverrides) {
@@ -4851,6 +4856,7 @@
         }
         const mainD = Math.max(2, +(outImgs.length * _arCollageState.cutSec).toFixed(2));
         const outroD = includeCard ? 3.2 : 0;
+        if (typeof OUTRO_DURATION !== 'undefined') OUTRO_DURATION = outroD;
         if (typeof BASE_DURATION !== 'undefined') BASE_DURATION = +(mainD + outroD).toFixed(2);
         if (typeof CUT_LENGTHS !== 'undefined') CUT_LENGTHS = Array.from({ length: outImgs.length }, () => _arCollageState.cutSec);
         if (typeof TOTAL_DURATION !== 'undefined') TOTAL_DURATION = +(mainD + outroD).toFixed(2);
@@ -4866,7 +4872,7 @@
         if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0);
         if (typeof isPlaying !== 'undefined') isPlaying = true;
         if (typeof openPresetDrawer === 'function') openPresetDrawer('right');
-        if (typeof arToast === 'function') arToast(`사진 콜라주 ${outImgs.length}컷을 만들었어요! 원하는 테마와 음악을 골라 입혀 보세요.`, true);
+        if (typeof arToast === 'function') arToast('콜라주 완성! 테마·노래를 고르고 [✏️ 텍스트·스티커 넣기]로 꾸며 보세요.', true);
       } catch (e) {
         if (typeof arToast === 'function') arToast('콜라주를 만들지 못했어요. 다른 사진으로 다시 시도해 주세요.');
       } finally {

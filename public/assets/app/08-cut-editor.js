@@ -5718,7 +5718,7 @@
       const baseDesign = getActiveDesign();
       const localSec = activeCutIdx >= 0 ? (t - activeCutIdx * cutDur) : 0;
       const isStillLookbook = baseDesign?.mstyle === 'in_lookbook_still';
-      const transId = isStillLookbook ? 'none' : campaign.cutTransitions?.[activeCutIdx] || 'default';
+      const transId = (isStillLookbook || (campaign && campaign.isPhotoCollageMode)) ? 'none' : (campaign.cutTransitions?.[activeCutIdx] || 'default');
       window.__arActiveRenderCutIdx = activeCutIdx;
       window.__arActiveRenderLocalSec = localSec;
       window.__arInsideMotionCaptionCard = false;

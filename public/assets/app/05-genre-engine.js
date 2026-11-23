@@ -13,7 +13,8 @@
         // 화면은 가상 시간(컷 길이 균등)으로 그리고, 소리·표시는 실제 시간을 씀
         window.__realTimelineT = this.currentTime;
         // 명함 화면이 없으면 끝 프레임에서도 명함을 그리지 않음
-        const drawT = OUTRO_DURATION <= 0 ? Math.min(this.currentTime, getMainDuration() - 0.001) : this.currentTime;
+        const noOutro = OUTRO_DURATION <= 0 || (typeof campaign !== 'undefined' && campaign && campaign.hideCardOnVideo);
+        const drawT = noOutro ? Math.min(this.currentTime, getMainDuration() - 0.001) : this.currentTime;
         renderHyperFramesComposition(toVirtualTime(drawT));
         updateTimelineUI(this.currentTime);
         if (isPlaying && AudioEngine.enabled) {
