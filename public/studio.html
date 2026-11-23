@@ -2459,20 +2459,20 @@
     </style>
   </div>
 
-  <!-- 인스타 카드뉴스(캐러셀) 만들기 모달 (주제 → 5~10장 자동 생성 → 템플릿 선택 & 글자만 수정 → PNG/ZIP/릴스 내보내기) -->
+  <!-- 인스타 카드뉴스(캐러셀) 만들기 모달 (브랜드 디자인 시스템 · 디자인 MD · 레퍼런스 색감 추출 · 트윅 · 5~10장 생성 · PNG/ZIP/릴스) -->
   <div id="arCardNewsModal" data-noind class="hidden fixed inset-0 z-[121] bg-black/80 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-5" role="dialog" aria-modal="true" aria-labelledby="arCardNewsModalTitle">
-    <div class="w-full max-w-[920px] max-h-[93dvh] flex flex-col rounded-[16px] bg-[#141416] border border-white/12 shadow-2xl overflow-hidden">
+    <div class="w-full max-w-[960px] max-h-[94dvh] flex flex-col rounded-[16px] bg-[#141416] border border-white/12 shadow-2xl overflow-hidden">
       <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div>
-          <h3 id="arCardNewsModalTitle" class="text-[15px] font-semibold text-[#ededed]">인스타 카드뉴스(캐러셀) 만들기</h3>
-          <p class="text-[11.5px] text-[#85858b]">주제만 입력하면 5~10장 캐러셀을 바로 만들고, 기본 템플릿에서 글자만 바꿔 고화질로 저장할 수 있어요.</p>
+          <h3 id="arCardNewsModalTitle" class="text-[15px] font-semibold text-[#ededed]">인스타 카드뉴스(캐러셀) 스튜디오</h3>
+          <p class="text-[11.5px] text-[#85858b]">브랜드 톤(디자인 MD)·레퍼런스 색감을 한 번 맞춰두면, 다음엔 주제와 사진만 넣어 5~10장 카드뉴스를 바로 양산할 수 있어요.</p>
         </div>
         <button type="button" onclick="arCloseCardNewsModal()" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-[#d4d4d8] text-[16px] cursor-pointer" aria-label="닫기">×</button>
       </div>
       <div class="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-12 gap-4">
-        <!-- 좌측: 실시간 카드뉴스 미리보기 & 장 이동 -->
+        <!-- 좌측: 실시간 카드뉴스 미리보기 & 장 관리 · 사진 배치 -->
         <div class="md:col-span-5 flex flex-col items-center gap-2.5">
-          <div id="arCnCanvasFrame" class="relative w-[264px] aspect-[4/5] rounded-[12px] overflow-hidden bg-[#0a0a0c] border border-white/15 shadow-2xl select-none">
+          <div id="arCnCanvasFrame" class="relative w-[268px] aspect-[4/5] rounded-[12px] overflow-hidden bg-[#0a0a0c] border border-white/15 shadow-2xl select-none">
             <canvas id="arCnPreviewCanvas" width="540" height="675" class="w-full h-full block"></canvas>
           </div>
           <div class="flex items-center gap-2 text-[12px] text-[#a1a1aa]">
@@ -2483,18 +2483,31 @@
           <div id="arCnSlidePills" class="flex items-center justify-center gap-1 flex-wrap max-w-full"></div>
           <div class="flex items-center justify-center gap-1.5 flex-wrap pt-0.5">
             <button type="button" onclick="arCnAddSlide()" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer">+ 장 추가</button>
-            <button type="button" onclick="arCnRemoveSlide()" class="btn-secondary h-7 px-2.5 text-[11px] text-[#fca5a5] cursor-pointer">🗑 이 장 삭제</button>
+            <button type="button" onclick="arCnRemoveSlide()" class="btn-secondary h-7 px-2.5 text-[11px] text-[#fca5a5] cursor-pointer">🗑 삭제</button>
             <label class="btn-secondary h-7 px-2.5 text-[11px] inline-flex items-center cursor-pointer">
-              📷 이 장 배경사진
+              📷 사진 넣기
               <input id="arCnBgPhotoInput" type="file" accept="image/*" class="hidden" onchange="arCnHandleBgPhoto(event)" />
             </label>
+            <button type="button" id="arCnVaultToggleBtn" onclick="arCnToggleVaultStrip()" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer">🖼️ 보관함</button>
             <button type="button" id="arCnClearBgPhotoBtn" onclick="arCnClearBgPhoto()" class="hidden btn-secondary h-7 px-2 text-[11px] text-[#fca5a5] cursor-pointer">사진 빼기</button>
+          </div>
+          <!-- 이 장에 사진이 있을 때 사진 배치 3종 선택 -->
+          <div id="arCnPhotoLayoutRow" class="hidden flex items-center justify-center gap-1 text-[11px]">
+            <span class="text-[#85858b] mr-1">사진 배치:</span>
+            <button type="button" data-cn-playout="photo_top" onclick="arCnSetPhotoLayout('photo_top')" class="ar-cn-opt-btn active">상단 사진</button>
+            <button type="button" data-cn-playout="photo_full" onclick="arCnSetPhotoLayout('photo_full')" class="ar-cn-opt-btn">풀배경</button>
+            <button type="button" data-cn-playout="photo_frame" onclick="arCnSetPhotoLayout('photo_frame')" class="ar-cn-opt-btn">액자형</button>
+          </div>
+          <!-- 보관함 사진 빠른 삽입 스트립 -->
+          <div id="arCnVaultWrap" class="hidden w-full rounded-[10px] bg-white/[0.03] border border-white/10 p-2 space-y-1">
+            <div class="text-[10.5px] text-[#85858b]">보관함 사진을 누르면 현재 카드에 바로 들어갑니다</div>
+            <div id="arCnVaultStrip" class="flex items-center gap-1.5 overflow-x-auto pb-0.5"></div>
           </div>
         </div>
 
-        <!-- 우측: 주제 생성 · 템플릿 선택 · 텍스트만 바로 수정 -->
-        <div class="md:col-span-7 space-y-3.5 min-w-0">
-          <!-- 1. 주제 입력 & 장수 선택 -->
+        <!-- 우측: 주제/원고 생성 · 브랜드 디자인 시스템 & 트윅 · 현재 카드 텍스트 & 코멘트 수정 -->
+        <div class="md:col-span-7 space-y-3 min-w-0">
+          <!-- 1. 주제·원고 입력 & 5~10장 생성 -->
           <div class="rounded-[12px] bg-white/[0.03] border border-white/10 p-3 space-y-2">
             <div class="flex items-center justify-between gap-2 flex-wrap">
               <span class="text-[12.5px] font-semibold text-[#ededed]">1. 주제 정하고 5~10장 만들기</span>
@@ -2508,43 +2521,107 @@
               </div>
             </div>
             <div class="flex items-center gap-1.5">
-              <input id="arCnTopicInput" type="text" placeholder="주제를 입력하세요 (예: 처음 방문할 때 꼭 알아둘 5가지, 여름 피부 관리 루틴)" onkeydown="if(event.key==='Enter'){event.preventDefault();arCnGenerateFromTopic();}" class="flex-1 min-w-0 h-9 px-3 rounded-[9px] bg-[#18181c] border border-white/15 text-[12.5px] text-[#ededed] placeholder-[#71717a] focus:outline-none focus:border-[#60a5fa]" />
+              <input id="arCnTopicInput" type="text" placeholder="주제 한 줄 (예: 처음 방문할 때 꼭 알아둘 5가지, 여름 피부 관리 루틴)" onkeydown="if(event.key==='Enter'){event.preventDefault();arCnGenerateFromTopic();}" class="flex-1 min-w-0 h-9 px-3 rounded-[9px] bg-[#18181c] border border-white/15 text-[12.5px] text-[#ededed] placeholder-[#71717a] focus:outline-none focus:border-[#60a5fa]" />
               <button type="button" id="arCnGenBtn" onclick="arCnGenerateFromTopic()" class="btn-primary h-9 px-3.5 text-[12px] font-semibold shrink-0 cursor-pointer">✨ AI 만들기</button>
             </div>
-            <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px]">
-              <span class="text-[#71717a] shrink-0">예시:</span>
-              <button type="button" onclick="arCnPickSampleTopic('초보자가 꼭 알아야 할 핵심 체크리스트')" class="ar-cn-sample-chip">체크리스트</button>
-              <button type="button" onclick="arCnPickSampleTopic('실패 없이 고르는 실전 가이드')" class="ar-cn-sample-chip">실전 가이드</button>
-              <button type="button" onclick="arCnPickSampleTopic('많이 묻는 질문 TOP 5 총정리')" class="ar-cn-sample-chip">FAQ 총정리</button>
-              <button type="button" onclick="arCnPickSampleTopic('하루 10분으로 바꾸는 루틴 정리')" class="ar-cn-sample-chip">루틴 정리</button>
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none text-[11px]">
+                <span class="text-[#71717a] shrink-0">예시:</span>
+                <button type="button" onclick="arCnPickSampleTopic('초보자가 꼭 알아야 할 핵심 체크리스트')" class="ar-cn-sample-chip">체크리스트</button>
+                <button type="button" onclick="arCnPickSampleTopic('실패 없이 고르는 실전 가이드')" class="ar-cn-sample-chip">실전 가이드</button>
+                <button type="button" onclick="arCnPickSampleTopic('많이 묻는 질문 TOP 5 총정리')" class="ar-cn-sample-chip">FAQ 총정리</button>
+                <button type="button" onclick="arCnPickSampleTopic('하루 10분으로 바꾸는 루틴 정리')" class="ar-cn-sample-chip">루틴 정리</button>
+              </div>
+              <button type="button" onclick="document.getElementById('arCnAdvancedBox').classList.toggle('hidden')" class="text-[11px] font-semibold text-[#93c5fd] hover:underline cursor-pointer shrink-0">📄 원고·디자인 MD 첨부 ▾</button>
+            </div>
+            <!-- 접이식: 내 원고 붙여넣기 + 디자인 MD 가이드(.md) 불러오기/저장 -->
+            <div id="arCnAdvancedBox" class="hidden pt-2 border-t border-white/10 space-y-2">
+              <div>
+                <label class="block text-[10.5px] text-[#a1a1aa] mb-1">미리 써둔 기획안·본문 원고 (붙여넣으면 그대로 5~10장 카드로 나눠드려요)</label>
+                <textarea id="arCnSourceInput" rows="2" placeholder="블로그 글·메모·기획안 원고가 있으면 여기에 붙여넣으세요 (비워두면 주제로 자동 작성)" class="w-full px-2.5 py-1.5 rounded-[8px] bg-[#121318] border border-white/12 text-[11.5px] text-[#ededed] focus:outline-none focus:border-[#60a5fa] resize-y"></textarea>
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                  <label class="text-[10.5px] text-[#a1a1aa]">브랜드 디자인 MD 가이드 (컬러·말투·여백 규칙 — AI 티 제거 핵심)</label>
+                  <div class="flex items-center gap-1">
+                    <label class="px-2 py-0.5 rounded-[6px] bg-white/8 hover:bg-white/15 text-[10.5px] text-[#ededed] cursor-pointer">
+                      📂 .md 불러오기
+                      <input id="arCnMdFileInput" type="file" accept=".md,.txt,text/markdown,text/plain" class="hidden" onchange="arCnImportDesignMd(event)" />
+                    </label>
+                    <button type="button" onclick="arCnExportDesignMd()" class="px-2 py-0.5 rounded-[6px] bg-white/8 hover:bg-white/15 text-[10.5px] text-[#ededed] cursor-pointer">⬇ .md 내보내기</button>
+                  </div>
+                </div>
+                <textarea id="arCnGuideInput" rows="2" oninput="arCnUpdateDesignGuide(this.value)" placeholder="예: 말투는 친근한 해요체, 감탄사·이모지 금지, 한 문장 20자 이내, 컬러 #f8f3eb / #c2603f" class="w-full px-2.5 py-1.5 rounded-[8px] bg-[#121318] border border-white/12 text-[11.5px] text-[#ededed] focus:outline-none focus:border-[#60a5fa] resize-y"></textarea>
+              </div>
             </div>
           </div>
 
-          <!-- 2. 기본 템플릿 & 비율 · 계정명 -->
+          <!-- 2. 브랜드 디자인 시스템 & 트윅(Tweak) -->
           <div class="space-y-2">
             <div class="flex items-center justify-between gap-2 flex-wrap">
-              <span class="text-[12.5px] font-semibold text-[#ededed]">2. 기본 템플릿 선택</span>
-              <div class="flex items-center gap-1.5">
-                <button type="button" data-cn-ratio="4:5" onclick="arCnSetRatio('4:5')" class="ar-cn-opt-btn active">4:5 세로 추천</button>
-                <button type="button" data-cn-ratio="1:1" onclick="arCnSetRatio('1:1')" class="ar-cn-opt-btn">1:1 정사각</button>
+              <span class="text-[12.5px] font-semibold text-[#ededed]">2. 브랜드 디자인 시스템 <span class="text-[10.5px] font-normal text-[#4ade80] ml-1">✓ 상업적 무료 폰트</span></span>
+              <div class="flex items-center gap-1 flex-wrap">
+                <label class="ar-cn-opt-btn inline-flex items-center cursor-pointer" title="핀터레스트·인스타 카드뉴스 캡처를 올리면 배경·포인트 색감을 자동으로 따라합니다">
+                  🎨 레퍼런스 색감
+                  <input id="arCnRefImgInput" type="file" accept="image/*" class="hidden" onchange="arCnExtractRefPalette(event)" />
+                </label>
+                <button type="button" onclick="arCnSaveBrandPreset()" class="ar-cn-opt-btn" style="background:#1e3a5f;color:#bfdbfe;border-color:#60a5fa;">💾 내 브랜드 톤 저장</button>
               </div>
             </div>
             <div id="arCnTplGrid" class="grid grid-cols-4 gap-1.5"></div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
-              <div class="flex items-center gap-1.5">
-                <span class="text-[11px] text-[#a1a1aa] shrink-0">계정명</span>
-                <input id="arCnHandleInput" type="text" placeholder="@내계정 (선택)" oninput="arCnUpdateHandle(this.value)" class="flex-1 min-w-0 h-8 px-2.5 rounded-[8px] bg-[#18181c] border border-white/12 text-[11.5px] text-[#ededed] placeholder-[#71717a] focus:outline-none focus:border-[#60a5fa]" />
+
+            <!-- 트윅(Tweak) 스위치 바 -->
+            <div class="flex items-center gap-1 flex-wrap text-[11px]">
+              <span class="text-[#85858b] mr-0.5">표시:</span>
+              <button type="button" data-cn-tweak="showPageNum" onclick="arCnToggleTweak('showPageNum')" class="ar-cn-tweak-btn active">01/07 번호</button>
+              <button type="button" data-cn-tweak="showProgress" onclick="arCnToggleTweak('showProgress')" class="ar-cn-tweak-btn active">진행바</button>
+              <button type="button" data-cn-tweak="showDots" onclick="arCnToggleTweak('showDots')" class="ar-cn-tweak-btn active">하단 점</button>
+              <button type="button" data-cn-tweak="showHandle" onclick="arCnToggleTweak('showHandle')" class="ar-cn-tweak-btn active">계정명</button>
+              <button type="button" data-cn-tweak="showHighlight" onclick="arCnToggleTweak('showHighlight')" class="ar-cn-tweak-btn active">팁 박스</button>
+              <div class="flex items-center gap-1 ml-auto">
+                <button type="button" data-cn-ratio="4:5" onclick="arCnSetRatio('4:5')" class="ar-cn-opt-btn active">4:5</button>
+                <button type="button" data-cn-ratio="1:1" onclick="arCnSetRatio('1:1')" class="ar-cn-opt-btn">1:1</button>
               </div>
-              <div class="flex items-center gap-1">
-                <span class="text-[11px] text-[#a1a1aa] shrink-0 mr-1">글자 크기</span>
-                <button type="button" data-cn-fsize="sm" onclick="arCnSetFontScale('sm')" class="ar-cn-opt-btn flex-1">작게</button>
-                <button type="button" data-cn-fsize="md" onclick="arCnSetFontScale('md')" class="ar-cn-opt-btn flex-1 active">보통</button>
-                <button type="button" data-cn-fsize="lg" onclick="arCnSetFontScale('lg')" class="ar-cn-opt-btn flex-1">크게</button>
+            </div>
+
+            <!-- 직접 수정(배경색·강조색·글자색·폰트·계정명·크기) -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center pt-0.5">
+              <div class="sm:col-span-5 flex items-center gap-1.5">
+                <label class="inline-flex items-center gap-1 text-[10.5px] text-[#a1a1aa] cursor-pointer" title="배경색 직접 변경">
+                  배경 <input id="arCnColorBg" type="color" value="#fbfbfd" oninput="arCnSetCustomColor('bg', this.value)" class="w-5 h-5 rounded border-0 bg-transparent cursor-pointer" />
+                </label>
+                <label class="inline-flex items-center gap-1 text-[10.5px] text-[#a1a1aa] cursor-pointer" title="강조색 직접 변경">
+                  포인트 <input id="arCnColorAccent" type="color" value="#0071e3" oninput="arCnSetCustomColor('accent', this.value)" class="w-5 h-5 rounded border-0 bg-transparent cursor-pointer" />
+                </label>
+                <label class="inline-flex items-center gap-1 text-[10.5px] text-[#a1a1aa] cursor-pointer" title="글자색 직접 변경">
+                  글자 <input id="arCnColorFg" type="color" value="#1d1d1f" oninput="arCnSetCustomColor('fg', this.value)" class="w-5 h-5 rounded border-0 bg-transparent cursor-pointer" />
+                </label>
+                <button type="button" onclick="arCnResetCustomColors()" class="text-[10.5px] text-[#85858b] hover:text-white cursor-pointer" title="템플릿 원래 색으로">↺</button>
               </div>
+              <div class="sm:col-span-4">
+                <select id="arCnFontSelect" onchange="arCnSetFontFamily(this.value)" class="w-full h-8 px-2 rounded-[8px] bg-[#18181c] border border-white/12 text-[11.5px] text-[#ededed] focus:outline-none">
+                  <option value="">템플릿 기본 폰트</option>
+                  <option value="'Pretendard', sans-serif">프리텐다드 (깔끔·모던)</option>
+                  <option value="'GmarketSans', sans-serif">지마켓 산스 (또렷·볼드)</option>
+                  <option value="'Paperlogy', sans-serif">페이퍼로지 (매거진·세련)</option>
+                  <option value="'Gowun Batang', serif">고운바탕 (감성 명조)</option>
+                  <option value="'Hahmlet', serif">함렛 (에디토리얼 세리프)</option>
+                  <option value="'Cafe24Ssurround', sans-serif">카페24 써라운드 (친근·둥근)</option>
+                </select>
+              </div>
+              <div class="sm:col-span-3 flex items-center gap-1">
+                <button type="button" data-cn-fsize="sm" onclick="arCnSetFontScale('sm')" class="ar-cn-opt-btn flex-1 px-1">작게</button>
+                <button type="button" data-cn-fsize="md" onclick="arCnSetFontScale('md')" class="ar-cn-opt-btn flex-1 px-1 active">보통</button>
+                <button type="button" data-cn-fsize="lg" onclick="arCnSetFontScale('lg')" class="ar-cn-opt-btn flex-1 px-1">크게</button>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] text-[#a1a1aa] shrink-0">하단 계정명</span>
+              <input id="arCnHandleInput" type="text" placeholder="@내계정 (선택)" oninput="arCnUpdateHandle(this.value)" class="flex-1 min-w-0 h-8 px-2.5 rounded-[8px] bg-[#18181c] border border-white/12 text-[11.5px] text-[#ededed] placeholder-[#71717a] focus:outline-none focus:border-[#60a5fa]" />
             </div>
           </div>
 
-          <!-- 3. 현재 카드 텍스트만 바로 수정 -->
+          <!-- 3. 현재 카드 텍스트만 바로 수정 + AI 코멘트 부분 수정 -->
           <div class="rounded-[12px] bg-[#1a1c24]/80 border border-[#60a5fa]/35 p-3 space-y-2">
             <div class="flex items-center justify-between gap-2">
               <span id="arCnEditCardLabel" class="text-[12px] font-semibold text-[#93c5fd]">3. 1번 카드(표지) 글자 수정</span>
@@ -2568,6 +2645,11 @@
               <label class="block text-[10.5px] text-[#a1a1aa] mb-0.5">본문 설명 (엔터로 줄바꿈 가능)</label>
               <textarea id="arCnBody" rows="3" oninput="arCnEditField('body', this.value)" placeholder="읽기 쉽게 2~3줄로 적어 주세요" class="w-full px-2.5 py-1.5 rounded-[8px] bg-[#121318] border border-white/12 text-[12px] text-[#ededed] focus:outline-none focus:border-[#60a5fa] resize-none"></textarea>
             </div>
+            <!-- 이 장만 AI 코멘트 수정 -->
+            <div class="flex items-center gap-1.5 pt-1 border-t border-white/10">
+              <input id="arCnCommentInput" type="text" placeholder="💬 이 장만 AI 수정 코멘트 (예: 제목 더 임팩트 있게 / 말투 부드럽게 / 2줄로 줄여줘)" onkeydown="if(event.key==='Enter'){event.preventDefault();arCnApplyCommentEdit();}" class="flex-1 min-w-0 h-8 px-2.5 rounded-[8px] bg-[#121318] border border-white/12 text-[11.5px] text-[#ededed] placeholder-[#71717a] focus:outline-none focus:border-[#60a5fa]" />
+              <button type="button" id="arCnCommentBtn" onclick="arCnApplyCommentEdit()" class="btn-secondary h-8 px-2.5 text-[11px] font-semibold text-[#93c5fd] shrink-0 cursor-pointer">✨ 이 장 반영</button>
+            </div>
           </div>
         </div>
       </div>
@@ -2587,10 +2669,15 @@
       }
       #arCardNewsModal .ar-cn-cnt-btn.active { background: #2563eb; color: #fff; border-color: #60a5fa; }
       #arCardNewsModal .ar-cn-opt-btn {
-        height: 28px; padding: 0 9px; border-radius: 7px; font-size: 11px; font-weight: 600;
+        height: 28px; padding: 0 8px; border-radius: 7px; font-size: 11px; font-weight: 600;
         background: #1c1c21; color: #a1a1aa; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;
       }
       #arCardNewsModal .ar-cn-opt-btn.active { background: #ededed; color: #111113; border-color: #ededed; }
+      #arCardNewsModal .ar-cn-tweak-btn {
+        height: 24px; padding: 0 7px; border-radius: 999px; font-size: 10.5px; font-weight: 600;
+        background: #1c1c21; color: #71717a; border: 1px solid rgba(255,255,255,0.08); cursor: pointer;
+      }
+      #arCardNewsModal .ar-cn-tweak-btn.active { background: rgba(59,130,246,0.22); color: #bfdbfe; border-color: rgba(96,165,250,0.6); }
       #arCardNewsModal .ar-cn-sample-chip {
         padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,0.06); color: #d4d4d8;
         border: 1px solid rgba(255,255,255,0.1); white-space: nowrap; cursor: pointer;
@@ -2611,7 +2698,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-insta-carousel"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cardnews-pro"><\/script>');
     }
   </script>
   <!--

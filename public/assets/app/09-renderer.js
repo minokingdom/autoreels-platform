@@ -4900,29 +4900,55 @@
       window.arApplyPhotoCollageToStudio = arApplyPhotoCollageToStudio;
     }
 
-    // ★ 인스타 카드뉴스(캐러셀) 만들기 (주제 → 5~10장 자동 생성 → 기본 템플릿 8종에서 텍스트만 수정 → PNG/ZIP/릴스 내보내기)
+    // ★ 인스타 카드뉴스(캐러셀) 스튜디오 (브랜드 디자인 시스템 8종 · 디자인 MD · 레퍼런스 색감 추출 · 트윅 · 사진 배치 3종 · 코멘트 수정)
+    const AR_CN_BRAND_STORAGE_KEY = 'ar_cardnews_brand_v1';
     const AR_CN_TEMPLATES = [
-      { id: 'editorial_ivory', name: '아이보리 매거진', bg: '#f6f1e8', card: '#efe7da', fg: '#1a1816', muted: '#6b6258', accent: '#b45309', pillBg: '#1a1816', pillFg: '#f6f1e8', fontTitle: "'Gowun Batang', 'Hahmlet', serif", fontBody: "'Pretendard', sans-serif", style: 'editorial' },
-      { id: 'minimal_white', name: '미니멀 화이트', bg: '#ffffff', card: '#f4f6fb', fg: '#111113', muted: '#52525b', accent: '#2563eb', pillBg: '#eff6ff', pillFg: '#1d4ed8', fontTitle: "'GmarketSans', 'Pretendard', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'clean' },
-      { id: 'dark_noir', name: '다크 인사이트', bg: '#0f1014', card: '#191b22', fg: '#f8fafc', muted: '#a1a1aa', accent: '#facc15', pillBg: '#facc15', pillFg: '#111113', fontTitle: "'Paperlogy', 'GmarketSans', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'dark' },
-      { id: 'forest_sage', name: '세이지 웰니스', bg: '#edf2ed', card: '#e1ebe1', fg: '#172b20', muted: '#4b6355', accent: '#2f6f4e', pillBg: '#2f6f4e', pillFg: '#ffffff', fontTitle: "'Hahmlet', 'Gowun Batang', serif", fontBody: "'Pretendard', sans-serif", style: 'soft' },
-      { id: 'cobalt_news', name: '코발트 브리핑', bg: '#0c1938', card: '#142652', fg: '#ffffff', muted: '#93c5fd', accent: '#38bdf8', pillBg: '#38bdf8', pillFg: '#082f49', fontTitle: "'GmarketSans', 'Pretendard', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'news' },
-      { id: 'warm_cream', name: '크림 다이어리', bg: '#fbf5eb', card: '#f3e8d6', fg: '#2b211a', muted: '#786656', accent: '#d97706', pillBg: '#fef3c7', pillFg: '#92400e', fontTitle: "'Gowun Batang', serif", fontBody: "'Pretendard', sans-serif", style: 'note' },
-      { id: 'pastel_peach', name: '소프트 피치', bg: '#fff5f2', card: '#ffe8e2', fg: '#26181a', muted: '#7a575c', accent: '#e11d48', pillBg: '#e11d48', pillFg: '#ffffff', fontTitle: "'Cafe24Ssurround', 'GmarketSans', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'soft' },
-      { id: 'mono_grid', name: '모노 스위스', bg: '#f3f3f5', card: '#e4e4e7', fg: '#09090b', muted: '#52525b', accent: '#18181b', pillBg: '#09090b', pillFg: '#ffffff', fontTitle: "'Paperlogy', 'Pretendard', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'swiss' }
+      { id: 'apple_clean', name: '애플 미니멀', bg: '#fbfbfd', card: '#f0f1f5', fg: '#1d1d1f', muted: '#6e6e73', accent: '#0071e3', pillBg: '#e8f2ff', pillFg: '#005bb5', fontTitle: "'Pretendard', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'clean' },
+      { id: 'nike_editorial', name: '나이키 볼드', bg: '#111111', card: '#1c1c1e', fg: '#ffffff', muted: '#a1a1aa', accent: '#f97316', pillBg: '#f97316', pillFg: '#111111', fontTitle: "'GmarketSans', 'Paperlogy', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'dark' },
+      { id: 'bakery_curation', name: '베이커리 큐레이션', bg: '#f8f3eb', card: '#efe5d6', fg: '#2c1f16', muted: '#756254', accent: '#c2603f', pillBg: '#2c1f16', pillFg: '#f8f3eb', fontTitle: "'Gowun Batang', 'Hahmlet', serif", fontBody: "'Pretendard', sans-serif", style: 'editorial' },
+      { id: 'busan_magazine', name: '로컬 매거진', bg: '#f4f1ea', card: '#e8e2d5', fg: '#141414', muted: '#57534e', accent: '#1d4ed8', pillBg: '#1d4ed8', pillFg: '#ffffff', fontTitle: "'Paperlogy', 'GmarketSans', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'editorial' },
+      { id: 'wellness_sage', name: '헬스·웰니스', bg: '#edf2ed', card: '#e0eae0', fg: '#162a1f', muted: '#4b6355', accent: '#2f6f4e', pillBg: '#2f6f4e', pillFg: '#ffffff', fontTitle: "'Hahmlet', 'Gowun Batang', serif", fontBody: "'Pretendard', sans-serif", style: 'soft' },
+      { id: 'beauty_gloss', name: '뷰티 에디토리얼', bg: '#fff6f4', card: '#ffe8e3', fg: '#24171a', muted: '#7a575c', accent: '#be185d', pillBg: '#fce7f3', pillFg: '#9d174d', fontTitle: "'Cafe24Ssurround', 'Pretendard', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'soft' },
+      { id: 'dark_insight', name: '다크 비즈니스', bg: '#0d0f14', card: '#181c26', fg: '#f8fafc', muted: '#94a3b8', accent: '#facc15', pillBg: '#facc15', pillFg: '#0f172a', fontTitle: "'Paperlogy', 'GmarketSans', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'news' },
+      { id: 'swiss_mono', name: '스위스 모노', bg: '#f3f3f5', card: '#e4e4e7', fg: '#09090b', muted: '#52525b', accent: '#18181b', pillBg: '#09090b', pillFg: '#ffffff', fontTitle: "'Paperlogy', 'Pretendard', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'swiss' }
     ];
     const _arCnState = {
-      templateId: 'editorial_ivory',
+      templateId: 'apple_clean',
+      customColors: { bg: '', accent: '', fg: '' },
+      fontFamily: '',     // '' = 템플릿 기본, 또는 상업적 무료 폰트
       ratio: '4:5',       // '4:5' (1080x1350) | '1:1' (1080x1080)
       fontScale: 'md',    // 'sm' | 'md' | 'lg'
       targetCount: 7,     // 5..10
       handle: '',
+      designGuide: '',    // 디자인 MD 가이드 텍스트
+      tweaks: { showPageNum: true, showProgress: true, showDots: true, showHandle: true, showHighlight: true },
       activeIdx: 0,
-      slides: []          // [{ role, kicker, title, body, highlight, bgImg }]
+      slides: [],         // [{ role, kicker, title, body, highlight, bgImg, photoLayout }]
+      brandLoaded: false
     };
 
     function arCnGetTemplate(id) {
       return AR_CN_TEMPLATES.find((t) => t.id === id) || AR_CN_TEMPLATES[0];
+    }
+    function arCnIsDarkHex(hex) {
+      const m = String(hex || '').replace('#', '');
+      if (m.length !== 6) return false;
+      const r = parseInt(m.slice(0, 2), 16), g = parseInt(m.slice(2, 4), 16), b = parseInt(m.slice(4, 6), 16);
+      return (0.299 * r + 0.587 * g + 0.114 * b) < 135;
+    }
+    function arCnEffectiveTheme() {
+      const base = arCnGetTemplate(_arCnState.templateId);
+      const bg = _arCnState.customColors.bg || base.bg;
+      const accent = _arCnState.customColors.accent || base.accent;
+      const fg = _arCnState.customColors.fg || base.fg;
+      const dark = arCnIsDarkHex(bg);
+      const muted = _arCnState.customColors.fg ? fg : (dark ? 'rgba(248,250,252,0.72)' : base.muted);
+      const card = _arCnState.customColors.bg ? (dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.055)') : base.card;
+      const pillBg = _arCnState.customColors.accent ? accent : base.pillBg;
+      const pillFg = _arCnState.customColors.accent ? (arCnIsDarkHex(accent) ? '#ffffff' : '#111113') : base.pillFg;
+      const fontTitle = _arCnState.fontFamily || base.fontTitle;
+      const fontBody = base.fontBody;
+      return { ...base, bg, accent, fg, muted, card, pillBg, pillFg, fontTitle, fontBody, dark };
     }
     function arCnDefaultSlides(count = 7, topic = '알아두면 바로 쓰는 핵심 가이드') {
       const n = Math.max(5, Math.min(10, Math.floor(Number(count) || 7)));
@@ -4938,13 +4964,13 @@
         { t: '다음 단계로 넓혀 보기', b: '반응이 좋았던 카드는 시리즈로 묶어\n다음 주 콘텐츠로 이어가 보세요.', h: '체크 8 · 시리즈로 확장하기' }
       ];
       const out = [
-        { role: 'cover', kicker: '핵심 요약 가이드', title: topic, body: `꼭 알아야 할 ${bodyN}가지 핵심만\n한눈에 보기 쉽게 정리했어요.`, highlight: '밀어서 확인하기 →', bgImg: null }
+        { role: 'cover', kicker: '핵심 요약 가이드', title: topic, body: `꼭 알아야 할 ${bodyN}가지 핵심만\n한눈에 보기 쉽게 정리했어요.`, highlight: '밀어서 확인하기 →', bgImg: null, photoLayout: 'photo_full' }
       ];
       for (let i = 0; i < bodyN; i++) {
         const p = samplePts[i % samplePts.length];
-        out.push({ role: 'point', kicker: `POINT ${String(i + 1).padStart(2, '0')}`, title: p.t, body: p.b, highlight: p.h, bgImg: null });
+        out.push({ role: 'point', kicker: `POINT ${String(i + 1).padStart(2, '0')}`, title: p.t, body: p.b, highlight: p.h, bgImg: null, photoLayout: 'photo_top' });
       }
-      out.push({ role: 'cta', kicker: '저장 · 공유', title: '필요할 때 바로 꺼내 보세요', body: '도움이 되셨다면 저장해 두고\n주변 분들에게도 가볍게 공유해 주세요.', highlight: '궁금한 점은 댓글로 남겨 주세요', bgImg: null });
+      out.push({ role: 'cta', kicker: '저장 · 공유', title: '필요할 때 바로 꺼내 보세요', body: '도움이 되셨다면 저장해 두고\n주변 분들에게도 가볍게 공유해 주세요.', highlight: '궁금한 점은 댓글로 남겨 주세요', bgImg: null, photoLayout: 'photo_top' });
       return out;
     }
 
@@ -4964,7 +4990,6 @@
             if (ctx.measureText(w).width <= maxW) {
               cur = w;
             } else {
-              // 긴 한글 단어 문자 단위 안전 줄바꿈
               let chunk = '';
               for (const ch of w) {
                 if (ctx.measureText(chunk + ch).width > maxW && chunk) {
@@ -4987,183 +5012,213 @@
       const ctx = canvas.getContext('2d');
       const W = canvas.width, H = canvas.height;
       const sc = W / 1080;
-      const tpl = arCnGetTemplate(_arCnState.templateId);
-      const fsMul = _arCnState.fontScale === 'sm' ? 0.88 : (_arCnState.fontScale === 'lg' ? 1.14 : 1.0);
+      const tpl = arCnEffectiveTheme();
+      const tw = _arCnState.tweaks || {};
+      const fsMul = _arCnState.fontScale === 'sm' ? 0.88 : (_arCnState.fontScale === 'lg' ? 1.12 : 1.0);
       const hasPhoto = Boolean(slide && slide.bgImg && slide.bgImg.naturalWidth);
-      const fg = hasPhoto ? '#ffffff' : tpl.fg;
-      const muted = hasPhoto ? 'rgba(255,255,255,0.82)' : tpl.muted;
-      const accent = hasPhoto ? '#facc15' : tpl.accent;
+      const pLayout = hasPhoto ? (slide.photoLayout || (slideIdx === 0 ? 'photo_full' : 'photo_top')) : 'text_only';
+      const isFullPhoto = pLayout === 'photo_full';
+      const fg = isFullPhoto ? '#ffffff' : tpl.fg;
+      const muted = isFullPhoto ? 'rgba(255,255,255,0.84)' : tpl.muted;
+      const accent = isFullPhoto ? (arCnIsDarkHex(tpl.accent) ? '#facc15' : tpl.accent) : tpl.accent;
       const isCover = slideIdx === 0 || (slide && slide.role === 'cover');
       const isCta = slideIdx === totalSlides - 1 || (slide && slide.role === 'cta');
-      const padX = Math.round(92 * sc);
-      const padY = Math.round(86 * sc);
+      const padX = Math.round(88 * sc);
+      const padY = Math.round(82 * sc);
 
       ctx.save();
-      // 1) 배경 (템플릿 컬러 + 패턴 또는 사용자 배경 사진)
+      // 1) 배경 (템플릿 컬러 + 풀사진 또는 은은한 디자인 텍스처)
       ctx.fillStyle = tpl.bg;
       ctx.fillRect(0, 0, W, H);
-      if (hasPhoto) {
+      if (isFullPhoto) {
         arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
         const scrim = ctx.createLinearGradient(0, 0, 0, H);
-        scrim.addColorStop(0, 'rgba(8,10,16,0.52)');
-        scrim.addColorStop(0.5, 'rgba(8,10,16,0.62)');
-        scrim.addColorStop(1, 'rgba(8,10,16,0.78)');
+        scrim.addColorStop(0, 'rgba(8,10,16,0.44)');
+        scrim.addColorStop(0.45, 'rgba(8,10,16,0.52)');
+        scrim.addColorStop(1, 'rgba(8,10,16,0.82)');
         ctx.fillStyle = scrim;
         ctx.fillRect(0, 0, W, H);
       } else {
-        if (tpl.style === 'note') {
-          ctx.fillStyle = 'rgba(120,102,86,0.14)';
-          const step = Math.round(38 * sc);
-          for (let y = step; y < H; y += step) for (let x = step; x < W; x += step) {
-            ctx.beginPath(); ctx.arc(x, y, Math.max(1, 1.8 * sc), 0, Math.PI * 2); ctx.fill();
-          }
-        } else if (tpl.style === 'news' || tpl.style === 'dark') {
-          const glow = ctx.createRadialGradient(W * 0.82, H * 0.14, 10, W * 0.82, H * 0.14, W * 0.72);
-          glow.addColorStop(0, tpl.style === 'news' ? 'rgba(56,189,248,0.18)' : 'rgba(250,204,21,0.12)');
+        if (tpl.style === 'news' || tpl.style === 'dark') {
+          const glow = ctx.createRadialGradient(W * 0.84, H * 0.14, 10, W * 0.84, H * 0.14, W * 0.68);
+          glow.addColorStop(0, tpl.style === 'news' ? 'rgba(250,204,21,0.10)' : 'rgba(249,115,22,0.12)');
           glow.addColorStop(1, 'rgba(0,0,0,0)');
           ctx.fillStyle = glow;
           ctx.fillRect(0, 0, W, H);
         } else if (tpl.style === 'editorial' || tpl.style === 'swiss') {
-          ctx.strokeStyle = tpl.style === 'swiss' ? 'rgba(9,9,11,0.18)' : 'rgba(26,24,22,0.15)';
+          ctx.strokeStyle = tpl.dark ? 'rgba(255,255,255,0.14)' : 'rgba(20,18,16,0.14)';
           ctx.lineWidth = Math.max(1, 2 * sc);
-          ctx.strokeRect(Math.round(38 * sc), Math.round(38 * sc), W - Math.round(76 * sc), H - Math.round(76 * sc));
+          ctx.strokeRect(Math.round(36 * sc), Math.round(36 * sc), W - Math.round(72 * sc), H - Math.round(72 * sc));
         }
       }
 
-      // 2) 상단 진행바 + 배지 + 페이지 번호 (01 / 07)
-      const topBarH = Math.max(3, Math.round(6 * sc));
-      ctx.fillStyle = hasPhoto ? 'rgba(255,255,255,0.22)' : (tpl.card || 'rgba(0,0,0,0.08)');
-      ctx.fillRect(padX, Math.round(52 * sc), W - padX * 2, topBarH);
-      ctx.fillStyle = accent;
-      ctx.fillRect(padX, Math.round(52 * sc), Math.round((W - padX * 2) * ((slideIdx + 1) / Math.max(1, totalSlides))), topBarH);
+      // 2) 상단 진행바 + 배지 + 페이지 번호 (트윅 스위치 반영)
+      if (tw.showProgress !== false) {
+        const topBarH = Math.max(3, Math.round(6 * sc));
+        ctx.fillStyle = isFullPhoto ? 'rgba(255,255,255,0.24)' : tpl.card;
+        ctx.fillRect(padX, Math.round(50 * sc), W - padX * 2, topBarH);
+        ctx.fillStyle = accent;
+        ctx.fillRect(padX, Math.round(50 * sc), Math.round((W - padX * 2) * ((slideIdx + 1) / Math.max(1, totalSlides))), topBarH);
+      }
 
-      const headerY = padY + Math.round(28 * sc);
+      const headerY = padY + Math.round(24 * sc);
       const kickerTxt = String((slide && slide.kicker) || '').trim();
       if (kickerTxt) {
-        const kFs = Math.round(28 * sc);
+        const kFs = Math.round(26 * sc);
         ctx.font = `700 ${kFs}px ${tpl.fontBody}`;
-        const kw = ctx.measureText(kickerTxt).width + Math.round(40 * sc);
-        const kh = Math.round(52 * sc);
-        ctx.fillStyle = hasPhoto ? 'rgba(255,255,255,0.18)' : tpl.pillBg;
+        const kw = ctx.measureText(kickerTxt).width + Math.round(38 * sc);
+        const kh = Math.round(48 * sc);
+        ctx.fillStyle = isFullPhoto ? 'rgba(255,255,255,0.20)' : tpl.pillBg;
         ctx.beginPath();
         if (ctx.roundRect) ctx.roundRect(padX, headerY - kh / 2, kw, kh, kh / 2);
         else ctx.rect(padX, headerY - kh / 2, kw, kh);
         ctx.fill();
-        ctx.fillStyle = hasPhoto ? '#ffffff' : tpl.pillFg;
+        ctx.fillStyle = isFullPhoto ? '#ffffff' : tpl.pillFg;
         ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-        ctx.fillText(kickerTxt, padX + Math.round(20 * sc), headerY + 1);
+        ctx.fillText(kickerTxt, padX + Math.round(19 * sc), headerY + 1);
       }
-      const pageTxt = `${String(slideIdx + 1).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
-      ctx.font = `700 ${Math.round(28 * sc)}px 'Pretendard', monospace`;
-      ctx.fillStyle = muted;
-      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-      ctx.fillText(pageTxt, W - padX, headerY);
-
-      // 3) 본문 카드용 은은한 큰 숫자 워터마크 (표지/마무리 제외)
-      if (!isCover && !isCta && !hasPhoto) {
-        ctx.save();
-        ctx.font = `900 ${Math.round(210 * sc)}px ${tpl.fontTitle}`;
-        ctx.fillStyle = tpl.fg;
-        ctx.globalAlpha = 0.055;
-        ctx.textAlign = 'right'; ctx.textBaseline = 'top';
-        ctx.fillText(String(slideIdx).padStart(2, '0'), W - padX + Math.round(10 * sc), Math.round(150 * sc));
-        ctx.restore();
+      if (tw.showPageNum !== false) {
+        const pageTxt = `${String(slideIdx + 1).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+        ctx.font = `700 ${Math.round(26 * sc)}px 'Pretendard', monospace`;
+        ctx.fillStyle = muted;
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        ctx.fillText(pageTxt, W - padX, headerY);
       }
 
-      // 4) 제목 + 본문 (표지/마무리는 중앙 정렬 또는 감성 좌측, 본문은 읽기 좋은 좌측 정렬)
       const maxTextW = W - padX * 2;
-      const titleFs = Math.round((isCover ? 82 : (isCta ? 70 : 66)) * sc * fsMul);
-      const bodyFs = Math.round((isCover ? 38 : 40) * sc * fsMul);
       const titleStr = String((slide && slide.title) || '').trim();
       const bodyStr = String((slide && slide.body) || '').trim();
-      const hlStr = String((slide && slide.highlight) || '').trim();
+      const hlStr = tw.showHighlight !== false ? String((slide && slide.highlight) || '').trim() : '';
 
-      ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
-      const titleLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 4);
-      const titleLH = Math.round(titleFs * 1.32);
-
-      ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
-      const bodyLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 7);
-      const bodyLH = Math.round(bodyFs * 1.56);
-
-      const blockH = titleLines.length * titleLH + Math.round(48 * sc) + bodyLines.length * bodyLH;
-      const contentTop = isCover || isCta
-        ? Math.max(Math.round(210 * sc), Math.round((H - blockH) * 0.44))
-        : Math.max(Math.round(215 * sc), Math.round((H - blockH) * 0.36));
-
-      // 제목 왼쪽 포인트 바(clean/dark/news) 또는 상단 포인트 짧은 선(editorial/soft/note/swiss)
-      ctx.fillStyle = accent;
-      if (isCover || isCta) {
-        ctx.fillRect(padX, contentTop - Math.round(34 * sc), Math.round(88 * sc), Math.max(3, Math.round(8 * sc)));
+      // 3) 레이아웃별 콘텐츠 배치 (상단 사진 / 액자형 / 타이포 집중·풀사진)
+      let curY = Math.round(180 * sc);
+      if (pLayout === 'photo_top') {
+        const photoY = Math.round(152 * sc);
+        const photoH = Math.round(H * 0.42);
+        arCollageDrawCover(ctx, slide.bgImg, padX, photoY, maxTextW, photoH, Math.round(24 * sc), null);
+        curY = photoY + photoH + Math.round(48 * sc);
+        const titleFs = Math.round(54 * sc * fsMul);
+        const bodyFs = Math.round(34 * sc * fsMul);
+        ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.3);
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(20 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 4);
+        const bLH = Math.round(bodyFs * 1.5);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+      } else if (pLayout === 'photo_frame') {
+        const titleFs = Math.round(56 * sc * fsMul);
+        const bodyFs = Math.round(33 * sc * fsMul);
+        curY = Math.round(166 * sc);
+        ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.28);
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(26 * sc);
+        const photoH = Math.round(H * 0.36);
+        // 액자 카드 테두리
+        ctx.fillStyle = tpl.card;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX - Math.round(12 * sc), curY - Math.round(12 * sc), maxTextW + Math.round(24 * sc), photoH + Math.round(24 * sc), Math.round(24 * sc));
+        else ctx.rect(padX - Math.round(12 * sc), curY - Math.round(12 * sc), maxTextW + Math.round(24 * sc), photoH + Math.round(24 * sc));
+        ctx.fill();
+        arCollageDrawCover(ctx, slide.bgImg, padX, curY, maxTextW, photoH, Math.round(16 * sc), null);
+        curY += photoH + Math.round(38 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.5);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
       } else {
-        ctx.fillRect(padX, contentTop - Math.round(28 * sc), Math.round(64 * sc), Math.max(3, Math.round(7 * sc)));
-      }
+        // 타이포 집중형 / 풀배경 사진형
+        if (!isCover && !isCta && !isFullPhoto) {
+          ctx.save();
+          ctx.font = `900 ${Math.round(205 * sc)}px ${tpl.fontTitle}`;
+          ctx.fillStyle = tpl.fg;
+          ctx.globalAlpha = 0.055;
+          ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+          ctx.fillText(String(slideIdx).padStart(2, '0'), W - padX + Math.round(8 * sc), Math.round(145 * sc));
+          ctx.restore();
+        }
+        const titleFs = Math.round((isCover ? 80 : (isCta ? 68 : 64)) * sc * fsMul);
+        const bodyFs = Math.round((isCover ? 37 : 39) * sc * fsMul);
+        ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 4);
+        const tLH = Math.round(titleFs * 1.32);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 7);
+        const bLH = Math.round(bodyFs * 1.56);
+        const blockH = tLines.length * tLH + Math.round(44 * sc) + bLines.length * bLH;
+        curY = isCover || isCta
+          ? Math.max(Math.round(210 * sc), Math.round((H - blockH) * (isFullPhoto ? 0.54 : 0.44)))
+          : Math.max(Math.round(210 * sc), Math.round((H - blockH) * 0.36));
 
-      ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
-      ctx.fillStyle = fg;
-      ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-      let curY = contentTop;
-      titleLines.forEach((ln) => {
-        ctx.fillText(ln, padX, curY);
-        curY += titleLH;
-      });
-
-      curY += Math.round(36 * sc);
-      ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
-      ctx.fillStyle = muted;
-      bodyLines.forEach((ln) => {
-        ctx.fillText(ln, padX, curY);
-        curY += bodyLH;
-      });
-
-      // 5) 하단 강조 팁 박스 (또는 표지 스와이프 안내)
-      if (hlStr) {
-        const hlFs = Math.round(32 * sc * Math.min(1.06, fsMul));
-        ctx.font = `700 ${hlFs}px ${tpl.fontBody}`;
-        const hlLines = arCnWrapLines(ctx, hlStr, maxTextW - Math.round(68 * sc)).slice(0, 2);
-        const hlLH = Math.round(hlFs * 1.42);
-        const boxH = Math.round(hlLines.length * hlLH + 46 * sc);
-        const boxY = Math.min(H - Math.round(180 * sc) - boxH, Math.max(curY + Math.round(36 * sc), H - Math.round(290 * sc)));
-        ctx.fillStyle = hasPhoto ? 'rgba(255,255,255,0.16)' : tpl.card;
-        ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(padX, boxY, maxTextW, boxH, Math.round(20 * sc));
-        else ctx.rect(padX, boxY, maxTextW, boxH);
-        ctx.fill();
-        // 좌측 강조 포인트 바
         ctx.fillStyle = accent;
-        ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(padX, boxY, Math.round(10 * sc), boxH, Math.round(5 * sc));
-        else ctx.rect(padX, boxY, Math.round(10 * sc), boxH);
-        ctx.fill();
+        ctx.fillRect(padX, curY - Math.round(30 * sc), Math.round((isCover ? 84 : 62) * sc), Math.max(3, Math.round(7 * sc)));
 
-        ctx.fillStyle = fg;
-        ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-        let hy = boxY + Math.round(24 * sc);
-        hlLines.forEach((ln) => {
-          ctx.fillText(ln, padX + Math.round(34 * sc), hy);
-          hy += hlLH;
-        });
+        ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+
+        curY += Math.round(34 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
       }
 
-      // 6) 하단 푸터: 계정명(@handle) + 캐러셀 페이지 도트
-      const footY = H - Math.round(82 * sc);
-      const handleTxt = String(_arCnState.handle || '').trim();
+      // 4) 하단 강조 팁 박스 (트윅 스위치 반영 & 사진 배치 시 공간 안전)
+      if (hlStr) {
+        const compactHl = pLayout === 'photo_top' || pLayout === 'photo_frame';
+        const hlFs = Math.round((compactHl ? 28 : 32) * sc * Math.min(1.06, fsMul));
+        ctx.font = `700 ${hlFs}px ${tpl.fontBody}`;
+        const hlLines = arCnWrapLines(ctx, hlStr, maxTextW - Math.round(64 * sc)).slice(0, compactHl ? 1 : 2);
+        const hlLH = Math.round(hlFs * 1.4);
+        const boxH = Math.round(hlLines.length * hlLH + (compactHl ? 34 : 44) * sc);
+        const minFootGap = Math.round(136 * sc);
+        const boxY = Math.min(H - minFootGap - boxH, Math.max(curY + Math.round(22 * sc), H - Math.round((compactHl ? 245 : 285) * sc)));
+        if (boxY + boxH < H - Math.round(112 * sc)) {
+          ctx.fillStyle = isFullPhoto ? 'rgba(255,255,255,0.16)' : tpl.card;
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(padX, boxY, maxTextW, boxH, Math.round(18 * sc));
+          else ctx.rect(padX, boxY, maxTextW, boxH);
+          ctx.fill();
+          ctx.fillStyle = accent;
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(padX, boxY, Math.round(10 * sc), boxH, Math.round(5 * sc));
+          else ctx.rect(padX, boxY, Math.round(10 * sc), boxH);
+          ctx.fill();
+          ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+          let hy = boxY + Math.round((compactHl ? 18 : 22) * sc);
+          hlLines.forEach((ln) => { ctx.fillText(ln, padX + Math.round(32 * sc), hy); hy += hlLH; });
+        }
+      }
+
+      // 5) 하단 푸터: 계정명(@handle) + 캐러셀 페이지 도트 (트윅 스위치 반영)
+      const footY = H - Math.round(74 * sc);
+      const handleTxt = tw.showHandle !== false ? String(_arCnState.handle || '').trim() : '';
       if (handleTxt) {
-        ctx.font = `600 ${Math.round(26 * sc)}px ${tpl.fontBody}`;
+        ctx.font = `600 ${Math.round(25 * sc)}px ${tpl.fontBody}`;
         ctx.fillStyle = muted;
         ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
         ctx.fillText(handleTxt.startsWith('@') ? handleTxt : `@${handleTxt}`, padX, footY);
       }
-      const dotR = Math.max(2, Math.round(6 * sc));
-      const dotGap = Math.round(22 * sc);
-      const startDotX = W - padX - (totalSlides - 1) * dotGap;
-      for (let i = 0; i < totalSlides; i++) {
-        const active = i === slideIdx;
-        ctx.fillStyle = active ? accent : (hasPhoto ? 'rgba(255,255,255,0.35)' : muted);
-        ctx.globalAlpha = active ? 1 : 0.35;
-        ctx.beginPath();
-        ctx.arc(startDotX + i * dotGap, footY, active ? dotR * 1.35 : dotR, 0, Math.PI * 2);
-        ctx.fill();
+      if (tw.showDots !== false) {
+        const dotR = Math.max(2, Math.round(6 * sc));
+        const dotGap = Math.round(22 * sc);
+        const startDotX = W - padX - (totalSlides - 1) * dotGap;
+        for (let i = 0; i < totalSlides; i++) {
+          const active = i === slideIdx;
+          ctx.fillStyle = active ? accent : (isFullPhoto ? 'rgba(255,255,255,0.35)' : muted);
+          ctx.globalAlpha = active ? 1 : 0.35;
+          ctx.beginPath();
+          ctx.arc(startDotX + i * dotGap, footY, active ? dotR * 1.35 : dotR, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
       ctx.restore();
     }
@@ -5229,12 +5284,51 @@
       return new Blob([...localParts, ...centralParts, new Uint8Array(eocd)], { type: 'application/zip' });
     }
 
+    function arCnLoadBrandPreset() {
+      if (_arCnState.brandLoaded) return;
+      _arCnState.brandLoaded = true;
+      try {
+        const raw = localStorage.getItem(AR_CN_BRAND_STORAGE_KEY);
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (saved.templateId) _arCnState.templateId = saved.templateId;
+        if (saved.customColors && typeof saved.customColors === 'object') {
+          _arCnState.customColors = { bg: saved.customColors.bg || '', accent: saved.customColors.accent || '', fg: saved.customColors.fg || '' };
+        }
+        if (typeof saved.fontFamily === 'string') _arCnState.fontFamily = saved.fontFamily;
+        if (saved.fontScale) _arCnState.fontScale = saved.fontScale;
+        if (saved.ratio) _arCnState.ratio = saved.ratio;
+        if (typeof saved.handle === 'string') _arCnState.handle = saved.handle;
+        if (typeof saved.designGuide === 'string') _arCnState.designGuide = saved.designGuide;
+        if (saved.tweaks && typeof saved.tweaks === 'object') {
+          _arCnState.tweaks = { ..._arCnState.tweaks, ...saved.tweaks };
+        }
+      } catch (_) {}
+    }
+
+    function arCnSaveBrandPreset() {
+      try {
+        localStorage.setItem(AR_CN_BRAND_STORAGE_KEY, JSON.stringify({
+          templateId: _arCnState.templateId,
+          customColors: _arCnState.customColors,
+          fontFamily: _arCnState.fontFamily,
+          fontScale: _arCnState.fontScale,
+          ratio: _arCnState.ratio,
+          handle: _arCnState.handle,
+          designGuide: _arCnState.designGuide,
+          tweaks: _arCnState.tweaks
+        }));
+        if (typeof arToast === 'function') arToast('내 브랜드 톤을 저장했어요! 다음부터 이 디자인 그대로 주제만 넣어 양산할 수 있어요.', true);
+      } catch (_) {}
+    }
+
     function arCnRefreshUI(skipInputSync = false) {
       if (!_arCnState.slides.length) _arCnState.slides = arCnDefaultSlides(_arCnState.targetCount);
       const total = _arCnState.slides.length;
       _arCnState.activeIdx = ((_arCnState.activeIdx % total) + total) % total;
       const idx = _arCnState.activeIdx;
       const cur = _arCnState.slides[idx];
+      const eff = arCnEffectiveTheme();
 
       // 캔버스 비율 동기화
       const frame = document.getElementById('arCnCanvasFrame');
@@ -5254,23 +5348,44 @@
       if (editLbl) editLbl.textContent = `3. ${idx + 1}번 카드(${roleLabel}) 글자 수정`;
       const zipBtn = document.getElementById('arCnDownloadZipBtn');
       if (zipBtn) zipBtn.textContent = `📦 전체 ${total}장 한 번에 저장 (.zip)`;
+      const hasPhoto = Boolean(cur && cur.bgImg);
       const clrPhoto = document.getElementById('arCnClearBgPhotoBtn');
-      if (clrPhoto) clrPhoto.classList.toggle('hidden', !(cur && cur.bgImg));
+      if (clrPhoto) clrPhoto.classList.toggle('hidden', !hasPhoto);
+      const pLayoutRow = document.getElementById('arCnPhotoLayoutRow');
+      if (pLayoutRow) {
+        pLayoutRow.classList.toggle('hidden', !hasPhoto);
+        const curPL = (cur && cur.photoLayout) || (idx === 0 ? 'photo_full' : 'photo_top');
+        pLayoutRow.querySelectorAll('[data-cn-playout]').forEach((b) => b.classList.toggle('active', b.dataset.cnPlayout === curPL));
+      }
 
       // 장 번호 칩
       const pills = document.getElementById('arCnSlidePills');
       if (pills) {
-        pills.innerHTML = _arCnState.slides.map((_, i) => {
+        pills.innerHTML = _arCnState.slides.map((s, i) => {
           const on = i === idx;
           const lbl = i === 0 ? '1 표지' : (i === total - 1 ? `${i + 1} 끝` : String(i + 1));
-          return `<button type="button" onclick="arCnSelectSlide(${i})" class="px-2 py-0.5 rounded-full text-[11px] font-semibold border cursor-pointer ${on ? 'bg-[#2563eb] text-white border-[#60a5fa]' : 'bg-[#1c1c21] text-[#a1a1aa] border-white/10'}">${lbl}</button>`;
+          const dot = s.bgImg ? '📷' : '';
+          return `<button type="button" onclick="arCnSelectSlide(${i})" class="px-2 py-0.5 rounded-full text-[11px] font-semibold border cursor-pointer ${on ? 'bg-[#2563eb] text-white border-[#60a5fa]' : 'bg-[#1c1c21] text-[#a1a1aa] border-white/10'}">${lbl}${dot}</button>`;
         }).join('');
       }
 
-      // 장수 / 비율 / 글자크기 / 템플릿 버튼 활성화
+      // 장수 / 비율 / 글자크기 / 트윅 / 컬러 / 폰트 / 템플릿 버튼 동기화
       document.querySelectorAll('#arCnCountRow [data-cn-cnt]').forEach((b) => b.classList.toggle('active', Number(b.dataset.cnCnt) === _arCnState.targetCount));
       document.querySelectorAll('#arCardNewsModal [data-cn-ratio]').forEach((b) => b.classList.toggle('active', b.dataset.cnRatio === _arCnState.ratio));
       document.querySelectorAll('#arCardNewsModal [data-cn-fsize]').forEach((b) => b.classList.toggle('active', b.dataset.cnFsize === _arCnState.fontScale));
+      document.querySelectorAll('#arCardNewsModal [data-cn-tweak]').forEach((b) => {
+        const k = b.dataset.cnTweak;
+        b.classList.toggle('active', _arCnState.tweaks[k] !== false);
+      });
+      const cBg = document.getElementById('arCnColorBg');
+      const cAc = document.getElementById('arCnColorAccent');
+      const cFg = document.getElementById('arCnColorFg');
+      if (cBg && /^#[0-9a-f]{6}$/i.test(eff.bg)) cBg.value = eff.bg;
+      if (cAc && /^#[0-9a-f]{6}$/i.test(eff.accent)) cAc.value = eff.accent;
+      if (cFg && /^#[0-9a-f]{6}$/i.test(eff.fg)) cFg.value = eff.fg;
+      const fSel = document.getElementById('arCnFontSelect');
+      if (fSel) fSel.value = _arCnState.fontFamily || '';
+
       const tplGrid = document.getElementById('arCnTplGrid');
       if (tplGrid) {
         tplGrid.innerHTML = AR_CN_TEMPLATES.map((t) => {
@@ -5295,12 +5410,15 @@
       const modal = document.getElementById('arCardNewsModal');
       if (!modal) return;
       if (typeof arPauseForStudioEdit === 'function') arPauseForStudioEdit();
+      arCnLoadBrandPreset();
       if (!_arCnState.handle) {
         const d = typeof getSelectedDealer === 'function' ? getSelectedDealer() : null;
         if (d && (d.branch || d.name)) _arCnState.handle = d.branch || d.name;
       }
       const hIn = document.getElementById('arCnHandleInput');
-      if (hIn && !hIn.value && _arCnState.handle) hIn.value = _arCnState.handle;
+      if (hIn && _arCnState.handle) hIn.value = _arCnState.handle;
+      const gIn = document.getElementById('arCnGuideInput');
+      if (gIn && _arCnState.designGuide) gIn.value = _arCnState.designGuide;
       if (!_arCnState.slides.length) {
         _arCnState.slides = arCnDefaultSlides(_arCnState.targetCount);
       }
@@ -5316,6 +5434,28 @@
     }
     function arCnSetTemplate(id) {
       _arCnState.templateId = id;
+      _arCnState.customColors = { bg: '', accent: '', fg: '' };
+      arCnRefreshUI(true);
+    }
+    function arCnSetCustomColor(key, hex) {
+      if (!['bg', 'accent', 'fg'].includes(key)) return;
+      _arCnState.customColors[key] = hex;
+      if (key === 'bg' && !_arCnState.customColors.fg) {
+        _arCnState.customColors.fg = arCnIsDarkHex(hex) ? '#f8fafc' : '#18181b';
+      }
+      arCnRefreshUI(true);
+    }
+    function arCnResetCustomColors() {
+      _arCnState.customColors = { bg: '', accent: '', fg: '' };
+      arCnRefreshUI(true);
+    }
+    function arCnSetFontFamily(fam) {
+      _arCnState.fontFamily = String(fam || '');
+      arCnRefreshUI(true);
+    }
+    function arCnToggleTweak(key) {
+      if (!(key in _arCnState.tweaks)) return;
+      _arCnState.tweaks[key] = !_arCnState.tweaks[key];
       arCnRefreshUI(true);
     }
     function arCnSetRatio(r) {
@@ -5328,6 +5468,15 @@
     }
     function arCnUpdateHandle(val) {
       _arCnState.handle = String(val || '').slice(0, 32);
+      arCnRefreshUI(true);
+    }
+    function arCnUpdateDesignGuide(val) {
+      _arCnState.designGuide = String(val || '').slice(0, 2000);
+    }
+    function arCnSetPhotoLayout(pl) {
+      const cur = _arCnState.slides[_arCnState.activeIdx];
+      if (!cur) return;
+      cur.photoLayout = pl;
       arCnRefreshUI(true);
     }
     function arCnSelectSlide(i) {
@@ -5356,7 +5505,8 @@
         title: '새 핵심 포인트 제목',
         body: '여기에 설명을 2~3줄로 적어 주세요.',
         highlight: '핵심 한 줄 요약',
-        bgImg: null
+        bgImg: null,
+        photoLayout: 'photo_top'
       });
       _arCnState.activeIdx = insertAt;
       arCnRefreshUI(false);
@@ -5382,6 +5532,10 @@
         const im = new Image(); im.src = dataUrl; im._dataUrl = dataUrl;
         await im.decode();
         cur.bgImg = im;
+        if (!cur.photoLayout || cur.photoLayout === 'text_only') {
+          cur.photoLayout = _arCnState.activeIdx === 0 ? 'photo_full' : 'photo_top';
+        }
+        if (typeof window.arVaultSaveImages === 'function') window.arVaultSaveImages([im], 'upload');
         arCnRefreshUI(true);
       } catch (_) {}
     }
@@ -5391,6 +5545,151 @@
       cur.bgImg = null;
       arCnRefreshUI(true);
     }
+    async function arCnToggleVaultStrip() {
+      const wrap = document.getElementById('arCnVaultWrap');
+      const strip = document.getElementById('arCnVaultStrip');
+      if (!wrap || !strip) return;
+      const willShow = wrap.classList.contains('hidden');
+      wrap.classList.toggle('hidden', !willShow);
+      if (!willShow) return;
+      if (typeof window.arVaultGetAll !== 'function') {
+        strip.innerHTML = '<span class="text-[11px] text-[#71717a]">보관함에 저장된 사진이 없어요.</span>';
+        return;
+      }
+      try {
+        const all = await window.arVaultGetAll();
+        if (!all || !all.length) {
+          strip.innerHTML = '<span class="text-[11px] text-[#71717a]">보관함에 저장된 사진이 없어요.</span>';
+          return;
+        }
+        strip.replaceChildren();
+        all.slice(0, 20).forEach((item) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.style.cssText = 'flex:0 0 auto;width:44px;height:56px;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.16);padding:0;background:#18181b;cursor:pointer;';
+          const im = document.createElement('img');
+          im.src = item.src;
+          im.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+          b.appendChild(im);
+          b.onclick = async () => {
+            const cur = _arCnState.slides[_arCnState.activeIdx];
+            if (!cur) return;
+            const loaded = new Image(); loaded.src = item.src;
+            try { await loaded.decode(); } catch (_) {}
+            cur.bgImg = loaded;
+            if (!cur.photoLayout || cur.photoLayout === 'text_only') {
+              cur.photoLayout = _arCnState.activeIdx === 0 ? 'photo_full' : 'photo_top';
+            }
+            arCnRefreshUI(true);
+          };
+          strip.appendChild(b);
+        });
+      } catch (_) {}
+    }
+
+    // 레퍼런스 카드뉴스 캡처 이미지에서 배경색·포인트색 자동 추출 (100% 로컬 즉시 적용)
+    async function arCnExtractRefPalette(ev) {
+      const f = ev?.target?.files?.[0];
+      if (ev?.target) ev.target.value = '';
+      if (!f) return;
+      try {
+        const dataUrl = await new Promise((resolve, reject) => {
+          const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(f);
+        });
+        const im = new Image(); im.src = dataUrl;
+        await im.decode();
+        const s = 48;
+        const cv = document.createElement('canvas'); cv.width = s; cv.height = s;
+        const g = cv.getContext('2d');
+        g.drawImage(im, 0, 0, s, s);
+        const px = g.getImageData(0, 0, s, s).data;
+        const toHex = (r, gr, b) => '#' + [r, gr, b].map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+        // 테두리 픽셀 평균 -> 배경색
+        let br = 0, bg = 0, bb = 0, bc = 0;
+        for (let y = 0; y < s; y++) for (let x = 0; x < s; x++) {
+          if (x < 5 || x >= s - 5 || y < 5 || y >= s - 5) {
+            const i = (y * s + x) * 4;
+            br += px[i]; bg += px[i + 1]; bb += px[i + 2]; bc++;
+          }
+        }
+        const bgR = br / Math.max(1, bc), bgG = bg / Math.max(1, bc), bgB = bb / Math.max(1, bc);
+        const bgHex = toHex(bgR, bgG, bgB);
+        // 내부 픽셀 중 배경과 대비되면서 채도가 높은 포인트 컬러 선택
+        let bestSat = -1, acR = 37, acG = 99, acB = 235;
+        for (let y = 5; y < s - 5; y++) for (let x = 5; x < s - 5; x++) {
+          const i = (y * s + x) * 4;
+          const r = px[i], gr = px[i + 1], b = px[i + 2];
+          const dist = Math.hypot(r - bgR, gr - bgG, b - bgB);
+          const mx = Math.max(r, gr, b), mn = Math.min(r, gr, b);
+          const sat = mx ? (mx - mn) / mx : 0;
+          const score = sat * 1.4 + (dist / 255) * 0.6;
+          if (dist > 45 && score > bestSat) { bestSat = score; acR = r; acG = gr; acB = b; }
+        }
+        const acHex = toHex(acR, acG, acB);
+        const dark = arCnIsDarkHex(bgHex);
+        _arCnState.customColors = { bg: bgHex, accent: acHex, fg: dark ? '#f8fafc' : '#18181b' };
+        arCnRefreshUI(true);
+        if (typeof arToast === 'function') arToast(`레퍼런스 색감(${bgHex} · ${acHex})을 전 카드에 적용했어요!`, true);
+      } catch (_) {
+        if (typeof arToast === 'function') arToast('레퍼런스 이미지에서 색감을 읽지 못했어요.');
+      }
+    }
+
+    // 디자인 MD 파일 불러오기 (.md 내 컬러 HEX·계정명·가이드 규칙 자동 반영) & 내보내기
+    async function arCnImportDesignMd(ev) {
+      const f = ev?.target?.files?.[0];
+      if (ev?.target) ev.target.value = '';
+      if (!f) return;
+      try {
+        const text = await f.text();
+        _arCnState.designGuide = text.slice(0, 2000);
+        const gIn = document.getElementById('arCnGuideInput');
+        if (gIn) gIn.value = _arCnState.designGuide;
+        const hexes = text.match(/#[0-9a-fA-F]{6}\b/g) || [];
+        const bgMatch = text.match(/(?:background|bg|배경)[^\n#]*(#[0-9a-fA-F]{6})/i);
+        const acMatch = text.match(/(?:accent|primary|point|강조|포인트)[^\n#]*(#[0-9a-fA-F]{6})/i);
+        const fgMatch = text.match(/(?:foreground|text|ink|글자)[^\n#]*(#[0-9a-fA-F]{6})/i);
+        const handleMatch = text.match(/@([a-zA-Z0-9._가-힣]{2,24})/);
+        if (bgMatch) _arCnState.customColors.bg = bgMatch[1];
+        else if (hexes[0]) _arCnState.customColors.bg = hexes[0];
+        if (acMatch) _arCnState.customColors.accent = acMatch[1];
+        else if (hexes[1]) _arCnState.customColors.accent = hexes[1];
+        if (fgMatch) _arCnState.customColors.fg = fgMatch[1];
+        else if (_arCnState.customColors.bg) _arCnState.customColors.fg = arCnIsDarkHex(_arCnState.customColors.bg) ? '#f8fafc' : '#18181b';
+        if (handleMatch) {
+          _arCnState.handle = `@${handleMatch[1]}`;
+          const hIn = document.getElementById('arCnHandleInput');
+          if (hIn) hIn.value = _arCnState.handle;
+        }
+        arCnRefreshUI(true);
+        if (typeof arToast === 'function') arToast('디자인 MD 가이드를 불러와 색감과 말투 규칙에 반영했어요!', true);
+      } catch (_) {}
+    }
+    function arCnExportDesignMd() {
+      const eff = arCnEffectiveTheme();
+      const md = [
+        `# 브랜드 카드뉴스 디자인 가이드 (Design MD)`,
+        ``,
+        `- 템플릿 베이스: ${eff.name} (${eff.id})`,
+        `- 배경색(Background): ${eff.bg}`,
+        `- 포인트 컬러(Accent): ${eff.accent}`,
+        `- 글자색(Text): ${eff.fg}`,
+        `- 폰트(상업적 무료): ${_arCnState.fontFamily || eff.fontTitle}`,
+        `- 비율: ${_arCnState.ratio}`,
+        `- 계정명: ${_arCnState.handle || '@내계정'}`,
+        ``,
+        `## 카피 · 톤앤매너 규칙`,
+        _arCnState.designGuide || `- 짧고 구체적인 사람 말투 사용 (AI 상투구 금지)\n- 한 문장 20자 이내로 줄바꿈\n- 이모지 남발 금지`
+      ].join('\n');
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'brand-design-guide.md';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+      if (typeof arToast === 'function') arToast('현재 브랜드 디자인 가이드(.md)를 저장했어요.', true);
+    }
+
     function arCnPickSampleTopic(text) {
       const inp = document.getElementById('arCnTopicInput');
       if (inp) inp.value = text;
@@ -5398,9 +5697,11 @@
     }
     async function arCnGenerateFromTopic() {
       const inp = document.getElementById('arCnTopicInput');
+      const srcEl = document.getElementById('arCnSourceInput');
       const topic = String(inp?.value || '').trim();
-      if (!topic) {
-        if (typeof arToast === 'function') arToast('먼저 카드뉴스 주제를 입력해 주세요.');
+      const sourceText = String(srcEl?.value || '').trim();
+      if (!topic && !sourceText) {
+        if (typeof arToast === 'function') arToast('먼저 카드뉴스 주제나 원고를 입력해 주세요.');
         inp?.focus();
         return;
       }
@@ -5414,6 +5715,8 @@
           body: JSON.stringify({
             mode: 'cardnews',
             topic,
+            sourceText,
+            designGuide: _arCnState.designGuide || '',
             slideCount: _arCnState.targetCount,
             industry: indName,
             accountName: _arCnState.handle || ''
@@ -5423,27 +5726,72 @@
         if (resp.ok) {
           const data = await resp.json();
           if (data && Array.isArray(data.slides) && data.slides.length >= 3) {
-            slides = data.slides.map((s) => ({
+            slides = data.slides.map((s, idx) => ({
               role: s.role || 'point',
               kicker: s.kicker || '',
               title: s.title || '',
               body: s.body || '',
               highlight: s.highlight || '',
-              bgImg: null
+              bgImg: (_arCnState.slides[idx] && _arCnState.slides[idx].bgImg) || null,
+              photoLayout: (_arCnState.slides[idx] && _arCnState.slides[idx].photoLayout) || (idx === 0 ? 'photo_full' : 'photo_top')
             }));
           }
         }
-        _arCnState.slides = slides || arCnDefaultSlides(_arCnState.targetCount, topic);
+        _arCnState.slides = slides || arCnDefaultSlides(_arCnState.targetCount, topic || sourceText.slice(0, 24));
         _arCnState.activeIdx = 0;
         arCnRefreshUI(false);
-        if (typeof arToast === 'function') arToast(`${_arCnState.slides.length}장 카드뉴스 초안을 만들었어요! 각 장을 눌러 글자만 다듬어 보세요.`, true);
+        if (typeof arToast === 'function') arToast(`${_arCnState.slides.length}장 카드뉴스 초안을 만들었어요! 각 장을 눌러 글자·사진만 다듬어 보세요.`, true);
       } catch (_) {
-        _arCnState.slides = arCnDefaultSlides(_arCnState.targetCount, topic);
+        _arCnState.slides = arCnDefaultSlides(_arCnState.targetCount, topic || sourceText.slice(0, 24));
         _arCnState.activeIdx = 0;
         arCnRefreshUI(false);
         if (typeof arToast === 'function') arToast(`${_arCnState.slides.length}장 기본 템플릿을 채웠어요! 글자를 자유롭게 수정해 보세요.`, true);
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = '✨ AI 만들기'; }
+      }
+    }
+
+    // 이 장만 AI 코멘트로 부분 수정 (Claude Design 코멘트 수정 워크플로우)
+    async function arCnApplyCommentEdit() {
+      const inp = document.getElementById('arCnCommentInput');
+      const instruction = String(inp?.value || '').trim();
+      const cur = _arCnState.slides[_arCnState.activeIdx];
+      if (!cur || !instruction) {
+        if (typeof arToast === 'function') arToast('이 장을 어떻게 바꿀지 코멘트를 적어 주세요.');
+        inp?.focus();
+        return;
+      }
+      const btn = document.getElementById('arCnCommentBtn');
+      if (btn) { btn.disabled = true; btn.textContent = '반영 중...'; }
+      try {
+        const resp = await fetch('/api/generate-script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mode: 'cardnews-edit',
+            slide: { role: cur.role, kicker: cur.kicker, title: cur.title, body: cur.body, highlight: cur.highlight },
+            instruction,
+            designGuide: _arCnState.designGuide || ''
+          })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.ok && data.slide) {
+            cur.kicker = data.slide.kicker;
+            cur.title = data.slide.title;
+            cur.body = data.slide.body;
+            cur.highlight = data.slide.highlight;
+            if (inp) inp.value = '';
+            arCnRefreshUI(false);
+            if (typeof arToast === 'function') arToast(`${_arCnState.activeIdx + 1}번 카드에 수정 코멘트를 반영했어요!`, true);
+            return;
+          }
+        }
+        if (typeof arToast === 'function') arToast('수정 응답을 받지 못했어요. 위 입력칸에서 직접 수정해 주세요.');
+      } catch (_) {
+        if (typeof arToast === 'function') arToast('네트워크 오류로 반영하지 못했어요.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '✨ 이 장 반영'; }
       }
     }
     function arCnExportSlideBlob(slide, i, total) {
@@ -5501,7 +5849,7 @@
       const btn = document.getElementById('arCnToReelsBtn');
       if (btn) { btn.disabled = true; btn.textContent = '릴스로 변환 중...'; }
       try {
-        const tpl = arCnGetTemplate(_arCnState.templateId);
+        const tpl = arCnEffectiveTheme();
         const outImgs = [];
         const off = document.createElement('canvas');
         off.width = 720; off.height = 1280;
@@ -5565,9 +5913,15 @@
       window.arCloseCardNewsModal = arCloseCardNewsModal;
       window.arCnSetTargetCount = arCnSetTargetCount;
       window.arCnSetTemplate = arCnSetTemplate;
+      window.arCnSetCustomColor = arCnSetCustomColor;
+      window.arCnResetCustomColors = arCnResetCustomColors;
+      window.arCnSetFontFamily = arCnSetFontFamily;
+      window.arCnToggleTweak = arCnToggleTweak;
       window.arCnSetRatio = arCnSetRatio;
       window.arCnSetFontScale = arCnSetFontScale;
       window.arCnUpdateHandle = arCnUpdateHandle;
+      window.arCnUpdateDesignGuide = arCnUpdateDesignGuide;
+      window.arCnSetPhotoLayout = arCnSetPhotoLayout;
       window.arCnSelectSlide = arCnSelectSlide;
       window.arCnStepSlide = arCnStepSlide;
       window.arCnEditField = arCnEditField;
@@ -5575,8 +5929,14 @@
       window.arCnRemoveSlide = arCnRemoveSlide;
       window.arCnHandleBgPhoto = arCnHandleBgPhoto;
       window.arCnClearBgPhoto = arCnClearBgPhoto;
+      window.arCnToggleVaultStrip = arCnToggleVaultStrip;
+      window.arCnExtractRefPalette = arCnExtractRefPalette;
+      window.arCnImportDesignMd = arCnImportDesignMd;
+      window.arCnExportDesignMd = arCnExportDesignMd;
+      window.arCnSaveBrandPreset = arCnSaveBrandPreset;
       window.arCnPickSampleTopic = arCnPickSampleTopic;
       window.arCnGenerateFromTopic = arCnGenerateFromTopic;
+      window.arCnApplyCommentEdit = arCnApplyCommentEdit;
       window.arCnDownloadCurrentPng = arCnDownloadCurrentPng;
       window.arCnDownloadAllZip = arCnDownloadAllZip;
       window.arCnApplyToStudioReels = arCnApplyToStudioReels;

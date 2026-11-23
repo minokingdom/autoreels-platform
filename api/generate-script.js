@@ -835,11 +835,13 @@ function buildFallbackCardNews(topic, slideCount, accountName) {
 
 async function handleCardNews(body, res) {
   const topic = String(body.topic || body.prompt || '').trim();
+  const sourceText = String(body.sourceText || '').trim().slice(0, 3000);
+  const designGuide = String(body.designGuide || '').trim().slice(0, 1200);
   const slideCount = Math.max(5, Math.min(10, Math.floor(Number(body.slideCount || body.count) || 7)));
   const industry = String(body.industry || '').trim();
   const accountName = String(body.accountName || '').trim();
-  const fallback = buildFallbackCardNews(topic, slideCount, accountName);
-  if (!topic) {
+  const fallback = buildFallbackCardNews(topic || sourceText.slice(0, 28), slideCount, accountName);
+  if (!topic && !sourceText) {
     return res.status(200).json({ ok: true, provider: '기본 템플릿', slides: fallback });
   }
   const geminiKey = String(body.adminGeminiKey || process.env.GEMINI_API_KEY || '').trim();
@@ -851,8 +853,9 @@ async function handleCardNews(body, res) {
     .split(',').map((s) => s.trim()).filter(Boolean).slice(0, 2);
 
   const sysPrompt = `당신은 대한민국 인스타그램 저장률 높은 카드뉴스(캐러셀) 전문 에디터입니다.
-주제에 맞춰 정확히 ${slideCount}장의 인스타그램 카드뉴스 원고를 작성하고 JSON으로만 출력하세요.
+주제${sourceText ? '와 제공된 원고/자료' : ''}에 맞춰 정확히 ${slideCount}장의 인스타그램 카드뉴스 원고를 작성하고 JSON으로만 출력하세요.
 ${HUMAN_TONE_RULES}
+${designGuide ? `\n[브랜드 디자인·톤앤매너 가이드(MD)]\n${designGuide}\n위 가이드의 말투·브랜드 톤·금지 표현을 반드시 따르세요.` : ''}
 
 [구성 규칙]
 - 총 ${slideCount}장: 1번은 표지(role: "cover"), 2~${slideCount - 1}번은 핵심 본문(role: "point"), ${slideCount}번은 마무리/저장 유도(role: "cta").
@@ -865,7 +868,13 @@ ${HUMAN_TONE_RULES}
 - 마지막 cta 카드: 핵심 한 줄 요약 + 저장·공유·댓글 유도.
 - 반드시 순수 JSON만 출력: {"slides":[{"role":"cover","kicker":"","title":"","body":"","highlight":""}, ...]}`;
 
-  const userMsg = `주제: ${topic}\n총 장수: ${slideCount}장${industry ? `\n업종/분야: ${industry}` : ''}${accountName ? `\n계정명: ${accountName}` : ''}`;
+  const userMsg = [
+    topic ? `주제: ${topic}` : '',
+    `총 장수: ${slideCount}장`,
+    industry ? `업종/분야: ${industry}` : '',
+    accountName ? `계정명: ${accountName}` : '',
+    sourceText ? `\n[참고 원고·기획 자료]\n${sourceText}` : ''
+  ].filter(Boolean).join('\n');
 
   const normalizeSlides = (raw) => {
     const arr = Array.isArray(raw && raw.slides) ? raw.slides : (Array.isArray(raw) ? raw : []);
@@ -968,6 +977,102 @@ ${HUMAN_TONE_RULES}
   return res.status(200).json({ ok: true, provider, slides: slides || fallback });
 }
 
+async function handleCardNewsEdit(body, res) {
+  const slide = body.slide && typeof body.slide === 'object' ? body.slide : {};
+  const instruction = String(body.instruction || '').trim();
+  const designGuide = String(body.designGuide || '').trim().slice(0, 800);
+  if (!instruction) return res.status(200).json({ ok: false, error: 'missing_instruction', slide });
+
+  const geminiKey = String(body.adminGeminiKey || process.env.GEMINI_API_KEY || '').trim();
+  const kieKey = String(process.env.KIE_API_KEY || '').trim();
+  const openaiKey = String(body.adminOpenAiKey || process.env.OPENAI_API_KEY || '').trim();
+  const geminiModel = String(process.env.GEMINI_SCRIPT_MODEL || 'gemini-2.5-flash').trim();
+  const openaiModel = String(process.env.OPENAI_SCRIPT_MODEL || 'gpt-4o-mini').trim();
+  const kieModels = String(process.env.KIE_SCRIPT_MODEL || 'gemini-3-6-flash-openai,gemini-4-hydrogen-openai')
+    .split(',').map((s) => s.trim()).filter(Boolean).slice(0, 2);
+
+  const sysPrompt = `당신은 인스타그램 카드뉴스 전문 에디터입니다.
+현재 카드 1장의 텍스트를 사용자의 수정 코멘트에 맞춰 다듬어 JSON으로만 출력하세요.
+${HUMAN_TONE_RULES}
+${designGuide ? `\n[브랜드 톤 가이드]\n${designGuide}` : ''}
+반드시 JSON만 출력: {"kicker":"","title":"","body":"","highlight":""}`;
+
+  const userMsg = `현재 카드:\n- 상단태그(kicker): ${slide.kicker || ''}\n- 제목(title): ${slide.title || ''}\n- 본문(body): ${slide.body || ''}\n- 하단팁(highlight): ${slide.highlight || ''}\n\n수정 요청 코멘트: ${instruction}`;
+
+  const cleanSlide = (p) => {
+    if (!p || typeof p !== 'object') return null;
+    if (!p.title && !p.body) return null;
+    return {
+      role: slide.role || 'point',
+      kicker: String(p.kicker ?? slide.kicker ?? '').trim().slice(0, 24),
+      title: String(p.title ?? slide.title ?? '').trim().slice(0, 60),
+      body: String(p.body ?? slide.body ?? '').trim().slice(0, 180),
+      highlight: String(p.highlight ?? slide.highlight ?? '').trim().slice(0, 48)
+    };
+  };
+
+  let next = null;
+  try {
+    if (geminiKey) {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(geminiModel)}:generateContent?key=${encodeURIComponent(geminiKey)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(12000),
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: sysPrompt }] },
+          contents: [{ role: 'user', parts: [{ text: userMsg }] }],
+          generationConfig: { temperature: 0.7, responseMimeType: 'application/json' }
+        })
+      });
+      if (r.ok) {
+        const d = await r.json();
+        next = cleanSlide(parseJsonLoose(d?.candidates?.[0]?.content?.parts?.[0]?.text || ''));
+      }
+    }
+    if (!next && kieKey) {
+      for (const m of kieModels) {
+        if (next) break;
+        const r = await fetch(`https://api.kie.ai/${encodeURIComponent(m)}/v1/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${kieKey}` },
+          signal: AbortSignal.timeout(12000),
+          body: JSON.stringify({
+            stream: true,
+            reasoning_effort: 'low',
+            messages: [
+              { role: 'system', content: [{ type: 'text', text: sysPrompt }] },
+              { role: 'user', content: [{ type: 'text', text: userMsg }] }
+            ]
+          })
+        });
+        if (r.ok) {
+          const { text } = await readKieStream(r);
+          next = cleanSlide(parseJsonLoose(text));
+        }
+      }
+    }
+    if (!next && openaiKey) {
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openaiKey}` },
+        signal: AbortSignal.timeout(12000),
+        body: JSON.stringify({
+          model: openaiModel,
+          temperature: 0.7,
+          response_format: { type: 'json_object' },
+          messages: [{ role: 'system', content: sysPrompt }, { role: 'user', content: userMsg }]
+        })
+      });
+      if (r.ok) {
+        const d = await r.json();
+        next = cleanSlide(parseJsonLoose(d?.choices?.[0]?.message?.content || ''));
+      }
+    }
+  } catch (_) {}
+
+  return res.status(200).json({ ok: Boolean(next), slide: next || slide });
+}
+
 const { isSameSiteRequest, consumeNightlyMedia, consumeReferenceStyle } = require('../lib/server/usage');
 
 async function handler(req, res) {
@@ -1004,6 +1109,7 @@ async function handler(req, res) {
   // 오늘의 주제 추천: {mode:'topics'} — 대본 대신 오늘 올릴 주제 후보 6개를 돌려줌
   if (body.mode === 'topics') return handleTopics(body, res);
   if (body.mode === 'cardnews') return handleCardNews(body, res);
+  if (body.mode === 'cardnews-edit') return handleCardNewsEdit(body, res);
   if (body.mode === 'reference-style') return require('../lib/reference-analysis.cjs').handleReferenceAnalysis(body, res);
   // 주제 맞춤 씬 이미지 생성: {mode:'scene-prompts' | 'scene-image' | 'scene-images'}
   if (body.mode === 'scene-images' || body.mode === 'scene-prompts' || body.mode === 'scene-image') return handleSceneImages(body, res);
