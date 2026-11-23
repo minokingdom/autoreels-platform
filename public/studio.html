@@ -2482,21 +2482,26 @@
           </div>
           <div id="arCnSlidePills" class="flex items-center justify-center gap-1 flex-wrap max-w-full"></div>
           <div class="flex items-center justify-center gap-1.5 flex-wrap pt-0.5">
-            <button type="button" onclick="arCnAddSlide()" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer">+ 장 추가</button>
-            <button type="button" onclick="arCnRemoveSlide()" class="btn-secondary h-7 px-2.5 text-[11px] text-[#fca5a5] cursor-pointer">🗑 삭제</button>
+            <button type="button" onclick="arCnAddSlide()" class="btn-secondary h-7 px-2 text-[11px] cursor-pointer">+ 장 추가</button>
+            <button type="button" onclick="arCnRemoveSlide()" class="btn-secondary h-7 px-2 text-[11px] text-[#fca5a5] cursor-pointer">🗑 삭제</button>
             <label class="btn-secondary h-7 px-2.5 text-[11px] inline-flex items-center cursor-pointer">
-              📷 사진 넣기
+              📷 사진 바꾸기
               <input id="arCnBgPhotoInput" type="file" accept="image/*" class="hidden" onchange="arCnHandleBgPhoto(event)" />
             </label>
-            <button type="button" id="arCnVaultToggleBtn" onclick="arCnToggleVaultStrip()" class="btn-secondary h-7 px-2.5 text-[11px] cursor-pointer">🖼️ 보관함</button>
+            <button type="button" id="arCnVaultToggleBtn" onclick="arCnToggleVaultStrip()" class="btn-secondary h-7 px-2 text-[11px] cursor-pointer">🖼️ 보관함</button>
+            <button type="button" id="arCnAiPhotoBtn" onclick="arCnFillAiPhotos()" class="btn-secondary h-7 px-2.5 text-[11px] text-[#93c5fd] border-[#60a5fa]/40 cursor-pointer" title="입력한 주제에 맞는 AI 사진을 카드에 자동으로 채웁니다">✨ AI 사진</button>
             <button type="button" id="arCnClearBgPhotoBtn" onclick="arCnClearBgPhoto()" class="hidden btn-secondary h-7 px-2 text-[11px] text-[#fca5a5] cursor-pointer">사진 빼기</button>
           </div>
-          <!-- 이 장에 사진이 있을 때 사진 배치 3종 선택 -->
-          <div id="arCnPhotoLayoutRow" class="hidden flex items-center justify-center gap-1 text-[11px]">
-            <span class="text-[#85858b] mr-1">사진 배치:</span>
-            <button type="button" data-cn-playout="photo_top" onclick="arCnSetPhotoLayout('photo_top')" class="ar-cn-opt-btn active">상단 사진</button>
+          <!-- 이 장의 사진 배치 8종 선택 -->
+          <div id="arCnPhotoLayoutRow" class="flex items-center justify-center gap-1 flex-wrap text-[10.5px]">
+            <button type="button" data-cn-playout="photo_top" onclick="arCnSetPhotoLayout('photo_top')" class="ar-cn-opt-btn">상단</button>
             <button type="button" data-cn-playout="photo_full" onclick="arCnSetPhotoLayout('photo_full')" class="ar-cn-opt-btn">풀배경</button>
-            <button type="button" data-cn-playout="photo_frame" onclick="arCnSetPhotoLayout('photo_frame')" class="ar-cn-opt-btn">액자형</button>
+            <button type="button" data-cn-playout="photo_polaroid" onclick="arCnSetPhotoLayout('photo_polaroid')" class="ar-cn-opt-btn">폴라로이드</button>
+            <button type="button" data-cn-playout="photo_arch" onclick="arCnSetPhotoLayout('photo_arch')" class="ar-cn-opt-btn">아치</button>
+            <button type="button" data-cn-playout="photo_band" onclick="arCnSetPhotoLayout('photo_band')" class="ar-cn-opt-btn">밴드</button>
+            <button type="button" data-cn-playout="photo_frame" onclick="arCnSetPhotoLayout('photo_frame')" class="ar-cn-opt-btn">액자</button>
+            <button type="button" data-cn-playout="photo_bottom" onclick="arCnSetPhotoLayout('photo_bottom')" class="ar-cn-opt-btn">하단</button>
+            <button type="button" data-cn-playout="text_only" onclick="arCnSetPhotoLayout('text_only')" class="ar-cn-opt-btn">텍스트만</button>
           </div>
           <!-- 보관함 사진 빠른 삽입 스트립 -->
           <div id="arCnVaultWrap" class="hidden w-full rounded-[10px] bg-white/[0.03] border border-white/10 p-2 space-y-1">
@@ -2556,10 +2561,10 @@
             </div>
           </div>
 
-          <!-- 2. 브랜드 디자인 시스템 & 트윅(Tweak) -->
+          <!-- 2. 미리보기 템플릿 갤러리 (사진 포함 8종) & 트윅(Tweak) -->
           <div class="space-y-2">
             <div class="flex items-center justify-between gap-2 flex-wrap">
-              <span class="text-[12.5px] font-semibold text-[#ededed]">2. 브랜드 디자인 시스템 <span class="text-[10.5px] font-normal text-[#4ade80] ml-1">✓ 상업적 무료 폰트</span></span>
+              <span class="text-[12.5px] font-semibold text-[#ededed]">2. 미리보기 템플릿 선택 <span class="text-[10.5px] font-normal text-[#4ade80] ml-1">✓ 사진 포함 · 상업용 무료 폰트</span></span>
               <div class="flex items-center gap-1 flex-wrap">
                 <label class="ar-cn-opt-btn inline-flex items-center cursor-pointer" title="핀터레스트·인스타 카드뉴스 캡처를 올리면 배경·포인트 색감을 자동으로 따라합니다">
                   🎨 레퍼런스 색감
@@ -2568,7 +2573,7 @@
                 <button type="button" onclick="arCnSaveBrandPreset()" class="ar-cn-opt-btn" style="background:#1e3a5f;color:#bfdbfe;border-color:#60a5fa;">💾 내 브랜드 톤 저장</button>
               </div>
             </div>
-            <div id="arCnTplGrid" class="grid grid-cols-4 gap-1.5"></div>
+            <div id="arCnTplGrid" class="grid grid-cols-4 gap-2"></div>
 
             <!-- 트윅(Tweak) 스위치 바 -->
             <div class="flex items-center gap-1 flex-wrap text-[11px]">
@@ -2684,11 +2689,15 @@
       }
       #arCardNewsModal .ar-cn-sample-chip:hover { background: rgba(255,255,255,0.14); color: #fff; }
       #arCardNewsModal .ar-cn-tpl-btn {
-        display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 9px;
-        background: #1c1c21; color: #d4d4d8; border: 1px solid rgba(255,255,255,0.1);
-        font-size: 11px; font-weight: 600; cursor: pointer; text-align: left;
+        display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 4px; border-radius: 10px;
+        background: #1a1a20; color: #d4d4d8; border: 1.5px solid rgba(255,255,255,0.1);
+        font-size: 10.5px; font-weight: 600; cursor: pointer; text-align: center; overflow: hidden; transition: border-color .15s, transform .15s;
       }
-      #arCardNewsModal .ar-cn-tpl-btn.active { background: #2563eb; color: #fff; border-color: #60a5fa; }
+      #arCardNewsModal .ar-cn-tpl-btn:hover { border-color: rgba(255,255,255,0.35); transform: translateY(-1px); }
+      #arCardNewsModal .ar-cn-tpl-btn.active { background: #1e3a5f; color: #ffffff; border-color: #60a5fa; box-shadow: 0 0 0 1px #60a5fa; }
+      #arCardNewsModal .ar-cn-tpl-thumb {
+        width: 100%; aspect-ratio: 4 / 5; border-radius: 6px; display: block; object-fit: cover; background: #111114;
+      }
     </style>
   </div>
 
@@ -2698,7 +2707,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cardnews-pro"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cn-visual-tpls"><\/script>');
     }
   </script>
   <!--

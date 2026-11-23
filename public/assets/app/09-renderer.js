@@ -4900,20 +4900,41 @@
       window.arApplyPhotoCollageToStudio = arApplyPhotoCollageToStudio;
     }
 
-    // ★ 인스타 카드뉴스(캐러셀) 스튜디오 (브랜드 디자인 시스템 8종 · 디자인 MD · 레퍼런스 색감 추출 · 트윅 · 사진 배치 3종 · 코멘트 수정)
+    // ★ 인스타 카드뉴스(캐러셀) 스튜디오 (사진 포함 시각 미리보기 템플릿 8종 · 디자인 MD · 레퍼런스 색감 추출 · 트윅 · 8가지 사진 배치 · 코멘트 수정)
     const AR_CN_BRAND_STORAGE_KEY = 'ar_cardnews_brand_v1';
+    const AR_CN_IMG_CACHE = {};
+    function arCnLoadImgUrl(url, onReady) {
+      if (!url) return null;
+      const hit = AR_CN_IMG_CACHE[url];
+      if (hit) {
+        if (hit.complete && hit.naturalWidth) return hit;
+        if (onReady) hit._cbs && hit._cbs.push(onReady);
+        return null;
+      }
+      const im = new Image();
+      im.crossOrigin = 'anonymous';
+      im._cbs = onReady ? [onReady] : [];
+      im.onload = () => {
+        const cbs = im._cbs.slice(); im._cbs = [];
+        cbs.forEach((fn) => { try { fn(im); } catch (_) {} });
+      };
+      im.src = url;
+      AR_CN_IMG_CACHE[url] = im;
+      return null;
+    }
+
     const AR_CN_TEMPLATES = [
-      { id: 'apple_clean', name: '애플 미니멀', bg: '#fbfbfd', card: '#f0f1f5', fg: '#1d1d1f', muted: '#6e6e73', accent: '#0071e3', pillBg: '#e8f2ff', pillFg: '#005bb5', fontTitle: "'Pretendard', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'clean' },
-      { id: 'nike_editorial', name: '나이키 볼드', bg: '#111111', card: '#1c1c1e', fg: '#ffffff', muted: '#a1a1aa', accent: '#f97316', pillBg: '#f97316', pillFg: '#111111', fontTitle: "'GmarketSans', 'Paperlogy', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'dark' },
-      { id: 'bakery_curation', name: '베이커리 큐레이션', bg: '#f8f3eb', card: '#efe5d6', fg: '#2c1f16', muted: '#756254', accent: '#c2603f', pillBg: '#2c1f16', pillFg: '#f8f3eb', fontTitle: "'Gowun Batang', 'Hahmlet', serif", fontBody: "'Pretendard', sans-serif", style: 'editorial' },
-      { id: 'busan_magazine', name: '로컬 매거진', bg: '#f4f1ea', card: '#e8e2d5', fg: '#141414', muted: '#57534e', accent: '#1d4ed8', pillBg: '#1d4ed8', pillFg: '#ffffff', fontTitle: "'Paperlogy', 'GmarketSans', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'editorial' },
-      { id: 'wellness_sage', name: '헬스·웰니스', bg: '#edf2ed', card: '#e0eae0', fg: '#162a1f', muted: '#4b6355', accent: '#2f6f4e', pillBg: '#2f6f4e', pillFg: '#ffffff', fontTitle: "'Hahmlet', 'Gowun Batang', serif", fontBody: "'Pretendard', sans-serif", style: 'soft' },
-      { id: 'beauty_gloss', name: '뷰티 에디토리얼', bg: '#fff6f4', card: '#ffe8e3', fg: '#24171a', muted: '#7a575c', accent: '#be185d', pillBg: '#fce7f3', pillFg: '#9d174d', fontTitle: "'Cafe24Ssurround', 'Pretendard', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'soft' },
-      { id: 'dark_insight', name: '다크 비즈니스', bg: '#0d0f14', card: '#181c26', fg: '#f8fafc', muted: '#94a3b8', accent: '#facc15', pillBg: '#facc15', pillFg: '#0f172a', fontTitle: "'Paperlogy', 'GmarketSans', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'news' },
-      { id: 'swiss_mono', name: '스위스 모노', bg: '#f3f3f5', card: '#e4e4e7', fg: '#09090b', muted: '#52525b', accent: '#18181b', pillBg: '#09090b', pillFg: '#ffffff', fontTitle: "'Paperlogy', 'Pretendard', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'swiss' }
+      { id: 'bakery_curation', name: '베이커리 큐레이션', bg: '#f8f3eb', card: '#efe5d6', fg: '#2c1f16', muted: '#756254', accent: '#c2603f', pillBg: '#2c1f16', pillFg: '#f8f3eb', fontTitle: "'Gowun Batang', 'Hahmlet', serif", fontBody: "'Pretendard', sans-serif", style: 'editorial', coverLayout: 'photo_top', bodyLayout: 'photo_top', samplePhoto: '/assets/landing/ed-cafe.jpg', scenePack: 'cafe', sampleTitle: '성수동 카페\n추천 베스트 5' },
+      { id: 'magazine_hero', name: '매거진 풀포토', bg: '#161514', card: '#242220', fg: '#ffffff', muted: '#d6d3d1', accent: '#f59e0b', pillBg: '#f59e0b', pillFg: '#141210', fontTitle: "'Hahmlet', 'Gowun Batang', serif", fontBody: "'Pretendard', sans-serif", style: 'editorial', coverLayout: 'photo_full', bodyLayout: 'photo_full', samplePhoto: '/assets/landing/ed-interior.jpg', scenePack: 'interior', sampleTitle: '공간이 달라지는\n조명 배치 법칙' },
+      { id: 'polaroid_diary', name: '폴라로이드 기록', bg: '#f4efe6', card: '#e9e0d2', fg: '#2b241e', muted: '#78685a', accent: '#b45309', pillBg: '#ffffff', pillFg: '#2b241e', fontTitle: "'Gowun Batang', serif", fontBody: "'Pretendard', sans-serif", style: 'soft', coverLayout: 'photo_polaroid', bodyLayout: 'photo_polaroid', samplePhoto: '/assets/landing/ed-dining.jpg', scenePack: 'restaurant', sampleTitle: '주말에 가기 좋은\n숨은 맛집 기록' },
+      { id: 'beauty_arch', name: '뷰티 아치 화보', bg: '#fff6f4', card: '#ffe8e3', fg: '#24171a', muted: '#7a575c', accent: '#be185d', pillBg: '#fce7f3', pillFg: '#9d174d', fontTitle: "'Hahmlet', 'Cafe24Ssurround', serif", fontBody: "'Pretendard', sans-serif", style: 'editorial', coverLayout: 'photo_arch', bodyLayout: 'photo_arch', samplePhoto: '/assets/landing/ed-beauty.jpg', scenePack: 'beauty', sampleTitle: '아침 5분 완성\n광채 스킨 루틴' },
+      { id: 'nike_editorial', name: '나이키 볼드 밴드', bg: '#111111', card: '#1c1c1e', fg: '#ffffff', muted: '#a1a1aa', accent: '#f97316', pillBg: '#f97316', pillFg: '#111111', fontTitle: "'GmarketSans', 'Paperlogy', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'dark', coverLayout: 'photo_band', bodyLayout: 'photo_band', samplePhoto: '/assets/scenes/fitness/1.jpg', scenePack: 'fitness', sampleTitle: '체지방 태우는\n핵심 루틴 5가지' },
+      { id: 'apple_clean', name: '애플 클린 액자', bg: '#fbfbfd', card: '#f0f1f5', fg: '#1d1d1f', muted: '#6e6e73', accent: '#0071e3', pillBg: '#e8f2ff', pillFg: '#005bb5', fontTitle: "'Pretendard', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'clean', coverLayout: 'photo_frame', bodyLayout: 'photo_frame', samplePhoto: '/assets/landing/ed-auto.jpg', scenePack: 'auto', sampleTitle: '실패 없는 선택\n핵심 체크리스트' },
+      { id: 'busan_magazine', name: '로컬 매거진', bg: '#f4f1ea', card: '#e8e2d5', fg: '#141414', muted: '#57534e', accent: '#1d4ed8', pillBg: '#1d4ed8', pillFg: '#ffffff', fontTitle: "'Paperlogy', 'GmarketSans', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'editorial', coverLayout: 'photo_bottom', bodyLayout: 'photo_bottom', samplePhoto: '/assets/scenes/realestate/1.jpg', scenePack: 'realestate', sampleTitle: '지금 주목해야 할\n로컬 핫플레이스' },
+      { id: 'dark_insight', name: '다크 비즈니스', bg: '#0d0f14', card: '#181c26', fg: '#f8fafc', muted: '#94a3b8', accent: '#facc15', pillBg: '#facc15', pillFg: '#0f172a', fontTitle: "'Paperlogy', 'GmarketSans', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'news', coverLayout: 'photo_bottom', bodyLayout: 'photo_top', samplePhoto: '/assets/landing/hero-cinema-kv.jpg', scenePack: 'clinic', sampleTitle: '매출 2배 만드는\n핵심 전략 정리' }
     ];
     const _arCnState = {
-      templateId: 'apple_clean',
+      templateId: 'bakery_curation',
       customColors: { bg: '', accent: '', fg: '' },
       fontFamily: '',     // '' = 템플릿 기본, 또는 상업적 무료 폰트
       ratio: '4:5',       // '4:5' (1080x1350) | '1:1' (1080x1080)
@@ -4923,7 +4944,7 @@
       designGuide: '',    // 디자인 MD 가이드 텍스트
       tweaks: { showPageNum: true, showProgress: true, showDots: true, showHandle: true, showHighlight: true },
       activeIdx: 0,
-      slides: [],         // [{ role, kicker, title, body, highlight, bgImg, photoLayout }]
+      slides: [],         // [{ role, kicker, title, body, highlight, bgImg, isUserPhoto, photoLayout }]
       brandLoaded: false
     };
 
@@ -4936,21 +4957,49 @@
       const r = parseInt(m.slice(0, 2), 16), g = parseInt(m.slice(2, 4), 16), b = parseInt(m.slice(4, 6), 16);
       return (0.299 * r + 0.587 * g + 0.114 * b) < 135;
     }
-    function arCnEffectiveTheme() {
-      const base = arCnGetTemplate(_arCnState.templateId);
-      const bg = _arCnState.customColors.bg || base.bg;
-      const accent = _arCnState.customColors.accent || base.accent;
-      const fg = _arCnState.customColors.fg || base.fg;
+    function arCnEffectiveTheme(overrideTpl) {
+      const base = overrideTpl || arCnGetTemplate(_arCnState.templateId);
+      const useCustom = !overrideTpl;
+      const bg = (useCustom && _arCnState.customColors.bg) || base.bg;
+      const accent = (useCustom && _arCnState.customColors.accent) || base.accent;
+      const fg = (useCustom && _arCnState.customColors.fg) || base.fg;
       const dark = arCnIsDarkHex(bg);
-      const muted = _arCnState.customColors.fg ? fg : (dark ? 'rgba(248,250,252,0.72)' : base.muted);
-      const card = _arCnState.customColors.bg ? (dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.055)') : base.card;
-      const pillBg = _arCnState.customColors.accent ? accent : base.pillBg;
-      const pillFg = _arCnState.customColors.accent ? (arCnIsDarkHex(accent) ? '#ffffff' : '#111113') : base.pillFg;
-      const fontTitle = _arCnState.fontFamily || base.fontTitle;
+      const muted = (useCustom && _arCnState.customColors.fg) ? fg : (dark ? 'rgba(248,250,252,0.74)' : base.muted);
+      const card = (useCustom && _arCnState.customColors.bg) ? (dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.055)') : base.card;
+      const pillBg = (useCustom && _arCnState.customColors.accent) ? accent : base.pillBg;
+      const pillFg = (useCustom && _arCnState.customColors.accent) ? (arCnIsDarkHex(accent) ? '#ffffff' : '#111113') : base.pillFg;
+      const fontTitle = (useCustom && _arCnState.fontFamily) || base.fontTitle;
       const fontBody = base.fontBody;
       return { ...base, bg, accent, fg, muted, card, pillBg, pillFg, fontTitle, fontBody, dark };
     }
+    function arCnSlideSampleUrl(tpl, slideIdx) {
+      if (slideIdx === 0 && tpl.samplePhoto) return tpl.samplePhoto;
+      const pack = tpl.scenePack || 'cafe';
+      const num = ((slideIdx) % 9) + 1;
+      return `/assets/scenes/${pack}/${num}.jpg`;
+    }
+    function arCnPopulateSamplePhotos(applyLayouts = true) {
+      const tpl = arCnGetTemplate(_arCnState.templateId);
+      let pending = false;
+      _arCnState.slides.forEach((s, i) => {
+        if (applyLayouts && !s.userLayoutLocked) {
+          s.photoLayout = i === 0 ? (tpl.coverLayout || 'photo_top') : (tpl.bodyLayout || 'photo_top');
+        }
+        if (s.isUserPhoto || s.userClearedPhoto) return;
+        const url = arCnSlideSampleUrl(tpl, i);
+        const ready = arCnLoadImgUrl(url, (loaded) => {
+          if (!s.isUserPhoto && !s.userClearedPhoto) {
+            s.bgImg = loaded;
+            arCnRefreshUI(true);
+          }
+        });
+        if (ready) s.bgImg = ready;
+        else pending = true;
+      });
+      return pending;
+    }
     function arCnDefaultSlides(count = 7, topic = '알아두면 바로 쓰는 핵심 가이드') {
+      const tpl = arCnGetTemplate(_arCnState.templateId);
       const n = Math.max(5, Math.min(10, Math.floor(Number(count) || 7)));
       const bodyN = n - 2;
       const samplePts = [
@@ -4964,13 +5013,13 @@
         { t: '다음 단계로 넓혀 보기', b: '반응이 좋았던 카드는 시리즈로 묶어\n다음 주 콘텐츠로 이어가 보세요.', h: '체크 8 · 시리즈로 확장하기' }
       ];
       const out = [
-        { role: 'cover', kicker: '핵심 요약 가이드', title: topic, body: `꼭 알아야 할 ${bodyN}가지 핵심만\n한눈에 보기 쉽게 정리했어요.`, highlight: '밀어서 확인하기 →', bgImg: null, photoLayout: 'photo_full' }
+        { role: 'cover', kicker: '핵심 요약 가이드', title: topic, body: `꼭 알아야 할 ${bodyN}가지 핵심만\n한눈에 보기 쉽게 정리했어요.`, highlight: '밀어서 확인하기 →', bgImg: null, isUserPhoto: false, photoLayout: tpl.coverLayout || 'photo_top' }
       ];
       for (let i = 0; i < bodyN; i++) {
         const p = samplePts[i % samplePts.length];
-        out.push({ role: 'point', kicker: `POINT ${String(i + 1).padStart(2, '0')}`, title: p.t, body: p.b, highlight: p.h, bgImg: null, photoLayout: 'photo_top' });
+        out.push({ role: 'point', kicker: `POINT ${String(i + 1).padStart(2, '0')}`, title: p.t, body: p.b, highlight: p.h, bgImg: null, isUserPhoto: false, photoLayout: tpl.bodyLayout || 'photo_top' });
       }
-      out.push({ role: 'cta', kicker: '저장 · 공유', title: '필요할 때 바로 꺼내 보세요', body: '도움이 되셨다면 저장해 두고\n주변 분들에게도 가볍게 공유해 주세요.', highlight: '궁금한 점은 댓글로 남겨 주세요', bgImg: null, photoLayout: 'photo_top' });
+      out.push({ role: 'cta', kicker: '저장 · 공유', title: '필요할 때 바로 꺼내 보세요', body: '도움이 되셨다면 저장해 두고\n주변 분들에게도 가볍게 공유해 주세요.', highlight: '궁금한 점은 댓글로 남겨 주세요', bgImg: null, isUserPhoto: false, photoLayout: tpl.bodyLayout || 'photo_top' });
       return out;
     }
 
@@ -5008,34 +5057,36 @@
       return lines;
     }
 
-    function arCnRenderSlide(canvas, slide, slideIdx, totalSlides) {
+    function arCnRenderSlide(canvas, slide, slideIdx, totalSlides, overrideTpl = null) {
       const ctx = canvas.getContext('2d');
       const W = canvas.width, H = canvas.height;
       const sc = W / 1080;
-      const tpl = arCnEffectiveTheme();
-      const tw = _arCnState.tweaks || {};
-      const fsMul = _arCnState.fontScale === 'sm' ? 0.88 : (_arCnState.fontScale === 'lg' ? 1.12 : 1.0);
+      const tpl = arCnEffectiveTheme(overrideTpl);
+      const tw = overrideTpl ? { showPageNum: true, showProgress: true, showDots: true, showHandle: false, showHighlight: true } : (_arCnState.tweaks || {});
+      const fsMul = overrideTpl ? 1.0 : (_arCnState.fontScale === 'sm' ? 0.88 : (_arCnState.fontScale === 'lg' ? 1.12 : 1.0));
       const hasPhoto = Boolean(slide && slide.bgImg && slide.bgImg.naturalWidth);
-      const pLayout = hasPhoto ? (slide.photoLayout || (slideIdx === 0 ? 'photo_full' : 'photo_top')) : 'text_only';
+      const wantLayout = (slide && slide.photoLayout) || (slideIdx === 0 ? tpl.coverLayout : tpl.bodyLayout) || 'photo_top';
+      const pLayout = (hasPhoto && wantLayout !== 'text_only') ? wantLayout : 'text_only';
       const isFullPhoto = pLayout === 'photo_full';
       const fg = isFullPhoto ? '#ffffff' : tpl.fg;
-      const muted = isFullPhoto ? 'rgba(255,255,255,0.84)' : tpl.muted;
+      const muted = isFullPhoto ? 'rgba(255,255,255,0.86)' : tpl.muted;
       const accent = isFullPhoto ? (arCnIsDarkHex(tpl.accent) ? '#facc15' : tpl.accent) : tpl.accent;
       const isCover = slideIdx === 0 || (slide && slide.role === 'cover');
       const isCta = slideIdx === totalSlides - 1 || (slide && slide.role === 'cta');
-      const padX = Math.round(88 * sc);
-      const padY = Math.round(82 * sc);
+      const padX = Math.round(84 * sc);
+      const padY = Math.round(78 * sc);
 
       ctx.save();
-      // 1) 배경 (템플릿 컬러 + 풀사진 또는 은은한 디자인 텍스처)
+      // 1) 배경 (템플릿 컬러 + 풀사진 또는 에디토리얼 프레임)
       ctx.fillStyle = tpl.bg;
       ctx.fillRect(0, 0, W, H);
       if (isFullPhoto) {
         arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
         const scrim = ctx.createLinearGradient(0, 0, 0, H);
-        scrim.addColorStop(0, 'rgba(8,10,16,0.44)');
-        scrim.addColorStop(0.45, 'rgba(8,10,16,0.52)');
-        scrim.addColorStop(1, 'rgba(8,10,16,0.82)');
+        scrim.addColorStop(0, 'rgba(8,10,16,0.34)');
+        scrim.addColorStop(0.42, 'rgba(8,10,16,0.28)');
+        scrim.addColorStop(0.72, 'rgba(8,10,16,0.72)');
+        scrim.addColorStop(1, 'rgba(8,10,16,0.88)');
         ctx.fillStyle = scrim;
         ctx.fillRect(0, 0, W, H);
       } else {
@@ -5048,17 +5099,17 @@
         } else if (tpl.style === 'editorial' || tpl.style === 'swiss') {
           ctx.strokeStyle = tpl.dark ? 'rgba(255,255,255,0.14)' : 'rgba(20,18,16,0.14)';
           ctx.lineWidth = Math.max(1, 2 * sc);
-          ctx.strokeRect(Math.round(36 * sc), Math.round(36 * sc), W - Math.round(72 * sc), H - Math.round(72 * sc));
+          ctx.strokeRect(Math.round(34 * sc), Math.round(34 * sc), W - Math.round(68 * sc), H - Math.round(68 * sc));
         }
       }
 
-      // 2) 상단 진행바 + 배지 + 페이지 번호 (트윅 스위치 반영)
+      // 2) 상단 진행바 + 배지 + 페이지 번호
       if (tw.showProgress !== false) {
-        const topBarH = Math.max(3, Math.round(6 * sc));
+        const topBarH = Math.max(2, Math.round(6 * sc));
         ctx.fillStyle = isFullPhoto ? 'rgba(255,255,255,0.24)' : tpl.card;
-        ctx.fillRect(padX, Math.round(50 * sc), W - padX * 2, topBarH);
+        ctx.fillRect(padX, Math.round(48 * sc), W - padX * 2, topBarH);
         ctx.fillStyle = accent;
-        ctx.fillRect(padX, Math.round(50 * sc), Math.round((W - padX * 2) * ((slideIdx + 1) / Math.max(1, totalSlides))), topBarH);
+        ctx.fillRect(padX, Math.round(48 * sc), Math.round((W - padX * 2) * ((slideIdx + 1) / Math.max(1, totalSlides))), topBarH);
       }
 
       const headerY = padY + Math.round(24 * sc);
@@ -5066,20 +5117,20 @@
       if (kickerTxt) {
         const kFs = Math.round(26 * sc);
         ctx.font = `700 ${kFs}px ${tpl.fontBody}`;
-        const kw = ctx.measureText(kickerTxt).width + Math.round(38 * sc);
-        const kh = Math.round(48 * sc);
-        ctx.fillStyle = isFullPhoto ? 'rgba(255,255,255,0.20)' : tpl.pillBg;
+        const kw = ctx.measureText(kickerTxt).width + Math.round(36 * sc);
+        const kh = Math.round(46 * sc);
+        ctx.fillStyle = isFullPhoto ? 'rgba(255,255,255,0.22)' : tpl.pillBg;
         ctx.beginPath();
         if (ctx.roundRect) ctx.roundRect(padX, headerY - kh / 2, kw, kh, kh / 2);
         else ctx.rect(padX, headerY - kh / 2, kw, kh);
         ctx.fill();
         ctx.fillStyle = isFullPhoto ? '#ffffff' : tpl.pillFg;
         ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-        ctx.fillText(kickerTxt, padX + Math.round(19 * sc), headerY + 1);
+        ctx.fillText(kickerTxt, padX + Math.round(18 * sc), headerY + 1);
       }
       if (tw.showPageNum !== false) {
         const pageTxt = `${String(slideIdx + 1).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
-        ctx.font = `700 ${Math.round(26 * sc)}px 'Pretendard', monospace`;
+        ctx.font = `700 ${Math.round(25 * sc)}px 'Pretendard', monospace`;
         ctx.fillStyle = muted;
         ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
         ctx.fillText(pageTxt, W - padX, headerY);
@@ -5090,101 +5141,240 @@
       const bodyStr = String((slide && slide.body) || '').trim();
       const hlStr = tw.showHighlight !== false ? String((slide && slide.highlight) || '').trim() : '';
 
-      // 3) 레이아웃별 콘텐츠 배치 (상단 사진 / 액자형 / 타이포 집중·풀사진)
-      let curY = Math.round(180 * sc);
+      // 3) 8종 시각 사진·텍스트 레이아웃 분기
+      let curY = Math.round(170 * sc);
+      let skipBottomHl = false;
+
       if (pLayout === 'photo_top') {
-        const photoY = Math.round(152 * sc);
-        const photoH = Math.round(H * 0.42);
-        arCollageDrawCover(ctx, slide.bgImg, padX, photoY, maxTextW, photoH, Math.round(24 * sc), null);
-        curY = photoY + photoH + Math.round(48 * sc);
+        const photoY = Math.round(146 * sc);
+        const photoH = Math.round(H * 0.43);
+        arCollageDrawCover(ctx, slide.bgImg, padX, photoY, maxTextW, photoH, Math.round(22 * sc), null);
+        curY = photoY + photoH + Math.round(42 * sc);
         const titleFs = Math.round(54 * sc * fsMul);
-        const bodyFs = Math.round(34 * sc * fsMul);
+        const bodyFs = Math.round(33 * sc * fsMul);
         ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
         const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
-        const tLH = Math.round(titleFs * 1.3);
+        const tLH = Math.round(titleFs * 1.28);
         ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
         tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
-        curY += Math.round(20 * sc);
+        curY += Math.round(18 * sc);
         ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
         ctx.fillStyle = muted;
-        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 4);
-        const bLH = Math.round(bodyFs * 1.5);
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+      } else if (pLayout === 'photo_polaroid') {
+        // 감성 폴라로이드 액자 (약간 기울어짐 + 그림자 + 흰 하단 여백)
+        const pw = Math.round(W * 0.68), ph = Math.round(H * 0.39);
+        const cx = W / 2, cy = Math.round(162 * sc + ph / 2);
+        const tilt = slideIdx % 2 === 0 ? -0.042 : 0.038;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(tilt);
+        const b = Math.round(24 * sc), bot = Math.round(72 * sc);
+        ctx.shadowColor = 'rgba(0,0,0,0.22)';
+        ctx.shadowBlur = Math.round(36 * sc);
+        ctx.shadowOffsetY = Math.round(14 * sc);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-pw / 2 - b, -ph / 2 - b, pw + b * 2, ph + b + bot);
+        ctx.shadowColor = 'transparent';
+        arCollageDrawCover(ctx, slide.bgImg, -pw / 2, -ph / 2, pw, ph, 0, null);
+        ctx.restore();
+
+        curY = Math.round(162 * sc + ph + 92 * sc);
+        const titleFs = Math.round(52 * sc * fsMul);
+        const bodyFs = Math.round(32 * sc * fsMul);
+        ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.28);
+        ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += tLH; });
+        curY += Math.round(16 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.92).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += bLH; });
+      } else if (pLayout === 'photo_arch') {
+        // 아치형 사진 창 (뷰티·라이프 에디토리얼)
+        const aw = Math.round(W * 0.66), ah = Math.round(H * 0.44);
+        const ax = Math.round((W - aw) / 2), ay = Math.round(148 * sc);
+        const rad = aw / 2;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(ax, ay + ah);
+        ctx.lineTo(ax, ay + rad);
+        ctx.arc(ax + rad, ay + rad, rad, Math.PI, 0);
+        ctx.lineTo(ax + aw, ay + ah);
+        ctx.closePath();
+        ctx.clip();
+        arCollageDrawCover(ctx, slide.bgImg, ax, ay, aw, ah, 0, null);
+        ctx.restore();
+        // 아치 외곽 얇은 포인트 선
+        ctx.save();
+        ctx.strokeStyle = accent;
+        ctx.globalAlpha = 0.45;
+        ctx.lineWidth = Math.max(1.5, 3 * sc);
+        ctx.beginPath();
+        ctx.moveTo(ax - Math.round(10 * sc), ay + ah + Math.round(8 * sc));
+        ctx.lineTo(ax - Math.round(10 * sc), ay + rad);
+        ctx.arc(ax + rad, ay + rad, rad + Math.round(10 * sc), Math.PI, 0);
+        ctx.lineTo(ax + aw + Math.round(10 * sc), ay + ah + Math.round(8 * sc));
+        ctx.stroke();
+        ctx.restore();
+
+        curY = ay + ah + Math.round(44 * sc);
+        const titleFs = Math.round(52 * sc * fsMul);
+        const bodyFs = Math.round(32 * sc * fsMul);
+        ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.28);
+        ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += tLH; });
+        curY += Math.round(16 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.92).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += bLH; });
+      } else if (pLayout === 'photo_band') {
+        // 나이키 볼드 포스터: 상단 강렬한 대형 제목 + 풀폭 가로 사진 밴드 + 하단 본문
+        const titleFs = Math.round(62 * sc * fsMul);
+        curY = Math.round(156 * sc);
+        ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.24);
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(24 * sc);
+        const bandH = Math.round(H * 0.35);
+        arCollageDrawCover(ctx, slide.bgImg, 0, curY, W, bandH, 0, null);
+        // 사진 밴드 상하 포인트 헤어라인
+        ctx.fillStyle = accent;
+        ctx.fillRect(0, curY, W, Math.max(2, Math.round(6 * sc)));
+        curY += bandH + Math.round(36 * sc);
+        const bodyFs = Math.round(34 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
         bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
       } else if (pLayout === 'photo_frame') {
-        const titleFs = Math.round(56 * sc * fsMul);
+        // 애플 클린 카드: 상단 제목 + 떠있는 소프트 섀도우 라운드 사진 + 하단 본문
+        const titleFs = Math.round(54 * sc * fsMul);
         const bodyFs = Math.round(33 * sc * fsMul);
-        curY = Math.round(166 * sc);
+        curY = Math.round(158 * sc);
         ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
         const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
         const tLH = Math.round(titleFs * 1.28);
         ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
         tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
         curY += Math.round(26 * sc);
-        const photoH = Math.round(H * 0.36);
-        // 액자 카드 테두리
+        const photoH = Math.round(H * 0.37);
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.16)';
+        ctx.shadowBlur = Math.round(34 * sc);
+        ctx.shadowOffsetY = Math.round(14 * sc);
         ctx.fillStyle = tpl.card;
         ctx.beginPath();
-        if (ctx.roundRect) ctx.roundRect(padX - Math.round(12 * sc), curY - Math.round(12 * sc), maxTextW + Math.round(24 * sc), photoH + Math.round(24 * sc), Math.round(24 * sc));
-        else ctx.rect(padX - Math.round(12 * sc), curY - Math.round(12 * sc), maxTextW + Math.round(24 * sc), photoH + Math.round(24 * sc));
+        if (ctx.roundRect) ctx.roundRect(padX, curY, maxTextW, photoH, Math.round(24 * sc));
+        else ctx.rect(padX, curY, maxTextW, photoH);
         ctx.fill();
-        arCollageDrawCover(ctx, slide.bgImg, padX, curY, maxTextW, photoH, Math.round(16 * sc), null);
-        curY += photoH + Math.round(38 * sc);
+        ctx.restore();
+        arCollageDrawCover(ctx, slide.bgImg, padX, curY, maxTextW, photoH, Math.round(24 * sc), null);
+        curY += photoH + Math.round(36 * sc);
         ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
         ctx.fillStyle = muted;
         const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 3);
-        const bLH = Math.round(bodyFs * 1.5);
+        const bLH = Math.round(bodyFs * 1.48);
         bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+      } else if (pLayout === 'photo_bottom') {
+        // 로컬 매거진 / 다크 비즈니스: 상단 헤드라인 + 본문 + 하단 41% 대형 사진 쇼케이스
+        const titleFs = Math.round(56 * sc * fsMul);
+        const bodyFs = Math.round(33 * sc * fsMul);
+        curY = Math.round(156 * sc);
+        ctx.fillStyle = accent;
+        ctx.fillRect(padX, curY - Math.round(16 * sc), Math.round(64 * sc), Math.max(2, Math.round(6 * sc)));
+        ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.28);
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(18 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.46);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+        const photoTop = Math.max(curY + Math.round(28 * sc), Math.round(H * 0.47));
+        const photoH = Math.max(Math.round(H * 0.28), H - photoTop - Math.round(130 * sc));
+        arCollageDrawCover(ctx, slide.bgImg, padX, photoTop, maxTextW, photoH, Math.round(20 * sc), null);
+        // 사진 하단 위 오버레이 팁 배지 (공간 겹침 방지)
+        if (hlStr) {
+          const hlFs = Math.round(26 * sc);
+          ctx.font = `700 ${hlFs}px ${tpl.fontBody}`;
+          const hw = Math.min(maxTextW - Math.round(36 * sc), ctx.measureText(hlStr).width + Math.round(40 * sc));
+          const hh = Math.round(50 * sc);
+          ctx.fillStyle = 'rgba(12,14,20,0.78)';
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(padX + Math.round(18 * sc), photoTop + photoH - hh - Math.round(18 * sc), hw, hh, hh / 2);
+          else ctx.rect(padX + Math.round(18 * sc), photoTop + photoH - hh - Math.round(18 * sc), hw, hh);
+          ctx.fill();
+          ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+          ctx.fillText(hlStr, padX + Math.round(38 * sc), photoTop + photoH - hh / 2 - Math.round(18 * sc));
+        }
+        skipBottomHl = true;
       } else {
-        // 타이포 집중형 / 풀배경 사진형
+        // 풀배경 사진형 (photo_full) 또는 순수 타이포형 (text_only)
         if (!isCover && !isCta && !isFullPhoto) {
           ctx.save();
-          ctx.font = `900 ${Math.round(205 * sc)}px ${tpl.fontTitle}`;
+          ctx.font = `900 ${Math.round(200 * sc)}px ${tpl.fontTitle}`;
           ctx.fillStyle = tpl.fg;
           ctx.globalAlpha = 0.055;
           ctx.textAlign = 'right'; ctx.textBaseline = 'top';
           ctx.fillText(String(slideIdx).padStart(2, '0'), W - padX + Math.round(8 * sc), Math.round(145 * sc));
           ctx.restore();
         }
-        const titleFs = Math.round((isCover ? 80 : (isCta ? 68 : 64)) * sc * fsMul);
-        const bodyFs = Math.round((isCover ? 37 : 39) * sc * fsMul);
+        const titleFs = Math.round((isCover ? 78 : (isCta ? 66 : 64)) * sc * fsMul);
+        const bodyFs = Math.round((isCover ? 36 : 38) * sc * fsMul);
         ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
         const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 4);
-        const tLH = Math.round(titleFs * 1.32);
+        const tLH = Math.round(titleFs * 1.3);
         ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
-        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 7);
-        const bLH = Math.round(bodyFs * 1.56);
-        const blockH = tLines.length * tLH + Math.round(44 * sc) + bLines.length * bLH;
-        curY = isCover || isCta
-          ? Math.max(Math.round(210 * sc), Math.round((H - blockH) * (isFullPhoto ? 0.54 : 0.44)))
-          : Math.max(Math.round(210 * sc), Math.round((H - blockH) * 0.36));
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 6);
+        const bLH = Math.round(bodyFs * 1.54);
+        const blockH = tLines.length * tLH + Math.round(40 * sc) + bLines.length * bLH;
+        curY = isFullPhoto
+          ? Math.max(Math.round(220 * sc), Math.round(H * 0.50 - blockH * 0.22))
+          : Math.max(Math.round(205 * sc), Math.round((H - blockH) * 0.38));
 
         ctx.fillStyle = accent;
-        ctx.fillRect(padX, curY - Math.round(30 * sc), Math.round((isCover ? 84 : 62) * sc), Math.max(3, Math.round(7 * sc)));
+        ctx.fillRect(padX, curY - Math.round(28 * sc), Math.round((isCover ? 82 : 60) * sc), Math.max(3, Math.round(7 * sc)));
 
         ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
         ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
         tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
 
-        curY += Math.round(34 * sc);
+        curY += Math.round(30 * sc);
         ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
         ctx.fillStyle = muted;
         bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
       }
 
-      // 4) 하단 강조 팁 박스 (트윅 스위치 반영 & 사진 배치 시 공간 안전)
-      if (hlStr) {
-        const compactHl = pLayout === 'photo_top' || pLayout === 'photo_frame';
-        const hlFs = Math.round((compactHl ? 28 : 32) * sc * Math.min(1.06, fsMul));
+      // 4) 하단 강조 팁 박스 (트윅 스위치 반영 & 공간 안전 체크)
+      if (hlStr && !skipBottomHl) {
+        const compactHl = pLayout !== 'text_only' && pLayout !== 'photo_full';
+        const hlFs = Math.round((compactHl ? 27 : 31) * sc * Math.min(1.06, fsMul));
         ctx.font = `700 ${hlFs}px ${tpl.fontBody}`;
-        const hlLines = arCnWrapLines(ctx, hlStr, maxTextW - Math.round(64 * sc)).slice(0, compactHl ? 1 : 2);
-        const hlLH = Math.round(hlFs * 1.4);
-        const boxH = Math.round(hlLines.length * hlLH + (compactHl ? 34 : 44) * sc);
-        const minFootGap = Math.round(136 * sc);
-        const boxY = Math.min(H - minFootGap - boxH, Math.max(curY + Math.round(22 * sc), H - Math.round((compactHl ? 245 : 285) * sc)));
-        if (boxY + boxH < H - Math.round(112 * sc)) {
-          ctx.fillStyle = isFullPhoto ? 'rgba(255,255,255,0.16)' : tpl.card;
+        const hlLines = arCnWrapLines(ctx, hlStr, maxTextW - Math.round(60 * sc)).slice(0, compactHl ? 1 : 2);
+        const hlLH = Math.round(hlFs * 1.38);
+        const boxH = Math.round(hlLines.length * hlLH + (compactHl ? 30 : 42) * sc);
+        const minFootGap = Math.round(126 * sc);
+        const boxY = Math.min(H - minFootGap - boxH, Math.max(curY + Math.round(20 * sc), H - Math.round((compactHl ? 225 : 275) * sc)));
+        if (boxY + boxH < H - Math.round(108 * sc)) {
+          ctx.fillStyle = isFullPhoto ? 'rgba(255,255,255,0.18)' : tpl.card;
           ctx.beginPath();
-          if (ctx.roundRect) ctx.roundRect(padX, boxY, maxTextW, boxH, Math.round(18 * sc));
+          if (ctx.roundRect) ctx.roundRect(padX, boxY, maxTextW, boxH, Math.round(16 * sc));
           else ctx.rect(padX, boxY, maxTextW, boxH);
           ctx.fill();
           ctx.fillStyle = accent;
@@ -5193,27 +5383,27 @@
           else ctx.rect(padX, boxY, Math.round(10 * sc), boxH);
           ctx.fill();
           ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-          let hy = boxY + Math.round((compactHl ? 18 : 22) * sc);
-          hlLines.forEach((ln) => { ctx.fillText(ln, padX + Math.round(32 * sc), hy); hy += hlLH; });
+          let hy = boxY + Math.round((compactHl ? 16 : 21) * sc);
+          hlLines.forEach((ln) => { ctx.fillText(ln, padX + Math.round(30 * sc), hy); hy += hlLH; });
         }
       }
 
-      // 5) 하단 푸터: 계정명(@handle) + 캐러셀 페이지 도트 (트윅 스위치 반영)
-      const footY = H - Math.round(74 * sc);
+      // 5) 하단 푸터: 계정명(@handle) + 캐러셀 페이지 도트
+      const footY = H - Math.round(70 * sc);
       const handleTxt = tw.showHandle !== false ? String(_arCnState.handle || '').trim() : '';
       if (handleTxt) {
-        ctx.font = `600 ${Math.round(25 * sc)}px ${tpl.fontBody}`;
+        ctx.font = `600 ${Math.round(24 * sc)}px ${tpl.fontBody}`;
         ctx.fillStyle = muted;
         ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
         ctx.fillText(handleTxt.startsWith('@') ? handleTxt : `@${handleTxt}`, padX, footY);
       }
       if (tw.showDots !== false) {
-        const dotR = Math.max(2, Math.round(6 * sc));
-        const dotGap = Math.round(22 * sc);
+        const dotR = Math.max(2, Math.round(5.5 * sc));
+        const dotGap = Math.round(20 * sc);
         const startDotX = W - padX - (totalSlides - 1) * dotGap;
         for (let i = 0; i < totalSlides; i++) {
           const active = i === slideIdx;
-          ctx.fillStyle = active ? accent : (isFullPhoto ? 'rgba(255,255,255,0.35)' : muted);
+          ctx.fillStyle = active ? accent : (isFullPhoto ? 'rgba(255,255,255,0.38)' : muted);
           ctx.globalAlpha = active ? 1 : 0.35;
           ctx.beginPath();
           ctx.arc(startDotX + i * dotGap, footY, active ? dotR * 1.35 : dotR, 0, Math.PI * 2);
@@ -5322,8 +5512,50 @@
       } catch (_) {}
     }
 
+    const AR_CN_TPL_THUMB_CACHE = {};
+    function arCnRenderTemplateGallery() {
+      const tplGrid = document.getElementById('arCnTplGrid');
+      if (!tplGrid) return;
+      // DOM 한 번 생성 후 active 상태와 썸네일만 갱신 (깜박임 0%)
+      if (!tplGrid.dataset.built) {
+        tplGrid.dataset.built = '1';
+        tplGrid.innerHTML = AR_CN_TEMPLATES.map((t) => `
+          <button type="button" data-cn-tpl="${t.id}" onclick="arCnSetTemplate('${t.id}')" class="ar-cn-tpl-btn">
+            <canvas data-cn-thumb="${t.id}" width="180" height="225" class="ar-cn-tpl-thumb"></canvas>
+            <span class="truncate px-0.5">${t.name}</span>
+          </button>
+        `).join('');
+      }
+      tplGrid.querySelectorAll('[data-cn-tpl]').forEach((b) => {
+        b.classList.toggle('active', b.dataset.cnTpl === _arCnState.templateId);
+      });
+      AR_CN_TEMPLATES.forEach((t) => {
+        const cv = tplGrid.querySelector(`canvas[data-cn-thumb="${t.id}"]`);
+        if (!cv) return;
+        const drawThumb = (imgObj) => {
+          const sampleSlide = {
+            role: 'cover',
+            kicker: 'GUIDE 01',
+            title: t.sampleTitle || t.name,
+            body: '사진과 글이 자연스럽게\n어우러지는 카드 템플릿',
+            highlight: '밀어서 확인하기 →',
+            bgImg: imgObj || null,
+            photoLayout: t.coverLayout || 'photo_top'
+          };
+          arCnRenderSlide(cv, sampleSlide, 0, 7, t);
+          if (imgObj) AR_CN_TPL_THUMB_CACHE[t.id] = true;
+        };
+        if (AR_CN_TPL_THUMB_CACHE[t.id]) return;
+        const cachedImg = arCnLoadImgUrl(t.samplePhoto, (loaded) => { drawThumb(loaded); });
+        drawThumb(cachedImg);
+      });
+    }
+
     function arCnRefreshUI(skipInputSync = false) {
-      if (!_arCnState.slides.length) _arCnState.slides = arCnDefaultSlides(_arCnState.targetCount);
+      if (!_arCnState.slides.length) {
+        _arCnState.slides = arCnDefaultSlides(_arCnState.targetCount);
+        arCnPopulateSamplePhotos(true);
+      }
       const total = _arCnState.slides.length;
       _arCnState.activeIdx = ((_arCnState.activeIdx % total) + total) % total;
       const idx = _arCnState.activeIdx;
@@ -5353,8 +5585,7 @@
       if (clrPhoto) clrPhoto.classList.toggle('hidden', !hasPhoto);
       const pLayoutRow = document.getElementById('arCnPhotoLayoutRow');
       if (pLayoutRow) {
-        pLayoutRow.classList.toggle('hidden', !hasPhoto);
-        const curPL = (cur && cur.photoLayout) || (idx === 0 ? 'photo_full' : 'photo_top');
+        const curPL = !hasPhoto ? 'text_only' : ((cur && cur.photoLayout) || (idx === 0 ? eff.coverLayout : eff.bodyLayout) || 'photo_top');
         pLayoutRow.querySelectorAll('[data-cn-playout]').forEach((b) => b.classList.toggle('active', b.dataset.cnPlayout === curPL));
       }
 
@@ -5364,12 +5595,12 @@
         pills.innerHTML = _arCnState.slides.map((s, i) => {
           const on = i === idx;
           const lbl = i === 0 ? '1 표지' : (i === total - 1 ? `${i + 1} 끝` : String(i + 1));
-          const dot = s.bgImg ? '📷' : '';
+          const dot = s.bgImg && s.photoLayout !== 'text_only' ? '📷' : '';
           return `<button type="button" onclick="arCnSelectSlide(${i})" class="px-2 py-0.5 rounded-full text-[11px] font-semibold border cursor-pointer ${on ? 'bg-[#2563eb] text-white border-[#60a5fa]' : 'bg-[#1c1c21] text-[#a1a1aa] border-white/10'}">${lbl}${dot}</button>`;
         }).join('');
       }
 
-      // 장수 / 비율 / 글자크기 / 트윅 / 컬러 / 폰트 / 템플릿 버튼 동기화
+      // 장수 / 비율 / 글자크기 / 트윅 / 컬러 / 폰트 / 시각 미리보기 템플릿 갤러리 동기화
       document.querySelectorAll('#arCnCountRow [data-cn-cnt]').forEach((b) => b.classList.toggle('active', Number(b.dataset.cnCnt) === _arCnState.targetCount));
       document.querySelectorAll('#arCardNewsModal [data-cn-ratio]').forEach((b) => b.classList.toggle('active', b.dataset.cnRatio === _arCnState.ratio));
       document.querySelectorAll('#arCardNewsModal [data-cn-fsize]').forEach((b) => b.classList.toggle('active', b.dataset.cnFsize === _arCnState.fontScale));
@@ -5386,13 +5617,7 @@
       const fSel = document.getElementById('arCnFontSelect');
       if (fSel) fSel.value = _arCnState.fontFamily || '';
 
-      const tplGrid = document.getElementById('arCnTplGrid');
-      if (tplGrid) {
-        tplGrid.innerHTML = AR_CN_TEMPLATES.map((t) => {
-          const on = t.id === _arCnState.templateId;
-          return `<button type="button" onclick="arCnSetTemplate('${t.id}')" class="ar-cn-tpl-btn${on ? ' active' : ''}"><span style="width:16px;height:16px;border-radius:4px;flex-shrink:0;background:${t.bg};border:2px solid ${t.accent};display:inline-block;"></span><span class="truncate">${t.name}</span></button>`;
-        }).join('');
-      }
+      arCnRenderTemplateGallery();
 
       if (!skipInputSync && cur) {
         const kEl = document.getElementById('arCnKicker');
@@ -5422,6 +5647,7 @@
       if (!_arCnState.slides.length) {
         _arCnState.slides = arCnDefaultSlides(_arCnState.targetCount);
       }
+      arCnPopulateSamplePhotos(false);
       modal.classList.remove('hidden');
       arCnRefreshUI();
     }
@@ -5435,6 +5661,8 @@
     function arCnSetTemplate(id) {
       _arCnState.templateId = id;
       _arCnState.customColors = { bg: '', accent: '', fg: '' };
+      _arCnState.slides.forEach((s) => { s.userLayoutLocked = false; });
+      arCnPopulateSamplePhotos(true);
       arCnRefreshUI(true);
     }
     function arCnSetCustomColor(key, hex) {
@@ -5477,6 +5705,11 @@
       const cur = _arCnState.slides[_arCnState.activeIdx];
       if (!cur) return;
       cur.photoLayout = pl;
+      cur.userLayoutLocked = true;
+      if (pl !== 'text_only' && !cur.bgImg) {
+        cur.userClearedPhoto = false;
+        arCnPopulateSamplePhotos(false);
+      }
       arCnRefreshUI(true);
     }
     function arCnSelectSlide(i) {
@@ -5498,6 +5731,7 @@
         if (typeof arToast === 'function') arToast('카드뉴스는 최대 10장까지 만들 수 있어요.');
         return;
       }
+      const tpl = arCnGetTemplate(_arCnState.templateId);
       const insertAt = Math.max(1, _arCnState.slides.length - 1);
       _arCnState.slides.splice(insertAt, 0, {
         role: 'point',
@@ -5506,9 +5740,11 @@
         body: '여기에 설명을 2~3줄로 적어 주세요.',
         highlight: '핵심 한 줄 요약',
         bgImg: null,
-        photoLayout: 'photo_top'
+        isUserPhoto: false,
+        photoLayout: tpl.bodyLayout || 'photo_top'
       });
       _arCnState.activeIdx = insertAt;
+      arCnPopulateSamplePhotos(false);
       arCnRefreshUI(false);
     }
     function arCnRemoveSlide() {
@@ -5532,8 +5768,11 @@
         const im = new Image(); im.src = dataUrl; im._dataUrl = dataUrl;
         await im.decode();
         cur.bgImg = im;
+        cur.isUserPhoto = true;
+        cur.userClearedPhoto = false;
         if (!cur.photoLayout || cur.photoLayout === 'text_only') {
-          cur.photoLayout = _arCnState.activeIdx === 0 ? 'photo_full' : 'photo_top';
+          const tpl = arCnGetTemplate(_arCnState.templateId);
+          cur.photoLayout = _arCnState.activeIdx === 0 ? (tpl.coverLayout || 'photo_full') : (tpl.bodyLayout || 'photo_top');
         }
         if (typeof window.arVaultSaveImages === 'function') window.arVaultSaveImages([im], 'upload');
         arCnRefreshUI(true);
@@ -5543,6 +5782,9 @@
       const cur = _arCnState.slides[_arCnState.activeIdx];
       if (!cur) return;
       cur.bgImg = null;
+      cur.isUserPhoto = false;
+      cur.userClearedPhoto = true;
+      cur.photoLayout = 'text_only';
       arCnRefreshUI(true);
     }
     async function arCnToggleVaultStrip() {
@@ -5577,8 +5819,11 @@
             const loaded = new Image(); loaded.src = item.src;
             try { await loaded.decode(); } catch (_) {}
             cur.bgImg = loaded;
+            cur.isUserPhoto = true;
+            cur.userClearedPhoto = false;
             if (!cur.photoLayout || cur.photoLayout === 'text_only') {
-              cur.photoLayout = _arCnState.activeIdx === 0 ? 'photo_full' : 'photo_top';
+              const tpl = arCnGetTemplate(_arCnState.templateId);
+              cur.photoLayout = _arCnState.activeIdx === 0 ? (tpl.coverLayout || 'photo_full') : (tpl.bodyLayout || 'photo_top');
             }
             arCnRefreshUI(true);
           };
@@ -5726,28 +5971,93 @@
         if (resp.ok) {
           const data = await resp.json();
           if (data && Array.isArray(data.slides) && data.slides.length >= 3) {
-            slides = data.slides.map((s, idx) => ({
-              role: s.role || 'point',
-              kicker: s.kicker || '',
-              title: s.title || '',
-              body: s.body || '',
-              highlight: s.highlight || '',
-              bgImg: (_arCnState.slides[idx] && _arCnState.slides[idx].bgImg) || null,
-              photoLayout: (_arCnState.slides[idx] && _arCnState.slides[idx].photoLayout) || (idx === 0 ? 'photo_full' : 'photo_top')
-            }));
+            const tpl = arCnGetTemplate(_arCnState.templateId);
+            slides = data.slides.map((s, idx) => {
+              const prev = _arCnState.slides[idx];
+              return {
+                role: s.role || 'point',
+                kicker: s.kicker || '',
+                title: s.title || '',
+                body: s.body || '',
+                highlight: s.highlight || '',
+                bgImg: (prev && prev.isUserPhoto) ? prev.bgImg : null,
+                isUserPhoto: Boolean(prev && prev.isUserPhoto),
+                photoLayout: (prev && prev.userLayoutLocked) ? prev.photoLayout : (idx === 0 ? (tpl.coverLayout || 'photo_top') : (tpl.bodyLayout || 'photo_top'))
+              };
+            });
           }
         }
         _arCnState.slides = slides || arCnDefaultSlides(_arCnState.targetCount, topic || sourceText.slice(0, 24));
         _arCnState.activeIdx = 0;
+        arCnPopulateSamplePhotos(false);
         arCnRefreshUI(false);
         if (typeof arToast === 'function') arToast(`${_arCnState.slides.length}장 카드뉴스 초안을 만들었어요! 각 장을 눌러 글자·사진만 다듬어 보세요.`, true);
       } catch (_) {
         _arCnState.slides = arCnDefaultSlides(_arCnState.targetCount, topic || sourceText.slice(0, 24));
         _arCnState.activeIdx = 0;
+        arCnPopulateSamplePhotos(false);
         arCnRefreshUI(false);
         if (typeof arToast === 'function') arToast(`${_arCnState.slides.length}장 기본 템플릿을 채웠어요! 글자를 자유롭게 수정해 보세요.`, true);
       } finally {
         if (btn) { btn.disabled = false; btn.textContent = '✨ AI 만들기'; }
+      }
+    }
+
+    // 입력한 주제에 맞춰 AI 사진 생성 후 카드뉴스 각 장에 자동 채우기
+    async function arCnFillAiPhotos() {
+      const topic = String(document.getElementById('arCnTopicInput')?.value || (_arCnState.slides[0] && _arCnState.slides[0].title) || '').trim();
+      if (!topic) {
+        if (typeof arToast === 'function') arToast('먼저 카드뉴스 주제를 입력해 주세요.');
+        return;
+      }
+      const btn = document.getElementById('arCnAiPhotoBtn');
+      if (btn) { btn.disabled = true; btn.textContent = '사진 생성 중...'; }
+      try {
+        const indKey = (typeof IND !== 'undefined' && IND && IND.key) ? IND.key : '';
+        const wantCnt = Math.min(6, _arCnState.slides.length);
+        const resp = await fetch('/api/generate-script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mode: 'scene-images',
+            prompt: topic,
+            count: wantCnt,
+            aspectRatio: _arCnState.ratio === '1:1' ? '1:1' : '4:5',
+            industry: indKey
+          })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          const imgs = (data && Array.isArray(data.images)) ? data.images : [];
+          if (imgs.length) {
+            const loaded = [];
+            for (const item of imgs) {
+              if (!item || !item.dataUrl) continue;
+              const im = new Image(); im.src = item.dataUrl; im._dataUrl = item.dataUrl;
+              try { await im.decode(); loaded.push(im); } catch (_) {}
+            }
+            if (loaded.length) {
+              const tpl = arCnGetTemplate(_arCnState.templateId);
+              _arCnState.slides.forEach((s, i) => {
+                s.bgImg = loaded[i % loaded.length];
+                s.isUserPhoto = true;
+                s.userClearedPhoto = false;
+                if (!s.photoLayout || s.photoLayout === 'text_only') {
+                  s.photoLayout = i === 0 ? (tpl.coverLayout || 'photo_top') : (tpl.bodyLayout || 'photo_top');
+                }
+              });
+              if (typeof window.arVaultSaveImages === 'function') window.arVaultSaveImages(loaded, 'ai');
+              arCnRefreshUI(true);
+              if (typeof arToast === 'function') arToast(`주제 맞춤 AI 사진 ${loaded.length}장을 카드뉴스에 채웠어요!`, true);
+              return;
+            }
+          }
+        }
+        if (typeof arToast === 'function') arToast('AI 사진 생성에 실패했어요. [📷 사진 바꾸기]나 [🖼️ 보관함]을 이용해 보세요.');
+      } catch (_) {
+        if (typeof arToast === 'function') arToast('사진 생성 중 오류가 발생했어요.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '✨ AI 사진'; }
       }
     }
 
@@ -5930,6 +6240,7 @@
       window.arCnHandleBgPhoto = arCnHandleBgPhoto;
       window.arCnClearBgPhoto = arCnClearBgPhoto;
       window.arCnToggleVaultStrip = arCnToggleVaultStrip;
+      window.arCnFillAiPhotos = arCnFillAiPhotos;
       window.arCnExtractRefPalette = arCnExtractRefPalette;
       window.arCnImportDesignMd = arCnImportDesignMd;
       window.arCnExportDesignMd = arCnExportDesignMd;
