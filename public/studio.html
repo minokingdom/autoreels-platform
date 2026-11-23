@@ -418,10 +418,10 @@
           <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="14" height="15" rx="2"/><path d="M7 6V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-3"/></svg>
           <span><strong>인스타 카드뉴스</strong><small>여러 장 슬라이드 만들기</small></span>
         </button>
-        <a data-studio-tool href="/assets/shorts/index.html" class="service-tool">
-          <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m10 9 5 3-5 3z"/></svg>
-          <span><strong>내 영상으로 쇼츠</strong><small>핵심 구간 찾기</small></span>
-        </a>
+        <button type="button" id="openMemeShortsBtn" onclick="arOpenMemeShortsStudio()" class="service-tool">
+          <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
+          <span><strong>밈 쇼츠 만들기</strong><small>오늘의 밈 · 해외영상 리메이크</small></span>
+        </button>
         <a data-studio-tool href="/assets/remix/index.html" class="service-tool service-wide">
           <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 7 17-4 1 5-18 4zm1 5v8h17V9M7 6l3 4m3-6 3 4"/></svg>
           <span><strong>참고 쇼츠·릴스 재구성</strong><small>참고 영상에 내 사진·자막 맞추기</small></span>
@@ -822,6 +822,98 @@
         </div>
         <!-- ★ 1단계 · 오늘의 주제: 요일·계절·다가오는 날·인기 키워드로 오늘 올릴 주제 후보를 보여 주고, 고르면 AI 대본을 바로 만듦 -->
         <div id="studioPanel_topic" role="tabpanel" aria-labelledby="studioTabBtn_topic" class="studio-panel p-5 sm:p-6 space-y-4">
+
+          <!-- 🔥 밈 쇼츠 만들기 전용 팩토리 패널 (오늘의 밈 레이더 · 해외 영상 자막 덮어쓰기 · 노래방 자막 · UI 세이프존) -->
+          <section id="arMemeShortsBox" class="hidden rounded-[14px] bg-[#14161e] border border-[#3b82f6]/40 p-3.5 space-y-3">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-full bg-[#2563eb] text-white text-[11px] font-bold">⚡ 밈 쇼츠 팩토리</span>
+                <span class="text-[12px] text-[#93c5fd] font-medium">1줄 20자 고속 전환 · 업로드 0번</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button type="button" id="arKaraokeToggleBtn" onclick="arToggleKaraokeMode()" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#2563eb] text-white border border-[#60a5fa] cursor-pointer">🎤 노래방 자막 ON</button>
+                <button type="button" id="arSafeZoneToggleBtn" onclick="arToggleSafeZoneGuide()" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#1e2028] text-[#a1a1aa] border border-white/15 cursor-pointer">📱 UI 가림 가이드</button>
+              </div>
+            </div>
+
+            <!-- 2가지 트랙 탭 전환 (트랙 A: 오늘의 밈 레이더 / 트랙 B: 해외·원본 영상 한국어 리메이크) -->
+            <div class="grid grid-cols-2 gap-1.5 bg-[#0d0e12] p-1 rounded-[10px] border border-white/10">
+              <button type="button" id="arMemeTabBtn_radar" onclick="arSwitchMemeTab('radar')" class="h-8 rounded-[7px] text-[12px] font-bold bg-[#2563eb] text-white cursor-pointer">🔥 오늘의 밈 레이더 (업로드 0번)</button>
+              <button type="button" id="arMemeTabBtn_remake" onclick="arSwitchMemeTab('remake')" class="h-8 rounded-[7px] text-[12px] font-semibold text-[#a1a1aa] hover:text-white cursor-pointer">🌏 해외·원본 영상 리메이크</button>
+            </div>
+
+            <!-- 트랙 A: 오늘의 밈·트렌드 레이더 -->
+            <div id="arMemePane_radar" class="space-y-2.5">
+              <div class="flex items-center gap-1 overflow-x-auto scrollbar-none pb-0.5">
+                <button type="button" data-meme-cat="all" onclick="arLoadMemeRadar('all')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white text-[#111113] shrink-0 cursor-pointer">전체</button>
+                <button type="button" data-meme-cat="급상승 밈" onclick="arLoadMemeRadar('급상승 밈')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🔥 급상승 밈</button>
+                <button type="button" data-meme-cat="동물·유머" onclick="arLoadMemeRadar('동물·유머')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🐱 동물·유머</button>
+                <button type="button" data-meme-cat="실시간 이슈" onclick="arLoadMemeRadar('실시간 이슈')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">⚡ 실시간 이슈</button>
+                <button type="button" data-meme-cat="해외 바이럴" onclick="arLoadMemeRadar('해외 바이럴')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🌏 해외 바이럴</button>
+                <button type="button" onclick="arLoadMemeRadar(window.__arMemeCat||'all', true)" class="ml-auto px-2 py-1 rounded-lg text-[11px] text-[#93c5fd] bg-white/5 hover:bg-white/10 shrink-0 cursor-pointer">🔄 새로고침</button>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <input id="arMemeSearchInput" type="text" placeholder="찾고 싶은 밈·이슈 키워드 (예: 칠가이, 고양이 반전, 신조어)" onkeydown="if(event.key==='Enter'){event.preventDefault();arSearchCustomMeme();}" class="studio-input flex-1 h-8 px-3 text-[12px]" />
+                <button type="button" onclick="arSearchCustomMeme()" class="btn-primary h-8 px-3 text-[11.5px] font-semibold shrink-0 cursor-pointer">6컷 설계</button>
+              </div>
+              <div id="arMemeRadarStatus" class="text-[11px] text-[#9ca3af]">실시간 유행 밈과 20자×6컷 고속 대본·출처를 준비했습니다.</div>
+              <div id="arMemeRadarList" class="space-y-2 max-h-[290px] overflow-y-auto pr-0.5"></div>
+            </div>
+
+            <!-- 트랙 B: 해외·밈 영상 한국어 리메이크 (샤오홍슈/해외클립 자막 덮어쓰기 & 더빙) -->
+            <div id="arMemePane_remake" class="hidden space-y-3">
+              <div class="rounded-[10px] bg-black/35 border border-white/10 p-3 space-y-2">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                  <div>
+                    <div class="text-[12.5px] font-bold text-white">1. 해외·원본 클립 업로드 (샤오홍슈·해외 쇼츠)</div>
+                    <p class="text-[11px] text-[#9ca3af]">원본 음악 자동 제거 · 외국어 자막 OCR 번역 · 자막 덮어쓰기 마스크 · 상단 후킹 문구까지 한 번에 처리합니다.</p>
+                  </div>
+                  <label class="btn-primary h-8 px-3 text-[12px] font-semibold inline-flex items-center cursor-pointer shrink-0">
+                    📁 MP4 영상 선택
+                    <input id="arForeignRemakeFileInput" type="file" accept="video/*" class="hidden" onchange="arHandleForeignRemakeVideo(event)" />
+                  </label>
+                </div>
+                <div id="arForeignRemakeStatus" class="text-[11.5px] text-[#93c5fd]">💡 2차 재사용이 허용되었거나 본인이 권리를 보유한 영상을 선택해 주세요.</div>
+              </div>
+
+              <!-- AI 분석 완료 후 활성화되는 컨트롤 -->
+              <div id="arForeignRemakeControls" class="space-y-2.5">
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11.5px] font-semibold text-[#e4e4e7]">2. 상단 고정 후킹 제목 (1탭 적용)</span>
+                    <button type="button" onclick="arSetMemeHookBanner('')" class="text-[10.5px] text-[#9ca3af] hover:text-white cursor-pointer">상단 제목 끄기</button>
+                  </div>
+                  <div id="arForeignHookChips" class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none"></div>
+                  <input id="arForeignCustomHookInput" type="text" placeholder="직접 상단 후킹 제목 입력 (비우면 표시 안 함)" oninput="arSetMemeHookBanner(this.value)" class="studio-input w-full h-8 px-2.5 text-[12px]" />
+                </div>
+
+                <div class="rounded-[10px] bg-white/[0.03] border border-white/10 p-2.5 space-y-2">
+                  <div class="flex items-center justify-between gap-2">
+                    <label class="inline-flex items-center gap-1.5 text-[12px] font-semibold text-white cursor-pointer">
+                      <input id="arCaptionMaskToggle" type="checkbox" checked onchange="arUpdateCaptionMaskSpec()" />
+                      <span>3. 기존 외국어 자막 덮어쓰기 마스크</span>
+                    </label>
+                    <span id="arCaptionMaskPosLabel" class="text-[11px] font-mono text-[#93c5fd]">위치 81% · 높이 13%</span>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2 text-[11px] text-[#d4d4d8]">
+                    <label class="flex items-center gap-1.5">
+                      <span class="shrink-0">세로 위치</span>
+                      <input id="arCaptionMaskY" type="range" min="0.58" max="0.90" step="0.01" value="0.81" oninput="arUpdateCaptionMaskSpec()" class="flex-1 accent-[#60a5fa]" />
+                    </label>
+                    <label class="flex items-center gap-1.5">
+                      <span class="shrink-0">가림 두께</span>
+                      <input id="arCaptionMaskH" type="range" min="0.08" max="0.20" step="0.01" value="0.13" oninput="arUpdateCaptionMaskSpec()" class="flex-1 accent-[#60a5fa]" />
+                    </label>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-2 flex-wrap pt-0.5">
+                  <button type="button" onclick="switchStudioTab('sound');setTimeout(()=>{if(typeof generateAllCutsTts==='function')generateAllCutsTts();},200);" class="btn-primary h-8 px-3 text-[12px] font-semibold cursor-pointer">🔊 한국어 AI 더빙 + 무료 BGM 입히기 →</button>
+                  <button type="button" onclick="switchStudioTab('publish')" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">🚀 출처 포함 예약 발행 →</button>
+                </div>
+              </div>
+            </div>
+          </section>
 
           <div>
             <div class="text-[16px] font-semibold text-[#ededed]">오늘은 어떤 내용으로 올릴까요?</div>
@@ -2966,7 +3058,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-duration-select"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-meme-shorts-factory"><\/script>');
     }
   </script>
   <!--

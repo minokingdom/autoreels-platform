@@ -1110,6 +1110,7 @@ async function handler(req, res) {
   if (body.mode === 'topics') return handleTopics(body, res);
   if (body.mode === 'cardnews') return handleCardNews(body, res);
   if (body.mode === 'cardnews-edit') return handleCardNewsEdit(body, res);
+  if (body.mode === 'meme-radar' || body.mode === 'foreign-remake') return require('../lib/meme-remake-engine.cjs').handleMemeRemakeRequest(body, res);
   if (body.mode === 'reference-style') return require('../lib/reference-analysis.cjs').handleReferenceAnalysis(body, res);
   // 주제 맞춤 씬 이미지 생성: {mode:'scene-prompts' | 'scene-image' | 'scene-images'}
   if (body.mode === 'scene-images' || body.mode === 'scene-prompts' || body.mode === 'scene-image') return handleSceneImages(body, res);

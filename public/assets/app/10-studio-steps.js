@@ -3045,6 +3045,7 @@
       const openHome=!special && !route.hash && !/^\/admin/.test(route.pathname);
       view.classList.toggle('ar-service-home',openHome);
       document.getElementById('startAutoReels').addEventListener('click',()=>{
+        document.getElementById('arMemeShortsBox')?.classList.add('hidden');
         arShowStudioServices(false);
         arSetupSheetMode();
         switchStudioTab('topic',true);
