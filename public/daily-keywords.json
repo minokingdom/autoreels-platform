@@ -1,56 +1,56 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-23T09:15:06.495081+09:00",
+  "collectedAt": "2026-11-23T21:22:56.286798+09:00",
   "items": [
     {
-      "term": "조세호",
-      "startedAt": "2026-11-22T15:10:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "편지",
-      "startedAt": "2026-11-22T15:00:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "atalanta vs inter",
-      "startedAt": "2026-11-22T14:50:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "대학",
-      "startedAt": "2026-11-22T14:40:00-08:00",
+      "term": "상장",
+      "startedAt": "2026-11-23T03:00:00-08:00",
       "traffic": "1000+"
     },
     {
-      "term": "로스앤젤레스 fc",
-      "startedAt": "2026-11-22T14:30:00-08:00",
+      "term": "m",
+      "startedAt": "2026-11-23T03:00:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "공항",
+      "startedAt": "2026-11-23T02:50:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "반도체 메모리",
+      "startedAt": "2026-11-23T02:40:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "중위소득",
+      "startedAt": "2026-11-23T02:10:00-08:00",
       "traffic": "500+"
     },
     {
-      "term": "노시환",
-      "startedAt": "2026-11-22T14:20:00-08:00",
-      "traffic": "2000+"
+      "term": "브레인악셀",
+      "startedAt": "2026-11-23T02:10:00-08:00",
+      "traffic": "500+"
     },
     {
-      "term": "김호령",
-      "startedAt": "2026-11-22T14:20:00-08:00",
-      "traffic": "2000+"
-    },
-    {
-      "term": "쟁의행위",
-      "startedAt": "2026-11-22T14:20:00-08:00",
+      "term": "일론 머스크",
+      "startedAt": "2026-11-23T02:00:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "메디게이트뉴스",
-      "startedAt": "2026-11-22T14:10:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "울릉도",
-      "startedAt": "2026-11-22T14:00:00-08:00",
+      "term": "이진관 판사",
+      "startedAt": "2026-11-23T01:40:00-08:00",
       "traffic": "1000+"
+    },
+    {
+      "term": "가석방",
+      "startedAt": "2026-11-23T01:40:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "딜라이트",
+      "startedAt": "2026-11-23T01:10:00-08:00",
+      "traffic": "200+"
     }
   ],
   "issues": [
@@ -59,18 +59,27 @@
       "day": "2026-11-23",
       "kind": "보도",
       "publisher": "연합뉴스",
-      "url": "https://www.yna.co.kr/view/AKR20261123026200001",
-      "publishedAt": "2026-11-23T09:08:13+09:00",
-      "headline": "野정성국 \"작년 수능시험지, 전남·인천·경기 일부 이미 폐기\""
+      "url": "https://www.yna.co.kr/view/AKR20261123026251001",
+      "publishedAt": "2026-11-23T19:01:30+09:00",
+      "headline": "정성국 \"수능시험지 1년 보관 지침에도 전국서 십수만장 폐기\"(종합)"
     },
     {
-      "term": "전국법관회의 의장",
+      "term": "음주운전 배우 고경표",
       "day": "2026-11-23",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008858233",
-      "publishedAt": "2026-11-23T08:59:00+09:00",
-      "headline": "전국법관회의 의장 \"조희대 탄핵 도 넘어…행동으로 나서야\""
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008859690",
+      "publishedAt": "2026-11-23T20:00:00+09:00",
+      "headline": "음주운전 배우 고경표 경찰 출석…\"무책임한 모습 죄송\""
+    },
+    {
+      "term": "오세훈 서울시장",
+      "day": "2026-11-23",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008859651",
+      "publishedAt": "2026-11-23T19:18:00+09:00",
+      "headline": "오세훈 서울시장, 내일 국무회의 참석…대통령에 부동산·현안 등 건의"
     }
   ],
   "previousIssues": [
