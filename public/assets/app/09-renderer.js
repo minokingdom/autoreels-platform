@@ -5003,6 +5003,16 @@
     }
 
     const AR_CN_TEMPLATES = [
+      // 바이럴 (8종 — 한국 인스타·핀터레스트 최다 저장 바이럴 카드뉴스 6종 구도!)
+      { id: 'viral_sidefade_beauty', cat: '바이럴', name: '좌측 페이드·태그칩', bg: '#0b0c0f', card: 'rgba(255,255,255,0.16)', fg: '#ffffff', muted: '#e4e4e7', accent: '#f4f4f5', pillBg: 'rgba(255,255,255,0.22)', pillFg: '#ffffff', fontKey: 'pretM', style: 'dark', coverLayout: 'photo_viral_sidefade', bodyLayout: 'photo_viral_sidefade', samplePhoto: '/assets/landing/ed-beauty.jpg', scenePack: 'beauty', sampleTitle: '어떤 디자인이\n나랑 잘 어울릴까?' },
+      { id: 'viral_mono_insight', cat: '바이럴', name: '흑백 인사이트 페이드', bg: '#050507', card: 'rgba(255,255,255,0.10)', fg: '#ffffff', muted: '#d4d4d8', accent: '#facc15', pillBg: 'rgba(255,255,255,0.18)', pillFg: '#ffffff', fontKey: 'hahmlet', style: 'dark', monoPhoto: true, coverLayout: 'photo_viral_darkfade', bodyLayout: 'photo_viral_darkfade', samplePhoto: '/assets/scenes/academy/5.jpg', scenePack: 'academy', sampleTitle: '성공을 가로막는\n10가지 습관' },
+      { id: 'viral_runner_hook', cat: '바이럴', name: '리얼 스냅 하단 후킹', bg: '#060608', card: 'rgba(255,255,255,0.12)', fg: '#ffffff', muted: '#d4d4d8', accent: '#ffffff', pillBg: 'rgba(255,255,255,0.20)', pillFg: '#ffffff', fontKey: 'aggro', style: 'dark', coverLayout: 'photo_viral_darkfade', bodyLayout: 'photo_viral_darkfade', samplePhoto: '/assets/scenes/fitness/4.jpg', scenePack: 'fitness', sampleTitle: '아직도 이걸\n모르고 있었다고?' },
+      { id: 'viral_tomato_accent', cat: '바이럴', name: '컬러 강조 포인트', bg: '#160d0a', card: 'rgba(255,255,255,0.14)', fg: '#ffffff', muted: '#f5e6e0', accent: '#ef4444', pillBg: '#ef4444', pillFg: '#ffffff', fontKey: 'paperlogy', style: 'editorial', coverLayout: 'photo_viral_colorword', bodyLayout: 'photo_viral_colorword', samplePhoto: '/assets/landing/ed-dining.jpg', scenePack: 'restaurant', sampleTitle: '올 시즌은\n이 트렌드가\n점령한다' },
+      { id: 'viral_lime_duotag', cat: '바이럴', name: '라임×블랙 투톤라벨', bg: '#111113', card: '#1c1c20', fg: '#ffffff', muted: '#e4e4e7', accent: '#bef264', pillBg: '#bef264', pillFg: '#111113', fontKey: 'gmarket', style: 'dark', coverLayout: 'photo_viral_duotag', bodyLayout: 'photo_viral_duotag', samplePhoto: '/assets/scenes/shop/3.jpg', scenePack: 'shop', sampleTitle: '알아두면 쓸데있는\n실전 꿀팁 잡학사전' },
+      { id: 'viral_yellow_duotag', cat: '바이럴', name: '옐로우×블랙 라벨', bg: '#111113', card: '#1c1c20', fg: '#ffffff', muted: '#e4e4e7', accent: '#facc15', pillBg: '#facc15', pillFg: '#111113', fontKey: 'aggro', style: 'dark', coverLayout: 'photo_viral_duotag', bodyLayout: 'photo_viral_duotag', samplePhoto: '/assets/landing/ed-cafe.jpg', scenePack: 'cafe', sampleTitle: '초보자가 꼭 챙길\n체크리스트 총정리' },
+      { id: 'viral_viewfinder_look', cat: '바이럴', name: '뷰파인더 룩북 프레임', bg: '#ececef', card: '#ffffff', fg: '#111113', muted: '#3f3f46', accent: '#f97316', pillBg: '#111113', pillFg: '#ffffff', fontKey: 'aggro', style: 'swiss', coverLayout: 'photo_viral_viewfinder', bodyLayout: 'photo_viral_viewfinder', samplePhoto: '/assets/landing/ed-interior.jpg', scenePack: 'interior', sampleTitle: 'SEASON\nKEYWORD' },
+      { id: 'viral_lime_glowcard', cat: '바이럴', name: '라임 오라 노트카드', bg: '#f7fee7', card: '#ffffff', fg: '#111113', muted: '#3f3f46', accent: '#a3e635', pillBg: '#111113', pillFg: '#ecfccb', fontKey: 'paperlogy', style: 'soft', coverLayout: 'photo_viral_glowcard', bodyLayout: 'photo_viral_glowcard', samplePhoto: '/assets/scenes/cafe/10.jpg', scenePack: 'cafe', sampleTitle: '하루 10분 만에\n완전히 달라졌다.' },
+
       // 빅타이포 (10종 — 사진 풀배경 + 초대형 타이포그래피!)
       { id: 'big_vogue_center', cat: '빅타이포', name: '보그 중앙 빅타이포', bg: '#101012', card: '#1e1e22', fg: '#ffffff', muted: '#e4e4e7', accent: '#f59e0b', pillBg: '#ffffff', pillFg: '#101012', fontKey: 'songmyung', style: 'editorial', coverLayout: 'photo_big_center', bodyLayout: 'photo_big_center', samplePhoto: '/assets/landing/ed-cafe.jpg', scenePack: 'cafe', sampleTitle: '취향이 곧\n브랜드가 된다' },
       { id: 'big_hype_bottom', cat: '빅타이포', name: '하단 임팩트 빅타이포', bg: '#0c0c0e', card: '#1c1c20', fg: '#ffffff', muted: '#d4d4d8', accent: '#f97316', pillBg: '#f97316', pillFg: '#111111', fontKey: 'aggro', style: 'dark', coverLayout: 'photo_big_bottom', bodyLayout: 'photo_big_bottom', samplePhoto: '/assets/scenes/fitness/2.jpg', scenePack: 'fitness', sampleTitle: '지금 시작해야\n바뀌는 5가지' },
@@ -5106,6 +5116,7 @@
       { name: '모노·블랙', bg: '#121212', accent: '#e5e5e5', fg: '#fafafa' }
     ];
     const AR_CN_PHOTO_LAYOUT_KEYS = [
+      'photo_viral_sidefade', 'photo_viral_darkfade', 'photo_viral_colorword', 'photo_viral_duotag', 'photo_viral_viewfinder', 'photo_viral_glowcard',
       'photo_fade_bottom', 'photo_fade_top', 'photo_fade_duotone', 'photo_fade_radial',
       'photo_big_center', 'photo_big_bottom', 'photo_big_top', 'photo_big_outline', 'photo_big_box', 'photo_big_editorial',
       'photo_top', 'photo_full', 'photo_polaroid', 'photo_arch', 'photo_band', 'photo_frame', 'photo_bottom',
@@ -5272,8 +5283,9 @@
       const pLayout = (hasPhoto && wantLayout !== 'text_only') ? wantLayout : 'text_only';
       const isBigTypo = pLayout.startsWith('photo_big_');
       const isPhotoFade = pLayout.startsWith('photo_fade_');
-      const isFullPhoto = pLayout === 'photo_full' || isBigTypo || pLayout === 'photo_fade_duotone';
-      const topOnPhoto = isFullPhoto || pLayout === 'photo_fade_bottom';
+      const isViralFull = pLayout === 'photo_viral_sidefade' || pLayout === 'photo_viral_darkfade' || pLayout === 'photo_viral_colorword' || pLayout === 'photo_viral_duotag' || pLayout === 'photo_viral_viewfinder';
+      const isFullPhoto = pLayout === 'photo_full' || isBigTypo || pLayout === 'photo_fade_duotone' || isViralFull;
+      const topOnPhoto = (isFullPhoto && pLayout !== 'photo_viral_viewfinder') || pLayout === 'photo_fade_bottom';
       const fg = isFullPhoto ? (pLayout === 'photo_big_box' ? tpl.fg : (arCnIsDarkHex(tpl.fg) ? '#ffffff' : tpl.fg)) : tpl.fg;
       const muted = isFullPhoto ? 'rgba(255,255,255,0.88)' : tpl.muted;
       const accent = isFullPhoto ? (pLayout === 'photo_big_box' ? tpl.accent : (arCnIsDarkHex(tpl.accent) ? '#facc15' : tpl.accent)) : tpl.accent;
@@ -5364,6 +5376,75 @@
         dg.addColorStop(1, arHexToRgba(tpl.bg, 0.94));
         ctx.fillStyle = dg;
         ctx.fillRect(0, 0, W, H);
+      } else if (pLayout === 'photo_viral_sidefade') {
+        // 좌측→우측 다크 그라데이션 페이드 (남자눈썹·뷰티·클리닉 바이럴 스타일!)
+        arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
+        const sideG = ctx.createLinearGradient(0, 0, W * 0.92, 0);
+        sideG.addColorStop(0, 'rgba(6,8,12,0.84)');
+        sideG.addColorStop(0.46, 'rgba(6,8,12,0.62)');
+        sideG.addColorStop(0.78, 'rgba(6,8,12,0.20)');
+        sideG.addColorStop(1, 'rgba(6,8,12,0.06)');
+        ctx.fillStyle = sideG;
+        ctx.fillRect(0, 0, W, H);
+        const botG = ctx.createLinearGradient(0, H * 0.62, 0, H);
+        botG.addColorStop(0, 'rgba(6,8,12,0)');
+        botG.addColorStop(1, 'rgba(6,8,12,0.74)');
+        ctx.fillStyle = botG;
+        ctx.fillRect(0, H * 0.62, W, H * 0.38);
+      } else if (pLayout === 'photo_viral_darkfade') {
+        // 흑백/시네마 풀사진 → 하단 순수 블랙 페이드 (인사이트·자기계발·러너 후킹 스타일!)
+        ctx.save();
+        if (tpl.monoPhoto) ctx.filter = 'grayscale(100%) contrast(1.12)';
+        arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
+        ctx.restore();
+        const darkG = ctx.createLinearGradient(0, 0, 0, H);
+        darkG.addColorStop(0, 'rgba(5,5,7,0.34)');
+        darkG.addColorStop(0.36, 'rgba(5,5,7,0.12)');
+        darkG.addColorStop(0.62, 'rgba(5,5,7,0.72)');
+        darkG.addColorStop(0.82, 'rgba(5,5,7,0.96)');
+        darkG.addColorStop(1, 'rgba(5,5,7,1)');
+        ctx.fillStyle = darkG;
+        ctx.fillRect(0, 0, W, H);
+      } else if (pLayout === 'photo_viral_colorword') {
+        // 선명한 사진 위 은은한 비네트 (토마토 코어 스타일 — 가운데 줄만 강렬한 포인트 컬러!)
+        arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
+        const vig = ctx.createRadialGradient(W * 0.56, H * 0.42, W * 0.14, W * 0.5, H * 0.5, W * 0.88);
+        vig.addColorStop(0, 'rgba(0,0,0,0.16)');
+        vig.addColorStop(0.65, 'rgba(0,0,0,0.44)');
+        vig.addColorStop(1, 'rgba(0,0,0,0.72)');
+        ctx.fillStyle = vig;
+        ctx.fillRect(0, 0, W, H);
+      } else if (pLayout === 'photo_viral_duotag') {
+        // 생생한 풀사진 + 하단 투톤 스티커 라벨 (윔블던 잡학사전 스타일!)
+        arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
+        const subtleG = ctx.createLinearGradient(0, H * 0.55, 0, H);
+        subtleG.addColorStop(0, 'rgba(0,0,0,0)');
+        subtleG.addColorStop(1, 'rgba(0,0,0,0.48)');
+        ctx.fillStyle = subtleG;
+        ctx.fillRect(0, H * 0.55, W, H * 0.45);
+      } else if (pLayout === 'photo_viral_viewfinder') {
+        // 룩북 뷰파인더 풀사진 (PANTS KEYWORD 스타일!)
+        arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
+        const topWash = ctx.createLinearGradient(0, 0, 0, H * 0.36);
+        topWash.addColorStop(0, 'rgba(255,255,255,0.68)');
+        topWash.addColorStop(0.65, 'rgba(255,255,255,0.22)');
+        topWash.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = topWash;
+        ctx.fillRect(0, 0, W, H * 0.36);
+      } else if (pLayout === 'photo_viral_glowcard') {
+        // 파스텔/라임 오라 글로우 + 우측 블렌드 사진 (로코 여주 스타일!)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, W, H);
+        const glow1 = ctx.createRadialGradient(W * 0.5, H * 0.85, W * 0.08, W * 0.5, H * 0.78, W * 0.82);
+        glow1.addColorStop(0, arHexToRgba(tpl.accent || '#a3e635', 0.72));
+        glow1.addColorStop(0.55, arHexToRgba(tpl.accent || '#a3e635', 0.28));
+        glow1.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = glow1;
+        ctx.fillRect(0, 0, W, H);
+        // 우측 상단 라운드 인물/주제 사진 + 하단 글로우와 자연 블렌드
+        const px = Math.round(W * 0.40), py = Math.round(112 * sc);
+        const pw = Math.round(W * 0.54), ph = Math.round(H * 0.46);
+        arCollageDrawCover(ctx, slide.bgImg, px, py, pw, ph, Math.round(28 * sc), null);
       } else if (isFullPhoto) {
         arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
         const scrim = ctx.createLinearGradient(0, 0, 0, H);
@@ -5445,7 +5526,203 @@
       let curY = Math.round(170 * sc);
       let skipBottomHl = false;
 
-      if (pLayout === 'photo_fade_bottom') {
+      if (pLayout === 'photo_viral_sidefade') {
+        // 좌측 다크 페이드 위 좌측 정렬 볼드 타이포 + 하단 프로스트드 #키워드 칩 3개
+        const titleFs = Math.round((isCover ? 74 : 64) * sc * fsMul * tMul);
+        const bodyFs = Math.round(30 * sc * fsMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, W * 0.68).slice(0, 3);
+        const tLH = Math.round(titleFs * 1.24);
+        curY = Math.round(H * 0.34);
+        ctx.save();
+        ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = Math.round(22 * sc);
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(22 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = 'rgba(255,255,255,0.84)';
+        const bLines = arCnWrapLines(ctx, bodyStr, W * 0.62).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+        ctx.restore();
+        // 하단 3개 반투명 키워드 칩 (하이라이트나 본문에서 자동 추출)
+        const rawTags = String(hlStr || kickerTxt || '핵심정리 · 실전가이드 · 추천').split(/[·,|/#]+/).map((s) => s.trim()).filter(Boolean);
+        const tags = rawTags.length >= 2 ? rawTags.slice(0, 3) : [rawTags[0] || '핵심포인트', '맞춤추천', '저장필수'];
+        const chipY = H - Math.round(168 * sc);
+        const chipH = Math.round(52 * sc);
+        const chipGap = Math.round(14 * sc);
+        ctx.font = `600 ${Math.round(24 * sc)}px ${tpl.fontBody}`;
+        let cx = padX;
+        tags.forEach((tg) => {
+          const txt = tg.startsWith('#') ? tg : `#${tg}`;
+          const cw = Math.min(Math.round(280 * sc), ctx.measureText(txt).width + Math.round(36 * sc));
+          if (cx + cw > W - padX + 10) return;
+          ctx.fillStyle = 'rgba(255,255,255,0.22)';
+          ctx.strokeStyle = 'rgba(255,255,255,0.34)';
+          ctx.lineWidth = Math.max(1, 1.5 * sc);
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(cx, chipY, cw, chipH, chipH / 2);
+          else ctx.rect(cx, chipY, cw, chipH);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(txt, cx + cw / 2, chipY + chipH / 2 + 1);
+          cx += cw + chipGap;
+        });
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_viral_darkfade') {
+        // 흑백/스냅 사진 → 하단 순수 블랙 페이드 + 중앙/좌측 볼드 후킹 헤드라인
+        const titleFs = Math.round((isCover ? 78 : 68) * sc * fsMul * tMul);
+        const bodyFs = Math.round(31 * sc * fsMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 3);
+        const tLH = Math.round(titleFs * 1.24);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.88).slice(0, 2);
+        const bLH = Math.round(bodyFs * 1.48);
+        const blockH = tLines.length * tLH + Math.round(22 * sc) + bLines.length * bLH;
+        curY = H - Math.round(145 * sc) - blockH;
+        const alignCenter = Boolean(tpl.monoPhoto);
+        const ax = alignCenter ? W / 2 : padX;
+        ctx.save();
+        // 제목 위 작은 보조 아이브로우 한 줄
+        if (hlStr) {
+          ctx.font = `600 ${Math.round(24 * sc)}px ${tpl.fontBody}`;
+          ctx.fillStyle = tpl.accent && !arCnIsDarkHex(tpl.accent) ? tpl.accent : 'rgba(255,255,255,0.72)';
+          ctx.textAlign = alignCenter ? 'center' : 'left'; ctx.textBaseline = 'bottom';
+          ctx.fillText(hlStr.slice(0, 34), ax, curY - Math.round(16 * sc));
+        }
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        ctx.fillStyle = '#ffffff'; ctx.textAlign = alignCenter ? 'center' : 'left'; ctx.textBaseline = 'top';
+        ctx.shadowColor = 'rgba(0,0,0,0.75)'; ctx.shadowBlur = Math.round(24 * sc);
+        tLines.forEach((ln) => { ctx.fillText(ln, ax, curY); curY += tLH; });
+        curY += Math.round(18 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = 'rgba(255,255,255,0.76)';
+        bLines.forEach((ln) => { ctx.fillText(ln, ax, curY); curY += bLH; });
+        ctx.restore();
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_viral_colorword') {
+        // 토마토 코어 스타일: 좌측 중단 3줄 스택 타이포, 가운데(핵심) 줄만 강렬한 포인트 컬러!
+        const titleFs = Math.round((isCover ? 82 : 70) * sc * fsMul * tMul);
+        const bodyFs = Math.round(31 * sc * fsMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW * 0.86).slice(0, 3);
+        const tLH = Math.round(titleFs * 1.24);
+        curY = Math.round(H * 0.44);
+        ctx.save();
+        ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.shadowColor = 'rgba(0,0,0,0.68)'; ctx.shadowBlur = Math.round(28 * sc); ctx.shadowOffsetY = Math.round(6 * sc);
+        tLines.forEach((ln, li) => {
+          const isAccentLine = (tLines.length >= 2 && li === 1);
+          ctx.fillStyle = isAccentLine ? (tpl.accent || '#ef4444') : '#ffffff';
+          ctx.fillText(ln, padX, curY);
+          curY += tLH;
+        });
+        curY += Math.round(24 * sc);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = 'rgba(255,255,255,0.88)';
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.86).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+        ctx.restore();
+      } else if (pLayout === 'photo_viral_duotag') {
+        // 윔블던 잡학사전 스타일: 좌측 하단 라임/옐로우 1줄 바 + 매트 블랙 2줄 바 투톤 스택!
+        const titleFs = Math.round((isCover ? 64 : 56) * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW - Math.round(48 * sc)).slice(0, 3);
+        const padBX = Math.round(24 * sc), padBY = Math.round(14 * sc);
+        const barH = Math.round(titleFs * 1.16) + padBY * 2;
+        const barGap = Math.round(10 * sc);
+        curY = H - Math.round(180 * sc) - tLines.length * (barH + barGap);
+        ctx.save();
+        tLines.forEach((ln, li) => {
+          ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+          const bw = Math.min(maxTextW, ctx.measureText(ln).width + padBX * 2);
+          const isTop = li === 0;
+          ctx.fillStyle = isTop ? (tpl.accent || '#bef264') : '#0b0b0e';
+          ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = Math.round(18 * sc); ctx.shadowOffsetY = Math.round(6 * sc);
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(padX, curY, bw, barH, Math.round(10 * sc));
+          else ctx.rect(padX, curY, bw, barH);
+          ctx.fill();
+          ctx.shadowColor = 'transparent';
+          ctx.fillStyle = isTop ? (arCnIsDarkHex(tpl.accent || '#bef264') ? '#ffffff' : '#111113') : '#ffffff';
+          ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+          ctx.fillText(ln, padX + padBX, curY + barH / 2 + Math.round(2 * sc));
+          curY += barH + barGap;
+        });
+        if (bodyStr) {
+          curY += Math.round(10 * sc);
+          ctx.font = `600 ${Math.round(28 * sc)}px ${tpl.fontBody}`;
+          ctx.fillStyle = 'rgba(255,255,255,0.92)';
+          ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+          ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = Math.round(14 * sc);
+          const bOne = arCnWrapLines(ctx, bodyStr, maxTextW)[0] || '';
+          ctx.fillText(bOne, padX, curY);
+        }
+        ctx.restore();
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_viral_viewfinder') {
+        // 룩북 뷰파인더: 상단 볼드 스택 제목 + 중앙 4코너 L-브래킷 + 하단 포인트 강조
+        const titleFs = Math.round((isCover ? 96 : 82) * sc * fsMul * tMul);
+        curY = Math.round(140 * sc);
+        ctx.save();
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.12);
+        ctx.fillStyle = '#111113'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += tLH; });
+        // 4코너 뷰파인더 L-브래킷 (┌ ┐ └ ┘)
+        const bx = Math.round(132 * sc), by = Math.round(H * 0.42);
+        const bw = W - bx * 2, bh = Math.round(H * 0.36);
+        const arm = Math.round(78 * sc);
+        ctx.strokeStyle = '#111113'; ctx.lineWidth = Math.max(2, Math.round(7 * sc)); ctx.lineCap = 'square';
+        const drawCorner = (x0, y0, dx, dy) => {
+          ctx.beginPath(); ctx.moveTo(x0, y0 + dy * arm); ctx.lineTo(x0, y0); ctx.lineTo(x0 + dx * arm, y0); ctx.stroke();
+        };
+        drawCorner(bx, by, 1, 1); drawCorner(bx + bw, by, -1, 1);
+        drawCorner(bx, by + bh, 1, -1); drawCorner(bx + bw, by + bh, -1, -1);
+        // 하단 포인트 워드마크
+        const accentWord = hlStr || kickerTxt || 'MINIMAL';
+        ctx.font = `700 ${Math.round(74 * sc)}px 'Nanum Brush Script', ${tpl.fontTitle}`;
+        ctx.fillStyle = tpl.accent || '#f97316';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = Math.round(14 * sc);
+        ctx.fillText(accentWord.slice(0, 18), W / 2, by + bh - Math.round(24 * sc));
+        ctx.restore();
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_viral_glowcard') {
+        // 로코 여주 스타일: 좌상단 볼드 블랙 훅 + 하단 깔끔한 화이트 라운드 노트박스
+        const titleFs = Math.round((isCover ? 64 : 56) * sc * fsMul * tMul);
+        curY = Math.round(156 * sc);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, Math.round(W * 0.38)).slice(0, 4);
+        const tLH = Math.round(titleFs * 1.28);
+        ctx.fillStyle = '#111113'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        // 하단 화이트 노트 카드 (얇은 테두리 + 깔끔한 본문 설명)
+        const cardY = Math.round(H * 0.62);
+        const cardH = Math.round(H * 0.24);
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.10)'; ctx.shadowBlur = Math.round(24 * sc); ctx.shadowOffsetY = Math.round(8 * sc);
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = 'rgba(17,17,19,0.22)';
+        ctx.lineWidth = Math.max(1.5, 2.5 * sc);
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX, cardY, maxTextW, cardH, Math.round(20 * sc));
+        else ctx.rect(padX, cardY, maxTextW, cardH);
+        ctx.fill(); ctx.stroke();
+        ctx.shadowColor = 'transparent';
+        const bodyFs = Math.round(31 * sc * fsMul);
+        ctx.font = `600 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = '#18181b'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        const bLines = arCnWrapLines(ctx, bodyStr || hlStr, maxTextW - Math.round(64 * sc)).slice(0, 4);
+        const bLH = Math.round(bodyFs * 1.52);
+        let by = cardY + Math.round((cardH - bLines.length * bLH) / 2);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX + Math.round(32 * sc), by); by += bLH; });
+        ctx.restore();
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_fade_bottom') {
         // 상단 사진이 하단 배경색으로 녹아든 영역 위에 깔끔한 에디토리얼 타이포 배치
         const titleFs = Math.round((isCover ? 74 : 64) * sc * fsMul * tMul);
         const bodyFs = Math.round(33 * sc * fsMul);
@@ -7670,7 +7947,7 @@
       // 1) 배경·글자 명도 대비 (WCAG 4.5 기준, 풀배경 사진형 제외)
       const nonFullCount = slides.filter((s) => {
         const pl = s.photoLayout || eff.coverLayout || '';
-        return pl !== 'photo_full' && !pl.startsWith('photo_big_');
+        return pl !== 'photo_full' && !pl.startsWith('photo_big_') && !pl.startsWith('photo_viral_');
       }).length;
       if (nonFullCount > 0 && /^#[0-9a-f]{6}$/i.test(eff.bg) && /^#[0-9a-f]{6}$/i.test(eff.fg)) {
         const cr = arContrastRatio(eff.bg, eff.fg);

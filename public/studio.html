@@ -1786,7 +1786,8 @@
               </div>
 
               <div id="arCnCatRow" class="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-                <button type="button" data-cn-cat="all" onclick="arCnSetCat('all')" class="ar-cn-tweak-btn active">전체 64</button>
+                <button type="button" data-cn-cat="all" onclick="arCnSetCat('all')" class="ar-cn-tweak-btn active">전체 72</button>
+                <button type="button" data-cn-cat="바이럴" onclick="arCnSetCat('바이럴')" class="ar-cn-tweak-btn">바이럴</button>
                 <button type="button" data-cn-cat="빅타이포" onclick="arCnSetCat('빅타이포')" class="ar-cn-tweak-btn">빅타이포</button>
                 <button type="button" data-cn-cat="그라데이션" onclick="arCnSetCat('그라데이션')" class="ar-cn-tweak-btn">그라데이션</button>
                 <button type="button" data-cn-cat="핀터레스트" onclick="arCnSetCat('핀터레스트')" class="ar-cn-tweak-btn">핀터레스트</button>
@@ -1888,8 +1889,14 @@
                 <button type="button" id="arCnClearBgPhotoBtn" onclick="arCnClearBgPhoto()" class="btn-secondary h-9 px-3 text-[12px] text-[#fca5a5] cursor-pointer">사진 빼기</button>
               </div>
               <div class="space-y-1.5">
-                <span class="text-[12px] font-semibold text-[#ededed]">이 장의 사진 배치 구도 (28종)</span>
+                <span class="text-[12px] font-semibold text-[#ededed]">이 장의 사진 배치 구도 (34종)</span>
                 <div id="arCnPhotoLayoutRow" class="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                  <button type="button" data-cn-playout="photo_viral_sidefade" onclick="arCnSetPhotoLayout('photo_viral_sidefade')" class="ar-cn-opt-btn">좌측페이드·칩</button>
+                  <button type="button" data-cn-playout="photo_viral_darkfade" onclick="arCnSetPhotoLayout('photo_viral_darkfade')" class="ar-cn-opt-btn">블랙하단페이드</button>
+                  <button type="button" data-cn-playout="photo_viral_colorword" onclick="arCnSetPhotoLayout('photo_viral_colorword')" class="ar-cn-opt-btn">컬러강조줄</button>
+                  <button type="button" data-cn-playout="photo_viral_duotag" onclick="arCnSetPhotoLayout('photo_viral_duotag')" class="ar-cn-opt-btn">투톤라벨</button>
+                  <button type="button" data-cn-playout="photo_viral_viewfinder" onclick="arCnSetPhotoLayout('photo_viral_viewfinder')" class="ar-cn-opt-btn">뷰파인더</button>
+                  <button type="button" data-cn-playout="photo_viral_glowcard" onclick="arCnSetPhotoLayout('photo_viral_glowcard')" class="ar-cn-opt-btn">오라·노트박스</button>
                   <button type="button" data-cn-playout="photo_fade_bottom" onclick="arCnSetPhotoLayout('photo_fade_bottom')" class="ar-cn-opt-btn">사진 하단페이드</button>
                   <button type="button" data-cn-playout="photo_fade_top" onclick="arCnSetPhotoLayout('photo_fade_top')" class="ar-cn-opt-btn">사진 상단페이드</button>
                   <button type="button" data-cn-playout="photo_fade_duotone" onclick="arCnSetPhotoLayout('photo_fade_duotone')" class="ar-cn-opt-btn">사진 컬러틴트</button>
@@ -2910,7 +2917,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cn-photofade"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cn-viral72"><\/script>');
     }
   </script>
   <!--
