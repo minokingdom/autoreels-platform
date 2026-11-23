@@ -1300,8 +1300,8 @@
 
       const openOverlays = () => {
         const list = [];
-        const cutPanel = document.getElementById('cutEditorPanel');
-        if (cutPanel && !cutPanel.classList.contains('hidden')) list.push(cutPanel);
+        const cutEditing = document.body.classList.contains('ar-cut-editing') || (document.getElementById('cutEditorPanel') && !document.getElementById('cutEditorPanel').classList.contains('hidden'));
+        if (cutEditing) list.push(document.getElementById('igEditorHud') || document.getElementById('cutEditorPanel'));
         const dr = document.getElementById('presetDrawer');
         if (dr && dr.classList.contains('open')) list.push(dr);
         document.querySelectorAll('.ar-modal').forEach((m) => { if (!m.classList.contains('hidden')) list.push(m); });
@@ -1312,13 +1312,18 @@
         if (igText && !igText.classList.contains('hidden')) list.push(igText);
         const igDraw = document.getElementById('igDrawOverlay');
         if (igDraw && !igDraw.classList.contains('hidden')) list.push(igDraw);
-        return list;
+        return list.filter(Boolean);
       };
 
       const closeOverlay = (el) => {
         if (!el) return;
         if (el.id === 'presetDrawer') return typeof closePresetDrawer === 'function' && closePresetDrawer();
-        if (el.id === 'cutEditorPanel') return typeof closeCutEditor === 'function' && closeCutEditor();
+        if (el.id === 'igEditorHud' || el.id === 'cutEditorPanel') {
+          if (typeof closeCutEditor === 'function') closeCutEditor();
+          if (typeof togglePinPreviewCut === 'function') togglePinPreviewCut(-1);
+          document.body.classList.remove('ar-cut-editing');
+          return;
+        }
         if (el.id === 'igSheetBackdrop') return typeof closeIgSheet === 'function' && closeIgSheet();
         if (el.id === 'igTextComposeOverlay') return typeof closeIgTextCompose === 'function' && closeIgTextCompose(false);
         if (el.id === 'igDrawOverlay') return typeof closeIgDrawMode === 'function' && closeIgDrawMode(true);
@@ -1380,8 +1385,10 @@
         const prevTab = curNav.tab;
         baseSwitch(key);
         if (!STUDIO_TABS.includes(key)) return;
-        curNav.tab = key;
-        if (fromHistory) return;
+        if (fromHistory) {
+          curNav.tab = key;
+          return;
+        }
         if (prevMode === 'reels' && key === prevTab) return;
         const replaceOv = replaceClosedOverlay && depth === 1 && Number(history.state?.arNav?.ov || 0) === 1 && !openOverlays().length;
         window.arNavPush({ mode: 'reels', tab: key }, { replace: replaceOv });
