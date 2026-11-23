@@ -3700,6 +3700,7 @@
             <span class="ar-el-label">확대</span>
             <input type="range" min="0.8" max="2.4" step="0.05" value="${Number(ph.scale) || 1}"
                    oninput="updateCutElementOverride(${cutIdx}, 'photo', 'scale', this.value, false)" class="flex-1" />
+            ${campaign && campaign.isPhotoCollageMode ? `<button type="button" onclick="closeInlineQuickEdit();arOpenPhotoCollageModal(${cutIdx});" class="ar-el-badge blue">🧩 칸별 사진 맞추기</button>` : ''}
             <button type="button" onclick="openCutPhotoReplaceModal(${cutIdx})" class="ar-el-badge blue">📷 이 컷 사진 교체</button>
             <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'photo')" class="ar-el-badge muted">↺</button>
           </div>
@@ -4651,6 +4652,7 @@
               📷 사진·영상 바꾸기
               <input type="file" accept="image/*,video/*" class="hidden" onchange="replaceCutMedia(${cutIdx}, event);renderCutEditorPanel();if(typeof renderInlineQuickEditBar==='function')renderInlineQuickEditBar();" />
             </label>
+            ${campaign && campaign.isPhotoCollageMode ? `<button type="button" onclick="closeCutEditor();arOpenPhotoCollageModal(${cutIdx});" class="ig-pill ig-pill-main">🧩 콜라주 칸별 맞추기</button>` : ''}
             <button type="button" onclick="resetCutElementOverride(${cutIdx}, 'photo')" class="ar-el-badge muted ml-auto">↺ 초기화</button>
           </div>
           <div class="ar-el-row">

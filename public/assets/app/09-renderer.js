@@ -4111,11 +4111,33 @@
       layout: 'split2', // split2 | magazine3 | grid4 | polaroid | filmstrip | slideshow
       bg: 'dark',       // dark | cream | white
       cutSec: 2.5,
-      previewIdx: 0
+      previewIdx: 0,
+      activeSlot: -1,   // -1 = 전체 보기, 0..3 = 개별 사진 칸 편집 모드
+      slotEdits: {}     // key: `${layout}:${slideIdx}:${slotIdx}` -> { scale, panX, panY, rot, flipX, imgOverride }
     };
 
-    function arCollageDrawCover(ctx, img, x, y, w, h, r = 0) {
-      if (!img || !img.naturalWidth || !img.naturalHeight) return;
+    function arCollageEditKey(slideIdx, slotIdx) {
+      return `${_arCollageState.layout}:${slideIdx}:${slotIdx}`;
+    }
+    function arCollageGetEdit(slideIdx, slotIdx) {
+      return _arCollageState.slotEdits[arCollageEditKey(slideIdx, slotIdx)] || { scale: 1, panX: 0, panY: 0, rot: 0, flipX: false, imgOverride: null };
+    }
+    function arCollageSetEdit(slideIdx, slotIdx, patch) {
+      const k = arCollageEditKey(slideIdx, slotIdx);
+      const cur = arCollageGetEdit(slideIdx, slotIdx);
+      _arCollageState.slotEdits[k] = { ...cur, ...patch };
+      return _arCollageState.slotEdits[k];
+    }
+
+    function arCollageDrawCover(ctx, img, x, y, w, h, r = 0, edit = null) {
+      const useImg = (edit && edit.imgOverride) || img;
+      if (!useImg || !useImg.naturalWidth || !useImg.naturalHeight) return;
+      const scale = Math.max(1, Math.min(2.8, Number(edit && edit.scale) || 1));
+      const panX = Math.max(-0.65, Math.min(0.65, Number(edit && edit.panX) || 0));
+      const panY = Math.max(-0.65, Math.min(0.65, Number(edit && edit.panY) || 0));
+      const rotRad = ((Number(edit && edit.rot) || 0) * Math.PI) / 180;
+      const flipX = Boolean(edit && edit.flipX);
+
       ctx.save();
       if (r > 0) {
         ctx.beginPath();
@@ -4127,11 +4149,90 @@
       } else {
         ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
       }
-      const iw = img.naturalWidth, ih = img.naturalHeight;
-      const sc = Math.max(w / iw, h / ih);
+      const iw = useImg.naturalWidth, ih = useImg.naturalHeight;
+      // 회전 시 모서리 빈틈 방지를 위해 미세 안전 배율 추가
+      const rotPad = Math.abs(rotRad) > 0.001 ? (1 + Math.abs(Math.sin(rotRad)) * 0.45) : 1;
+      const sc = Math.max(w / iw, h / ih) * scale * rotPad;
       const dw = iw * sc, dh = ih * sc;
-      ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+      const cx = x + w / 2 + panX * w;
+      const cy = y + h / 2 + panY * h;
+      ctx.translate(cx, cy);
+      if (rotRad) ctx.rotate(rotRad);
+      if (flipX) ctx.scale(-1, 1);
+      ctx.drawImage(useImg, -dw / 2, -dh / 2, dw, dh);
       ctx.restore();
+    }
+
+    // 슬라이드별 정확한 칸 좌표(렌더링 + 꾹 누르기/탭 히트테스트 공용)
+    function arCollageGetSlotRects(slide, W, H) {
+      if (!slide) return [];
+      const pad = Math.round(W * 0.036);
+      const gap = Math.round(W * 0.024);
+      const rad = Math.round(W * 0.026);
+      if (slide.type === 'single') {
+        return [{ x: 0, y: 0, w: W, h: H, r: 0, rot: 0 }];
+      }
+      if (slide.type === 'split2') {
+        const uw = W - pad * 2;
+        const uh = Math.round((H - pad * 2 - gap) / 2);
+        return [
+          { x: pad, y: pad, w: uw, h: uh, r: rad, rot: 0 },
+          { x: pad, y: pad + uh + gap, w: uw, h: H - pad * 2 - gap - uh, r: rad, rot: 0 }
+        ];
+      }
+      if (slide.type === 'magazine3') {
+        const uw = W - pad * 2;
+        const topH = Math.round((H - pad * 2 - gap) * 0.56);
+        const botY = pad + topH + gap;
+        const botH = H - pad - botY;
+        const halfW = Math.round((uw - gap) / 2);
+        return [
+          { x: pad, y: pad, w: uw, h: topH, r: rad, rot: 0 },
+          { x: pad, y: botY, w: halfW, h: botH, r: rad, rot: 0 },
+          { x: pad + halfW + gap, y: botY, w: uw - halfW - gap, h: botH, r: rad, rot: 0 }
+        ];
+      }
+      if (slide.type === 'grid4') {
+        const cellW = Math.round((W - pad * 2 - gap) / 2);
+        const cellH = Math.round((H - pad * 2 - gap) / 2);
+        return [
+          { x: pad, y: pad, w: cellW, h: cellH, r: rad, rot: 0 },
+          { x: pad + cellW + gap, y: pad, w: W - pad * 2 - gap - cellW, h: cellH, r: rad, rot: 0 },
+          { x: pad, y: pad + cellH + gap, w: cellW, h: H - pad * 2 - gap - cellH, r: rad, rot: 0 },
+          { x: pad + cellW + gap, y: pad + cellH + gap, w: W - pad * 2 - gap - cellW, h: H - pad * 2 - gap - cellH, r: rad, rot: 0 }
+        ];
+      }
+      if (slide.type === 'polaroid') {
+        const pw = Math.round(W * 0.64), ph = Math.round(H * 0.34);
+        const flip = (slide.idx || 0) % 2 === 0 ? 1 : -1;
+        return [
+          { isPolaroid: true, cx: W * (0.45 - 0.04 * flip), cy: H * 0.30, w: pw, h: ph, x: W * (0.45 - 0.04 * flip) - pw / 2, y: H * 0.30 - ph / 2, r: 0, rot: -0.055 * flip },
+          { isPolaroid: true, cx: W * (0.55 + 0.04 * flip), cy: H * 0.67, w: pw, h: ph, x: W * (0.55 + 0.04 * flip) - pw / 2, y: H * 0.67 - ph / 2, r: 0, rot: 0.048 * flip }
+        ];
+      }
+      if (slide.type === 'filmstrip') {
+        const rail = Math.round(W * 0.095);
+        const fw = W - rail * 2;
+        const fh = Math.round((H - pad * 2 - gap * 2) / 3);
+        return [0, 1, 2].map((i) => ({ x: rail, y: pad + i * (fh + gap), w: fw, h: fh, r: Math.round(W * 0.012), rot: 0 }));
+      }
+      return [];
+    }
+
+    function arCollageHitSlot(slide, W, H, px, py) {
+      const rects = arCollageGetSlotRects(slide, W, H);
+      for (let i = rects.length - 1; i >= 0; i--) {
+        const rc = rects[i];
+        if (rc.isPolaroid) {
+          const dx = px - rc.cx, dy = py - rc.cy;
+          const ca = Math.cos(-rc.rot), sa = Math.sin(-rc.rot);
+          const lx = dx * ca - dy * sa, ly = dx * sa + dy * ca;
+          if (Math.abs(lx) <= rc.w / 2 + 12 && Math.abs(ly) <= rc.h / 2 + 24) return i;
+        } else {
+          if (px >= rc.x && px <= rc.x + rc.w && py >= rc.y && py <= rc.y + rc.h) return i;
+        }
+      }
+      return -1;
     }
 
     function arCollageBuildSlides(photos, layout) {
@@ -4184,78 +4285,226 @@
       return slides.slice(0, 10);
     }
 
-    function arCollageRenderSlide(canvas, slide, bgTone) {
+    function arCollageRenderSlide(canvas, slide, bgTone, slideIdx = 0, showOverlayUI = false) {
       const ctx = canvas.getContext('2d');
       const W = canvas.width, H = canvas.height;
       const bgMap = { dark: '#111114', cream: '#f3ece1', white: '#ffffff' };
-      const bgCol = bgMap[bgTone] || '#111114';
-      const pad = Math.round(W * 0.036);
-      const gap = Math.round(W * 0.024);
-      const rad = Math.round(W * 0.026);
-      ctx.fillStyle = bgCol;
+      ctx.fillStyle = slide && slide.type === 'filmstrip' ? '#0c0b0a' : (bgMap[bgTone] || '#111114');
       ctx.fillRect(0, 0, W, H);
       if (!slide || !slide.imgs || !slide.imgs.length) return;
       const imgs = slide.imgs;
+      const rects = arCollageGetSlotRects(slide, W, H);
+      const activeSlot = showOverlayUI ? _arCollageState.activeSlot : -1;
 
-      if (slide.type === 'single') {
-        arCollageDrawCover(ctx, imgs[0], 0, 0, W, H, 0);
-      } else if (slide.type === 'split2') {
-        const uw = W - pad * 2;
-        const uh = Math.round((H - pad * 2 - gap) / 2);
-        arCollageDrawCover(ctx, imgs[0], pad, pad, uw, uh, rad);
-        arCollageDrawCover(ctx, imgs[1] || imgs[0], pad, pad + uh + gap, uw, H - pad * 2 - gap - uh, rad);
-      } else if (slide.type === 'magazine3') {
-        const uw = W - pad * 2;
-        const topH = Math.round((H - pad * 2 - gap) * 0.56);
-        const botY = pad + topH + gap;
-        const botH = H - pad - botY;
-        const halfW = Math.round((uw - gap) / 2);
-        arCollageDrawCover(ctx, imgs[0], pad, pad, uw, topH, rad);
-        arCollageDrawCover(ctx, imgs[1] || imgs[0], pad, botY, halfW, botH, rad);
-        arCollageDrawCover(ctx, imgs[2] || imgs[0], pad + halfW + gap, botY, uw - halfW - gap, botH, rad);
-      } else if (slide.type === 'grid4') {
-        const cellW = Math.round((W - pad * 2 - gap) / 2);
-        const cellH = Math.round((H - pad * 2 - gap) / 2);
-        arCollageDrawCover(ctx, imgs[0], pad, pad, cellW, cellH, rad);
-        arCollageDrawCover(ctx, imgs[1] || imgs[0], pad + cellW + gap, pad, W - pad * 2 - gap - cellW, cellH, rad);
-        arCollageDrawCover(ctx, imgs[2] || imgs[0], pad, pad + cellH + gap, cellW, H - pad * 2 - gap - cellH, rad);
-        arCollageDrawCover(ctx, imgs[3] || imgs[1] || imgs[0], pad + cellW + gap, pad + cellH + gap, W - pad * 2 - gap - cellW, H - pad * 2 - gap - cellH, rad);
-      } else if (slide.type === 'polaroid') {
-        // 부드러운 배경 + 살짝 기울어진 2~3장 폴라로이드 카드
-        const drawPol = (im, cx, cy, pw, ph, ang) => {
-          ctx.save();
-          ctx.translate(cx, cy);
-          ctx.rotate(ang);
-          const b = Math.round(W * 0.025), bot = Math.round(W * 0.085);
-          ctx.shadowColor = 'rgba(0,0,0,0.34)';
-          ctx.shadowBlur = Math.round(W * 0.045);
-          ctx.shadowOffsetY = Math.round(W * 0.02);
-          ctx.fillStyle = '#fcfbf8';
-          ctx.fillRect(-pw / 2 - b, -ph / 2 - b, pw + b * 2, ph + b + bot);
-          ctx.shadowColor = 'transparent';
-          arCollageDrawCover(ctx, im, -pw / 2, -ph / 2, pw, ph, 0);
-          ctx.restore();
-        };
-        const pw = Math.round(W * 0.64), ph = Math.round(H * 0.34);
-        const flip = (slide.idx || 0) % 2 === 0 ? 1 : -1;
-        drawPol(imgs[0], W * (0.45 - 0.04 * flip), H * 0.30, pw, ph, -0.055 * flip);
-        drawPol(imgs[1] || imgs[0], W * (0.55 + 0.04 * flip), H * 0.67, pw, ph, 0.048 * flip);
-      } else if (slide.type === 'filmstrip') {
-        ctx.fillStyle = '#0c0b0a';
-        ctx.fillRect(0, 0, W, H);
+      if (slide.type === 'filmstrip') {
         const rail = Math.round(W * 0.095);
-        const fw = W - rail * 2;
-        const fh = Math.round((H - pad * 2 - gap * 2) / 3);
         ctx.fillStyle = 'rgba(244,238,225,0.22)';
         const holeW = Math.round(rail * 0.44), holeH = Math.round(H * 0.018);
         for (let y = Math.round(H * 0.025); y < H - holeH; y += Math.round(H * 0.045)) {
           ctx.fillRect(Math.round((rail - holeW) / 2), y, holeW, holeH);
           ctx.fillRect(W - rail + Math.round((rail - holeW) / 2), y, holeW, holeH);
         }
-        for (let i = 0; i < 3; i++) {
-          arCollageDrawCover(ctx, imgs[i] || imgs[0], rail, pad + i * (fh + gap), fw, fh, Math.round(W * 0.012));
-        }
       }
+
+      rects.forEach((rc, si) => {
+        const im = imgs[si] || imgs[0];
+        const ed = arCollageGetEdit(slideIdx, si);
+        const isDim = activeSlot >= 0 && activeSlot !== si;
+        const isOn = activeSlot === si;
+        ctx.save();
+        if (isDim) ctx.globalAlpha = 0.42;
+        if (rc.isPolaroid) {
+          ctx.translate(rc.cx, rc.cy);
+          ctx.rotate(rc.rot);
+          const b = Math.round(W * 0.025), bot = Math.round(W * 0.085);
+          ctx.shadowColor = 'rgba(0,0,0,0.34)';
+          ctx.shadowBlur = Math.round(W * 0.045);
+          ctx.shadowOffsetY = Math.round(W * 0.02);
+          ctx.fillStyle = '#fcfbf8';
+          ctx.fillRect(-rc.w / 2 - b, -rc.h / 2 - b, rc.w + b * 2, rc.h + b + bot);
+          ctx.shadowColor = 'transparent';
+          arCollageDrawCover(ctx, im, -rc.w / 2, -rc.h / 2, rc.w, rc.h, 0, ed);
+          if (isOn) {
+            ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 4;
+            ctx.strokeRect(-rc.w / 2 - 2, -rc.h / 2 - 2, rc.w + 4, rc.h + 4);
+          }
+        } else {
+          arCollageDrawCover(ctx, im, rc.x, rc.y, rc.w, rc.h, rc.r, ed);
+          if (isOn) {
+            ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 4;
+            ctx.strokeRect(rc.x + 2, rc.y + 2, rc.w - 4, rc.h - 4);
+          }
+        }
+        ctx.restore();
+
+        // 편집 모드 UI 배지(미리보기 캔버스 전용 — 완성 이미지에는 절대 안 그려짐)
+        if (showOverlayUI) {
+          ctx.save();
+          const bx = rc.isPolaroid ? rc.cx - rc.w * 0.42 : rc.x + 10;
+          const by = rc.isPolaroid ? rc.cy - rc.h * 0.42 : rc.y + 10;
+          const label = isOn ? `✏️ ${si + 1}번 칸 · 드래그 이동` : `${si + 1}`;
+          ctx.font = '700 12px Pretendard, sans-serif';
+          const tw = ctx.measureText(label).width + 14;
+          ctx.fillStyle = isOn ? '#2563eb' : 'rgba(0,0,0,0.68)';
+          ctx.beginPath();
+          ctx.roundRect ? ctx.roundRect(bx, by, tw, 22, 11) : ctx.rect(bx, by, tw, 22);
+          ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+          ctx.fillText(label, bx + 7, by + 11);
+          ctx.restore();
+        }
+      });
+    }
+
+    function arCollageBindCanvasPointer() {
+      const cv = document.getElementById('arCollagePreviewCanvas');
+      if (!cv || cv.dataset.arCollageBound) return;
+      cv.dataset.arCollageBound = '1';
+      let lpTimer = 0;
+      let dragging = false;
+      let startX = 0, startY = 0, origPanX = 0, origPanY = 0;
+      let activeRect = null;
+      let pinchStartDist = 0, pinchStartScale = 1;
+      const pointers = new Map();
+
+      const getCanvasPt = (ev) => {
+        const br = cv.getBoundingClientRect();
+        return {
+          x: ((ev.clientX - br.left) / Math.max(1, br.width)) * cv.width,
+          y: ((ev.clientY - br.top) / Math.max(1, br.height)) * cv.height
+        };
+      };
+
+      cv.addEventListener('pointerdown', (ev) => {
+        const slides = arCollageBuildSlides(_arCollageState.photos, _arCollageState.layout);
+        if (!slides.length) return;
+        const slide = slides[_arCollageState.previewIdx];
+        if (!slide) return;
+        cv.setPointerCapture?.(ev.pointerId);
+        const pt = getCanvasPt(ev);
+        pointers.set(ev.pointerId, pt);
+
+        // 2손가락 핀치 확대
+        if (pointers.size === 2 && _arCollageState.activeSlot >= 0) {
+          clearTimeout(lpTimer); lpTimer = 0; dragging = false;
+          const [p1, p2] = Array.from(pointers.values());
+          pinchStartDist = Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1;
+          pinchStartScale = arCollageGetEdit(_arCollageState.previewIdx, _arCollageState.activeSlot).scale || 1;
+          return;
+        }
+
+        const hit = arCollageHitSlot(slide, cv.width, cv.height, pt.x, pt.y);
+        if (hit < 0) return;
+
+        // 이미 편집 중인 칸을 누르면 즉시 드래그 패닝 시작!
+        if (_arCollageState.activeSlot === hit) {
+          dragging = true;
+          startX = pt.x; startY = pt.y;
+          const ed = arCollageGetEdit(_arCollageState.previewIdx, hit);
+          origPanX = ed.panX || 0; origPanY = ed.panY || 0;
+          activeRect = arCollageGetSlotRects(slide, cv.width, cv.height)[hit];
+          return;
+        }
+
+        // 다른 칸을 꾹 누르면(320ms) 그 칸의 개별 편집 모드로 진입!
+        clearTimeout(lpTimer);
+        startX = pt.x; startY = pt.y;
+        lpTimer = setTimeout(() => {
+          lpTimer = 0;
+          if (navigator.vibrate) { try { navigator.vibrate(18); } catch (_) {} }
+          arCollageEnterSlotEdit(hit);
+          dragging = true;
+          const ed = arCollageGetEdit(_arCollageState.previewIdx, hit);
+          origPanX = ed.panX || 0; origPanY = ed.panY || 0;
+          activeRect = arCollageGetSlotRects(slide, cv.width, cv.height)[hit];
+        }, 320);
+      });
+
+      cv.addEventListener('pointermove', (ev) => {
+        const pt = getCanvasPt(ev);
+        if (pointers.has(ev.pointerId)) pointers.set(ev.pointerId, pt);
+        if (pointers.size === 2 && _arCollageState.activeSlot >= 0 && pinchStartDist > 0) {
+          const [p1, p2] = Array.from(pointers.values());
+          const curDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+          const nextSc = Math.max(1, Math.min(2.6, +(pinchStartScale * (curDist / pinchStartDist)).toFixed(2)));
+          arCollageUpdateActiveSlot('scale', nextSc);
+          return;
+        }
+        if (lpTimer && Math.hypot(pt.x - startX, pt.y - startY) > 14) {
+          clearTimeout(lpTimer); lpTimer = 0;
+        }
+        if (!dragging || _arCollageState.activeSlot < 0 || !activeRect) return;
+        const dx = (pt.x - startX) / Math.max(40, activeRect.w);
+        const dy = (pt.y - startY) / Math.max(40, activeRect.h);
+        arCollageSetEdit(_arCollageState.previewIdx, _arCollageState.activeSlot, {
+          panX: Math.max(-0.65, Math.min(0.65, origPanX + dx)),
+          panY: Math.max(-0.65, Math.min(0.65, origPanY + dy))
+        });
+        arCollageRefreshUI();
+      });
+
+      const endPtr = (ev) => {
+        pointers.delete(ev.pointerId);
+        if (pointers.size < 2) pinchStartDist = 0;
+        clearTimeout(lpTimer); lpTimer = 0;
+        dragging = false;
+      };
+      cv.addEventListener('pointerup', endPtr);
+      cv.addEventListener('pointercancel', endPtr);
+      cv.addEventListener('contextmenu', (ev) => ev.preventDefault());
+      cv.addEventListener('wheel', (ev) => {
+        if (_arCollageState.activeSlot < 0) return;
+        ev.preventDefault();
+        const cur = arCollageGetEdit(_arCollageState.previewIdx, _arCollageState.activeSlot).scale || 1;
+        const next = Math.max(1, Math.min(2.6, +(cur + (ev.deltaY < 0 ? 0.08 : -0.08)).toFixed(2)));
+        arCollageUpdateActiveSlot('scale', next);
+      }, { passive: false });
+    }
+
+    function arCollageEnterSlotEdit(slotIdx) {
+      _arCollageState.activeSlot = slotIdx;
+      arCollageRefreshUI();
+    }
+    function arCollageExitSlotEdit() {
+      _arCollageState.activeSlot = -1;
+      arCollageRefreshUI();
+    }
+    function arCollageUpdateActiveSlot(prop, val) {
+      if (_arCollageState.activeSlot < 0) return;
+      arCollageSetEdit(_arCollageState.previewIdx, _arCollageState.activeSlot, { [prop]: val });
+      arCollageRefreshUI();
+    }
+    function arCollageNudgeSlotRot(delta) {
+      if (_arCollageState.activeSlot < 0) return;
+      const cur = arCollageGetEdit(_arCollageState.previewIdx, _arCollageState.activeSlot).rot || 0;
+      const next = Math.max(-25, Math.min(25, cur + delta));
+      arCollageUpdateActiveSlot('rot', next);
+    }
+    function arCollageToggleSlotFlip() {
+      if (_arCollageState.activeSlot < 0) return;
+      const cur = Boolean(arCollageGetEdit(_arCollageState.previewIdx, _arCollageState.activeSlot).flipX);
+      arCollageUpdateActiveSlot('flipX', !cur);
+    }
+    function arCollageResetActiveSlot() {
+      if (_arCollageState.activeSlot < 0) return;
+      delete _arCollageState.slotEdits[arCollageEditKey(_arCollageState.previewIdx, _arCollageState.activeSlot)];
+      arCollageRefreshUI();
+    }
+    async function arCollageReplaceActiveSlotFile(ev) {
+      const f = ev?.target?.files?.[0];
+      if (ev?.target) ev.target.value = '';
+      if (!f || _arCollageState.activeSlot < 0) return;
+      try {
+        const dataUrl = await new Promise((resolve, reject) => {
+          const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(f);
+        });
+        const im = new Image(); im.src = dataUrl; im._dataUrl = dataUrl;
+        await im.decode();
+        arCollageSetEdit(_arCollageState.previewIdx, _arCollageState.activeSlot, { imgOverride: im, scale: 1, panX: 0, panY: 0, rot: 0, flipX: false });
+        if (typeof window.arVaultSaveImages === 'function') window.arVaultSaveImages([im], 'upload');
+        arCollageRefreshUI();
+      } catch (_) {}
     }
 
     function arCollageRefreshUI() {
@@ -4263,6 +4512,12 @@
       const cntEl = document.getElementById('arCollagePickCount');
       const hintEl = document.getElementById('arCollageEmptyHint');
       const metaEl = document.getElementById('arCollageSlideMeta');
+      const pillsEl = document.getElementById('arCollageSlotPills');
+      const editBar = document.getElementById('arCollageSlotEditBar');
+      const editTitle = document.getElementById('arCollageSlotEditTitle');
+      const scIn = document.getElementById('arCollageSlotScale');
+      const scVal = document.getElementById('arCollageSlotScaleVal');
+      const slotHint = document.getElementById('arCollageSlotHint');
       const cv = document.getElementById('arCollagePreviewCanvas');
       const n = _arCollageState.photos.length;
       if (cntEl) cntEl.textContent = `${n}/10`;
@@ -4284,7 +4539,7 @@
             const del = document.createElement('button');
             del.type = 'button'; del.textContent = '×';
             del.style.cssText = 'position:absolute;right:2px;top:2px;width:18px;height:18px;border-radius:999px;background:rgba(0,0,0,0.75);color:#f87171;border:0;font-size:12px;line-height:1;cursor:pointer;';
-            del.onclick = () => { _arCollageState.photos.splice(idx, 1); arCollageRefreshUI(); };
+            del.onclick = () => { _arCollageState.photos.splice(idx, 1); _arCollageState.activeSlot = -1; arCollageRefreshUI(); };
             card.append(im, num, del);
             listEl.appendChild(card);
           });
@@ -4293,21 +4548,49 @@
       const slides = arCollageBuildSlides(_arCollageState.photos, _arCollageState.layout);
       if (!slides.length) {
         if (metaEl) metaEl.textContent = '0컷 · 0.0초';
+        if (pillsEl) pillsEl.innerHTML = '';
+        if (editBar) editBar.classList.add('hidden');
         if (cv) { const g = cv.getContext('2d'); g.fillStyle = '#0a0a0c'; g.fillRect(0, 0, cv.width, cv.height); }
         return;
       }
       _arCollageState.previewIdx = ((_arCollageState.previewIdx % slides.length) + slides.length) % slides.length;
+      const curSlide = slides[_arCollageState.previewIdx];
+      const slotCount = arCollageGetSlotRects(curSlide, 360, 640).length;
+      if (_arCollageState.activeSlot >= slotCount) _arCollageState.activeSlot = -1;
       if (metaEl) metaEl.textContent = `${_arCollageState.previewIdx + 1}/${slides.length}컷 · ${(slides.length * _arCollageState.cutSec).toFixed(1)}초`;
-      if (cv) arCollageRenderSlide(cv, slides[_arCollageState.previewIdx], _arCollageState.bg);
+      if (pillsEl) {
+        pillsEl.innerHTML = Array.from({ length: slotCount }, (_, si) => {
+          const on = _arCollageState.activeSlot === si;
+          return `<button type="button" onclick="${on ? 'arCollageExitSlotEdit()' : `arCollageEnterSlotEdit(${si})`}" class="px-2 py-0.5 rounded-full text-[11px] font-semibold border cursor-pointer ${on ? 'bg-[#2563eb] text-white border-[#60a5fa]' : 'bg-[#1c1c21] text-[#a1a1aa] border-white/10'}">${si + 1}번 칸${on ? ' 편집중' : ''}</button>`;
+        }).join('');
+      }
+      if (editBar) {
+        const editing = _arCollageState.activeSlot >= 0;
+        editBar.classList.toggle('hidden', !editing);
+        if (slotHint) {
+          slotHint.innerHTML = editing
+            ? `✏️ <strong>${_arCollageState.activeSlot + 1}번 칸</strong>을 드래그해서 위치를 맞추고 확대·회전하세요`
+            : '💡 각 사진 칸을 <strong>꾹 누르면</strong> 그 칸만 확대·이동·교체할 수 있어요';
+        }
+        if (editing) {
+          const ed = arCollageGetEdit(_arCollageState.previewIdx, _arCollageState.activeSlot);
+          if (editTitle) editTitle.textContent = `✏️ ${_arCollageState.activeSlot + 1}번 칸 편집 모드${ed.rot ? ` (${ed.rot}°)` : ''}`;
+          if (scIn) scIn.value = String(ed.scale || 1);
+          if (scVal) scVal.textContent = `${Math.round((ed.scale || 1) * 100)}%`;
+        }
+      }
+      if (cv) arCollageRenderSlide(cv, curSlide, _arCollageState.bg, _arCollageState.previewIdx, true);
     }
 
-    async function arOpenPhotoCollageModal() {
+    async function arOpenPhotoCollageModal(jumpSlideIdx) {
       const modal = document.getElementById('arPhotoCollageModal');
       if (!modal) return;
       if (typeof arPauseForStudioEdit === 'function') arPauseForStudioEdit();
+      if (typeof jumpSlideIdx === 'number' && jumpSlideIdx >= 0) _arCollageState.previewIdx = jumpSlideIdx;
+      _arCollageState.activeSlot = -1;
       modal.classList.remove('hidden');
+      arCollageBindCanvasPointer();
       arCollageRefreshUI();
-      // 보관함 이미지 스트립 채우기
       const vWrap = document.getElementById('arCollageVaultWrap');
       const vStrip = document.getElementById('arCollageVaultStrip');
       if (vWrap && vStrip && typeof window.arVaultGetAll === 'function') {
@@ -4325,10 +4608,17 @@
               im.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
               b.appendChild(im);
               b.onclick = async () => {
-                if (_arCollageState.photos.length >= 10) { if (typeof arToast === 'function') arToast('최대 10장까지 고를 수 있어요.'); return; }
                 const loaded = new Image();
                 loaded.src = item.src;
                 try { await loaded.decode(); } catch (_) {}
+                // 개별 칸 편집 모드 중 보관함 사진을 누르면 그 칸 사진만 바로 교체!
+                if (_arCollageState.activeSlot >= 0) {
+                  arCollageSetEdit(_arCollageState.previewIdx, _arCollageState.activeSlot, { imgOverride: loaded, scale: 1, panX: 0, panY: 0, rot: 0, flipX: false });
+                  arCollageRefreshUI();
+                  if (typeof arToast === 'function') arToast(`${_arCollageState.activeSlot + 1}번 칸 사진을 바꿨어요.`, true);
+                  return;
+                }
+                if (_arCollageState.photos.length >= 10) { if (typeof arToast === 'function') arToast('최대 10장까지 고를 수 있어요.'); return; }
                 _arCollageState.photos.push({ id: item.id + '_' + Date.now(), img: loaded, src: item.src, fromVault: true });
                 arCollageRefreshUI();
               };
@@ -4341,6 +4631,7 @@
       }
     }
     function arClosePhotoCollageModal() {
+      _arCollageState.activeSlot = -1;
       document.getElementById('arPhotoCollageModal')?.classList.add('hidden');
     }
     async function arCollageHandleFiles(ev) {
@@ -4371,12 +4662,13 @@
       }
       arCollageRefreshUI();
     }
-    function arCollageClearPhotos() { _arCollageState.photos = []; _arCollageState.previewIdx = 0; arCollageRefreshUI(); }
-    function arCollageStepPreview(delta) { _arCollageState.previewIdx += delta; arCollageRefreshUI(); }
+    function arCollageClearPhotos() { _arCollageState.photos = []; _arCollageState.previewIdx = 0; _arCollageState.activeSlot = -1; _arCollageState.slotEdits = {}; arCollageRefreshUI(); }
+    function arCollageStepPreview(delta) { _arCollageState.previewIdx += delta; _arCollageState.activeSlot = -1; arCollageRefreshUI(); }
     function arCollageSetLayout(layout) {
       _arCollageState.layout = layout;
       document.querySelectorAll('#arPhotoCollageModal [data-cl-layout]').forEach((b) => b.classList.toggle('active', b.dataset.clLayout === layout));
       _arCollageState.previewIdx = 0;
+      _arCollageState.activeSlot = -1;
       arCollageRefreshUI();
     }
     function arCollageSetBg(bg) {
@@ -4405,7 +4697,7 @@
         const off = document.createElement('canvas');
         off.width = 720; off.height = 1280;
         for (let i = 0; i < slides.length; i++) {
-          arCollageRenderSlide(off, slides[i], _arCollageState.bg);
+          arCollageRenderSlide(off, slides[i], _arCollageState.bg, i, false);
           const url = off.toDataURL('image/jpeg', 0.90);
           const im = new Image();
           im.src = url;
@@ -4478,6 +4770,13 @@
       window.arCollageSetLayout = arCollageSetLayout;
       window.arCollageSetBg = arCollageSetBg;
       window.arCollageSetDur = arCollageSetDur;
+      window.arCollageEnterSlotEdit = arCollageEnterSlotEdit;
+      window.arCollageExitSlotEdit = arCollageExitSlotEdit;
+      window.arCollageUpdateActiveSlot = arCollageUpdateActiveSlot;
+      window.arCollageNudgeSlotRot = arCollageNudgeSlotRot;
+      window.arCollageToggleSlotFlip = arCollageToggleSlotFlip;
+      window.arCollageResetActiveSlot = arCollageResetActiveSlot;
+      window.arCollageReplaceActiveSlotFile = arCollageReplaceActiveSlotFile;
       window.arApplyPhotoCollageToStudio = arApplyPhotoCollageToStudio;
     }
 
