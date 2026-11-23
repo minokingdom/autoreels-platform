@@ -4924,24 +4924,50 @@
     }
 
     const AR_CN_FONTS = [
+      // 임팩트 · 포스터 · 바이럴 볼드 (상업용 무료)
       { key: 'pretM', label: '프리텐다드' },
+      { key: 'freesentation', label: '프리젠테이션' },
       { key: 'paperlogy', label: '페이퍼로지' },
+      { key: 'suite', label: '스위트 헤비' },
       { key: 'gmarket', label: '지마켓산스' },
       { key: 'aggro', label: '어그로 볼드' },
+      { key: 'jalnan', label: '잘난체' },
+      { key: 'blackhansans', label: '검은고딕' },
+      { key: 'gasoekone', label: '가석원 울트라' },
+      { key: 'gangwon', label: '강원파워' },
+      { key: 'lineseed', label: '라인 시드' },
+      { key: 'ibmplex', label: 'IBM 플렉스' },
+      { key: 'tenada', label: '테나다 볼드' },
+      { key: 'cafe24ohsquare', label: '카페24 아네모네' },
       { key: 'cafe24', label: '카페24 둥근' },
       { key: 'bagel', label: '베이글 팻' },
+      { key: 'dohyeon', label: '배민 도현체' },
+      { key: 'jua', label: '배민 주아체' },
+      // 에디토리얼 · 신문 · 감성 명조 (상업용 무료)
       { key: 'hahmlet', label: '함렛 명조' },
+      { key: 'serif7', label: '본명조 볼드' },
+      { key: 'chosun', label: '조선일보명조' },
       { key: 'songmyung', label: '송명 세리프' },
+      { key: 'maru', label: '마루부리' },
       { key: 'diphylleia', label: '디필레이아' },
       { key: 'grandiflora', label: '그란디플로라' },
       { key: 'gowun', label: '고운바탕' },
+      { key: 'batang', label: '고운바탕 볼드' },
+      { key: 'dodum', label: '고운돋움' },
+      // 테크 · 레트로 · 개성 디스플레이 (상업용 무료)
       { key: 'orbit', label: '오르빗 테크' },
+      { key: 'gugi', label: '구기체' },
       { key: 'sunflower', label: '해바라기' },
-      { key: 'jua', label: '주아체' },
+      { key: 'bwpicture', label: '흑백사진체' },
+      { key: 'stylish', label: '스타일리시' },
+      { key: 'moirai', label: '모이라이' },
+      // 손글씨 · 붓글씨 · 캘리 (상업용 무료)
       { key: 'pen', label: '나눔펜 손글씨' },
       { key: 'brush', label: '나눔붓글씨' },
       { key: 'dokdo', label: '독도 캘리' },
-      { key: 'kirang', label: '기랑해랑' }
+      { key: 'kirang', label: '기랑해랑' },
+      { key: 'yeonsung', label: '연성체' },
+      { key: 'gaegu', label: '개구체' }
     ];
     function arCnFontSpec(key) {
       const k = String(key || 'pretM');
@@ -5034,7 +5060,13 @@
     }
 
     const AR_CN_TEMPLATES = [
-      // 바이럴 (14종 — 한국 인스타 바이럴 + 볼드 네온 스탬프·스튜디오·에이전시 팩!)
+      // 바이럴 (20종 — 체커보드 교차 분할 · 45° 사선 슬래시 · 2×2 벤토 · 다이아몬드 포스터 + 한국 바이럴!)
+      { id: 'checker_lime_carbon', cat: '바이럴', name: '라임×카본 체커보드', bg: '#0f0f0f', card: '#1d1f1c', fg: '#ffffff', muted: '#d4d4d8', accent: '#a3e600', pillBg: '#a3e600', pillFg: '#0f0f0f', fontKey: 'freesentation', style: 'dark', coverLayout: 'photo_checker_split', bodyLayout: 'photo_checker_split', samplePhoto: '/assets/scenes/shop/10.jpg', scenePack: 'shop', sampleTitle: '단계별로 올리는\n스마트 활용법' },
+      { id: 'gold_slash_kinetic', cat: '바이럴', name: '골드 45° 사선 슬래시', bg: '#0d0d0d', card: '#1c1c1e', fg: '#ffffff', muted: '#e5e5e5', accent: '#f5c400', pillBg: '#f5c400', pillFg: '#0d0d0d', fontKey: 'freesentation', style: 'dark', monoPhoto: true, coverLayout: 'photo_slash_kinetic', bodyLayout: 'photo_slash_kinetic', samplePhoto: '/assets/scenes/fitness/7.jpg', scenePack: 'fitness', sampleTitle: '결과가 달라지는\n결정적 한 끗' },
+      { id: 'gold_bento_dark', cat: '바이럴', name: '골드×블랙 2×2 벤토', bg: '#0e0e10', card: '#1b1b1f', fg: '#ffffff', muted: '#d4d4d8', accent: '#f5c400', pillBg: '#f5c400', pillFg: '#0e0e10', fontKey: 'gangwon', style: 'dark', monoPhoto: true, coverLayout: 'photo_bento_dark', bodyLayout: 'photo_bento_dark', samplePhoto: '/assets/scenes/auto/8.jpg', scenePack: 'auto', sampleTitle: '프로들이 선택하는\n핵심 스펙 정리' },
+      { id: 'gold_diamond_poster', cat: '바이럴', name: '골드 다이아 포스터', bg: '#f5c400', card: '#111111', fg: '#0d0d0d', muted: '#27272a', accent: '#0d0d0d', pillBg: '#0d0d0d', pillFg: '#f5c400', fontKey: 'jalnan', style: 'swiss', monoPhoto: true, coverLayout: 'photo_diamond_pop', bodyLayout: 'photo_slash_kinetic', samplePhoto: '/assets/scenes/fitness/8.jpg', scenePack: 'fitness', sampleTitle: '눈에 확 띄는\n시그니처 포스터' },
+      { id: 'checker_orange_noir', cat: '바이럴', name: '오렌지×블랙 체커보드', bg: '#111113', card: '#1f1e22', fg: '#ffffff', muted: '#e4e4e7', accent: '#fb923c', pillBg: '#fb923c', pillFg: '#111113', fontKey: 'blackhansans', style: 'dark', coverLayout: 'photo_checker_split', bodyLayout: 'photo_checker_split', samplePhoto: '/assets/scenes/cafe/13.jpg', scenePack: 'cafe', sampleTitle: '저장하고 꺼내 보는\n브랜드 꿀팁 7' },
+      { id: 'checker_cyan_navy', cat: '바이럴', name: '시안×네이비 체커보드', bg: '#071126', card: '#102042', fg: '#ffffff', muted: '#bae6fd', accent: '#38bdf8', pillBg: '#38bdf8', pillFg: '#071126', fontKey: 'suite', style: 'news', coverLayout: 'photo_checker_split', bodyLayout: 'photo_checker_split', samplePhoto: '/assets/scenes/academy/6.jpg', scenePack: 'academy', sampleTitle: '실무 속도를 2배로\n높이는 체크리스트' },
       { id: 'bold_verde_stamp', cat: '바이럴', name: '네온 라임 스탬프', bg: '#0c0d0c', card: 'rgba(200,255,46,0.14)', fg: '#ffffff', muted: '#d4d4d8', accent: '#c8ff2e', pillBg: '#c8ff2e', pillFg: '#0c0d0c', fontKey: 'aggro', style: 'dark', monoPhoto: true, coverLayout: 'photo_bold_stamp', bodyLayout: 'photo_bold_stamp', samplePhoto: '/assets/scenes/fitness/6.jpg', scenePack: 'fitness', sampleTitle: '지금 당장\n시작해야 할 이유' },
       { id: 'neon_studio_poster', cat: '바이럴', name: '애시드 라임 스튜디오', bg: '#d4ff2a', card: '#ffffff', fg: '#0e0f0c', muted: '#27272a', accent: '#0e0f0c', pillBg: '#0e0f0c', pillFg: '#d4ff2a', fontKey: 'aggro', style: 'swiss', monoPhoto: true, coverLayout: 'photo_neon_studio', bodyLayout: 'photo_neon_studio', samplePhoto: '/assets/scenes/shop/9.jpg', scenePack: 'shop', sampleTitle: '브랜드가\n기억되는 공식' },
       { id: 'bold_verde_card', cat: '바이럴', name: '흑백×라임 알림카드', bg: '#0b0c0b', card: '#c8ff2e', fg: '#0e0f0c', muted: '#27272a', accent: '#c8ff2e', pillBg: '#c8ff2e', pillFg: '#0b0c0b', fontKey: 'paperlogy', style: 'dark', monoPhoto: true, coverLayout: 'photo_neon_card', bodyLayout: 'photo_bold_stamp', samplePhoto: '/assets/scenes/cafe/12.jpg', scenePack: 'cafe', sampleTitle: '오늘 꼭 기억할\n핵심 체크 3가지' },
@@ -5153,6 +5185,7 @@
       { name: '모노·블랙', bg: '#121212', accent: '#e5e5e5', fg: '#fafafa' }
     ];
     const AR_CN_PHOTO_LAYOUT_KEYS = [
+      'photo_checker_split', 'photo_slash_kinetic', 'photo_bento_dark', 'photo_diamond_pop',
       'photo_bold_stamp', 'photo_neon_studio', 'photo_neon_card', 'photo_agency_brand',
       'photo_viral_sidefade', 'photo_viral_darkfade', 'photo_viral_colorword', 'photo_viral_duotag', 'photo_viral_viewfinder', 'photo_viral_glowcard',
       'photo_fade_bottom', 'photo_fade_top', 'photo_fade_duotone', 'photo_fade_radial',
@@ -5321,7 +5354,7 @@
       const pLayout = (hasPhoto && wantLayout !== 'text_only') ? wantLayout : 'text_only';
       const isBigTypo = pLayout.startsWith('photo_big_');
       const isPhotoFade = pLayout.startsWith('photo_fade_');
-      const isViralFull = pLayout === 'photo_viral_sidefade' || pLayout === 'photo_viral_darkfade' || pLayout === 'photo_viral_colorword' || pLayout === 'photo_viral_duotag' || pLayout === 'photo_viral_viewfinder' || pLayout === 'photo_bold_stamp' || pLayout === 'photo_neon_card';
+      const isViralFull = pLayout === 'photo_viral_sidefade' || pLayout === 'photo_viral_darkfade' || pLayout === 'photo_viral_colorword' || pLayout === 'photo_viral_duotag' || pLayout === 'photo_viral_viewfinder' || pLayout === 'photo_bold_stamp' || pLayout === 'photo_neon_card' || pLayout === 'photo_slash_kinetic';
       const isFullPhoto = pLayout === 'photo_full' || isBigTypo || pLayout === 'photo_fade_duotone' || isViralFull;
       const topOnPhoto = (isFullPhoto && pLayout !== 'photo_viral_viewfinder') || pLayout === 'photo_fade_bottom';
       const fg = isFullPhoto ? (pLayout === 'photo_big_box' ? tpl.fg : (arCnIsDarkHex(tpl.fg) ? '#ffffff' : tpl.fg)) : tpl.fg;
@@ -5414,6 +5447,44 @@
         dg.addColorStop(1, arHexToRgba(tpl.bg, 0.94));
         ctx.fillStyle = dg;
         ctx.fillRect(0, 0, W, H);
+      } else if (pLayout === 'photo_slash_kinetic') {
+        // Pin #1: 고대비 흑백 풀사진 + 45° 골드/포인트 사선 슬래시 리본 & 코너 대각선 빗금(////)
+        ctx.save();
+        if (tpl.monoPhoto !== false) ctx.filter = 'grayscale(100%) contrast(1.18) brightness(0.82)';
+        arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
+        ctx.restore();
+        const ac = tpl.accent || '#f5c400';
+        ctx.save();
+        // 상단 우측 → 하단 좌측 45° 사선 슬래시 2줄
+        ctx.fillStyle = ac; ctx.globalAlpha = 0.88;
+        ctx.beginPath();
+        ctx.moveTo(W * 0.64, 0); ctx.lineTo(W * 0.82, 0);
+        ctx.lineTo(W * 0.16, H); ctx.lineTo(-W * 0.02, H);
+        ctx.closePath(); ctx.fill();
+        ctx.globalAlpha = 0.24;
+        ctx.beginPath();
+        ctx.moveTo(W * 0.88, 0); ctx.lineTo(W * 0.96, 0);
+        ctx.lineTo(W * 0.30, H); ctx.lineTo(W * 0.22, H);
+        ctx.closePath(); ctx.fill();
+        // 중앙 가독성용 다크 밴드
+        ctx.globalAlpha = 1;
+        const midSc = ctx.createLinearGradient(0, H * 0.28, 0, H * 0.78);
+        midSc.addColorStop(0, 'rgba(10,10,12,0)');
+        midSc.addColorStop(0.35, 'rgba(10,10,12,0.72)');
+        midSc.addColorStop(0.68, 'rgba(10,10,12,0.72)');
+        midSc.addColorStop(1, 'rgba(10,10,12,0.12)');
+        ctx.fillStyle = midSc;
+        ctx.fillRect(0, H * 0.28, W, H * 0.50);
+        // 코너 평행 대각선 빗금 장식 (////)
+        ctx.strokeStyle = ac; ctx.lineWidth = Math.max(1.5, 3 * sc);
+        for (let di = 0; di < 5; di++) {
+          const off = di * Math.round(24 * sc);
+          ctx.beginPath();
+          ctx.moveTo(W - Math.round(160 * sc) + off, H - Math.round(60 * sc));
+          ctx.lineTo(W - Math.round(50 * sc) + off, H - Math.round(170 * sc));
+          ctx.stroke();
+        }
+        ctx.restore();
       } else if (pLayout === 'photo_bold_stamp' || pLayout === 'photo_neon_card') {
         // Feed Bold Verde 스타일: 고대비 흑백 풀사진 + 깊은 다크 비네트 + 원형 스탬프 & 네온 도트 매트릭스!
         ctx.save();
@@ -5581,7 +5652,236 @@
       let curY = Math.round(170 * sc);
       let skipBottomHl = false;
 
-      if (pLayout === 'photo_bold_stamp') {
+      if (pLayout === 'photo_checker_split') {
+        // Pin #2: 짝수·홀수 카드마다 카본 블랙 ↔ 네온 라임(포인트색)이 교차 반전되는 체커보드 좌우 분할 캐러셀!
+        const isAltBright = (slideIdx % 2 === 1);
+        const bgCol = isAltBright ? (tpl.accent || '#a3e600') : (tpl.bg || '#0f0f0f');
+        const mainFg = isAltBright ? '#0e0f0c' : '#ffffff';
+        const hiFg = isAltBright ? '#1f4d0e' : (tpl.accent || '#a3e600');
+        const bodyFg = isAltBright ? 'rgba(14,15,12,0.82)' : 'rgba(255,255,255,0.80)';
+        // 전체 체커보드 바탕 채우기 (교차 반전)
+        ctx.fillStyle = bgCol;
+        ctx.fillRect(0, 0, W, H);
+        // 다크 타일 은은한 동심원 HUD 링
+        if (!isAltBright) {
+          ctx.save();
+          ctx.strokeStyle = arHexToRgba(hiFg, 0.10);
+          ctx.lineWidth = Math.max(1, 2 * sc);
+          [0.24, 0.38, 0.52].forEach((rr) => {
+            ctx.beginPath(); ctx.arc(W * 0.78, H * 0.52, W * rr, 0, Math.PI * 2); ctx.stroke();
+          });
+          ctx.restore();
+        }
+        // 상단 헤더 (좌측 배지 + 우측 ••• 도트)
+        ctx.font = `800 ${Math.round(24 * sc)}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = mainFg; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(String(kickerTxt || `STEP ${String(slideIdx + 1).padStart(2, '0')}`).toUpperCase().slice(0, 18), padX, Math.round(92 * sc));
+        for (let di = 0; di < 3; di++) {
+          ctx.fillStyle = di === (slideIdx % 3) ? hiFg : mainFg;
+          ctx.globalAlpha = di === (slideIdx % 3) ? 1 : 0.35;
+          ctx.beginPath();
+          ctx.arc(W - padX - (2 - di) * Math.round(22 * sc), Math.round(92 * sc), Math.round(6 * sc), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        // 좌측 52% 텍스트 스택 (2톤 볼드 제목 + 짧은 가로선 + 본문 + 캡슐 아웃라인 CTA)
+        const leftW = Math.round(W * 0.48);
+        const titleFs = Math.round((isCover ? 74 : 66) * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, leftW).slice(0, 4);
+        const tLH = Math.round(titleFs * 1.16);
+        curY = Math.round(188 * sc);
+        ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln, li) => {
+          ctx.fillStyle = li === 1 ? hiFg : mainFg;
+          ctx.fillText(ln, padX, curY);
+          curY += tLH;
+        });
+        curY += Math.round(18 * sc);
+        ctx.fillStyle = hiFg;
+        ctx.fillRect(padX, curY, Math.round(52 * sc), Math.max(2, Math.round(5 * sc)));
+        curY += Math.round(26 * sc);
+        const bodyFs = Math.round(29 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = bodyFg;
+        const bLines = arCnWrapLines(ctx, bodyStr, leftW).slice(0, 5);
+        const bLH = Math.round(bodyFs * 1.5);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+        // 우측 44% 플로팅 쇼케이스 사진 카드
+        const rx = padX + leftW + Math.round(26 * sc);
+        const rw = W - padX - rx;
+        const ry = Math.round(206 * sc);
+        const rh = Math.round(H * 0.56);
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.28)'; ctx.shadowBlur = Math.round(32 * sc); ctx.shadowOffsetY = Math.round(14 * sc);
+        arCollageDrawCover(ctx, slide.bgImg, rx, ry, rw, rh, Math.round(24 * sc), null);
+        ctx.restore();
+        ctx.strokeStyle = isAltBright ? 'rgba(14,15,12,0.28)' : arHexToRgba(hiFg, 0.45);
+        ctx.lineWidth = Math.max(1.5, 2.5 * sc);
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(rx, ry, rw, rh, Math.round(24 * sc));
+        else ctx.rect(rx, ry, rw, rh);
+        ctx.stroke();
+        // 좌측 하단 1px 아웃라인 캡슐 CTA 버튼
+        const ctaTxt = (hlStr || 'SWIPE NEXT →').slice(0, 22);
+        const ctaY = H - Math.round(154 * sc);
+        const ctaH = Math.round(54 * sc);
+        ctx.font = `700 ${Math.round(23 * sc)}px ${tpl.fontBody}`;
+        const ctaW = Math.min(leftW + Math.round(40 * sc), ctx.measureText(ctaTxt).width + Math.round(48 * sc));
+        ctx.strokeStyle = isAltBright ? '#0e0f0c' : hiFg;
+        ctx.lineWidth = Math.max(1.5, 2.5 * sc);
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX, ctaY, ctaW, ctaH, ctaH / 2);
+        else ctx.rect(padX, ctaY, ctaW, ctaH);
+        ctx.stroke();
+        ctx.fillStyle = isAltBright ? '#0e0f0c' : hiFg;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(ctaTxt, padX + ctaW / 2, ctaY + ctaH / 2 + 1);
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_slash_kinetic') {
+        // Pin #1 R3C2: 45° 사선 슬래시 위 중앙 볼드 헤드라인 + 포인트 언더라인
+        const titleFs = Math.round((isCover ? 92 : 80) * sc * fsMul * tMul);
+        const bodyFs = Math.round(32 * sc * fsMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 3);
+        const tLH = Math.round(titleFs * 1.16);
+        const blockH = tLines.length * tLH + Math.round(120 * sc);
+        curY = Math.round((H - blockH) * 0.48);
+        ctx.save();
+        ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.shadowColor = 'rgba(0,0,0,0.75)'; ctx.shadowBlur = Math.round(28 * sc); ctx.shadowOffsetY = Math.round(8 * sc);
+        tLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += tLH; });
+        ctx.shadowColor = 'transparent';
+        ctx.fillStyle = tpl.accent || '#f5c400';
+        ctx.fillRect(W / 2 - Math.round(64 * sc), curY + Math.round(12 * sc), Math.round(128 * sc), Math.max(3, Math.round(8 * sc)));
+        curY += Math.round(44 * sc);
+        ctx.font = `600 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.88).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.46);
+        bLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += bLH; });
+        ctx.restore();
+      } else if (pLayout === 'photo_bento_dark') {
+        // Pin #1 R4C1: 비대칭 2×2 다크×골드 벤토 그리드!
+        const ac = tpl.accent || '#f5c400';
+        const topY = Math.round(142 * sc);
+        const totalH = H - topY - Math.round(118 * sc);
+        const gap = Math.round(18 * sc);
+        const leftW = Math.round((maxTextW - gap) * 0.48);
+        const rightW = maxTextW - gap - leftW;
+        const leftTopH = Math.round(totalH * 0.36);
+        const leftBotH = totalH - gap - leftTopH;
+        const rightTopH = Math.round(totalH * 0.64);
+        const rightBotH = totalH - gap - rightTopH;
+        const nextSlide = (!overrideTpl && _arCnState.slides.length > 1) ? _arCnState.slides[(slideIdx + 1) % _arCnState.slides.length] : null;
+        const img2 = (nextSlide && nextSlide.bgImg && nextSlide.bgImg.naturalWidth) ? nextSlide.bgImg : slide.bgImg;
+        // 1) 좌상단: 골드 틴트 서브 포토
+        arCollageDrawCover(ctx, img2, padX, topY, leftW, leftTopH, Math.round(14 * sc), null);
+        ctx.fillStyle = arHexToRgba(ac, 0.36);
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX, topY, leftW, leftTopH, Math.round(14 * sc));
+        else ctx.rect(padX, topY, leftW, leftTopH);
+        ctx.fill();
+        // 2) 우상단: 고대비 흑백 대형 세로 포토
+        ctx.save();
+        if (tpl.monoPhoto !== false) ctx.filter = 'grayscale(100%) contrast(1.16)';
+        arCollageDrawCover(ctx, slide.bgImg, padX + leftW + gap, topY, rightW, rightTopH, Math.round(14 * sc), null);
+        ctx.restore();
+        // 3) 좌하단: 다크 카피 카드 (제목 + 본문)
+        const lbY = topY + leftTopH + gap;
+        ctx.fillStyle = '#18181c';
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX, lbY, leftW, leftBotH, Math.round(14 * sc));
+        else ctx.rect(padX, lbY, leftW, leftBotH);
+        ctx.fill();
+        ctx.fillStyle = ac;
+        ctx.fillRect(padX + Math.round(28 * sc), lbY + Math.round(30 * sc), Math.round(48 * sc), Math.max(2, Math.round(5 * sc)));
+        let ly = lbY + Math.round(56 * sc);
+        const titleFs = Math.round(42 * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        const tLines = arCnWrapLines(ctx, titleStr, leftW - Math.round(56 * sc)).slice(0, 3);
+        const tLH = Math.round(titleFs * 1.24);
+        tLines.forEach((ln) => { ctx.fillText(ln, padX + Math.round(28 * sc), ly); ly += tLH; });
+        ly += Math.round(18 * sc);
+        const bodyFs = Math.round(26 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = 'rgba(255,255,255,0.78)';
+        const bLines = arCnWrapLines(ctx, bodyStr, leftW - Math.round(56 * sc)).slice(0, 5);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX + Math.round(28 * sc), ly); ly += bLH; });
+        // 4) 우하단: 골드 포인트 CTA 블록
+        const rbX = padX + leftW + gap, rbY = topY + rightTopH + gap;
+        ctx.fillStyle = ac;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(rbX, rbY, rightW, rightBotH, Math.round(14 * sc));
+        else ctx.rect(rbX, rbY, rightW, rightBotH);
+        ctx.fill();
+        ctx.fillStyle = '#0e0e10';
+        ctx.font = `800 ${Math.round(28 * sc)}px ${tpl.fontTitle}`;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        const ctaLns = arCnWrapLines(ctx, hlStr || '밀어서 확인 →', rightW - Math.round(48 * sc)).slice(0, 2);
+        let ry0 = rbY + Math.round(32 * sc);
+        ctaLns.forEach((ln) => { ctx.fillText(ln, rbX + Math.round(24 * sc), ry0); ry0 += Math.round(38 * sc); });
+        ctx.font = `700 ${Math.round(56 * sc)}px 'JetBrains Mono', monospace`;
+        ctx.globalAlpha = 0.22; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+        ctx.fillText(String(slideIdx + 1).padStart(2, '0'), rbX + rightW - Math.round(20 * sc), rbY + rightBotH - Math.round(12 * sc));
+        ctx.globalAlpha = 1;
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_diamond_pop') {
+        // Pin #1 R3C3/R4C3: 골드/포인트 포스터 + 회전 다이아몬드 흑백 포토 + 좌측 세로 사이드 텍스트 + 코너 빗금!
+        ctx.save();
+        // 우상단 평행 빗금(////)
+        ctx.strokeStyle = 'rgba(14,14,14,0.22)'; ctx.lineWidth = Math.max(1.5, 3 * sc);
+        for (let di = 0; di < 6; di++) {
+          const off = di * Math.round(24 * sc);
+          ctx.beginPath();
+          ctx.moveTo(W - Math.round(200 * sc) + off, 0);
+          ctx.lineTo(W, Math.round(200 * sc) - off);
+          ctx.stroke();
+        }
+        // 좌측 세로 회전 사이드 라벨 (90° CCW)
+        ctx.save();
+        ctx.translate(Math.round(34 * sc), H * 0.62);
+        ctx.rotate(-Math.PI / 2);
+        ctx.font = `700 ${Math.round(18 * sc)}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = 'rgba(14,14,14,0.58)'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(`ARCHIVE EDITION · NO.${String(slideIdx + 1).padStart(2, '0')} · SWIPE →`, 0, 0);
+        ctx.restore();
+        ctx.restore();
+        // 상단 굵은 압축 헤드라인
+        curY = Math.round(142 * sc);
+        const titleFs = Math.round((isCover ? 72 : 62) * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.16);
+        ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += tLH; });
+        // 중앙 회전 다이아몬드 다크 백플레이트 + 고대비 흑백 포토 클립
+        const cx = W / 2, cy = Math.round(H * 0.54);
+        const dSize = Math.round(W * 0.36);
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(Math.PI / 4);
+        ctx.fillStyle = '#111113';
+        ctx.fillRect(-dSize + Math.round(14 * sc), -dSize + Math.round(14 * sc), dSize * 2, dSize * 2);
+        ctx.beginPath();
+        ctx.rect(-dSize, -dSize, dSize * 2, dSize * 2);
+        ctx.clip();
+        ctx.rotate(-Math.PI / 4);
+        if (tpl.monoPhoto !== false) ctx.filter = 'grayscale(100%) contrast(1.18)';
+        arCollageDrawCover(ctx, slide.bgImg, -dSize * 1.45, -dSize * 1.45, dSize * 2.9, dSize * 2.9, 0, null);
+        ctx.restore();
+        // 하단 본문
+        curY = cy + Math.round(dSize * 1.24);
+        const bodyFs = Math.round(30 * sc * fsMul);
+        ctx.font = `600 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.88).slice(0, 2);
+        const bLH = Math.round(bodyFs * 1.46);
+        bLines.forEach((ln) => { ctx.fillText(ln, W / 2, curY); curY += bLH; });
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_bold_stamp') {
         // Feed Bold Verde 스타일: 고대비 흑백 풀사진 위 좌측 볼드 타이포 + 네온 라임 하이라이트 서브바
         const titleFs = Math.round((isCover ? 86 : 74) * sc * fsMul * tMul);
         const bodyFs = Math.round(31 * sc * fsMul);
@@ -8135,7 +8435,7 @@
       // 1) 배경·글자 명도 대비 (WCAG 4.5 기준, 풀배경 사진형 제외)
       const nonFullCount = slides.filter((s) => {
         const pl = s.photoLayout || eff.coverLayout || '';
-        return pl !== 'photo_full' && !pl.startsWith('photo_big_') && !pl.startsWith('photo_viral_') && pl !== 'photo_bold_stamp' && pl !== 'photo_neon_card';
+        return pl !== 'photo_full' && !pl.startsWith('photo_big_') && !pl.startsWith('photo_viral_') && pl !== 'photo_bold_stamp' && pl !== 'photo_neon_card' && pl !== 'photo_slash_kinetic' && pl !== 'photo_checker_split';
       }).length;
       if (nonFullCount > 0 && /^#[0-9a-f]{6}$/i.test(eff.bg) && /^#[0-9a-f]{6}$/i.test(eff.fg)) {
         const cr = arContrastRatio(eff.bg, eff.fg);
