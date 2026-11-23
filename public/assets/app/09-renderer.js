@@ -4900,6 +4900,688 @@
       window.arApplyPhotoCollageToStudio = arApplyPhotoCollageToStudio;
     }
 
+    // ★ 인스타 카드뉴스(캐러셀) 만들기 (주제 → 5~10장 자동 생성 → 기본 템플릿 8종에서 텍스트만 수정 → PNG/ZIP/릴스 내보내기)
+    const AR_CN_TEMPLATES = [
+      { id: 'editorial_ivory', name: '아이보리 매거진', bg: '#f6f1e8', card: '#efe7da', fg: '#1a1816', muted: '#6b6258', accent: '#b45309', pillBg: '#1a1816', pillFg: '#f6f1e8', fontTitle: "'Gowun Batang', 'Hahmlet', serif", fontBody: "'Pretendard', sans-serif", style: 'editorial' },
+      { id: 'minimal_white', name: '미니멀 화이트', bg: '#ffffff', card: '#f4f6fb', fg: '#111113', muted: '#52525b', accent: '#2563eb', pillBg: '#eff6ff', pillFg: '#1d4ed8', fontTitle: "'GmarketSans', 'Pretendard', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'clean' },
+      { id: 'dark_noir', name: '다크 인사이트', bg: '#0f1014', card: '#191b22', fg: '#f8fafc', muted: '#a1a1aa', accent: '#facc15', pillBg: '#facc15', pillFg: '#111113', fontTitle: "'Paperlogy', 'GmarketSans', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'dark' },
+      { id: 'forest_sage', name: '세이지 웰니스', bg: '#edf2ed', card: '#e1ebe1', fg: '#172b20', muted: '#4b6355', accent: '#2f6f4e', pillBg: '#2f6f4e', pillFg: '#ffffff', fontTitle: "'Hahmlet', 'Gowun Batang', serif", fontBody: "'Pretendard', sans-serif", style: 'soft' },
+      { id: 'cobalt_news', name: '코발트 브리핑', bg: '#0c1938', card: '#142652', fg: '#ffffff', muted: '#93c5fd', accent: '#38bdf8', pillBg: '#38bdf8', pillFg: '#082f49', fontTitle: "'GmarketSans', 'Pretendard', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'news' },
+      { id: 'warm_cream', name: '크림 다이어리', bg: '#fbf5eb', card: '#f3e8d6', fg: '#2b211a', muted: '#786656', accent: '#d97706', pillBg: '#fef3c7', pillFg: '#92400e', fontTitle: "'Gowun Batang', serif", fontBody: "'Pretendard', sans-serif", style: 'note' },
+      { id: 'pastel_peach', name: '소프트 피치', bg: '#fff5f2', card: '#ffe8e2', fg: '#26181a', muted: '#7a575c', accent: '#e11d48', pillBg: '#e11d48', pillFg: '#ffffff', fontTitle: "'Cafe24Ssurround', 'GmarketSans', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'soft' },
+      { id: 'mono_grid', name: '모노 스위스', bg: '#f3f3f5', card: '#e4e4e7', fg: '#09090b', muted: '#52525b', accent: '#18181b', pillBg: '#09090b', pillFg: '#ffffff', fontTitle: "'Paperlogy', 'Pretendard', sans-serif", fontBody: "'Pretendard', sans-serif", style: 'swiss' }
+    ];
+    const _arCnState = {
+      templateId: 'editorial_ivory',
+      ratio: '4:5',       // '4:5' (1080x1350) | '1:1' (1080x1080)
+      fontScale: 'md',    // 'sm' | 'md' | 'lg'
+      targetCount: 7,     // 5..10
+      handle: '',
+      activeIdx: 0,
+      slides: []          // [{ role, kicker, title, body, highlight, bgImg }]
+    };
+
+    function arCnGetTemplate(id) {
+      return AR_CN_TEMPLATES.find((t) => t.id === id) || AR_CN_TEMPLATES[0];
+    }
+    function arCnDefaultSlides(count = 7, topic = '알아두면 바로 쓰는 핵심 가이드') {
+      const n = Math.max(5, Math.min(10, Math.floor(Number(count) || 7)));
+      const bodyN = n - 2;
+      const samplePts = [
+        { t: '먼저 기준부터 정리하세요', b: '막연하게 시작하면 중간에 흔들리기 쉽습니다.\n핵심 기준 1가지만 먼저 정해 두세요.', h: '체크 1 · 기준 한 줄로 적기' },
+        { t: '많이 놓치는 디테일 확인', b: '결과 차이는 대부분 작은 부분에서 갈립니다.\n체크리스트로 빠진 항목을 짚어 보세요.', h: '체크 2 · 필수 항목 3가지 점검' },
+        { t: '바로 써먹는 실전 공식', b: '복잡한 이론보다 지금 당장 적용할 수 있는\n가장 단순한 순서로 실행해 보세요.', h: '체크 3 · 오늘 10분 바로 적용' },
+        { t: '시간·비용 줄이는 요령', b: '비교할 항목을 3가지만 남기면\n결정 속도가 훨씬 빨라집니다.', h: '체크 4 · 핵심 3가지만 비교' },
+        { t: '반응을 끌어올리는 포인트', b: '첫 문장에서 독자의 고민을 바로 짚어 주면\n끝까지 읽는 비율이 크게 높아집니다.', h: '체크 5 · 첫 줄에 핵심 담기' },
+        { t: '꾸준히 유지하는 루틴', b: '완벽한 한 번보다 매주 같은 요일에\n가볍게 점검하는 습관이 훨씬 오래갑니다.', h: '체크 6 · 주 1회 10분 점검' },
+        { t: '실수를 막는 최종 체크', b: '올리기 전 글자 크기와 여백만 한 번 더 봐도\n가독성이 확 살아납니다.', h: '체크 7 · 저장 전 최종 확인' },
+        { t: '다음 단계로 넓혀 보기', b: '반응이 좋았던 카드는 시리즈로 묶어\n다음 주 콘텐츠로 이어가 보세요.', h: '체크 8 · 시리즈로 확장하기' }
+      ];
+      const out = [
+        { role: 'cover', kicker: '핵심 요약 가이드', title: topic, body: `꼭 알아야 할 ${bodyN}가지 핵심만\n한눈에 보기 쉽게 정리했어요.`, highlight: '밀어서 확인하기 →', bgImg: null }
+      ];
+      for (let i = 0; i < bodyN; i++) {
+        const p = samplePts[i % samplePts.length];
+        out.push({ role: 'point', kicker: `POINT ${String(i + 1).padStart(2, '0')}`, title: p.t, body: p.b, highlight: p.h, bgImg: null });
+      }
+      out.push({ role: 'cta', kicker: '저장 · 공유', title: '필요할 때 바로 꺼내 보세요', body: '도움이 되셨다면 저장해 두고\n주변 분들에게도 가볍게 공유해 주세요.', highlight: '궁금한 점은 댓글로 남겨 주세요', bgImg: null });
+      return out;
+    }
+
+    function arCnWrapLines(ctx, text, maxW) {
+      const paras = String(text || '').replace(/\r/g, '').split('\n');
+      const lines = [];
+      paras.forEach((para) => {
+        if (!para.trim()) { lines.push(''); return; }
+        const words = para.split(' ');
+        let cur = '';
+        words.forEach((w) => {
+          const test = cur ? `${cur} ${w}` : w;
+          if (ctx.measureText(test).width <= maxW) {
+            cur = test;
+          } else {
+            if (cur) lines.push(cur);
+            if (ctx.measureText(w).width <= maxW) {
+              cur = w;
+            } else {
+              // 긴 한글 단어 문자 단위 안전 줄바꿈
+              let chunk = '';
+              for (const ch of w) {
+                if (ctx.measureText(chunk + ch).width > maxW && chunk) {
+                  lines.push(chunk);
+                  chunk = ch;
+                } else {
+                  chunk += ch;
+                }
+              }
+              cur = chunk;
+            }
+          }
+        });
+        if (cur) lines.push(cur);
+      });
+      return lines;
+    }
+
+    function arCnRenderSlide(canvas, slide, slideIdx, totalSlides) {
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const sc = W / 1080;
+      const tpl = arCnGetTemplate(_arCnState.templateId);
+      const fsMul = _arCnState.fontScale === 'sm' ? 0.88 : (_arCnState.fontScale === 'lg' ? 1.14 : 1.0);
+      const hasPhoto = Boolean(slide && slide.bgImg && slide.bgImg.naturalWidth);
+      const fg = hasPhoto ? '#ffffff' : tpl.fg;
+      const muted = hasPhoto ? 'rgba(255,255,255,0.82)' : tpl.muted;
+      const accent = hasPhoto ? '#facc15' : tpl.accent;
+      const isCover = slideIdx === 0 || (slide && slide.role === 'cover');
+      const isCta = slideIdx === totalSlides - 1 || (slide && slide.role === 'cta');
+      const padX = Math.round(92 * sc);
+      const padY = Math.round(86 * sc);
+
+      ctx.save();
+      // 1) 배경 (템플릿 컬러 + 패턴 또는 사용자 배경 사진)
+      ctx.fillStyle = tpl.bg;
+      ctx.fillRect(0, 0, W, H);
+      if (hasPhoto) {
+        arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
+        const scrim = ctx.createLinearGradient(0, 0, 0, H);
+        scrim.addColorStop(0, 'rgba(8,10,16,0.52)');
+        scrim.addColorStop(0.5, 'rgba(8,10,16,0.62)');
+        scrim.addColorStop(1, 'rgba(8,10,16,0.78)');
+        ctx.fillStyle = scrim;
+        ctx.fillRect(0, 0, W, H);
+      } else {
+        if (tpl.style === 'note') {
+          ctx.fillStyle = 'rgba(120,102,86,0.14)';
+          const step = Math.round(38 * sc);
+          for (let y = step; y < H; y += step) for (let x = step; x < W; x += step) {
+            ctx.beginPath(); ctx.arc(x, y, Math.max(1, 1.8 * sc), 0, Math.PI * 2); ctx.fill();
+          }
+        } else if (tpl.style === 'news' || tpl.style === 'dark') {
+          const glow = ctx.createRadialGradient(W * 0.82, H * 0.14, 10, W * 0.82, H * 0.14, W * 0.72);
+          glow.addColorStop(0, tpl.style === 'news' ? 'rgba(56,189,248,0.18)' : 'rgba(250,204,21,0.12)');
+          glow.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = glow;
+          ctx.fillRect(0, 0, W, H);
+        } else if (tpl.style === 'editorial' || tpl.style === 'swiss') {
+          ctx.strokeStyle = tpl.style === 'swiss' ? 'rgba(9,9,11,0.18)' : 'rgba(26,24,22,0.15)';
+          ctx.lineWidth = Math.max(1, 2 * sc);
+          ctx.strokeRect(Math.round(38 * sc), Math.round(38 * sc), W - Math.round(76 * sc), H - Math.round(76 * sc));
+        }
+      }
+
+      // 2) 상단 진행바 + 배지 + 페이지 번호 (01 / 07)
+      const topBarH = Math.max(3, Math.round(6 * sc));
+      ctx.fillStyle = hasPhoto ? 'rgba(255,255,255,0.22)' : (tpl.card || 'rgba(0,0,0,0.08)');
+      ctx.fillRect(padX, Math.round(52 * sc), W - padX * 2, topBarH);
+      ctx.fillStyle = accent;
+      ctx.fillRect(padX, Math.round(52 * sc), Math.round((W - padX * 2) * ((slideIdx + 1) / Math.max(1, totalSlides))), topBarH);
+
+      const headerY = padY + Math.round(28 * sc);
+      const kickerTxt = String((slide && slide.kicker) || '').trim();
+      if (kickerTxt) {
+        const kFs = Math.round(28 * sc);
+        ctx.font = `700 ${kFs}px ${tpl.fontBody}`;
+        const kw = ctx.measureText(kickerTxt).width + Math.round(40 * sc);
+        const kh = Math.round(52 * sc);
+        ctx.fillStyle = hasPhoto ? 'rgba(255,255,255,0.18)' : tpl.pillBg;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX, headerY - kh / 2, kw, kh, kh / 2);
+        else ctx.rect(padX, headerY - kh / 2, kw, kh);
+        ctx.fill();
+        ctx.fillStyle = hasPhoto ? '#ffffff' : tpl.pillFg;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(kickerTxt, padX + Math.round(20 * sc), headerY + 1);
+      }
+      const pageTxt = `${String(slideIdx + 1).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+      ctx.font = `700 ${Math.round(28 * sc)}px 'Pretendard', monospace`;
+      ctx.fillStyle = muted;
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText(pageTxt, W - padX, headerY);
+
+      // 3) 본문 카드용 은은한 큰 숫자 워터마크 (표지/마무리 제외)
+      if (!isCover && !isCta && !hasPhoto) {
+        ctx.save();
+        ctx.font = `900 ${Math.round(210 * sc)}px ${tpl.fontTitle}`;
+        ctx.fillStyle = tpl.fg;
+        ctx.globalAlpha = 0.055;
+        ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+        ctx.fillText(String(slideIdx).padStart(2, '0'), W - padX + Math.round(10 * sc), Math.round(150 * sc));
+        ctx.restore();
+      }
+
+      // 4) 제목 + 본문 (표지/마무리는 중앙 정렬 또는 감성 좌측, 본문은 읽기 좋은 좌측 정렬)
+      const maxTextW = W - padX * 2;
+      const titleFs = Math.round((isCover ? 82 : (isCta ? 70 : 66)) * sc * fsMul);
+      const bodyFs = Math.round((isCover ? 38 : 40) * sc * fsMul);
+      const titleStr = String((slide && slide.title) || '').trim();
+      const bodyStr = String((slide && slide.body) || '').trim();
+      const hlStr = String((slide && slide.highlight) || '').trim();
+
+      ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
+      const titleLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 4);
+      const titleLH = Math.round(titleFs * 1.32);
+
+      ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+      const bodyLines = arCnWrapLines(ctx, bodyStr, maxTextW).slice(0, 7);
+      const bodyLH = Math.round(bodyFs * 1.56);
+
+      const blockH = titleLines.length * titleLH + Math.round(48 * sc) + bodyLines.length * bodyLH;
+      const contentTop = isCover || isCta
+        ? Math.max(Math.round(210 * sc), Math.round((H - blockH) * 0.44))
+        : Math.max(Math.round(215 * sc), Math.round((H - blockH) * 0.36));
+
+      // 제목 왼쪽 포인트 바(clean/dark/news) 또는 상단 포인트 짧은 선(editorial/soft/note/swiss)
+      ctx.fillStyle = accent;
+      if (isCover || isCta) {
+        ctx.fillRect(padX, contentTop - Math.round(34 * sc), Math.round(88 * sc), Math.max(3, Math.round(8 * sc)));
+      } else {
+        ctx.fillRect(padX, contentTop - Math.round(28 * sc), Math.round(64 * sc), Math.max(3, Math.round(7 * sc)));
+      }
+
+      ctx.font = `800 ${titleFs}px ${tpl.fontTitle}`;
+      ctx.fillStyle = fg;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      let curY = contentTop;
+      titleLines.forEach((ln) => {
+        ctx.fillText(ln, padX, curY);
+        curY += titleLH;
+      });
+
+      curY += Math.round(36 * sc);
+      ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+      ctx.fillStyle = muted;
+      bodyLines.forEach((ln) => {
+        ctx.fillText(ln, padX, curY);
+        curY += bodyLH;
+      });
+
+      // 5) 하단 강조 팁 박스 (또는 표지 스와이프 안내)
+      if (hlStr) {
+        const hlFs = Math.round(32 * sc * Math.min(1.06, fsMul));
+        ctx.font = `700 ${hlFs}px ${tpl.fontBody}`;
+        const hlLines = arCnWrapLines(ctx, hlStr, maxTextW - Math.round(68 * sc)).slice(0, 2);
+        const hlLH = Math.round(hlFs * 1.42);
+        const boxH = Math.round(hlLines.length * hlLH + 46 * sc);
+        const boxY = Math.min(H - Math.round(180 * sc) - boxH, Math.max(curY + Math.round(36 * sc), H - Math.round(290 * sc)));
+        ctx.fillStyle = hasPhoto ? 'rgba(255,255,255,0.16)' : tpl.card;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX, boxY, maxTextW, boxH, Math.round(20 * sc));
+        else ctx.rect(padX, boxY, maxTextW, boxH);
+        ctx.fill();
+        // 좌측 강조 포인트 바
+        ctx.fillStyle = accent;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(padX, boxY, Math.round(10 * sc), boxH, Math.round(5 * sc));
+        else ctx.rect(padX, boxY, Math.round(10 * sc), boxH);
+        ctx.fill();
+
+        ctx.fillStyle = fg;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        let hy = boxY + Math.round(24 * sc);
+        hlLines.forEach((ln) => {
+          ctx.fillText(ln, padX + Math.round(34 * sc), hy);
+          hy += hlLH;
+        });
+      }
+
+      // 6) 하단 푸터: 계정명(@handle) + 캐러셀 페이지 도트
+      const footY = H - Math.round(82 * sc);
+      const handleTxt = String(_arCnState.handle || '').trim();
+      if (handleTxt) {
+        ctx.font = `600 ${Math.round(26 * sc)}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(handleTxt.startsWith('@') ? handleTxt : `@${handleTxt}`, padX, footY);
+      }
+      const dotR = Math.max(2, Math.round(6 * sc));
+      const dotGap = Math.round(22 * sc);
+      const startDotX = W - padX - (totalSlides - 1) * dotGap;
+      for (let i = 0; i < totalSlides; i++) {
+        const active = i === slideIdx;
+        ctx.fillStyle = active ? accent : (hasPhoto ? 'rgba(255,255,255,0.35)' : muted);
+        ctx.globalAlpha = active ? 1 : 0.35;
+        ctx.beginPath();
+        ctx.arc(startDotX + i * dotGap, footY, active ? dotR * 1.35 : dotR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // 순수 JS 무압축 ZIP 생성기 (외부 CDN 없이 전체 5~10장 PNG를 한 번에 .zip 저장)
+    function arCnBuildZipBlob(files) {
+      const crcTable = new Uint32Array(256);
+      for (let i = 0; i < 256; i++) {
+        let c = i;
+        for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+        crcTable[i] = c >>> 0;
+      }
+      const crc32 = (u8) => {
+        let c = 0xffffffff;
+        for (let i = 0; i < u8.length; i++) c = crcTable[(c ^ u8[i]) & 0xff] ^ (c >>> 8);
+        return (c ^ 0xffffffff) >>> 0;
+      };
+      const enc = new TextEncoder();
+      const localParts = [];
+      const centralParts = [];
+      let offset = 0;
+      files.forEach((f) => {
+        const nameBytes = enc.encode(f.name);
+        const data = f.data;
+        const crc = crc32(data);
+        const lh = new ArrayBuffer(30 + nameBytes.length);
+        const lv = new DataView(lh);
+        lv.setUint32(0, 0x04034b50, true);
+        lv.setUint16(4, 20, true);
+        lv.setUint16(6, 0x0800, true); // UTF-8
+        lv.setUint16(8, 0, true);      // Store
+        lv.setUint32(14, crc, true);
+        lv.setUint32(18, data.length, true);
+        lv.setUint32(22, data.length, true);
+        lv.setUint16(26, nameBytes.length, true);
+        new Uint8Array(lh, 30).set(nameBytes);
+        localParts.push(new Uint8Array(lh), data);
+
+        const ch = new ArrayBuffer(46 + nameBytes.length);
+        const cv = new DataView(ch);
+        cv.setUint32(0, 0x02014b50, true);
+        cv.setUint16(4, 20, true);
+        cv.setUint16(6, 20, true);
+        cv.setUint16(8, 0x0800, true);
+        cv.setUint16(10, 0, true);
+        cv.setUint32(16, crc, true);
+        cv.setUint32(20, data.length, true);
+        cv.setUint32(24, data.length, true);
+        cv.setUint16(28, nameBytes.length, true);
+        cv.setUint32(42, offset, true);
+        new Uint8Array(ch, 46).set(nameBytes);
+        centralParts.push(new Uint8Array(ch));
+        offset += 30 + nameBytes.length + data.length;
+      });
+      const centralSize = centralParts.reduce((s, p) => s + p.length, 0);
+      const eocd = new ArrayBuffer(22);
+      const ev = new DataView(eocd);
+      ev.setUint32(0, 0x06054b50, true);
+      ev.setUint16(8, files.length, true);
+      ev.setUint16(10, files.length, true);
+      ev.setUint32(12, centralSize, true);
+      ev.setUint32(16, offset, true);
+      return new Blob([...localParts, ...centralParts, new Uint8Array(eocd)], { type: 'application/zip' });
+    }
+
+    function arCnRefreshUI(skipInputSync = false) {
+      if (!_arCnState.slides.length) _arCnState.slides = arCnDefaultSlides(_arCnState.targetCount);
+      const total = _arCnState.slides.length;
+      _arCnState.activeIdx = ((_arCnState.activeIdx % total) + total) % total;
+      const idx = _arCnState.activeIdx;
+      const cur = _arCnState.slides[idx];
+
+      // 캔버스 비율 동기화
+      const frame = document.getElementById('arCnCanvasFrame');
+      const cv = document.getElementById('arCnPreviewCanvas');
+      if (frame && cv) {
+        const isSquare = _arCnState.ratio === '1:1';
+        frame.style.aspectRatio = isSquare ? '1 / 1' : '4 / 5';
+        const wantH = isSquare ? 540 : 675;
+        if (cv.width !== 540 || cv.height !== wantH) { cv.width = 540; cv.height = wantH; }
+        arCnRenderSlide(cv, cur, idx, total);
+      }
+
+      const roleLabel = idx === 0 ? '표지' : (idx === total - 1 ? '마무리' : `본문 ${idx}`);
+      const meta = document.getElementById('arCnSlideMeta');
+      if (meta) meta.textContent = `${idx + 1} / ${total}장 · ${roleLabel}`;
+      const editLbl = document.getElementById('arCnEditCardLabel');
+      if (editLbl) editLbl.textContent = `3. ${idx + 1}번 카드(${roleLabel}) 글자 수정`;
+      const zipBtn = document.getElementById('arCnDownloadZipBtn');
+      if (zipBtn) zipBtn.textContent = `📦 전체 ${total}장 한 번에 저장 (.zip)`;
+      const clrPhoto = document.getElementById('arCnClearBgPhotoBtn');
+      if (clrPhoto) clrPhoto.classList.toggle('hidden', !(cur && cur.bgImg));
+
+      // 장 번호 칩
+      const pills = document.getElementById('arCnSlidePills');
+      if (pills) {
+        pills.innerHTML = _arCnState.slides.map((_, i) => {
+          const on = i === idx;
+          const lbl = i === 0 ? '1 표지' : (i === total - 1 ? `${i + 1} 끝` : String(i + 1));
+          return `<button type="button" onclick="arCnSelectSlide(${i})" class="px-2 py-0.5 rounded-full text-[11px] font-semibold border cursor-pointer ${on ? 'bg-[#2563eb] text-white border-[#60a5fa]' : 'bg-[#1c1c21] text-[#a1a1aa] border-white/10'}">${lbl}</button>`;
+        }).join('');
+      }
+
+      // 장수 / 비율 / 글자크기 / 템플릿 버튼 활성화
+      document.querySelectorAll('#arCnCountRow [data-cn-cnt]').forEach((b) => b.classList.toggle('active', Number(b.dataset.cnCnt) === _arCnState.targetCount));
+      document.querySelectorAll('#arCardNewsModal [data-cn-ratio]').forEach((b) => b.classList.toggle('active', b.dataset.cnRatio === _arCnState.ratio));
+      document.querySelectorAll('#arCardNewsModal [data-cn-fsize]').forEach((b) => b.classList.toggle('active', b.dataset.cnFsize === _arCnState.fontScale));
+      const tplGrid = document.getElementById('arCnTplGrid');
+      if (tplGrid) {
+        tplGrid.innerHTML = AR_CN_TEMPLATES.map((t) => {
+          const on = t.id === _arCnState.templateId;
+          return `<button type="button" onclick="arCnSetTemplate('${t.id}')" class="ar-cn-tpl-btn${on ? ' active' : ''}"><span style="width:16px;height:16px;border-radius:4px;flex-shrink:0;background:${t.bg};border:2px solid ${t.accent};display:inline-block;"></span><span class="truncate">${t.name}</span></button>`;
+        }).join('');
+      }
+
+      if (!skipInputSync && cur) {
+        const kEl = document.getElementById('arCnKicker');
+        const tEl = document.getElementById('arCnTitle');
+        const bEl = document.getElementById('arCnBody');
+        const hEl = document.getElementById('arCnHighlight');
+        if (kEl) kEl.value = cur.kicker || '';
+        if (tEl) tEl.value = cur.title || '';
+        if (bEl) bEl.value = cur.body || '';
+        if (hEl) hEl.value = cur.highlight || '';
+      }
+    }
+
+    function arOpenCardNewsModal() {
+      const modal = document.getElementById('arCardNewsModal');
+      if (!modal) return;
+      if (typeof arPauseForStudioEdit === 'function') arPauseForStudioEdit();
+      if (!_arCnState.handle) {
+        const d = typeof getSelectedDealer === 'function' ? getSelectedDealer() : null;
+        if (d && (d.branch || d.name)) _arCnState.handle = d.branch || d.name;
+      }
+      const hIn = document.getElementById('arCnHandleInput');
+      if (hIn && !hIn.value && _arCnState.handle) hIn.value = _arCnState.handle;
+      if (!_arCnState.slides.length) {
+        _arCnState.slides = arCnDefaultSlides(_arCnState.targetCount);
+      }
+      modal.classList.remove('hidden');
+      arCnRefreshUI();
+    }
+    function arCloseCardNewsModal() {
+      document.getElementById('arCardNewsModal')?.classList.add('hidden');
+    }
+    function arCnSetTargetCount(n) {
+      _arCnState.targetCount = Math.max(5, Math.min(10, Number(n) || 7));
+      arCnRefreshUI(true);
+    }
+    function arCnSetTemplate(id) {
+      _arCnState.templateId = id;
+      arCnRefreshUI(true);
+    }
+    function arCnSetRatio(r) {
+      _arCnState.ratio = r === '1:1' ? '1:1' : '4:5';
+      arCnRefreshUI(true);
+    }
+    function arCnSetFontScale(sz) {
+      _arCnState.fontScale = ['sm', 'md', 'lg'].includes(sz) ? sz : 'md';
+      arCnRefreshUI(true);
+    }
+    function arCnUpdateHandle(val) {
+      _arCnState.handle = String(val || '').slice(0, 32);
+      arCnRefreshUI(true);
+    }
+    function arCnSelectSlide(i) {
+      _arCnState.activeIdx = Number(i) || 0;
+      arCnRefreshUI(false);
+    }
+    function arCnStepSlide(delta) {
+      _arCnState.activeIdx += delta;
+      arCnRefreshUI(false);
+    }
+    function arCnEditField(field, val) {
+      const cur = _arCnState.slides[_arCnState.activeIdx];
+      if (!cur) return;
+      cur[field] = val;
+      arCnRefreshUI(true);
+    }
+    function arCnAddSlide() {
+      if (_arCnState.slides.length >= 10) {
+        if (typeof arToast === 'function') arToast('카드뉴스는 최대 10장까지 만들 수 있어요.');
+        return;
+      }
+      const insertAt = Math.max(1, _arCnState.slides.length - 1);
+      _arCnState.slides.splice(insertAt, 0, {
+        role: 'point',
+        kicker: `POINT ${String(insertAt).padStart(2, '0')}`,
+        title: '새 핵심 포인트 제목',
+        body: '여기에 설명을 2~3줄로 적어 주세요.',
+        highlight: '핵심 한 줄 요약',
+        bgImg: null
+      });
+      _arCnState.activeIdx = insertAt;
+      arCnRefreshUI(false);
+    }
+    function arCnRemoveSlide() {
+      if (_arCnState.slides.length <= 3) {
+        if (typeof arToast === 'function') arToast('최소 3장은 남겨 두어야 해요.');
+        return;
+      }
+      _arCnState.slides.splice(_arCnState.activeIdx, 1);
+      if (_arCnState.activeIdx >= _arCnState.slides.length) _arCnState.activeIdx = _arCnState.slides.length - 1;
+      arCnRefreshUI(false);
+    }
+    async function arCnHandleBgPhoto(ev) {
+      const f = ev?.target?.files?.[0];
+      if (ev?.target) ev.target.value = '';
+      const cur = _arCnState.slides[_arCnState.activeIdx];
+      if (!f || !cur) return;
+      try {
+        const dataUrl = await new Promise((resolve, reject) => {
+          const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(f);
+        });
+        const im = new Image(); im.src = dataUrl; im._dataUrl = dataUrl;
+        await im.decode();
+        cur.bgImg = im;
+        arCnRefreshUI(true);
+      } catch (_) {}
+    }
+    function arCnClearBgPhoto() {
+      const cur = _arCnState.slides[_arCnState.activeIdx];
+      if (!cur) return;
+      cur.bgImg = null;
+      arCnRefreshUI(true);
+    }
+    function arCnPickSampleTopic(text) {
+      const inp = document.getElementById('arCnTopicInput');
+      if (inp) inp.value = text;
+      arCnGenerateFromTopic();
+    }
+    async function arCnGenerateFromTopic() {
+      const inp = document.getElementById('arCnTopicInput');
+      const topic = String(inp?.value || '').trim();
+      if (!topic) {
+        if (typeof arToast === 'function') arToast('먼저 카드뉴스 주제를 입력해 주세요.');
+        inp?.focus();
+        return;
+      }
+      const btn = document.getElementById('arCnGenBtn');
+      if (btn) { btn.disabled = true; btn.textContent = '만드는 중...'; }
+      try {
+        const indName = (typeof IND !== 'undefined' && IND && IND.name) ? IND.name : '';
+        const resp = await fetch('/api/generate-script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mode: 'cardnews',
+            topic,
+            slideCount: _arCnState.targetCount,
+            industry: indName,
+            accountName: _arCnState.handle || ''
+          })
+        });
+        let slides = null;
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && Array.isArray(data.slides) && data.slides.length >= 3) {
+            slides = data.slides.map((s) => ({
+              role: s.role || 'point',
+              kicker: s.kicker || '',
+              title: s.title || '',
+              body: s.body || '',
+              highlight: s.highlight || '',
+              bgImg: null
+            }));
+          }
+        }
+        _arCnState.slides = slides || arCnDefaultSlides(_arCnState.targetCount, topic);
+        _arCnState.activeIdx = 0;
+        arCnRefreshUI(false);
+        if (typeof arToast === 'function') arToast(`${_arCnState.slides.length}장 카드뉴스 초안을 만들었어요! 각 장을 눌러 글자만 다듬어 보세요.`, true);
+      } catch (_) {
+        _arCnState.slides = arCnDefaultSlides(_arCnState.targetCount, topic);
+        _arCnState.activeIdx = 0;
+        arCnRefreshUI(false);
+        if (typeof arToast === 'function') arToast(`${_arCnState.slides.length}장 기본 템플릿을 채웠어요! 글자를 자유롭게 수정해 보세요.`, true);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '✨ AI 만들기'; }
+      }
+    }
+    function arCnExportSlideBlob(slide, i, total) {
+      return new Promise((resolve) => {
+        const off = document.createElement('canvas');
+        off.width = 1080;
+        off.height = _arCnState.ratio === '1:1' ? 1080 : 1350;
+        arCnRenderSlide(off, slide, i, total);
+        off.toBlob((blob) => resolve(blob), 'image/png');
+      });
+    }
+    async function arCnDownloadCurrentPng() {
+      const idx = _arCnState.activeIdx;
+      const total = _arCnState.slides.length;
+      const cur = _arCnState.slides[idx];
+      if (!cur) return;
+      const blob = await arCnExportSlideBlob(cur, idx, total);
+      if (!blob) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `카드뉴스_${String(idx + 1).padStart(2, '0')}.png`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+      if (typeof arToast === 'function') arToast(`${idx + 1}번 카드를 고화질 PNG로 저장했어요.`, true);
+    }
+    async function arCnDownloadAllZip() {
+      const total = _arCnState.slides.length;
+      if (!total) return;
+      const btn = document.getElementById('arCnDownloadZipBtn');
+      if (btn) { btn.disabled = true; btn.textContent = `PNG ${total}장 묶는 중...`; }
+      try {
+        const files = [];
+        for (let i = 0; i < total; i++) {
+          const blob = await arCnExportSlideBlob(_arCnState.slides[i], i, total);
+          const buf = new Uint8Array(await blob.arrayBuffer());
+          const tag = i === 0 ? '표지' : (i === total - 1 ? '마무리' : `본문${i}`);
+          files.push({ name: `${String(i + 1).padStart(2, '0')}_${tag}.png`, data: buf });
+        }
+        const zipBlob = arCnBuildZipBlob(files);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(zipBlob);
+        a.download = `인스타_카드뉴스_${total}장.zip`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        if (typeof arToast === 'function') arToast(`카드뉴스 ${total}장을 고화질 ZIP으로 한 번에 저장했어요!`, true);
+      } catch (_) {
+        if (typeof arToast === 'function') arToast('저장에 실패했어요. 이 장 PNG 저장을 이용해 주세요.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = `📦 전체 ${total}장 한 번에 저장 (.zip)`; }
+      }
+    }
+    async function arCnApplyToStudioReels() {
+      const total = _arCnState.slides.length;
+      if (!total) return;
+      const btn = document.getElementById('arCnToReelsBtn');
+      if (btn) { btn.disabled = true; btn.textContent = '릴스로 변환 중...'; }
+      try {
+        const tpl = arCnGetTemplate(_arCnState.templateId);
+        const outImgs = [];
+        const off = document.createElement('canvas');
+        off.width = 720; off.height = 1280;
+        const g = off.getContext('2d');
+        const cardCv = document.createElement('canvas');
+        cardCv.width = 720; cardCv.height = _arCnState.ratio === '1:1' ? 720 : 900;
+        for (let i = 0; i < total; i++) {
+          arCnRenderSlide(cardCv, _arCnState.slides[i], i, total);
+          g.fillStyle = tpl.bg;
+          g.fillRect(0, 0, 720, 1280);
+          g.drawImage(cardCv, 0, Math.round((1280 - cardCv.height) / 2));
+          const url = off.toDataURL('image/jpeg', 0.92);
+          const im = new Image(); im.src = url; im._dataUrl = url; im._skipVault = true; im._label = `카드뉴스 ${i + 1}장`;
+          await im.decode();
+          outImgs.push(im);
+        }
+        (campaign.uploadedPhotos || []).forEach(arReleasePhoto);
+        campaign.uploadedPhotos = outImgs;
+        campaign.isUserCustomPhotos = true;
+        campaign.isPhotoCollageMode = true;
+        campaign._collageCutSec = 2.6;
+        campaign.cutCountOverride = outImgs.length;
+        campaign.hasCustomVideo = false;
+        campaign.scenePlan = outImgs.map((_, i) => ({ photoIdx: i }));
+        campaign.hideCardOnVideo = true;
+        campaign.noDefaultCaptions = true;
+        campaign.hook = '';
+        campaign.sub = '';
+        campaign.priceTag = '';
+        campaign.cutCaptions = Array.from({ length: outImgs.length }, () => '');
+        campaign.ttsLines = Array.from({ length: outImgs.length }, () => '');
+        if (typeof AudioEngine !== 'undefined') {
+          AudioEngine.ttsVoice = 'off'; AudioEngine.masterBuffer = null; AudioEngine.masterDuration = 0; AudioEngine.ttsDirty = false;
+        }
+        const mainD = +(outImgs.length * 2.6).toFixed(2);
+        if (typeof OUTRO_DURATION !== 'undefined') OUTRO_DURATION = 0;
+        if (typeof BASE_DURATION !== 'undefined') BASE_DURATION = mainD;
+        if (typeof CUT_LENGTHS !== 'undefined') CUT_LENGTHS = Array.from({ length: outImgs.length }, () => 2.6);
+        if (typeof TOTAL_DURATION !== 'undefined') TOTAL_DURATION = mainD;
+        if (window.__timelines && window.__timelines.main) window.__timelines.main.duration = TOTAL_DURATION;
+        if (typeof updateDurationIndicator === 'function') updateDurationIndicator();
+        if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+        if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+        if (typeof renderUploadedPhotoThumbs === 'function') renderUploadedPhotoThumbs();
+        if (typeof designThumbCache !== 'undefined' && designThumbCache) designThumbCache.fresh = {};
+        if (typeof scheduleDesignThumbs === 'function') scheduleDesignThumbs();
+        arSyncEditedVideoOptionUI();
+        arCloseCardNewsModal();
+        if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0);
+        if (typeof isPlaying !== 'undefined') isPlaying = true;
+        if (typeof arToast === 'function') arToast(`카드뉴스 ${total}장을 릴스 영상으로 불러왔어요! 노래를 입혀 바로 저장해 보세요.`, true);
+      } catch (_) {
+        if (typeof arToast === 'function') arToast('릴스로 변환하지 못했어요. 다시 시도해 주세요.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '🎬 릴스 영상으로도 만들기 →'; }
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.arOpenCardNewsModal = arOpenCardNewsModal;
+      window.arCloseCardNewsModal = arCloseCardNewsModal;
+      window.arCnSetTargetCount = arCnSetTargetCount;
+      window.arCnSetTemplate = arCnSetTemplate;
+      window.arCnSetRatio = arCnSetRatio;
+      window.arCnSetFontScale = arCnSetFontScale;
+      window.arCnUpdateHandle = arCnUpdateHandle;
+      window.arCnSelectSlide = arCnSelectSlide;
+      window.arCnStepSlide = arCnStepSlide;
+      window.arCnEditField = arCnEditField;
+      window.arCnAddSlide = arCnAddSlide;
+      window.arCnRemoveSlide = arCnRemoveSlide;
+      window.arCnHandleBgPhoto = arCnHandleBgPhoto;
+      window.arCnClearBgPhoto = arCnClearBgPhoto;
+      window.arCnPickSampleTopic = arCnPickSampleTopic;
+      window.arCnGenerateFromTopic = arCnGenerateFromTopic;
+      window.arCnDownloadCurrentPng = arCnDownloadCurrentPng;
+      window.arCnDownloadAllZip = arCnDownloadAllZip;
+      window.arCnApplyToStudioReels = arCnApplyToStudioReels;
+    }
+
     // 쇼츠 화면에서 연 편집기가 맡겨 둔 영상을 받아 테마 입히기 (/studio?applyTheme=1)
     function arTakeStashedThemeVideo() {
       return new Promise((resolve) => {

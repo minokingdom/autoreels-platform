@@ -790,6 +790,184 @@ async function handleSceneImages(body, res) {
   return res.status(200).json({ ok: images.length > 0, images, error: images.length ? undefined : results[0]?.error });
 }
 
+function buildFallbackCardNews(topic, slideCount, accountName) {
+  const cleanTopic = String(topic || '').trim() || '알아두면 바로 쓰는 핵심 가이드';
+  const n = Math.max(5, Math.min(10, Math.floor(Number(slideCount) || 7)));
+  const bodyCount = n - 2;
+  const pointTemplates = [
+    { title: '가장 먼저 확인할 기준', body: `${cleanTopic}에서 시행착오를 줄이려면\n먼저 기준부터 분명하게 잡아야 합니다.`, highlight: '체크 1 · 기준 먼저 정하기' },
+    { title: '많이 놓치는 핵심 포인트', body: '겉으로 보이는 조건만 보면\n중요한 세부 항목을 놓치기 쉽습니다.', highlight: '체크 2 · 세부 조건 확인' },
+    { title: '실제로 효과가 큰 방법', body: '복잡한 단계를 줄이고\n바로 적용할 수 있는 순서로 정리하세요.', highlight: '체크 3 · 단순하게 실행하기' },
+    { title: '비용·시간 아끼는 요령', body: '비교할 항목을 3가지만 추려도\n불필요한 낭비를 크게 줄일 수 있습니다.', highlight: '체크 4 · 3가지 핵심만 비교' },
+    { title: '바로 써먹는 실전 팁', body: '처음부터 완벽하게 하기보다\n작은 것부터 기록하며 다듬어 보세요.', highlight: '체크 5 · 기록하며 개선하기' },
+    { title: '오래 유지하는 습관', body: '한 번에 끝내려 하지 말고\n매주 같은 시간에 10분만 점검하세요.', highlight: '체크 6 · 주 1회 10분 점검' },
+    { title: '실수를 막는 최종 점검', body: '진행 전 체크리스트로 한 번 더 훑으면\n예상치 못한 문제를 미리 막을 수 있어요.', highlight: '체크 7 · 마지막 체크리스트' },
+    { title: '다음 단계로 넓히기', body: '기본 흐름이 익숙해졌다면\n반응이 좋았던 부분부터 확장해 보세요.', highlight: '체크 8 · 잘되는 것부터 확장' }
+  ];
+  const slides = [
+    {
+      role: 'cover',
+      kicker: '핵심 요약 가이드',
+      title: cleanTopic,
+      body: `꼭 알아야 할 ${bodyCount}가지 핵심만\n한눈에 보기 쉽게 정리했습니다.`,
+      highlight: '밀어서 확인하기 →'
+    }
+  ];
+  for (let i = 0; i < bodyCount; i++) {
+    const pt = pointTemplates[i % pointTemplates.length];
+    slides.push({
+      role: 'point',
+      kicker: `POINT ${String(i + 1).padStart(2, '0')}`,
+      title: pt.title,
+      body: pt.body,
+      highlight: pt.highlight
+    });
+  }
+  slides.push({
+    role: 'cta',
+    kicker: '저장 · 공유',
+    title: '필요할 때 바로 꺼내 보세요',
+    body: `${cleanTopic} 내용이 도움이 되셨다면\n저장해 두고 주변에도 공유해 주세요.`,
+    highlight: accountName ? `${accountName} 팔로우하고 더 받아보기` : '궁금한 점은 댓글로 남겨 주세요'
+  });
+  return slides;
+}
+
+async function handleCardNews(body, res) {
+  const topic = String(body.topic || body.prompt || '').trim();
+  const slideCount = Math.max(5, Math.min(10, Math.floor(Number(body.slideCount || body.count) || 7)));
+  const industry = String(body.industry || '').trim();
+  const accountName = String(body.accountName || '').trim();
+  const fallback = buildFallbackCardNews(topic, slideCount, accountName);
+  if (!topic) {
+    return res.status(200).json({ ok: true, provider: '기본 템플릿', slides: fallback });
+  }
+  const geminiKey = String(body.adminGeminiKey || process.env.GEMINI_API_KEY || '').trim();
+  const kieKey = String(process.env.KIE_API_KEY || '').trim();
+  const openaiKey = String(body.adminOpenAiKey || process.env.OPENAI_API_KEY || '').trim();
+  const geminiModel = String(process.env.GEMINI_SCRIPT_MODEL || 'gemini-2.5-flash').trim();
+  const openaiModel = String(process.env.OPENAI_SCRIPT_MODEL || 'gpt-4o-mini').trim();
+  const kieModels = String(process.env.KIE_SCRIPT_MODEL || 'gemini-3-6-flash-openai,gemini-4-hydrogen-openai')
+    .split(',').map((s) => s.trim()).filter(Boolean).slice(0, 2);
+
+  const sysPrompt = `당신은 대한민국 인스타그램 저장률 높은 카드뉴스(캐러셀) 전문 에디터입니다.
+주제에 맞춰 정확히 ${slideCount}장의 인스타그램 카드뉴스 원고를 작성하고 JSON으로만 출력하세요.
+${HUMAN_TONE_RULES}
+
+[구성 규칙]
+- 총 ${slideCount}장: 1번은 표지(role: "cover"), 2~${slideCount - 1}번은 핵심 본문(role: "point"), ${slideCount}번은 마무리/저장 유도(role: "cta").
+- 표지 title은 22자 이내로 임팩트 있게 (필요 시 \\n 줄바꿈 1회), body는 34자 이내 부제목.
+- 각 본문 카드:
+  - kicker: "01", "02" 또는 짧은 키워드 태그 (8자 이내)
+  - title: 핵심 소제목 (18자 이내)
+  - body: 구체적이고 실용적인 설명 (35~65자, 읽기 좋게 \\n으로 2~3줄 나누기)
+  - highlight: 한 줄 핵심 팁·체크포인트 (22자 이내)
+- 마지막 cta 카드: 핵심 한 줄 요약 + 저장·공유·댓글 유도.
+- 반드시 순수 JSON만 출력: {"slides":[{"role":"cover","kicker":"","title":"","body":"","highlight":""}, ...]}`;
+
+  const userMsg = `주제: ${topic}\n총 장수: ${slideCount}장${industry ? `\n업종/분야: ${industry}` : ''}${accountName ? `\n계정명: ${accountName}` : ''}`;
+
+  const normalizeSlides = (raw) => {
+    const arr = Array.isArray(raw && raw.slides) ? raw.slides : (Array.isArray(raw) ? raw : []);
+    if (arr.length < 3) return null;
+    const out = [];
+    for (let i = 0; i < slideCount; i++) {
+      const src = arr[i] || fallback[i];
+      const role = i === 0 ? 'cover' : (i === slideCount - 1 ? 'cta' : 'point');
+      out.push({
+        role,
+        kicker: String(src.kicker || fallback[i].kicker).trim().slice(0, 24),
+        title: String(src.title || fallback[i].title).trim().slice(0, 60),
+        body: String(src.body || fallback[i].body).trim().slice(0, 180),
+        highlight: String(src.highlight || fallback[i].highlight || '').trim().slice(0, 48)
+      });
+    }
+    return out;
+  };
+
+  let slides = null;
+  let provider = '기본 카드뉴스 엔진';
+
+  try {
+    if (geminiKey) {
+      for (const m of [geminiModel, 'gemini-2.5-flash-lite'].filter((v, i, a) => v && a.indexOf(v) === i)) {
+        if (slides) break;
+        try {
+          const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:generateContent?key=${encodeURIComponent(geminiKey)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: AbortSignal.timeout(15000),
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: sysPrompt }] },
+              contents: [{ role: 'user', parts: [{ text: userMsg }] }],
+              generationConfig: { temperature: 0.75, responseMimeType: 'application/json' }
+            })
+          });
+          if (r.ok) {
+            const d = await r.json();
+            const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const parsed = parseJsonLoose(txt);
+            const norm = normalizeSlides(parsed);
+            if (norm) { slides = norm; provider = `Gemini ${m}`; }
+          }
+        } catch (_) {}
+      }
+    }
+    if (!slides && kieKey) {
+      for (const m of kieModels) {
+        if (slides) break;
+        try {
+          const r = await fetch(`https://api.kie.ai/${encodeURIComponent(m)}/v1/chat/completions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${kieKey}` },
+            signal: AbortSignal.timeout(16000),
+            body: JSON.stringify({
+              stream: true,
+              reasoning_effort: 'low',
+              messages: [
+                { role: 'system', content: [{ type: 'text', text: sysPrompt }] },
+                { role: 'user', content: [{ type: 'text', text: userMsg }] }
+              ]
+            })
+          });
+          if (r.ok) {
+            const { text } = await readKieStream(r);
+            const parsed = parseJsonLoose(text);
+            const norm = normalizeSlides(parsed);
+            if (norm) { slides = norm; provider = `kie.ai ${m}`; }
+          }
+        } catch (_) {}
+      }
+    }
+    if (!slides && openaiKey) {
+      try {
+        const r = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openaiKey}` },
+          signal: AbortSignal.timeout(14000),
+          body: JSON.stringify({
+            model: openaiModel,
+            temperature: 0.75,
+            response_format: { type: 'json_object' },
+            messages: [
+              { role: 'system', content: sysPrompt },
+              { role: 'user', content: userMsg }
+            ]
+          })
+        });
+        if (r.ok) {
+          const d = await r.json();
+          const parsed = parseJsonLoose(d?.choices?.[0]?.message?.content || '');
+          const norm = normalizeSlides(parsed);
+          if (norm) { slides = norm; provider = `OpenAI ${openaiModel}`; }
+        }
+      } catch (_) {}
+    }
+  } catch (_) {}
+
+  return res.status(200).json({ ok: true, provider, slides: slides || fallback });
+}
+
 const { isSameSiteRequest, consumeNightlyMedia, consumeReferenceStyle } = require('../lib/server/usage');
 
 async function handler(req, res) {
@@ -825,6 +1003,7 @@ async function handler(req, res) {
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : { ...req.body };
   // 오늘의 주제 추천: {mode:'topics'} — 대본 대신 오늘 올릴 주제 후보 6개를 돌려줌
   if (body.mode === 'topics') return handleTopics(body, res);
+  if (body.mode === 'cardnews') return handleCardNews(body, res);
   if (body.mode === 'reference-style') return require('../lib/reference-analysis.cjs').handleReferenceAnalysis(body, res);
   // 주제 맞춤 씬 이미지 생성: {mode:'scene-prompts' | 'scene-image' | 'scene-images'}
   if (body.mode === 'scene-images' || body.mode === 'scene-prompts' || body.mode === 'scene-image') return handleSceneImages(body, res);
