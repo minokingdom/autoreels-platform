@@ -9758,6 +9758,64 @@
       arLoadMemeRadar('all', true, q);
     }
 
+    function arPickLocalMemeVideoUrl(keyword, idx = 0) {
+      const k = String(keyword || '').toLowerCase();
+      if (/cat|kitten|paw|meow|고양이/.test(k)) return ['/assets/clips/meme-01.mp4', '/assets/clips/meme-02.mp4', '/assets/clips/meme-10.mp4'][idx % 3];
+      if (/dog|puppy|retriever|tail|강아지|칠 가이|chill/.test(k)) return ['/assets/clips/meme-03.mp4', '/assets/clips/meme-04.mp4', '/assets/clips/meme-11.mp4'][idx % 3];
+      if (/coffee|cafe|barista|espresso|drink|cup|아메리카노|카페/.test(k)) return '/assets/clips/meme-05.mp4';
+      if (/office|laptop|typing|keyboard|phone|comment|work|quiz|직장/.test(k)) return '/assets/clips/meme-06.mp4';
+      if (/gym|fitness|workout|exercise|squat|muscle|운동|헬스/.test(k)) return '/assets/clips/meme-07.mp4';
+      if (/cook|cake|food|bakery|kitchen|restaurant|dessert|요리|식당/.test(k)) return '/assets/clips/meme-08.mp4';
+      if (/city|street|crowd|news|breaking|walk|이슈/.test(k)) return '/assets/clips/meme-09.mp4';
+      if (/laugh|smile|happy|thumb|cheer|applause|반전/.test(k)) return '/assets/clips/meme-12.mp4';
+      return `/assets/clips/meme-${String((idx % 12) + 1).padStart(2, '0')}.mp4`;
+    }
+
+    function arLoadRemoteCutVideo(videoUrl, fallbackVideoUrl, label) {
+      return new Promise((resolve) => {
+        const tryLoad = (src, isFallback) => {
+          const vid = document.createElement('video');
+          vid.muted = true;
+          vid.playsInline = true;
+          vid.loop = true;
+          vid.preload = 'auto';
+          vid.crossOrigin = 'anonymous';
+          vid._isVideo = true;
+          vid._videoSrc = src;
+          vid._label = label || '밈 영상 클립';
+          let settled = false;
+          const finish = (ok) => {
+            if (settled) return;
+            settled = true;
+            if (ok) {
+              try {
+                const c = document.createElement('canvas');
+                c.width = 180;
+                c.height = 280;
+                const vw = vid.videoWidth || 360;
+                const vh = vid.videoHeight || 640;
+                const r = Math.max(c.width / vw, c.height / vh);
+                c.getContext('2d').drawImage(vid, (c.width - vw * r) / 2, (c.height - vh * r) / 2, vw * r, vh * r);
+                vid._dataUrl = c.toDataURL('image/jpeg', 0.72);
+              } catch (_) {}
+              vid.play().catch(() => {});
+              resolve(vid);
+            } else if (!isFallback && fallbackVideoUrl && fallbackVideoUrl !== src) {
+              tryLoad(fallbackVideoUrl, true);
+            } else {
+              resolve(null);
+            }
+          };
+          vid.addEventListener('loadeddata', () => finish(true), { once: true });
+          vid.addEventListener('error', () => finish(false), { once: true });
+          setTimeout(() => finish(vid.readyState >= 2), 3200);
+          vid.src = src;
+          try { vid.load(); } catch (_) {}
+        };
+        tryLoad(videoUrl || fallbackVideoUrl, !videoUrl);
+      });
+    }
+
     async function arApplyMemeItemToStudio(idx, forceMashupMode) {
       const baseItem = (window.__arMemeRadarItems || [])[idx];
       if (!baseItem) return;
@@ -9777,8 +9835,8 @@
         const productPoint = String(document.getElementById('arMemeStorePointInput')?.value || '시그니처 혜택').trim();
         if (statusEl) {
           statusEl.textContent = mode === 'store'
-            ? `🏪 "${baseItem.title.slice(0, 16)}..." 밈을 [${storeName} · ${productPoint}] 홍보 쇼츠로 패러디 조립 중...`
-            : `⚡ "${baseItem.title.slice(0, 16)}..." 밈과 오늘의 키워드 [${issueKw}] 콜라보 대본 조립 중...`;
+            ? `🏪 "${baseItem.title.slice(0, 16)}..." 밈을 [${storeName} · ${productPoint}] 홍보 영상으로 패러디 조립 중...`
+            : `⚡ "${baseItem.title.slice(0, 16)}..." 밈과 오늘의 키워드 [${issueKw}] 콜라보 영상 조립 중...`;
         }
         try {
           const res = await fetch('/api/generate-script', {
@@ -9811,18 +9869,18 @@
       window.__arMemeHookBanner = (Array.isArray(it.hookTitles) && it.hookTitles[0]) ? it.hookTitles[0] : it.title.slice(0, 32);
       arToggleKaraokeMode(true);
 
-      // 1차로 즉시 내장 바이럴/업종 스톡 6장 로드 후, 백그라운드로 GIPHY/Pixabay/Wikimedia 무료 밈 짤 자동 매칭!
-      const pack = it.scenePack || ((typeof IND !== 'undefined' && IND && IND.key) ? IND.key : 'cafe');
-      const loadedImgs = [];
-      for (let i = 0; i < lines.length; i++) {
-        const src = cuts[i]?.fallbackImg || `/assets/scenes/${pack}/${(i % 10) + 1}.jpg`;
-        const im = new Image();
-        im.crossOrigin = 'anonymous';
-        im.src = src;
-        await new Promise((r) => { im.onload = r; im.onerror = r; setTimeout(r, 900); });
-        if (im.naturalWidth) loadedImgs.push(im);
+      // ★ 핵심: 정지 사진(JPG)이 아니라 실제 움직이는 9:16 MP4 비디오 클립(<video _isVideo=true>) 6개를 즉시 장착!
+      const loadedVids = await Promise.all(lines.map(async (_, i) => {
+        const c = cuts[i] || {};
+        const localMp4 = c.videoUrl || arPickLocalMemeVideoUrl(c.keyword, i);
+        c.videoUrl = localMp4;
+        return await arLoadRemoteCutVideo(localMp4, `/assets/clips/meme-${String((i % 12) + 1).padStart(2, '0')}.mp4`, `${i + 1}컷 · ${c.mediaType || '밈 영상'}`);
+      }));
+      const validVids = loadedVids.filter(Boolean);
+      if (validVids.length) {
+        if (typeof pauseAllCutVideos === 'function') pauseAllCutVideos();
+        campaign.uploadedPhotos = validVids;
       }
-      if (loadedImgs.length) campaign.uploadedPhotos = loadedImgs;
 
       campaign.scenePlan = lines.map((ln, i) => ({
         cut: i + 1,
@@ -9830,7 +9888,7 @@
         photoIdx: i % Math.max(1, campaign.uploadedPhotos.length),
         sub: ln,
         badge: cuts[i]?.mediaType || it.badge || `CUT 0${i + 1}`,
-        effect: ['zoom-in', 'pan-right', 'zoom-out', 'pan-left'][i % 4]
+        effect: 'none'
       }));
       if (typeof setVideoTotalDuration === 'function') setVideoTotalDuration(12);
 
@@ -9843,14 +9901,17 @@
       if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
       if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
       if (typeof syncPreviewPanel === 'function') syncPreviewPanel();
-      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0.25);
+
+      // 조립 직후 상단 9:16 모니터에서 실제 영상이 즉시 움직이며 재생되도록 시작!
+      isPlaying = true;
+      const ppBtn = document.getElementById('playPauseBtn');
+      if (ppBtn) ppBtn.textContent = '⏸ 일시정지';
+      if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
+      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0.05);
 
       const modeLabel = mode === 'store' ? '🏪 우리 가게×밈 패러디' : mode === 'keyword' ? '⚡ 오늘 키워드×밈 콜라보' : '🔥 원본 밈';
-      if (statusEl) statusEl.textContent = `✅ [${modeLabel}] "${it.title}" 6컷 조립 완료! 위 미리보기에서 바로 확인하세요.`;
-      if (typeof arToast === 'function') arToast(`${modeLabel} 6컷 쇼츠가 자동 조립되었어요!`, true);
-
-      // 비동기로 GIPHY / Pixabay / Wikimedia Commons 무료 밈 리액션·스톡 클립 자동 매칭
-      arFetchLiveVisualsForCurrentMeme(true);
+      if (statusEl) statusEl.textContent = `✅ [${modeLabel}] "${it.title}" 6컷 실제 영상 클립 조립 완료! 상단 미리보기에서 바로 재생 중입니다.`;
+      if (typeof arToast === 'function') arToast(`🎬 ${modeLabel} 6컷 실제 영상 쇼츠가 재생됩니다!`, true);
     }
 
     function arRenderMemeAssembledStrip(it) {
@@ -9859,24 +9920,62 @@
       const titleEl = document.getElementById('arMemeAssembledTitle');
       if (!box || !strip || !it) return;
       box.classList.remove('hidden');
-      if (titleEl) titleEl.textContent = `✅ 조립된 6컷 (${it.title.slice(0, 22)})`;
+      if (titleEl) titleEl.textContent = `🎬 조립된 6컷 실제 영상 클립 (${it.title.slice(0, 20)})`;
       strip.innerHTML = (it.cuts || []).slice(0, 6).map((c, idx) => {
-        const curImg = campaign.uploadedPhotos[idx];
-        const thumbSrc = (curImg && curImg.src) || c.fallbackImg || '/assets/scenes/cafe/1.jpg';
+        const curMedia = campaign.uploadedPhotos[idx];
+        const vSrc = (curMedia && curMedia._videoSrc) || c.videoUrl || arPickLocalMemeVideoUrl(c.keyword, idx);
         return `
-          <div class="rounded-[9px] bg-[#161924] border border-white/10 p-2 flex items-center gap-2">
-            <img src="${thumbSrc}" alt="" class="w-10 h-14 rounded-[6px] object-cover shrink-0 border border-white/15" />
-            <div class="min-w-0 flex-1">
+          <div class="rounded-[9px] bg-[#161924] border border-white/12 p-2 flex items-center gap-2">
+            <div class="relative w-11 h-16 rounded-[6px] overflow-hidden shrink-0 border border-[#60a5fa]/40 bg-black">
+              <video src="${vSrc}" autoplay loop muted playsinline class="w-full h-full object-cover block"></video>
+              <span class="absolute bottom-0 inset-x-0 bg-[#2563eb]/90 text-[8.5px] text-white font-bold text-center py-0.2">🎬 영상</span>
+            </div>
+            <div class="min-w-0 flex-1 space-y-0.5">
               <div class="flex items-center justify-between gap-1">
-                <span class="text-[10.5px] font-bold text-[#60a5fa]">${idx + 1}컷 · ${c.mediaType || '밈 짤'}</span>
-                <span class="text-[10px] text-[#9ca3af]">${(c.line || '').length}자</span>
+                <span class="text-[10.5px] font-bold text-[#60a5fa]">${idx + 1}컷 · ${c.mediaType || '밈 영상'}</span>
+                <button type="button" onclick="arSwapSingleMemeCutVideo(${idx})" class="px-1.5 py-0.5 rounded bg-white/8 hover:bg-white/15 text-[9.5px] text-[#93c5fd] cursor-pointer" title="이 컷만 다른 영상 클립으로 교체">🔄 교체</button>
               </div>
               <div class="text-[11px] text-white font-medium truncate">${c.line || ''}</div>
-              <div class="text-[10px] text-[#85858b] truncate">🔍 ${c.keyword || 'reaction'}</div>
+              <div class="text-[10px] text-[#85858b] truncate">🎬 ${c.keyword || 'video clip'}</div>
             </div>
           </div>
         `;
       }).join('');
+    }
+
+    async function arSwapSingleMemeCutVideo(cutIdx) {
+      const it = window.__arCurrentMemeItem;
+      if (!it || !Array.isArray(it.cuts) || !it.cuts[cutIdx]) return;
+      const c = it.cuts[cutIdx];
+      const nextClipIdx = ((Number(c._swapCount) || cutIdx) + 1) % 12;
+      c._swapCount = nextClipIdx;
+      const fallbackUrl = `/assets/clips/meme-${String(nextClipIdx + 1).padStart(2, '0')}.mp4`;
+      let targetUrl = fallbackUrl;
+      try {
+        const res = await fetch('/api/generate-script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'meme-visuals', queries: [c.keyword || 'funny cat'] })
+        });
+        const data = await res.json().catch(() => ({}));
+        const list = data?.visualsByCut?.[0] || [];
+        if (list.length) {
+          const pick = list[nextClipIdx % list.length];
+          if (pick && pick.url) {
+            targetUrl = pick.url;
+            c.mediaType = pick.source || '무료 영상';
+          }
+        }
+      } catch (_) {}
+      const vid = await arLoadRemoteCutVideo(targetUrl, fallbackUrl, `${cutIdx + 1}컷 · ${c.mediaType || '밈 영상'}`);
+      if (vid) {
+        c.videoUrl = vid._videoSrc || fallbackUrl;
+        campaign.uploadedPhotos[cutIdx] = vid;
+        arRenderMemeAssembledStrip(it);
+        if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+        if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(cutIdx * 2.0 + 0.1);
+        if (typeof arToast === 'function') arToast(`🎬 ${cutIdx + 1}번 컷 영상을 새 클립으로 교체했어요!`, true);
+      }
     }
 
     async function arFetchLiveVisualsForCurrentMeme(silent = false) {
@@ -9896,25 +9995,22 @@
           if (!Array.isArray(candidates) || !candidates.length) return;
           const pick = candidates[Math.floor(Math.random() * candidates.length)];
           if (!pick || !pick.url) return;
-          const im = new Image();
-          im.crossOrigin = 'anonymous';
-          im.src = pick.url;
-          const ok = await new Promise((r) => {
-            im.onload = () => r(true);
-            im.onerror = () => r(false);
-            setTimeout(() => r(false), 2500);
-          });
-          if (ok && im.naturalWidth && campaign.uploadedPhotos[ci]) {
-            campaign.uploadedPhotos[ci] = im;
-            if (it.cuts[ci]) it.cuts[ci].mediaType = pick.source || '무료 밈 짤';
+          const fb = `/assets/clips/meme-${String(((ci + Math.floor(Math.random() * 11)) % 12) + 1).padStart(2, '0')}.mp4`;
+          const vid = await arLoadRemoteCutVideo(pick.url, fb, `${ci + 1}컷 · ${pick.source || '무료 영상'}`);
+          if (vid && campaign.uploadedPhotos[ci]) {
+            campaign.uploadedPhotos[ci] = vid;
+            if (it.cuts[ci]) {
+              it.cuts[ci].videoUrl = vid._videoSrc || fb;
+              it.cuts[ci].mediaType = pick.source || '무료 영상';
+            }
             replaced++;
           }
         }));
         if (replaced > 0) {
           arRenderMemeAssembledStrip(it);
           if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
-          if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime || 0.25);
-          if (!silent && typeof arToast === 'function') arToast(`🔄 ${replaced}개 컷에 새 무료 밈 짤·스톡 이미지를 매칭했어요!`, true);
+          if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0.1);
+          if (!silent && typeof arToast === 'function') arToast(`🎬 ${replaced}개 컷을 새 무료 밈·스톡 영상 클립으로 매칭했어요!`, true);
         }
       } catch (_) {}
     }
@@ -10043,6 +10139,7 @@
     window.arSetMemeMashupMode = arSetMemeMashupMode;
     window.arHighlightMemeIssueChip = arHighlightMemeIssueChip;
     window.arFetchLiveVisualsForCurrentMeme = arFetchLiveVisualsForCurrentMeme;
+    window.arSwapSingleMemeCutVideo = arSwapSingleMemeCutVideo;
     window.arSwitchMemeTab = arSwitchMemeTab;
     window.arToggleKaraokeMode = arToggleKaraokeMode;
     window.arToggleSafeZoneGuide = arToggleSafeZoneGuide;
