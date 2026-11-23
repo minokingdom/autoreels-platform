@@ -1994,7 +1994,17 @@ body.ar-cut-editing #arQuickBar { display: none; }
 #studioServices {display:none}
 #viewPreview.ar-service-home #studioServices {display:grid;gap:10px;grid-column:1/-1;width:min(100%,640px);margin:0 auto;padding:14px;box-sizing:border-box}
 #viewPreview.ar-service-home #studioServices .bgm-now {width:100%;min-width:0;margin:0;text-align:left}
-#viewPreview.ar-service-home #startAutoReels {border-color:var(--border-strong);background:var(--raised)}
+#viewPreview.ar-service-home #startAutoReels {
+  background: linear-gradient(105deg, #214f98, #183768);
+  border-color: #5286d0;
+}
+#startAutoReels .bgm-now-txt strong,
+#startAutoReels .bgm-now-go { color: #fff; }
+#startAutoReels .bgm-now-txt small { color: #d4e6ff; }
+#viewPreview.ar-service-home #startAutoReels:hover {
+  background: linear-gradient(105deg, #285ca9, #1b427c);
+}
+#startAutoReels:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 body:not(.ar-cn-mode) #viewPreview.ar-service-home > #mainMonitorColumn,
 body:not(.ar-cn-mode) #viewPreview.ar-service-home > #studioWorkflowColumn,
 body:not(.ar-cn-mode):has(#viewPreview.ar-service-home:not(.hidden)) #mobileStepBar,
