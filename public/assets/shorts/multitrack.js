@@ -226,24 +226,52 @@ function drawCues(s,type,total){
   if(!lane.children.length)lane.append(mixButton(sound?'＋ 효과음':'＋ 자막',()=>{selectMix(s,type);editCue(s,type);},'mix-empty'));
 }
 const MIX_CAPTION_FONTS=[
+  // 임팩트 · 포스터 · 바이럴 볼드 (상업용 무료 40종)
   {id:'pretendard',name:'프리텐다드',css:'"Pretendard Variable", Pretendard, sans-serif',w:700},
-  {id:'dohyeon',name:'도현체',css:'"Do Hyeon", sans-serif',w:400},
-  {id:'blackhan',name:'블랙한산스',css:'"Black Han Sans", sans-serif',w:400},
-  {id:'jua',name:'주아체',css:'"Jua", sans-serif',w:400},
-  {id:'bagel',name:'베이글팻',css:'"Bagel Fat One", sans-serif',w:400},
-  {id:'gasoek',name:'가석체',css:'"Gasoek One", sans-serif',w:400},
-  {id:'gugi',name:'구기체',css:'"Gugi", sans-serif',w:400},
+  {id:'freesentation',name:'프리젠테이션',css:'"Freesentation", sans-serif',w:900},
+  {id:'paperlogy',name:'페이퍼로지',css:'"Paperlogy", sans-serif',w:800},
+  {id:'suite',name:'스위트 헤비',css:'"SUITE", sans-serif',w:900},
+  {id:'gmarket',name:'지마켓산스',css:'"GmarketSans", sans-serif',w:700},
+  {id:'aggro',name:'어그로 볼드',css:'"SBAggroB", sans-serif',w:700},
+  {id:'jalnan',name:'잘난체',css:'"yg-jalnan", sans-serif',w:700},
+  {id:'blackhan',name:'검은고딕',css:'"Black Han Sans", sans-serif',w:400},
+  {id:'gasoek',name:'가석원 울트라',css:'"Gasoek One", sans-serif',w:400},
+  {id:'gangwon',name:'강원파워',css:'"GangwonEduPower", sans-serif',w:800},
+  {id:'lineseed',name:'라인 시드',css:'"LINESeedKR", sans-serif',w:700},
+  {id:'ibmplex',name:'IBM 플렉스',css:'"IBM Plex Sans KR", sans-serif',w:700},
+  {id:'tenada',name:'테나다 볼드',css:'"Tenada", sans-serif',w:800},
+  {id:'cafe24ohsquare',name:'카페24 아네모네',css:'"Cafe24Ohsquare", sans-serif',w:700},
+  {id:'cafe24',name:'카페24 둥근',css:'"Cafe24Ssurround", sans-serif',w:700},
+  {id:'bagel',name:'베이글 팻',css:'"Bagel Fat One", sans-serif',w:400},
+  {id:'dohyeon',name:'배민 도현체',css:'"Do Hyeon", sans-serif',w:400},
+  {id:'jua',name:'배민 주아체',css:'"Jua", sans-serif',w:400},
+  // 에디토리얼 · 신문 · 감성 명조
+  {id:'hahmlet',name:'함렛 명조',css:'"Hahmlet", serif',w:900},
+  {id:'serif',name:'본명조 볼드',css:'"Noto Serif KR", serif',w:900},
+  {id:'chosun',name:'조선일보명조',css:'"Chosunilbo_myungjo", serif',w:400},
+  {id:'songmyung',name:'송명 세리프',css:'"Song Myung", serif',w:400},
+  {id:'maru',name:'마루부리',css:'"MaruBuri", serif',w:700},
+  {id:'diphylleia',name:'디필레이아',css:'"Diphylleia", serif',w:400},
+  {id:'grandiflora',name:'그란디플로라',css:'"Grandiflora One", serif',w:400},
   {id:'gowun',name:'고운바탕',css:'"Gowun Batang", serif',w:700},
-  {id:'songmyung',name:'송명체',css:'"Song Myung", serif',w:400},
-  {id:'hahmlet',name:'함렛 세리프',css:'"Hahmlet", serif',w:700},
+  {id:'dodum',name:'고운돋움',css:'"Gowun Dodum", sans-serif',w:400},
+  // 테크 · 레트로 · 개성 디스플레이
+  {id:'orbit',name:'오르빗 테크',css:'"Orbit", sans-serif',w:400},
+  {id:'gugi',name:'구기체',css:'"Gugi", sans-serif',w:400},
+  {id:'sunflower',name:'해바라기',css:'"Sunflower", sans-serif',w:700},
+  {id:'bwpicture',name:'흑백사진체',css:'"Black And White Picture", sans-serif',w:400,sz:17},
+  {id:'stylish',name:'스타일리시',css:'"Stylish", sans-serif',w:400,sz:16},
+  {id:'moirai',name:'모이라이',css:'"Moirai One", cursive',w:400,sz:16},
+  // 손글씨 · 붓글씨 · 캘리
   {id:'pen',name:'나눔손글씨 펜',css:'"Nanum Pen Script", cursive',w:400,sz:19},
   {id:'brush',name:'나눔손글씨 붓',css:'"Nanum Brush Script", cursive',w:400,sz:19},
+  {id:'dokdo',name:'동해독도체',css:'"East Sea Dokdo", cursive',w:400,sz:20},
+  {id:'kirang',name:'기랑해랑',css:'"Kirang Haerang", cursive',w:400,sz:17},
   {id:'gaegu',name:'개구쟁이',css:'"Gaegu", cursive',w:700,sz:17},
   {id:'himelody',name:'하이멜로디',css:'"Hi Melody", cursive',w:400,sz:18},
-  {id:'gamja',name:'감자꽃',css:'"Gamja Flower", cursive',w:400,sz:17},
-  {id:'poorstory',name:'푸어스토리',css:'"Poor Story", cursive',w:400,sz:16},
   {id:'yeonsung',name:'연성체',css:'"Yeon Sung", cursive',w:400,sz:16},
-  {id:'dokdo',name:'동해독도체',css:'"East Sea Dokdo", cursive',w:400,sz:20}
+  {id:'gamja',name:'감자꽃',css:'"Gamja Flower", cursive',w:400,sz:17},
+  {id:'poorstory',name:'푸어스토리',css:'"Poor Story", cursive',w:400,sz:16}
 ];
 function buildCaptionStylePicker(box,opts){
   const state={

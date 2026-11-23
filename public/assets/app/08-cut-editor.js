@@ -111,43 +111,123 @@
       { id: 'prism', label: '🌈 프리즘' }
     ];
     const CUT_TEXT_FONTS = [
-      // ── 트렌디 · 릴스 임팩트 ──
-      { id: 'sans', label: '모던고딕', css: "'Pretendard Variable', 'Pretendard', sans-serif", weight: 800 },
+      // ── 임팩트 · 포스터 · 바이럴 볼드 (상업용 무료 42종) ──
+      { id: 'sans', label: '프리텐다드', css: "'Pretendard Variable', 'Pretendard', sans-serif", weight: 800 },
+      { id: 'freesentation', label: '프리젠테이션', css: "'Freesentation', 'Paperlogy', sans-serif", weight: 900 },
       { id: 'paperlogy', label: '페이퍼로지', css: "'Paperlogy', 'Pretendard Variable', sans-serif", weight: 800 },
+      { id: 'suite', label: '스위트 헤비', css: "'SUITE', 'Pretendard Variable', sans-serif", weight: 900 },
       { id: 'gmarket', label: '지마켓산스', css: "'GmarketSans', 'Pretendard Variable', sans-serif", weight: 700 },
-      { id: 'aggro', label: '어그로체', css: "'SBAggroB', 'Paperlogy', sans-serif", weight: 700 },
+      { id: 'aggro', label: '어그로 볼드', css: "'SBAggroB', 'Paperlogy', sans-serif", weight: 700 },
+      { id: 'jalnan', label: '잘난체', css: "'yg-jalnan', 'SBAggroB', sans-serif", weight: 700 },
+      { id: 'blackhansans', label: '검은고딕', css: "'Black Han Sans', 'Paperlogy', sans-serif", weight: 400 },
+      { id: 'gasoekone', label: '가석원 울트라', css: "'Gasoek One', 'SBAggroB', sans-serif", weight: 400 },
+      { id: 'gangwon', label: '강원파워', css: "'GangwonEduPower', 'Paperlogy', sans-serif", weight: 800 },
+      { id: 'lineseed', label: '라인 시드', css: "'LINESeedKR', 'Pretendard Variable', sans-serif", weight: 700 },
+      { id: 'ibmplex', label: 'IBM 플렉스', css: "'IBM Plex Sans KR', 'Pretendard Variable', sans-serif", weight: 700 },
+      { id: 'tenada', label: '테나다 볼드', css: "'Tenada', 'Cafe24Ssurround', sans-serif", weight: 800 },
+      { id: 'cafe24ohsquare', label: '카페24 아네모네', css: "'Cafe24Ohsquare', 'SBAggroB', sans-serif", weight: 700 },
       // ── 예능 · 팝 · 둥근체 ──
-      { id: 'cafe24', label: '써라운드', css: "'Cafe24Ssurround', 'Bagel Fat One', sans-serif", weight: 700 },
-      { id: 'bagel', label: '베이글통통', css: "'Bagel Fat One', 'Cafe24Ssurround', sans-serif", weight: 400 },
-      { id: 'dohyeon', label: '배민도현', css: "'Do Hyeon', sans-serif", weight: 400 },
-      { id: 'jua', label: '배민주아', css: "'Jua', sans-serif", weight: 400 },
-      { id: 'dongle', label: '동글', css: "'Dongle', sans-serif", weight: 700 },
-      { id: 'cute', label: '큐트폰트', css: "'Cute Font', cursive", weight: 400 },
-      { id: 'stylish', label: '스타일리시', css: "'Stylish', sans-serif", weight: 400 },
+      { id: 'cafe24', label: '카페24 둥근', css: "'Cafe24Ssurround', 'Bagel Fat One', sans-serif", weight: 700 },
+      { id: 'bagel', label: '베이글 팻', css: "'Bagel Fat One', 'Cafe24Ssurround', sans-serif", weight: 400 },
+      { id: 'dohyeon', label: '배민 도현체', css: "'Do Hyeon', sans-serif", weight: 400 },
+      { id: 'jua', label: '배민 주아체', css: "'Jua', sans-serif", weight: 400 },
+      { id: 'dongle', label: '동글', css: "'Dongle', sans-serif", weight: 700, sz: 20 },
+      { id: 'cute', label: '큐트폰트', css: "'Cute Font', cursive", weight: 400, sz: 20 },
+      { id: 'stylish', label: '스타일리시', css: "'Stylish', sans-serif", weight: 400, sz: 16 },
       // ── 매거진 · 에디토리얼 명조 ──
-      { id: 'hahmlet', label: '햄릿명조', css: "'Hahmlet', 'Noto Serif KR', serif", weight: 900 },
-      { id: 'diphylleia', label: '럭셔리세리프', css: "'Diphylleia', 'MaruBuri', serif", weight: 400 },
-      { id: 'grandiflora', label: '시적명조', css: "'Grandiflora One', 'Gowun Batang', serif", weight: 400 },
+      { id: 'hahmlet', label: '함렛 명조', css: "'Hahmlet', 'Noto Serif KR', serif", weight: 900 },
+      { id: 'serif', label: '본명조 볼드', css: "'Noto Serif KR', serif", weight: 900 },
+      { id: 'chosun', label: '조선일보명조', css: "'Chosunilbo_myungjo', 'MaruBuri', serif", weight: 400 },
+      { id: 'songmyung', label: '송명 세리프', css: "'Song Myung', serif", weight: 400 },
       { id: 'maru', label: '마루부리', css: "'MaruBuri', 'Gowun Batang', serif", weight: 600 },
-      { id: 'serif', label: '본명조', css: "'Noto Serif KR', serif", weight: 900 },
+      { id: 'diphylleia', label: '디필레이아', css: "'Diphylleia', 'MaruBuri', serif", weight: 400 },
+      { id: 'grandiflora', label: '그란디플로라', css: "'Grandiflora One', 'Gowun Batang', serif", weight: 400 },
       { id: 'batang', label: '고운바탕', css: "'Gowun Batang', serif", weight: 700 },
-      { id: 'songmyung', label: '송명', css: "'Song Myung', serif", weight: 400 },
+      { id: 'dodum', label: '고운돋움', css: "'Gowun Dodum', sans-serif", weight: 400 },
       { id: 'sunflower', label: '해바라기', css: "'Sunflower', sans-serif", weight: 700 },
       // ── 테크 · 레트로 · 스트릿 ──
-      { id: 'orbit', label: '사이버오빗', css: "'Orbit', 'Gowun Dodum', sans-serif", weight: 400 },
-      { id: 'gugi', label: '구기레트로', css: "'Gugi', sans-serif", weight: 400 },
-      { id: 'bwpicture', label: '흑백사진', css: "'Black And White Picture', sans-serif", weight: 400 },
-      { id: 'kirang', label: '스트릿붓', css: "'Kirang Haerang', cursive", weight: 400 },
-      // ── 손글씨 · 붓글씨 · 영문필기 ──
-      { id: 'dokdo', label: '동해독도', css: "'East Sea Dokdo', cursive", weight: 400 },
-      { id: 'brush', label: '나눔붓글씨', css: "'Nanum Brush Script', cursive", weight: 400 },
-      { id: 'pen', label: '나눔펜', css: "'Nanum Pen Script', cursive", weight: 400 },
-      { id: 'gaegu', label: '개구쟁이', css: "'Gaegu', cursive", weight: 700 },
-      { id: 'singleday', label: '다이어리', css: "'Single Day', cursive", weight: 400 },
-      { id: 'yeonsung', label: '연성체', css: "'Yeon Sung', cursive", weight: 400 },
-      { id: 'himelody', label: '하이멜로디', css: "'Hi Melody', cursive", weight: 400 },
-      { id: 'script', label: '영문필기', css: "'Great Vibes', 'Pinyon Script', cursive", weight: 400 }
+      { id: 'orbit', label: '오르빗 테크', css: "'Orbit', 'Gowun Dodum', sans-serif", weight: 400 },
+      { id: 'gugi', label: '구기체', css: "'Gugi', sans-serif", weight: 400 },
+      { id: 'bwpicture', label: '흑백사진체', css: "'Black And White Picture', sans-serif", weight: 400, sz: 17 },
+      { id: 'moirai', label: '모이라이', css: "'Moirai One', cursive", weight: 400, sz: 16 },
+      { id: 'kirang', label: '기랑해랑', css: "'Kirang Haerang', cursive", weight: 400, sz: 17 },
+      // ── 손글씨 · 붓글씨 · 캘리 ──
+      { id: 'dokdo', label: '동해독도체', css: "'East Sea Dokdo', cursive", weight: 400, sz: 20 },
+      { id: 'brush', label: '나눔붓글씨', css: "'Nanum Brush Script', cursive", weight: 400, sz: 19 },
+      { id: 'pen', label: '나눔손글씨 펜', css: "'Nanum Pen Script', cursive", weight: 400, sz: 19 },
+      { id: 'gaegu', label: '개구쟁이', css: "'Gaegu', cursive", weight: 700, sz: 17 },
+      { id: 'singleday', label: '싱글데이', css: "'Single Day', cursive", weight: 400, sz: 17 },
+      { id: 'yeonsung', label: '연성체', css: "'Yeon Sung', cursive", weight: 400, sz: 16 },
+      { id: 'himelody', label: '하이멜로디', css: "'Hi Melody', cursive", weight: 400, sz: 18 },
+      { id: 'gamja', label: '감자꽃', css: "'Gamja Flower', cursive", weight: 400, sz: 17 },
+      { id: 'poorstory', label: '푸어스토리', css: "'Poor Story', cursive", weight: 400, sz: 16 },
+      { id: 'script', label: '영문필기', css: "'Great Vibes', 'Pinyon Script', cursive", weight: 400, sz: 18 }
     ];
+    window.__arFontPickerExpanded = window.__arFontPickerExpanded || {};
+    function arRenderUnifiedFontPickerHtml(opts) {
+      const items = opts.items || CUT_TEXT_FONTS;
+      const pickerId = String(opts.pickerId || 'default');
+      const expanded = Boolean(opts.expanded ?? window.__arFontPickerExpanded[pickerId]);
+      const sampleRaw = String(opts.sampleText || '').replace(/\s+/g, ' ').trim();
+      const sampleTxt = (sampleRaw ? sampleRaw.slice(0, 14) : (opts.fallbackText || '가나다 릴스 자막'));
+      const escSample = typeof escapeCutHtml === 'function' ? escapeCutHtml(sampleTxt) : sampleTxt.replace(/[<>&"]/g, '');
+      const titleLbl = opts.title || `글꼴 미리보기 (${items.length}종)`;
+      const resetHtml = opts.resetExpr
+        ? `<button type="button" onclick="${opts.resetExpr}" class="ar-font-reset">${opts.resetLabel || '기본 ↺'}</button>`
+        : '';
+      const cardsHtml = items.map((f) => {
+        const fid = f.id || f.key || '';
+        const fam = String(f.css || f.family || "'Pretendard Variable', sans-serif").replace(/"/g, "'");
+        const fw = f.weight || f.w || 700;
+        const szStyle = f.sz ? `font-size:${f.sz}px;` : '';
+        const on = String(opts.activeId || '') === String(fid);
+        const onClick = typeof opts.onSelectExpr === 'function' ? opts.onSelectExpr(fid) : '';
+        const lbl = typeof escapeCutHtml === 'function' ? escapeCutHtml(f.label || f.name || fid) : (f.label || f.name || fid);
+        return `<button type="button" data-font-id="${fid}" aria-pressed="${on ? 'true' : 'false'}" onclick="${onClick}" class="ar-font-card${on ? ' active' : ''}">`
+          + `<span class="ar-font-sample" style="font-family:${fam};font-weight:${fw};${szStyle}">${escSample}</span>`
+          + `<span class="ar-font-name">${lbl}</span>`
+          + `</button>`;
+      }).join('');
+      return `
+        <div class="ar-font-picker" data-picker-id="${pickerId}">
+          <div class="ar-font-head">
+            <div class="ar-font-head-l">
+              <span class="ar-font-sec-lbl">${titleLbl}</span>
+              ${opts.freeBadge ? '<span class="text-[10.5px] text-[#4ade80]">(상업용 무료)</span>' : ''}
+            </div>
+            <div class="ar-font-head-r">
+              ${resetHtml}
+              <button type="button" onclick="arToggleUnifiedFontGrid(this)" class="ar-font-toggle">${expanded ? '캐러셀로 접기 ▴' : '전체 펼치기 ▾'}</button>
+            </div>
+          </div>
+          <div class="ar-font-carousel-wrap">
+            <button type="button" onclick="arScrollUnifiedFontRow(this, -1)" class="ar-font-nav" style="${expanded ? 'display:none;' : ''}" aria-label="이전 폰트">‹</button>
+            <div class="${expanded ? 'ar-font-grid' : 'ar-font-carousel'}">${cardsHtml}</div>
+            <button type="button" onclick="arScrollUnifiedFontRow(this, 1)" class="ar-font-nav" style="${expanded ? 'display:none;' : ''}" aria-label="다음 폰트">›</button>
+          </div>
+        </div>
+      `;
+    }
+    function arToggleUnifiedFontGrid(btn) {
+      const picker = btn && btn.closest('.ar-font-picker');
+      if (!picker) return;
+      const pid = picker.dataset.pickerId || 'default';
+      const list = picker.querySelector('.ar-font-carousel, .ar-font-grid');
+      if (!list) return;
+      const expanded = list.classList.contains('ar-font-carousel');
+      window.__arFontPickerExpanded[pid] = expanded;
+      list.className = expanded ? 'ar-font-grid' : 'ar-font-carousel';
+      btn.textContent = expanded ? '캐러셀로 접기 ▴' : '전체 펼치기 ▾';
+      picker.querySelectorAll('.ar-font-nav').forEach((n) => { n.style.display = expanded ? 'none' : 'flex'; });
+    }
+    function arScrollUnifiedFontRow(btn, dir) {
+      const picker = btn && btn.closest('.ar-font-picker');
+      const list = picker && picker.querySelector('.ar-font-carousel');
+      if (list) list.scrollBy({ left: dir * 284, behavior: 'smooth' });
+    }
+    window.arRenderUnifiedFontPickerHtml = arRenderUnifiedFontPickerHtml;
+    window.arToggleUnifiedFontGrid = arToggleUnifiedFontGrid;
+    window.arScrollUnifiedFontRow = arScrollUnifiedFontRow;
     const CUT_TEXT_STYLES = [
       { id: 'box', label: '박스' },
       { id: 'softbox', label: '반투명' },
@@ -4423,18 +4503,18 @@
                     class="ar-el-chip ${obj.align === 'right' ? 'active' : ''}">▶ 우정렬</button>
           </div>
         </div>
-        <div class="ar-el-row">
-          <span class="ar-el-label">폰트 스타일</span>
-          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 min-w-0 py-0.5">
-            <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'font', '', true)"
-                    class="ar-el-chip ${!curFont ? 'active' : ''}">기본 폰트</button>
-            ${CUT_TEXT_FONTS.map((f) => `
-              <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'font', '${f.id}', true)"
-                      style="font-family:${f.css};font-weight:${f.weight};"
-                      class="ar-el-chip ${curFont === f.id ? 'active' : ''}">${f.label}</button>
-            `).join('')}
-          </div>
-        </div>
+        ${arRenderUnifiedFontPickerHtml({
+          pickerId: `cut-el-${elKey}`,
+          items: CUT_TEXT_FONTS,
+          activeId: curFont,
+          sampleText: (obj && obj.text) || '',
+          fallbackText: '가나다 릴스 자막',
+          title: `글꼴 미리보기 (${CUT_TEXT_FONTS.length}종)`,
+          freeBadge: true,
+          resetExpr: `updateCutElementOverride(${cutIdx}, '${elKey}', 'font', '', true)`,
+          resetLabel: '기본 폰트 ↺',
+          onSelectExpr: (fid) => `updateCutElementOverride(${cutIdx}, '${elKey}', 'font', '${fid}', true)`
+        })}
         <div class="ar-el-row">
           <span class="ar-el-label">카드·박스</span>
           <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 min-w-0 py-0.5">
@@ -4471,10 +4551,18 @@
           <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'hidden', ${!obj.hidden}, true)" class="ig-pill ${obj.hidden ? 'off' : ''}">${obj.hidden ? '숨김' : '보임'}</button>
           <button type="button" onclick="arApplyElementStyleToAllCuts(${cutIdx}, '${elKey}')" class="ig-pill" title="이 모양·위치를 모든 컷에 똑같이">모든 컷에 똑같이</button>
         </div>
-        <div class="ig-ins-fonts no-scrollbar">
-          <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'font', '', true)" class="ig-font ${!curFont ? 'on' : ''}">기본</button>
-          ${CUT_TEXT_FONTS.map((f) => `<button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'font', '${f.id}', true)" style="font-family:${f.css};font-weight:${f.weight};" class="ig-font ${curFont === f.id ? 'on' : ''}">${f.label}</button>`).join('')}
-        </div>
+        ${arRenderUnifiedFontPickerHtml({
+          pickerId: `cut-std-${elKey}`,
+          items: CUT_TEXT_FONTS,
+          activeId: curFont,
+          sampleText: curTextVal || '',
+          fallbackText: '가나다 릴스 자막',
+          title: `글꼴 미리보기 (${CUT_TEXT_FONTS.length}종)`,
+          freeBadge: true,
+          resetExpr: `updateCutElementOverride(${cutIdx}, '${elKey}', 'font', '', true)`,
+          resetLabel: '기본 ↺',
+          onSelectExpr: (fid) => `updateCutElementOverride(${cutIdx}, '${elKey}', 'font', '${fid}', true)`
+        })}
         <div class="ig-ins-colors no-scrollbar">
           <button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'color', '', true)" class="ig-dot ig-dot-auto ${!obj.color ? 'on' : ''}" aria-label="디자인 기본색"></button>
           ${CUT_TEXT_COLORS.map((col) => `<button type="button" onclick="updateCutElementOverride(${cutIdx}, '${elKey}', 'color', '${col}', true)" class="ig-dot ${obj.color === col ? 'on' : ''}" style="background:${col}" aria-label="색상 ${col}"></button>`).join('')}
@@ -4841,17 +4929,16 @@
               <span id="arElValOvScale" class="ar-el-val">${Math.round((Number(it.scale) || 1) * 100)}%</span>
             </div>
             ${isText ? `
-              <div class="ar-el-row">
-                <span class="ar-el-label">폰트</span>
-                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
-                  ${CUT_TEXT_FONTS.map((f) => {
-                    const on = (it.font || 'dohyeon') === f.id;
-                    return `<button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'font', '${f.id}', true)"
-                                    style="font-family:${f.css};font-weight:${f.weight};"
-                                    class="ar-el-chip ${on ? 'active' : ''}">${f.label}</button>`;
-                  }).join('')}
-                </div>
-              </div>
+              ${arRenderUnifiedFontPickerHtml({
+                pickerId: `cut-ov-${ii}`,
+                items: CUT_TEXT_FONTS,
+                activeId: it.font || 'dohyeon',
+                sampleText: curTxt || '',
+                fallbackText: '가나다 릴스 자막',
+                title: `글꼴 미리보기 (${CUT_TEXT_FONTS.length}종)`,
+                freeBadge: true,
+                onSelectExpr: (fid) => `updateSelectedOverlayProp(${cutIdx}, ${ii}, 'font', '${fid}', true)`
+              })}
               <div class="ar-el-row">
                 <span class="ar-el-label">글자색</span>
                 <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">

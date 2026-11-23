@@ -88,26 +88,50 @@ byId('showCaptions').addEventListener('change',e => {
 byId('editor').addEventListener('toggle',() => { if (session && byId('editor').open) session.interacted = true; });
 const SHORTS_CAPTION_FONTS = {
   pretendard: '"Pretendard Variable", Pretendard, sans-serif',
-  dohyeon: '"Do Hyeon", "Pretendard Variable", sans-serif',
+  freesentation: '"Freesentation", "Pretendard Variable", sans-serif',
+  paperlogy: '"Paperlogy", "Pretendard Variable", sans-serif',
+  suite: '"SUITE", "Pretendard Variable", sans-serif',
+  gmarket: '"GmarketSans", "Pretendard Variable", sans-serif',
+  aggro: '"SBAggroB", "Paperlogy", sans-serif',
+  jalnan: '"yg-jalnan", "SBAggroB", sans-serif',
   blackhan: '"Black Han Sans", sans-serif',
-  jua: '"Jua", "Pretendard Variable", sans-serif',
-  gugi: '"Gugi", "Pretendard Variable", sans-serif',
-  bagel: '"Bagel Fat One", "Jua", sans-serif',
   gasoek: '"Gasoek One", "Black Han Sans", sans-serif',
-  gowun: '"Gowun Batang", serif',
-  songmyung: '"Song Myung", serif',
+  gangwon: '"GangwonEduPower", "Paperlogy", sans-serif',
+  lineseed: '"LINESeedKR", "Pretendard Variable", sans-serif',
+  ibmplex: '"IBM Plex Sans KR", "Pretendard Variable", sans-serif',
+  tenada: '"Tenada", "Cafe24Ssurround", sans-serif',
+  cafe24ohsquare: '"Cafe24Ohsquare", "SBAggroB", sans-serif',
+  cafe24: '"Cafe24Ssurround", "Bagel Fat One", sans-serif',
+  bagel: '"Bagel Fat One", "Jua", sans-serif',
+  dohyeon: '"Do Hyeon", "Pretendard Variable", sans-serif',
+  jua: '"Jua", "Pretendard Variable", sans-serif',
   hahmlet: '"Hahmlet", serif',
+  serif: '"Noto Serif KR", serif',
+  chosun: '"Chosunilbo_myungjo", "MaruBuri", serif',
+  songmyung: '"Song Myung", serif',
+  maru: '"MaruBuri", "Gowun Batang", serif',
+  diphylleia: '"Diphylleia", "MaruBuri", serif',
+  grandiflora: '"Grandiflora One", "Gowun Batang", serif',
+  gowun: '"Gowun Batang", serif',
+  dodum: '"Gowun Dodum", sans-serif',
+  orbit: '"Orbit", "Gowun Dodum", sans-serif',
+  gugi: '"Gugi", "Pretendard Variable", sans-serif',
+  sunflower: '"Sunflower", sans-serif',
+  bwpicture: '"Black And White Picture", sans-serif',
+  stylish: '"Stylish", sans-serif',
+  moirai: '"Moirai One", cursive',
   pen: '"Nanum Pen Script", cursive',
   brush: '"Nanum Brush Script", cursive',
+  dokdo: '"East Sea Dokdo", cursive',
+  kirang: '"Kirang Haerang", cursive',
   gaegu: '"Gaegu", cursive',
   himelody: '"Hi Melody", cursive',
-  gamja: '"Gamja Flower", cursive',
-  poorstory: '"Poor Story", cursive',
   yeonsung: '"Yeon Sung", cursive',
-  dokdo: '"East Sea Dokdo", cursive'
+  gamja: '"Gamja Flower", cursive',
+  poorstory: '"Poor Story", cursive'
 };
-const SHORTS_FONT_SCALE = { pen: 1.28, brush: 1.30, dokdo: 1.36, himelody: 1.20, gaegu: 1.12, gamja: 1.10, poorstory: 1.08 };
-const SHORTS_NORMAL_WEIGHT = new Set(['dohyeon','blackhan','jua','gugi','bagel','gasoek','songmyung','pen','brush','himelody','gamja','poorstory','yeonsung','dokdo']);
+const SHORTS_FONT_SCALE = { pen: 1.28, brush: 1.30, dokdo: 1.36, himelody: 1.20, gaegu: 1.12, gamja: 1.10, poorstory: 1.08, bwpicture: 1.14, kirang: 1.12, moirai: 1.08 };
+const SHORTS_NORMAL_WEIGHT = new Set(['dohyeon','blackhan','jua','gugi','bagel','gasoek','chosun','songmyung','diphylleia','grandiflora','dodum','orbit','bwpicture','stylish','moirai','pen','brush','dokdo','kirang','himelody','gamja','poorstory','yeonsung']);
 function drawTitles(ctx,clip,caption,cueOrStyle) {
   if (!clip) return;
   caption = caption || '';

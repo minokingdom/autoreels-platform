@@ -56,7 +56,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app/astryx-tokens.css?v=0.7.16" />
   <link rel="stylesheet" href="/assets/design-system.css?v=1" />
-  <link rel="stylesheet" href="/assets/app/app.css?v=20261123-cn-sheet-perfect" />
+  <link rel="stylesheet" href="/assets/app/app.css?v=20261123-unified-fonts40" />
   <link rel="stylesheet" href="/assets/app/splash.css?v=studio-return" />
   <script>
     // 랜딩(첫 방문자의 /)으로 열릴 때는 스플래시를 그리지 않음 — 12-account-billing-sns.js 의 shouldShowLandingOnBoot 와 같은 판단
@@ -714,7 +714,7 @@
             <div class="flex items-center gap-2 min-w-0">
               <div class="ar-mode-switch" role="group" aria-label="제작 형식 전환">
                 <button type="button" class="ar-mode-btn active" aria-pressed="true">릴스</button>
-                <button type="button" onclick="arOpenCardNewsModal()" class="ar-mode-btn" aria-pressed="false">인스타</button>
+                <button type="button" onclick="arOpenCardNewsModal()" class="ar-mode-btn" aria-pressed="false">카드뉴스</button>
               </div>
               <h2 id="previewDealerHeader" class="text-[16px] font-medium text-[#ededed] whitespace-nowrap">오늘의 릴스 만들기</h2>
               <span id="wasmEngineBadge" class="hidden tag-chip px-2 py-0.5 font-mono text-[11px]">Rust Wasm v1.0</span>
@@ -1662,19 +1662,19 @@
               <span class="aq-dot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg></span>
               <span class="aq-label">랜덤섞기</span>
             </button>
-            <button type="button" class="aq-btn" onclick="arCnOpenSheet('theme')" title="핀터레스트·매거진 테마 44종">
+            <button type="button" class="aq-btn" onclick="arCnOpenSheet('theme')" title="핀터레스트·매거진 테마 90종">
               <span class="aq-dot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
               <span class="aq-label">테마</span>
             </button>
-            <button type="button" class="aq-btn" onclick="arCnOpenSheet('text')" title="글자 수정 · 18종 폰트">
+            <button type="button" class="aq-btn" onclick="arCnOpenSheet('text')" title="글꼴 미리보기 · 40종 상업용 무료 폰트">
               <span class="aq-dot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg></span>
-              <span class="aq-label">글자</span>
+              <span class="aq-label">폰트</span>
             </button>
-            <button type="button" class="aq-btn" onclick="arCnOpenSheet('photo')" title="사진 교체 · 8종 배치">
+            <button type="button" class="aq-btn" onclick="arCnOpenSheet('photo')" title="사진 교체 · 46종 배치">
               <span class="aq-dot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="m21 15-5-5L5 19"/></svg></span>
               <span class="aq-label">사진</span>
             </button>
-            <button type="button" class="aq-btn" onclick="arCnOpenSheet('export')" title="고화질 PNG · ZIP 저장">
+            <button type="button" class="aq-btn" onclick="arCnOpenSheet('export')" title="고화질 PNG · PDF · PPTX · ZIP 저장">
               <span class="aq-dot"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
               <span class="aq-label">저장</span>
             </button>
@@ -1687,14 +1687,14 @@
         <!-- 모바일 전용 드래그 손잡이 (#arSheetHandle 과 100% 동일: 절반 ↔ 전체 ↔ 접기 3단계) -->
         <button type="button" id="arCnSheetHandle" aria-label="편집 시트 전체화면으로 보기" aria-expanded="true"><span></span></button>
         <div class="studio-card">
-          <!-- 상단 모드 전환(릴스 | 인스타) + 장수 선택 바 (오토릴스 '길이' 바 위치·스타일 100% 동일!) -->
+          <!-- 상단 모드 전환(릴스 | 카드뉴스) + 장수 선택 바 (오토릴스 '길이' 바 위치·스타일 100% 동일!) -->
           <div class="flex items-center justify-between gap-1.5 px-3 sm:px-6 pt-2 lg:pt-5">
             <div class="flex items-center gap-2 min-w-0">
               <div class="ar-mode-switch" role="group" aria-label="제작 형식 전환">
                 <button type="button" onclick="arCloseCardNewsModal()" class="ar-mode-btn" aria-pressed="false">릴스</button>
-                <button type="button" class="ar-mode-btn active" aria-pressed="true">인스타</button>
+                <button type="button" class="ar-mode-btn active" aria-pressed="true">카드뉴스</button>
               </div>
-              <h2 class="hidden lg:inline text-[16px] font-medium text-[#ededed] whitespace-nowrap">인스타 카드뉴스</h2>
+              <h2 class="hidden lg:inline text-[16px] font-medium text-[#ededed] whitespace-nowrap">카드뉴스</h2>
             </div>
             <div id="arCnCountRow" class="flex items-center gap-0.5 sm:gap-1 bg-[#141415] px-1.5 sm:px-2 py-1 rounded-[9px] border border-[var(--border)] overflow-x-auto scrollbar-none">
               <span class="hidden sm:inline text-[11px] text-[#85858b] px-1">장수</span>
@@ -1717,7 +1717,7 @@
                 <span class="font-mono" aria-hidden="true">2</span> 테마
               </button>
               <button type="button" role="tab" data-cn-dock="text" aria-selected="false" onclick="arCnOpenSheet('text')" class="studio-tab">
-                <span class="font-mono" aria-hidden="true">3</span> 글자
+                <span class="font-mono" aria-hidden="true">3</span> 폰트
               </button>
               <button type="button" role="tab" data-cn-dock="photo" aria-selected="false" onclick="arCnOpenSheet('photo')" class="studio-tab">
                 <span class="font-mono" aria-hidden="true">4</span> 사진
@@ -1832,14 +1832,14 @@
               </div>
               <div class="ar-cn-panel-nav flex items-center justify-between pt-2 border-t border-[var(--border)]">
                 <button type="button" onclick="arCnOpenSheet('ai')" class="btn-secondary h-9 px-3 text-[12px] cursor-pointer">← 주제</button>
-                <button type="button" onclick="arCnOpenSheet('text')" class="btn-secondary h-9 px-4 text-[12.5px] cursor-pointer">다음: 글자·폰트 수정 →</button>
+                <button type="button" onclick="arCnOpenSheet('text')" class="btn-secondary h-9 px-4 text-[12.5px] cursor-pointer">다음: 폰트·문구 수정 →</button>
               </div>
             </div>
 
-            <!-- 3단계: 글자 수정 & 18종 상업용 무료 개성 폰트 -->
+            <!-- 3단계: 폰트 미리보기 (40종 상업용 무료) & 카드 문구 수정 -->
             <div id="arCnTab_text" class="hidden studio-panel p-4 sm:p-6 space-y-3.5">
               <div class="flex items-center justify-between gap-2 flex-wrap">
-                <span id="arCnEditCardLabel" class="text-[13px] font-semibold text-[#93c5fd]">1번 카드 글자 수정</span>
+                <span id="arCnEditCardLabel" class="text-[13px] font-semibold text-[#93c5fd]">1번 카드 폰트·문구</span>
                 <div class="flex items-center gap-1">
                   <span class="text-[11px] text-[#85858b] mr-1">글자 크기</span>
                   <button type="button" data-cn-fsize="sm" onclick="arCnSetFontScale('sm')" class="ar-cn-opt-btn">작게</button>
@@ -1847,13 +1847,7 @@
                   <button type="button" data-cn-fsize="lg" onclick="arCnSetFontScale('lg')" class="ar-cn-opt-btn">크게</button>
                 </div>
               </div>
-              <div class="space-y-1.5">
-                <div class="flex items-center justify-between">
-                  <span class="text-[11.5px] text-[#a1a1a6]">제목 폰트 40종 <span class="text-[#4ade80]">(상업용 무료)</span></span>
-                  <button type="button" onclick="arCnSetFontKey('')" class="text-[11px] text-[#85858b] hover:text-white cursor-pointer">템플릿 기본 ↺</button>
-                </div>
-                <div id="arCnFontChipRow" class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none"></div>
-              </div>
+              <div id="arCnFontChipRow" class="w-full"></div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <label class="block text-[11px] text-[#a1a1a6] mb-1">상단 배지</label>
@@ -1952,7 +1946,7 @@
                 <div id="arCnVaultStrip" class="flex items-center gap-2 overflow-x-auto pb-1 min-h-[64px]"></div>
               </div>
               <div class="ar-cn-panel-nav flex items-center justify-between pt-2 border-t border-[var(--border)]">
-                <button type="button" onclick="arCnOpenSheet('text')" class="btn-secondary h-9 px-3 text-[12px] cursor-pointer">← 글자·폰트</button>
+                <button type="button" onclick="arCnOpenSheet('text')" class="btn-secondary h-9 px-3 text-[12px] cursor-pointer">← 폰트</button>
                 <button type="button" onclick="arCnOpenSheet('export')" class="btn-primary h-9 px-4 text-[12.5px] font-semibold cursor-pointer">다음: 고화질 저장 →</button>
               </div>
             </div>
@@ -2937,7 +2931,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cn-90-brandapp"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-cn-unified-fonts40"><\/script>');
     }
   </script>
   <!--

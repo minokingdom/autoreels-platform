@@ -7618,14 +7618,14 @@
     const AR_CN_TPL_THUMB_CACHE = {};
     const AR_CN_SHEET_TITLES = {
       ai: '✨ 장수 확인 후 AI로 카드뉴스 만들기',
-      theme: '🎨 사진 포함 테마 20종 · 레퍼런스 색감',
-      text: '✏️ 글자 수정 · 18종 개성 폰트',
-      photo: '📷 이 장 사진 교체 · 8종 사진 배치',
-      export: '💾 고화질 PNG · 전체 ZIP · 릴스 변환'
+      theme: '🎨 사진 포함 테마 90종 · 레퍼런스 색감',
+      text: '✏️ 폰트 미리보기 · 40종 상업용 무료',
+      photo: '📷 이 장 사진 교체 · 46종 사진 배치',
+      export: '💾 고화질 PNG · PDF · PPTX · ZIP 저장'
     };
 
     const AR_CN_TAB_ORDER = ['ai', 'theme', 'text', 'photo', 'export'];
-    const AR_CN_TAB_LABELS = { ai: '주제', theme: '테마', text: '글자', photo: '사진', export: '저장' };
+    const AR_CN_TAB_LABELS = { ai: '주제', theme: '테마', text: '폰트', photo: '사진', export: '저장' };
 
     function arCnBindSheetHandle() {
       const h = document.getElementById('arCnSheetHandle');
@@ -7723,20 +7723,42 @@
       arCnRenderTemplateGallery();
     }
 
+    const AR_CN_FONT_PREVIEW_SZ = { pen: 19, brush: 19, dokdo: 20, kirang: 17, gaegu: 17, yeonsung: 16, bwpicture: 17, stylish: 16, moirai: 16 };
     function arCnRenderFontChips() {
       const row = document.getElementById('arCnFontChipRow');
       if (!row) return;
       const eff = arCnEffectiveTheme();
       const activeKey = _arCnState.fontKey || eff.fontKey || 'pretM';
-      row.innerHTML = AR_CN_FONTS.map((f) => {
+      const curSlide = _arCnState.slides[_arCnState.activeIdx] || {};
+      const sampleTxt = String(curSlide.title || '').replace(/\s+/g, ' ').trim();
+      const items = AR_CN_FONTS.map((f) => {
         const sp = arCnFontSpec(f.key);
-        const on = activeKey === f.key;
         arCnEnsureFont(f.key, () => {
           const cv = document.getElementById('arCnPreviewCanvas');
           if (cv && _arCnState.slides[_arCnState.activeIdx]) arCnRenderSlide(cv, _arCnState.slides[_arCnState.activeIdx], _arCnState.activeIdx, _arCnState.slides.length);
         });
-        return `<button type="button" onclick="arCnSetFontKey('${f.key}')" style="font-family:${sp.family};font-weight:${sp.weight};" class="ar-cn-font-chip${on ? ' active' : ''}">${f.label}</button>`;
-      }).join('');
+        return {
+          id: f.key,
+          label: f.label,
+          css: String(sp.family || "'Pretendard Variable', sans-serif").replace(/"/g, "'"),
+          weight: sp.weight || 700,
+          sz: AR_CN_FONT_PREVIEW_SZ[f.key] || 0
+        };
+      });
+      if (typeof arRenderUnifiedFontPickerHtml === 'function') {
+        row.innerHTML = arRenderUnifiedFontPickerHtml({
+          pickerId: 'cardnews-title',
+          items,
+          activeId: activeKey,
+          sampleText: sampleTxt,
+          fallbackText: '가나다 카드뉴스',
+          title: `글꼴 미리보기 (${items.length}종)`,
+          freeBadge: true,
+          resetExpr: "arCnSetFontKey('')",
+          resetLabel: '템플릿 기본 ↺',
+          onSelectExpr: (fid) => `arCnSetFontKey('${fid}')`
+        });
+      }
     }
 
     function arCnRenderTemplateGallery() {
@@ -8099,6 +8121,11 @@
       const cur = _arCnState.slides[_arCnState.activeIdx];
       if (!cur) return;
       cur[field] = val;
+      if (field === 'title') {
+        const clean = String(val || '').replace(/\s+/g, ' ').trim();
+        const preview = clean ? clean.slice(0, 14) : '가나다 카드뉴스';
+        document.querySelectorAll('#arCnFontChipRow .ar-font-sample').forEach((el) => { el.textContent = preview; });
+      }
       arCnRefreshUI(true);
     }
     function arCnAddSlide() {
@@ -8873,7 +8900,7 @@
       const isDefaultSample = slides[0] && String(slides[0].title || '').trim() === '알아두면 바로 쓰는 핵심 가이드';
       if (emptySlides.length) {
         score -= 15;
-        issues.push({ ok: false, fixable: false, msg: `${emptySlides.join(', ')}번 카드에 제목이 비어 있어요. [3 글자] 탭에서 채워 주세요.` });
+        issues.push({ ok: false, fixable: false, msg: `${emptySlides.join(', ')}번 카드에 제목이 비어 있어요. [3 폰트] 탭에서 채워 주세요.` });
       } else if (isDefaultSample) {
         score -= 10;
         issues.push({ ok: false, fixable: false, msg: '1번 카드가 아직 예시 제목이에요. [1 주제]에서 내 주제로 생성해 보세요.' });
