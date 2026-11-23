@@ -5002,8 +5002,45 @@
       return true;
     }
 
+    function arCnDrawCircularStamp(ctx, cx, cy, r, text, color, sc) {
+      const str = String(text || 'BRAND · STUDIO · ARCHIVE · ');
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.font = `700 ${Math.round(16 * sc)}px 'JetBrains Mono', monospace`;
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const step = (Math.PI * 2) / Math.max(12, str.length);
+      for (let i = 0; i < str.length; i++) {
+        ctx.save();
+        ctx.rotate(i * step - Math.PI / 2);
+        ctx.fillText(str[i], 0, -r);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+    function arCnDrawDotMatrix(ctx, x, y, cols, rows, gap, color, sc) {
+      ctx.save();
+      ctx.fillStyle = color;
+      const dr = Math.max(1.2, 3.2 * sc);
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          ctx.beginPath();
+          ctx.arc(x + c * gap, y + r * gap, dr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
     const AR_CN_TEMPLATES = [
-      // 바이럴 (8종 — 한국 인스타·핀터레스트 최다 저장 바이럴 카드뉴스 6종 구도!)
+      // 바이럴 (14종 — 한국 인스타 바이럴 + 볼드 네온 스탬프·스튜디오·에이전시 팩!)
+      { id: 'bold_verde_stamp', cat: '바이럴', name: '네온 라임 스탬프', bg: '#0c0d0c', card: 'rgba(200,255,46,0.14)', fg: '#ffffff', muted: '#d4d4d8', accent: '#c8ff2e', pillBg: '#c8ff2e', pillFg: '#0c0d0c', fontKey: 'aggro', style: 'dark', monoPhoto: true, coverLayout: 'photo_bold_stamp', bodyLayout: 'photo_bold_stamp', samplePhoto: '/assets/scenes/fitness/6.jpg', scenePack: 'fitness', sampleTitle: '지금 당장\n시작해야 할 이유' },
+      { id: 'neon_studio_poster', cat: '바이럴', name: '애시드 라임 스튜디오', bg: '#d4ff2a', card: '#ffffff', fg: '#0e0f0c', muted: '#27272a', accent: '#0e0f0c', pillBg: '#0e0f0c', pillFg: '#d4ff2a', fontKey: 'aggro', style: 'swiss', monoPhoto: true, coverLayout: 'photo_neon_studio', bodyLayout: 'photo_neon_studio', samplePhoto: '/assets/scenes/shop/9.jpg', scenePack: 'shop', sampleTitle: '브랜드가\n기억되는 공식' },
+      { id: 'bold_verde_card', cat: '바이럴', name: '흑백×라임 알림카드', bg: '#0b0c0b', card: '#c8ff2e', fg: '#0e0f0c', muted: '#27272a', accent: '#c8ff2e', pillBg: '#c8ff2e', pillFg: '#0b0c0b', fontKey: 'paperlogy', style: 'dark', monoPhoto: true, coverLayout: 'photo_neon_card', bodyLayout: 'photo_bold_stamp', samplePhoto: '/assets/scenes/cafe/12.jpg', scenePack: 'cafe', sampleTitle: '오늘 꼭 기억할\n핵심 체크 3가지' },
+      { id: 'electric_yellow_zine', cat: '바이럴', name: '일렉트릭 옐로우 진', bg: '#f6e84b', card: '#ffffff', fg: '#111111', muted: '#3f3f46', accent: '#111111', pillBg: '#111111', pillFg: '#f6e84b', fontKey: 'gmarket', style: 'swiss', monoPhoto: true, coverLayout: 'photo_neon_studio', bodyLayout: 'photo_neon_card', samplePhoto: '/assets/scenes/auto/7.jpg', scenePack: 'auto', sampleTitle: '남다른 결과를 만드는\n실전 전략 노트' },
+      { id: 'agency_terracotta', cat: '바이럴', name: '에이전시 테라코타', bg: '#7c2d12', card: '#f5efe6', fg: '#faf5ef', muted: '#fed7aa', accent: '#f5efe6', pillBg: '#f5efe6', pillFg: '#7c2d12', fontKey: 'hahmlet', style: 'editorial', coverLayout: 'photo_agency_brand', bodyLayout: 'photo_agency_brand', samplePhoto: '/assets/landing/ed-interior.jpg', scenePack: 'interior', sampleTitle: '좋은 아이디어가\n브랜드를 만든다' },
+      { id: 'cyber_violet_stamp', cat: '바이럴', name: '사이버 라일락 스탬프', bg: '#0c0b12', card: 'rgba(192,132,252,0.16)', fg: '#ffffff', muted: '#e9d5ff', accent: '#c084fc', pillBg: '#c084fc', pillFg: '#0c0b12', fontKey: 'orbit', style: 'dark', monoPhoto: true, coverLayout: 'photo_bold_stamp', bodyLayout: 'photo_neon_card', samplePhoto: '/assets/scenes/beauty/6.jpg', scenePack: 'beauty', sampleTitle: '시선을 멈추게 하는\n비주얼 공식' },
       { id: 'viral_sidefade_beauty', cat: '바이럴', name: '좌측 페이드·태그칩', bg: '#0b0c0f', card: 'rgba(255,255,255,0.16)', fg: '#ffffff', muted: '#e4e4e7', accent: '#f4f4f5', pillBg: 'rgba(255,255,255,0.22)', pillFg: '#ffffff', fontKey: 'pretM', style: 'dark', coverLayout: 'photo_viral_sidefade', bodyLayout: 'photo_viral_sidefade', samplePhoto: '/assets/landing/ed-beauty.jpg', scenePack: 'beauty', sampleTitle: '어떤 디자인이\n나랑 잘 어울릴까?' },
       { id: 'viral_mono_insight', cat: '바이럴', name: '흑백 인사이트 페이드', bg: '#050507', card: 'rgba(255,255,255,0.10)', fg: '#ffffff', muted: '#d4d4d8', accent: '#facc15', pillBg: 'rgba(255,255,255,0.18)', pillFg: '#ffffff', fontKey: 'hahmlet', style: 'dark', monoPhoto: true, coverLayout: 'photo_viral_darkfade', bodyLayout: 'photo_viral_darkfade', samplePhoto: '/assets/scenes/academy/5.jpg', scenePack: 'academy', sampleTitle: '성공을 가로막는\n10가지 습관' },
       { id: 'viral_runner_hook', cat: '바이럴', name: '리얼 스냅 하단 후킹', bg: '#060608', card: 'rgba(255,255,255,0.12)', fg: '#ffffff', muted: '#d4d4d8', accent: '#ffffff', pillBg: 'rgba(255,255,255,0.20)', pillFg: '#ffffff', fontKey: 'aggro', style: 'dark', coverLayout: 'photo_viral_darkfade', bodyLayout: 'photo_viral_darkfade', samplePhoto: '/assets/scenes/fitness/4.jpg', scenePack: 'fitness', sampleTitle: '아직도 이걸\n모르고 있었다고?' },
@@ -5116,6 +5153,7 @@
       { name: '모노·블랙', bg: '#121212', accent: '#e5e5e5', fg: '#fafafa' }
     ];
     const AR_CN_PHOTO_LAYOUT_KEYS = [
+      'photo_bold_stamp', 'photo_neon_studio', 'photo_neon_card', 'photo_agency_brand',
       'photo_viral_sidefade', 'photo_viral_darkfade', 'photo_viral_colorword', 'photo_viral_duotag', 'photo_viral_viewfinder', 'photo_viral_glowcard',
       'photo_fade_bottom', 'photo_fade_top', 'photo_fade_duotone', 'photo_fade_radial',
       'photo_big_center', 'photo_big_bottom', 'photo_big_top', 'photo_big_outline', 'photo_big_box', 'photo_big_editorial',
@@ -5283,7 +5321,7 @@
       const pLayout = (hasPhoto && wantLayout !== 'text_only') ? wantLayout : 'text_only';
       const isBigTypo = pLayout.startsWith('photo_big_');
       const isPhotoFade = pLayout.startsWith('photo_fade_');
-      const isViralFull = pLayout === 'photo_viral_sidefade' || pLayout === 'photo_viral_darkfade' || pLayout === 'photo_viral_colorword' || pLayout === 'photo_viral_duotag' || pLayout === 'photo_viral_viewfinder';
+      const isViralFull = pLayout === 'photo_viral_sidefade' || pLayout === 'photo_viral_darkfade' || pLayout === 'photo_viral_colorword' || pLayout === 'photo_viral_duotag' || pLayout === 'photo_viral_viewfinder' || pLayout === 'photo_bold_stamp' || pLayout === 'photo_neon_card';
       const isFullPhoto = pLayout === 'photo_full' || isBigTypo || pLayout === 'photo_fade_duotone' || isViralFull;
       const topOnPhoto = (isFullPhoto && pLayout !== 'photo_viral_viewfinder') || pLayout === 'photo_fade_bottom';
       const fg = isFullPhoto ? (pLayout === 'photo_big_box' ? tpl.fg : (arCnIsDarkHex(tpl.fg) ? '#ffffff' : tpl.fg)) : tpl.fg;
@@ -5376,6 +5414,23 @@
         dg.addColorStop(1, arHexToRgba(tpl.bg, 0.94));
         ctx.fillStyle = dg;
         ctx.fillRect(0, 0, W, H);
+      } else if (pLayout === 'photo_bold_stamp' || pLayout === 'photo_neon_card') {
+        // Feed Bold Verde 스타일: 고대비 흑백 풀사진 + 깊은 다크 비네트 + 원형 스탬프 & 네온 도트 매트릭스!
+        ctx.save();
+        if (tpl.monoPhoto !== false) ctx.filter = 'grayscale(100%) contrast(1.16) brightness(0.86)';
+        arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
+        ctx.restore();
+        const scG = ctx.createLinearGradient(0, 0, 0, H);
+        scG.addColorStop(0, 'rgba(8,10,8,0.46)');
+        scG.addColorStop(0.5, 'rgba(8,10,8,0.34)');
+        scG.addColorStop(1, 'rgba(8,10,8,0.82)');
+        ctx.fillStyle = scG;
+        ctx.fillRect(0, 0, W, H);
+        // 코너 원형 스탬프 + 네온 도트 매트릭스 장식
+        const stampCol = tpl.accent || '#c8ff2e';
+        const stampPos = slideIdx % 2 === 0 ? { x: W - Math.round(148 * sc), y: Math.round(212 * sc) } : { x: Math.round(148 * sc), y: Math.round(212 * sc) };
+        arCnDrawCircularStamp(ctx, stampPos.x, stampPos.y, Math.round(62 * sc), 'EDITION · ARCHIVE · DESIGN · ', stampCol, sc);
+        arCnDrawDotMatrix(ctx, W - Math.round(178 * sc), H - Math.round(240 * sc), 5, 6, Math.round(18 * sc), arHexToRgba(stampCol, 0.72), sc);
       } else if (pLayout === 'photo_viral_sidefade') {
         // 좌측→우측 다크 그라데이션 페이드 (남자눈썹·뷰티·클리닉 바이럴 스타일!)
         arCollageDrawCover(ctx, slide.bgImg, 0, 0, W, H, 0, null);
@@ -5526,7 +5581,140 @@
       let curY = Math.round(170 * sc);
       let skipBottomHl = false;
 
-      if (pLayout === 'photo_viral_sidefade') {
+      if (pLayout === 'photo_bold_stamp') {
+        // Feed Bold Verde 스타일: 고대비 흑백 풀사진 위 좌측 볼드 타이포 + 네온 라임 하이라이트 서브바
+        const titleFs = Math.round((isCover ? 86 : 74) * sc * fsMul * tMul);
+        const bodyFs = Math.round(31 * sc * fsMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW * 0.86).slice(0, 3);
+        const tLH = Math.round(titleFs * 1.18);
+        curY = Math.round(H * 0.44);
+        const acCol = tpl.accent || '#c8ff2e';
+        ctx.save();
+        ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.shadowColor = 'rgba(0,0,0,0.68)'; ctx.shadowBlur = Math.round(26 * sc);
+        tLines.forEach((ln, li) => {
+          ctx.fillStyle = li === 0 ? acCol : '#ffffff';
+          ctx.fillText(ln, padX, curY);
+          curY += tLH;
+        });
+        // 네온 라임 하이라이트 강조 바
+        if (hlStr || bodyStr) {
+          curY += Math.round(18 * sc);
+          const barTxt = (hlStr || bodyStr.split('\n')[0] || '').slice(0, 30);
+          ctx.font = `800 ${Math.round(28 * sc)}px ${tpl.fontBody}`;
+          const bw = Math.min(maxTextW, ctx.measureText(barTxt).width + Math.round(36 * sc));
+          const bh = Math.round(48 * sc);
+          ctx.shadowColor = 'transparent';
+          ctx.fillStyle = acCol;
+          ctx.fillRect(padX, curY, bw, bh);
+          ctx.fillStyle = arCnIsDarkHex(acCol) ? '#ffffff' : '#0c0d0c';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(barTxt, padX + Math.round(18 * sc), curY + bh / 2 + 1);
+          curY += bh + Math.round(20 * sc);
+        }
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = 'rgba(255,255,255,0.86)'; ctx.textBaseline = 'top';
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.82).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+        ctx.restore();
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_neon_card') {
+        // 흑백 풀사진 위 떠있는 라임/네온 라운드 알림·체크리스트 카드!
+        const acCol = tpl.accent || '#c8ff2e';
+        const cardFg = arCnIsDarkHex(acCol) ? '#ffffff' : '#0e0f0c';
+        const cardMuted = arCnIsDarkHex(acCol) ? 'rgba(255,255,255,0.82)' : 'rgba(14,15,12,0.78)';
+        const cw = maxTextW, ch = Math.round(H * 0.36);
+        const cx = padX, cy = Math.round(H * 0.42);
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.42)'; ctx.shadowBlur = Math.round(36 * sc); ctx.shadowOffsetY = Math.round(14 * sc);
+        ctx.fillStyle = acCol;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(cx, cy, cw, ch, Math.round(28 * sc));
+        else ctx.rect(cx, cy, cw, ch);
+        ctx.fill();
+        ctx.restore();
+        const inPad = Math.round(44 * sc);
+        let iy = cy + Math.round(38 * sc);
+        ctx.font = `700 ${Math.round(22 * sc)}px 'JetBrains Mono', monospace`;
+        ctx.fillStyle = cardMuted; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.fillText(`✦  NOTE ${String(slideIdx + 1).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`, cx + inPad, iy);
+        iy += Math.round(44 * sc);
+        const titleFs = Math.round(52 * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        ctx.fillStyle = cardFg;
+        const tLines = arCnWrapLines(ctx, titleStr, cw - inPad * 2).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.24);
+        tLines.forEach((ln) => { ctx.fillText(ln, cx + inPad, iy); iy += tLH; });
+        iy += Math.round(18 * sc);
+        const bodyFs = Math.round(30 * sc * fsMul);
+        ctx.font = `600 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = cardMuted;
+        const bLines = arCnWrapLines(ctx, bodyStr, cw - inPad * 2).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, cx + inPad, iy); iy += bLH; });
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_neon_studio') {
+        // NOVA / ASTRA 네온 스튜디오 포스터: 애시드 라임/옐로우 솔리드 + 블랙 그리드 라인 + 고대비 흑백 사진 박스!
+        ctx.save();
+        ctx.strokeStyle = 'rgba(14,15,12,0.22)'; ctx.lineWidth = Math.max(1, 2 * sc);
+        ctx.strokeRect(Math.round(42 * sc), Math.round(42 * sc), W - Math.round(84 * sc), H - Math.round(84 * sc));
+        ctx.restore();
+        curY = Math.round(146 * sc);
+        const titleFs = Math.round((isCover ? 74 : 64) * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 2);
+        const tLH = Math.round(titleFs * 1.18);
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(24 * sc);
+        // 고대비 흑백 사진 박스 + 검정 프레임 테두리
+        const photoH = Math.round(H * 0.37);
+        ctx.save();
+        if (tpl.monoPhoto !== false) ctx.filter = 'grayscale(100%) contrast(1.18)';
+        arCollageDrawCover(ctx, slide.bgImg, padX, curY, maxTextW, photoH, Math.round(8 * sc), null);
+        ctx.restore();
+        ctx.strokeStyle = fg; ctx.lineWidth = Math.max(2, 4 * sc);
+        ctx.strokeRect(padX, curY, maxTextW, photoH);
+        arCnDrawDotMatrix(ctx, W - padX - Math.round(86 * sc), curY + photoH + Math.round(24 * sc), 5, 3, Math.round(16 * sc), fg, sc);
+        curY += photoH + Math.round(32 * sc);
+        const bodyFs = Math.round(31 * sc * fsMul);
+        ctx.font = `600 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, maxTextW * 0.78).slice(0, 3);
+        const bLH = Math.round(bodyFs * 1.48);
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += bLH; });
+      } else if (pLayout === 'photo_agency_brand') {
+        // 에이전시 브랜드 그리드 (테라코타·에스프레소·크림 타이포 중심 + 우측 하단 콤팩트 화보 사진!)
+        curY = Math.round(164 * sc);
+        const titleFs = Math.round((isCover ? 82 : 70) * sc * fsMul * tMul);
+        ctx.font = `${tW} ${titleFs}px ${tpl.fontTitle}`;
+        const tLines = arCnWrapLines(ctx, titleStr, maxTextW).slice(0, 3);
+        const tLH = Math.round(titleFs * 1.18);
+        ctx.fillStyle = fg; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        tLines.forEach((ln) => { ctx.fillText(ln, padX, curY); curY += tLH; });
+        curY += Math.round(26 * sc);
+        // 얇은 에디토리얼 가로선
+        ctx.fillStyle = accent; ctx.globalAlpha = 0.45;
+        ctx.fillRect(padX, curY, maxTextW, Math.max(1.5, 2.5 * sc));
+        ctx.globalAlpha = 1;
+        curY += Math.round(32 * sc);
+        // 하단 2단: 좌측 본문 + 우측 세로 에디토리얼 사진
+        const colGap = Math.round(28 * sc);
+        const leftW = Math.round(maxTextW * 0.46);
+        const rightW = maxTextW - leftW - colGap;
+        const photoH = Math.max(Math.round(H * 0.28), H - curY - Math.round(134 * sc));
+        const bodyFs = Math.round(30 * sc * fsMul);
+        ctx.font = `500 ${bodyFs}px ${tpl.fontBody}`;
+        ctx.fillStyle = muted;
+        const bLines = arCnWrapLines(ctx, bodyStr, leftW).slice(0, 6);
+        const bLH = Math.round(bodyFs * 1.52);
+        let by = curY;
+        bLines.forEach((ln) => { ctx.fillText(ln, padX, by); by += bLH; });
+        arCollageDrawCover(ctx, slide.bgImg, padX + leftW + colGap, curY, rightW, photoH, Math.round(14 * sc), null);
+        skipBottomHl = true;
+      } else if (pLayout === 'photo_viral_sidefade') {
         // 좌측 다크 페이드 위 좌측 정렬 볼드 타이포 + 하단 프로스트드 #키워드 칩 3개
         const titleFs = Math.round((isCover ? 74 : 64) * sc * fsMul * tMul);
         const bodyFs = Math.round(30 * sc * fsMul);
@@ -7947,7 +8135,7 @@
       // 1) 배경·글자 명도 대비 (WCAG 4.5 기준, 풀배경 사진형 제외)
       const nonFullCount = slides.filter((s) => {
         const pl = s.photoLayout || eff.coverLayout || '';
-        return pl !== 'photo_full' && !pl.startsWith('photo_big_') && !pl.startsWith('photo_viral_');
+        return pl !== 'photo_full' && !pl.startsWith('photo_big_') && !pl.startsWith('photo_viral_') && pl !== 'photo_bold_stamp' && pl !== 'photo_neon_card';
       }).length;
       if (nonFullCount > 0 && /^#[0-9a-f]{6}$/i.test(eff.bg) && /^#[0-9a-f]{6}$/i.test(eff.fg)) {
         const cr = arContrastRatio(eff.bg, eff.fg);
