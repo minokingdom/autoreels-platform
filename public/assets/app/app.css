@@ -1732,10 +1732,18 @@ body.ar-cut-editing #arQuickBar { display: none; }
   }
   body.ar-cn-mode #arCnMonitorColumn .ar-cn-desk-meta { display: none !important; }
   body.ar-cn-mode #arCnCanvasFrame {
-    flex: 1 1 auto; min-height: 0;
-    height: 100%; width: auto; max-width: 100%;
-    max-height: calc(100% - 34px);
+    flex: 0 1 auto; min-height: 0; min-width: 0;
+    height: min(calc(100% - 36px), calc((100vw - 66px) * 5 / 4));
+    width: auto; max-width: 100%;
+    max-height: calc(100% - 36px);
     aspect-ratio: 4 / 5;
+  }
+  body.ar-cn-mode #arCnCanvasFrame[data-ratio="1:1"] {
+    height: min(calc(100% - 36px), calc(100vw - 66px));
+    aspect-ratio: 1 / 1;
+  }
+  body.ar-cn-mode #arCnPreviewCanvas {
+    width: 100%; height: 100%; object-fit: contain;
   }
   body.ar-cn-mode #arCnSlideNavRow {
     flex: 0 0 auto; width: 100%; max-width: 310px;

@@ -5767,6 +5767,7 @@
       const cv = document.getElementById('arCnPreviewCanvas');
       if (frame && cv) {
         const isSquare = _arCnState.ratio === '1:1';
+        frame.dataset.ratio = isSquare ? '1:1' : '4:5';
         frame.style.aspectRatio = isSquare ? '1 / 1' : '4 / 5';
         const wantH = isSquare ? 540 : 675;
         if (cv.width !== 540 || cv.height !== wantH) { cv.width = 540; cv.height = wantH; }
