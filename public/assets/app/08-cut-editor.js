@@ -162,6 +162,19 @@
       { id: 'right', label: '오른쪽' }
     ];
     const CUT_TEXT_COLORS = ['#ffffff', '#09090b', '#facc15', '#fb7185', '#ef4444', '#f97316', '#38bdf8', '#3b82f6', '#34d399', '#a3e635', '#c084fc', '#f472b6'];
+    const CUT_TEXT_BG_COLORS = [
+      { id: 'none', label: '없음', css: 'transparent' },
+      { id: 'rgba(10,10,14,0.72)', label: '반투명', css: 'rgba(10,10,14,0.78)' },
+      { id: '#09090b', label: '검정', css: '#09090b' },
+      { id: '#ffffff', label: '흰색', css: '#ffffff' },
+      { id: '#facc15', label: '노랑', css: '#facc15' },
+      { id: '#f97316', label: '주황', css: '#f97316' },
+      { id: '#ef4444', label: '빨강', css: '#ef4444' },
+      { id: '#fb7185', label: '분홍', css: '#fb7185' },
+      { id: '#2563eb', label: '파랑', css: '#2563eb' },
+      { id: '#10b981', label: '민트', css: '#10b981' },
+      { id: '#9333ea', label: '보라', css: '#9333ea' }
+    ];
     const CUT_STICKER_WIDGETS = [
       { key: 'loc', label: '📍 위치 태그', sub: 'SEOUL · HOT', bg: 'linear-gradient(90deg,#ec4899,#8b5cf6)' },
       { key: 'time', label: '🕒 시간 스탬프', sub: 'NOW · LIVE', bg: '#18181b' },
@@ -1368,6 +1381,7 @@
         if (txt) {
           const st = item.style || 'box';
           const col = item.color || '#ffffff';
+          const bgCol = typeof item.bgColor === 'string' ? item.bgColor : '';
           const align = item.align || 'center';
           const fontObj = CUT_TEXT_FONTS.find((f) => f.id === (item.font || 'dohyeon')) || CUT_TEXT_FONTS[0];
           const fs = Math.round(44 * sc * (fontObj.id === 'pen' || fontObj.id === 'brush' || fontObj.id === 'script' ? 1.2 : 1));
@@ -1380,8 +1394,10 @@
           const totalH = fullLines.length * lineH;
           const xOff = align === 'left' ? -maxW / 2 : align === 'right' ? maxW / 2 : 0;
           const isLightBg = col === '#ffffff' || col === '#facc15' || col === '#38bdf8' || col === '#34d399' || col === '#a3e635';
+          const hasExplicitBg = Boolean(bgCol && bgCol !== 'none');
+          const explicitNoBg = bgCol === 'none';
 
-          if (st === 'box' || st === 'softbox' || st === 'darkGlass' || st === 'solidBadge' || st === 'outlineBox' || st === 'softBox') {
+          if (!explicitNoBg && (hasExplicitBg || st === 'box' || st === 'softbox' || st === 'darkGlass' || st === 'solidBadge' || st === 'outlineBox' || st === 'softBox') && st !== 'highlight' && st !== 'neon' && st !== 'neonGlow') {
             const padX = Math.round(22 * sc);
             const padY = Math.round(12 * sc);
             const bw = maxW + padX * 2;
@@ -1391,7 +1407,9 @@
             c.shadowColor = ast.glowBoost > 0 ? col : 'rgba(0,0,0,0.35)';
             c.shadowBlur = 14 + ast.glowBoost * 18;
             gRoundRect(c, -bw / 2, -bh / 2, bw, bh, Math.round(16 * sc));
-            c.fillStyle = st === 'darkGlass' ? 'rgba(10,10,14,0.84)' : st === 'outlineBox' ? 'rgba(10,10,14,0.68)' : col;
+            c.fillStyle = hasExplicitBg
+              ? bgCol
+              : (st === 'darkGlass' ? 'rgba(10,10,14,0.84)' : st === 'outlineBox' ? 'rgba(10,10,14,0.68)' : col);
             c.fill();
             if (st === 'outlineBox' || st === 'darkGlass') {
               c.strokeStyle = col;
@@ -1399,24 +1417,36 @@
               c.stroke();
             }
             c.restore();
-            c.fillStyle = (st === 'darkGlass' || st === 'outlineBox') ? col : (isLightBg ? '#09090b' : '#ffffff');
-          } else if (st === 'highlight') {
+            c.fillStyle = hasExplicitBg
+              ? col
+              : ((st === 'darkGlass' || st === 'outlineBox') ? col : (isLightBg ? '#09090b' : '#ffffff'));
+          } else if (st === 'highlight' && !explicitNoBg) {
+            const hlFill = hasExplicitBg ? bgCol : col;
             lines.forEach((line, li) => {
               const ly = (li - (fullLines.length - 1) / 2) * lineH;
               const lw = c.measureText(line).width + 20 * sc;
               const bx = align === 'left' ? -maxW / 2 - 10 * sc : align === 'right' ? maxW / 2 - lw + 10 * sc : -lw / 2;
               c.save();
               c.globalAlpha *= 0.85;
-              c.fillStyle = col;
+              c.fillStyle = hlFill;
               gRoundRect(c, bx, ly - lineH * 0.42, lw, lineH * 0.86, 8 * sc);
               c.fill();
               c.restore();
             });
-            c.fillStyle = isLightBg ? '#09090b' : '#ffffff';
+            c.fillStyle = hasExplicitBg ? col : (isLightBg ? '#09090b' : '#ffffff');
           } else if (st === 'neon' || st === 'neonGlow') {
-            c.shadowColor = col;
+            c.shadowColor = hasExplicitBg ? bgCol : col;
             c.shadowBlur = 26 + ast.glowBoost * 18;
-            c.fillStyle = '#ffffff';
+            c.fillStyle = hasExplicitBg ? col : '#ffffff';
+          } else if (st === 'outline') {
+            c.lineWidth = Math.max(3, Math.round(fs * 0.09));
+            c.strokeStyle = col === '#09090b' ? '#ffffff' : '#09090b';
+            c.lineJoin = 'round';
+            lines.forEach((line, li) => {
+              const ly = (li - (fullLines.length - 1) / 2) * lineH;
+              c.strokeText(line, xOff, ly);
+            });
+            c.fillStyle = col;
           } else {
             c.shadowColor = 'rgba(0,0,0,0.82)';
             c.shadowBlur = 14 + ast.glowBoost * 16;
@@ -2499,10 +2529,17 @@
           window.__arCutTextStyle = it.style || 'box';
           window.__arCutTextAlign = it.align || 'center';
           window.__arCutTextColor = it.color || '#ffffff';
+          window.__arCutTextBg = typeof it.bgColor === 'string' && it.bgColor ? it.bgColor : 'rgba(10,10,14,0.72)';
+          window.__arCutTextScale = Number(it.scale) || 1.0;
         }
       } else {
         ta.value = '';
+        if (!window.__arCutTextColor) window.__arCutTextColor = '#ffffff';
+        if (!window.__arCutTextBg) window.__arCutTextBg = 'rgba(10,10,14,0.72)';
+        window.__arCutTextScale = 1.0;
       }
+      const scIn = document.getElementById('igComposeScale');
+      if (scIn) scIn.value = String(window.__arCutTextScale || 1.0);
       renderIgComposeFontBar();
       openIgTextComposeColors();
       ov.classList.remove('hidden');
@@ -2511,11 +2548,21 @@
     }
     function openIgTextComposeColors() {
       const colBar = document.getElementById('igComposeColorBar');
-      if (!colBar) return;
-      colBar.innerHTML = CUT_TEXT_COLORS.map((col) => {
-        const on = window.__arCutTextColor === col;
-        return `<button type="button" onclick="window.__arCutTextColor='${col}';previewIgComposeStyle();openIgTextComposeColors()" class="w-5 h-5 rounded-full shrink-0 border-2 cursor-pointer transition ${on ? 'scale-120 border-white' : 'border-white/40'}" style="background:${col}"></button>`;
-      }).join('');
+      if (colBar) {
+        colBar.innerHTML = `<span class="text-[10px] font-bold text-white/70 shrink-0 mr-0.5">글자</span>` + CUT_TEXT_COLORS.map((col) => {
+          const on = (window.__arCutTextColor || '#ffffff') === col;
+          return `<button type="button" onclick="window.__arCutTextColor='${col}';previewIgComposeStyle();openIgTextComposeColors()" class="w-5 h-5 rounded-full shrink-0 border-2 cursor-pointer transition ${on ? 'scale-120 border-white' : 'border-white/40'}" style="background:${col}"></button>`;
+        }).join('');
+      }
+      const bgBar = document.getElementById('igComposeBgBar');
+      if (bgBar) {
+        const curBg = window.__arCutTextBg || 'rgba(10,10,14,0.72)';
+        bgBar.innerHTML = `<span class="text-[10px] font-bold text-white/70 shrink-0 mr-0.5">배경</span>` + CUT_TEXT_BG_COLORS.map((bg) => {
+          const on = curBg === bg.id;
+          const inner = bg.id === 'none' ? '<span style="font-size:10px;color:#f87171;font-weight:800;">✕</span>' : '';
+          return `<button type="button" title="배경: ${bg.label}" onclick="window.__arCutTextBg='${bg.id}';previewIgComposeStyle();openIgTextComposeColors()" class="w-5 h-5 rounded-full shrink-0 border-2 cursor-pointer transition flex items-center justify-center ${on ? 'scale-120 border-white' : 'border-white/40'}" style="background:${bg.id === 'none' ? '#18181b' : bg.css}">${inner}</button>`;
+        }).join('');
+      }
     }
     function cycleIgComposeStyle() {
       const ids = CUT_TEXT_STYLES.map((s) => s.id);
@@ -2533,29 +2580,33 @@
       const ta = document.getElementById('igComposeTextarea');
       const btn = document.getElementById('igComposeStyleBtn');
       const alignBtn = document.getElementById('igComposeAlignBtn');
+      const scVal = document.getElementById('igComposeScaleVal');
       const st = window.__arCutTextStyle || 'box';
       const align = window.__arCutTextAlign || 'center';
       const col = window.__arCutTextColor || '#ffffff';
+      const bg = window.__arCutTextBg || 'rgba(10,10,14,0.72)';
+      const sc = Math.max(0.5, Math.min(2.2, Number(window.__arCutTextScale) || 1.0));
       const fontObj = CUT_TEXT_FONTS.find((f) => f.id === (window.__arCutTextFont || 'dohyeon')) || CUT_TEXT_FONTS[0];
       const stObj = CUT_TEXT_STYLES.find((s) => s.id === st) || CUT_TEXT_STYLES[0];
       const alObj = CUT_TEXT_ALIGNS.find((a) => a.id === align) || CUT_TEXT_ALIGNS[0];
       if (btn) btn.textContent = stObj.label;
       if (alignBtn) alignBtn.textContent = alObj.label;
+      if (scVal) scVal.textContent = `${Math.round(sc * 100)}%`;
       if (!ta) return;
       ta.style.fontFamily = fontObj.css;
       ta.style.fontWeight = String(fontObj.weight);
+      ta.style.fontSize = `${Math.round(22 * sc)}px`;
       ta.style.textAlign = align;
-      const isLight = col === '#ffffff' || col === '#facc15' || col === '#38bdf8' || col === '#34d399' || col === '#a3e635';
-      if (st === 'box' || st === 'softbox' || st === 'highlight') {
-        ta.style.backgroundColor = st === 'softbox' ? `${col}b8` : col;
-        ta.style.color = isLight ? '#09090b' : '#ffffff';
+      if (bg !== 'none' && st !== 'neon' && st !== 'outline') {
+        ta.style.backgroundColor = bg;
+        ta.style.color = col;
         ta.style.padding = '8px 14px';
         ta.style.borderRadius = '12px';
         ta.style.textShadow = 'none';
         ta.style.webkitTextStroke = '0px transparent';
       } else if (st === 'neon') {
         ta.style.backgroundColor = 'transparent';
-        ta.style.color = '#ffffff';
+        ta.style.color = col;
         ta.style.padding = '4px';
         ta.style.textShadow = `0 0 12px ${col}, 0 0 22px ${col}`;
         ta.style.webkitTextStroke = '0px transparent';
@@ -2583,6 +2634,8 @@
       if (!txt) return;
       pushCutOverlayUndo();
       const list = getCutOverlayList(cutIdx);
+      const chosenBg = window.__arCutTextBg || 'rgba(10,10,14,0.72)';
+      const chosenSc = Math.max(0.45, Math.min(2.5, Number(window.__arCutTextScale) || 1.0));
       if (window.__arEditingOverlayIdx >= 0 && list[window.__arEditingOverlayIdx]) {
         const it = list[window.__arEditingOverlayIdx];
         it.text = txt;
@@ -2590,6 +2643,8 @@
         it.style = window.__arCutTextStyle || 'box';
         it.align = window.__arCutTextAlign || 'center';
         it.color = window.__arCutTextColor || '#ffffff';
+        it.bgColor = chosenBg;
+        it.scale = chosenSc;
         window.__arSelectedOverlayIdx = window.__arEditingOverlayIdx;
       } else {
         const offset = (list.length % 4) * 0.06;
@@ -2600,17 +2655,24 @@
           style: window.__arCutTextStyle || 'box',
           align: window.__arCutTextAlign || 'center',
           color: window.__arCutTextColor || '#ffffff',
+          bgColor: chosenBg,
           x: 0.5,
           y: Math.min(0.8, 0.38 + offset),
-          scale: 1.0,
+          scale: chosenSc,
           rot: 0
         });
         window.__arSelectedOverlayIdx = list.length - 1;
       }
+      const selIdx = window.__arSelectedOverlayIdx;
       window.__arEditingOverlayIdx = -1;
       saveCutOverlays();
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(window.__timelines.main.currentTime);
-      renderPreviewCutPinBar();
+      // 글자 추가/수정 직후 폰트·크기·글자색·배경색 편집 모드를 바로 열어 즉시 꾸밀 수 있게 함!
+      if (typeof openCutEditor === 'function') {
+        openCutEditor(cutIdx, `overlay:${selIdx}`);
+      } else {
+        renderPreviewCutPinBar();
+      }
     }
 
     function addCutStickerOverlay(variant, val) {
@@ -3664,11 +3726,22 @@
             </div>
             ${isText ? `
               <div class="ar-inline-scroll-row ar-inline-color-bar">
+                <span class="text-[10px] font-bold text-white/65 shrink-0 mr-0.5">글자</span>
                 ${CUT_TEXT_COLORS.map((col) => `
                   <button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'color', '${col}', true)"
                           class="ar-inline-color-swatch ${(it.color || '#ffffff') === col ? 'active' : ''}"
                           style="background:${col}"></button>
                 `).join('')}
+              </div>
+              <div class="ar-inline-scroll-row ar-inline-color-bar">
+                <span class="text-[10px] font-bold text-white/65 shrink-0 mr-0.5">배경</span>
+                ${CUT_TEXT_BG_COLORS.map((bg) => {
+                  const curBg = typeof it.bgColor === 'string' && it.bgColor ? it.bgColor : 'none';
+                  const inner = bg.id === 'none' ? '<span style="font-size:10px;color:#f87171;font-weight:800;">✕</span>' : '';
+                  return `<button type="button" title="배경: ${bg.label}" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'bgColor', '${bg.id}', true)"
+                                  class="ar-inline-color-swatch ${curBg === bg.id ? 'active' : ''}"
+                                  style="background:${bg.id === 'none' ? '#18181b' : bg.css};display:inline-flex;align-items:center;justify-content:center;">${inner}</button>`;
+                }).join('')}
               </div>
             ` : ''}
           `;
@@ -4756,9 +4829,15 @@
               <button type="button" onclick="duplicateSelectedOverlay()" class="ar-el-badge muted">복제</button>
               <button type="button" onclick="removeSelectedOverlay()" class="ar-el-badge" style="color:#f87171;border-color:rgba(248,113,113,0.4);">🗑 삭제</button>
             </div>
+            <div class="ar-el-row">
+              <span class="ar-el-label">${isText ? '폰트 크기' : '크기'}</span>
+              <input id="arElRangeOvScale" type="range" min="0.45" max="2.5" step="0.05" value="${Number(it.scale) || 1}"
+                     oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'scale', this.value, false)" class="flex-1" />
+              <span id="arElValOvScale" class="ar-el-val">${Math.round((Number(it.scale) || 1) * 100)}%</span>
+            </div>
             ${isText ? `
               <div class="ar-el-row">
-                <span class="ar-el-label">폰트 스타일</span>
+                <span class="ar-el-label">폰트</span>
                 <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
                   ${CUT_TEXT_FONTS.map((f) => {
                     const on = (it.font || 'dohyeon') === f.id;
@@ -4769,13 +4848,35 @@
                 </div>
               </div>
               <div class="ar-el-row">
-                <span class="ar-el-label">색상 선택</span>
+                <span class="ar-el-label">글자색</span>
                 <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
                   ${CUT_TEXT_COLORS.map((col) => `
                     <button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'color', '${col}', true)"
                             class="ar-el-color-swatch ${(it.color || '#ffffff') === col ? 'active' : ''}"
                             style="background:${col}"></button>
                   `).join('')}
+                </div>
+              </div>
+              <div class="ar-el-row">
+                <span class="ar-el-label">배경색</span>
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
+                  ${CUT_TEXT_BG_COLORS.map((bg) => {
+                    const curBg = typeof it.bgColor === 'string' && it.bgColor ? it.bgColor : 'none';
+                    const inner = bg.id === 'none' ? '<span style="font-size:10px;color:#f87171;font-weight:800;">✕</span>' : '';
+                    return `<button type="button" title="배경: ${bg.label}" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'bgColor', '${bg.id}', true)"
+                                    class="ar-el-color-swatch ${curBg === bg.id ? 'active' : ''}"
+                                    style="background:${bg.id === 'none' ? '#18181b' : bg.css};display:inline-flex;align-items:center;justify-content:center;">${inner}</button>`;
+                  }).join('')}
+                </div>
+              </div>
+              <div class="ar-el-row">
+                <span class="ar-el-label">배경 스타일</span>
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
+                  ${CUT_TEXT_STYLES.map((bs) => {
+                    const on = (it.style || 'box') === bs.id;
+                    return `<button type="button" onclick="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'style', '${bs.id}', true)"
+                                    class="ar-el-chip ${on ? 'active' : ''}">${bs.label}</button>`;
+                  }).join('')}
                 </div>
               </div>
             ` : ''}
@@ -4801,12 +4902,6 @@
               <input id="arElRangeOvY" type="range" min="0.06" max="0.94" step="0.01" value="${typeof it.y === 'number' ? it.y : 0.5}"
                      oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'y', this.value, false)" class="flex-1" />
               <span id="arElValOvY" class="ar-el-val">${Math.round((typeof it.y === 'number' ? it.y : 0.5) * 100)}%</span>
-            </div>
-            <div class="ar-el-row">
-              <span class="ar-el-label">크기</span>
-              <input id="arElRangeOvScale" type="range" min="0.45" max="2.5" step="0.05" value="${Number(it.scale) || 1}"
-                     oninput="updateSelectedOverlayProp(${cutIdx}, ${ii}, 'scale', this.value, false)" class="flex-1" />
-              <span id="arElValOvScale" class="ar-el-val">${Math.round((Number(it.scale) || 1) * 100)}%</span>
             </div>
             <div class="ar-el-row">
               <span class="ar-el-label">회전</span>

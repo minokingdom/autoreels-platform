@@ -504,8 +504,14 @@
                     class="w-full select-text bg-transparent text-center font-extrabold text-[22px] leading-snug focus:outline-none resize-none placeholder-white/40"></textarea>
                 </div>
                 <div class="space-y-1.5">
+                  <div class="flex items-center gap-2 text-[10.5px] text-white/80">
+                    <span class="font-bold shrink-0">크기</span>
+                    <input id="igComposeScale" type="range" min="0.5" max="2.2" step="0.05" value="1" oninput="window.__arCutTextScale=Number(this.value);previewIgComposeStyle()" class="flex-1 accent-white" />
+                    <span id="igComposeScaleVal" class="font-mono w-9 text-right">100%</span>
+                  </div>
                   <div id="igComposeFontBar" class="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-none"></div>
                   <div id="igComposeColorBar" class="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none"></div>
+                  <div id="igComposeBgBar" class="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none"></div>
                 </div>
               </div>
               <!-- 인스타 스타일 그리기(펜·형광펜·네온) 모드 -->
@@ -2455,7 +2461,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-collage-still"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-text-style-controls"><\/script>');
     }
   </script>
   <!--
