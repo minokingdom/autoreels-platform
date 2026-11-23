@@ -9418,60 +9418,49 @@
 
         ctx.save();
         if (hasCustomVid && aspect > 0.68) {
-          // ★ 핵심: 가로형/정방형(예능·드라마·영화·콘서트·밈) 원본 영상이 상단 제목이나 하단 자막과 부딪히거나 좌우 인물이 잘리지 않도록!
-          // 배경에는 다크 시네마 블러 백드롭을 깔고, 중앙 스테이지(Y: 16.5% ~ 71.5%)에 원본 비율을 살려 선명한 라운드 카드로 배치합니다.
-          const bgR = Math.max(W / sw, H / sh) * 1.15;
-          ctx.globalAlpha = 0.28;
-          ctx.drawImage(srcMedia, (W - sw * bgR) / 2, (H - sh * bgR) / 2, sw * bgR, sh * bgR);
-          ctx.globalAlpha = 1;
-          ctx.fillStyle = 'rgba(7, 9, 15, 0.76)';
+          // ★ 핵심: 상단 자막 영역(0 ~ 19%)과 하단 자막 영역(74% ~ 100%)을 위아래로 꽉 채우고,
+          // 가운데 영상 스테이지(19% ~ 74%)는 좌우 여백 없이 꽉 채워 원본 인물과 표정이 가장 크게 보이도록 설계!
+          ctx.fillStyle = '#07090f';
           ctx.fillRect(0, 0, W, H);
 
-          const stageX = Math.round(W * 0.035);
-          const stageY = Math.round(H * 0.168);
-          const stageW = Math.round(W * 0.93);
-          const stageH = Math.round(H * 0.545);
-          const rad = Math.round(18 * sc);
+          const stageX = 0;
+          const stageY = Math.round(H * 0.19);
+          const stageW = W;
+          const stageH = Math.round(H * 0.55);
 
+          // 스테이지 내부 은은한 블러 배경 (비율 차이로 남는 영역 자연스럽게 메움)
           ctx.save();
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
-          ctx.shadowBlur = Math.round(22 * sc);
-          ctx.fillStyle = '#090b10';
-          drawRoundedRect(ctx, stageX, stageY, stageW, stageH, rad);
-          ctx.fill();
-          ctx.restore();
-
-          ctx.save();
-          drawRoundedRect(ctx, stageX, stageY, stageW, stageH, rad);
+          ctx.beginPath();
+          ctx.rect(stageX, stageY, stageW, stageH);
           ctx.clip();
-          // 중앙 스테이지 안을 꽉 채우되(적절한 cover/contain 균형) 얼굴·자막이 잘리지 않도록 스케일링
+          const bgR = Math.max(stageW / sw, stageH / sh) * 1.12;
+          ctx.globalAlpha = 0.32;
+          ctx.drawImage(srcMedia, stageX + (stageW - sw * bgR) / 2, stageY + (stageH - sh * bgR) / 2, sw * bgR, sh * bgR);
+          ctx.globalAlpha = 1;
+
+          // 중앙 스테이지 안을 꽉 채우되 얼굴·액션이 잘리지 않도록 최적 스케일링
           const fitContain = Math.min(stageW / sw, stageH / sh);
           const fitCover = Math.max(stageW / sw, stageH / sh);
-          const drawScale = aspect > 1.38 ? (fitContain * 1.08) : (fitContain * 0.35 + fitCover * 0.65);
+          const drawScale = aspect > 1.35 ? (fitContain * 1.05) : (fitContain * 0.25 + fitCover * 0.75);
           const dw = sw * drawScale;
           const dh = sh * drawScale;
           ctx.drawImage(srcMedia, stageX + (stageW - dw) / 2, stageY + (stageH - dh) / 2, dw, dh);
           ctx.restore();
 
-          // 스테이지 테두리 & 현재 컷 배지
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
-          ctx.lineWidth = Math.max(1.5, 2 * sc);
-          drawRoundedRect(ctx, stageX, stageY, stageW, stageH, rad);
-          ctx.stroke();
-
+          // 현재 컷 배지 (영상 스테이지 좌상단)
           const badgeTxt = `CUT 0${cutIdx + 1} · ${mood}`;
           ctx.font = `800 ${Math.round(11.5 * sc)}px "Pretendard Variable", sans-serif`;
           const bw = ctx.measureText(badgeTxt).width + Math.round(20 * sc);
           const bh = Math.round(23 * sc);
-          const bx = stageX + Math.round(12 * sc);
-          const by = stageY + Math.round(12 * sc);
+          const bx = Math.round(12 * sc);
+          const by = stageY + Math.round(10 * sc);
           ctx.fillStyle = 'rgba(10, 12, 18, 0.82)';
           drawRoundedRect(ctx, bx, by, bw, bh, Math.round(8 * sc));
           ctx.fill();
-          ctx.strokeStyle = 'rgba(96, 165, 250, 0.5)';
+          ctx.strokeStyle = 'rgba(250, 204, 21, 0.55)';
           ctx.lineWidth = 1 * sc;
           ctx.stroke();
-          ctx.fillStyle = '#93c5fd';
+          ctx.fillStyle = '#fef08a';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(badgeTxt, bx + bw / 2, by + bh / 2);
@@ -9876,129 +9865,128 @@
         arDrawMemeCharacterStage(ctx, W, H, realT, cIdx, cProg, memeItem, cutObj);
       }
 
-      // 1) 상단 고정 후킹 제목 배너 (2줄 균형 줄바꿈 적용 — "vs 현실"처럼 어색하게 한 단어만 떨어지지 않음)
-      const hookBanner = String(window.__arMemeHookBanner || '').trim();
+      // 1) 상단 자막(후킹 제목) 영역: 화면 상단(0 ~ 19%)을 좌우·위아래 빈틈없이 꽉 채우고, 글자도 그 영역 안에 꽉 차게 자동 스케일링!
+      const hookBanner = String(window.__arMemeHookBanner || (isMemeMode && window.__arCurrentMemeItem?.title) || '').trim();
       if (hookBanner) {
         ctx.save();
-        const fs = Math.round(21 * sc);
-        ctx.font = `900 ${fs}px "Pretendard Variable", sans-serif`;
-        const maxW = W * 0.84;
-        const showLines = arBalanceKoreanCaptionLines(hookBanner, ctx, maxW, 15).slice(0, 2);
-        const lh = Math.round(fs * 1.32);
-        const boxH = showLines.length * lh + Math.round(20 * sc);
-        const boxW = Math.min(W * 0.92, Math.max(...showLines.map((l) => ctx.measureText(l).width)) + Math.round(38 * sc));
-        const bx = (W - boxW) / 2;
-        const by = Math.round(H * 0.042);
-        ctx.shadowColor = 'rgba(0,0,0,0.65)';
-        ctx.shadowBlur = Math.round(14 * sc);
-        ctx.fillStyle = 'rgba(11, 13, 19, 0.95)';
-        drawRoundedRect(ctx, bx, by, boxW, boxH, Math.round(13 * sc));
-        ctx.fill();
-        ctx.strokeStyle = '#facc15';
-        ctx.lineWidth = Math.max(2, 2.2 * sc);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
+        const topBarH = Math.round(H * 0.19);
+        ctx.fillStyle = '#07090f';
+        ctx.fillRect(0, 0, W, topBarH);
+        // 하단 경계 골드 라인
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(0, topBarH - Math.max(2, Math.round(3 * sc)), W, Math.max(2, Math.round(3 * sc)));
+
+        const baseFs = Math.round(34 * sc);
+        ctx.font = `900 ${baseFs}px "Pretendard Variable", sans-serif`;
+        const showLines = arBalanceKoreanCaptionLines(hookBanner, ctx, W * 0.92, 11).slice(0, 2);
+        const targetW = W * 0.90;
+        const maxLineH = showLines.length === 1 ? Math.round(topBarH * 0.46) : Math.round(topBarH * 0.34);
+
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#fef08a';
+        const lineGap = Math.round(topBarH * 0.40);
+        const startY = showLines.length === 1
+          ? Math.round(topBarH * 0.52)
+          : Math.round(topBarH * 0.50 - lineGap / 2);
+
         showLines.forEach((ln, idx) => {
-          ctx.fillText(ln, W / 2, by + Math.round(11 * sc) + idx * lh + lh / 2 - 1);
+          // 각 줄이 상단 자막 영역의 가로 폭(90%)을 꽉 채우도록 폰트 크기 자동 계산
+          ctx.font = `900 ${baseFs}px "Pretendard Variable", sans-serif`;
+          const mW = Math.max(10, ctx.measureText(ln).width);
+          const fittedFs = Math.max(Math.round(24 * sc), Math.min(maxLineH, Math.round(baseFs * (targetW / mW))));
+          ctx.font = `900 ${fittedFs}px "Pretendard Variable", sans-serif`;
+          const yPos = startY + idx * lineGap;
+          ctx.lineWidth = Math.max(4, Math.round(6 * sc));
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.95)';
+          ctx.strokeText(ln, W / 2, yPos);
+          ctx.fillStyle = idx === 0 ? '#ffffff' : '#facc15';
+          ctx.fillText(ln, W / 2, yPos);
         });
         ctx.restore();
       }
 
-      // 2) 외국어 자막 덮어쓰기 마스크 + 노래방식 단어별 싱크 자막 (하이라이트 박스가 옆 글자와 절대 겹치지 않도록 단어 간격 & 패딩 정밀 설계!)
+      // 2) 하단 자막(노래방 대사) 영역: 화면 하단(74% ~ 100%)을 위아래·좌우 꽉 채우고, 자막 글자도 그 영역을 꽉 채우도록 대형 렌더링!
       const mask = window.__arCaptionCoverMask || {};
       const showMask = Boolean(mask.enabled);
       const showKaraoke = Boolean(window.__arKaraokeMode || showMask || isMemeMode);
       if (showMask || showKaraoke) {
         const rawLine = String((campaign.ttsLines && campaign.ttsLines[cIdx]) || (window.__arCurrentMemeItem?.cuts?.[cIdx]?.line) || '').replace(/\s+/g, ' ').trim();
-        const centerY = H * (showMask ? (Number(mask.maskY) || 0.78) : 0.775);
-        const maskH = H * (Number(mask.maskH) || 0.13);
+        const botTopY = showMask
+          ? Math.round(H * ((Number(mask.maskY) || 0.81) - (Number(mask.maskH) || 0.18) / 2))
+          : Math.round(H * 0.74);
+        const botBarH = H - botTopY;
 
         ctx.save();
-        if (showMask) {
-          const mw = W * 0.94;
-          const mx = (W - mw) / 2;
-          const my = centerY - maskH / 2;
-          ctx.fillStyle = 'rgba(10, 11, 15, 0.95)';
-          drawRoundedRect(ctx, mx, my, mw, maskH, Math.round(16 * sc));
-          ctx.fill();
-          ctx.strokeStyle = 'rgba(255,255,255,0.16)';
-          ctx.lineWidth = Math.max(1, 1.5 * sc);
-          ctx.stroke();
-        }
+        // 하단 자막 영역 전체를 위아래·좌우 빈틈없이 꽉 채우는 다크 스테이지 바
+        ctx.fillStyle = '#07090f';
+        ctx.fillRect(0, botTopY, W, botBarH);
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(0, botTopY, W, Math.max(2, Math.round(3 * sc)));
 
         if (rawLine) {
           const tokens = rawLine.split(' ').filter(Boolean);
           const activeWordIdx = Math.min(tokens.length - 1, Math.floor(cProg * tokens.length));
-          const kFs = Math.round(23.5 * sc);
-          ctx.font = `900 ${kFs}px "Pretendard Variable", sans-serif`;
-          // ★ 핵심: 단어 사이 간격(wordGap)을 13px로 넉넉히 확보하고, 하이라이트 캡슐 padX는 4.5px로 설계하여
-          // 노란 하이라이트 박스가 앞뒤 단어("여러분도 [요리] 실패담")를 절대 침범하지 않게 합니다!
-          const wordGap = Math.round(13 * sc);
-          const pillPadX = Math.round(4.5 * sc);
-          const pillPadY = Math.round(3.5 * sc);
-          const maxLineW = W * 0.80;
 
-          // 14자 이상이거나 폭이 넓으면 2줄로 균형 있게 분할
-          const measuredTokens = tokens.map((tok, ti) => ({ tok, ti, tw: ctx.measureText(tok).width }));
-          const fullOneLineW = measuredTokens.reduce((a, b) => a + b.tw, 0) + Math.max(0, measuredTokens.length - 1) * wordGap;
-          let displayRows = [];
-          if (measuredTokens.length >= 4 && (fullOneLineW > maxLineW || rawLine.length >= 15)) {
-            let bestIdx = Math.ceil(measuredTokens.length / 2);
+          // 2줄 균형 배치로 하단 영역의 위아래와 좌우를 동시에 꽉 채움
+          let tokenRows = [];
+          if (tokens.length >= 3) {
+            let bestIdx = Math.ceil(tokens.length / 2);
             let minDiff = 99999;
-            for (let split = 1; split < measuredTokens.length; split++) {
-              const r1 = measuredTokens.slice(0, split);
-              const r2 = measuredTokens.slice(split);
-              const w1 = r1.reduce((a, b) => a + b.tw, 0) + (r1.length - 1) * wordGap;
-              const w2 = r2.reduce((a, b) => a + b.tw, 0) + (r2.length - 1) * wordGap;
-              if (w1 <= W * 0.86 && w2 <= W * 0.86 && Math.abs(w1 - w2) < minDiff) {
-                minDiff = Math.abs(w1 - w2);
+            for (let split = 1; split < tokens.length; split++) {
+              const l1 = tokens.slice(0, split).join(' ').length;
+              const l2 = tokens.slice(split).join(' ').length;
+              if (Math.abs(l1 - l2) < minDiff) {
+                minDiff = Math.abs(l1 - l2);
                 bestIdx = split;
               }
             }
-            displayRows = [measuredTokens.slice(0, bestIdx), measuredTokens.slice(bestIdx)];
+            tokenRows = [
+              tokens.slice(0, bestIdx).map((tok, i) => ({ tok, ti: i })),
+              tokens.slice(bestIdx).map((tok, i) => ({ tok, ti: bestIdx + i }))
+            ];
           } else {
-            displayRows = [measuredTokens];
+            tokenRows = [tokens.map((tok, i) => ({ tok, ti: i }))];
           }
 
-          const rowLH = Math.round(kFs * 1.46);
-          const startY = centerY - ((displayRows.length - 1) * rowLH) / 2;
-
-          if (!showMask) {
-            const widest = Math.max(...displayRows.map((r) => r.reduce((acc, it) => acc + it.tw, 0) + Math.max(0, r.length - 1) * wordGap));
-            const bgW = Math.min(W * 0.93, widest + Math.round(36 * sc));
-            const bgH = displayRows.length * rowLH + Math.round(20 * sc);
-            ctx.shadowColor = 'rgba(0,0,0,0.6)';
-            ctx.shadowBlur = Math.round(14 * sc);
-            ctx.fillStyle = 'rgba(10, 12, 18, 0.90)';
-            drawRoundedRect(ctx, (W - bgW) / 2, centerY - bgH / 2, bgW, bgH, Math.round(14 * sc));
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
-            ctx.lineWidth = Math.max(1, 1.2 * sc);
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-          }
+          // 하단 영역(74% ~ 100%) 안에서 자막이 위아래·좌우를 꽉 채우도록 줄별 폰트 크기 자동 확대!
+          const usableTop = botTopY + Math.round(botBarH * 0.08);
+          const usableH = Math.round(botBarH * 0.80);
+          const rowSlotH = usableH / tokenRows.length;
+          const targetRowW = W * 0.90;
 
           ctx.textBaseline = 'middle';
           ctx.textAlign = 'left';
-          displayRows.forEach((r, ri) => {
-            const totalW = r.reduce((acc, it) => acc + it.tw, 0) + Math.max(0, r.length - 1) * wordGap;
+
+          tokenRows.forEach((r, ri) => {
+            const refFs = Math.round(38 * sc);
+            ctx.font = `900 ${refFs}px "Pretendard Variable", sans-serif`;
+            const refGap = Math.round(14 * sc);
+            const refWordsW = r.reduce((acc, it) => acc + ctx.measureText(it.tok).width, 0) + Math.max(0, r.length - 1) * refGap;
+            const maxRowFs = tokenRows.length === 1 ? Math.round(botBarH * 0.38) : Math.round(rowSlotH * 0.72);
+            const rowFs = Math.max(Math.round(28 * sc), Math.min(maxRowFs, Math.round(refFs * (targetRowW / Math.max(10, refWordsW)))));
+
+            ctx.font = `900 ${rowFs}px "Pretendard Variable", sans-serif`;
+            const wordGap = Math.max(Math.round(13 * sc), Math.round(rowFs * 0.34));
+            const pillPadX = Math.round(wordGap * 0.34);
+            const pillPadY = Math.round(rowFs * 0.14);
+
+            const measured = r.map((it) => ({ ...it, tw: ctx.measureText(it.tok).width }));
+            const totalW = measured.reduce((acc, it) => acc + it.tw, 0) + Math.max(0, measured.length - 1) * wordGap;
             let xCursor = (W - totalW) / 2;
-            const yPos = startY + ri * rowLH;
-            r.forEach((it) => {
+            const yPos = Math.round(usableTop + (ri + 0.5) * rowSlotH);
+
+            measured.forEach((it) => {
               const isAct = it.ti === activeWordIdx;
               const isPast = it.ti < activeWordIdx;
               if (isAct) {
                 ctx.fillStyle = '#facc15';
-                drawRoundedRect(ctx, xCursor - pillPadX, yPos - kFs / 2 - pillPadY, it.tw + pillPadX * 2, kFs + pillPadY * 2, Math.round(6 * sc));
+                drawRoundedRect(ctx, xCursor - pillPadX, yPos - rowFs / 2 - pillPadY, it.tw + pillPadX * 2, rowFs + pillPadY * 2, Math.round(8 * sc));
                 ctx.fill();
                 ctx.fillStyle = '#09090b';
                 ctx.fillText(it.tok, xCursor, yPos + 1);
               } else {
-                ctx.lineWidth = Math.max(3, Math.round(4 * sc));
-                ctx.strokeStyle = 'rgba(0,0,0,0.92)';
+                ctx.lineWidth = Math.max(4, Math.round(5.5 * sc));
+                ctx.strokeStyle = 'rgba(0,0,0,0.95)';
                 ctx.strokeText(it.tok, xCursor, yPos + 1);
                 ctx.fillStyle = isPast ? '#fde047' : '#ffffff';
                 ctx.fillText(it.tok, xCursor, yPos + 1);
