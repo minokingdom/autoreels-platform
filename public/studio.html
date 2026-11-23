@@ -772,6 +772,10 @@
             <span class="bgm-now-txt"><strong>영상 편집기</strong><small>갤러리 영상 자르기 · 이어붙이기 · SNS 발행</small></span>
             <span class="bgm-now-go">편집기 열기 ›</span>
           </button>
+          <button type="button" id="openPhotoCollageBtn" onclick="arOpenPhotoCollageModal()" class="bgm-now cursor-pointer">
+            <span class="bgm-now-txt"><strong>사진 콜라주로 만들기</strong><small>사진 여러 장 골라 분할 콜라주 · 테마·음악 바로 입히기</small></span>
+            <span class="bgm-now-go">사진 고르기 ›</span>
+          </button>
           <input type="file" id="quickShortVideoInput" accept="video/*" multiple class="hidden" />
           <a class="bgm-now" data-studio-tool href="/assets/shorts/index.html"><span class="bgm-now-txt"><strong>내 영상으로 쇼츠 만들기</strong><small>긴 말하기 영상에서 핵심 발언 찾기</small></span><span class="bgm-now-go">열기 ›</span></a>
           <a class="bgm-now" data-studio-tool href="/assets/remix/index.html"><span class="bgm-now-txt"><strong>참고 쇼츠·릴스로 재구성하기</strong><small>참고 쇼츠의 컷 길이에 내 영상과 자막 맞추기</small></span><span class="bgm-now-go">열기 ›</span></a>
@@ -1044,7 +1048,10 @@
                 <span class="text-[12.5px] font-semibold text-[#ededed]">내 이미지 보관함</span>
                 <span id="arMediaVaultCount" class="text-[11px] text-[#85858b] ml-1.5">0장</span>
               </div>
-              <button type="button" id="arMediaVaultApplyAll" class="btn-secondary h-7 px-2.5 text-[11.5px] cursor-pointer">내 이미지로 채우기</button>
+              <div class="flex items-center gap-1.5">
+                <button type="button" onclick="arVaultCleanDuplicates()" class="btn-secondary h-7 px-2 text-[11px] cursor-pointer" title="같은 사진 중복 제거">중복 정리</button>
+                <button type="button" id="arMediaVaultApplyAll" class="btn-secondary h-7 px-2.5 text-[11.5px] cursor-pointer">내 이미지로 채우기</button>
+              </div>
             </div>
             <p class="text-[11.5px] text-[#85858b]">올린 사진과 AI 생성 이미지가 이 기기에 무료 보관됩니다. 누르면 현재 컷에 바로 적용되고, ↓ 버튼으로 폰 사진첩에 저장할 수 있어요. (홈 화면에 추가하면 아이폰에서도 오래 유지돼요)</p>
             <div id="arMediaVaultList" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar"></div>
@@ -2284,13 +2291,121 @@
     </div>
   </div>
 
+  <!-- 사진 콜라주로 만들기 모달 (2~10장 선택 → 6종 콜라주 레이아웃 → 테마 바로 입히기) -->
+  <div id="arPhotoCollageModal" data-noind class="hidden fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5" role="dialog" aria-modal="true" aria-labelledby="arCollageModalTitle">
+    <div class="w-full max-w-[780px] max-h-[92dvh] flex flex-col rounded-[16px] bg-[#141416] border border-white/12 shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-white/10">
+        <div>
+          <h3 id="arCollageModalTitle" class="text-[15px] font-semibold text-[#ededed]">사진 콜라주로 만들기</h3>
+          <p class="text-[11.5px] text-[#85858b]">사진을 고르면 9:16 콜라주 영상으로 묶고, 편집기 영상처럼 원하는 테마·음악을 바로 입힐 수 있어요.</p>
+        </div>
+        <button type="button" onclick="arClosePhotoCollageModal()" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-[#d4d4d8] text-[16px] cursor-pointer" aria-label="닫기">×</button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-12 gap-4">
+        <div class="md:col-span-5 flex flex-col items-center gap-2.5">
+          <div class="relative w-[198px] aspect-[9/16] rounded-[14px] overflow-hidden bg-[#0a0a0c] border border-white/15 shadow-xl">
+            <canvas id="arCollagePreviewCanvas" width="360" height="640" class="w-full h-full block"></canvas>
+            <div id="arCollageEmptyHint" class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 text-[12px] text-[#85858b]">
+              <span class="text-[24px] mb-1.5">🖼️</span>
+              <span>오른쪽에서 사진 2~10장을<br/>골라 주세요</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 text-[11.5px] text-[#a1a1aa]">
+            <button type="button" onclick="arCollageStepPreview(-1)" class="btn-secondary h-7 px-2 text-[11px] cursor-pointer">◀</button>
+            <span id="arCollageSlideMeta" class="font-mono text-[#ededed]">0컷 · 0.0초</span>
+            <button type="button" onclick="arCollageStepPreview(1)" class="btn-secondary h-7 px-2 text-[11px] cursor-pointer">▶</button>
+          </div>
+        </div>
+        <div class="md:col-span-7 space-y-3.5 min-w-0">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <span class="text-[12.5px] font-semibold text-[#ededed]">1. 사진 선택 <span id="arCollagePickCount" class="text-[#60a5fa] font-mono ml-1">0/10</span></span>
+              <div class="flex items-center gap-1.5">
+                <label class="btn-primary h-8 px-3 text-[12px] inline-flex items-center cursor-pointer">
+                  + 사진 불러오기
+                  <input id="arCollageFileInput" type="file" accept="image/*" multiple class="hidden" onchange="arCollageHandleFiles(event)" />
+                </label>
+                <button type="button" onclick="arCollageClearPhotos()" class="btn-secondary h-8 px-2.5 text-[11.5px] cursor-pointer">비우기</button>
+              </div>
+            </div>
+            <div id="arCollageSelectedList" class="flex items-center gap-2 overflow-x-auto pb-1 min-h-[76px] rounded-[10px] bg-white/[0.03] border border-white/[0.08] p-2"></div>
+            <div id="arCollageVaultWrap" class="hidden space-y-1">
+              <div class="text-[11px] text-[#85858b]">내 이미지 보관함에서 바로 담기 (탭해서 추가)</div>
+              <div id="arCollageVaultStrip" class="flex items-center gap-1.5 overflow-x-auto pb-1"></div>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <span class="text-[12.5px] font-semibold text-[#ededed]">2. 콜라주 레이아웃</span>
+            <div id="arCollageLayoutGrid" class="grid grid-cols-3 gap-1.5">
+              <button type="button" data-cl-layout="split2" onclick="arCollageSetLayout('split2')" class="ar-cl-btn active">🪟 상하 2분할</button>
+              <button type="button" data-cl-layout="magazine3" onclick="arCollageSetLayout('magazine3')" class="ar-cl-btn">🧩 3분할 화보</button>
+              <button type="button" data-cl-layout="grid4" onclick="arCollageSetLayout('grid4')" class="ar-cl-btn">🔲 4분할 그리드</button>
+              <button type="button" data-cl-layout="polaroid" onclick="arCollageSetLayout('polaroid')" class="ar-cl-btn">📷 폴라로이드</button>
+              <button type="button" data-cl-layout="filmstrip" onclick="arCollageSetLayout('filmstrip')" class="ar-cl-btn">🎬 35mm 필름</button>
+              <button type="button" data-cl-layout="slideshow" onclick="arCollageSetLayout('slideshow')" class="ar-cl-btn">🎞 풀화면 1장씩</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div class="space-y-1">
+              <span class="text-[11.5px] text-[#a1a1aa]">콜라주 배경 톤</span>
+              <div class="flex items-center gap-1.5">
+                <button type="button" data-cl-bg="dark" onclick="arCollageSetBg('dark')" class="ar-cl-bg-btn active">다크</button>
+                <button type="button" data-cl-bg="cream" onclick="arCollageSetBg('cream')" class="ar-cl-bg-btn">크림</button>
+                <button type="button" data-cl-bg="white" onclick="arCollageSetBg('white')" class="ar-cl-bg-btn">화이트</button>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <span class="text-[11.5px] text-[#a1a1aa]">컷당 길이</span>
+              <div class="flex items-center gap-1.5">
+                <button type="button" data-cl-dur="1.8" onclick="arCollageSetDur(1.8)" class="ar-cl-dur-btn">1.8초</button>
+                <button type="button" data-cl-dur="2.5" onclick="arCollageSetDur(2.5)" class="ar-cl-dur-btn active">2.5초</button>
+                <button type="button" data-cl-dur="3.5" onclick="arCollageSetDur(3.5)" class="ar-cl-dur-btn">3.5초</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-4 flex-wrap pt-1 text-[12px] text-[#d4d4d8]">
+            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+              <input id="arCollageIncludeScript" type="checkbox" />
+              <span>📝 대본 자막 포함</span>
+            </label>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+              <input id="arCollageIncludeCard" type="checkbox" />
+              <span>🪪 명함·상호 엔딩 포함</span>
+            </label>
+            <span class="text-[11px] text-[#85858b]">(테마 화면에서 언제든 켜고 끌 수 있어요)</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between gap-2 px-4 py-3 border-t border-white/10 bg-[#101012]">
+        <button type="button" onclick="arClosePhotoCollageModal()" class="btn-secondary h-9 px-3.5 text-[12.5px] cursor-pointer">취소</button>
+        <button type="button" id="arCollageApplyBtn" onclick="arApplyPhotoCollageToStudio()" class="btn-primary h-9 px-5 text-[13px] font-semibold cursor-pointer">✨ 콜라주 완성 · 테마 입히기 →</button>
+      </div>
+    </div>
+    <style>
+      #arPhotoCollageModal .ar-cl-btn,
+      #arPhotoCollageModal .ar-cl-bg-btn,
+      #arPhotoCollageModal .ar-cl-dur-btn {
+        height: 32px; padding: 0 8px; border-radius: 8px; font-size: 11.5px; font-weight: 600;
+        background: #1c1c21; color: #a1a1aa; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; flex: 1;
+      }
+      #arPhotoCollageModal .ar-cl-btn.active,
+      #arPhotoCollageModal .ar-cl-bg-btn.active,
+      #arPhotoCollageModal .ar-cl-dur-btn.active {
+        background: #ededed; color: #111113; border-color: #ededed;
+      }
+    </style>
+  </div>
+
 <script>
     if (window.__AR_MOBILE_SHELL) {
       document.head.innerHTML = '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>오토릴스메이커 — 모바일 보기 (390×844)</title><style>*{box-sizing:border-box}html,body{margin:0;height:100%;background:#09090b;color:#ededed;font-family:Pretendard,system-ui,sans-serif;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px}.bar{display:flex;align-items:center;justify-content:space-between;width:394px;max-width:100%;font-size:12px;color:#a1a1a6}.bar a{color:#ededed;text-decoration:none;padding:5px 10px;border-radius:8px;background:#232325;border:1px solid rgba(255,255,255,.14)}.frame{width:394px;height:min(848px,calc(100dvh - 54px));border-radius:26px;overflow:hidden;border:2px solid rgba(255,255,255,.16);box-shadow:0 24px 64px rgba(0,0,0,.75);background:#0f0f10}iframe{width:100%;height:100%;border:0;display:block}</style>';
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-point-accent"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261123-collage-vault"><\/script>');
     }
   </script>
   <!--

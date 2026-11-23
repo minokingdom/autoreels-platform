@@ -3967,10 +3967,10 @@
       }
     }
 
-    // ★ 편집 영상(내 영상)에 대본 자막 / 명함·상호를 넣을지 말지 1탭 선택 토글
+    // ★ 편집 영상(내 영상) · 사진 콜라주에 대본 자막 / 명함·상호를 넣을지 말지 1탭 선택 토글
     function arSyncEditedVideoOptionUI() {
       const bar = document.getElementById('pdOverlayChoiceBar');
-      const isShort = Boolean(typeof arGetShortVideoMedia === 'function' && arGetShortVideoMedia());
+      const isShort = Boolean((typeof arGetShortVideoMedia === 'function' && arGetShortVideoMedia()) || campaign.isPhotoCollageMode);
       if (bar) bar.classList.toggle('hidden', !isShort);
       const scriptOn = !campaign.noDefaultCaptions;
       const cardOn = !campaign.hideCardOnVideo;
@@ -4027,7 +4027,18 @@
         }
       } else if (kind === 'card') {
         campaign.hideCardOnVideo = !campaign.hideCardOnVideo;
-        arUpdateShortVideoEdit({});
+        if (campaign.isPhotoCollageMode) {
+          const cutN = Math.max(1, (campaign.uploadedPhotos || []).length);
+          const perCut = Number(campaign._collageCutSec) || 2.5;
+          const mainD = Math.max(2, +(cutN * perCut).toFixed(2));
+          const outroD = campaign.hideCardOnVideo ? 0 : 3.2;
+          if (typeof CUT_LENGTHS !== 'undefined') CUT_LENGTHS = Array.from({ length: cutN }, () => perCut);
+          if (typeof TOTAL_DURATION !== 'undefined') TOTAL_DURATION = +(mainD + outroD).toFixed(2);
+          if (window.__timelines && window.__timelines.main) window.__timelines.main.duration = TOTAL_DURATION;
+          if (typeof updateDurationIndicator === 'function') updateDurationIndicator();
+        } else {
+          arUpdateShortVideoEdit({});
+        }
       }
       if (typeof designThumbCache !== 'undefined' && designThumbCache) designThumbCache.fresh = {};
       if (typeof scheduleDesignThumbs === 'function') scheduleDesignThumbs();
@@ -4090,6 +4101,384 @@
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0);
       if (typeof openPresetDrawer === 'function') openPresetDrawer('right');
       if (typeof arToast === 'function') arToast('편집한 영상을 넣었어요. 대본·명함은 위 버튼에서 원할 때 켜고 끌 수 있어요.');
+    }
+
+    // =========================================================================
+    // ★ 처음 시작할 때 "사진 콜라주로 만들기" → 6종 9:16 콜라주 생성 + 편집기 영상처럼 테마 바로 입히기
+    // =========================================================================
+    const _arCollageState = {
+      photos: [],       // [{ id, img, src, fromVault }]
+      layout: 'split2', // split2 | magazine3 | grid4 | polaroid | filmstrip | slideshow
+      bg: 'dark',       // dark | cream | white
+      cutSec: 2.5,
+      previewIdx: 0
+    };
+
+    function arCollageDrawCover(ctx, img, x, y, w, h, r = 0) {
+      if (!img || !img.naturalWidth || !img.naturalHeight) return;
+      ctx.save();
+      if (r > 0) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath(); ctx.clip();
+      } else {
+        ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+      }
+      const iw = img.naturalWidth, ih = img.naturalHeight;
+      const sc = Math.max(w / iw, h / ih);
+      const dw = iw * sc, dh = ih * sc;
+      ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+      ctx.restore();
+    }
+
+    function arCollageBuildSlides(photos, layout) {
+      const n = photos.length;
+      if (!n) return [];
+      const at = (i) => photos[((i % n) + n) % n].img;
+      const slides = [];
+      if (layout === 'slideshow') {
+        for (let i = 0; i < n; i++) slides.push({ type: 'single', imgs: [at(i)] });
+      } else if (layout === 'split2') {
+        if (n === 1) slides.push({ type: 'split2', imgs: [at(0), at(0)] });
+        else if (n === 2) {
+          slides.push({ type: 'split2', imgs: [at(0), at(1)] });
+          slides.push({ type: 'single', imgs: [at(0)] });
+          slides.push({ type: 'single', imgs: [at(1)] });
+          slides.push({ type: 'split2', imgs: [at(1), at(0)] });
+        } else {
+          for (let i = 0; i < n; i += 2) slides.push({ type: 'split2', imgs: [at(i), at(i + 1)] });
+          if (slides.length < 3) slides.push({ type: 'split2', imgs: [at(n - 1), at(0)] });
+        }
+      } else if (layout === 'magazine3') {
+        if (n <= 3) {
+          slides.push({ type: 'magazine3', imgs: [at(0), at(1), at(2)] });
+          slides.push({ type: 'magazine3', imgs: [at(1), at(2), at(0)] });
+          slides.push({ type: 'magazine3', imgs: [at(2), at(0), at(1)] });
+        } else {
+          for (let i = 0; i < n; i += 3) slides.push({ type: 'magazine3', imgs: [at(i), at(i + 1), at(i + 2)] });
+        }
+      } else if (layout === 'grid4') {
+        if (n <= 4) {
+          slides.push({ type: 'grid4', imgs: [at(0), at(1), at(2), at(3)] });
+          slides.push({ type: 'split2', imgs: [at(0), at(1)] });
+          slides.push({ type: 'split2', imgs: [at(2), at(3)] });
+          slides.push({ type: 'grid4', imgs: [at(1), at(2), at(3), at(0)] });
+        } else {
+          for (let i = 0; i < n; i += 4) slides.push({ type: 'grid4', imgs: [at(i), at(i + 1), at(i + 2), at(i + 3)] });
+        }
+      } else if (layout === 'polaroid') {
+        const step = n >= 4 ? 2 : 1;
+        for (let i = 0; i < Math.max(3, Math.ceil(n / step)); i++) {
+          const base = i * step;
+          slides.push({ type: 'polaroid', imgs: [at(base), at(base + 1), at(base + 2)], idx: i });
+        }
+      } else if (layout === 'filmstrip') {
+        const count = Math.max(3, Math.ceil(n / 2));
+        for (let i = 0; i < count; i++) {
+          slides.push({ type: 'filmstrip', imgs: [at(i * 2), at(i * 2 + 1), at(i * 2 + 2)] });
+        }
+      }
+      return slides.slice(0, 10);
+    }
+
+    function arCollageRenderSlide(canvas, slide, bgTone) {
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const bgMap = { dark: '#111114', cream: '#f3ece1', white: '#ffffff' };
+      const bgCol = bgMap[bgTone] || '#111114';
+      const pad = Math.round(W * 0.036);
+      const gap = Math.round(W * 0.024);
+      const rad = Math.round(W * 0.026);
+      ctx.fillStyle = bgCol;
+      ctx.fillRect(0, 0, W, H);
+      if (!slide || !slide.imgs || !slide.imgs.length) return;
+      const imgs = slide.imgs;
+
+      if (slide.type === 'single') {
+        arCollageDrawCover(ctx, imgs[0], 0, 0, W, H, 0);
+      } else if (slide.type === 'split2') {
+        const uw = W - pad * 2;
+        const uh = Math.round((H - pad * 2 - gap) / 2);
+        arCollageDrawCover(ctx, imgs[0], pad, pad, uw, uh, rad);
+        arCollageDrawCover(ctx, imgs[1] || imgs[0], pad, pad + uh + gap, uw, H - pad * 2 - gap - uh, rad);
+      } else if (slide.type === 'magazine3') {
+        const uw = W - pad * 2;
+        const topH = Math.round((H - pad * 2 - gap) * 0.56);
+        const botY = pad + topH + gap;
+        const botH = H - pad - botY;
+        const halfW = Math.round((uw - gap) / 2);
+        arCollageDrawCover(ctx, imgs[0], pad, pad, uw, topH, rad);
+        arCollageDrawCover(ctx, imgs[1] || imgs[0], pad, botY, halfW, botH, rad);
+        arCollageDrawCover(ctx, imgs[2] || imgs[0], pad + halfW + gap, botY, uw - halfW - gap, botH, rad);
+      } else if (slide.type === 'grid4') {
+        const cellW = Math.round((W - pad * 2 - gap) / 2);
+        const cellH = Math.round((H - pad * 2 - gap) / 2);
+        arCollageDrawCover(ctx, imgs[0], pad, pad, cellW, cellH, rad);
+        arCollageDrawCover(ctx, imgs[1] || imgs[0], pad + cellW + gap, pad, W - pad * 2 - gap - cellW, cellH, rad);
+        arCollageDrawCover(ctx, imgs[2] || imgs[0], pad, pad + cellH + gap, cellW, H - pad * 2 - gap - cellH, rad);
+        arCollageDrawCover(ctx, imgs[3] || imgs[1] || imgs[0], pad + cellW + gap, pad + cellH + gap, W - pad * 2 - gap - cellW, H - pad * 2 - gap - cellH, rad);
+      } else if (slide.type === 'polaroid') {
+        // 부드러운 배경 + 살짝 기울어진 2~3장 폴라로이드 카드
+        const drawPol = (im, cx, cy, pw, ph, ang) => {
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(ang);
+          const b = Math.round(W * 0.025), bot = Math.round(W * 0.085);
+          ctx.shadowColor = 'rgba(0,0,0,0.34)';
+          ctx.shadowBlur = Math.round(W * 0.045);
+          ctx.shadowOffsetY = Math.round(W * 0.02);
+          ctx.fillStyle = '#fcfbf8';
+          ctx.fillRect(-pw / 2 - b, -ph / 2 - b, pw + b * 2, ph + b + bot);
+          ctx.shadowColor = 'transparent';
+          arCollageDrawCover(ctx, im, -pw / 2, -ph / 2, pw, ph, 0);
+          ctx.restore();
+        };
+        const pw = Math.round(W * 0.64), ph = Math.round(H * 0.34);
+        const flip = (slide.idx || 0) % 2 === 0 ? 1 : -1;
+        drawPol(imgs[0], W * (0.45 - 0.04 * flip), H * 0.30, pw, ph, -0.055 * flip);
+        drawPol(imgs[1] || imgs[0], W * (0.55 + 0.04 * flip), H * 0.67, pw, ph, 0.048 * flip);
+      } else if (slide.type === 'filmstrip') {
+        ctx.fillStyle = '#0c0b0a';
+        ctx.fillRect(0, 0, W, H);
+        const rail = Math.round(W * 0.095);
+        const fw = W - rail * 2;
+        const fh = Math.round((H - pad * 2 - gap * 2) / 3);
+        ctx.fillStyle = 'rgba(244,238,225,0.22)';
+        const holeW = Math.round(rail * 0.44), holeH = Math.round(H * 0.018);
+        for (let y = Math.round(H * 0.025); y < H - holeH; y += Math.round(H * 0.045)) {
+          ctx.fillRect(Math.round((rail - holeW) / 2), y, holeW, holeH);
+          ctx.fillRect(W - rail + Math.round((rail - holeW) / 2), y, holeW, holeH);
+        }
+        for (let i = 0; i < 3; i++) {
+          arCollageDrawCover(ctx, imgs[i] || imgs[0], rail, pad + i * (fh + gap), fw, fh, Math.round(W * 0.012));
+        }
+      }
+    }
+
+    function arCollageRefreshUI() {
+      const listEl = document.getElementById('arCollageSelectedList');
+      const cntEl = document.getElementById('arCollagePickCount');
+      const hintEl = document.getElementById('arCollageEmptyHint');
+      const metaEl = document.getElementById('arCollageSlideMeta');
+      const cv = document.getElementById('arCollagePreviewCanvas');
+      const n = _arCollageState.photos.length;
+      if (cntEl) cntEl.textContent = `${n}/10`;
+      if (hintEl) hintEl.classList.toggle('hidden', n > 0);
+      if (listEl) {
+        if (!n) {
+          listEl.innerHTML = '<div class="text-[11.5px] text-[#71717a] px-2">아직 선택한 사진이 없습니다. [+ 사진 불러오기]나 아래 보관함에서 눌러 추가해 주세요.</div>';
+        } else {
+          listEl.replaceChildren();
+          _arCollageState.photos.forEach((p, idx) => {
+            const card = document.createElement('div');
+            card.style.cssText = 'position:relative;flex:0 0 auto;width:58px;height:78px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.16);background:#18181b;';
+            const im = document.createElement('img');
+            im.src = p.src;
+            im.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+            const num = document.createElement('span');
+            num.textContent = String(idx + 1);
+            num.style.cssText = 'position:absolute;left:3px;top:3px;background:rgba(0,0,0,0.75);color:#fff;font-size:10px;font-weight:700;padding:0 5px;border-radius:999px;';
+            const del = document.createElement('button');
+            del.type = 'button'; del.textContent = '×';
+            del.style.cssText = 'position:absolute;right:2px;top:2px;width:18px;height:18px;border-radius:999px;background:rgba(0,0,0,0.75);color:#f87171;border:0;font-size:12px;line-height:1;cursor:pointer;';
+            del.onclick = () => { _arCollageState.photos.splice(idx, 1); arCollageRefreshUI(); };
+            card.append(im, num, del);
+            listEl.appendChild(card);
+          });
+        }
+      }
+      const slides = arCollageBuildSlides(_arCollageState.photos, _arCollageState.layout);
+      if (!slides.length) {
+        if (metaEl) metaEl.textContent = '0컷 · 0.0초';
+        if (cv) { const g = cv.getContext('2d'); g.fillStyle = '#0a0a0c'; g.fillRect(0, 0, cv.width, cv.height); }
+        return;
+      }
+      _arCollageState.previewIdx = ((_arCollageState.previewIdx % slides.length) + slides.length) % slides.length;
+      if (metaEl) metaEl.textContent = `${_arCollageState.previewIdx + 1}/${slides.length}컷 · ${(slides.length * _arCollageState.cutSec).toFixed(1)}초`;
+      if (cv) arCollageRenderSlide(cv, slides[_arCollageState.previewIdx], _arCollageState.bg);
+    }
+
+    async function arOpenPhotoCollageModal() {
+      const modal = document.getElementById('arPhotoCollageModal');
+      if (!modal) return;
+      if (typeof arPauseForStudioEdit === 'function') arPauseForStudioEdit();
+      modal.classList.remove('hidden');
+      arCollageRefreshUI();
+      // 보관함 이미지 스트립 채우기
+      const vWrap = document.getElementById('arCollageVaultWrap');
+      const vStrip = document.getElementById('arCollageVaultStrip');
+      if (vWrap && vStrip && typeof window.arVaultGetAll === 'function') {
+        try {
+          const all = await window.arVaultGetAll();
+          if (all && all.length) {
+            vWrap.classList.remove('hidden');
+            vStrip.replaceChildren();
+            all.slice(0, 18).forEach((item) => {
+              const b = document.createElement('button');
+              b.type = 'button';
+              b.style.cssText = 'flex:0 0 auto;width:48px;height:64px;border-radius:7px;overflow:hidden;border:1px solid rgba(255,255,255,0.16);padding:0;background:#18181b;cursor:pointer;';
+              const im = document.createElement('img');
+              im.src = item.src;
+              im.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+              b.appendChild(im);
+              b.onclick = async () => {
+                if (_arCollageState.photos.length >= 10) { if (typeof arToast === 'function') arToast('최대 10장까지 고를 수 있어요.'); return; }
+                const loaded = new Image();
+                loaded.src = item.src;
+                try { await loaded.decode(); } catch (_) {}
+                _arCollageState.photos.push({ id: item.id + '_' + Date.now(), img: loaded, src: item.src, fromVault: true });
+                arCollageRefreshUI();
+              };
+              vStrip.appendChild(b);
+            });
+          } else {
+            vWrap.classList.add('hidden');
+          }
+        } catch (_) {}
+      }
+    }
+    function arClosePhotoCollageModal() {
+      document.getElementById('arPhotoCollageModal')?.classList.add('hidden');
+    }
+    async function arCollageHandleFiles(ev) {
+      const files = Array.from(ev?.target?.files || []);
+      if (ev?.target) ev.target.value = '';
+      if (!files.length) return;
+      const newUploaded = [];
+      for (const f of files) {
+        if (_arCollageState.photos.length >= 10) break;
+        try {
+          const dataUrl = await new Promise((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = () => resolve(r.result);
+            r.onerror = reject;
+            r.readAsDataURL(f);
+          });
+          const im = new Image();
+          im.src = dataUrl;
+          im._dataUrl = dataUrl;
+          im._label = f.name || '내 사진';
+          await im.decode();
+          _arCollageState.photos.push({ id: 'u_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), img: im, src: dataUrl, fromVault: false });
+          newUploaded.push(im);
+        } catch (_) {}
+      }
+      if (newUploaded.length && typeof window.arVaultSaveImages === 'function') {
+        window.arVaultSaveImages(newUploaded, 'upload');
+      }
+      arCollageRefreshUI();
+    }
+    function arCollageClearPhotos() { _arCollageState.photos = []; _arCollageState.previewIdx = 0; arCollageRefreshUI(); }
+    function arCollageStepPreview(delta) { _arCollageState.previewIdx += delta; arCollageRefreshUI(); }
+    function arCollageSetLayout(layout) {
+      _arCollageState.layout = layout;
+      document.querySelectorAll('#arPhotoCollageModal [data-cl-layout]').forEach((b) => b.classList.toggle('active', b.dataset.clLayout === layout));
+      _arCollageState.previewIdx = 0;
+      arCollageRefreshUI();
+    }
+    function arCollageSetBg(bg) {
+      _arCollageState.bg = bg;
+      document.querySelectorAll('#arPhotoCollageModal [data-cl-bg]').forEach((b) => b.classList.toggle('active', b.dataset.clBg === bg));
+      arCollageRefreshUI();
+    }
+    function arCollageSetDur(sec) {
+      _arCollageState.cutSec = Number(sec) || 2.5;
+      document.querySelectorAll('#arPhotoCollageModal [data-cl-dur]').forEach((b) => b.classList.toggle('active', Number(b.dataset.clDur) === _arCollageState.cutSec));
+      arCollageRefreshUI();
+    }
+
+    async function arApplyPhotoCollageToStudio() {
+      if (!_arCollageState.photos.length) {
+        if (typeof arToast === 'function') arToast('먼저 콜라주에 넣을 사진을 1장 이상 골라 주세요.');
+        return;
+      }
+      const btn = document.getElementById('arCollageApplyBtn');
+      if (btn) { btn.disabled = true; btn.textContent = '콜라주 만드는 중...'; }
+      try {
+        const slides = arCollageBuildSlides(_arCollageState.photos, _arCollageState.layout);
+        const includeScript = Boolean(document.getElementById('arCollageIncludeScript')?.checked);
+        const includeCard = Boolean(document.getElementById('arCollageIncludeCard')?.checked);
+        const outImgs = [];
+        const off = document.createElement('canvas');
+        off.width = 720; off.height = 1280;
+        for (let i = 0; i < slides.length; i++) {
+          arCollageRenderSlide(off, slides[i], _arCollageState.bg);
+          const url = off.toDataURL('image/jpeg', 0.90);
+          const im = new Image();
+          im.src = url;
+          im._dataUrl = url;
+          im._skipVault = true;
+          im._label = `콜라주 ${i + 1}컷`;
+          await im.decode();
+          outImgs.push(im);
+        }
+        (campaign.uploadedPhotos || []).forEach(arReleasePhoto);
+        campaign.uploadedPhotos = outImgs;
+        campaign.isUserCustomPhotos = true;
+        campaign.isPhotoCollageMode = true;
+        campaign._collageCutSec = _arCollageState.cutSec;
+        campaign.hasCustomVideo = false;
+        campaign.scenePlan = outImgs.map((_, i) => ({ photoIdx: i }));
+        campaign.hideCardOnVideo = !includeCard;
+        campaign.noDefaultCaptions = !includeScript;
+
+        if (!includeScript) {
+          if (Array.isArray(campaign.cutCaptions) && campaign.cutCaptions.some((x) => String(x || '').trim())) {
+            campaign._stashedCaptions = campaign.cutCaptions.slice();
+            campaign._stashedHook = campaign.hook || '';
+          }
+          campaign.hook = '';
+          campaign.sub = '';
+          campaign.priceTag = '';
+          campaign.cutCaptions = Array.from({ length: outImgs.length }, () => '');
+          campaign.ttsLines = Array.from({ length: outImgs.length }, () => '');
+          if (typeof AudioEngine !== 'undefined') {
+            AudioEngine.ttsVoice = 'off';
+            AudioEngine.masterBuffer = null;
+            AudioEngine.masterDuration = 0;
+            AudioEngine.ttsDirty = false;
+            const vSel = document.getElementById('ttsVoiceSelect');
+            if (vSel) vSel.value = 'off';
+          }
+        }
+        const mainD = Math.max(2, +(outImgs.length * _arCollageState.cutSec).toFixed(2));
+        const outroD = includeCard ? 3.2 : 0;
+        if (typeof BASE_DURATION !== 'undefined') BASE_DURATION = +(mainD + outroD).toFixed(2);
+        if (typeof CUT_LENGTHS !== 'undefined') CUT_LENGTHS = Array.from({ length: outImgs.length }, () => _arCollageState.cutSec);
+        if (typeof TOTAL_DURATION !== 'undefined') TOTAL_DURATION = +(mainD + outroD).toFixed(2);
+        if (window.__timelines && window.__timelines.main) window.__timelines.main.duration = TOTAL_DURATION;
+        if (typeof updateDurationIndicator === 'function') updateDurationIndicator();
+        if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
+        if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
+        if (typeof renderUploadedPhotoThumbs === 'function') renderUploadedPhotoThumbs();
+        if (typeof designThumbCache !== 'undefined' && designThumbCache) designThumbCache.fresh = {};
+        if (typeof scheduleDesignThumbs === 'function') scheduleDesignThumbs();
+        arSyncEditedVideoOptionUI();
+        arClosePhotoCollageModal();
+        if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0);
+        if (typeof isPlaying !== 'undefined') isPlaying = true;
+        if (typeof openPresetDrawer === 'function') openPresetDrawer('right');
+        if (typeof arToast === 'function') arToast(`사진 콜라주 ${outImgs.length}컷을 만들었어요! 원하는 테마와 음악을 골라 입혀 보세요.`, true);
+      } catch (e) {
+        if (typeof arToast === 'function') arToast('콜라주를 만들지 못했어요. 다른 사진으로 다시 시도해 주세요.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '✨ 콜라주 완성 · 테마 입히기 →'; }
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.arOpenPhotoCollageModal = arOpenPhotoCollageModal;
+      window.arClosePhotoCollageModal = arClosePhotoCollageModal;
+      window.arCollageHandleFiles = arCollageHandleFiles;
+      window.arCollageClearPhotos = arCollageClearPhotos;
+      window.arCollageStepPreview = arCollageStepPreview;
+      window.arCollageSetLayout = arCollageSetLayout;
+      window.arCollageSetBg = arCollageSetBg;
+      window.arCollageSetDur = arCollageSetDur;
+      window.arApplyPhotoCollageToStudio = arApplyPhotoCollageToStudio;
     }
 
     // 쇼츠 화면에서 연 편집기가 맡겨 둔 영상을 받아 테마 입히기 (/studio?applyTheme=1)

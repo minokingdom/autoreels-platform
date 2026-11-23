@@ -2204,54 +2204,170 @@ async function arRestoreLastProject(){
     return s.length + ':' + s.slice(0, 64) + ':' + s.slice(-48);
   }
 
+  // 8x8 그레이스케일 지각 해시(aHash): 해상도/JPEG 재압축이 달라도 같은 사진이면 중복으로 판별
+  async function computeVisualHash(src) {
+    return new Promise((resolve) => {
+      try {
+        const im = new Image();
+        im.crossOrigin = 'anonymous';
+        const done = (v) => resolve(v || '');
+        const timer = setTimeout(() => done(''), 3500);
+        im.onload = () => {
+          clearTimeout(timer);
+          try {
+            const cv = document.createElement('canvas');
+            cv.width = 8; cv.height = 8;
+            const ctx = cv.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(im, 0, 0, 8, 8);
+            const data = ctx.getImageData(0, 0, 8, 8).data;
+            const lum = new Float32Array(64);
+            let sum = 0;
+            for (let i = 0; i < 64; i++) {
+              const g = data[i * 4] * 0.299 + data[i * 4 + 1] * 0.587 + data[i * 4 + 2] * 0.114;
+              lum[i] = g; sum += g;
+            }
+            const avg = sum / 64;
+            let bits = '';
+            for (let i = 0; i < 64; i++) bits += lum[i] >= avg ? '1' : '0';
+            let hex = '';
+            for (let i = 0; i < 64; i += 4) hex += parseInt(bits.slice(i, i + 4), 2).toString(16);
+            done(hex);
+          } catch (_) { done(''); }
+        };
+        im.onerror = () => { clearTimeout(timer); done(''); };
+        im.src = src;
+      } catch (_) { resolve(''); }
+    });
+  }
+
+  function hammingHex(a, b) {
+    if (!a || !b || a.length !== 16 || b.length !== 16) return 99;
+    let dist = 0;
+    for (let i = 0; i < 16; i++) {
+      let x = parseInt(a[i], 16) ^ parseInt(b[i], 16);
+      while (x) { dist += x & 1; x >>= 1; }
+    }
+    return dist;
+  }
+
+  function isDuplicateItem(fp, vhash, existingList) {
+    for (const ex of existingList) {
+      if (fp && ex.fp === fp) return true;
+      if (vhash && ex.vhash && hammingHex(vhash, ex.vhash) <= 4) return true;
+    }
+    return false;
+  }
+
   function isStockSceneUrl(src) {
     const s = String(src || '');
     return /^\/assets\/(scenes|topics|landing)\//.test(s) || /\/assets\/(scenes|topics|landing)\//.test(s);
+  }
+
+  // 기존 보관함에 쌓인 중복 사진 자동 정리 (최신 1장만 유지, 중복은 IndexedDB에서 영구 삭제)
+  let vaultDedupRan = false;
+  async function vaultDeduplicate(force = false) {
+    if (vaultDedupRan && !force) return 0;
+    vaultDedupRan = true;
+    try {
+      const all = await vaultAll();
+      if (all.length <= 1) return 0;
+      const kept = [];
+      const toDelete = [];
+      const toUpdate = [];
+      for (const item of all) {
+        let vh = item.vhash || '';
+        if (!vh && item.src) {
+          vh = await computeVisualHash(item.src);
+          if (vh) { item.vhash = vh; toUpdate.push(item); }
+        }
+        if (isDuplicateItem(item.fp, vh, kept)) {
+          toDelete.push(item.id);
+        } else {
+          kept.push(item);
+        }
+      }
+      if (toDelete.length || toUpdate.length) {
+        const db = await openVault();
+        await new Promise((resolve) => {
+          const tx = db.transaction(VAULT_STORE, 'readwrite');
+          const st = tx.objectStore(VAULT_STORE);
+          toUpdate.forEach((it) => { if (!toDelete.includes(it.id)) st.put(it); });
+          toDelete.forEach((id) => st.delete(id));
+          tx.oncomplete = tx.onerror = () => { db.close(); resolve(); };
+        });
+      }
+      return toDelete.length;
+    } catch (_) { return 0; }
   }
 
   async function decodeVaultImg(item) {
     const img = new Image();
     img.src = item.src;
     img._dataUrl = item.src;
+    img._fromVault = true;
     img._label = item.source === 'ai' ? 'AI 보관함' : '내 사진 보관함';
     img._sceneTitle = item.label || '';
     await Promise.race([img.decode(), new Promise((_, rej) => setTimeout(() => rej(new Error('decode_timeout')), 8000))]);
     return img;
   }
 
-  window.arVaultSaveImages = async function (imgList, source = 'upload') {
-    try {
-      if (!Array.isArray(imgList) || !imgList.length) return;
-      const ind = (typeof IND !== 'undefined' && IND?.key) ? IND.key : 'auto';
-      const existing = await vaultAll();
-      const seen = new Set(existing.map((x) => x.fp));
-      const toAdd = [];
-      for (const img of imgList) {
-        if (!img || img._isVideo) continue;
-        const rawSrc = img._dataUrl || img.src || '';
-        if (!rawSrc || isStockSceneUrl(rawSrc)) continue;
-        let dataUrl = rawSrc;
-        if (!rawSrc.startsWith('data:image/')) {
-          try { dataUrl = await arProjectImage(rawSrc, 1080); } catch (_) { continue; }
+  // 병렬 호출 레이스 컨디션(4~10장 동시 저장 시 중복 폭증) 방지를 위한 직렬 저장 큐
+  let vaultSaveQueue = Promise.resolve();
+  window.arVaultSaveImages = function (imgList, source = 'upload') {
+    if (!Array.isArray(imgList) || !imgList.length) return Promise.resolve();
+    const snap = imgList.slice();
+    vaultSaveQueue = vaultSaveQueue.then(async () => {
+      try {
+        const ind = (typeof IND !== 'undefined' && IND?.key) ? IND.key : 'auto';
+        const existing = await vaultAll();
+        // 기존 항목 중 vhash가 없는 것 보강
+        for (const ex of existing) {
+          if (!ex.vhash && ex.src) ex.vhash = await computeVisualHash(ex.src);
         }
-        const fp = fpOf(dataUrl);
-        if (seen.has(fp)) continue;
-        seen.add(fp);
-        toAdd.push({
-          id: 'v_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-          fp,
-          industry: ind,
-          source: source === 'ai' ? 'ai' : 'upload',
-          label: String(img._sceneTitle || img._label || (source === 'ai' ? 'AI 이미지' : '내 사진')).slice(0, 32),
-          src: dataUrl,
-          createdAt: Date.now()
-        });
-      }
-      if (toAdd.length) {
-        await vaultPutMany(toAdd);
-        window.arRenderMediaVault();
-      }
-    } catch (_) {}
+        const pool = existing.slice();
+        const toAdd = [];
+        for (const img of snap) {
+          if (!img || img._isVideo || img._fromVault || img._skipVault) continue;
+          const rawSrc = img._dataUrl || img.src || '';
+          if (!rawSrc || isStockSceneUrl(rawSrc)) continue;
+          let dataUrl = rawSrc;
+          if (!rawSrc.startsWith('data:image/')) {
+            try { dataUrl = await arProjectImage(rawSrc, 1080); } catch (_) { continue; }
+          }
+          const fp = fpOf(dataUrl);
+          const vhash = await computeVisualHash(dataUrl);
+          if (isDuplicateItem(fp, vhash, pool)) continue;
+          const entry = {
+            id: 'v_' + (vhash || Date.now().toString(36)) + '_' + Math.random().toString(36).slice(2, 6),
+            fp,
+            vhash,
+            industry: ind,
+            source: source === 'ai' ? 'ai' : 'upload',
+            label: String(img._sceneTitle || img._label || (source === 'ai' ? 'AI 이미지' : '내 사진')).slice(0, 32),
+            src: dataUrl,
+            createdAt: Date.now()
+          };
+          pool.unshift(entry);
+          toAdd.push(entry);
+        }
+        if (toAdd.length) {
+          await vaultPutMany(toAdd);
+          window.arRenderMediaVault();
+        }
+      } catch (_) {}
+    });
+    return vaultSaveQueue;
+  };
+  window.arVaultGetAll = async function () {
+    await vaultDeduplicate(false);
+    return vaultAll();
+  };
+  window.arVaultCleanDuplicates = async function () {
+    const removed = await vaultDeduplicate(true);
+    await window.arRenderMediaVault();
+    if (typeof arToast === 'function') {
+      arToast(removed ? `중복 이미지 ${removed}장을 깔끔하게 정리했어요.` : '중복된 이미지가 없습니다.', true);
+    }
   };
 
   async function applyVaultListToReel(items, silent = false) {
@@ -2283,6 +2399,7 @@ async function arRestoreLastProject(){
     const cntEl = document.getElementById('arMediaVaultCount');
     if (!box || !listEl) return;
     try {
+      await vaultDeduplicate(false);
       const all = await vaultAll();
       const curInd = (typeof IND !== 'undefined' && IND?.key) ? IND.key : 'auto';
       // 현재 업종 이미지를 맨 앞으로 정렬
