@@ -14,6 +14,10 @@ try {
   for(const width of [390,1280]) {
     const page=await browser.newPage({viewport:{width,height:844},isMobile:width<600});
     const errors=[];
+    if(production){
+      const guest=page.getByRole('button',{name:'로그인 없이 둘러보기'});
+      await page.addLocatorHandler(guest,()=>guest.click());
+    }
     page.on('pageerror',e=>errors.push(e.message));
     if(!production) await page.route('**/*',async route=>{
       const {hostname,pathname}=new URL(route.request().url());
@@ -33,6 +37,7 @@ try {
     assert.deepEqual(names,['오토릴스 만들기','영상 편집기','사진 콜라주로 만들기','인스타 카드뉴스 만들기','내 영상으로 쇼츠 만들기','참고 쇼츠·릴스로 재구성하기']);
     if(width===390 && process.env.SERVICES_CAPTURE){
       await page.locator('#arSplashIntro').waitFor({state:'hidden'});
+      await menu.getByRole('button',{name:/오토릴스 만들기/}).click({trial:true});
       await menu.screenshot({path:process.env.SERVICES_CAPTURE});
     }
     const offscreen=await menu.evaluate(el=>el.scrollWidth>innerWidth||el.getBoundingClientRect().top>=innerHeight);
