@@ -3035,14 +3035,16 @@
       const openHome=!special && !route.hash && !history.state?.arReelsWorkspace && !/^\/admin/.test(route.pathname);
       view.classList.toggle('ar-service-home',openHome);
       document.getElementById('startAutoReels').addEventListener('click',()=>{
-        history.replaceState({...history.state,arReelsWorkspace:true},'');
         arShowStudioServices(false);
-        switchStudioTab('topic');
+        switchStudioTab('topic',true);
+        if(typeof window.arNavPush==='function') window.arNavPush({mode:'reels',tab:'topic'});
+        else history.pushState({...history.state,arReelsWorkspace:true},'');
         if(document.body.classList.contains('ar-sheet'))arToggleSheet('full');
         document.getElementById('studioPanel_topic')?.scrollIntoView({block:'nearest'});
       });
       document.getElementById('showStudioServices').addEventListener('click',()=>{
-        history.replaceState({...history.state,arReelsWorkspace:false},'');
         arShowStudioServices(true);
+        if(typeof window.arNavPush==='function') window.arNavPush({mode:'home'});
+        else history.pushState({...history.state,arReelsWorkspace:false},'');
       });
     })();

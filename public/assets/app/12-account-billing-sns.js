@@ -1172,7 +1172,7 @@
       if (!s) return;
       if (s === 'connected') arToast('SNS 계정을 연결했습니다.', true);
       else arToast(`SNS 연결 실패: ${p.get('msg') || p.get('reason') || '다시 시도해 주세요'}`);
-      try { history.replaceState({ arTab: 'script' }, '', window.location.pathname); } catch (e) {}
+      try { history.replaceState({ ...(history.state || {}), arTab: 'script' }, '', window.location.pathname); } catch (e) {}
       if (typeof switchStudioTab === 'function') { try { switchStudioTab('publish'); } catch (e) {} }
     }
 
@@ -1276,70 +1276,168 @@
 
 
     // ==========================================================================
-    // ★ 휴대폰 [뒤로 가기]: 사이트를 벗어나지 않고 열린 창 → 이전 탭 순서로 돌아감
+    // ★ 웹앱 [뒤로 가기]: 사이트를 벗어나지 않고 열린 편집창·모달 → 이전 단계 → 제작 메뉴 순으로 복귀
     // ==========================================================================
     (function arBackNav() {
       if (!window.history || !history.pushState) return;
-      let depth = 0;      // 열린 창 때문에 쌓아 둔 기록 수
+      let depth = 0;      // 현재 화면 위에 열린 오버레이·편집창 때문에 쌓아 둔 기록 수
       let ignorePop = 0;  // 버튼으로 창을 닫아 기록을 되돌릴 때 생기는 popstate는 무시
-      let curTab = 'topic';
+      const initMode = document.getElementById('viewCardNews') && !document.getElementById('viewCardNews').classList.contains('hidden')
+        ? 'cardnews'
+        : (document.getElementById('viewPreview')?.classList.contains('ar-service-home') ? 'home' : 'reels');
+      let curNav = { mode: initMode, tab: 'topic', cnTab: 'ai' };
+
+      const makeState = (nav, ovDepth) => {
+        const prev = (history.state && typeof history.state === 'object') ? history.state : {};
+        return {
+          ...prev,
+          arView: 'studio',
+          arReelsWorkspace: nav.mode === 'reels',
+          arTab: nav.tab,
+          arNav: { mode: nav.mode, tab: nav.tab, cnTab: nav.cnTab, ov: ovDepth }
+        };
+      };
+
       const openOverlays = () => {
         const list = [];
+        const cutPanel = document.getElementById('cutEditorPanel');
+        if (cutPanel && !cutPanel.classList.contains('hidden')) list.push(cutPanel);
         const dr = document.getElementById('presetDrawer');
         if (dr && dr.classList.contains('open')) list.push(dr);
         document.querySelectorAll('.ar-modal').forEach((m) => { if (!m.classList.contains('hidden')) list.push(m); });
+        document.querySelectorAll('dialog[open]').forEach((d) => { list.push(d); });
+        const igSheet = document.getElementById('igSheetBackdrop');
+        if (igSheet && !igSheet.classList.contains('hidden')) list.push(igSheet);
+        const igText = document.getElementById('igTextComposeOverlay');
+        if (igText && !igText.classList.contains('hidden')) list.push(igText);
+        const igDraw = document.getElementById('igDrawOverlay');
+        if (igDraw && !igDraw.classList.contains('hidden')) list.push(igDraw);
         return list;
       };
+
       const closeOverlay = (el) => {
-        if (el.id === 'presetDrawer') return closePresetDrawer();
+        if (!el) return;
+        if (el.id === 'presetDrawer') return typeof closePresetDrawer === 'function' && closePresetDrawer();
+        if (el.id === 'cutEditorPanel') return typeof closeCutEditor === 'function' && closeCutEditor();
+        if (el.id === 'igSheetBackdrop') return typeof closeIgSheet === 'function' && closeIgSheet();
+        if (el.id === 'igTextComposeOverlay') return typeof closeIgTextCompose === 'function' && closeIgTextCompose(false);
+        if (el.id === 'igDrawOverlay') return typeof closeIgDrawMode === 'function' && closeIgDrawMode(true);
+        if (el.tagName === 'DIALOG') { try { el.close(); } catch (_) {} return; }
         if (el.id === 'industryPickerModal') return el.remove();
         const x = el.querySelector('.ar-modal-x');
         if (x) x.click(); else el.classList.add('hidden');
       };
+
       let pending = false;
       const sync = () => {
         pending = false;
         const n = openOverlays().length;
         if (n > depth) {
-          while (depth < n) { depth++; history.pushState({ arTab: curTab, arOverlay: depth }, ''); }
+          while (depth < n) {
+            depth++;
+            try { history.pushState(makeState(curNav, depth), ''); } catch (_) {}
+          }
         } else if (n < depth) {
+          const curOv = Number(history.state?.arNav?.ov || 0);
           const k = depth - n;
           depth = n;
-          ignorePop++;
-          history.go(-k);
+          // 현재 히스토리 최상단이 실제로 오버레이 엔트리일 때만 되돌림 (모달→다른 탭 이동 시 덮어쓰기 방지)
+          if (curOv > n) {
+            ignorePop++;
+            history.go(-Math.min(k, curOv - n));
+          }
         }
       };
       const schedule = () => { if (!pending) { pending = true; requestAnimationFrame(sync); } };
-      new MutationObserver(schedule).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+      new MutationObserver(schedule).observe(document.body, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: ['class', 'open']
+      });
 
-      // 탭을 옮길 때마다 기록을 남겨서, 뒤로 가기로 이전 탭으로 돌아감
+      window.arNavPush = function (patch, { replace = false } = {}) {
+        const next = {
+          mode: patch.mode || curNav.mode,
+          tab: patch.tab || curNav.tab,
+          cnTab: patch.cnTab || curNav.cnTab
+        };
+        const same = next.mode === curNav.mode && next.tab === curNav.tab && next.cnTab === curNav.cnTab;
+        curNav = next;
+        const curOv = openOverlays().length;
+        const shouldReplace = replace || same || (Number(history.state?.arNav?.ov || 0) > 0 && curOv === 0);
+        depth = curOv;
+        try {
+          if (shouldReplace) history.replaceState(makeState(curNav, depth), '');
+          else history.pushState(makeState(curNav, depth), '');
+        } catch (_) {}
+      };
+
+      // 탭을 옮길 때마다 기록을 남겨서, 뒤로 가기로 이전 탭·이전 화면으로 돌아감
       const baseSwitch = switchStudioTab;
       switchStudioTab = function (key, fromHistory, { replaceClosedOverlay = false } = {}) {
-        const prev = curTab;
+        const prevMode = curNav.mode;
+        const prevTab = curNav.tab;
         baseSwitch(key);
         if (!STUDIO_TABS.includes(key)) return;
-        curTab = key;
-        if (fromHistory || key === prev) return;
-        // 상품 창에서 바로 대본으로 넘어가면 창 기록을 대본 탭 기록으로 바꿉니다.
-        if (replaceClosedOverlay && depth === 1 && history.state?.arOverlay === 1 && !openOverlays().length) {
-          depth = 0;
-          history.replaceState({ arTab: key }, '');
-        } else {
-          history.pushState({ arTab: key }, '');
-        }
+        curNav.tab = key;
+        if (fromHistory) return;
+        if (prevMode === 'reels' && key === prevTab) return;
+        const replaceOv = replaceClosedOverlay && depth === 1 && Number(history.state?.arNav?.ov || 0) === 1 && !openOverlays().length;
+        window.arNavPush({ mode: 'reels', tab: key }, { replace: replaceOv });
       };
-      try { history.replaceState({ arTab: 'topic' }, ''); } catch (e) {}
+
+      try { history.replaceState(makeState(curNav, 0), ''); } catch (_) {}
 
       window.addEventListener('popstate', (e) => {
         if (ignorePop > 0) { ignorePop--; return; }
+        const target = e.state && e.state.arNav;
         const ov = openOverlays();
-        if (ov.length) {
-          depth = Math.max(0, depth - 1); // 이 기록은 방금 브라우저가 지움
+        const targetOv = Number(target?.ov || 0);
+        // 1) 열린 편집창·모달·다이얼로그가 있고 이전 상태로 돌아가면 최상단 오버레이부터 닫기
+        if (ov.length > targetOv) {
+          depth = Math.max(0, ov.length - 1);
           closeOverlay(ov[ov.length - 1]);
           return;
         }
-        const tab = (e.state && e.state.arTab) || 'script';
-        if (tab !== curTab) switchStudioTab(tab, true);
+        // 2) 이전 화면/단계(제작 메뉴 ↔ 릴스 단계 ↔ 카드뉴스 단계) 복원
+        if (!target) {
+          if (ov.length) {
+            depth = Math.max(0, ov.length - 1);
+            closeOverlay(ov[ov.length - 1]);
+            return;
+          }
+          const fallbackTab = (e.state && e.state.arTab) || 'topic';
+          if (curNav.mode === 'reels' && fallbackTab !== curNav.tab) {
+            curNav.tab = fallbackTab;
+            switchStudioTab(fallbackTab, true);
+          }
+          return;
+        }
+        // 화면 전환 시 남아 있는 오버레이 정리
+        if (ov.length) {
+          depth = 0;
+          ov.slice().reverse().forEach(closeOverlay);
+        }
+        const prevMode = curNav.mode;
+        curNav = {
+          mode: target.mode || 'home',
+          tab: target.tab || curNav.tab || 'topic',
+          cnTab: target.cnTab || curNav.cnTab || 'ai'
+        };
+        depth = 0;
+
+        if (curNav.mode === 'home') {
+          if (prevMode === 'cardnews' && typeof arCloseCardNewsModal === 'function') arCloseCardNewsModal(true);
+          if (typeof arShowStudioServices === 'function') arShowStudioServices(true);
+        } else if (curNav.mode === 'cardnews') {
+          if (prevMode !== 'cardnews' && typeof arOpenCardNewsModal === 'function') arOpenCardNewsModal(true);
+          if (typeof arCnOpenSheet === 'function') arCnOpenSheet(curNav.cnTab, true, true);
+        } else {
+          if (prevMode === 'cardnews' && typeof arCloseCardNewsModal === 'function') arCloseCardNewsModal(true);
+          if (typeof arShowStudioServices === 'function') arShowStudioServices(false);
+          switchStudioTab(curNav.tab, true);
+        }
       });
     })();
 
@@ -1577,7 +1675,7 @@
         history.replaceState({ ...history.state, studioTool: { topic: document.getElementById('topicCustomInput').value, industry: IND.key, design: campaign.designStyle } }, '');
       }));
       if (!showLanding && (window.location.pathname === '/' || window.location.pathname === '') && !window.location.search && !window.location.hash) {
-        try { history.replaceState({ arView: 'studio' }, '', '/studio'); } catch (e) {}
+        try { history.replaceState({ ...(history.state || {}), arView: 'studio' }, '', '/studio'); } catch (e) {}
       }
       applyLandingRouteState(showLanding);
       const sp = new URLSearchParams(window.location.search || '');
@@ -1599,7 +1697,7 @@
           selectedPlanKey = planKey;
           setTimeout(() => openBillingCheckoutModal(false), 600);
         }
-        try { history.replaceState({ arView: 'studio' }, '', '/studio' + (window.location.hash || '')); } catch (e) {}
+        try { history.replaceState({ ...(history.state || {}), arView: 'studio' }, '', '/studio' + (window.location.hash || '')); } catch (e) {}
       }
 
       // 카카오톡 · 인스타그램 · 네이버 인앱 브라우저 감지 시 외부 브라우저 안내 배너 표시 (MP4 저장 안정화)
