@@ -840,7 +840,7 @@
     }
     // ★ 2026-11-17 사장님 요청: 성우 목소리를 첫 화면부터 바로 들려줌 (발행 단계까지 기다리지 않음)
     //   크레딧 절약은 '소리를 켰을 때만 녹음'(prefetchTtsBuffers)으로, 이전 대본 목소리 섞임은 대본별 녹음(masterWantKey)으로 막음
-    function arVoiceAllowed() { return !window.__arScriptGenerating; }
+    function arVoiceAllowed() { return !window.__arScriptGenerating && !(document.body.classList.contains('ar-meme-mode') && window.__arKeepMemeOrigAudio); }
     function arHasGenerationAccount() { return Boolean(window.AR_SERVER?.me?.user); }
     function arTrialIsActive(trial) {
       return trial.active && Date.parse(trial.endsAt) > Date.now();

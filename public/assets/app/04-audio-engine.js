@@ -351,6 +351,7 @@
       },
 
       startBgmLoop() {
+        if (document.body.classList.contains('ar-meme-mode') && window.__arKeepMemeOrigAudio) return;
         this.stopBgmLoop();
         if (!this.enabled || this.bgmStyle === 'off') return;
         const ctx = this.ensureContext();
@@ -450,9 +451,11 @@
             (campaign.cutCaptions && campaign.cutCaptions[cutIdx]) ||
             campaign.hook;
         } else {
-          // 마지막 엔딩 카드(명함/매장) 클로징 멘트: 매장 중심 업종은 매장명으로, 인물 중심 업종은 호칭으로 안내
-          // 명함을 아직 안 채웠으면 이름 없이 안내만
-          if (arCardEmpty()) return ''; // 명함 화면이 없으면 마지막 멘트도 없음
+          // 마지막 엔딩 카드(명함/매장) 클로징 멘트: 명함 숨김 모드(밈 쇼츠 등)이거나 명함이 비어 있으면 마지막 멘트 없음
+          const hideOutroVoice = arCardEmpty()
+            || (typeof campaign !== 'undefined' && campaign && campaign.hideCardOnVideo)
+            || (typeof document !== 'undefined' && document.body && document.body.classList.contains('ar-meme-mode'));
+          if (hideOutroVoice) return '';
           const card = arDisplayDealer(d);
           const name = card.name === '사용자' ? '' : card.name;
           const who = name ? (IND.outroMode === 'store' ? name : [name, card.title].filter(Boolean).join(' ')) : arDealerForCopy(card).branch;
@@ -1031,7 +1034,10 @@
       },
 
       shouldUseCutSyncedPlayback() {
-        // 전체 녹음은 영상 길이와 무관하게 연속 재생. 컷 사이에 대기 시간을 넣지 않음.
+        // ★ 밈·쇼츠 팩토리 모드에서는 각 컷(1~6컷)의 영상·노래방 자막이 전환되는 정확한 순간에 해당 컷 대사 음성이 1:1로 시작되도록 컷 단위 싱크 재생 사용!
+        if (typeof document !== 'undefined' && document.body && document.body.classList.contains('ar-meme-mode')) {
+          return true;
+        }
         return false;
       },
 
@@ -1559,6 +1565,15 @@
       syncWithTimeline(t) {
         if (!this.enabled || !isPlaying || arEditSheetOpen) return;
         try { this.handleSceneSfx(t); } catch (e) {}
+        if (this.bgmGain && this.ctx) {
+          const memeMode = typeof document !== 'undefined' && document.body?.classList.contains('ar-meme-mode');
+          const speaking = Boolean(this.ttsSource || this.masterSource || window.speechSynthesis?.speaking);
+          const duck = Boolean(memeMode && speaking);
+          if (duck !== Boolean(this.memeBgmDucked)) {
+            this.memeBgmDucked = duck;
+            this.bgmGain.gain.setTargetAtTime(duck ? 0.14 : 0.42, this.ctx.currentTime, 0.08);
+          }
+        }
         if (!arVoiceAllowed()) return;
         // 1. 본편 길이가 음성과 딱 맞을 때는 원테이크 마스터 음성을 끊김 없이 연속 재생
         if (this.masterBuffer && !this.shouldUseCutSyncedPlayback()) {

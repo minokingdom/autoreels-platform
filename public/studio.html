@@ -898,6 +898,7 @@
             <div id="arMemePane_radar" class="space-y-2.5">
               <div class="flex items-center gap-1 overflow-x-auto scrollbar-none pb-0.5">
                 <button type="button" data-meme-cat="all" onclick="arLoadMemeRadar('all')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white text-[#111113] shrink-0 cursor-pointer">Top 10 전체</button>
+                <button type="button" id="arMemeFactoryFormats" data-meme-cat="쇼츠 포맷" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">쇼츠 포맷</button>
                 <button type="button" data-meme-cat="국내 예능" onclick="arLoadMemeRadar('국내 예능')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">📺 국내 예능</button>
                 <button type="button" data-meme-cat="드라마·영화" onclick="arLoadMemeRadar('드라마·영화')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🎬 드라마·영화</button>
                 <button type="button" data-meme-cat="공연·콘서트" onclick="arLoadMemeRadar('공연·콘서트')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🎤 공연·콘서트</button>
@@ -939,7 +940,7 @@
                       📁 내 원본 MP4 올리기
                       <input type="file" accept="video/*" class="hidden" onchange="arHandleForeignRemakeVideo(event)" />
                     </label>
-                    <button type="button" onclick="switchStudioTab('sound');setTimeout(()=>{if(typeof generateAllCutsTts==='function')generateAllCutsTts();},200);" class="btn-primary h-7 px-2.5 text-[11px] font-bold cursor-pointer">🔊 AI 더빙 입히기 →</button>
+                    <button type="button" onclick="arToggleMemeOrigAudio(false);arEnableMemeStudioAudioAndVoice();switchStudioTab('sound')" class="btn-primary h-7 px-2.5 text-[11px] font-bold cursor-pointer">🔊 AI 더빙 입히기 →</button>
                   </div>
                 </div>
                 <div id="arMemeCutVisualStrip" class="grid grid-cols-2 sm:grid-cols-3 gap-1.5"></div>
@@ -997,7 +998,7 @@
                 </div>
 
                 <div class="flex items-center justify-between gap-2 flex-wrap pt-0.5">
-                  <button type="button" onclick="switchStudioTab('sound');setTimeout(()=>{if(typeof generateAllCutsTts==='function')generateAllCutsTts();},200);" class="btn-primary h-8 px-3 text-[12px] font-semibold cursor-pointer">🔊 한국어 AI 더빙 + 무료 BGM 입히기 →</button>
+                  <button type="button" onclick="switchStudioTab('sound')" class="btn-primary h-8 px-3 text-[12px] font-semibold cursor-pointer">🔊 한국어 더빙·배경 음악 설정 →</button>
                   <button type="button" onclick="switchStudioTab('publish')" class="btn-secondary h-8 px-3 text-[12px] cursor-pointer">🚀 출처 포함 예약 발행 →</button>
                 </div>
               </div>
@@ -3147,7 +3148,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-no-cartoon-dog"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-meme-formats"><\/script>');
     }
   </script>
   <!--

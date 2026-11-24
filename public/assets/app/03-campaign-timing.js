@@ -804,7 +804,9 @@
     // 선택한 길이와 성우 음성 길이로 실제 영상 길이를 계산
     //  - 컷 길이는 가장 긴 성우 문장이 끝까지 나올 만큼 확보 (음성이 중간에 잘리지 않도록)
     function computeFittedDurations() {
-      const hideOutro = (typeof campaign !== 'undefined' && campaign && campaign.hideCardOnVideo) || (typeof arCardEmpty === 'function' && arCardEmpty());
+      const hideOutro = (typeof campaign !== 'undefined' && campaign && campaign.hideCardOnVideo)
+        || (typeof document !== 'undefined' && document.body && document.body.classList.contains('ar-meme-mode'))
+        || (typeof arCardEmpty === 'function' && arCardEmpty());
       const cuts = getTargetCutCount();
       if (typeof campaign !== 'undefined' && campaign && campaign.isPhotoCollageMode) {
         const perCut = Math.max(1.5, Number(campaign._collageCutSec) || 10);
@@ -830,11 +832,9 @@
           : null;
 
         // 전체 음성이 기준: 엔딩 없으면 본문 끝, 있으면 엔딩 멘트 끝에 영상도 종료.
-        // 단, 음성이 선택한 기본 길이(BASE_DURATION)보다 지나치게 짧을 때(예: 3초) 영상이 3초로 줄어들지 않도록 최소 길이 보장
         const voiceDuration = AudioEngine.masterBuffer && AudioEngine.masterBuffer.duration;
-        const minSafeTotal = Math.max(6, BASE_DURATION - 1.5);
-        if (bounds && Number.isFinite(voiceDuration) && voiceDuration >= minSafeTotal) {
-          const mainEnd = arCardEmpty() ? voiceDuration : Math.min(voiceDuration, bounds[cuts]);
+        if (bounds && Number.isFinite(voiceDuration) && voiceDuration > 0) {
+          const mainEnd = hideOutro ? voiceDuration : Math.min(voiceDuration, bounds[cuts]);
           const voiceLengths = [];
           let previous = 0;
           for (let i = 0; i < cuts; i++) {
@@ -843,7 +843,7 @@
             previous = end;
           }
           if (voiceLengths.every((length) => Number.isFinite(length) && length > 0)) {
-            return { total: voiceDuration, outro: voiceDuration - mainEnd, lengths: voiceLengths };
+            return { total: voiceDuration, outro: hideOutro ? 0 : (voiceDuration - mainEnd), lengths: voiceLengths };
           }
         }
         if (bounds) {
@@ -869,22 +869,24 @@
           if (longestCut > 0) mainDur = Math.max(mainDur, cuts * (longestCut + 0.3));
         }
 
-        // 마지막 엔딩 명함 멘트 길이 확보 (음성이 완전히 끝나고도 충분히 유지하되 과도하게 늘리지 않음)
-        if (outroSec > 0) {
+        // 마지막 엔딩 명함 멘트 길이 확보 (엔딩 숨김 모드에서는 0)
+        if (hideOutro) {
+          outro = 0;
+        } else if (outroSec > 0) {
           outro = Math.max(outro, outroSec + 1.8);
         } else {
           outro = Math.max(outro, 4.0);
         }
 
         // 음성의 문장 경계를 유지하고, 선택 길이의 남는 시간은 마지막 화면에서 유지.
-        if (exactMasterLocked) {
+        if (exactMasterLocked && !hideOutro) {
           outro = Math.max(outro, BASE_DURATION - mainDur);
         } else {
           mainDur = Math.max(mainDur, BASE_DURATION - outro);
         }
       }
-      // 명함이 비었으면 명함 화면 없이: 한 호흡 음성이 끝까지 들어가게 확보 (마지막 컷만 연장)
-      if (arCardEmpty()) {
+      // 명함이 비었거나 엔딩 숨김 모드(밈 쇼츠 등)이면 명함 화면 없이 본편이 전체 시간을 채움
+      if (hideOutro) {
         outro = 0;
         const targetMain = Math.max(
           mainDur,
