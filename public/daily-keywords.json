@@ -1,59 +1,70 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-24T13:16:54.501724+09:00",
+  "collectedAt": "2026-11-25T05:07:22.374085+09:00",
   "items": [
     {
-      "term": "미사일",
-      "startedAt": "2026-11-23T19:10:00-08:00",
-      "traffic": "500+"
+      "term": "중앙일보",
+      "startedAt": "2026-11-24T10:50:00-08:00",
+      "traffic": "2000+"
     },
     {
-      "term": "농업",
-      "startedAt": "2026-11-23T19:10:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "사고",
-      "startedAt": "2026-11-23T19:10:00-08:00",
+      "term": "정치",
+      "startedAt": "2026-11-24T10:50:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "자동차산업",
-      "startedAt": "2026-11-23T19:00:00-08:00",
+      "term": "에코프로비엠",
+      "startedAt": "2026-11-24T10:50:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "관세",
-      "startedAt": "2026-11-23T18:50:00-08:00",
+      "term": "알나스르 대 알사드",
+      "startedAt": "2026-11-24T10:30:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "galatasaray vs aston villa",
+      "startedAt": "2026-11-24T10:00:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "제우스",
+      "startedAt": "2026-11-24T09:50:00-08:00",
+      "traffic": "2000+"
+    },
+    {
+      "term": "경원선",
+      "startedAt": "2026-11-24T09:50:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "посольство",
-      "startedAt": "2026-11-23T18:40:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "순항 미사일",
-      "startedAt": "2026-11-23T18:30:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "호세 수아레즈",
-      "startedAt": "2026-11-23T18:30:00-08:00",
+      "term": "에릭 페디",
+      "startedAt": "2026-11-24T08:40:00-08:00",
       "traffic": "1000+"
     },
     {
-      "term": "월드컵",
-      "startedAt": "2026-11-23T18:30:00-08:00",
-      "traffic": "200+"
+      "term": "무시알라",
+      "startedAt": "2026-11-24T08:30:00-08:00",
+      "traffic": "100+"
     },
     {
-      "term": "카카오",
-      "startedAt": "2026-11-23T18:20:00-08:00",
-      "traffic": "1000+"
+      "term": "pakistan a vs nepal national cricket team standings",
+      "startedAt": "2026-11-24T07:50:00-08:00",
+      "traffic": "5000+"
     }
   ],
   "issues": [
+    {
+      "term": "대중교통 파업",
+      "day": "2026-11-25",
+      "kind": "보도",
+      "publisher": "연합뉴스",
+      "url": "https://www.yna.co.kr/view/AKR20261125004252004",
+      "publishedAt": "2026-11-25T04:36:24+09:00",
+      "headline": "서울지하철 임단협 타결로 파업 철회…'출근길 대란' 피했다(종합2보)"
+    }
+  ],
+  "previousIssues": [
     {
       "term": "수능",
       "day": "2026-11-24",
@@ -116,35 +127,6 @@
       "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860712",
       "publishedAt": "2026-11-24T11:35:00+09:00",
       "headline": "문신으로 마약 판매 홍보한 20대 유튜버 항소심서 징역 2년 유지"
-    }
-  ],
-  "previousIssues": [
-    {
-      "term": "수능",
-      "day": "2026-11-23",
-      "kind": "보도",
-      "publisher": "연합뉴스",
-      "url": "https://www.yna.co.kr/view/AKR20261123026251001",
-      "publishedAt": "2026-11-23T19:01:30+09:00",
-      "headline": "정성국 \"수능시험지 1년 보관 지침에도 전국서 십수만장 폐기\"(종합)"
-    },
-    {
-      "term": "음주운전 배우 고경표",
-      "day": "2026-11-23",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008859690",
-      "publishedAt": "2026-11-23T20:00:00+09:00",
-      "headline": "음주운전 배우 고경표 경찰 출석…\"무책임한 모습 죄송\""
-    },
-    {
-      "term": "오세훈 서울시장",
-      "day": "2026-11-23",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008859651",
-      "publishedAt": "2026-11-23T19:18:00+09:00",
-      "headline": "오세훈 서울시장, 내일 국무회의 참석…대통령에 부동산·현안 등 건의"
     }
   ]
 }

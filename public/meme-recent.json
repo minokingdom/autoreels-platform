@@ -1,6 +1,168 @@
 {
   "quotes": [
     {
+      "id": "Q2r7ACD8iyQ",
+      "work": "엄마가 미쳤어요",
+      "quote": "저 어떡해요 선생님...",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-24T12:47:22+00:00",
+      "context": "오열하는 김희정을 위로하는 공정환"
+    },
+    {
+      "id": "EuW2eEXB99k",
+      "work": "엄마가 미쳤어요",
+      "quote": "너 얼마나 알고 있는 게냐?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-24T12:44:34+00:00",
+      "context": "남성진의 허를 찌르는 김영옥의 역질문!"
+    },
+    {
+      "id": "SbP9LWut3gI",
+      "work": "엄마가 미쳤어요",
+      "quote": "지각이에요 지각!",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-24T12:38:29+00:00",
+      "context": "정민아와 함께 있는 배지완을 견제하는 동하"
+    },
+    {
+      "id": "2yT7hUTigEU",
+      "work": "엄마가 미쳤어요",
+      "quote": "앞으로 생활비 받아써요",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-24T12:35:37+00:00",
+      "context": "차영옥에게 돈을 생활비로 주겠다고 하는 강경헌"
+    },
+    {
+      "id": "dTVhPVbfbyo",
+      "work": "엄마가 미쳤어요",
+      "quote": "아빠가 돌아왔다는 거야?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-24T12:32:11+00:00",
+      "context": "이한위가 동네로 이사 온 사실을 알게 된 정민아!"
+    },
+    {
+      "id": "RlBBXCxnxAQ",
+      "work": "엄마가 미쳤어요",
+      "quote": "가출한 건 아니겠지..?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-24T12:11:36+00:00",
+      "context": "집에 들어오지 않는 김희정에 의문을 품는 가족들"
+    },
+    {
+      "id": "QxfKFIHPyFA",
+      "work": "엄마가 미쳤어요",
+      "quote": "같이 찍어요",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-24T12:08:24+00:00",
+      "context": "양희경에게 함께 가족사진을 찍자고 하는 이한위"
+    },
+    {
+      "id": "QMJjo0iSwc0",
+      "work": "엄마가 미쳤어요",
+      "quote": "너무 아파요",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-24T12:05:39+00:00",
+      "context": "복통을 호소하는 김희정을 발견한 공정환!"
+    },
+    {
+      "id": "HuCl9u2wIuU",
+      "work": "욕망의 덫",
+      "quote": "당신이 죽인거야?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-24T11:53:24+00:00",
+      "context": "설정환에게 술김에 말실수한 유태웅"
+    },
+    {
+      "id": "_pJ_5ZlRF0A",
+      "work": "욕망의 덫",
+      "quote": "은설 씨 같은 딸 부러워",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-24T11:48:19+00:00",
+      "context": "전혜원에게 목걸이를 선물한 윤해영"
+    },
+    {
+      "id": "Do8hey4EVjQ",
+      "work": "욕망의 덫",
+      "quote": "이게 날 차단을 해?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-24T11:48:17+00:00",
+      "context": "장서희 전화 차단한 김광영"
+    },
+    {
+      "id": "hxmO2q89rWQ",
+      "work": "욕망의 덫",
+      "quote": "그날 내가 들었어요!",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-24T11:44:35+00:00",
+      "context": "설정환에게 돌아온 기억 말하는 박현정"
+    },
+    {
+      "id": "TlZ41hXZZPE",
+      "work": "가족관계증명서",
+      "quote": "지금 내 위치도 알겠네?",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-24T11:17:00+00:00",
+      "context": ""
+    },
+    {
+      "id": "n_c7nMaNk-E",
+      "work": "가족관계증명서",
+      "quote": "여자 시신이래요...",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-24T10:57:33+00:00",
+      "context": "전승빈 말에 놀란 윤희석"
+    },
+    {
+      "id": "3cJzifnahLc",
+      "work": "가족관계증명서",
+      "quote": "세리 씨 어디서 어떻게 지내?",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-24T10:47:55+00:00",
+      "context": "성이언에게 묻는 윤희석"
+    },
+    {
+      "id": "tn61-Nxgf_s",
+      "work": "가족관계증명서",
+      "quote": "지니야..!",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-24T10:42:05+00:00",
+      "context": "박세영에게 절연당한 한고은"
+    },
+    {
+      "id": "EDpdgU5wolU",
+      "work": "가족관계증명서",
+      "quote": "정말 할 거야..?",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-24T10:32:52+00:00",
+      "context": "혼자 고민하는 윤지원"
+    },
+    {
+      "id": "awxGPC2md7w",
+      "work": "가족관계증명서",
+      "quote": "너한테 기회를 준 거야",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-24T10:27:43+00:00",
+      "context": "윤지원에게 지시하는 최수린"
+    },
+    {
       "id": "uQY_g1BQXaA",
       "work": "엄마가 미쳤어요",
       "quote": "강다미 씨한테 호감 있어",
@@ -128,6 +290,22 @@
     }
   ],
   "clips": [
+    {
+      "id": "zhes4i5rlDizAQXdAy",
+      "title": "GIF by GIPHY Studios",
+      "publisher": "GIPHY Studios",
+      "publishedAt": "2026-11-24T19:06:46Z",
+      "url": "https://media.giphy.com/media/zhes4i5rlDizAQXdAy/giphy.mp4",
+      "hasOriginalAudio": false
+    },
+    {
+      "id": "tEnhzXMoj3LnkJGTon",
+      "title": "GIF by Utah Jazz",
+      "publisher": "Utah Jazz",
+      "publishedAt": "2026-11-24T05:00:05Z",
+      "url": "https://media.giphy.com/media/tEnhzXMoj3LnkJGTon/giphy.mp4",
+      "hasOriginalAudio": false
+    },
     {
       "id": "ZUEKsf5fbtd5j5Eg7J",
       "title": "Break Up Love GIF",
