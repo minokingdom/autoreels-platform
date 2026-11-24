@@ -1,59 +1,124 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-23T21:22:56.286798+09:00",
+  "collectedAt": "2026-11-24T11:08:36.338846+09:00",
   "items": [
     {
-      "term": "상장",
-      "startedAt": "2026-11-23T03:00:00-08:00",
-      "traffic": "1000+"
-    },
-    {
-      "term": "m",
-      "startedAt": "2026-11-23T03:00:00-08:00",
+      "term": "신인감독 김연경 2",
+      "startedAt": "2026-11-23T17:00:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "공항",
-      "startedAt": "2026-11-23T02:50:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "반도체 메모리",
-      "startedAt": "2026-11-23T02:40:00-08:00",
+      "term": "남도일보",
+      "startedAt": "2026-11-23T16:40:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "중위소득",
-      "startedAt": "2026-11-23T02:10:00-08:00",
+      "term": "세종의사당",
+      "startedAt": "2026-11-23T16:30:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "화성시",
+      "startedAt": "2026-11-23T16:30:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "세인트루이스 시티 sc 대 엘에이 fc",
+      "startedAt": "2026-11-23T16:20:00-08:00",
+      "traffic": "20000+"
+    },
+    {
+      "term": "국가장학금 신청",
+      "startedAt": "2026-11-23T16:20:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "우지원",
+      "startedAt": "2026-11-23T16:20:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "필라데피아 대 포틀랜드",
+      "startedAt": "2026-11-23T16:10:00-08:00",
       "traffic": "500+"
     },
     {
-      "term": "브레인악셀",
-      "startedAt": "2026-11-23T02:10:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "일론 머스크",
-      "startedAt": "2026-11-23T02:00:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "이진관 판사",
-      "startedAt": "2026-11-23T01:40:00-08:00",
+      "term": "청약홈",
+      "startedAt": "2026-11-23T16:10:00-08:00",
       "traffic": "1000+"
     },
     {
-      "term": "가석방",
-      "startedAt": "2026-11-23T01:40:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "딜라이트",
-      "startedAt": "2026-11-23T01:10:00-08:00",
-      "traffic": "200+"
+      "term": "삼성전자 임원인사",
+      "startedAt": "2026-11-23T16:10:00-08:00",
+      "traffic": "2000+"
     }
   ],
   "issues": [
+    {
+      "term": "수능",
+      "day": "2026-11-24",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860336",
+      "publishedAt": "2026-11-24T10:59:00+09:00",
+      "headline": "\"이럴 용기로 공부를 하지\"…수능날 '휴지 뭉치' 딱 걸렸다"
+    },
+    {
+      "term": "대중교통 파업",
+      "day": "2026-11-24",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860540",
+      "publishedAt": "2026-11-24T10:50:00+09:00",
+      "headline": "서울시, 25일 지하철 파업 대비 비상수송대책…\"출근길 뚫는다\""
+    },
+    {
+      "term": "AI 부정행위 논란",
+      "day": "2026-11-24",
+      "kind": "보도",
+      "publisher": "연합뉴스",
+      "url": "https://www.yna.co.kr/view/AKR20261124044300530",
+      "publishedAt": "2026-11-24T10:57:37+09:00",
+      "headline": "국가자격시험 'AI 커닝' 차단…꺼진 기기 탐지·부정행위 징역 5년"
+    },
+    {
+      "term": "한덕수 파기환송심 다음",
+      "day": "2026-11-24",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860573",
+      "publishedAt": "2026-11-24T11:00:00+09:00",
+      "headline": "'내란 중요임무' 한덕수 파기환송심 다음 달 15일 첫 재판"
+    },
+    {
+      "term": "러시아 군용기",
+      "day": "2026-11-24",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860249",
+      "publishedAt": "2026-11-24T10:59:00+09:00",
+      "headline": "러시아 군용기 접근했는데 '북한 항공기'…문자 오발송, 울릉 혼란"
+    },
+    {
+      "term": "멸종위기 제주 한라산",
+      "day": "2026-11-24",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860433",
+      "publishedAt": "2026-11-24T10:14:00+09:00",
+      "headline": "멸종위기 제주 한라산 구상나무 유전체 지도 세계 최초 완성"
+    },
+    {
+      "term": "경북도",
+      "day": "2026-11-24",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860254",
+      "publishedAt": "2026-11-24T09:33:00+09:00",
+      "headline": "경북도, 울릉 경계경보 해제 문자에 '북한 항공기' 잘못 안내"
+    }
+  ],
+  "previousIssues": [
     {
       "term": "수능",
       "day": "2026-11-23",
@@ -80,80 +145,6 @@
       "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008859651",
       "publishedAt": "2026-11-23T19:18:00+09:00",
       "headline": "오세훈 서울시장, 내일 국무회의 참석…대통령에 부동산·현안 등 건의"
-    }
-  ],
-  "previousIssues": [
-    {
-      "term": "수능",
-      "day": "2026-11-22",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008857884",
-      "publishedAt": "2026-11-22T20:11:00+09:00",
-      "headline": "10분 만에 푼 국영수 '만점'…\"지금의 수능, 더는 안돼\""
-    },
-    {
-      "term": "대중교통 파업",
-      "day": "2026-11-22",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008857784",
-      "publishedAt": "2026-11-22T16:02:00+09:00",
-      "headline": "'출근 대란' 현실화 될까…서울 지하철 노사, 총파업 예고일 전날 최종교섭"
-    },
-    {
-      "term": "AI 부정행위 논란",
-      "day": "2026-11-22",
-      "kind": "보도",
-      "publisher": "연합뉴스",
-      "url": "https://www.yna.co.kr/view/AKR20261122014051004",
-      "publishedAt": "2026-11-22T13:36:50+09:00",
-      "headline": "[르포] 'AI커닝'에 대입 논술시험도 긴장…태블릿PC 적발도(종합)"
-    },
-    {
-      "term": "강원 영월서 차박하던",
-      "day": "2026-11-22",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008857921",
-      "publishedAt": "2026-11-22T19:22:00+09:00",
-      "headline": "강원 영월서 차박하던 70대 숨져…일산화탄소 중독 추정"
-    },
-    {
-      "term": "진도 앞바다서 어선",
-      "day": "2026-11-22",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008857850",
-      "publishedAt": "2026-11-22T17:48:00+09:00",
-      "headline": "진도 앞바다서 어선 뒤집혀…선원 8명 모두 구조"
-    },
-    {
-      "term": "명륜당 회장 추가",
-      "day": "2026-11-22",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008857846",
-      "publishedAt": "2026-11-22T17:06:00+09:00",
-      "headline": "'서울중수청 1호 강제수사' 명륜당 회장 추가 압수수색 영장 기각"
-    },
-    {
-      "term": "수색 닷새 만에",
-      "day": "2026-11-22",
-      "kind": "보도",
-      "publisher": "연합뉴스",
-      "url": "https://www.yna.co.kr/view/AKR20261122036051063",
-      "publishedAt": "2026-11-22T16:34:30+09:00",
-      "headline": "수색 닷새 만에 해광호 선체 해저서 발견…\"실종자 7명 수색\"(종합)"
-    },
-    {
-      "term": "서울 금천구 주차타워서",
-      "day": "2026-11-22",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008857807",
-      "publishedAt": "2026-11-22T16:24:00+09:00",
-      "headline": "서울 금천구 주차타워서 미라화 시신 발견…경찰 수사"
     }
   ]
 }
