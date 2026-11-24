@@ -104,22 +104,12 @@ fn quotes(rows: &[Value], now: DateTime<Utc>) -> Vec<Value> {
         }
         *count += 1;
         let context = field(q, "context");
-        let cuts = vec![
-            cut("작품", work, publisher),
-            cut(
-                "장면",
-                if context.is_empty() {
-                    field(q, "genre")
-                } else {
-                    context
-                },
-                publisher,
-            ),
-            cut("대사", quote, publisher),
-            cut("여운", "이 장면에서 기억에 남은 말은?", publisher),
-        ];
+        let mut cuts = vec![cut("대사", quote, publisher)];
+        if !context.is_empty() && context != quote {
+            cuts.push(cut("장면", context, publisher));
+        }
         let url = format!("https://www.youtube.com/watch?v={id}");
-        drafts.push(json!({"id":format!("quote_{id}"),"factoryType":"quote","cat":"명대사","badge":"최근 게시","genre":field(q,"genre"),"title":work,"quote":quote,"publishedAt":field(q,"publishedAt"),"why":context,"color":"#433954","sourceTag":publisher,"sourceUrl":url,"factNote":format!("{publisher} · {url}"),"previewSheet":preview(&cuts,"#433954"),"cuts":cuts}));
+        drafts.push(json!({"id":format!("quote_{id}"),"factoryType":"quote","cat":"명대사","badge":"최근 게시","genre":field(q,"genre"),"work":work,"title":quote,"quote":quote,"publishedAt":field(q,"publishedAt"),"why":context,"color":"#433954","sourceTag":publisher,"sourceUrl":url,"scenePlayerId":field(q,"scenePlayerId"),"factNote":format!("{publisher} · {url}"),"previewSheet":preview(&cuts,"#433954"),"cuts":cuts}));
         if drafts.len() == 8 {
             break;
         }
@@ -258,7 +248,7 @@ mod tests {
         old["publishedAt"] = json!("2026-11-06T01:00:00Z");
         let out = quotes(&[old, good.clone(), good], t);
         assert_eq!(out.len(), 1);
-        assert_eq!(out[0]["cuts"][2]["line"], "첫 대사");
-        assert_eq!(out[0]["cuts"].as_array().unwrap().len(), 4);
+        assert_eq!(out[0]["cuts"][0]["line"], "첫 대사");
+        assert_eq!(out[0]["cuts"].as_array().unwrap().len(), 1);
     }
 }

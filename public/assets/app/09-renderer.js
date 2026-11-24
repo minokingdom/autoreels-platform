@@ -10151,25 +10151,86 @@
       arSyncMemeKeywordAndStoreInputs();
     }
 
+    function arQuoteVideoId(sourceUrl) {
+      try {
+        const url = new URL(sourceUrl);
+        if (!['www.youtube.com', 'youtube.com'].includes(url.hostname) || url.pathname !== '/watch') return '';
+        const id = url.searchParams.get('v') || '';
+        return /^[\w-]{11}$/.test(id) ? id : '';
+      } catch (_) { return ''; }
+    }
+
+    function arOpenQuoteScene(item, idx, id) {
+      const dialog = document.getElementById('arQuoteScene');
+      const frame = document.createElement('iframe');
+      const work = item.work || item.title;
+      frame.title = work + ' 공식 영상';
+      frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      frame.allowFullscreen = true;
+      frame.referrerPolicy = 'strict-origin-when-cross-origin';
+      const naver = /^[A-F0-9]{36}$/.test(item.scenePlayerId || '');
+      frame.classList.toggle('quote-clip-player', naver);
+      frame.src = naver ? 'https://m.naver.com/shorts/?serviceType=CLIP&seedMediaId=' + item.scenePlayerId
+        : 'https://www.youtube.com/embed/' + id + '?autoplay=1&playsinline=1&rel=0';
+      ++arMemeApplyRequest;
+      arPauseForStudioEdit();
+      dialog.querySelector('h2').textContent = work;
+      dialog.querySelector('p').textContent = item.quote;
+      dialog.querySelector('a').href = 'https://www.youtube.com/watch?v=' + id;
+      dialog.querySelector('[data-scene-player]').replaceChildren(frame);
+      dialog.querySelector('[data-scene-card]').onclick = () => {
+        dialog.close();
+        arApplyMemeItemToStudio(idx, 'pure', true);
+      };
+      dialog.showModal();
+    }
+
+    const arQuoteSceneDialog = document.getElementById('arQuoteScene');
+    arQuoteSceneDialog.addEventListener('close', () => {
+      arQuoteSceneDialog.querySelector('[data-scene-player]').replaceChildren();
+      arQuoteSceneDialog.querySelector('[data-scene-card]').onclick = null;
+    });
+    arQuoteSceneDialog.querySelector('input').addEventListener('change', event => {
+      const file = event.target.files[0];
+      event.target.value = '';
+      if (!file) return;
+      arQuoteSceneDialog.close();
+      arOpenQuickVideoEditor(file);
+    });
+
     function arRenderDraftChoice(list, item, idx) {
       const briefing = item.factoryType === 'briefing';
+      const sceneId = !briefing && arQuoteVideoId(item.sourceUrl);
       const card = document.createElement('article');
       card.className = 'quote-choice';
       const detail = document.createElement('small');
-      detail.textContent = [item.genre, briefing ? '' : item.title, item.publishedAt ? item.publishedAt.slice(0,10)+' 게시' : item.year, item.badge].filter(Boolean).join(' · ');
-      const title = document.createElement('strong');
+      detail.textContent = [item.genre, briefing ? '' : (item.work || item.title), item.publishedAt ? item.publishedAt.slice(0,10)+' 게시' : item.year, item.badge].filter(Boolean).join(' · ');
+      const title = document.createElement(briefing ? 'strong' : 'button');
+      if (!briefing) {
+        title.type = 'button';
+        title.className = 'quote-select';
+        const action = sceneId ? '원본 장면 재생' : '대사 카드 낭독';
+        title.setAttribute('aria-label', (item.work || item.title) + ' · ' + item.quote + ' · ' + action);
+        title.addEventListener('click', () => sceneId ? arOpenQuoteScene(item, idx, sceneId) : arApplyMemeItemToStudio(idx, 'pure', true));
+      }
       title.textContent = briefing ? item.title : '“' + item.quote + '”';
+      if (!briefing) {
+        const action = document.createElement('span');
+        action.className = 'quote-action';
+        action.textContent = sceneId ? '▶ 원본 장면 재생' : '대사 카드 낭독';
+        title.append(action);
+      }
       const links = document.createElement('div');
       for (const ref of item.sources || [{name:item.sourceTag,url:item.sourceUrl}]) {
         const source = document.createElement('a');
         source.href = ref.url;
         source.target = '_blank';
         source.rel = 'noopener noreferrer';
-        source.textContent = ref.headline ? ref.name + ' · ' + ref.headline : ref.name + ' 출처 보기 ↗';
+        source.textContent = ref.headline ? ref.name + ' · ' + ref.headline : ref.name + (/^https:\/\/www\.youtube\.com\/watch\?v=/.test(ref.url) ? ' 원본 장면 보기 ↗' : ' 출처 보기 ↗');
         links.append(source);
       }
       card.append(detail, title);
-      if (item.previewSheet) {
+      if (briefing && item.previewSheet) {
         const details = document.createElement('details');
         details.className = 'draft-sheet';
         const label = document.createElement('summary');
@@ -10181,10 +10242,15 @@
         card.append(details);
       }
       links.className = 'draft-sources';
+      if (!briefing) {
+        if (!sceneId) card.append(links);
+        list.append(card);
+        return;
+      }
       const make = document.createElement('button');
       make.type = 'button';
       make.className = 'btn-primary';
-      make.textContent = briefing ? '브리핑 만들기' : '이 대사로 만들기';
+      make.textContent = '브리핑 만들기';
       make.addEventListener('click', () => arApplyMemeItemToStudio(idx, 'pure'));
       card.append(links, make);
       list.append(card);
@@ -10218,7 +10284,7 @@
       rows.forEach((row, i) => ctx.fillText(row, x, h*0.48 + (i-(rows.length-1)/2)*w*0.115, w-2*x));
       ctx.globalAlpha = 1;
       ctx.font = '600 ' + w*0.045 + 'px sans-serif';
-      ctx.fillText(item.title, x, h*0.77);
+      ctx.fillText(item.work || item.title, x, h*0.77);
       ctx.font = '400 ' + w*0.032 + 'px sans-serif';
       ctx.fillStyle = '#e8dbbf';
       ctx.fillText((item.factoryType === 'briefing' ? '' : '대사 출처 · ') + (cut.sourceTag || item.sourceTag), x, h*0.82);
@@ -10265,9 +10331,20 @@
       }
     }
 
+    document.getElementById('arChooseAnotherQuote')?.addEventListener('click', () => {
+      document.getElementById('arMemeShortsBox').removeAttribute('data-quote-selected');
+      document.getElementById('arChooseAnotherQuote').hidden = true;
+      arPauseForStudioEdit();
+      document.querySelector('#arMemeRadarList .quote-select')?.focus();
+    });
+
     let arMemeRadarRequest = 0;
     async function arLoadMemeRadar(cat = 'all', force = false, customQuery = '') {
       window.__arMemeCat = cat || 'all';
+      const box = document.getElementById('arMemeShortsBox');
+      box.toggleAttribute('data-quote-library', cat === '명대사');
+      box.removeAttribute('data-quote-selected');
+      document.getElementById('arChooseAnotherQuote').hidden = true;
       window.__arMemeSearchQuery=customQuery;
       const requestId = ++arMemeRadarRequest;
       ++arMemeApplyRequest;
@@ -10333,7 +10410,7 @@
         return;
       }
       if (cat === '명대사' && items.length) {
-        if (statusEl) statusEl.textContent = '작품을 골라 명대사 타이포그래피 쇼츠를 만드세요.';
+        if (statusEl) statusEl.textContent = '보고 싶은 장면을 선택하세요.';
         items.forEach((item, idx) => arRenderDraftChoice(listEl, item, idx));
         return;
       }
@@ -10393,15 +10470,19 @@
 
     window.__arKeepMemeOrigAudio = false;
     function arToggleMemeOrigAudio(forceVal) {
+      if (arActiveMemeDialogue() && window.__arCurrentMemeItem.factoryType === 'quote') return;
       arSetMemeVoiceMode(typeof forceVal === 'boolean' ? forceVal : !window.__arKeepMemeOrigAudio);
       arEnableMemeStudioAudioAndVoice();
     }
 
     function arSetMemeVoiceMode(keepOriginal) {
+      const quote = window.__arCurrentMemeItem?.factoryType === 'quote';
+      if (quote) keepOriginal = false;
       window.__arKeepMemeOrigAudio = keepOriginal;
       const btn = document.getElementById('arMemeOrigAudioBtn');
       if (btn) {
-        btn.textContent = keepOriginal ? '음성 · 원본 목소리' : '음성 · 자막 더빙';
+        btn.disabled = quote;
+        btn.textContent = quote ? '음성 · 대사 낭독' : keepOriginal ? '음성 · 원본 목소리' : '음성 · 자막 더빙';
         btn.setAttribute('aria-pressed', String(keepOriginal));
         btn.className = window.__arKeepMemeOrigAudio
           ? 'px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#16a34a] text-white border border-[#4ade80] cursor-pointer'
@@ -10561,11 +10642,19 @@
     }
 
     let arMemeApplyRequest = 0;
-    async function arApplyMemeItemToStudio(idx, forceMashupMode) {
+    async function arApplyMemeItemToStudio(idx, forceMashupMode, listen = false) {
       AudioEngine.ensureContext();
       const requestId = ++arMemeApplyRequest;
       const baseItem = (window.__arMemeRadarItems || [])[idx];
       if (!baseItem) return;
+      if (listen && baseItem.factoryType === 'quote') {
+        arPreviewPausedForEdit = false;
+        arPendingPreviewPlay = null;
+        window.__arUserMuted = false;
+        isPlaying = false;
+        pauseAllCutVideos();
+        AudioEngine.onPlayStateChange(false);
+      }
       const mode = forceMashupMode || window.__arMemeMashupMode || 'pure';
       if (forceMashupMode && forceMashupMode !== window.__arMemeMashupMode) {
         arSetMemeMashupMode(forceMashupMode);
@@ -10670,6 +10759,11 @@
         await voiceReady;
         if (requestId !== arMemeApplyRequest || !arActiveMemeDialogue() || window.__arCurrentMemeItem !== it) return;
         if (lines.some((line, i) => line !== arMemeDialogueAt(i))) return;
+        if (it.factoryType === 'quote' && !window.__arUserMuted && !AudioEngine.masterBuffer &&
+            !lines.filter(Boolean).every(line => AudioEngine.ttsSeconds.has(AudioEngine.ttsKey(line)))) {
+          if (statusEl) statusEl.textContent = arCanUseAi() ? '낭독 음성을 준비하지 못했어요. 잠시 뒤 작품의 대사를 다시 눌러 주세요.' : arAiAccessNotice();
+          return;
+        }
       }
       if (!isPlaying && window.__timelines?.main?.currentTime === 0) {
         isPlaying = true;
@@ -10678,6 +10772,12 @@
         if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
       }
 
+      if (it.factoryType === 'quote') {
+        document.getElementById('arMemeShortsBox').setAttribute('data-quote-selected','');
+        document.getElementById('arChooseAnotherQuote').hidden = false;
+        if (statusEl) statusEl.textContent = (it.work || it.title) + ' · 낭독 미리보기';
+        return;
+      }
       const modeLabel = it.factoryType === 'briefing' ? '오늘의 브리핑' : it.factoryType === 'quote' ? '명대사 쇼츠' : mode === 'store' ? '🏪 우리 가게×밈 패러디' : mode === 'keyword' ? '⚡ 오늘 키워드×밈 콜라보' : '🔥 실제 원본 밈';
       if (statusEl) statusEl.textContent = `✅ [${modeLabel}] "${it.title}" 영상 ${loadedVideos.length}컷과 컷별 자막을 적용했어요.`;
       if (typeof arToast === 'function') arToast(`${modeLabel} · ${loadedVideos.length}컷 미리보기`, true);
@@ -10692,7 +10792,7 @@
       const ytUrl = 'https://www.youtube.com/results?search_query='+encodeURIComponent(it.title+' 쇼츠');
       const html = value=>String(value ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
       if (titleEl && ['quote','briefing'].includes(it.factoryType)) {
-        titleEl.textContent = it.title + (it.factoryType === 'briefing' ? ' · 브리핑 편집' : ' · 명대사 편집');
+        titleEl.textContent = (it.work || it.title) + (it.factoryType === 'briefing' ? ' · 브리핑 편집' : ' · 명대사 편집');
       } else if (titleEl) {
         titleEl.innerHTML = `🎬 실제 원본 밈 영상 ${it.cuts.length}컷 (${html(it.title.slice(0, 18))}) <a href="${ytUrl}" target="_blank" rel="noopener noreferrer" class="ml-1.5 underline text-[#fca5a5] text-[11px]">▶️ 유튜브 쇼츠 검색 ↗</a>`;
       }
@@ -10714,7 +10814,7 @@
             <div class="min-w-0 flex-1 space-y-1">
               <div class="flex items-center justify-between gap-1">
                 <span class="text-[10.5px] font-bold text-[#60a5fa]">${idx + 1}컷 · ${getCutLengths()[idx]?.toFixed(1)}초 · ${html(c.role || c.mood || '원본 밈')}</span>
-                <div class="flex items-center gap-1">
+                <div data-clip-tools class="flex items-center gap-1">
                   <button type="button" onclick="arSwapSingleMemeCutVideo(${idx})" class="px-1.5 py-0.5 rounded bg-[#2563eb]/25 hover:bg-[#2563eb] text-[9.5px] text-[#93c5fd] hover:text-white cursor-pointer" title="이 컷을 Tenor/GIPHY의 다른 실제 원본 밈 클립으로 교체">🔄 다른 원본</button>
                   <label class="px-1.5 py-0.5 rounded bg-white/8 hover:bg-white/15 text-[9.5px] text-[#d4d4d8] cursor-pointer" title="이 컷만 내 영상(MP4) 또는 짤 이미지로 교체">
                     파일로 교체

@@ -109,3 +109,26 @@ body:has(#viewPreview.ar-service-home:not(.hidden)) .service-settings-icon { dis
 .draft-sources { display: grid; gap: 4px; min-width: 0; }
 .draft-sources a { overflow-wrap: anywhere; }
 .ar-cut-motion{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px;margin-top:10px;font-size:12px}.ar-cut-motion select{padding:8px;border:1px solid #42444e;border-radius:8px;background:#202128;color:#fff}.ar-cut-motion>div{grid-column:1/-1}.ar-cut-motion label{display:flex;align-items:center;gap:8px;min-height:30px}.ar-cut-motion input{flex:1;min-width:0}.ar-cut-motion output{min-width:3em;text-align:right}
+
+#arMemeShortsBox:not([data-quote-library]) [data-quote-tools],
+#arMemeShortsBox[data-quote-library] [data-clip-tools],
+#arMemeShortsBox[data-quote-selected] #arMemeRadarList,
+#arMemeShortsBox[data-quote-library]:not([data-quote-selected]) #arMemeAssembledBox { display: none; }
+.quote-flow-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+#arChooseAnotherQuote[hidden] { display:none; }
+#arMemeShortsBox[data-quote-library] #arMemeRadarList { max-height: none; overflow: visible; }
+.quote-choice .quote-select { text-align: left; width: 100%; padding: .6rem 0; color: inherit; font-weight: 700; cursor: pointer; }
+
+.quote-action { display:block; margin-top:.35rem; font-size:.78rem; color:#a9caff; }
+#arQuoteScene { position:fixed; inset:0; margin:auto; width:min(94vw,760px); max-height:92dvh; overflow:auto; padding:16px; border:1px solid #3c414b; border-radius:16px; background:#17191f; color:#fff; }
+#arQuoteScene::backdrop { background:rgb(0 0 0 / 76%); }
+#arQuoteScene .quote-scene-head, #arQuoteScene .quote-scene-actions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+#arQuoteScene .quote-scene-head { justify-content:space-between; margin-bottom:12px; }
+#arQuoteScene h2 { font-size:1.05rem; font-weight:700; }
+#arQuoteScene [data-scene-player] iframe { display:block; width:100%; aspect-ratio:16 / 9; min-height:200px; border:0; background:#090909; }
+#arQuoteScene p { margin:.75rem 0 .35rem; }
+#arQuoteScene a { color:#abcaff; text-decoration:underline; font-size:.85rem; }
+#arQuoteScene .quote-scene-actions { margin-top:1rem; }
+#arQuoteScene .quote-scene-actions > * { padding:.55rem .75rem; cursor:pointer; }
+
+#arQuoteScene iframe.quote-clip-player { height:min(60dvh,560px); }

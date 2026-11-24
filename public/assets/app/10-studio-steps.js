@@ -1255,16 +1255,7 @@
       else if (k === 'settings' && typeof openStudioSettingsModal === 'function') openStudioSettingsModal();
       else if (k === 'voice') {
         const sel = document.getElementById('ttsVoiceSelect');
-        if (sel) {
-          let saved = '';
-          try { saved = localStorage.getItem('autoreels_tts_voice') || ''; } catch (e) {}
-          const firstOn = Array.from(sel.options).map((o) => o.value).find((v) => v && v !== 'off') || '';
-          sel.value = sel.value === 'off' ? (saved && Array.from(sel.options).some((o) => o.value === saved) ? saved : firstOn) : 'off';
-          if (typeof onAudioConfigChange === 'function') onAudioConfigChange();
-          if (typeof arSyncIgSelects === 'function') arSyncIgSelects();
-          // 성우를 켰는데 소리가 꺼져 있으면 함께 켬
-          if (sel.value !== 'off' && typeof AudioEngine !== 'undefined' && !AudioEngine.enabled) toggleAudioMaster(true);
-        }
+        if (sel) arOpenOptionSheet(sel);
       }
       arSyncQuickBar();
     }
@@ -1282,8 +1273,8 @@
         b.classList.toggle('is-off', !!off);
         b.setAttribute('aria-label', label);
       };
-      set('sound', on ? '소리켜짐' : '소리켜기', on ? 'sound' : 'mute', !on);
-      set('voice', voiceOn ? '나레이션' : '나레이션끔', 'voice', !voiceOn);
+      set('sound', on ? '전체 소리 켬' : '전체 소리 끔', on ? 'sound' : 'mute', !on);
+      set('voice', '성우 선택', 'voice', !voiceOn);
       set('shuffle', '랜덤섞기', 'shuffle', false);
       set('design', '디자인', 'design', false);
       set('restart', '처음부터', 'restart', false);
