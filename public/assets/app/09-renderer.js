@@ -9731,7 +9731,7 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(fortuneTag, fx + fw / 2, fy + fh / 2 + 1);
-      } else {
+      } else if (!memeItem?.singleReaction && !memeItem?.searchQuery) {
         // 기본 컷 배지 (스테이지 좌상단 모서리)
         const badgeTxt = `CUT 0${cutIdx + 1} · ${mood}`;
         ctx.font = `800 ${Math.round(11 * sc)}px "Pretendard Variable", sans-serif`;
@@ -9920,7 +9920,16 @@
         const pillFgColor = capTheme === 'yellow_viral' ? '#ffffff' : '#09090b';
         const pastFgColor = capTheme === 'split_news' ? '#bae6fd' : '#fde047';
 
-        if (rawLine) {
+        if (rawLine && isMemeMode && window.__arCurrentMemeItem.singleReaction && !window.__arKaraokeMode) {
+          const rows = arBalanceKoreanCaptionLines(rawLine, ctx, W * 0.85, 17);
+          let size = Math.round(36 * sc);
+          do { ctx.font = '800 ' + size + 'px "Pretendard Variable", sans-serif'; }
+          while (rows.some(line => ctx.measureText(line).width > W * 0.87) && --size > 14 * sc);
+          ctx.fillStyle = '#ffffff';
+          ctx.textBaseline = 'middle';
+          ctx.textAlign = 'center';
+          rows.forEach((row,i) => ctx.fillText(row,W/2,botTopY+botBarH*0.42+(i-(rows.length-1)/2)*size*1.35));
+        } else if (rawLine) {
           const tokens = rawLine.split(' ').filter(Boolean);
           const activeWordIdx = Math.min(tokens.length - 1, Math.floor(cProg * tokens.length));
 
@@ -10304,7 +10313,7 @@
         const title=document.createElement('strong');
         title.textContent=customQuery+' · 검색 원본 '+item.cuts.length+'컷';
         const names=document.createElement('small');
-        names.textContent=item.cuts.map(c=>c.line).join(' / ');
+        names.textContent=item.cuts.map(c=>c.sourceTitle || c.line).join(' / ');
         card.append(title,names);
         for (const [mode,label] of [['pure','검색 원본 적용'],['keyword','오늘 키워드와 결합'],['store','우리 가게에 적용']]) {
           const button=document.createElement('button');
@@ -10621,14 +10630,14 @@
       window.__arCurrentMemeItem = it;
       isPlaying = false;
       campaign.uploadedPhotos = loadedVideos;
-      arSetMemeVoiceMode(it.directSource === true);
+      arSetMemeVoiceMode(it.directSource === true || (!lines.some(Boolean) && cuts.some(c=>c.hasOriginalAudio)));
       campaign.vehicle = it.title.replace(/^\[[^\]]+\]\s*/, '').slice(0, 26);
       campaign.hook = it.title;
       campaign.bullets = [it.why || '', it.factNote || ''].filter(Boolean);
       window.__arMemeHookBanner = (Array.isArray(it.hookTitles) && it.hookTitles[0])
         ? it.hookTitles[0]
         : it.title.replace(/^\[[^\]]+\]\s*/, '').replace(/\s*\([^)]+\)/g, '').trim();
-      arToggleKaraokeMode(true);
+      arToggleKaraokeMode(!it.singleReaction);
 
       // ★ 6컷 자막·음성·영상 1:1 타임라인 완전 동기화!
       const available = loadedVideos.reduce((seconds,video,i)=>{

@@ -895,6 +895,16 @@
         const mainDur = +lengths.reduce((sum, duration) => sum + duration, 0).toFixed(2);
         return { total: +(mainDur + outro).toFixed(2), outro, lengths };
       }
+      const single = window.__arCurrentMemeItem;
+      if (single?.singleReaction && document.body.classList.contains('ar-meme-mode') && cuts === 1) {
+        const footage = Number(single.cuts?.[0]?._customCutVideo?.duration);
+        if (Number.isFinite(footage) && footage > 0) {
+          const voice = !window.__arKeepMemeOrigAudio && audioEngineReady() && AudioEngine.enabled
+            ? AudioEngine.masterBuffer?.duration || AudioEngine.getNarrationSeconds()[0] || 0 : 0;
+          const total = Math.max(voice, Math.min(footage, 12) * (campaign.cutLenScale?.[0] || 1));
+          return {total, outro:0, lengths:[total]};
+        }
+      }
       const baseOutro = hideOutro ? 0 : (BASE_DURATION <= 8 ? 2.4 : BASE_DURATION >= 20 ? 4.0 : 3.5);
       let mainDur = Math.max(4.0, BASE_DURATION - baseOutro);
       let outro = baseOutro;
