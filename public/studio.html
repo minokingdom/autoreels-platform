@@ -911,7 +911,7 @@
                 <button type="button" data-meme-cat="공연·콘서트" onclick="arLoadMemeRadar('공연·콘서트')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🎤 공연·콘서트</button>
                 <button type="button" data-meme-cat="급상승 밈" onclick="arLoadMemeRadar('급상승 밈')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🔥 급상승 밈</button>
                 <button type="button" data-meme-cat="동물·유머" onclick="arLoadMemeRadar('동물·유머')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🐱 동물·유머</button>
-                <button type="button" onclick="arLoadMemeRadar(window.__arMemeCat||'all', true)" class="ml-auto px-2 py-1 rounded-lg text-[11px] text-[#93c5fd] bg-white/5 hover:bg-white/10 shrink-0 cursor-pointer">🔄 실시간 수집</button>
+                <button type="button" onclick="arLoadMemeRadar(window.__arMemeCat||'all', true, window.__arMemeSearchQuery||'')" class="ml-auto px-2 py-1 rounded-lg text-[11px] text-[#93c5fd] bg-white/5 hover:bg-white/10 shrink-0 cursor-pointer">🔄 실시간 수집</button>
               </div>
               <div class="flex items-center gap-1 overflow-x-auto scrollbar-none pb-0.5 text-[10.5px]">
                 <span class="text-[#9ca3af] shrink-0 mr-1">🇰🇷 국내 원본 바로 불러오기:</span>
@@ -928,7 +928,7 @@
               </div>
               <div class="flex items-center gap-1.5">
                 <input id="arMemeSearchInput" type="text" placeholder="국내 예능·드라마·영화·공연·밈 검색 (예: 무한도전, 도깨비, 마동석, 아이유 콘서트)" onkeydown="if(event.key==='Enter'){event.preventDefault();arSearchCustomMeme();}" class="studio-input flex-1 h-8 px-3 text-[12px]" />
-                <button type="button" onclick="arSearchCustomMeme()" class="btn-primary h-8 px-3 text-[11.5px] font-semibold shrink-0 cursor-pointer">밈 설계</button>
+                <button type="button" onclick="arSearchCustomMeme()" class="btn-primary h-8 px-3 text-[11.5px] font-semibold shrink-0 cursor-pointer">검색해서 적용</button>
               </div>
               <div class="flex items-center gap-1.5">
                 <input id="arMemeDirectUrlInput" type="text" placeholder="🔗 국내 예능·드라마·배우·콘서트 이름 또는 원본 링크(TikTok·Tenor·GIPHY·Shorts) 입력" onkeydown="if(event.key==='Enter'){event.preventDefault();arImportMemeFromUrlInput('arMemeDirectUrlInput');}" class="studio-input flex-1 h-8 px-3 text-[12px]" />
@@ -3158,7 +3158,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-meme-mix-carousel"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-search-original"><\/script>');
     }
   </script>
   <!--

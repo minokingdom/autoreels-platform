@@ -10203,6 +10203,7 @@
     let arMemeRadarRequest = 0;
     async function arLoadMemeRadar(cat = 'all', force = false, customQuery = '') {
       window.__arMemeCat = cat || 'all';
+      window.__arMemeSearchQuery=customQuery;
       const requestId = ++arMemeRadarRequest;
       ++arMemeApplyRequest;
       document.querySelectorAll('#arMemePane_radar [data-meme-cat]').forEach((b) => {
@@ -10243,6 +10244,29 @@
 
       if (requestId !== arMemeRadarRequest) return;
       const items = window.__arMemeRadarItems || [];
+      if (customQuery) {
+        if (!items.length) {
+          statusEl.textContent='“'+customQuery+'”에 맞는 원본을 찾지 못했어요.'+(window.__arCurrentMemeItem ? ' 미리보기에는 이전 작업이 열려 있어요.' : '');
+          return;
+        }
+        const item=items[0];
+        const card=document.createElement('article');
+        card.className='quote-choice';
+        const title=document.createElement('strong');
+        title.textContent=customQuery+' · 검색 원본 '+item.cuts.length+'컷';
+        const names=document.createElement('small');
+        names.textContent=item.cuts.map(c=>c.line).join(' / ');
+        card.append(title,names);
+        for (const [mode,label] of [['pure','검색 원본 적용'],['keyword','오늘 키워드와 결합'],['store','우리 가게에 적용']]) {
+          const button=document.createElement('button');
+          button.type='button'; button.className='btn-primary'; button.textContent=label;
+          button.addEventListener('click',()=>arApplyMemeItemToStudio(0,mode));
+          card.append(button);
+        }
+        listEl.replaceChildren(card);
+        await arApplyMemeItemToStudio(0,'pure');
+        return;
+      }
       if (cat === '명대사' && items.length) {
         if (statusEl) statusEl.textContent = '작품을 골라 명대사 타이포그래피 쇼츠를 만드세요.';
         arRenderQuoteChoices(listEl, items);
@@ -10293,7 +10317,7 @@
     function arSearchCustomMeme() {
       const inp = document.getElementById('arMemeSearchInput');
       const q = String(inp?.value || '').trim();
-      arLoadMemeRadar('all', true, q);
+      if (q) return arLoadMemeRadar('all', true, q);
     }
 
     window.__arKeepMemeOrigAudio = true;
@@ -10556,7 +10580,7 @@
         const footage = Math.max(0.2,(video.duration || 4)-arMemeOverlap);
         return seconds+Math.min(6,footage,reading+1.2);
       },0);
-      arSyncMemeSixCutTimelineAndVoice(lines, it.factoryType === 'quote' ? 15 : Math.min(24,available));
+      arSyncMemeSixCutTimelineAndVoice(lines, it.directSource ? Math.min(90,loadedVideos[0].duration || 6) : it.factoryType === 'quote' ? 15 : Math.min(24,available));
 
       const capEl = document.getElementById('snsCaptionInput');
       if (capEl) {
@@ -10798,81 +10822,79 @@
     }
 
     // ★ 신규: 링크(URL) 또는 밈 이름 한 줄만 붙여넣으면 실제 원본 밈 MP4 스트림을 즉시 추출해 6컷에 장착!
+    async function arApplyLinkedMeme(source,request) {
+      if (request!==arMemeRadarRequest) return;
+      const title=String(source.title || '원본 영상').slice(0,150);
+      const item={id:'link_'+request,title,directSource:true,sourceTag:source.sourceLabel,
+        cuts:[{line:title,keyword:title,mediaType:source.sourceLabel,videoUrl:source.videoUrl}]};
+      window.__arMemeRadarItems=[item];
+      document.getElementById('arMemeRadarList')?.replaceChildren();
+      await arApplyMemeItemToStudio(0,'pure');
+      return window.__arCurrentMemeItem?.id===item.id;
+    }
+
+    function arOfferMemeFile(status,request) {
+      if (!status || request!==arMemeRadarRequest) return;
+      const label=document.createElement('label'),input=document.createElement('input');
+      label.className='btn-primary inline-flex ml-2 px-2';
+      label.textContent='원본 파일 선택';input.type='file';input.accept='video/*';input.className='sr-only';
+      input.onchange=async()=>{
+        const file=input.files[0];
+        if (!file || request!==arMemeRadarRequest) return;
+        const id=++arMemeRadarRequest;
+        ++arMemeApplyRequest;
+        const url=URL.createObjectURL(file);
+        try {
+          const ok=await arApplyLinkedMeme({title:file.name,videoUrl:url,sourceLabel:'내 원본 영상'},id);
+          if (!ok) URL.revokeObjectURL(url);
+        } catch (_) {URL.revokeObjectURL(url);}
+        if (id===arMemeRadarRequest) status.textContent=document.getElementById('arMemeRadarStatus')?.textContent || '';
+      };
+      label.append(input);status.append(label);
+    }
+
     async function arImportMemeFromUrlInput(inputId) {
-      const inp = document.getElementById(inputId || 'arMemeDirectUrlInput');
-      const rawUrl = String(inp?.value || '').trim();
-      if (!rawUrl) {
-        if (typeof arToast === 'function') arToast('가져올 밈 영상 링크(TikTok / Tenor / GIPHY / YouTube Shorts)나 밈 이름을 입력해 주세요.');
-        return;
+      const raw = document.getElementById(inputId || 'arMemeDirectUrlInput')?.value.trim();
+      if (!raw) return;
+      let url;
+      try { url=new URL(raw); } catch (_) {
+        if (inputId==='arForeignRemakeUrlInput') arSwitchMemeTab('radar');
+        const search=document.getElementById('arMemeSearchInput');
+        if (search) search.value=raw;
+        return arLoadMemeRadar('all',true,raw);
       }
-      const statusEl = document.getElementById('arMemeRadarStatus');
-      const fStatusEl = document.getElementById('arForeignRemakeStatus');
-      if (statusEl) statusEl.textContent = `⏳ "${rawUrl.slice(0, 36)}..."에서 실제 원본 밈 MP4 스트림을 추출하고 있습니다...`;
-      if (fStatusEl) fStatusEl.textContent = `⏳ "${rawUrl.slice(0, 36)}..."에서 실제 원본 밈 MP4 스트림을 추출하고 있습니다...`;
-
+      const request=++arMemeRadarRequest;
+      ++arMemeApplyRequest;
+      AudioEngine.ensureContext();
+      const status=document.getElementById('arMemeRadarStatus');
+      const foreign=document.getElementById('arForeignRemakeStatus');
+      const update=message=>{
+        if (request!==arMemeRadarRequest) return;
+        if (status) status.textContent=message;
+        if (foreign) foreign.textContent=message;
+      };
+      update('링크의 원본 영상을 확인하고 있어요.');
+      let blob;
       try {
-        const res = await fetch('/api/generate-script', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mode: 'meme-url-import', url: rawUrl })
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!data || !data.ok || !data.videoUrl) {
-          const msg = data?.message || '해당 링크에서 영상을 가져오지 못했습니다. Tenor/GIPHY/TikTok 링크나 밈 이름을 넣어 보세요.';
-          if (statusEl) statusEl.textContent = `⚠️ ${msg}`;
-          if (fStatusEl) fStatusEl.textContent = `⚠️ ${msg}`;
-          if (typeof arToast === 'function') arToast(msg);
-          return;
+        const native=await import('/assets/remix/native-reference.mjs');
+        let source;
+        if (native.nativeYouTube && native.videoId(url)) {
+          const {file,title}=await native.nativeFile(native.videoId(url),new AbortController().signal,update);
+          blob=URL.createObjectURL(file);
+          source={videoUrl:blob,title:title || file.name,sourceLabel:'YouTube Shorts'};
+        } else {
+          const response=await fetch('/api/generate-script',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'meme-url-import',url:raw})});
+          source=await response.json();
+          if (!response.ok || !source.ok) throw Error(source.message || '원본 영상을 열 수 없어요.');
         }
-
-        const pool = Array.isArray(data.extraVideos) && data.extraVideos.length ? data.extraVideos : [data.videoUrl];
-        const cleanTitle = String(data.title || rawUrl || '레전드 명장면').replace(/^\[[^\]]+\]\s*/, '').trim();
-        const curItem = {
-          id: 'url_meme_' + Date.now(),
-          title: `${cleanTitle} 레전드 하이라이트`,
-          badge: `🎬 ${data.sourceLabel || '원본 클립 반입'}`,
-          why: `"${cleanTitle}" 실제 원본 MP4 클립 6컷 반입`,
-          factNote: `📌 출처: ${data.sourceLabel || '원본 클립'} (${cleanTitle}) #${cleanTitle.replace(/\s+/g, '')} #밈쇼츠 #Shorts`,
-          cuts: [
-            { line: `요즘 알고리즘 점령한 ${cleanTitle.slice(0, 10)}!`, mood: `${cleanTitle.slice(0, 8)} 1컷`, keyword: cleanTitle },
-            { line: '처음엔 그냥 평범한 장면인 줄 알았는데', mood: `${cleanTitle.slice(0, 8)} 2컷`, keyword: cleanTitle },
-            { line: '볼수록 중독성 터지는 바로 이 장면!', mood: `${cleanTitle.slice(0, 8)} 3컷`, keyword: cleanTitle },
-            { line: '댓글창이 완전히 뒤집어진 이유가 있었네요', mood: `${cleanTitle.slice(0, 8)} 4컷`, keyword: cleanTitle },
-            { line: '어떤 상황에도 찰떡같이 어울리는 레전드!', mood: `${cleanTitle.slice(0, 8)} 5컷`, keyword: cleanTitle },
-            { line: '여러분은 이 명장면 몇 점 주시겠어요?', mood: `${cleanTitle.slice(0, 8)} 6컷`, keyword: cleanTitle }
-          ]
-        };
-
-        const loadedVids = await Promise.all((curItem.cuts || []).slice(0, 6).map(async (c, i) => {
-          const u = pool[i % pool.length] || data.videoUrl;
-          c.videoUrl = u;
-          c.mediaType = `🎬 ${data.sourceLabel || '원본 밈 MP4'}`;
-          const vid = await arLoadRealMemeCutVideo(u, `${i + 1}컷 · ${cleanTitle}`);
-          if (vid) {
-            c._customCutVideo = vid;
-            return vid;
-          }
-          return arCreateMemeCutSnapshotImage(curItem, c, i);
-        }));
-
-        window.__arCurrentMemeItem = curItem;
-        window.__arMemeHookBanner = `${cleanTitle.slice(0, 14)} 레전드 모먼트`;
-        campaign.uploadedPhotos = loadedVids;
-        const lines = curItem.cuts.map((c) => c.line);
-        arSyncMemeSixCutTimelineAndVoice(lines, 15);
-        arRenderMemeAssembledStrip(curItem);
-        if (typeof renderDynamicCutCardsUI === 'function') renderDynamicCutCardsUI();
-        if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
-        isPlaying = true;
-        if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0.05);
-
-        const doneMsg = `✅ [${data.sourceLabel}] "${data.title}" 실제 원본 밈 MP4 반입 완료! 상단 미리보기에서 바로 재생 중입니다.`;
-        if (statusEl) statusEl.textContent = doneMsg;
-        if (fStatusEl) fStatusEl.textContent = doneMsg;
-        if (typeof arToast === 'function') arToast(`🎬 실제 원본 밈 영상("${data.title}")을 가져왔어요!`, true);
-      } catch (e) {
-        if (statusEl) statusEl.textContent = '⚠️ 링크에서 원본 밈을 가져오는 중 오류가 발생했습니다.';
+        if (request!==arMemeRadarRequest) return;
+        if (await arApplyLinkedMeme(source,request)) blob=null;
+        if (request===arMemeRadarRequest && foreign && status) foreign.textContent=status.textContent;
+      } catch (error) {
+        update(error.message || '원본 영상을 열 수 없어요.');
+        arOfferMemeFile(inputId==='arForeignRemakeUrlInput' ? foreign : status,request);
       }
+      finally { if (blob && !campaign.uploadedPhotos?.some(v=>v._videoSrc===blob)) URL.revokeObjectURL(blob); }
     }
 
     function arSetMemeHookBanner(txt) {
