@@ -9436,406 +9436,86 @@
     window.__arMemeRadarItems = [];
     window.__arMemeCat = 'all';
 
-    // 밈 캐릭터·컷별 상황(대사·감정·포즈)을 1:1로 그리는 60fps 실시간 모션 스테이지
+    // 밈 컷별 실제 원본 MP4 / 이미지를 그리는 60fps 실시간 스테이지 (절차적 2D 강아지·고양이 일러스트 폴백 완전 제거!)
     function arDrawMemeCharacterStage(ctx, W, H, t, cutIdx, cutProg, memeItem, cutObj) {
       const sc = W / 540;
-      const charType = String(memeItem?.characterType || 'chill_dog');
-      const line = String(cutObj?.line || '').trim();
       const mood = String(cutObj?.mood || `CUT 0${cutIdx + 1}`);
       const hasAiImg = Boolean(cutObj && cutObj._aiSceneImg && cutObj._aiSceneImg.complete && cutObj._aiSceneImg.naturalWidth > 0);
-      const hasCustomVid = Boolean(cutObj && cutObj._customCutVideo && cutObj._customCutVideo.readyState >= 2);
       const hasStoreImg = Boolean(cutObj && cutObj._storeImg && cutObj._storeImg.complete && cutObj._storeImg.naturalWidth > 0);
 
-      // 1) 만약 이 컷에 실제 원본 밈 MP4나 AI 1:1 생성 이미지, 또는 우리 가게 실사가 있으면 한국 쇼츠 밈 프레임으로 렌더링
+      // 현재 컷 비디오가 시크(seek)나 루프 전환 중 1~2프레임 동안 readyState < 2로 내려가거나 로딩 중일 때도
+      // 절대 강아지 일러스트 캐릭터로 빠지지 않도록 videoWidth > 0 이면 그대로 그리고, 아직 디코딩 전이면 같은 밈의 로드된 컷 비디오나 직전 프레임을 유지!
+      let vidMedia = (cutObj && cutObj._customCutVideo && (cutObj._customCutVideo.readyState >= 2 || cutObj._customCutVideo.videoWidth > 0))
+        ? cutObj._customCutVideo
+        : null;
+      if (!vidMedia && memeItem && Array.isArray(memeItem.cuts)) {
+        const fallbackCut = memeItem.cuts.find((c) => c && c._customCutVideo && (c._customCutVideo.readyState >= 2 || c._customCutVideo.videoWidth > 0));
+        if (fallbackCut) vidMedia = fallbackCut._customCutVideo;
+      }
+      if (!vidMedia && window.__arLastGoodMemeVideo && window.__arLastGoodMemeVideo.videoWidth > 0) {
+        vidMedia = window.__arLastGoodMemeVideo;
+      }
+      const hasCustomVid = Boolean(vidMedia);
+
+      ctx.fillStyle = '#07090f';
+      ctx.fillRect(0, 0, W, H);
+
+      const stageX = 0;
+      const stageY = Math.round(H * 0.19);
+      const stageW = W;
+      const stageH = Math.round(H * 0.55);
+
       if (hasCustomVid || hasAiImg || hasStoreImg) {
-        const srcMedia = hasCustomVid ? cutObj._customCutVideo : (hasAiImg ? cutObj._aiSceneImg : cutObj._storeImg);
-        if (hasCustomVid && srcMedia.paused && typeof isPlaying !== 'undefined' && isPlaying) {
-          srcMedia.play().catch(() => {});
+        const srcMedia = hasCustomVid ? vidMedia : (hasAiImg ? cutObj._aiSceneImg : cutObj._storeImg);
+        if (hasCustomVid) {
+          window.__arLastGoodMemeVideo = srcMedia;
+          if (cutObj && cutObj._customCutVideo === srcMedia && srcMedia.paused && typeof isPlaying !== 'undefined' && isPlaying) {
+            srcMedia.play().catch(() => {});
+          }
         }
         const sw = srcMedia.videoWidth || srcMedia.naturalWidth || W;
         const sh = srcMedia.videoHeight || srcMedia.naturalHeight || H;
-        const aspect = sw / Math.max(1, sh);
 
         ctx.save();
-        if (hasCustomVid && aspect > 0.68) {
-          // ★ 핵심: 왜 겹쳐 보였는가?
-          // 1) 기존에 배경에 같은 영상을 확대해 한 번 더 깔아서(bgR * 1.12, globalAlpha 0.32) 위에는 큰 머리통, 아래에는 큰 "컴온" 글자가 잔상처럼 겹쳐 보였음! -> 이중 배경 영상 완전 제거(100% 솔리드 다크 스테이지)!
-          // 2) drawScale이 fitCover 쪽으로 치우쳐 영상 위아래가 잘렸음 -> stageW에 100% 딱 맞는 정밀 스케일링으로 인물과 원본 자막이 1장으로만 선명하게 나오도록 수정!
-          ctx.fillStyle = '#07090f';
-          ctx.fillRect(0, 0, W, H);
+        ctx.beginPath();
+        ctx.rect(stageX, stageY, stageW, stageH);
+        ctx.clip();
+        ctx.fillStyle = '#090b10';
+        ctx.fillRect(stageX, stageY, stageW, stageH);
 
-          const stageX = 0;
-          const stageY = Math.round(H * 0.19);
-          const stageW = W;
-          const stageH = Math.round(H * 0.55);
-
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(stageX, stageY, stageW, stageH);
-          ctx.clip();
-          // 이중 잔상 배경을 완전히 제거하고 깔끔한 솔리드 다크 스테이지 위에 원본 영상 1장만 정중앙 배치
-          ctx.fillStyle = '#090b10';
-          ctx.fillRect(stageX, stageY, stageW, stageH);
-
-          const fitContain = Math.min(stageW / sw, stageH / sh);
-          const dw = Math.round(sw * fitContain);
-          const dh = Math.round(sh * fitContain);
-          const dx = stageX + Math.round((stageW - dw) / 2);
-          const dy = stageY + Math.round((stageH - dh) / 2);
+        const fitContain = Math.min(stageW / Math.max(1, sw), stageH / Math.max(1, sh));
+        const dw = Math.round(sw * fitContain);
+        const dh = Math.round(sh * fitContain);
+        const dx = stageX + Math.round((stageW - dw) / 2);
+        const dy = stageY + Math.round((stageH - dh) / 2);
+        try {
           ctx.drawImage(srcMedia, dx, dy, dw, dh);
-          ctx.restore();
-
-          // 현재 컷 배지 (영상 위를 가리지 않도록 스테이지 좌상단 모서리에 작고 깔끔하게 표시)
-          const badgeTxt = `CUT 0${cutIdx + 1} · ${mood}`;
-          ctx.font = `800 ${Math.round(11 * sc)}px "Pretendard Variable", sans-serif`;
-          const bw = ctx.measureText(badgeTxt).width + Math.round(18 * sc);
-          const bh = Math.round(21 * sc);
-          const bx = Math.round(10 * sc);
-          const by = stageY + Math.round(8 * sc);
-          ctx.fillStyle = 'rgba(10, 12, 18, 0.85)';
-          drawRoundedRect(ctx, bx, by, bw, bh, Math.round(7 * sc));
-          ctx.fill();
-          ctx.strokeStyle = 'rgba(250, 204, 21, 0.55)';
-          ctx.lineWidth = 1 * sc;
-          ctx.stroke();
-          ctx.fillStyle = '#fef08a';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(badgeTxt, bx + bw / 2, by + bh / 2);
-        } else {
-          // 9:16 세로형 원본 영상 또는 AI/매장 이미지는 풀스크린 + 상하단 시네마 비네팅
-          const zoom = hasCustomVid ? 1.0 : (1.04 + cutProg * 0.08);
-          const panX = hasCustomVid ? 0 : Math.sin(cutIdx * 1.7 + cutProg * Math.PI) * 14 * sc;
-          const panY = hasCustomVid ? 0 : Math.cos(cutIdx * 1.3 + cutProg * Math.PI) * 10 * sc;
-          const r = Math.max(W / sw, H / sh) * zoom;
-          ctx.drawImage(srcMedia, (W - sw * r) / 2 + panX, (H - sh * r) / 2 + panY, sw * r, sh * r);
-          const vig = ctx.createLinearGradient(0, 0, 0, H);
-          vig.addColorStop(0, 'rgba(6, 8, 15, 0.64)');
-          vig.addColorStop(0.22, 'rgba(6, 8, 15, 0.06)');
-          vig.addColorStop(0.66, 'rgba(6, 8, 15, 0.12)');
-          vig.addColorStop(1, 'rgba(6, 8, 15, 0.86)');
-          ctx.fillStyle = vig;
-          ctx.fillRect(0, 0, W, H);
-        }
+        } catch (_) {}
         ctx.restore();
-        if (hasCustomVid || hasAiImg) return;
       } else {
-        // 컷마다 분위기가 확 바뀌는 시네마틱 스튜디오 배경
-        const palettes = [
-          ['#0f172a', '#1e293b', '#38bdf8'],
-          ['#1a1423', '#2d1e3e', '#f472b6'],
-          ['#14211d', '#1c332c', '#4ade80'],
-          ['#231815', '#3b231d', '#fb923c'],
-          ['#111827', '#1f2937', '#facc15'],
-          ['#17152b', '#28234a', '#a78bfa']
-        ];
-        const pal = palettes[cutIdx % palettes.length];
-        const bg = ctx.createRadialGradient(W * 0.5, H * 0.40, 20 * sc, W * 0.5, H * 0.45, H * 0.72);
-        bg.addColorStop(0, pal[1]);
-        bg.addColorStop(1, pal[0]);
-        ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, W, H);
-
-        // 스포트라이트 링 & 리듬 파티클
-        ctx.save();
-        ctx.strokeStyle = pal[2];
-        ctx.globalAlpha = 0.16;
-        ctx.lineWidth = 2 * sc;
-        for (let r = 1; r <= 3; r++) {
-          ctx.beginPath();
-          ctx.arc(W * 0.5, H * 0.41, (75 * r + Math.sin(t * 3 + r) * 8) * sc, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-        ctx.restore();
+        // 초기 비디오 버퍼링 중에도 강아지 캐릭터를 절대 그리지 않고 깔끔한 다크 시네마 스테이지만 유지
+        ctx.fillStyle = '#090b10';
+        ctx.fillRect(stageX, stageY, stageW, stageH);
       }
 
-      // 2) 컷별 대사·상황에 맞춘 60fps 애니메이션 밈 캐릭터 & 상황 소품 스테이지 (우리 가게 실사 위에는 우하단 리액션 캐릭터로 합성!)
-      const isCornerReaction = hasStoreImg && !hasAiImg && !hasCustomVid;
-      const cx = isCornerReaction ? W * 0.78 : W * 0.5;
-      const cy = isCornerReaction ? H * 0.54 : H * 0.41;
-      const scale = (isCornerReaction ? 0.58 : 1.0) * sc * (0.94 + Math.min(1, cutProg * 4) * 0.08);
-      const bobY = Math.sin(t * 5.2) * 7 * sc;
-      const tilt = Math.sin(t * 3.4 + cutIdx) * 0.05;
-
+      // 현재 컷 배지 (스테이지 좌상단 모서리에 작고 깔끔하게 표시)
       ctx.save();
-      ctx.translate(cx, cy + bobY);
-      ctx.rotate(tilt);
-      ctx.scale(scale, scale);
-
-      // 캐릭터 바닥 그림자
-      ctx.fillStyle = 'rgba(0,0,0,0.38)';
-      ctx.beginPath();
-      ctx.ellipse(0, 148, 86, 20, 0, 0, Math.PI * 2);
+      const badgeTxt = `CUT 0${cutIdx + 1} · ${mood}`;
+      ctx.font = `800 ${Math.round(11 * sc)}px "Pretendard Variable", sans-serif`;
+      const bw = ctx.measureText(badgeTxt).width + Math.round(18 * sc);
+      const bh = Math.round(21 * sc);
+      const bx = Math.round(10 * sc);
+      const by = stageY + Math.round(8 * sc);
+      ctx.fillStyle = 'rgba(10, 12, 18, 0.85)';
+      drawRoundedRect(ctx, bx, by, bw, bh, Math.round(7 * sc));
       ctx.fill();
-
-      const isCat = /cat|고양이|하\?|생선|도둑/.test(charType + ' ' + (memeItem?.title || '') + ' ' + line);
-      const isGolden = /golden|리트리버|강아지|댕댕|인형|현관|guilty_puppy/.test(charType + ' ' + (memeItem?.title || '')) && !/칠 가이|chill/i.test(memeItem?.title || '');
-
-      if (isCat) {
-        // 🐱 통통 고양이("하? Huh?" / 생선 도둑 고양이) — 컷별 표정(황당 갸우뚱 / 동공지진 / 뻔뻔) 애니메이션
-        const isOrange = /생선|도둑|thief/.test(charType + ' ' + (memeItem?.title || ''));
-        const furCol = isOrange ? '#f59e0b' : '#f8fafc';
-        const patchCol = isOrange ? '#d97706' : '#94a3b8';
-        const headTilt = (cutIdx % 2 === 1 ? 0.22 : -0.14) * Math.sin(t * 4.5 + 1);
-
-        // 통통한 몸통
-        ctx.fillStyle = furCol;
-        ctx.strokeStyle = '#1e293b';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.ellipse(0, 75, 78, 68, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        // 머리 (갸우뚱 모션)
-        ctx.save();
-        ctx.translate(0, -18);
-        ctx.rotate(headTilt);
-
-        // 귀 2개
-        [[-52, -48, -22, -72, -8, -42], [52, -48, 22, -72, 8, -42]].forEach((pts) => {
-          ctx.fillStyle = furCol;
-          ctx.beginPath();
-          ctx.moveTo(pts[0], pts[1]);
-          ctx.lineTo(pts[2], pts[3]);
-          ctx.lineTo(pts[4], pts[5]);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-        });
-
-        // 얼굴 원
-        ctx.fillStyle = furCol;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 68, 58, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        // 얼룩 무늬
-        ctx.fillStyle = patchCol;
-        ctx.beginPath();
-        ctx.ellipse(-28, -32, 22, 14, -0.3, 0, Math.PI * 2);
-        ctx.ellipse(30, -30, 18, 12, 0.3, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 눈 (컷 감정에 따라 황당 반달눈 vs 동공지진 큰 눈)
-        const wideEyes = /충격|현행범|동공|놀란|0\.1초/.test(mood + ' ' + line);
-        [-24, 24].forEach((ex) => {
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(ex, -4, wideEyes ? 16 : 13, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
-          ctx.fillStyle = '#0f172a';
-          ctx.beginPath();
-          ctx.arc(ex + Math.sin(t * 8) * 2, -4, wideEyes ? 9 : 6, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(ex - 3, -8, 3, 0, Math.PI * 2);
-          ctx.fill();
-        });
-
-        // 코 & "하?(Huh?)" 벌어진 입
-        ctx.fillStyle = '#fb7185';
-        ctx.beginPath();
-        ctx.arc(0, 10, 5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#be123c';
-        ctx.beginPath();
-        ctx.ellipse(0, 25, 10, 7 + Math.abs(Math.sin(t * 6)) * 6, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-
-        // 컷별 말풍선 이펙트 ("하??", "?!", "두근")
-        ctx.fillStyle = '#facc15';
-        ctx.font = '900 28px "Pretendard Variable", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(cutIdx === 2 ? '하?? (Huh?)' : (wideEyes ? '?!' : '갸우뚱?'), 82, -75);
-      } else if (isGolden) {
-        // 🐶 골든리트리버 / 눈치 백단 강아지 (인형 물기 / 프로펠러 꼬리 / 물개 눈웃음)
-        const wag = Math.sin(t * 22) * 28;
-        // 헬리콥터 꼬리
-        ctx.save();
-        ctx.strokeStyle = '#f59e0b';
-        ctx.lineWidth = 18;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(55, 85);
-        ctx.quadraticCurveTo(105, 40 + wag, 118, 10 + wag);
-        ctx.stroke();
-        ctx.restore();
-
-        // 몸통
-        ctx.fillStyle = '#fbbf24';
-        ctx.strokeStyle = '#451a03';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.ellipse(0, 72, 70, 64, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        // 머리 & 접힌 귀
-        ctx.fillStyle = '#d97706';
-        ctx.beginPath();
-        ctx.ellipse(-56, -8, 18, 36, 0.35, 0, Math.PI * 2);
-        ctx.ellipse(56, -8, 18, 36, -0.35, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = '#fcd34d';
-        ctx.beginPath();
-        ctx.ellipse(0, -16, 60, 52, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        // 눈웃음 vs 초롱초롱 눈
-        const isSmileEyes = /눈웃음|꼬리|안아|미소/.test(line + ' ' + mood);
-        [-22, 22].forEach((ex) => {
-          if (isSmileEyes) {
-            ctx.strokeStyle = '#451a03';
-            ctx.lineWidth = 5;
-            ctx.beginPath();
-            ctx.arc(ex, -18, 11, Math.PI * 1.1, Math.PI * 1.9);
-            ctx.stroke();
-          } else {
-            ctx.fillStyle = '#1e293b';
-            ctx.beginPath();
-            ctx.arc(ex, -18, 9, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(ex - 3, -21, 3, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        });
-
-        // 코 & 입에 문 애착 인형
-        ctx.fillStyle = '#1e293b';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, 11, 8, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        if (/인형|기다|현관|도어락/.test(line + ' ' + (memeItem?.title || ''))) {
-          ctx.fillStyle = '#a855f7';
-          drawRoundedRect(ctx, -28, 12, 56, 26, 12);
-          ctx.fill();
-          ctx.stroke();
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 11px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('🧸애착인형', 0, 29);
-        }
-      } else {
-        // 🐕 칠 가이(Chill Guy) 스타일 — 회색 스웨터 + 롤업 청바지 + 빨간 운동화 + 주머니에 손 넣고 평온한 미소!
-        // 빨간 운동화
-        ctx.fillStyle = '#ef4444';
-        ctx.strokeStyle = '#0f172a';
-        ctx.lineWidth = 3.5;
-        drawRoundedRect(ctx, -50, 125, 38, 22, 10);
-        ctx.fill(); ctx.stroke();
-        drawRoundedRect(ctx, 12, 125, 38, 22, 10);
-        ctx.fill(); ctx.stroke();
-
-        // 청바지
-        ctx.fillStyle = '#3b82f6';
-        drawRoundedRect(ctx, -40, 74, 34, 56, 8);
-        ctx.fill(); ctx.stroke();
-        drawRoundedRect(ctx, 6, 74, 34, 56, 8);
-        ctx.fill(); ctx.stroke();
-
-        // 회색 스웨터 (주머니에 손 넣은 포즈)
-        ctx.fillStyle = '#9ca3af';
-        drawRoundedRect(ctx, -54, -4, 108, 86, 26);
-        ctx.fill(); ctx.stroke();
-
-        // 주머니에 꽂은 양팔
-        ctx.strokeStyle = '#0f172a';
-        ctx.lineWidth = 3.5;
-        ctx.beginPath();
-        ctx.moveTo(-48, 16); ctx.quadraticCurveTo(-64, 48, -32, 68);
-        ctx.moveTo(48, 16);  ctx.quadraticCurveTo(64, 48, 32, 68);
-        ctx.stroke();
-
-        // 갈색 강아지 머리 & 주둥이 (Chill Guy 시그니처)
-        ctx.fillStyle = '#b45309';
-        ctx.beginPath();
-        ctx.ellipse(0, -48, 48, 44, 0, 0, Math.PI * 2);
-        ctx.fill(); ctx.stroke();
-
-        // 옆으로 뻗은 주둥이(Snout)
-        ctx.beginPath();
-        ctx.ellipse(26, -42, 34, 24, 0.08, 0, Math.PI * 2);
-        ctx.fill(); ctx.stroke();
-
-        // 처진 귀
-        ctx.fillStyle = '#92400e';
-        ctx.beginPath();
-        ctx.ellipse(-34, -52, 14, 28, 0.25, 0, Math.PI * 2);
-        ctx.fill(); ctx.stroke();
-
-        // 까만 코
-        ctx.fillStyle = '#0f172a';
-        ctx.beginPath();
-        ctx.ellipse(54, -46, 9, 7, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 반쯤 감긴 평온한 칠 가이 눈
-        [-8, 14].forEach((ex) => {
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.ellipse(ex, -58, 9, 10, 0, 0, Math.PI * 2);
-          ctx.fill(); ctx.stroke();
-          ctx.fillStyle = '#0f172a';
-          ctx.beginPath();
-          ctx.arc(ex + 2, -57, 4, 0, Math.PI * 2);
-          ctx.fill();
-          // 느긋한 눈꺼풀
-          ctx.fillStyle = '#b45309';
-          ctx.fillRect(ex - 9, -68, 18, 9);
-          ctx.beginPath();
-          ctx.moveTo(ex - 9, -59); ctx.lineTo(ex + 9, -59);
-          ctx.stroke();
-        });
-
-        // 칠 가이 특유의 평온한 한쪽 입꼬리 미소
-        ctx.beginPath();
-        ctx.arc(24, -34, 14, 0.15, Math.PI * 0.75);
-        ctx.stroke();
-
-        // 컷별 대사 소품 (출근길 커피 / 텅 빈 잔고 0원 / 따봉)
-        if (/출근|커피|아메리카노|카페/.test(line)) {
-          ctx.fillStyle = '#ffffff';
-          drawRoundedRect(ctx, 56, 12, 28, 38, 6);
-          ctx.fill(); ctx.stroke();
-          ctx.fillStyle = '#78350f';
-          ctx.fillRect(59, 20, 22, 24);
-        } else if (/통장|잔고|0원|비어도/.test(line)) {
-          ctx.fillStyle = '#fef08a';
-          ctx.font = '900 18px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('잔고 0원 (평온~)', 0, -108);
-        }
-      }
-      ctx.restore();
-
-      // 3) 현재 컷 상황·감정 뱃지 & 1:1 장면 설명 캡슐 (시청자가 지금 몇 컷째 어떤 장면인지 즉시 인지)
-      ctx.save();
-      const pillTxt = `CUT 0${cutIdx + 1} · ${mood}`;
-      ctx.font = `800 ${Math.round(13 * sc)}px "Pretendard Variable", sans-serif`;
-      const pw = ctx.measureText(pillTxt).width + 28 * sc;
-      const px = (W - pw) / 2;
-      const py = H * 0.165;
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-      drawRoundedRect(ctx, px, py, pw, 28 * sc, 14 * sc);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(96, 165, 250, 0.55)';
-      ctx.lineWidth = 1.5 * sc;
+      ctx.strokeStyle = 'rgba(250, 204, 21, 0.55)';
+      ctx.lineWidth = 1 * sc;
       ctx.stroke();
-      ctx.fillStyle = '#93c5fd';
+      ctx.fillStyle = '#fef08a';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(pillTxt, W / 2, py + 14 * sc);
+      ctx.fillText(badgeTxt, bx + bw / 2, by + bh / 2);
       ctx.restore();
     }
 
@@ -10368,30 +10048,43 @@
         vid._keepAudio = window.__arKeepMemeOrigAudio !== false;
         vid._videoSrc = videoUrl;
         vid._label = label || '실제 원본 밈 MP4';
+
+        const captureThumb = () => {
+          if (vid._dataUrl || !vid.videoWidth) return;
+          try {
+            const c = document.createElement('canvas');
+            c.width = 180;
+            c.height = 280;
+            const vw = vid.videoWidth || 360;
+            const vh = vid.videoHeight || 640;
+            const r = Math.max(c.width / vw, c.height / vh);
+            c.getContext('2d').drawImage(vid, (c.width - vw * r) / 2, (c.height - vh * r) / 2, vw * r, vh * r);
+            vid._dataUrl = c.toDataURL('image/jpeg', 0.72);
+          } catch (_) {}
+        };
+
         let settled = false;
+        let failed = false;
         const finish = (ok) => {
           if (settled) return;
           settled = true;
           if (ok) {
-            try {
-              const c = document.createElement('canvas');
-              c.width = 180;
-              c.height = 280;
-              const vw = vid.videoWidth || 360;
-              const vh = vid.videoHeight || 640;
-              const r = Math.max(c.width / vw, c.height / vh);
-              c.getContext('2d').drawImage(vid, (c.width - vw * r) / 2, (c.height - vh * r) / 2, vw * r, vh * r);
-              vid._dataUrl = c.toDataURL('image/jpeg', 0.72);
-            } catch (_) {}
-            // ★ 로드 시점에 6개 비디오를 동시에 play()하지 않고 pause 상태로 대기시켜 GPU 디코더 경합 깜빡임을 방지!
+            captureThumb();
             resolve(vid);
           } else {
             resolve(null);
           }
         };
-        vid.addEventListener('loadeddata', () => finish(true), { once: true });
-        vid.addEventListener('error', () => finish(false), { once: true });
-        setTimeout(() => finish(vid.readyState >= 2), 3800);
+        vid.addEventListener('loadeddata', () => {
+          captureThumb();
+          finish(true);
+        }, { once: true });
+        vid.addEventListener('error', () => {
+          failed = true;
+          finish(false);
+        }, { once: true });
+        // 네트워크가 느려 3.5초 안에 버퍼링이 덜 끝났더라도 에러가 아니라면 <video> 객체를 폐기하지 않고 유지하여 뒤이어 재생될 때 정상 표시되게 함!
+        setTimeout(() => finish(!failed), 3500);
         vid.src = videoUrl;
         try { vid.load(); } catch (_) {}
       });
@@ -10521,7 +10214,6 @@
         } catch (_) {}
       }
 
-      window.__arCurrentMemeItem = it;
       const cuts = Array.isArray(it.cuts) && it.cuts.length ? it.cuts : [];
       const lines = cuts.map((c) => String(c.line || '').trim()).filter(Boolean);
       if (!lines.length) return;
@@ -10529,8 +10221,8 @@
       if (typeof pauseAllCutVideos === 'function') pauseAllCutVideos();
       if (statusEl) statusEl.textContent = `⏳ "${it.title}" 실제 원본 밈 영상(MP4) 6컷을 불러오고 있습니다...`;
 
-      // ★ 핵심: 각 컷의 실제 원본 밈 MP4(무한도전, 런닝맨, 도깨비, 범죄도시, 백종원, 아이유 콘서트, 칠 가이, 하? 고양이 등)를 즉시 로드해 장착!
-      const loadedVideos = await Promise.all(cuts.slice(0, 6).map(async (c, i) => {
+      // ★ 핵심: 각 컷의 실제 원본 밈 MP4를 모두 먼저 로드한 뒤 window.__arCurrentMemeItem을 교체하여 로딩 중 빈 프레임이나 폴백이 뜨지 않게 함!
+      const rawVideos = await Promise.all(cuts.slice(0, 6).map(async (c, i) => {
         const vUrl = c.videoUrl || (baseItem.cuts && baseItem.cuts[i] && baseItem.cuts[i].videoUrl) || '';
         c.videoUrl = vUrl;
         const vid = await arLoadRealMemeCutVideo(vUrl, `${i + 1}컷 · ${c.mood || '실제 원본 밈'}`);
@@ -10539,9 +10231,20 @@
           c.mediaType = c.mediaType || '🎬 실제 원본 밈 MP4';
           return vid;
         }
-        return arCreateMemeCutSnapshotImage(it, c, i);
+        return null;
       }));
 
+      const firstValidVideo = rawVideos.find((v) => v && v._isVideo) || null;
+      const loadedVideos = rawVideos.map((v, i) => {
+        if (v) return v;
+        if (firstValidVideo && cuts[i]) {
+          cuts[i]._customCutVideo = firstValidVideo;
+          return firstValidVideo;
+        }
+        return arCreateMemeCutSnapshotImage(it, cuts[i], i);
+      });
+
+      window.__arCurrentMemeItem = it;
       campaign.uploadedPhotos = loadedVideos;
       campaign.vehicle = it.title.replace(/^\[[^\]]+\]\s*/, '').slice(0, 26);
       campaign.hook = it.title;
