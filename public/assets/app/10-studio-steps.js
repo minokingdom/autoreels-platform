@@ -316,6 +316,7 @@
       const row = document.createElement('div');
       row.className = 'daily-keyword-row';
       const button = document.createElement('button');
+      button.dataset.term = term;
       button.type = 'button';
       const title = document.createElement('span');
       title.textContent = term;

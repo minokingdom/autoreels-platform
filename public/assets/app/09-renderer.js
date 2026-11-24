@@ -10089,16 +10089,23 @@
       const chipRow = document.getElementById('arMemeIssueChipRow');
       if (chipRow) {
         const domKeywords = Array.from(document.querySelectorAll('#dailyKeywords .daily-keyword-list button, #dailyKeywords .daily-keyword-chip'))
-          .map((el) => String(el.textContent || '').replace(/^#/, '').trim())
+          .map(el => el.dataset.term?.trim())
           .filter(Boolean);
         const defaults = ['블랙프라이데이 특가', '첫눈·영하 한파', '연말 모임·회식', '월요병 출근길', '점심 메뉴 고민', '다이어트 작심삼일'];
         const merged = Array.from(new Set([...domKeywords, ...defaults])).slice(0, 8);
         const inp = document.getElementById('arMemeIssueCustomInput');
         if (inp && !inp.value && merged[0]) inp.value = merged[0];
-        chipRow.innerHTML = merged.map((kw) => {
-          const safe = kw.replace(/'/g, "\\'");
-          return `<button type="button" onclick="document.getElementById('arMemeIssueCustomInput').value='${safe}';arHighlightMemeIssueChip(this);" class="px-2.5 py-1 rounded-full bg-[#2563eb]/20 hover:bg-[#2563eb] border border-[#60a5fa]/40 text-[11px] text-[#dbeafe] whitespace-nowrap shrink-0 cursor-pointer">#${kw}</button>`;
-        }).join('');
+        chipRow.replaceChildren(...merged.map(kw => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'px-2.5 py-1 rounded-full bg-[#2563eb]/20 hover:bg-[#2563eb] border border-[#60a5fa]/40 text-[11px] text-[#93c5fd] font-bold whitespace-nowrap shrink-0 cursor-pointer';
+          button.textContent = '#' + kw;
+          button.addEventListener('click', () => {
+            if (inp) inp.value = kw;
+            arHighlightMemeIssueChip(button);
+          });
+          return button;
+        }));
       }
       const sNameEl = document.getElementById('arMemeStoreNameInput');
       const sPointEl = document.getElementById('arMemeStorePointInput');
