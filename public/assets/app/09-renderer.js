@@ -3692,18 +3692,23 @@
           window.__arLastSyncedVideoCut = activeIdx;
           const keepAud = Boolean(m._keepAudio && (typeof AudioEngine === 'undefined' || !AudioEngine || !window.__arUserMuted));
           m.muted = !keepAud;
-          if (keepAud && typeof AudioEngine !== 'undefined' && AudioEngine.ctx && AudioEngine.streamDest && !m._arAudioNode) {
+          m.volume = keepAud ? 1.0 : 0;
+          // ★ 중요: 내보내기(window.__exportingVideo) 중이 아닐 때는 createMediaElementSource로 비디오 오디오를 가로채지 않고
+          // 브라우저 네이티브 <video> 스피커 출력을 그대로 써야 AudioContext suspended 상태에서도 영상 자체 소리가 100% 즉시 들립니다!
+          // 내보내기(MP4 녹화) 중일 때만 AudioEngine.streamDest에 연결해 녹화 파일에도 원본 영상 소리가 합쳐지게 합니다.
+          if (keepAud && window.__exportingVideo && typeof AudioEngine !== 'undefined' && AudioEngine.ctx && AudioEngine.streamDest && !m._arAudioNode) {
             try {
+              AudioEngine.ensureContext?.();
               m._arAudioNode = AudioEngine.ctx.createMediaElementSource(m);
               m._arAudioGain = AudioEngine.ctx.createGain();
-              m._arAudioGain.gain.value = 0.85;
+              m._arAudioGain.gain.value = 0.95;
               m._arAudioNode.connect(m._arAudioGain);
               m._arAudioGain.connect(AudioEngine.ctx.destination);
               m._arAudioGain.connect(AudioEngine.streamDest);
             } catch (e) {}
           }
           if (m._arAudioGain) {
-            m._arAudioGain.gain.value = keepAud ? 0.85 : 0;
+            m._arAudioGain.gain.value = keepAud ? 0.95 : 0;
           }
           if (!isPlaying && dur > 0.2) {
             want = localSec % dur;
@@ -10332,11 +10337,20 @@
           if (m && m._isVideo) {
             m._keepAudio = window.__arKeepMemeOrigAudio;
             m.muted = !window.__arKeepMemeOrigAudio;
+            m.volume = window.__arKeepMemeOrigAudio ? 1.0 : 0;
           }
         });
       }
-      if (window.__arKeepMemeOrigAudio && typeof toggleAudioMaster === 'function' && typeof AudioEngine !== 'undefined' && !AudioEngine.enabled) {
-        toggleAudioMaster(true);
+      // 원본 영상 소리를 켰을 때는 영상 자체의 소리(웃음소리·대사·현장음·콘서트 사운드)가 방해받지 않고 선명하게 들리도록
+      // 내장 신디사이저 BGM은 자동으로 끄고, 원본 영상 소리를 껐을 때만 BGM+성우 더빙으로 전환합니다!
+      if (typeof AudioEngine !== 'undefined' && AudioEngine) {
+        if (window.__arKeepMemeOrigAudio) {
+          AudioEngine.stopBgmLoop?.();
+          AudioEngine.stopTts?.();
+        } else if (AudioEngine.enabled) {
+          AudioEngine.startBgmLoop?.();
+          AudioEngine.prefetchTtsBuffers?.(true)?.catch?.(() => {});
+        }
       }
     }
 
@@ -10398,11 +10412,18 @@
       return im;
     }
 
-    // ★ 밈 쇼츠 전용: 클릭 1번에 소리(AI 성우 더빙 + BGM + 원본 영상 오디오)와 6컷 타임라인을 즉시 자동 활성화!
+    // ★ 밈 쇼츠 전용: 원본 영상 소리 ON일 때는 영상 자체의 실제 오디오(웃음·대사·현장음·콘서트 사운드)만 또렷하게 들려주고,
+    //   원본 영상 소리 OFF일 때만 AI 성우 더빙 + 배경음악을 켭니다!
     function arEnableMemeStudioAudioAndVoice() {
       if (typeof AudioEngine === 'undefined' || !AudioEngine) return;
       try {
         window.__arUserMuted = false;
+        if (window.__arKeepMemeOrigAudio !== false) {
+          // 원본 영상 자체 소리가 BGM/신디사이저 비트에 묻히지 않도록 내장 BGM/TTS는 멈추고 영상 자체 소리만 출력!
+          AudioEngine.stopBgmLoop?.();
+          AudioEngine.stopTts?.();
+          return;
+        }
         if (!AudioEngine.enabled && typeof toggleAudioMaster === 'function') {
           toggleAudioMaster(true);
         } else {
