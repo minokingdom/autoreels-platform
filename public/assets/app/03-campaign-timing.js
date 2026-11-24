@@ -822,7 +822,45 @@
         return Math.max(0.8, Math.min(6, (Number.isFinite(source) && source > 0 ? reading * 0.64 + Math.min(source, 6) * 0.36 : reading) * hold));
       });
       const sum = weights.reduce((a, b) => a + b, 0);
-      return weights.map(weight => total * weight / sum);
+      const lengths = weights.map(weight => total * weight / sum);
+      const caps = item.cuts.map(cut => {
+        const duration = cut._customCutVideo?.duration;
+        return Number.isFinite(duration) && duration>0.35 ? duration-0.20 : Infinity;
+      });
+      // Reserve the end of each source for the overlap. Move excess time to clips with spare footage.
+      if (caps.reduce((a,b)=>a+b,0) >= total) {
+        let excess = 0;
+        for (let i=0;i<count;i++) {
+          excess += Math.max(0,lengths[i]-caps[i]);
+          lengths[i] = Math.min(lengths[i],caps[i]);
+        }
+        for (let pass=0;pass<count && excess>0.0001;pass++) {
+          const room = caps.map((cap,i)=>cap-lengths[i]);
+          const open = room.filter(space=>space>0.0001).length;
+          if (!open) break;
+          const share = excess/open;
+          room.forEach((space,i)=>{
+            const add = Math.min(space,share);
+            lengths[i] += add; excess -= add;
+          });
+        }
+      }
+      for (let i=0;i<count-1;i++) {
+        const sound = item.cuts[i]._customCutVideo?._memeSound;
+        if (!sound?.levels?.length) continue;
+        const nominal = lengths[i];
+        const low = Math.max(0.65,nominal-0.38,nominal+lengths[i+1]-caps[i+1]);
+        const high = Math.min(caps[i],nominal+0.38,nominal+lengths[i+1]-0.65);
+        let best = nominal, score = Infinity;
+        for (let bin=Math.ceil(low/0.05);bin*0.05<=high && bin+1<sound.levels.length;bin++) {
+          const at = bin*0.05;
+          const cost = (sound.levels[bin]+sound.levels[bin+1])*0.5 + 0.032*Math.abs(at-nominal);
+          if (cost < score) { best = at; score = cost; }
+        }
+        lengths[i] = best;
+        lengths[i+1] += nominal-best;
+      }
+      return lengths;
     }
 
     function computeFittedDurations() {

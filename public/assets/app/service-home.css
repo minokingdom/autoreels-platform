@@ -91,3 +91,14 @@ body:has(#viewPreview.ar-service-home:not(.hidden)) .service-settings-icon { dis
 .quote-choice button { padding: 8px 12px; }
 
 #studioServices #openCardNewsBtn { grid-column: 1 / -1; grid-template-columns: auto 1fr; align-items: center; gap: 12px; }
+
+.meme-cut-carousel { min-width:0; max-width:100%; }
+.meme-cut-nav { display:flex; align-items:center; gap:8px; margin:4px 0 8px; }
+.meme-cut-nav strong { margin-right:auto; }
+.meme-cut-nav output { font-variant-numeric:tabular-nums; }
+.meme-cut-nav button { width:36px; height:36px; border-radius:50%; background:#252934; font-size:22px; }
+.meme-cut-nav button:disabled { opacity:.32; }
+#arMemeCutVisualStrip { display:flex; width:100%; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:thin; }
+#arMemeCutVisualStrip > div { flex:0 0 100%; min-width:0; box-sizing:border-box; scroll-snap-align:start; }
+#arMemeCutVisualStrip > div > button { width:25%; height:110px; }
+#arMemeCutVisualStrip .truncate { white-space:normal; overflow-wrap:anywhere; }

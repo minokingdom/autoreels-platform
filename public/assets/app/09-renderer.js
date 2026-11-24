@@ -3649,7 +3649,112 @@
     }
 
     // 현재 컷의 영상만 컷 시작에 맞춰 재생하고 나머지는 멈춤 (activeIdx가 -1이면 전부 멈춤)
+    async function arMeasureMemeSound(video) {
+      if (!video._videoSrc || video.duration > 60) return;
+      const controller = new AbortController();
+      const timeout = setTimeout(()=>controller.abort(),3500);
+      try {
+        const res = await fetch(video._videoSrc,{signal:controller.signal});
+        const limit = 6*1024*1024;
+        if (!res.ok || !res.body || Number(res.headers.get('content-length'))>limit) return;
+        const reader = res.body.getReader(), chunks = [];
+        let size = 0;
+        for (;;) {
+          const {done,value} = await reader.read();
+          if (done) break;
+          size += value.length;
+          if (size>limit) { await reader.cancel(); return; }
+          chunks.push(value);
+        }
+        const bytes = new Uint8Array(size);
+        let offset=0;
+        for (const chunk of chunks) { bytes.set(chunk,offset); offset+=chunk.length; }
+        const Offline = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+        const audio = await new Offline(1,1,16000).decodeAudioData(bytes.buffer);
+        const channels = Array.from({length:Math.min(2,audio.numberOfChannels)},(_,i)=>audio.getChannelData(i));
+        const hop=Math.round(audio.sampleRate*0.05), levels=[];
+        for(let start=0;start<Math.min(audio.length,audio.sampleRate*30);start+=hop) {
+          const end=Math.min(audio.length,start+hop);
+          let energy=0;
+          for(const data of channels) for(let i=start;i<end;i++) energy+=data[i]*data[i];
+          levels.push(Math.sqrt(energy/((end-start)*channels.length)));
+        }
+        const active=levels.filter(x=>x>0.003).sort((a,b)=>a-b);
+        const rms=active[Math.floor(active.length*0.7)];
+        video._memeSound={gain:rms ? Math.max(0.12,Math.min(5,0.115/rms)) : 1,levels};
+      } catch (_) {
+        // Playback metering covers containers with no separately decodable audio.
+      } finally { clearTimeout(timeout); controller.abort(); }
+    }
+
+    const arMemeOverlap = 0.20;
+    const arMemePlayback = {item:null,video:null,index:-1,time:-1,tail:null};
+    function arSetMemeMix(video, weight) {
+      const keep = Boolean(video._keepAudio && !window.__arUserMuted);
+      video.muted = !keep;
+      const ctx = AudioEngine.ctx;
+      if (ctx?.state === 'running' && !video._arAudioNode) {
+        try {
+          const node=ctx.createMediaElementSource(video), meter=ctx.createAnalyser(), gain=ctx.createGain();
+          meter.fftSize=1024; gain.gain.value=0;
+          node.connect(meter); meter.connect(gain); gain.connect(AudioEngine.limiter);
+          video._arAudioNode=node; video._arAudioGain=gain; video._memeMeter=meter;
+          video._memeSamples=new Float32Array(meter.fftSize);
+        } catch (_) {}
+      }
+      if (!video._memeSound && video._memeMeter && ctx.currentTime-(video._memeMeterAt || 0)>0.05) {
+        video._memeMeterAt=ctx.currentTime;
+        const samples=video._memeSamples;
+        video._memeMeter.getFloatTimeDomainData(samples);
+        let energy=0;
+        for (const v of samples) energy+=v*v;
+        const rms=Math.sqrt(energy/samples.length);
+        if (rms>0.008) {
+          const target=Math.max(0.12,Math.min(5,0.115/rms));
+          video._memeLiveGain=(video._memeLiveGain ?? target)*0.92+target*0.08;
+        }
+      }
+      const gain=keep ? (video._memeSound?.gain ?? video._memeLiveGain ?? 1)*weight : 0;
+      if (video._arAudioGain) {
+        video.volume=1;
+        if (video._memeTarget !== gain) {
+          video._memeTarget=gain;
+          video._arAudioGain.gain.setTargetAtTime(gain,ctx.currentTime,0.012);
+        }
+      } else video.volume=Math.min(1,gain);
+    }
+
+    function arSyncMemeClips(index,local) {
+      const state=arMemePlayback, media=campaign.uploadedPhotos;
+      const video=media[index]?._isVideo ? media[index] : null;
+      const item=window.__arCurrentMemeItem, time=Number(window.__realTimelineT)||0;
+      const contiguous=isPlaying && state.item===item && time>=state.time && time-state.time<0.28;
+      const changed=video!==state.video || index!==state.index;
+      if (!contiguous || changed) {
+        if (state.tail && state.tail!==video) state.tail.pause();
+        state.tail=contiguous && changed && index===state.index+1 && state.video && state.video!==video && !state.video.paused && video && local<arMemeOverlap ? state.video : null;
+        if (state.video && state.video!==video && state.video!==state.tail) state.video.pause();
+      }
+      if (state.tail && local>=arMemeOverlap) { state.tail.pause(); state.tail=null; }
+      for (const other of media) if (other?._isVideo && other!==video && other!==state.tail && !other.paused) other.pause();
+      const angle=Math.min(1,local/arMemeOverlap)*Math.PI/2;
+      if (state.tail) arSetMemeMix(state.tail,Math.cos(angle));
+      Object.assign(state,{item,video,index,time});
+      if (!video) return;
+      if (Number.isFinite(video.duration) && video.duration>0 && (changed || !contiguous || !isPlaying)) {
+        const want=local%video.duration;
+        if (Math.abs(video.currentTime-want)>0.09) video.currentTime=want;
+      }
+      arSetMemeMix(video,state.tail ? Math.sin(angle) : 1);
+      if (!isPlaying) { if (!video.paused) video.pause(); return; }
+      if (video.paused && !video._memePlayPending) {
+        video._memePlayPending=true;
+        video.play().catch(()=>{}).finally(()=>{video._memePlayPending=false;});
+      }
+    }
+
     function syncCutVideos(activeIdx, localSec) {
+      if (document.body.classList.contains('ar-meme-mode') && window.__arCurrentMemeItem && !campaign.uploadedPhotos[activeIdx]?._continuousVideo) return arSyncMemeClips(activeIdx, localSec);
       campaign.uploadedPhotos.forEach((m, i) => {
         if (!m || !m._isVideo) return;
         if (i !== activeIdx) {
@@ -9491,7 +9596,7 @@
           const last = ctx._arMemeStageFrame;
           const elapsed = cutProg * getCutLengths()[cutIdx];
           let outgoing = null;
-          if (isPlaying && last?.item === memeItem && t >= last.time && t - last.time < 0.16 && elapsed < 0.14) {
+          if (isPlaying && last?.item === memeItem && t >= last.time && t - last.time < 0.28 && elapsed < arMemeOverlap) {
             outgoing = last.cut === cutIdx - 1 ? last.media : last.cut === cutIdx ? last.outgoing : null;
           }
           ctx._arMemeStageFrame = {item: memeItem, cut: cutIdx, media: srcMedia, outgoing, time: t};
@@ -9500,7 +9605,7 @@
             const oh = outgoing.videoHeight || outgoing.naturalHeight || outgoing.height;
             if (ow && oh) {
               const fit = Math.max(stageW / ow, stageH / oh);
-              ctx.globalAlpha *= 1 - elapsed / 0.14;
+              ctx.globalAlpha *= 1 - elapsed / arMemeOverlap;
               ctx.drawImage(outgoing, (W - ow*fit)/2, stageY + (stageH - oh*fit)/2, ow*fit, oh*fit);
             }
           }
@@ -10002,7 +10107,7 @@
         const card = document.createElement('article');
         card.className = 'quote-choice';
         const detail = document.createElement('small');
-        detail.textContent = [item.genre, item.title, item.year, item.badge === '오늘의 이슈' ? item.badge : ''].filter(Boolean).join(' · ');
+        detail.textContent = [item.genre, item.title, item.publishedAt ? item.publishedAt.slice(0,10)+' 게시' : item.year, item.badge].filter(Boolean).join(' · ');
         const title = document.createElement('strong');
         title.textContent = '“' + item.quote + '”';
         const source = document.createElement('a');
@@ -10032,7 +10137,7 @@
       ctx.textBaseline = 'middle';
       ctx.fillStyle = '#e8dbbf';
       ctx.font = '600 ' + w * 0.035 + 'px sans-serif';
-      ctx.fillText(item.genre + '   /   ' + item.year, x, h * 0.14);
+      ctx.fillText(item.genre + '   /   ' + (item.year || item.publishedAt?.slice(0,10)+' 게시'), x, h * 0.14);
       ctx.fillRect(x, h * 0.18, w - 2*x, Math.max(1,w*0.002));
       ctx.fillStyle = '#fff9f0';
       ctx.globalAlpha = 0.65 + 0.35 * Math.min(1,progress * 9);
@@ -10078,7 +10183,7 @@
       const hTitle = document.getElementById('previewDealerHeader');
       if (hTitle) hTitle.textContent = '⚡ 밈 쇼츠 스튜디오';
       const eTitle = document.getElementById('easyStepTitle');
-      if (eTitle) eTitle.textContent = '오늘의 밈 Top 10 · 키워드 · 가게 패러디';
+      if (eTitle) eTitle.textContent = '최근 밈 · 키워드 · 가게 패러디';
       const box = document.getElementById('arMemeShortsBox');
       if (box) box.classList.remove('hidden');
       const wf = document.getElementById('studioWorkflowColumn');
@@ -10111,7 +10216,7 @@
       if (!listEl) return;
       window.__arMemeRadarItems = [];
       listEl.replaceChildren();
-      if (statusEl) statusEl.textContent = cat === '쇼츠 포맷' ? '쇼츠 포맷을 불러오는 중…' : customQuery ? `"${customQuery}" 맞춤 6컷 고속 밈 쇼츠 설계 중...` : 'YouTube · Google Trends 기반 오늘의 밈 Top 10 수집 중...';
+      if (statusEl) statusEl.textContent = cat === '쇼츠 포맷' ? '쇼츠 포맷을 불러오는 중…' : customQuery ? `"${customQuery}" 맞춤 6컷 고속 밈 쇼츠 설계 중...` : '원본 목록을 불러오는 중…';
 
       try {
         const res = await fetch('/api/generate-script', {
@@ -10146,8 +10251,8 @@
       const isFactory = window.__arMemeCat === '쇼츠 포맷';
       if (statusEl) {
         statusEl.textContent = items.length
-          ? isFactory ? `쇼츠 포맷 ${items.length}종 · 예시를 골라 편집하세요` : `🔥 오늘의 밈·트렌드 Top ${items.length} (원본 클립·컷별 자막)`
-          : '밈 목록을 불러오지 못했습니다. 실시간 수집을 눌러 주세요.';
+          ? isFactory ? `쇼츠 포맷 ${items.length}종 · 예시를 골라 편집하세요` : `${items[0].fresh ? "최근 7일 게시 원본" : customQuery ? "검색 결과" : "보관함 예시"} · ${items.length}개`
+          : '표시할 원본이 없습니다. 다시 수집하거나 보관함에서 선택해 주세요.';
       }
       listEl.innerHTML = items.map((it, idx) => {
         const summaryHtml = Array.isArray(it.summary3) && it.summary3.length
@@ -10161,7 +10266,7 @@
           <div class="rounded-[12px] bg-[#181b26] hover:bg-[#1d2130] border border-white/12 p-3 space-y-2 transition">
             <div class="flex items-center justify-between gap-2 flex-wrap">
               <div class="flex items-center gap-1.5">
-                <span class="px-2 py-0.5 rounded-md bg-[#2563eb] text-white text-[10.5px] font-extrabold">${isFactory ? '포맷' : 'TOP ' + (it.rank || (idx + 1))}</span>
+                <span class="px-2 py-0.5 rounded-md bg-[#2563eb] text-white text-[10.5px] font-extrabold">${isFactory ? '포맷' : it.publishedAt ? it.publishedAt.slice(0,10) : '원본'}</span>
                 <span class="px-2 py-0.5 rounded-md bg-[#2563eb]/20 border border-[#60a5fa]/40 text-[#93c5fd] text-[10.5px] font-bold">${it.badge || it.cat || '🔥 인기 밈'}</span>
                 <span class="text-[10px] text-[#9ca3af]">${it.sourceTag || '트렌드 레이더'}</span>
               </div>
@@ -10265,7 +10370,7 @@
           clearTimeout(timeout);
           if (ok) {
             captureThumb();
-            resolve(vid);
+            arMeasureMemeSound(vid).finally(()=>resolve(vid));
           } else {
             resolve(null);
           }
@@ -10364,6 +10469,7 @@
 
     let arMemeApplyRequest = 0;
     async function arApplyMemeItemToStudio(idx, forceMashupMode) {
+      AudioEngine.ensureContext();
       const requestId = ++arMemeApplyRequest;
       const baseItem = (window.__arMemeRadarItems || [])[idx];
       if (!baseItem) return;
@@ -10445,7 +10551,12 @@
       arToggleKaraokeMode(true);
 
       // ★ 6컷 자막·음성·영상 1:1 타임라인 완전 동기화!
-      arSyncMemeSixCutTimelineAndVoice(lines, 15);
+      const available = loadedVideos.reduce((seconds,video,i)=>{
+        const reading = 1.6 + Array.from(lines[i]).length/6;
+        const footage = Math.max(0.2,(video.duration || 4)-arMemeOverlap);
+        return seconds+Math.min(6,footage,reading+1.2);
+      },0);
+      arSyncMemeSixCutTimelineAndVoice(lines, it.factoryType === 'quote' ? 15 : Math.min(24,available));
 
       const capEl = document.getElementById('snsCaptionInput');
       if (capEl) {
@@ -10474,11 +10585,12 @@
       const titleEl = document.getElementById('arMemeAssembledTitle');
       if (!box || !strip || !it) return;
       box.classList.remove('hidden');
-      const ytUrl = it.ytSearchUrl || `https://www.youtube.com/results?search_query=${encodeURIComponent(it.title + ' 쇼츠')}`;
+      const ytUrl = 'https://www.youtube.com/results?search_query='+encodeURIComponent(it.title+' 쇼츠');
+      const html = value=>String(value ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
       if (titleEl && it.factoryType === 'quote') {
         titleEl.textContent = it.title + ' · 명대사 편집';
       } else if (titleEl) {
-        titleEl.innerHTML = `🎬 실제 원본 밈 영상 6컷 (${it.title.slice(0, 18)}) <a href="${ytUrl}" target="_blank" rel="noopener noreferrer" class="ml-1.5 underline text-[#fca5a5] text-[11px]">▶️ 유튜브 쇼츠 검색 ↗</a>`;
+        titleEl.innerHTML = `🎬 실제 원본 밈 영상 ${it.cuts.length}컷 (${html(it.title.slice(0, 18))}) <a href="${ytUrl}" target="_blank" rel="noopener noreferrer" class="ml-1.5 underline text-[#fca5a5] text-[11px]">▶️ 유튜브 쇼츠 검색 ↗</a>`;
       }
       strip.innerHTML = (it.cuts || []).slice(0, 6).map((c, idx) => {
         const vSrc = (c._customCutVideo && c._customCutVideo._videoSrc) || c.videoUrl || '';
@@ -10491,27 +10603,61 @@
           <div class="rounded-[9px] bg-[#161924] border border-white/12 p-2 flex items-center gap-2">
             <button type="button" onclick="if(window.__timelines&&window.__timelines.main)window.__timelines.main.seek(getCutStart(${idx}) + 0.05);" class="relative w-11 h-16 rounded-[6px] overflow-hidden shrink-0 border border-[#60a5fa]/40 bg-black cursor-pointer">
               ${thumbSrc
-                ? `<img src="${thumbSrc}" class="w-full h-full object-cover block" alt="" />`
-                : (vSrc ? `<video src="${vSrc}" preload="metadata" muted playsinline class="w-full h-full object-cover block"></video>` : '')}
-              <span class="absolute bottom-0 inset-x-0 bg-[#2563eb]/90 text-[8px] text-white font-bold text-center py-0.5">${statusBadge}</span>
+                ? `<img src="${html(thumbSrc)}" class="w-full h-full object-cover block" alt="" />`
+                : (vSrc ? `<video src="${html(vSrc)}" preload="metadata" muted playsinline class="w-full h-full object-cover block"></video>` : '')}
+              <span class="absolute bottom-0 inset-x-0 bg-[#2563eb]/90 text-[8px] text-white font-bold text-center py-0.5">${html(statusBadge)}</span>
             </button>
             <div class="min-w-0 flex-1 space-y-1">
               <div class="flex items-center justify-between gap-1">
-                <span class="text-[10.5px] font-bold text-[#60a5fa]">${idx + 1}컷 · ${getCutLengths()[idx]?.toFixed(1)}초 · ${c.role || c.mood || '원본 밈'}</span>
+                <span class="text-[10.5px] font-bold text-[#60a5fa]">${idx + 1}컷 · ${getCutLengths()[idx]?.toFixed(1)}초 · ${html(c.role || c.mood || '원본 밈')}</span>
                 <div class="flex items-center gap-1">
                   <button type="button" onclick="arSwapSingleMemeCutVideo(${idx})" class="px-1.5 py-0.5 rounded bg-[#2563eb]/25 hover:bg-[#2563eb] text-[9.5px] text-[#93c5fd] hover:text-white cursor-pointer" title="이 컷을 Tenor/GIPHY의 다른 실제 원본 밈 클립으로 교체">🔄 다른 원본</button>
                   <label class="px-1.5 py-0.5 rounded bg-white/8 hover:bg-white/15 text-[9.5px] text-[#d4d4d8] cursor-pointer" title="이 컷만 내 영상(MP4) 또는 짤 이미지로 교체">
-                    📁
+                    파일로 교체
                     <input type="file" accept="video/*,image/*" class="hidden" onchange="arUploadSingleMemeCutMedia(${idx}, event)" />
                   </label>
                 </div>
               </div>
-              <div class="text-[11px] text-white font-medium truncate">${c.line || ''}</div>
-              <div class="text-[9.5px] text-[#4ade80] truncate">${c.mediaType || '🎬 실제 원본 밈 MP4'}</div>
+              <div class="text-[11px] text-white font-medium truncate">${html(c.line)}</div>
+              <div class="text-[9.5px] text-[#4ade80] truncate">${html([c.mediaType,c.publishedAt && c.publishedAt.slice(0,10)].filter(Boolean).join(" · "))}</div>
             </div>
           </div>
         `;
       }).join('');
+      const same = strip._memeItem === it;
+      const current = same ? strip._cutIndex || 0 : 0;
+      strip._memeItem = it;
+      const prev = document.getElementById('arMemeCutPrev');
+      const next = document.getElementById('arMemeCutNext');
+      const counter = document.getElementById('arMemeCutCounter');
+      function select(index,seek) {
+        const size = strip.children.length;
+        const i = Math.max(0,Math.min(size-1,index));
+        strip._cutIndex = i;
+        prev.disabled = i === 0; next.disabled = i+1 >= size;
+        counter.textContent = (i+1)+' / '+size;
+        if (seek) window.__timelines?.main?.seek(getCutStart(i)+0.05);
+      }
+      function move(index,seek=true) {
+        select(index,seek);
+        strip.scrollLeft = strip._cutIndex*strip.clientWidth;
+      }
+      prev.onclick = ()=>move(strip._cutIndex-1);
+      next.onclick = ()=>move(strip._cutIndex+1);
+      strip.onkeydown = event=>{
+        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+        event.preventDefault(); move(strip._cutIndex+(event.key === 'ArrowRight' ? 1 : -1));
+      };
+      strip.onscroll = ()=>{
+        if (!strip.clientWidth) return;
+        const index = Math.round(strip.scrollLeft/strip.clientWidth);
+        if (index !== strip._cutIndex) select(index,true);
+      };
+      if (!strip._memeResize && window.ResizeObserver) {
+        strip._memeResize = new ResizeObserver(()=>{strip.scrollLeft=(strip._cutIndex || 0)*strip.clientWidth;});
+        strip._memeResize.observe(strip);
+      }
+      move(current,false);
     }
 
     // 개별 컷을 내 MP4 영상이나 짤 이미지로 직접 교체
@@ -10521,10 +10667,15 @@
       const it = window.__arCurrentMemeItem;
       if (!file || !it || !Array.isArray(it.cuts) || !it.cuts[cutIdx]) return;
       const c = it.cuts[cutIdx];
+      const request = c._editRequest = (c._editRequest || 0)+1;
+      const current = ()=>window.__arCurrentMemeItem === it && c._editRequest === request;
+      c._swapping=false;
       if (file.type.startsWith('video/')) {
         const url = URL.createObjectURL(file);
         const vid = await arLoadRealMemeCutVideo(url, `${cutIdx + 1}컷 · 내 원본 클립`);
+        if (!current() || !vid) { URL.revokeObjectURL(url); return; }
         if (vid) {
+          c._aiSceneImg=null;
           c._customCutVideo = vid;
           c.videoUrl = url;
           c.mediaType = '🎬 내 원본 MP4';
@@ -10540,12 +10691,14 @@
         im.src = dataUrl;
         im._dataUrl = dataUrl;
         await im.decode().catch(() => {});
+        if (!current()) return;
         c._customCutVideo = null;
         c.videoUrl = '';
         c._aiSceneImg = im;
         c.mediaType = '직접 올린 짤';
         campaign.uploadedPhotos[cutIdx] = im;
       }
+      c.publishedAt=null; c.publisher=null;
       applyVideoDurations();
       arRenderMemeAssembledStrip(it);
       if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
@@ -10558,6 +10711,8 @@
       const it = window.__arCurrentMemeItem;
       if (!it || !Array.isArray(it.cuts) || !it.cuts[cutIdx]) return false;
       const c = it.cuts[cutIdx];
+      const request = c._editRequest = (c._editRequest || 0)+1;
+      const current = ()=>window.__arCurrentMemeItem === it && c._editRequest === request;
       c._swapping = true;
       arRenderMemeAssembledStrip(it);
       const q = c.keyword || it.title || 'chill guy meme';
@@ -10565,15 +10720,18 @@
         const res = await fetch('/api/generate-script', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mode: 'meme-visuals', queries: [q] })
+          body: JSON.stringify({ mode: 'meme-visuals', recentOnly: Boolean(it.fresh), queries: [q] })
         });
         const data = await res.json().catch(() => ({}));
         const list = (data && Array.isArray(data.visualsByCut) && data.visualsByCut[0]) || [];
         c._swapIdx = ((Number(c._swapIdx) || 0) + 1);
-        const pick = list.length ? list[c._swapIdx % list.length] : null;
+        const alternatives = list.filter(p=>p.url !== c.videoUrl);
+        const pick = alternatives[c._swapIdx % alternatives.length];
         if (pick && pick.url) {
           const vid = await arLoadRealMemeCutVideo(pick.url, `${cutIdx + 1}컷 · ${pick.title || '원본 밈'}`);
+          if (!current()) return false;
           if (vid) {
+            c.publishedAt=pick.publishedAt; c.publisher=pick.source; c._aiSceneImg=null;
             c._swapping = false;
             c._customCutVideo = vid;
             c.videoUrl = pick.url;
@@ -10588,8 +10746,10 @@
           }
         }
       } catch (_) {}
+      if (!current()) return false;
       c._swapping = false;
       arRenderMemeAssembledStrip(it);
+      if (typeof arToast === 'function') arToast('교체할 다른 원본을 찾지 못했어요.');
       return false;
     }
 
@@ -10599,12 +10759,13 @@
       if (!it || !Array.isArray(it.cuts)) return;
       const statusEl = document.getElementById('arMemeRadarStatus');
       if (statusEl) statusEl.textContent = `⏳ "${it.title}" 6개 컷의 새로운 실제 원본 밈 MP4 클립을 실시간 수집 중...`;
+      const requests = it.cuts.map(c=>c._editRequest=(c._editRequest || 0)+1);
       const queries = it.cuts.slice(0, 6).map((c) => c.keyword || it.title || 'chill guy meme');
       try {
         const res = await fetch('/api/generate-script', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mode: 'meme-visuals', queries })
+          body: JSON.stringify({ mode: 'meme-visuals', recentOnly: Boolean(it.fresh), queries })
         });
         const data = await res.json().catch(() => ({}));
         if (data && Array.isArray(data.visualsByCut)) {
@@ -10616,7 +10777,8 @@
             const pick = list[c._swapIdx % list.length];
             if (!pick || !pick.url) return;
             const vid = await arLoadRealMemeCutVideo(pick.url, `${ci + 1}컷 · ${pick.title || '원본 밈'}`);
-            if (vid) {
+            if (vid && window.__arCurrentMemeItem === it && requests[ci]===c._editRequest) {
+              c.publishedAt=pick.publishedAt; c.publisher=pick.source; c._aiSceneImg=null; c._swapping=false;
               c._customCutVideo = vid;
               c.videoUrl = pick.url;
               c.mediaType = `🎬 ${pick.source || 'Tenor 원본 밈 MP4'}`;
@@ -10624,6 +10786,7 @@
               count++;
             }
           }));
+          if (window.__arCurrentMemeItem !== it) return;
           applyVideoDurations();
           arRenderMemeAssembledStrip(it);
           if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();

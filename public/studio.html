@@ -77,7 +77,7 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="/assets/app/service-home.css?v=2" />
+  <link rel="stylesheet" href="/assets/app/service-home.css?v=3" />
 </head>
 <body class="antialiased px-4 py-6 md:px-8 md:py-8 pb-24 md:pb-12">
   <!-- 시작 스플래시 (코덱스 H 시안, 앱 색 톤): 페이지를 열자마자 보여 앱 로딩 시간을 가림. 준비되면 12-account-billing-sns.js 가 닫음. 누르면 바로 닫힘 -->
@@ -837,7 +837,7 @@
             <div class="flex items-center justify-between gap-2 flex-wrap">
               <div class="flex items-center gap-2">
                 <span class="px-2.5 py-0.5 rounded-full bg-[#2563eb] text-white text-[11px] font-bold">⚡ 밈 쇼츠 스튜디오</span>
-                <span class="text-[11.5px] text-[#93c5fd] font-medium">오늘의 밈 Top 10 × 실시간 키워드 × 우리 가게 홍보</span>
+                <span class="text-[11.5px] text-[#93c5fd] font-medium">최근 밈 · 키워드 · 우리 가게 홍보</span>
               </div>
               <div class="flex items-center gap-1.5 flex-wrap">
                 <button type="button" id="arMemeOrigAudioBtn" onclick="arToggleMemeOrigAudio()" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#16a34a] text-white border border-[#4ade80] cursor-pointer">🔊 원본 영상 소리 ON</button>
@@ -895,14 +895,15 @@
 
             <!-- 2가지 소싱 탭 전환 (트랙 A: 오늘의 밈 Top 10 보드 / 트랙 B: 해외·원본 MP4 자막 덮어쓰기) -->
             <div class="grid grid-cols-2 gap-1.5 bg-[#0d0e12] p-1 rounded-[10px] border border-white/10">
-              <button type="button" id="arMemeTabBtn_radar" onclick="arSwitchMemeTab('radar')" class="h-8 rounded-[7px] text-[12px] font-bold bg-[#2563eb] text-white cursor-pointer">🔥 오늘의 밈 Top 10 (업로드 0번)</button>
+              <button type="button" id="arMemeTabBtn_radar" onclick="arSwitchMemeTab('radar')" class="h-8 rounded-[7px] text-[12px] font-bold bg-[#2563eb] text-white cursor-pointer">밈 원본 찾기</button>
               <button type="button" id="arMemeTabBtn_remake" onclick="arSwitchMemeTab('remake')" class="h-8 rounded-[7px] text-[12px] font-semibold text-[#a1a1aa] hover:text-white cursor-pointer">🌏 해외·원본 영상 자막 덮어쓰기</button>
             </div>
 
             <!-- 트랙 A: 오늘의 밈·트렌드 Top 10 레이더 (YouTube · Google Trends · Reddit) -->
             <div id="arMemePane_radar" class="space-y-2.5">
               <div class="flex items-center gap-1 overflow-x-auto scrollbar-none pb-0.5">
-                <button type="button" data-meme-cat="all" onclick="arLoadMemeRadar('all')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white text-[#111113] shrink-0 cursor-pointer">Top 10 전체</button>
+                <button type="button" data-meme-cat="all" onclick="arLoadMemeRadar('all')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white text-[#111113] shrink-0 cursor-pointer">최근 7일</button>
+                <button type="button" data-meme-cat="보관함" onclick="arLoadMemeRadar('보관함')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white text-[#111113] shrink-0 cursor-pointer">보관함</button>
                 <button type="button" id="arMemeFactoryFormats" data-meme-cat="쇼츠 포맷" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">쇼츠 포맷</button>
                 <button type="button" data-meme-cat="국내 예능" onclick="arLoadMemeRadar('국내 예능')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">📺 국내 예능</button>
                 <button type="button" data-meme-cat="드라마·영화" onclick="arLoadMemeRadar('드라마·영화')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🎬 드라마·영화</button>
@@ -933,7 +934,7 @@
                 <input id="arMemeDirectUrlInput" type="text" placeholder="🔗 국내 예능·드라마·배우·콘서트 이름 또는 원본 링크(TikTok·Tenor·GIPHY·Shorts) 입력" onkeydown="if(event.key==='Enter'){event.preventDefault();arImportMemeFromUrlInput('arMemeDirectUrlInput');}" class="studio-input flex-1 h-8 px-3 text-[12px]" />
                 <button type="button" onclick="arImportMemeFromUrlInput('arMemeDirectUrlInput')" class="h-8 px-3 rounded-[8px] bg-[#16a34a] hover:bg-[#15803d] text-white text-[11.5px] font-bold shrink-0 cursor-pointer">🎬 원본 영상 가져오기</button>
               </div>
-              <div id="arMemeRadarStatus" class="text-[11px] text-[#9ca3af]">YouTube · Google Trends · Tenor 실제 원본 밈 MP4 Top 10 보드입니다.</div>
+              <div id="arMemeRadarStatus" class="text-[11px] text-[#9ca3af]">최근 7일 원본과 보관함에서 클립을 고르세요.</div>
               <div id="arMemeRadarList" class="space-y-2.5 max-h-[340px] overflow-y-auto pr-0.5"></div>
 
               <!-- 조립된 6컷 실제 원본 밈 MP4 확인 & 다른 원본 밈 교체 / 원본 영상 올리기 바 -->
@@ -949,7 +950,10 @@
                     <button type="button" onclick="arToggleMemeOrigAudio(false);arEnableMemeStudioAudioAndVoice();switchStudioTab('sound')" class="btn-primary h-7 px-2.5 text-[11px] font-bold cursor-pointer">🔊 AI 더빙 입히기 →</button>
                   </div>
                 </div>
-                <div id="arMemeCutVisualStrip" class="grid grid-cols-2 sm:grid-cols-3 gap-1.5"></div>
+                <div class="meme-cut-carousel" role="region" aria-roledescription="캐러셀" aria-label="원본 컷 편집">
+                  <div class="meme-cut-nav"><strong>원본 컷 편집</strong><button type="button" id="arMemeCutPrev" aria-label="이전 컷">‹</button><output id="arMemeCutCounter" aria-live="polite"></output><button type="button" id="arMemeCutNext" aria-label="다음 컷">›</button></div>
+                  <div id="arMemeCutVisualStrip" tabindex="0" aria-label="컷 목록"></div>
+                </div>
               </div>
             </div>
 
@@ -3154,7 +3158,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-responsive-editor"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-meme-mix-carousel"><\/script>');
     }
   </script>
   <!--
