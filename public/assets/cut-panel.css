@@ -147,3 +147,8 @@ dialog.arcp[open]{display:flex;flex-direction:column;z-index:125;background:var(
   #arCnCountRow {display:flex;align-items:center;min-width:0;overflow-x:auto}
   #arCnCountRow > span {display:none}
 }
+
+@media (min-width:1024px) {
+  dialog.arcp { inset: 0; margin: auto; height: fit-content; max-height: 85dvh; width: min(640px, 90vw); border-radius: 14px; }
+  dialog.arcp .arcp-grip { display: none; }
+}

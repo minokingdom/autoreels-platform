@@ -995,7 +995,7 @@
     // ==========================================================================
     function arToggleSheet(force) {
       const classes = document.body.classList;
-      if(classes.contains('ar-work-docked') || classes.contains('ar-cn-mode')) {
+      if(!arUsesWorkflowSheet() || classes.contains('ar-work-docked') || classes.contains('ar-cn-mode')) {
         classes.remove('ar-sheet-min','ar-sheet-full');
         return;
       }
@@ -1031,7 +1031,13 @@
       const on = arUsesWorkflowSheet();
       document.body.classList.toggle('ar-sheet', on);
       arEnsureQuickBar();
-      if (!on && !document.body.classList.contains('ar-work-docked')) return;
+      const editing = !document.getElementById('viewPreview')?.classList.contains('ar-service-home');
+      document.body.classList.toggle('ar-work-docked', on && editing);
+      if (wasOn !== on && document.getElementById('cutEditorPanel')) ensureCutEditorPanelDOM();
+      if (!on) {
+        document.body.classList.remove('ar-sheet-min', 'ar-sheet-full');
+        return;
+      }
       if (!wasOn && arWorkflowSheetExpanded()) {
         arPauseForStudioEdit();
         const play = document.getElementById('playPauseBtn');
@@ -3030,7 +3036,7 @@
     function arShowStudioServices(show) {
       const view = document.getElementById('viewPreview');
       view.classList.toggle('ar-service-home',show);
-      document.body.classList.toggle('ar-work-docked',!show);
+      document.body.classList.toggle('ar-work-docked', !show && arUsesWorkflowSheet());
       const handle=document.getElementById('arSheetHandle');
       if(handle){handle.disabled=!show;handle.tabIndex=show?0:-1;handle.classList.toggle('ar-fixed-grip',!show);}
       if (show) view.querySelector('#startAutoReels')?.focus({preventScroll:true});

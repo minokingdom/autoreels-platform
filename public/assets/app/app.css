@@ -2057,22 +2057,11 @@ body.ar-sheet.ar-work-docked,body.ar-cn-mode{--ar-sheet:calc(50dvh - var(--ar-ms
   body.ar-sheet.ar-work-docked.ar-cut-editing #mainMonitorColumn>.monitor-frame>#arQuickBar{display:flex!important;position:fixed;right:4px;left:auto;top:25dvh;bottom:auto;transform:translateY(-50%);max-height:49dvh;overflow:auto}
 
 }
-@media(min-width:1024px){
-  body.ar-work-docked:not(.ar-cut-editing) #studioWorkflowColumn,body.ar-cn-mode #arCnWorkflowColumn{position:fixed;inset:auto 0 0;margin:auto;width:min(100%,800px);height:50dvh;box-sizing:border-box;overflow:auto;background:var(--card);border:1px solid var(--border);border-radius:18px 18px 0 0;z-index:42;overscroll-behavior:contain}
-  body.ar-work-docked:not(.ar-cut-editing) #mainMonitorColumn,body.ar-cn-mode #arCnMonitorColumn{grid-column:1/-1}
-  body.ar-work-docked:not(.ar-cut-editing) #mainMonitorColumn .monitor-frame,body.ar-cn-mode #arCnMonitorColumn .monitor-frame{width:min(240px,26vh);margin:auto}
-  body.ar-cn-mode #arCnMonitorColumn{position:fixed;inset:0 0 auto;z-index:35;height:50dvh;overflow:hidden;background:var(--bg-deep);display:flex;align-items:center;justify-content:center}
-  body.ar-cn-mode #arCnMonitorColumn .monitor-frame{box-sizing:border-box;width:clamp(120px,calc((50dvh - 144px)*.8),240px);margin:0 auto;padding:6px}
-  body.ar-cn-mode #arCnQuickBar{gap:3px;max-height:49dvh;overflow:auto}
-  body.ar-work-docked #arSheetHandle,body.ar-cn-mode #arCnSheetHandle{display:block;height:20px;width:100%;background:var(--card);border:0;position:sticky;top:0;z-index:22}
-  body.ar-work-docked #arSheetHandle span,body.ar-cn-mode #arCnSheetHandle span{display:block;width:38px;height:4px;border-radius:8px;background:#767c85;margin:auto}
-}
-
-
-
+@media(max-width:1023px){
 body.ar-work-docked #cutEditorPanel.ar-preview-sheet-backdrop:not(.hidden){position:fixed;inset:auto 0 0;z-index:46;height:50dvh;max-height:50dvh;box-sizing:border-box;overflow:auto;overscroll-behavior:contain;border:1px solid var(--border);border-radius:18px 18px 0 0;background:var(--card);padding:0 10px max(8px,env(safe-area-inset-bottom));width:min(100%,800px);margin:0 auto}
 body.ar-work-docked #cutEditorPanel:not(.hidden)::before{content:'';display:block;position:sticky;top:8px;z-index:1;width:38px;height:4px;background:#767c85;border-radius:9px;margin:8px auto}
 body.ar-work-docked #cutEditorPanel .ar-preview-bottom-sheet{max-height:none;overflow:visible;width:100%;height:auto;border:0;background:transparent;box-shadow:none}
+}
 
 /* Use the visible fixed viewport when mobile Chrome's toolbar changes height. */
 @media(max-width:1023px){

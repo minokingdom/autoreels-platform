@@ -35,13 +35,13 @@ try {
     await menu.waitFor();
     assert.equal(await page.locator('.studio-topbar .studio-brand-name').innerText(),'AutoReelsMaker');
     const geometry=await menu.evaluate(el=>{
-      const [hero,video,collage,cards,meme,shorts,remix]=Array.from(el.querySelectorAll('button,a'),node=>node.getBoundingClientRect());
-      return hero.width>video.width && video.top===collage.top && cards.top===meme.top && shorts.width===hero.width && remix.width===hero.width;
+      const [hero,video,collage,cards,meme,quotes,shorts,remix]=Array.from(el.querySelectorAll('button,a'),node=>node.getBoundingClientRect());
+      return hero.width>video.width && video.top===collage.top && cards.top>video.top && meme.top>cards.top && meme.top===quotes.top && shorts.width===hero.width && remix.width===hero.width;
     });
     assert.ok(geometry,'service cards follow the approved two-column layout');
     for(const photo of await menu.locator('.service-photos img').all()) await photo.evaluate(image=>image.decode());
     const names=await menu.locator('strong').allTextContents();
-    assert.deepEqual(names,['오토릴스 만들기','영상 편집기','사진 콜라주','인스타 카드뉴스','밈 쇼츠 만들기','내 영상으로 쇼츠','참고 쇼츠·릴스 재구성']);
+    assert.deepEqual(names,['오토릴스 만들기','영상 편집기','사진 콜라주','인스타 카드뉴스','밈 쇼츠 만들기','영화·드라마 명대사','내 영상으로 쇼츠','참고 쇼츠·릴스 재구성']);
     if(width===390 && process.env.SERVICES_CAPTURE){
       await page.locator('#arSplashIntro').waitFor({state:'hidden'});
       await menu.getByRole('button',{name:/오토릴스 만들기/}).click({trial:true});
@@ -51,6 +51,11 @@ try {
     assert.equal(offscreen,false);
     await menu.getByRole('button',{name:/오토릴스 만들기/}).click({timeout:12000});
     await page.locator('#studioPanel_topic').waitFor();
+    if(width>=1024) {
+      const monitor=await page.locator('#mainMonitorColumn').boundingBox();
+      const workflow=await page.locator('#studioWorkflowColumn').boundingBox();
+      assert.ok(monitor.x + monitor.width <= workflow.x + 1,'PC 미리보기와 편집 영역은 좌우로 배치');
+    }
     if(width===390){
       await page.waitForFunction(()=>document.getElementById('reelCanvas').getBoundingClientRect().height>100);
       const split=await page.evaluate(()=>({
@@ -79,7 +84,7 @@ try {
     await menu.waitFor();
     await menu.getByRole('button',{name:/영상 편집기/}).click();
     await page.frameLocator('dialog.ar-video-editor iframe').locator('#file').waitFor({state:'attached'});
-    console.log(width+'px · 6개 메뉴, 오토릴스 주제, 컷 편집·전환·글꼴 46종, 영상 편집기 확인');
+    console.log(width+'px · 제작 메뉴, 오토릴스 주제, 컷 편집·전환·글꼴 46종, 영상 편집기 확인');
     await page.frameLocator('dialog.ar-video-editor iframe').locator('[data-studio-back]').click();
     await menu.getByRole('button',{name:/밈 쇼츠 만들기/}).click();
     await page.locator('#arMemeShortsBox').waitFor();

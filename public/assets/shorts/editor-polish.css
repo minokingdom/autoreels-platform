@@ -166,3 +166,23 @@ body:has(#work:not([hidden])) #shortsScreen:has(#frame.loaded) {
   padding: 0 14px max(12px, env(safe-area-inset-bottom)); box-sizing: border-box;
   overflow: auto; overscroll-behavior: contain; border-radius: 16px 16px 0 0;
 }
+
+@media (min-width:1024px) {
+  body #shortsScreen, body:has(#work:not([hidden])) #shortsScreen:has(#frame.loaded) {
+    display: grid; grid-template-columns: minmax(300px, 5fr) minmax(0, 7fr);
+    grid-template-rows: auto minmax(0,1fr); width: min(100%, 1360px); max-width: none; height: 100dvh; overflow: hidden;
+  }
+  #shortsScreen > header { grid-column: 1 / -1; grid-row: 1; }
+  #shortsScreen > .stage, #shortsScreen:has(#frame.loaded) > .stage {
+    grid-area: 2 / 1; position: relative; inset: auto; height: 100%; min-height: 0; container-type: size; padding: 16px; align-self: start;
+  }
+  #shortsScreen .stage #frame { height: auto; width: min(calc(100cqw - 84px), 56.25cqh); max-height: none; }
+  #shortsScreen > .sheet, #shortsScreen > #cutTimeline,
+  #shortsScreen:has(#frame.loaded) > :is(.sheet, #cutTimeline) {
+    grid-area: 2 / 2; position: relative; inset: auto; align-self: stretch; height: auto;
+    max-height: none !important; overflow: auto; border-radius: 0; border: 0; border-left: 1px solid #34363c; box-shadow: none;
+  }
+  .quick-video.show-tools #shortsScreen > .sheet { z-index: 4; }
+  #shortsScreen .sheet .handle, #shortsScreen #cutTimeline::before, .quick-video #mixDialog::before { display: none; }
+  .quick-video #mixDialog { inset: 0; margin: auto; height: fit-content; width: min(640px, 90vw); max-height: 85dvh; border-radius: 14px; }
+}
