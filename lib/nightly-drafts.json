@@ -17,19 +17,19 @@
         "sourceTag": "SBS"
       },
       {
-        "line": "서울시, 25일 지하철 파업 대비 비상수송대책…\"출근길 뚫는다\"",
+        "line": "국가자격시험 'AI 커닝' 차단…꺼진 기기 탐지·부정행위 징역 5년",
         "mediaType": "타이포그래피",
         "role": "소식 2",
-        "sourceTag": "SBS"
+        "sourceTag": "연합뉴스"
       },
       {
-        "line": "국가자격시험 'AI 커닝' 차단…꺼진 기기 탐지·부정행위 징역 5년",
+        "line": "신세계백화점 폭파 협박범은 울산 중학생…경찰에 범행 시인(종합)",
         "mediaType": "타이포그래피",
         "role": "소식 3",
         "sourceTag": "연합뉴스"
       },
       {
-        "line": "'내란 중요임무' 한덕수 파기환송심 다음 달 15일 첫 재판",
+        "line": "현직 부장판사, 조희대 탄핵 추진 비판…\"계엄 선포만큼이나 민주주의 역사에 오점\"",
         "mediaType": "타이포그래피",
         "role": "소식 4",
         "sourceTag": "SBS"
@@ -41,11 +41,11 @@
         "sourceTag": "오늘의 브리핑"
       }
     ],
-    "factNote": "SBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008860336\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008860540\n연합뉴스 · https://www.yna.co.kr/view/AKR20261124044300530\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008860573",
+    "factNote": "SBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008860336\n연합뉴스 · https://www.yna.co.kr/view/AKR20261124044300530\n연합뉴스 · https://www.yna.co.kr/view/AKR20261124097151057\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008860835",
     "factoryType": "briefing",
     "genre": "뉴스 브리핑",
     "id": "briefing_2026-11-24",
-    "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 312 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">도입</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">11월 24일</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">주요 뉴스</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g><g transform=\"translate(104 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 1</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">\"이럴 용기로</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">공부를</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">하지\"…수능날</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">'휴지 뭉치' 딱</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">걸렸다</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(208 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 2</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">서울시, 25일</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">지하철 파업 대비</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">비상수송대책…\"출</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">근길 뚫는다\"</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 3</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">국가자격시험</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">'AI 커닝'</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">차단…꺼진 기기</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">탐지·부정행위</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">징역 5년</text><text x=\"7\" y=\"160\" font-size=\"7\">연합뉴스</text></g></g><g transform=\"translate(104 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 4</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">'내란 중요임무'</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">한덕수 파기환송심</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">다음 달 15일</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">첫 재판</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(208 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">마무리</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기사별 출처는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">설명에서</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">확인하세요.</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g></svg>",
+    "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 312 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">도입</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">11월 24일</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">주요 뉴스</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g><g transform=\"translate(104 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 1</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">\"이럴 용기로</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">공부를</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">하지\"…수능날</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">'휴지 뭉치' 딱</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">걸렸다</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(208 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 2</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">국가자격시험</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">'AI 커닝'</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">차단…꺼진 기기</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">탐지·부정행위</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">징역 5년</text><text x=\"7\" y=\"160\" font-size=\"7\">연합뉴스</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 3</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">신세계백화점 폭파</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">협박범은 울산</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">중학생…경찰에</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">범행 시인(종합)</text><text x=\"7\" y=\"160\" font-size=\"7\">연합뉴스</text></g></g><g transform=\"translate(104 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 4</text><text x=\"7\" y=\"50\" font-size=\"10\" font-weight=\"700\">현직 부장판사,</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">조희대 탄핵 추진</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">비판…\"계엄</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">선포만큼이나</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">민주주의 역사에</text><text x=\"7\" y=\"120\" font-size=\"10\" font-weight=\"700\">오점\"</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(208 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">마무리</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기사별 출처는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">설명에서</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">확인하세요.</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g></svg>",
     "sourceTag": "SBS",
     "sourceUrl": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860336",
     "sources": [
@@ -55,19 +55,19 @@
         "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860336"
       },
       {
-        "headline": "서울시, 25일 지하철 파업 대비 비상수송대책…\"출근길 뚫는다\"",
-        "name": "SBS",
-        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860540"
-      },
-      {
         "headline": "국가자격시험 'AI 커닝' 차단…꺼진 기기 탐지·부정행위 징역 5년",
         "name": "연합뉴스",
         "url": "https://www.yna.co.kr/view/AKR20261124044300530"
       },
       {
-        "headline": "'내란 중요임무' 한덕수 파기환송심 다음 달 15일 첫 재판",
+        "headline": "신세계백화점 폭파 협박범은 울산 중학생…경찰에 범행 시인(종합)",
+        "name": "연합뉴스",
+        "url": "https://www.yna.co.kr/view/AKR20261124097151057"
+      },
+      {
+        "headline": "현직 부장판사, 조희대 탄핵 추진 비판…\"계엄 선포만큼이나 민주주의 역사에 오점\"",
         "name": "SBS",
-        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860573"
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860835"
       }
     ],
     "title": "11월 24일 주요 뉴스",
