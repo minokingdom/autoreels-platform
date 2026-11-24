@@ -10022,7 +10022,17 @@
         });
         const data = await res.json().catch(() => ({}));
         if (requestId !== arMemeRadarRequest) return;
-        if (data && Array.isArray(data.items)) {
+        if (res.status === 401) {
+          if (statusEl) statusEl.textContent = '밈과 쇼츠 포맷을 보려면 로그인해 주세요.';
+          const login = document.createElement('button');
+          login.type = 'button';
+          login.className = 'btn-primary h-8 px-3';
+          login.textContent = '로그인';
+          login.addEventListener('click', () => openDealerAuthModal());
+          listEl.replaceChildren(login);
+          return;
+        }
+        if (res.ok && Array.isArray(data.items)) {
           window.__arMemeRadarItems = data.items;
         }
       } catch (_) {}
