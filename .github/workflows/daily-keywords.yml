@@ -19,9 +19,11 @@ jobs:
           ref: main
       - run: python3 scripts/refresh_daily_keywords.py
       - run: node scripts/refresh-meme-recent.cjs
+      - name: Build daily quote and briefing drafts
+        run: cargo run --locked --manifest-path tools/nightly-drafts/Cargo.toml
       - name: Publish verified daily keywords
         run: |
-          git add public/daily-keywords.json public/meme-recent.json
+          git add public/daily-keywords.json public/meme-recent.json lib/nightly-drafts.json
           if git diff --cached --quiet; then exit 0; fi
           git config user.name autoreels-bot
           git config user.email actions@users.noreply.github.com

@@ -9775,7 +9775,7 @@
 
       if (isMemeMode) {
         const memeItem = window.__arCurrentMemeItem;
-        if (memeItem.factoryType === 'quote' && campaign.uploadedPhotos[cIdx]?._quoteCard) {
+        if (campaign.uploadedPhotos[cIdx]?._quoteCard) {
           arPaintQuoteFrame(ctx, W, H, memeItem, memeItem.cuts[cIdx], campaign.cutCaptions?.[cIdx], cProg);
           return;
         }
@@ -10101,28 +10101,43 @@
       arSyncMemeKeywordAndStoreInputs();
     }
 
-    function arRenderQuoteChoices(list, items) {
-      list.replaceChildren();
-      items.forEach((item, idx) => {
-        const card = document.createElement('article');
-        card.className = 'quote-choice';
-        const detail = document.createElement('small');
-        detail.textContent = [item.genre, item.title, item.publishedAt ? item.publishedAt.slice(0,10)+' 게시' : item.year, item.badge].filter(Boolean).join(' · ');
-        const title = document.createElement('strong');
-        title.textContent = '“' + item.quote + '”';
+    function arRenderDraftChoice(list, item, idx) {
+      const briefing = item.factoryType === 'briefing';
+      const card = document.createElement('article');
+      card.className = 'quote-choice';
+      const detail = document.createElement('small');
+      detail.textContent = [item.genre, briefing ? '' : item.title, item.publishedAt ? item.publishedAt.slice(0,10)+' 게시' : item.year, item.badge].filter(Boolean).join(' · ');
+      const title = document.createElement('strong');
+      title.textContent = briefing ? item.title : '“' + item.quote + '”';
+      const links = document.createElement('div');
+      for (const ref of item.sources || [{name:item.sourceTag,url:item.sourceUrl}]) {
         const source = document.createElement('a');
-        source.href = item.sourceUrl;
+        source.href = ref.url;
         source.target = '_blank';
         source.rel = 'noopener noreferrer';
-        source.textContent = item.sourceTag + ' 출처 보기 ↗';
-        const make = document.createElement('button');
-        make.type = 'button';
-        make.className = 'btn-primary';
-        make.textContent = '이 대사로 만들기';
-        make.addEventListener('click', () => arApplyMemeItemToStudio(idx, 'pure'));
-        card.append(detail, title, source, make);
-        list.append(card);
-      });
+        source.textContent = ref.headline ? ref.name + ' · ' + ref.headline : ref.name + ' 출처 보기 ↗';
+        links.append(source);
+      }
+      card.append(detail, title);
+      if (item.previewSheet) {
+        const details = document.createElement('details');
+        details.className = 'draft-sheet';
+        const label = document.createElement('summary');
+        label.textContent = item.cuts.length + '컷 미리보기';
+        const image = new Image();
+        image.alt = item.cuts.map(c => c.line).join(' / ');
+        image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(item.previewSheet);
+        details.append(label, image);
+        card.append(details);
+      }
+      links.className = 'draft-sources';
+      const make = document.createElement('button');
+      make.type = 'button';
+      make.className = 'btn-primary';
+      make.textContent = briefing ? '브리핑 만들기' : '이 대사로 만들기';
+      make.addEventListener('click', () => arApplyMemeItemToStudio(idx, 'pure'));
+      card.append(links, make);
+      list.append(card);
     }
 
     function arPaintQuoteFrame(ctx, w, h, item, cut, line, progress) {
@@ -10156,7 +10171,7 @@
       ctx.fillText(item.title, x, h*0.77);
       ctx.font = '400 ' + w*0.032 + 'px sans-serif';
       ctx.fillStyle = '#e8dbbf';
-      ctx.fillText('대사 출처 · ' + item.sourceTag, x, h*0.82);
+      ctx.fillText((item.factoryType === 'briefing' ? '' : '대사 출처 · ') + (cut.sourceTag || item.sourceTag), x, h*0.82);
       ctx.restore();
     }
 
@@ -10269,7 +10284,7 @@
       }
       if (cat === '명대사' && items.length) {
         if (statusEl) statusEl.textContent = '작품을 골라 명대사 타이포그래피 쇼츠를 만드세요.';
-        arRenderQuoteChoices(listEl, items);
+        items.forEach((item, idx) => arRenderDraftChoice(listEl, item, idx));
         return;
       }
       const isFactory = window.__arMemeCat === '쇼츠 포맷';
@@ -10279,6 +10294,7 @@
           : '표시할 원본이 없습니다. 다시 수집하거나 보관함에서 선택해 주세요.';
       }
       listEl.innerHTML = items.map((it, idx) => {
+        if (it.factoryType === 'briefing') return '';
         const summaryHtml = Array.isArray(it.summary3) && it.summary3.length
           ? `<div class="rounded-[8px] bg-black/30 border border-white/5 p-2 space-y-0.5 text-[11px] text-[#d4d4d8]">${it.summary3.map((s) => `<div>${s}</div>`).join('')}</div>`
           : `<p class="text-[11.5px] text-[#a1a1aa] leading-relaxed">${it.why || ''}</p>`;
@@ -10309,6 +10325,11 @@
         `;
       }).join('');
 
+      const drafts = document.createDocumentFragment();
+      items.forEach((item, idx) => {
+        if (item.factoryType === 'briefing') arRenderDraftChoice(drafts, item, idx);
+      });
+      listEl.prepend(drafts);
       if (!window.__arCurrentMemeItem && items[0] && document.body.classList.contains('ar-meme-mode')) {
         arApplyMemeItemToStudio(0, window.__arMemeMashupMode || 'pure');
       }
@@ -10539,11 +10560,11 @@
       if (!lines.length) return;
 
       if (requestId !== arMemeApplyRequest) return;
-      if (statusEl) statusEl.textContent = it.factoryType === 'quote' ? `「${it.title}」 명대사 카드를 만들고 있어요.` : `「${it.title}」 클립 ${cuts.length}개를 불러오고 있어요.`;
+      if (statusEl) statusEl.textContent = ['briefing','quote'].includes(it.factoryType) ? `「${it.title}」 카드를 만들고 있어요.` : `「${it.title}」 클립 ${cuts.length}개를 불러오고 있어요.`;
 
       // ★ 핵심: 각 컷의 실제 원본 밈 MP4를 모두 먼저 로드한 뒤 window.__arCurrentMemeItem을 교체하여 로딩 중 빈 프레임이나 폴백이 뜨지 않게 함!
       const rawVideos = await Promise.all(cuts.slice(0, 6).map(async (c, i) => {
-        if (it.factoryType === 'quote') return arMakeQuoteImage(it, c);
+        if (it.factoryType === 'quote' || it.factoryType === 'briefing') return arMakeQuoteImage(it, c);
         const vUrl = c.videoUrl || (baseItem.cuts && baseItem.cuts[i] && baseItem.cuts[i].videoUrl) || '';
         c.videoUrl = vUrl;
         const vid = await arLoadRealMemeCutVideo(vUrl, `${i + 1}컷 · ${c.mood || '실제 원본 밈'}`);
@@ -10598,7 +10619,7 @@
       if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0.05);
 
-      const modeLabel = it.factoryType === 'quote' ? '명대사 쇼츠' : mode === 'store' ? '🏪 우리 가게×밈 패러디' : mode === 'keyword' ? '⚡ 오늘 키워드×밈 콜라보' : '🔥 실제 원본 밈';
+      const modeLabel = it.factoryType === 'briefing' ? '오늘의 브리핑' : it.factoryType === 'quote' ? '명대사 쇼츠' : mode === 'store' ? '🏪 우리 가게×밈 패러디' : mode === 'keyword' ? '⚡ 오늘 키워드×밈 콜라보' : '🔥 실제 원본 밈';
       if (statusEl) statusEl.textContent = `✅ [${modeLabel}] "${it.title}" 영상 ${loadedVideos.length}컷과 컷별 자막을 적용했어요.`;
       if (typeof arToast === 'function') arToast(`${modeLabel} · ${loadedVideos.length}컷 미리보기`, true);
     }
@@ -10611,8 +10632,8 @@
       box.classList.remove('hidden');
       const ytUrl = 'https://www.youtube.com/results?search_query='+encodeURIComponent(it.title+' 쇼츠');
       const html = value=>String(value ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-      if (titleEl && it.factoryType === 'quote') {
-        titleEl.textContent = it.title + ' · 명대사 편집';
+      if (titleEl && ['quote','briefing'].includes(it.factoryType)) {
+        titleEl.textContent = it.title + (it.factoryType === 'briefing' ? ' · 브리핑 편집' : ' · 명대사 편집');
       } else if (titleEl) {
         titleEl.innerHTML = `🎬 실제 원본 밈 영상 ${it.cuts.length}컷 (${html(it.title.slice(0, 18))}) <a href="${ytUrl}" target="_blank" rel="noopener noreferrer" class="ml-1.5 underline text-[#fca5a5] text-[11px]">▶️ 유튜브 쇼츠 검색 ↗</a>`;
       }

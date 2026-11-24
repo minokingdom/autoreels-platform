@@ -102,3 +102,9 @@ body:has(#viewPreview.ar-service-home:not(.hidden)) .service-settings-icon { dis
 #arMemeCutVisualStrip > div { flex:0 0 100%; min-width:0; box-sizing:border-box; scroll-snap-align:start; }
 #arMemeCutVisualStrip > div > button { width:25%; height:110px; }
 #arMemeCutVisualStrip .truncate { white-space:normal; overflow-wrap:anywhere; }
+
+.quote-choice .draft-sheet { grid-column: 1 / -1; }
+.draft-sheet summary { cursor: pointer; color: #d6e2ef; font-size: 13px; }
+.draft-sheet img { width: 100%; max-height: 330px; margin-top: 8px; object-fit: contain; }
+.draft-sources { display: grid; gap: 4px; min-width: 0; }
+.draft-sources a { overflow-wrap: anywhere; }
