@@ -71,3 +71,23 @@ body:has(#viewPreview.ar-service-home:not(.hidden)) .service-settings-icon { dis
 #studioServices .service-tool small { margin-top: 2px; color: #b9c3d0; font-size: 12px; line-height: 1.4; word-break: keep-all; }
 #studioServices .service-wide { grid-column: 1 / -1; grid-template-columns: auto 1fr; align-items: center; gap: 12px; padding-right: 28px; }
 #studioServices .service-wide::after { top: calc(50% - 3px); }
+
+#studioServices .service-group { grid-column: 1 / -1; min-width: 0; border-bottom: 1px solid #303744; }
+#studioServices .service-group summary { display: flex; align-items: center; justify-content: space-between; min-height: 46px; padding: 0 4px; color: #e7edf5; font-size: 15px; font-weight: 700; cursor: pointer; list-style: none; }
+#studioServices .service-group summary::-webkit-details-marker { display: none; }
+#studioServices .service-group summary::after { content: ''; width: 7px; height: 7px; border: solid #93a4b8; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); margin-right: 7px; }
+#studioServices .service-group[open] summary::after { transform: rotate(225deg); }
+#studioServices summary:focus-visible { outline: 2px solid #93cdff; }
+#studioServices .service-group-tools { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; padding-bottom: 12px; }
+#studioServices .service-group-tools .service-tool:only-child,
+#studioServices .service-group-tools .service-tool:last-child:nth-child(odd) { grid-column: 1 / -1; }
+#studioServices .service-group-tools .service-wide { grid-column: auto; grid-template-columns: auto; }
+#studioServices .quote-menu-icon { font: 700 34px/23px Georgia,serif; height: 23px; color: #89cefc; }
+
+.quote-choice { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 9px 12px; padding: 15px; border-radius: 12px; border: 1px solid #343c49; background: #191e25; }
+.quote-choice small,.quote-choice strong { grid-column: 1 / -1; }
+.quote-choice small,.quote-choice a { color: #b3c2d2; font-size: 12px; }
+.quote-choice strong { color: #fff8eb; font-size: 17px; word-break: keep-all; }
+.quote-choice button { padding: 8px 12px; }
+
+#studioServices #openCardNewsBtn { grid-column: 1 / -1; grid-template-columns: auto 1fr; align-items: center; gap: 12px; }

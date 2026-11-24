@@ -77,7 +77,7 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="/assets/app/service-home.css?v=1" />
+  <link rel="stylesheet" href="/assets/app/service-home.css?v=2" />
 </head>
 <body class="antialiased px-4 py-6 md:px-8 md:py-8 pb-24 md:pb-12">
   <!-- 시작 스플래시 (코덱스 H 시안, 앱 색 톤): 페이지를 열자마자 보여 앱 로딩 시간을 가림. 준비되면 12-account-billing-sns.js 가 닫음. 누르면 바로 닫힘 -->
@@ -418,10 +418,15 @@
           <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="14" height="15" rx="2"/><path d="M7 6V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-3"/></svg>
           <span><strong>인스타 카드뉴스</strong><small>여러 장 슬라이드 만들기</small></span>
         </button>
+        <details class="service-group" open><summary>밈 편집</summary>
+          <div class="service-group-tools">
         <button type="button" id="openMemeShortsBtn" onclick="arOpenMemeShortsStudio()" class="service-tool">
           <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
           <span><strong>밈 쇼츠 만들기</strong><small>오늘의 밈×이슈 · 가게 패러디</small></span>
         </button>
+<button type="button" id="openQuoteShorts" class="service-tool"><span class="quote-menu-icon" aria-hidden="true">“</span><span><strong>영화·드라마 명대사</strong><small>작품을 골라 명대사 쇼츠 만들기</small></span></button>
+          </div>
+        </details>
         <a data-studio-tool href="/assets/shorts/index.html" class="service-tool service-wide">
           <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m10 9 5 3-5 3z"/></svg>
           <span><strong>내 영상으로 쇼츠</strong><small>긴 말하기 영상에서 핵심 구간 자동 찾기</small></span>
@@ -901,6 +906,7 @@
                 <button type="button" id="arMemeFactoryFormats" data-meme-cat="쇼츠 포맷" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">쇼츠 포맷</button>
                 <button type="button" data-meme-cat="국내 예능" onclick="arLoadMemeRadar('국내 예능')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">📺 국내 예능</button>
                 <button type="button" data-meme-cat="드라마·영화" onclick="arLoadMemeRadar('드라마·영화')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🎬 드라마·영화</button>
+                <button type="button" id="arQuoteFilter" data-meme-cat="명대사" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">영화·드라마 명대사</button>
                 <button type="button" data-meme-cat="공연·콘서트" onclick="arLoadMemeRadar('공연·콘서트')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🎤 공연·콘서트</button>
                 <button type="button" data-meme-cat="급상승 밈" onclick="arLoadMemeRadar('급상승 밈')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🔥 급상승 밈</button>
                 <button type="button" data-meme-cat="동물·유머" onclick="arLoadMemeRadar('동물·유머')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/8 text-[#d4d4d8] shrink-0 cursor-pointer">🐱 동물·유머</button>
@@ -3148,7 +3154,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-meme-formats-login"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-quote-pacing"><\/script>');
     }
   </script>
   <!--

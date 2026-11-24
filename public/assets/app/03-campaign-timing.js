@@ -803,6 +803,28 @@
 
     // 선택한 길이와 성우 음성 길이로 실제 영상 길이를 계산
     //  - 컷 길이는 가장 긴 성우 문장이 끝까지 나올 만큼 확보 (음성이 중간에 잘리지 않도록)
+    // 원본 한 편을 이어 재생할 때는 분석된 자막 시작점을 그대로 사용한다.
+    // 서로 다른 클립은 읽을 분량과 실제 재생 길이로 비중을 정한다.
+    function arMemeCutLengths(count, total) {
+      const item = window.__arCurrentMemeItem;
+      if (!document.body.classList.contains('ar-meme-mode') || item?.cuts?.length !== count) return [];
+      const starts = item.cuts.map(cut => cut.cueStart);
+      if (starts.every((t, i) => Number.isFinite(t) && t >= 0 && t < total && (!i || t > starts[i - 1]))) {
+        starts[0] = 0;
+        return starts.map((t, i) => (starts[i + 1] ?? total) - t);
+      }
+      const weights = item.cuts.map((cut, i) => {
+        const line = String(campaign.cutCaptions?.[i] || cut.line || '').trim();
+        const reading = 0.8 + Array.from(line.replace(/\s/g, '')).length / 7 + (/[!?…,，]/.test(line) ? 0.25 : 0);
+        const source = cut._customCutVideo?.duration;
+        const beat = i === 0 ? 0.82 : i === count - 1 ? 1.18 : 1;
+        const hold = cut.role === '대사' ? 1.55 : beat;
+        return Math.max(0.8, Math.min(6, (Number.isFinite(source) && source > 0 ? reading * 0.64 + Math.min(source, 6) * 0.36 : reading) * hold));
+      });
+      const sum = weights.reduce((a, b) => a + b, 0);
+      return weights.map(weight => total * weight / sum);
+    }
+
     function computeFittedDurations() {
       const hideOutro = (typeof campaign !== 'undefined' && campaign && campaign.hideCardOnVideo)
         || (typeof document !== 'undefined' && document.body && document.body.classList.contains('ar-meme-mode'))
@@ -823,7 +845,9 @@
       let outro = baseOutro;
       let lengths = [];
       let exactMasterLocked = false;
-      if (audioEngineReady() && AudioEngine.enabled && AudioEngine.ttsVoice !== 'off') {
+      const meme = typeof window !== 'undefined' && !!window.__arCurrentMemeItem && document.body.classList.contains('ar-meme-mode');
+      const useNarration = !(meme && window.__arKeepMemeOrigAudio);
+      if (useNarration && audioEngineReady() && AudioEngine.enabled && AudioEngine.ttsVoice !== 'off') {
         const secs = AudioEngine.getNarrationSeconds();
         const cutSecs = secs.slice(0, cuts);
         const outroSec = secs[cuts] || 0;
@@ -891,7 +915,7 @@
         const targetMain = Math.max(
           mainDur,
           BASE_DURATION,
-          audioEngineReady() && AudioEngine.enabled && AudioEngine.masterBuffer ? AudioEngine.masterDuration + 0.6 : 0
+          useNarration && audioEngineReady() && AudioEngine.enabled && AudioEngine.masterBuffer ? AudioEngine.masterDuration + 0.6 : 0
         );
         if (exactMasterLocked && lengths.length > 0 && targetMain > mainDur) {
           lengths[lengths.length - 1] += targetMain - mainDur;
@@ -899,6 +923,7 @@
         mainDur = targetMain;
       }
       // 음성 경계가 없을 때만 수동 컷 길이 반영. 전체 녹음이 있으면 영상이 음성을 따름
+      if (meme && !lengths.length) lengths = arMemeCutLengths(cuts, mainDur);
       const lenScale = (typeof campaign !== 'undefined' && Array.isArray(campaign.cutLenScale)) ? campaign.cutLenScale : null;
       if (!exactMasterLocked && lenScale && lenScale.some((v) => v && Math.abs(v - 1) > 0.01)) {
         if (!lengths.length) lengths = new Array(cuts).fill(mainDur / cuts);
@@ -965,7 +990,8 @@
       const prevCuts = getTargetCutCount();
       BASE_DURATION = Math.max(6, Math.min(90, Number(sec) || 12));
       if (typeof campaign !== 'undefined') {
-        delete campaign.cutCountOverride; campaign.cutLenScale = [];
+        if (!document.body.classList.contains('ar-meme-mode') || !window.__arCurrentMemeItem) delete campaign.cutCountOverride;
+        campaign.cutLenScale = [];
         // 컷 수가 바뀌면 컷마다 섞기도 새 컷 수에 맞춰 다시
         if (campaign.cutDesigns && typeof arBuildCutDesignMix === 'function') setTimeout(() => { campaign.cutDesigns = arBuildCutDesignMix(); if (typeof arRenderCutMixRow === 'function') arRenderCutMixRow(); }, 0);
       }

@@ -3653,7 +3653,7 @@
       campaign.uploadedPhotos.forEach((m, i) => {
         if (!m || !m._isVideo) return;
         if (i !== activeIdx) {
-          if (!m.paused) m.pause();
+          if (m !== campaign.uploadedPhotos[activeIdx] && !m.paused) m.pause();
           return;
         }
         const dur = m.duration && isFinite(m.duration) ? m.duration : 0;
@@ -3692,7 +3692,9 @@
           window.__arLastSyncedVideoCut = activeIdx;
           const keepAud = Boolean(m._keepAudio && (typeof AudioEngine === 'undefined' || !AudioEngine || !window.__arUserMuted));
           m.muted = !keepAud;
-          m.volume = keepAud ? 1.0 : 0;
+          const paced = document.body.classList.contains('ar-meme-mode') && !m._continuousVideo;
+          const gain = paced ? Math.min(1, Math.max(0, localSec / 0.065), Math.max(0, (getCutLengths()[activeIdx] - localSec) / 0.1)) : 1;
+          m.volume = keepAud ? gain : 0;
           // ★ 중요: 내보내기(window.__exportingVideo) 중이 아닐 때는 createMediaElementSource로 비디오 오디오를 가로채지 않고
           // 브라우저 네이티브 <video> 스피커 출력을 그대로 써야 AudioContext suspended 상태에서도 영상 자체 소리가 100% 즉시 들립니다!
           // 내보내기(MP4 녹화) 중일 때만 AudioEngine.streamDest에 연결해 녹화 파일에도 원본 영상 소리가 합쳐지게 합니다.
@@ -9435,6 +9437,8 @@
     window.__arCaptionCoverMask = { enabled: false, maskY: 0.81, maskH: 0.13 };
     window.__arMemeRadarItems = [];
     window.__arMemeCat = 'all';
+    document.getElementById('openQuoteShorts')?.addEventListener('click', () => arOpenMemeShortsStudio('명대사'));
+    document.getElementById('arQuoteFilter')?.addEventListener('click', () => arLoadMemeRadar('명대사'));
     document.getElementById('arMemeFactoryFormats')?.addEventListener('click', () => arLoadMemeRadar('쇼츠 포맷'));
 
     // 밈·쇼츠 팩토리 컷별 실제 원본 MP4 / 이미지를 빈틈(검은 여백) 0%로 그리는 60fps 실시간 스테이지
@@ -9483,6 +9487,23 @@
         const dy = stageY + Math.round((stageH - dh) / 2);
         try {
           ctx.drawImage(srcMedia, dx, dy, dw, dh);
+          // 연속 재생으로 경계를 통과한 경우에만 직전 컷의 끝 프레임을 짧게 겹친다.
+          const last = ctx._arMemeStageFrame;
+          const elapsed = cutProg * getCutLengths()[cutIdx];
+          let outgoing = null;
+          if (isPlaying && last?.item === memeItem && t >= last.time && t - last.time < 0.16 && elapsed < 0.14) {
+            outgoing = last.cut === cutIdx - 1 ? last.media : last.cut === cutIdx ? last.outgoing : null;
+          }
+          ctx._arMemeStageFrame = {item: memeItem, cut: cutIdx, media: srcMedia, outgoing, time: t};
+          if (outgoing && outgoing !== srcMedia) {
+            const ow = outgoing.videoWidth || outgoing.naturalWidth || outgoing.width;
+            const oh = outgoing.videoHeight || outgoing.naturalHeight || outgoing.height;
+            if (ow && oh) {
+              const fit = Math.max(stageW / ow, stageH / oh);
+              ctx.globalAlpha *= 1 - elapsed / 0.14;
+              ctx.drawImage(outgoing, (W - ow*fit)/2, stageY + (stageH - oh*fit)/2, ow*fit, oh*fit);
+            }
+          }
         } catch (_) {}
         ctx.restore();
       } else {
@@ -9649,6 +9670,10 @@
 
       if (isMemeMode) {
         const memeItem = window.__arCurrentMemeItem;
+        if (memeItem.factoryType === 'quote' && campaign.uploadedPhotos[cIdx]?._quoteCard) {
+          arPaintQuoteFrame(ctx, W, H, memeItem, memeItem.cuts[cIdx], campaign.cutCaptions?.[cIdx], cProg);
+          return;
+        }
         const cutObj = (memeItem.cuts && memeItem.cuts[cIdx]) || { line: campaign.ttsLines?.[cIdx] || '', mood: `컷 ${cIdx + 1}` };
         arDrawMemeCharacterStage(ctx, W, H, realT, cIdx, cProg, memeItem, cutObj);
       }
@@ -9971,7 +9996,78 @@
       arSyncMemeKeywordAndStoreInputs();
     }
 
-    function arOpenMemeShortsStudio() {
+    function arRenderQuoteChoices(list, items) {
+      list.replaceChildren();
+      items.forEach((item, idx) => {
+        const card = document.createElement('article');
+        card.className = 'quote-choice';
+        const detail = document.createElement('small');
+        detail.textContent = [item.genre, item.title, item.year, item.badge === '오늘의 이슈' ? item.badge : ''].filter(Boolean).join(' · ');
+        const title = document.createElement('strong');
+        title.textContent = '“' + item.quote + '”';
+        const source = document.createElement('a');
+        source.href = item.sourceUrl;
+        source.target = '_blank';
+        source.rel = 'noopener noreferrer';
+        source.textContent = item.sourceTag + ' 출처 보기 ↗';
+        const make = document.createElement('button');
+        make.type = 'button';
+        make.className = 'btn-primary';
+        make.textContent = '이 대사로 만들기';
+        make.addEventListener('click', () => arApplyMemeItemToStudio(idx, 'pure'));
+        card.append(detail, title, source, make);
+        list.append(card);
+      });
+    }
+
+    function arPaintQuoteFrame(ctx, w, h, item, cut, line, progress) {
+      ctx.save();
+      const gradient = ctx.createLinearGradient(0, 0, w, h);
+      gradient.addColorStop(0, item.color);
+      gradient.addColorStop(1, '#101116');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, w, h);
+      const x = w * 0.09;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#e8dbbf';
+      ctx.font = '600 ' + w * 0.035 + 'px sans-serif';
+      ctx.fillText(item.genre + '   /   ' + item.year, x, h * 0.14);
+      ctx.fillRect(x, h * 0.18, w - 2*x, Math.max(1,w*0.002));
+      ctx.fillStyle = '#fff9f0';
+      ctx.globalAlpha = 0.65 + 0.35 * Math.min(1,progress * 9);
+      ctx.font = '700 ' + w * (cut.role === '대사' ? 0.09 : 0.073) + 'px "Pretendard Variable", sans-serif';
+      const words = String(line || cut.line).split(/\s+/);
+      const rows = [''];
+      for (const word of words) {
+        const last = rows.length - 1;
+        const next = [rows[last], word].filter(Boolean).join(' ');
+        if (rows[last] && ctx.measureText(next).width > w - 2*x) rows.push(word);
+        else rows[last] = next;
+      }
+      rows.forEach((row, i) => ctx.fillText(row, x, h*0.48 + (i-(rows.length-1)/2)*w*0.115, w-2*x));
+      ctx.globalAlpha = 1;
+      ctx.font = '600 ' + w*0.045 + 'px sans-serif';
+      ctx.fillText(item.title, x, h*0.77);
+      ctx.font = '400 ' + w*0.032 + 'px sans-serif';
+      ctx.fillStyle = '#e8dbbf';
+      ctx.fillText('대사 출처 · ' + item.sourceTag, x, h*0.82);
+      ctx.restore();
+    }
+
+    async function arMakeQuoteImage(item, cut) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 540; canvas.height = 960;
+      arPaintQuoteFrame(canvas.getContext('2d'), 540, 960, item, cut, cut.line, 1);
+      const img = new Image();
+      img.src = img._dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+      await img.decode();
+      img._quoteCard = true;
+      cut._aiSceneImg = img;
+      return img;
+    }
+
+    function arOpenMemeShortsStudio(category) {
       document.body.classList.add('ar-meme-mode');
       if (typeof arShowStudioServices === 'function') arShowStudioServices(false);
       if (typeof arSetupSheetMode === 'function') arSetupSheetMode();
@@ -9989,7 +10085,10 @@
       if (wf) wf.scrollTop = 0;
       arSyncMemeKeywordAndStoreInputs();
       arToggleKaraokeMode(true);
-      if (!window.__arMemeRadarItems || !window.__arMemeRadarItems.length) {
+      if (category === '명대사' || window.__arMemeCat === '명대사') {
+        arSwitchMemeTab('radar');
+        arLoadMemeRadar(category || 'all');
+      } else if (!window.__arMemeRadarItems || !window.__arMemeRadarItems.length) {
         arLoadMemeRadar('all', false);
       } else if (!window.__arCurrentMemeItem && window.__arMemeRadarItems[0]) {
         arApplyMemeItemToStudio(0, window.__arMemeMashupMode || 'pure');
@@ -10039,6 +10138,11 @@
 
       if (requestId !== arMemeRadarRequest) return;
       const items = window.__arMemeRadarItems || [];
+      if (cat === '명대사' && items.length) {
+        if (statusEl) statusEl.textContent = '작품을 골라 명대사 타이포그래피 쇼츠를 만드세요.';
+        arRenderQuoteChoices(listEl, items);
+        return;
+      }
       const isFactory = window.__arMemeCat === '쇼츠 포맷';
       if (statusEl) {
         statusEl.textContent = items.length
@@ -10224,8 +10328,8 @@
 
     // ★ 밈 쇼츠 전용: 6컷 자막·성우 음성·원본 영상 타임라인 1:1 완전 동기화 헬퍼
     function arSyncMemeSixCutTimelineAndVoice(lines, durSec = 15) {
-      const cutCount = Math.max(4, (Array.isArray(lines) && lines.length) || 6);
-      const totalSec = Math.max(12, Number(durSec) || 15);
+      const cutCount = lines.length;
+      const totalSec = Math.max(6, Number(durSec) || 15);
       // 1) 밈 쇼츠에서는 기본으로 명함 엔딩 카드를 숨겨 6컷 전체가 영상+자막+음성에 100% 배정되도록 함
       campaign.hideCardOnVideo = true;
       AudioEngine.stopTts();
@@ -10243,9 +10347,10 @@
       campaign.cutCountOverride = cutCount;
       campaign.cutCaptions = lines.slice(0, cutCount);
       campaign.ttsLines = lines.slice(0, cutCount);
+      const cutLengths = arMemeCutLengths(cutCount, totalSec);
       campaign.scenePlan = lines.slice(0, cutCount).map((ln, i) => ({
         cut: i + 1,
-        duration: +(totalSec / cutCount).toFixed(2),
+        duration: cutLengths[i] || totalSec / cutCount,
         photoIdx: i,
         sub: ln,
         badge: (window.__arCurrentMemeItem?.cuts?.[i]?.mediaType) || `CUT 0${i + 1}`,
@@ -10304,10 +10409,11 @@
       if (!lines.length) return;
 
       if (requestId !== arMemeApplyRequest) return;
-      if (statusEl) statusEl.textContent = `⏳ "${it.title}" 실제 원본 밈 영상(MP4) 6컷을 불러오고 있습니다...`;
+      if (statusEl) statusEl.textContent = it.factoryType === 'quote' ? `「${it.title}」 명대사 카드를 만들고 있어요.` : `「${it.title}」 클립 ${cuts.length}개를 불러오고 있어요.`;
 
       // ★ 핵심: 각 컷의 실제 원본 밈 MP4를 모두 먼저 로드한 뒤 window.__arCurrentMemeItem을 교체하여 로딩 중 빈 프레임이나 폴백이 뜨지 않게 함!
       const rawVideos = await Promise.all(cuts.slice(0, 6).map(async (c, i) => {
+        if (it.factoryType === 'quote') return arMakeQuoteImage(it, c);
         const vUrl = c.videoUrl || (baseItem.cuts && baseItem.cuts[i] && baseItem.cuts[i].videoUrl) || '';
         c.videoUrl = vUrl;
         const vid = await arLoadRealMemeCutVideo(vUrl, `${i + 1}컷 · ${c.mood || '실제 원본 밈'}`);
@@ -10357,9 +10463,9 @@
       if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
       if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0.05);
 
-      const modeLabel = mode === 'store' ? '🏪 우리 가게×밈 패러디' : mode === 'keyword' ? '⚡ 오늘 키워드×밈 콜라보' : '🔥 실제 원본 밈';
+      const modeLabel = it.factoryType === 'quote' ? '명대사 쇼츠' : mode === 'store' ? '🏪 우리 가게×밈 패러디' : mode === 'keyword' ? '⚡ 오늘 키워드×밈 콜라보' : '🔥 실제 원본 밈';
       if (statusEl) statusEl.textContent = `✅ [${modeLabel}] "${it.title}" 영상 ${loadedVideos.length}컷과 컷별 자막을 적용했어요.`;
-      if (typeof arToast === 'function') arToast(`🎬 ${modeLabel} 실제 원본 영상 6컷이 재생됩니다!`, true);
+      if (typeof arToast === 'function') arToast(`${modeLabel} · ${loadedVideos.length}컷 미리보기`, true);
     }
 
     function arRenderMemeAssembledStrip(it) {
@@ -10369,19 +10475,21 @@
       if (!box || !strip || !it) return;
       box.classList.remove('hidden');
       const ytUrl = it.ytSearchUrl || `https://www.youtube.com/results?search_query=${encodeURIComponent(it.title + ' 쇼츠')}`;
-      if (titleEl) {
+      if (titleEl && it.factoryType === 'quote') {
+        titleEl.textContent = it.title + ' · 명대사 편집';
+      } else if (titleEl) {
         titleEl.innerHTML = `🎬 실제 원본 밈 영상 6컷 (${it.title.slice(0, 18)}) <a href="${ytUrl}" target="_blank" rel="noopener noreferrer" class="ml-1.5 underline text-[#fca5a5] text-[11px]">▶️ 유튜브 쇼츠 검색 ↗</a>`;
       }
       strip.innerHTML = (it.cuts || []).slice(0, 6).map((c, idx) => {
         const vSrc = (c._customCutVideo && c._customCutVideo._videoSrc) || c.videoUrl || '';
         const snap = campaign.uploadedPhotos[idx];
         const thumbSrc = (c._aiSceneImg && c._aiSceneImg.src) || (snap && (snap._dataUrl || snap.src)) || '';
-        const statusBadge = c._swapping
+        const statusBadge = snap?._quoteCard ? c.role : c._swapping
           ? '⏳ 원본 교체중'
           : (vSrc ? '🎬 실제 원본 MP4' : (c._aiSceneImg ? '✨ AI 1:1 씬' : '🎬 원본 밈'));
         return `
           <div class="rounded-[9px] bg-[#161924] border border-white/12 p-2 flex items-center gap-2">
-            <button type="button" onclick="if(window.__timelines&&window.__timelines.main)window.__timelines.main.seek(${getCutStart(idx) + 0.05});" class="relative w-11 h-16 rounded-[6px] overflow-hidden shrink-0 border border-[#60a5fa]/40 bg-black cursor-pointer">
+            <button type="button" onclick="if(window.__timelines&&window.__timelines.main)window.__timelines.main.seek(getCutStart(${idx}) + 0.05);" class="relative w-11 h-16 rounded-[6px] overflow-hidden shrink-0 border border-[#60a5fa]/40 bg-black cursor-pointer">
               ${thumbSrc
                 ? `<img src="${thumbSrc}" class="w-full h-full object-cover block" alt="" />`
                 : (vSrc ? `<video src="${vSrc}" preload="metadata" muted playsinline class="w-full h-full object-cover block"></video>` : '')}
@@ -10389,7 +10497,7 @@
             </button>
             <div class="min-w-0 flex-1 space-y-1">
               <div class="flex items-center justify-between gap-1">
-                <span class="text-[10.5px] font-bold text-[#60a5fa]">${idx + 1}컷 · ${c.mood || '원본 밈'}</span>
+                <span class="text-[10.5px] font-bold text-[#60a5fa]">${idx + 1}컷 · ${getCutLengths()[idx]?.toFixed(1)}초 · ${c.role || c.mood || '원본 밈'}</span>
                 <div class="flex items-center gap-1">
                   <button type="button" onclick="arSwapSingleMemeCutVideo(${idx})" class="px-1.5 py-0.5 rounded bg-[#2563eb]/25 hover:bg-[#2563eb] text-[9.5px] text-[#93c5fd] hover:text-white cursor-pointer" title="이 컷을 Tenor/GIPHY의 다른 실제 원본 밈 클립으로 교체">🔄 다른 원본</button>
                   <label class="px-1.5 py-0.5 rounded bg-white/8 hover:bg-white/15 text-[9.5px] text-[#d4d4d8] cursor-pointer" title="이 컷만 내 영상(MP4) 또는 짤 이미지로 교체">
@@ -10438,9 +10546,10 @@
         c.mediaType = '직접 올린 짤';
         campaign.uploadedPhotos[cutIdx] = im;
       }
+      applyVideoDurations();
       arRenderMemeAssembledStrip(it);
       if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
-      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(cutIdx * 2.0 + 0.15);
+      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(getCutStart(cutIdx) + 0.05);
       if (typeof arToast === 'function') arToast(`✅ ${cutIdx + 1}번 컷 비주얼을 교체했어요!`, true);
     }
 
@@ -10470,9 +10579,10 @@
             c.videoUrl = pick.url;
             c.mediaType = `🎬 ${pick.source || 'Tenor 원본 밈 MP4'}`;
             campaign.uploadedPhotos[cutIdx] = vid;
+            applyVideoDurations();
             arRenderMemeAssembledStrip(it);
             if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
-            if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(cutIdx * 2.0 + 0.15);
+            if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(getCutStart(cutIdx) + 0.05);
             if (typeof arToast === 'function') arToast(`🎬 ${cutIdx + 1}번 컷을 새 실제 원본 밈 클립으로 교체했어요!`, true);
             return true;
           }
@@ -10514,6 +10624,7 @@
               count++;
             }
           }));
+          applyVideoDurations();
           arRenderMemeAssembledStrip(it);
           if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
           if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0.05);
@@ -10674,7 +10785,7 @@
         const koLines = cues.map((c) => String(c.ko || '').trim()).filter(Boolean);
         const hooks = Array.isArray(data.hookTitles) && data.hookTitles.length ? data.hookTitles : ['끝까지 보면 터지는 레전드 반전 😂'];
 
-        const cutCount = Math.max(4, koLines.length || 6);
+        const cutCount = koLines.length || 6;
         const finalLines = koLines.length ? koLines : [
           '처음엔 평범한 상황인 줄 알았는데',
           '잠시 뒤 예상치 못한 일이 벌어집니다',
@@ -10694,6 +10805,7 @@
           cuts: finalLines.map((ln, idx) => ({
             line: ln,
             mood: `${Math.round((idx * dur) / finalLines.length)}~${Math.round(((idx + 1) * dur) / finalLines.length)}초 구간`,
+            cueStart: cues.filter(c => String(c.ko || '').trim())[idx]?.start,
             mediaType: '원본 영상 구간',
             _customCutVideo: vid
           }))
