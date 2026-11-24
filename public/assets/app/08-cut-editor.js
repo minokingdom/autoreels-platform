@@ -4097,7 +4097,12 @@ function arBindMotionPanel(host,index,item) {
     function updateCutCaptionDirect(cutIdx, val) {
       if (typeof cutIdx !== 'number' || cutIdx < 0) return;
       if (!Array.isArray(campaign.cutCaptions)) campaign.cutCaptions = [];
+      const changed = campaign.cutCaptions[cutIdx] !== String(val ?? '');
       campaign.cutCaptions[cutIdx] = String(val ?? '');
+      if (changed && arActiveMemeDialogue()) {
+        arSyncEditedMemeDialogue(cutIdx);
+        arResetAndRebuildNarration();
+      }
       const s2Input = document.getElementById(`s2CutCap_${cutIdx}`);
       if (s2Input && s2Input.value !== campaign.cutCaptions[cutIdx]) {
         s2Input.value = campaign.cutCaptions[cutIdx];

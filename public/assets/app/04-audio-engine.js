@@ -442,6 +442,7 @@
       ttsBlockedUntil: 0,
 
       getCutNarration(cutIdx) {
+        if (arActiveMemeDialogue()) return cutIdx < getTargetCutCount() ? arMemeDialogueAt(cutIdx).replace(/\s+/g, ' ') : '';
         const d = getSelectedDealer();
         const totalCuts = getTargetCutCount();
         let text = '';
@@ -1034,11 +1035,7 @@
       },
 
       shouldUseCutSyncedPlayback() {
-        // ★ 밈·쇼츠 팩토리 모드에서는 각 컷(1~6컷)의 영상·노래방 자막이 전환되는 정확한 순간에 해당 컷 대사 음성이 1:1로 시작되도록 컷 단위 싱크 재생 사용!
-        if (typeof document !== 'undefined' && document.body && document.body.classList.contains('ar-meme-mode')) {
-          return true;
-        }
-        return false;
+        return arActiveMemeDialogue() && (!this.masterBuffer || this.masterCutBounds?.length !== getTargetCutCount() + 1);
       },
 
       playMasterAt(startT = 0) {

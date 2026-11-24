@@ -3696,7 +3696,7 @@
     const arMemeOverlap = 0.20;
     const arMemePlayback = {item:null,video:null,index:-1,time:-1,tail:null};
     function arSetMemeMix(video, weight) {
-      const keep = Boolean(video._keepAudio && !window.__arUserMuted);
+      const keep = Boolean(window.__arKeepMemeOrigAudio && video._keepAudio && !window.__arUserMuted);
       video.muted = !keep;
       const ctx = AudioEngine.ctx;
       if (ctx?.state === 'running' && !video._arAudioNode) {
@@ -3736,6 +3736,8 @@
       const item=window.__arCurrentMemeItem, time=Number(window.__realTimelineT)||0;
       const contiguous=isPlaying && state.item===item && time>=state.time && time-state.time<0.28;
       const changed=video!==state.video || index!==state.index;
+      // A delayed animation frame is not a seek. Keep the media clock running within the same cut.
+      const jumped = state.item !== item || time < state.time || Math.abs(time-state.time) > 0.8;
       if (!contiguous || changed) {
         if (state.tail && state.tail!==video) state.tail.pause();
         state.tail=contiguous && changed && index===state.index+1 && state.video && state.video!==video && !state.video.paused && video && local<arMemeOverlap ? state.video : null;
@@ -3747,13 +3749,13 @@
       if (state.tail) arSetMemeMix(state.tail,Math.cos(angle));
       Object.assign(state,{item,video,index,time});
       if (!video) return;
-      if (Number.isFinite(video.duration) && video.duration>0 && (changed || !contiguous || !isPlaying)) {
-        const want=local%video.duration;
+      if (Number.isFinite(video.duration) && video.duration>0 && (changed || jumped || !isPlaying)) {
+        const want=video.loop ? local%video.duration : Math.min(local, Math.max(0, video.duration-0.001));
         if (Math.abs(video.currentTime-want)>0.09) video.currentTime=want;
       }
       arSetMemeMix(video,state.tail ? Math.sin(angle) : 1);
       if (!isPlaying) { if (!video.paused) video.pause(); return; }
-      if (video.paused && !video._memePlayPending) {
+      if (video.paused && !video._memePlayPending && !(video.ended && !video.loop && local >= video.duration-0.05)) {
         video._memePlayPending=true;
         video.play().catch(()=>{}).finally(()=>{video._memePlayPending=false;});
       }
@@ -3905,8 +3907,11 @@
         vid._playRate = Math.max(0.5, Math.min(2.0, patch.playRate));
       }
       if (patch.toggleAudio) {
-        vid._keepAudio = !vid._keepAudio;
-        vid.muted = !vid._keepAudio;
+        if (arActiveMemeDialogue()) arToggleMemeOrigAudio(!window.__arKeepMemeOrigAudio);
+        else {
+          vid._keepAudio = !vid._keepAudio;
+          vid.muted = !vid._keepAudio;
+        }
       }
       const span = Math.max(1, ((vid._trimEnd || dur) - (vid._trimStart || 0)) / (vid._playRate || 1));
       const outroSec = (typeof arCardEmpty === 'function' && arCardEmpty()) ? 0 : 3;
@@ -9560,7 +9565,27 @@
       const hasStoreImg = Boolean(cutObj && cutObj._storeImg && cutObj._storeImg.complete && cutObj._storeImg.naturalWidth > 0);
 
       const video = cutObj?._customCutVideo;
-      const vidMedia = video?.readyState >= 2 ? video : null;
+      // 디코더가 버퍼링하거나 탐색하는 동안 마지막으로 표시한 프레임을 유지한다.
+      let vidMedia = video?._memePoster || null;
+      if (video && !video.seeking && video.readyState >= 2 && video.videoWidth) {
+        const decoded = video.getVideoPlaybackQuality?.().totalVideoFrames;
+        const stamp = !video.paused && decoded > 0 ? decoded : 'at-' + video.currentTime;
+        if (!video._memeStill || video._memeFrameStamp !== stamp) {
+          const still = video._memeStill || document.createElement('canvas');
+          const width = Math.min(video.videoWidth, Math.max(W, ctx.canvas.width));
+          const height = Math.max(1, Math.round(width * video.videoHeight / video.videoWidth));
+          if (still.width !== width || still.height !== height) {
+            still.width = width;
+            still.height = height;
+          }
+          try {
+            still.getContext('2d').drawImage(video, 0, 0, width, height);
+            video._memeStill = still;
+            video._memeFrameStamp = stamp;
+          } catch (_) {}
+        }
+      }
+      vidMedia = video?._memeStill || vidMedia;
       const hasCustomVid = Boolean(vidMedia);
 
       ctx.fillStyle = '#07090f';
@@ -9574,7 +9599,10 @@
 
       // ★ 핵심: 영상 위아래에 의미 없는 검은 레터박스 빈 공간이 생기지 않도록
       //   영상 비율에 맞춰 중앙 영상 스테이지 높이를 계산하고, 상단 자막바(0~stageY)와 하단 자막바(stageY+stageH~H)가 영상 위아래 경계에 0px 오차로 딱 달라붙게 스냅!
-      const naturalHAtFullW = Math.round(W * (sh / Math.max(1, sw)));
+      const first = campaign.uploadedPhotos?.[0];
+      const frameW = first?.videoWidth || first?.naturalWidth || sw;
+      const frameH = first?.videoHeight || first?.naturalHeight || sh;
+      const naturalHAtFullW = Math.round(W * frameH / Math.max(1, frameW));
       const stageX = 0;
       const stageW = W;
       const stageH = Math.min(Math.round(H * 0.54), Math.max(Math.round(H * 0.42), naturalHAtFullW));
@@ -9876,7 +9904,7 @@
       const showMask = Boolean(mask.enabled);
       const showKaraoke = Boolean(window.__arKaraokeMode || showMask || isMemeMode);
       if (showMask || showKaraoke) {
-        const rawLine = String((campaign.ttsLines && campaign.ttsLines[cIdx]) || (window.__arCurrentMemeItem?.cuts?.[cIdx]?.line) || '').replace(/\s+/g, ' ').trim();
+        const rawLine = (isMemeMode ? arMemeDialogueAt(cIdx) : String(campaign.ttsLines?.[cIdx] || '')).replace(/\s+/g, ' ').trim();
         const botTopY = showMask
           ? Math.round(H * ((Number(mask.maskY) || 0.81) - (Number(mask.maskH) || 0.18) / 2))
           : ((isMemeMode && window.__arMemeStageBotY) ? window.__arMemeStageBotY : Math.round(H * 0.72));
@@ -10163,7 +10191,7 @@
       ctx.fillStyle = '#fff9f0';
       ctx.globalAlpha = 0.65 + 0.35 * Math.min(1,progress * 9);
       ctx.font = '700 ' + w * (cut.role === '대사' ? 0.09 : 0.073) + 'px "Pretendard Variable", sans-serif';
-      const words = String(line || cut.line).split(/\s+/);
+      const words = String(line ?? cut.line ?? '').split(/\s+/);
       const rows = [''];
       for (const word of words) {
         const last = rows.length - 1;
@@ -10347,12 +10375,18 @@
       if (q) return arLoadMemeRadar('all', true, q);
     }
 
-    window.__arKeepMemeOrigAudio = true;
+    window.__arKeepMemeOrigAudio = false;
     function arToggleMemeOrigAudio(forceVal) {
-      window.__arKeepMemeOrigAudio = typeof forceVal === 'boolean' ? forceVal : !window.__arKeepMemeOrigAudio;
+      arSetMemeVoiceMode(typeof forceVal === 'boolean' ? forceVal : !window.__arKeepMemeOrigAudio);
+      arEnableMemeStudioAudioAndVoice();
+    }
+
+    function arSetMemeVoiceMode(keepOriginal) {
+      window.__arKeepMemeOrigAudio = keepOriginal;
       const btn = document.getElementById('arMemeOrigAudioBtn');
       if (btn) {
-        btn.textContent = window.__arKeepMemeOrigAudio ? '🔊 원본 영상 소리 ON' : '🔇 원본 영상 소리 OFF';
+        btn.textContent = keepOriginal ? '음성 · 원본 목소리' : '음성 · 자막 더빙';
+        btn.setAttribute('aria-pressed', String(keepOriginal));
         btn.className = window.__arKeepMemeOrigAudio
           ? 'px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#16a34a] text-white border border-[#4ade80] cursor-pointer'
           : 'px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#1e2028] text-[#a1a1aa] border border-white/15 cursor-pointer';
@@ -10361,21 +10395,17 @@
         campaign.uploadedPhotos.forEach((m) => {
           if (m && m._isVideo) {
             m._keepAudio = window.__arKeepMemeOrigAudio;
+            if (!m._continuousVideo) m.loop = keepOriginal;
+            if (!keepOriginal && m._arAudioGain) {
+              const gain = m._arAudioGain.gain;
+              gain.cancelScheduledValues(AudioEngine.ctx.currentTime);
+              gain.setValueAtTime(0, AudioEngine.ctx.currentTime);
+              m._memeTarget = 0;
+            }
             m.muted = !window.__arKeepMemeOrigAudio;
             m.volume = window.__arKeepMemeOrigAudio ? 1.0 : 0;
           }
         });
-      }
-      // 원본 영상 소리를 켰을 때는 영상 자체의 소리(웃음소리·대사·현장음·콘서트 사운드)가 방해받지 않고 선명하게 들리도록
-      // 내장 신디사이저 BGM은 자동으로 끄고, 원본 영상 소리를 껐을 때만 BGM+성우 더빙으로 전환합니다!
-      if (typeof AudioEngine !== 'undefined' && AudioEngine) {
-        if (window.__arKeepMemeOrigAudio) {
-          AudioEngine.stopBgmLoop?.();
-          AudioEngine.stopTts?.();
-        } else if (AudioEngine.enabled) {
-          AudioEngine.startBgmLoop?.();
-          AudioEngine.prefetchTtsBuffers?.(true)?.catch?.(() => {});
-        }
       }
     }
 
@@ -10459,7 +10489,7 @@
     function arEnableMemeStudioAudioAndVoice() {
       if (typeof AudioEngine === 'undefined' || !AudioEngine) return;
       try {
-        window.__arUserMuted = false;
+        if (window.__arUserMuted) return;
         if (window.__arKeepMemeOrigAudio !== false) {
           // 원본 영상 자체 소리가 BGM/신디사이저 비트에 묻히지 않도록 내장 BGM/TTS는 멈추고 영상 자체 소리만 출력!
           AudioEngine.stopBgmLoop?.();
@@ -10478,7 +10508,7 @@
           const vSel = document.getElementById('ttsVoiceSelect');
           if (vSel) vSel.value = AudioEngine.ttsVoice;
         }
-        AudioEngine.prefetchTtsBuffers?.(true)?.catch?.(() => {});
+        return AudioEngine.prefetchTtsBuffers?.(true)?.catch?.(() => {});
       } catch (_) {}
     }
 
@@ -10494,15 +10524,11 @@
       AudioEngine.masterKey = AudioEngine.masterWantKey = '';
       AudioEngine.lastSpokenCut = -1;
       AudioEngine.ttsDirty = true;
-      if (typeof setVideoTotalDuration === 'function') {
-        setVideoTotalDuration(totalSec);
-      } else {
-        BASE_DURATION = totalSec;
-      }
-      // 2) setVideoTotalDuration이 지운 cutCountOverride를 6컷으로 고정하고 대사를 다시 주입
       campaign.cutCountOverride = cutCount;
-      campaign.cutCaptions = lines.slice(0, cutCount);
-      campaign.ttsLines = lines.slice(0, cutCount);
+      campaign.cutCaptions = lines.slice();
+      campaign.ttsLines = lines.slice();
+      if (typeof setVideoTotalDuration === 'function') setVideoTotalDuration(totalSec);
+      else BASE_DURATION = totalSec;
       const cutLengths = arMemeCutLengths(cutCount, totalSec);
       campaign.scenePlan = lines.slice(0, cutCount).map((ln, i) => ({
         cut: i + 1,
@@ -10515,7 +10541,7 @@
       if (typeof applyVideoDurations === 'function') {
         applyVideoDurations();
       }
-      arEnableMemeStudioAudioAndVoice();
+      return arEnableMemeStudioAudioAndVoice();
     }
 
     let arMemeApplyRequest = 0;
@@ -10561,9 +10587,10 @@
         } catch (_) {}
       }
 
-      const cuts = Array.isArray(it.cuts) && it.cuts.length ? it.cuts : [];
-      const lines = cuts.map((c) => String(c.line || '').trim()).filter(Boolean);
-      if (!lines.length) return;
+      const cuts = Array.isArray(it.cuts) ? it.cuts.slice(0, 6) : [];
+      it.cuts = cuts;
+      const lines = cuts.map((c) => String(c.line ?? '').trim());
+      if (!cuts.length) return;
 
       if (requestId !== arMemeApplyRequest) return;
       if (statusEl) statusEl.textContent = ['briefing','quote'].includes(it.factoryType) ? `「${it.title}」 카드를 만들고 있어요.` : `「${it.title}」 클립 ${cuts.length}개를 불러오고 있어요.`;
@@ -10592,7 +10619,9 @@
       const loadedVideos = rawVideos;
 
       window.__arCurrentMemeItem = it;
+      isPlaying = false;
       campaign.uploadedPhotos = loadedVideos;
+      arSetMemeVoiceMode(it.directSource === true);
       campaign.vehicle = it.title.replace(/^\[[^\]]+\]\s*/, '').slice(0, 26);
       campaign.hook = it.title;
       campaign.bullets = [it.why || '', it.factNote || ''].filter(Boolean);
@@ -10607,7 +10636,7 @@
         const footage = Math.max(0.2,(video.duration || 4)-arMemeOverlap);
         return seconds+Math.min(6,footage,reading+1.2);
       },0);
-      arSyncMemeSixCutTimelineAndVoice(lines, it.directSource ? Math.min(90,loadedVideos[0].duration || 6) : it.factoryType === 'quote' ? 15 : Math.min(24,available));
+      const voiceReady = arSyncMemeSixCutTimelineAndVoice(lines, it.directSource ? Math.min(90,loadedVideos[0].duration || 6) : it.factoryType === 'quote' ? 15 : Math.min(24,available));
 
       const capEl = document.getElementById('snsCaptionInput');
       if (capEl) {
@@ -10619,11 +10648,19 @@
       if (typeof renderPhotoThumbnailsGrid === 'function') renderPhotoThumbnailsGrid();
       if (typeof syncPreviewPanel === 'function') syncPreviewPanel();
 
-      isPlaying = true;
-      const ppBtn = document.getElementById('playPauseBtn');
-      if (ppBtn) ppBtn.textContent = '⏸ 일시정지';
-      if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
-      if (window.__timelines && window.__timelines.main) window.__timelines.main.seek(0.05);
+      window.__timelines?.main?.seek(0);
+      if (voiceReady) {
+        if (statusEl) statusEl.textContent = '컷 자막에 맞춰 더빙을 준비하고 있어요.';
+        await voiceReady;
+        if (requestId !== arMemeApplyRequest || !arActiveMemeDialogue() || window.__arCurrentMemeItem !== it) return;
+        if (lines.some((line, i) => line !== arMemeDialogueAt(i))) return;
+      }
+      if (!isPlaying && window.__timelines?.main?.currentTime === 0) {
+        isPlaying = true;
+        lastWallTime = performance.now();
+        AudioEngine.onPlayStateChange(true);
+        if (typeof updatePlayPauseUI === 'function') updatePlayPauseUI();
+      }
 
       const modeLabel = it.factoryType === 'briefing' ? '오늘의 브리핑' : it.factoryType === 'quote' ? '명대사 쇼츠' : mode === 'store' ? '🏪 우리 가게×밈 패러디' : mode === 'keyword' ? '⚡ 오늘 키워드×밈 콜라보' : '🔥 실제 원본 밈';
       if (statusEl) statusEl.textContent = `✅ [${modeLabel}] "${it.title}" 영상 ${loadedVideos.length}컷과 컷별 자막을 적용했어요.`;
@@ -11025,6 +11062,7 @@
         };
 
         campaign.uploadedPhotos = Array.from({ length: cutCount }, () => vid);
+        arSetMemeVoiceMode(false);
         campaign.hook = hooks[0];
         campaign.vehicle = hooks[0].slice(0, 24);
         arSyncMemeSixCutTimelineAndVoice(finalLines, dur);

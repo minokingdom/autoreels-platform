@@ -527,7 +527,7 @@
             <span class="block text-[11px] text-[#85858b]">화면 자막 <span class="text-[#6e6e73]">· " / "로 줄 나누기 (비우면 자동)</span></span>
             <input id="cutSub${i}" type="text" value="${subVal}" oninput="updateCustomCutCaptions()" placeholder="${i + 1}컷 화면 헤드라인" class="studio-input w-full h-8 px-2.5 text-[12px]" />
             <span class="block text-[11px] text-[#85858b]">성우 대사</span>
-            <input id="cutTts${i}" type="text" value="${ttsVal}" oninput="updateCustomCutCaptions()" placeholder="${i + 1}컷 성우 대사 (짧을수록 영상이 짧아집니다)" title="숫자가 다르게 읽히면 한글로 적어 주세요. 예: 네 대" class="studio-input w-full h-7 px-2.5 text-[11px] text-[#a1a1a6]" />
+            <input id="cutTts${i}" type="text" value="${ttsVal}" oninput="updateCustomCutCaptions(this)" placeholder="${i + 1}컷 성우 대사 (짧을수록 영상이 짧아집니다)" title="숫자가 다르게 읽히면 한글로 적어 주세요. 예: 네 대" class="studio-input w-full h-7 px-2.5 text-[11px] text-[#a1a1a6]" />
           </div>
         `;
         // 사진 탭: 컷별 사진/영상 · 화면 디자인 · 카메라 모션
@@ -861,6 +861,23 @@
         lengths[i+1] += nominal-best;
       }
       return lengths;
+    }
+
+    function arActiveMemeDialogue() {
+      return document.body.classList.contains('ar-meme-mode') && !!window.__arCurrentMemeItem;
+    }
+
+    function arMemeDialogueAt(index) {
+      return String(campaign.cutCaptions?.[index] ?? window.__arCurrentMemeItem?.cuts?.[index]?.line ?? '').trim();
+    }
+
+    function arSyncEditedMemeDialogue(index) {
+      const cut = window.__arCurrentMemeItem.cuts?.[index];
+      if (!cut) return;
+      const text = arMemeDialogueAt(index);
+      campaign.ttsLines[index] = text;
+      cut.line = text;
+      if (campaign.scenePlan?.[index]) campaign.scenePlan[index].sub = text;
     }
 
     function computeFittedDurations() {

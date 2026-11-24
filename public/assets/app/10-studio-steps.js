@@ -2398,7 +2398,7 @@
     }
 
     let _arCutCaptionDebounce = null;
-    function updateCustomCutCaptions() {
+    function updateCustomCutCaptions(source) {
       campaign.noDefaultCaptions = false;
       campaign._userWroteScript = true;
       const totalCuts = getTargetCutCount();
@@ -2408,7 +2408,14 @@
         // 대본 칸에서는 ' / ' 를 줄 나누기로 씀 (화면에서 직접 넣은 줄바꿈과 같은 뜻)
         if (el) campaign.cutCaptions[i] = el.value.replace(/\s+\/\s+/g, '\n').replace(/\n{2,}/g, '\n').trim();
         const ttsEl = document.getElementById(`cutTts${i}`);
-        if (ttsEl) campaign.ttsLines[i] = ttsEl.value;
+        if (arActiveMemeDialogue()) {
+          if (source && source === ttsEl) {
+            campaign.cutCaptions[i] = ttsEl.value;
+            if (el) el.value = ttsEl.value;
+          }
+          arSyncEditedMemeDialogue(i);
+          if (ttsEl && ttsEl.value !== campaign.ttsLines[i]) ttsEl.value = campaign.ttsLines[i];
+        } else if (ttsEl) campaign.ttsLines[i] = ttsEl.value;
       }
       clearTimeout(_arCutCaptionDebounce);
       _arCutCaptionDebounce = setTimeout(() => {

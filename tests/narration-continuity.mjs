@@ -28,12 +28,13 @@ const methods=['shouldUseCutSyncedPlayback','playMasterAt','stopMasterSource','s
  const m=audio.match(new RegExp('^      '+name+'\\([^]*?^      \\},?\\r?$','m'));
  assert.ok(m,name); return m[0].trimEnd().replace(/,$/, '');
 }).join(',\n');
-for(const factor of [0.5,1,4]) for (const card of [false,true]) for(const base of [8,12,20,30]) {
+for(const factor of [0.5,1,4]) for (const mode of ['meme','reel','card']) for(const base of [8,12,20,30]) {
+ const card=mode==='card';
  const rawBounds=card?[0,2.21,3.65,5.03,5.8775,7.4]:[0,2.21,3.65,5.03,5.8775];
  const bounds=rawBounds.map(x=>x*factor);
  const sources=[];
  const ctx={currentTime:1,createBufferSource(){const s={connect(){},start(t,offset){this.offset=offset},stop(){this.stopped=true}};sources.push(s);return s},createGain(){return {connect(){},gain:{value:1,cancelScheduledValues(){},setValueAtTime(){},linearRampToValueAtTime(){}}}}};
- const env={BASE_DURATION:base,TOTAL_DURATION:base,OUTRO_DURATION:0,campaign:{cutLenScale:[2,1,1,1]},arCardEmpty:()=>!card,audioEngineReady:()=>true,getTargetCutCount:()=>4,arVoiceAllowed:()=>true,getMainDuration:()=>env.TOTAL_DURATION-env.OUTRO_DURATION,isPlaying:true,arEditSheetOpen:false,window:{__timelines:{main:{currentTime:2}}}};
+ const env={arActiveMemeDialogue:()=>mode==='meme',BASE_DURATION:base,TOTAL_DURATION:base,OUTRO_DURATION:0,campaign:{cutLenScale:[2,1,1,1]},arCardEmpty:()=>!card,audioEngineReady:()=>true,getTargetCutCount:()=>4,arVoiceAllowed:()=>true,getMainDuration:()=>env.TOTAL_DURATION-env.OUTRO_DURATION,isPlaying:true,arEditSheetOpen:false,window:{__timelines:{main:{currentTime:2}}}};
  vm.createContext(env);
  vm.runInContext('this.AudioEngine={'+methods+'}',env);
  Object.assign(env.AudioEngine,{ctx,enabled:true,ttsVoice:'test',masterBuffer:{duration:bounds.at(-1)},masterDuration:bounds.at(-1),masterCutBounds:bounds,masterPeak:1,ttsGain:{},ensureContext:()=>ctx,handleSceneSfx(){},getNarrationSeconds:()=>bounds.slice(1).map((b,i)=>b-bounds[i]),speakCutLine(){throw Error('continuous narration interrupted by a cut')}});
@@ -65,4 +66,4 @@ for(const factor of [0.5,1,4]) for (const card of [false,true]) for(const base o
  env.AudioEngine.playMasterAt(0);
  assert.equal(env.AudioEngine.masterSource.offset,0);
 }
-console.log('narration continuity ok: 24 short/long narration and duration/card combinations, cut boundaries, pause/resume/restart');
+console.log('narration continuity ok: 36 meme/reel short/long narration and duration/card combinations, cut boundaries, pause/resume/restart');
