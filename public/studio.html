@@ -77,7 +77,7 @@
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="/assets/app/service-home.css?v=3" />
+  <link rel="stylesheet" href="/assets/app/service-home.css?v=4" />
 </head>
 <body class="antialiased px-4 py-6 md:px-8 md:py-8 pb-24 md:pb-12">
   <!-- 시작 스플래시 (코덱스 H 시안, 앱 색 톤): 페이지를 열자마자 보여 앱 로딩 시간을 가림. 준비되면 12-account-billing-sns.js 가 닫음. 누르면 바로 닫힘 -->
@@ -424,7 +424,8 @@
           <svg class="service-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
           <span><strong>밈 쇼츠 만들기</strong><small>오늘의 밈×이슈 · 가게 패러디</small></span>
         </button>
-<button type="button" id="openQuoteShorts" class="service-tool"><span class="quote-menu-icon" aria-hidden="true">“</span><span><strong>영화·드라마 명대사</strong><small>작품을 골라 명대사 쇼츠 만들기</small></span></button>
+<a href="/assets/shorts/index.html?mode=edit&amp;story=1" class="service-tool"><span class="quote-menu-icon" aria-hidden="true">✦</span><span><strong>캐릭터 쇼츠 만들기</strong><small>주제로 만화 장면과 대사 만들기</small></span></a>
+        <button type="button" id="openQuoteShorts" class="service-tool"><span class="quote-menu-icon" aria-hidden="true">“</span><span><strong>영화·드라마 명대사</strong><small>작품을 골라 명대사 쇼츠 만들기</small></span></button>
           </div>
         </details>
         <a data-studio-tool href="/assets/shorts/index.html" class="service-tool service-wide">
@@ -952,7 +953,7 @@
                 </div>
                 <div class="meme-cut-carousel" role="region" aria-roledescription="캐러셀" aria-label="원본 컷 편집">
                   <div class="meme-cut-nav"><strong>원본 컷 편집</strong><button type="button" id="arMemeCutPrev" aria-label="이전 컷">‹</button><output id="arMemeCutCounter" aria-live="polite"></output><button type="button" id="arMemeCutNext" aria-label="다음 컷">›</button></div>
-                  <div id="arMemeCutVisualStrip" tabindex="0" aria-label="컷 목록"></div>
+                  <div id="arMemeCutVisualStrip" tabindex="0" aria-label="컷 목록"></div><div id="memeCutMotion"></div>
                 </div>
               </div>
             </div>
@@ -3158,7 +3159,7 @@
       document.body.className = '';
       document.body.innerHTML = '<div class="bar"><span>모바일 화면 (390×844)</span><a href="/studio">PC 버전으로</a></div><div class="frame"><iframe src="/studio?v=20261120b" title="오토릴스메이커 모바일 스튜디오"></iframe></div>';
     } else {
-      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-search-original"><\/script>');
+      document.write('<script src="/assets/shorts/sns-transport.js"><\/script><script src="/assets/app/app.js?v=20261124-mobile-motion"><\/script>');
     }
   </script>
   <!--
@@ -3171,5 +3172,6 @@
   <link rel="stylesheet" href="/assets/app/studio-polish.css?v=20261121a" />
   <link rel="stylesheet" href="/assets/shorts/launch.css">
   <script src="/assets/shorts/launch.js?v=cuts2"></script>
+<script defer src="/assets/shorts/lottie-canvas.js"></script><script defer src="/assets/shorts/motion-library.js"></script>
 </body>
 </html>

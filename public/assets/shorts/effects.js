@@ -1,4 +1,5 @@
 const effectNames={
+  ...window.arMotionLibrary.names,
   flash:'플래시',zoom:'펀치 줌',echo:'이중상',dip:'딥 전환',leak:'빛 번짐',slice:'슬라이스 스텝',
   rgbSplit:'글리치 RGB',bloom:'소프트 블룸',bokeh:'보케 빛망울',snow:'눈 내림',sparks:'스파크 반짝임',
   letterbox:'필름 레터박스',scanline:'스캔라인',prism:'프리즘 빛갈림',zoomOut:'줌 아웃 펄스',blurPull:'렌즈 포커스',
@@ -17,6 +18,7 @@ const lookKinds=new Set([
   'cutoutBlur','cutoutDark','cutoutCream','cutoutOutline','cutoutBehindText'
 ]);
 const effectRecipes=[
+  ...Object.keys(window.arMotionLibrary.names).map(kind=>({kind,duration:1.45,strength:1})),
   // 인물 컷아웃 (AI 배경 제거 5종 — 무료 브라우저 GPU 처리)
   {kind:'cutoutBlur',duration:Infinity,strength:.85,tab:'cutout'},
   {kind:'cutoutBehindText',duration:Infinity,strength:1,tab:'cutout'},
@@ -215,6 +217,8 @@ function paintEffects(ctx,s,time,activeText){
     ctx.save();
     if(window.arCutoutKinds && window.arCutoutKinds.has(effect.kind) && typeof window.arPaintCutoutEffect==='function'){
       window.arPaintCutoutEffect(ctx,effect.kind,amount,time,s?.clip,activeText);
+    }else if(Object.hasOwn(window.arMotionLibrary.names,effect.kind)){
+      window.arMotionLibrary.paint(ctx,effect.kind,phase,effect.strength);
     }else if(look){
       paintLook(ctx,effect.kind,amount,time,w,h);
     }else if(effect.kind==='flash' || effect.kind==='dip'){

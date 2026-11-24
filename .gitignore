@@ -9,3 +9,6 @@ public/assets/landing/industries.js
 
 .vercel
 .env*
+
+/public/assets/shorts/lottie-canvas.js
+/public/assets/shorts/lottie-LICENSE.txt

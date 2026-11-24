@@ -29,6 +29,7 @@
       "maxDuration": 60
     },
     "api/generate-script.js": {
+      "includeFiles": "node_modules/{@ffmpeg-installer/linux-x64,@resvg/resvg-js-linux-x64-gnu}/**",
       "maxDuration": 60
     }
   },

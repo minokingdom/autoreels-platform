@@ -108,3 +108,4 @@ body:has(#viewPreview.ar-service-home:not(.hidden)) .service-settings-icon { dis
 .draft-sheet img { width: 100%; max-height: 330px; margin-top: 8px; object-fit: contain; }
 .draft-sources { display: grid; gap: 4px; min-width: 0; }
 .draft-sources a { overflow-wrap: anywhere; }
+.ar-cut-motion{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px;margin-top:10px;font-size:12px}.ar-cut-motion select{padding:8px;border:1px solid #42444e;border-radius:8px;background:#202128;color:#fff}.ar-cut-motion>div{grid-column:1/-1}.ar-cut-motion label{display:flex;align-items:center;gap:8px;min-height:30px}.ar-cut-motion input{flex:1;min-width:0}.ar-cut-motion output{min-width:3em;text-align:right}

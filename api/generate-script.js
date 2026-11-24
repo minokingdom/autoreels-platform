@@ -1108,6 +1108,7 @@ async function handler(req, res) {
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : { ...req.body };
   // 오늘의 주제 추천: {mode:'topics'} — 대본 대신 오늘 올릴 주제 후보 6개를 돌려줌
   if (body.mode === 'topics') return handleTopics(body, res);
+  if (['character-plan','character-render'].includes(body.mode)) return require('../lib/character-shorts.cjs').handleCharacter(body,res);
   if (body.mode === 'cardnews') return handleCardNews(body, res);
   if (body.mode === 'cardnews-edit') return handleCardNewsEdit(body, res);
   if (['meme-radar', 'meme-visuals', 'meme-mashup', 'foreign-remake', 'meme-url-import'].includes(body.mode)) return require('../lib/meme-remake-engine.cjs').handleMemeRemakeRequest(body, res);

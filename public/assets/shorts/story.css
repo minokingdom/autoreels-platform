@@ -1,0 +1,24 @@
+#storyMaker{margin:auto;padding:0;border:1px solid #34363b;border-radius:16px;background:#191a1f;color:#fafafa;width:min(800px,96vw);max-width:none;max-height:94dvh}
+#storyMaker::backdrop{background:#0d0d10e8}
+.story-layout{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr;height:min(680px,86dvh);font-family:inherit}
+.story-head{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:8px 14px;background:#17181c}
+.story-head h1{font-size:17px;margin:0}
+#storyMaker button,#storyMaker select{min-height:40px;padding:7px 12px;border:1px solid #42434c;border-radius:9px;background:#2a2b32;color:#f8f8f9;font:inherit;cursor:pointer}
+#storyMaker button:disabled{opacity:.5}.story-screen{min-height:0;background:#0d0e11;display:grid;place-items:center;position:relative;overflow:hidden}
+#storyPreview{display:block;height:100%;max-width:100%;aspect-ratio:9/16;object-fit:contain}
+#storySubtitle{position:absolute;bottom:14%;inset-inline:8%;margin:0;text-align:center;font-size:clamp(13px,2.5vw,20px);font-weight:750;color:white;text-shadow:0 1px 6px black,0 0 4px black;pointer-events:none;word-break:keep-all}
+.story-tools{min-width:0;min-height:0;overflow:auto;padding:20px;overscroll-behavior:contain}
+.story-tools form,.story-tools #storyCuts:not([hidden]){display:grid;gap:10px}.story-tools [hidden]{display:none!important}.story-tools textarea{resize:vertical;box-sizing:border-box;width:100%;font:inherit;font-size:16px;padding:10px;color:white;background:#111216;border:1px solid #40414a;border-radius:10px}
+.story-tools fieldset{border:0;padding:0;margin:0}.story-tools label,.story-tools legend{font-size:14px}.story-styles,.story-scene-actions,#storySceneNav{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.story-styles label{padding:8px 2px}.story-styles input{accent-color:#a8c4ff}
+#storyMaker .story-primary,#storySceneNav button[aria-pressed="true"]{background:#bfd1ff;color:#11234c;font-weight:700}
+#storyStatus{font-size:13px;color:#cdd0db;margin:10px 0 0}.story-scene-actions{justify-content:space-between}
+@media(max-width:680px){#storyMaker{width:100%;height:100dvh;max-height:none;border:0;border-radius:0}
+.story-layout{height:100%;display:grid;grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) 50%}
+.story-tools{border-radius:18px 18px 0 0;background:#202126;padding:10px 16px max(16px,env(safe-area-inset-bottom))}
+.story-tools:before{content:"";display:block;width:42px;height:4px;background:#666870;border-radius:9px;margin:0 auto 12px}
+.story-head{padding-top:max(8px,env(safe-area-inset-top))}}
+
+
+.story-screen{grid-template: minmax(0,1fr) / minmax(0,1fr)}
+#storyPreview{min-width:0;min-height:0;width:100%;height:100%;max-height:100%;object-fit:contain}

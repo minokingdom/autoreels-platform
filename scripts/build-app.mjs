@@ -11,6 +11,10 @@ import vm from 'node:vm';
 import referenceStyles from '../lib/reference-style.cjs';
 export function buildApp(repoRoot) {
   const dir = path.join(repoRoot, 'public', 'assets', 'app');
+  const player = path.join(repoRoot,'node_modules','lottie-web');
+  const shorts = path.join(repoRoot,'public','assets','shorts');
+  fs.copyFileSync(path.join(player,'build/player/lottie_light_canvas.min.js'),path.join(shorts,'lottie-canvas.js'));
+  fs.copyFileSync(path.join(player,'LICENSE.md'),path.join(shorts,'lottie-LICENSE.txt'));
   const parts = fs.readdirSync(dir).filter((f) => /^\d\d-.+\.js$/.test(f)).sort();
   if (!parts.length) throw new Error('no app parts in ' + dir);
   const body = parts.map((f) => `// ===== ${f} =====\n` + fs.readFileSync(path.join(dir, f), 'utf8').replace(/\s+$/, '') + '\n').join('\n');

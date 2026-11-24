@@ -3473,6 +3473,12 @@
         arRenderMemeShortsOverlay(ctx, W, H, t, mainDuration);
       }
 
+      const realTime=Number(window.__realTimelineT)||0;
+      if (realTime<getMainDuration() && window.arMotionLibrary) {
+        const cut=getCutIndexAt(realTime);
+        const motion=isMemeShortsActive ? window.__arCurrentMemeItem?.cuts?.[cut]?.motion : campaign.cutMotions?.[cut];
+        if(motion && motion.duration>0)arMotionLibrary.paint(ctx,motion.kind,(realTime-getCutStart(cut)-motion.start)/motion.duration,1,W,H);
+      }
       // 정품 확인은 화면용 명함(항목을 끈 것)이 아니라 실제 계정 정보로
       const drmCode = evaluateDealerDrmStatus(getSelectedDealer());
       // ★ 2026-11-17: 미리보기가 첫 화면부터 보이므로, 미구독 띠는 완성 영상(내보내기)에만 크게 넣고
@@ -10681,6 +10687,7 @@
         strip._cutIndex = i;
         prev.disabled = i === 0; next.disabled = i+1 >= size;
         counter.textContent = (i+1)+' / '+size;
+        arBindMotionPanel(document.getElementById('memeCutMotion'),i,it);
         if (seek) window.__timelines?.main?.seek(getCutStart(i)+0.05);
       }
       function move(index,seek=true) {

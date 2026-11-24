@@ -1744,7 +1744,7 @@
     })();
 
 // 계정별 프로젝트: 사진은 DB에 비공개 저장하고 라이선스·토큰은 저장하지 않습니다.
-const AR_PROJECT_FIELDS = 'atmosphereFx bgGradient bullets carTitle colorKey cutCaptions cutCountOverride cutDecos cutDesigns cutElementOverrides cutFilters cutFrames cutLenScale cutOverlays cutSceneIndices cutScripts cutStrokes cutTransitions designCat designStyle discount discountNum hook industry isUserCustomPhotos kakaoChat layoutMode lookbookFinishedCards motionSeed neonColor presetKey priceLine priceTag scenePlan themeId topic ttsLines vehicle vehicleEntered'.split(' ');
+const AR_PROJECT_FIELDS = 'atmosphereFx bgGradient bullets carTitle colorKey cutCaptions cutCountOverride cutMotions cutDecos cutDesigns cutElementOverrides cutFilters cutFrames cutLenScale cutOverlays cutSceneIndices cutScripts cutStrokes cutTransitions designCat designStyle discount discountNum hook industry isUserCustomPhotos kakaoChat layoutMode lookbookFinishedCards motionSeed neonColor presetKey priceLine priceTag scenePlan themeId topic ttsLines vehicle vehicleEntered'.split(' ');
 let arProjectCurrent=null, arProjectBusy=false;
 let arPhoneChallenge=null;
 function arPanelNotice(id,text) { const e=document.getElementById(id); if(e) e.textContent=text; }

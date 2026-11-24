@@ -88,6 +88,39 @@
       return kd;
     }
     // 컷별 꾸밈효과 + 인스타 스타일 글씨/스티커 오버레이 + 미리보기 컷 번호 고정
+function arBindMotionPanel(host,index,item) {
+  if(!host || !window.arMotionLibrary)return;
+  const length=getCutLengths()[index] || 1;
+  const get=()=>item ? item.cuts[index].motion : campaign.cutMotions?.[index];
+  const write=value=>{if(item)item.cuts[index].motion=value;else (campaign.cutMotions||=[])[index]=value;};
+  const select=document.createElement('select');select.setAttribute('aria-label','타임라인 모션');
+  select.add(new Option('모션 없음',''));
+  for(const [kind,name] of Object.entries(arMotionLibrary.names))select.add(new Option(name,kind));
+  select.value=get()?.kind || '';
+  const bars=document.createElement('div');
+  const ranges={};
+  for(const [key,label] of [['start','시작'],['duration','길이']]){
+    const wrap=document.createElement('label'),input=document.createElement('input'),out=document.createElement('output');
+    input.type='range';input.step='.05';input.setAttribute('aria-label','모션 '+label);
+    wrap.append(label,input,out);bars.append(wrap);ranges[key]={input,out};
+    input.oninput=()=>{const v=get();if(!v)return;v[key]=input.valueAsNumber;sync();seek(v);};
+  }
+  function sync(){
+    const v=get();bars.hidden=!v;if(!v)return;
+    const min=Math.min(.1,length);v.duration=Math.max(min,Math.min(length,v.duration));
+    v.start=Math.max(0,Math.min(length-v.duration,v.start));
+    for(const key of ['start','duration']){
+      const {input,out}=ranges[key];
+      input.min=key==='start'?0:min;input.max=key==='start'?length-v.duration:length-v.start;
+      input.value=v[key];out.textContent=v[key].toFixed(1)+'초';
+    }
+  }
+  function seek(v){window.__timelines?.main?.seek(getCutStart(index)+(v?v.start+v.duration*.4:0));}
+  select.onchange=()=>{const v=select.value?{kind:select.value,start:0,duration:Math.min(1.45,length)}:null;write(v);sync();seek(v);};
+  host.className='ar-cut-motion';
+  const title=document.createElement('strong');title.textContent='타임라인 모션';host.replaceChildren(title,select,bars);sync();
+}
+
     const CUT_DECO_OPTIONS = [
       { id: 'none', label: '없음' },
       { id: 'cineKeyLight', label: '🎬 키라이트' },
@@ -4558,7 +4591,7 @@
     }
 
     // ★ 컷 순서 바꾸기 · 복사 · 빼기 · 길이
-    const AR_PER_CUT_KEYS = ['cutCaptions', 'ttsLines', 'scenePlan', 'cutDecos', 'cutFilters', 'cutFrames', 'cutOverlays', 'cutStrokes', 'cutTransitions', 'cutVideoUrls', 'cutVideos', 'cutSceneIndices', 'cutLenScale'];
+    const AR_PER_CUT_KEYS = ['cutCaptions', 'ttsLines', 'scenePlan', 'cutMotions', 'cutDecos', 'cutFilters', 'cutFrames', 'cutOverlays', 'cutStrokes', 'cutTransitions', 'cutVideoUrls', 'cutVideos', 'cutSceneIndices', 'cutLenScale'];
     function arPerCutArrays() {
       const n = getTargetCutCount();
       if (!Array.isArray(cutElementOverrides)) cutElementOverrides = [];
@@ -4952,6 +4985,7 @@
             <button type="button" onclick="closeCutEditor();openIgSheet('sticker')" class="ar-el-chip">＋ ⭐ 스티커·위젯</button>
             <button type="button" onclick="closeCutEditor();openIgDrawMode()" class="ar-el-chip">＋ ✏️ 그리기</button>
           </div>
+          <div data-motion-panel></div>
           <div class="ar-el-row">
             <span class="ar-el-label">꾸밈 효과</span>
             <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar flex-1 py-0.5">
@@ -5005,6 +5039,7 @@
           </div>
         </div>
       `;
+      arBindMotionPanel(panel.querySelector("[data-motion-panel]"),cutIdx,document.body.classList.contains("ar-meme-mode") ? window.__arCurrentMemeItem : null);
     }
 
     function setCutDeco(idx, decoId) {
