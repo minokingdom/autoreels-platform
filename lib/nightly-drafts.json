@@ -11,10 +11,16 @@
         "sourceTag": "오늘의 브리핑"
       },
       {
-        "line": "서울지하철 임단협 타결로 파업 철회…'출근길 대란' 피했다(종합2보)",
+        "line": "서울지하철 파업 직전 극적 타결…출근길 대란 피했다",
         "mediaType": "타이포그래피",
         "role": "소식 1",
-        "sourceTag": "연합뉴스"
+        "sourceTag": "SBS"
+      },
+      {
+        "line": "포항 도로 터널 외벽서 화재…2시간 50분 만에 꺼져",
+        "mediaType": "타이포그래피",
+        "role": "소식 2",
+        "sourceTag": "SBS"
       },
       {
         "line": "기사별 출처는 설명에서 확인하세요.",
@@ -23,18 +29,23 @@
         "sourceTag": "오늘의 브리핑"
       }
     ],
-    "factNote": "연합뉴스 · https://www.yna.co.kr/view/AKR20261125004252004",
+    "factNote": "SBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008861922\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008862013",
     "factoryType": "briefing",
     "genre": "뉴스 브리핑",
     "id": "briefing_2026-11-25",
-    "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 208 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">도입</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">11월 25일</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">주요 뉴스</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g><g transform=\"translate(104 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 1</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">서울지하철 임단협</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">타결로 파업</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">철회…'출근길</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">대란'</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">피했다(종합2보)</text><text x=\"7\" y=\"160\" font-size=\"7\">연합뉴스</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">마무리</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기사별 출처는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">설명에서</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">확인하세요.</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g></svg>",
-    "sourceTag": "연합뉴스",
-    "sourceUrl": "https://www.yna.co.kr/view/AKR20261125004252004",
+    "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 208 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">도입</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">11월 25일</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">주요 뉴스</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g><g transform=\"translate(104 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 1</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">서울지하철 파업</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">직전 극적</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">타결…출근길 대란</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">피했다</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 2</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">포항 도로 터널</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">외벽서</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">화재…2시간</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">50분 만에 꺼져</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(104 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">마무리</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기사별 출처는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">설명에서</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">확인하세요.</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g></svg>",
+    "sourceTag": "SBS",
+    "sourceUrl": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008861922",
     "sources": [
       {
-        "headline": "서울지하철 임단협 타결로 파업 철회…'출근길 대란' 피했다(종합2보)",
-        "name": "연합뉴스",
-        "url": "https://www.yna.co.kr/view/AKR20261125004252004"
+        "headline": "서울지하철 파업 직전 극적 타결…출근길 대란 피했다",
+        "name": "SBS",
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008861922"
+      },
+      {
+        "headline": "포항 도로 터널 외벽서 화재…2시간 50분 만에 꺼져",
+        "name": "SBS",
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008862013"
       }
     ],
     "title": "11월 25일 주요 뉴스",

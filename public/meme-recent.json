@@ -234,7 +234,8 @@
       "genre": "드라마",
       "publisher": "KBS Drama",
       "publishedAt": "2026-11-23T11:42:02+00:00",
-      "context": "설정환에게 도움을 요청하는 주새벽"
+      "context": "설정환에게 도움을 요청하는 주새벽",
+      "scenePlayerId": "DD492FDC66BA7509EE59185158158FA1F14E"
     },
     {
       "id": "35OhNlpFh5E",
@@ -302,6 +303,14 @@
   ],
   "clips": [
     {
+      "id": "n6R7bbE1ac583EWf7w",
+      "title": "Shocked Kris GIF by LA Clippers",
+      "publisher": "LA Clippers",
+      "publishedAt": "2026-11-24T19:27:05Z",
+      "url": "https://media.giphy.com/media/n6R7bbE1ac583EWf7w/giphy.mp4",
+      "hasOriginalAudio": false
+    },
+    {
       "id": "zhes4i5rlDizAQXdAy",
       "title": "GIF by GIPHY Studios",
       "publisher": "GIPHY Studios",
@@ -323,6 +332,14 @@
       "publisher": "stinkyzaba",
       "publishedAt": "2026-11-23T23:34:04Z",
       "url": "https://media.giphy.com/media/ZUEKsf5fbtd5j5Eg7J/giphy.mp4",
+      "hasOriginalAudio": false
+    },
+    {
+      "id": "qy5prNBJ7r6IqUFmJT",
+      "title": "Give Me Want GIF by the innernette",
+      "publisher": "the innernette",
+      "publishedAt": "2026-11-20T19:38:13Z",
+      "url": "https://media.giphy.com/media/qy5prNBJ7r6IqUFmJT/giphy.mp4",
       "hasOriginalAudio": false
     },
     {
