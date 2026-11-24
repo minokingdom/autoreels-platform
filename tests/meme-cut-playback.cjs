@@ -7,11 +7,12 @@ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ar-meme-mix-'));
     for (const [name,volume,hz] of [['soft',0.4,440],['loud',4,620]]) {
       cp.execFileSync('ffmpeg',['-loglevel','error','-f','lavfi','-i','color=c='+(name==='soft'?'blue':'red')+':s=100x100:r=24:d=4'+(name==='soft'?",drawbox=x=0:y=0:w=iw:h=ih:color=green:t=fill:enable='between(t,0.65,1.35)'":''),'-f','lavfi','-i','sine=frequency='+hz+':duration=4','-af','volume='+volume,'-c:v','libx264','-pix_fmt','yuv420p','-c:a','aac','-movflags','+faststart',path.join(dir,name+'.mp4')]);
     }
+    cp.execFileSync('ffmpeg',['-loglevel','error','-i',path.join(dir,'soft.mp4'),'-t','1.8','-c:v','libx264','-an',path.join(dir,'mini.mp4')]);
     srv=require('../server'); await new Promise(r=>srv.listen(0,'127.0.0.1',r));
     br=await require('playwright').chromium.launch({channel:'chrome',args:['--autoplay-policy=no-user-gesture-required']});
     const p=await br.newPage({viewport:{width:390,height:844},isMobile:true});
     p.on('pageerror',e=>console.log('JS',e.message));
-    await p.route('**/meme-fixture-*.mp4',r=>r.fulfill({path:path.join(dir,r.request().url().includes('soft')?'soft.mp4':'loud.mp4'),contentType:'video/mp4'}));
+    await p.route('**/meme-fixture-*.mp4',r=>r.fulfill({path:path.join(dir,r.request().url().includes('mini')?'mini.mp4':r.request().url().includes('soft')?'soft.mp4':'loud.mp4'),contentType:'video/mp4'}));
     const item={id:'test-mix',title:'음량 검증',cuts:['soft','loud','soft'].map((name,i)=>({line:['첫 장면','큰 소리로 녹음한 두 번째 장면','마무리'][i],videoUrl:'/meme-fixture-'+name+'.mp4',mediaType:'원본 영상'}))};
     await p.route('**/api/**',r=>{
       const body=r.request().postDataJSON?.();
@@ -83,5 +84,25 @@ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'ar-meme-mix-'));
     await p.locator('#arMemeCutNext').click();assert.ok(await p.locator('#arMemeCutNext').isDisabled());
     await p.locator('#arMemeCutPrev').click();
     const strip=await p.locator('#arMemeCutVisualStrip').evaluate(el=>[el.scrollLeft,el.clientWidth,el.children.length]);assert.ok(Math.abs(strip[0]-strip[1])<2);console.log('CAROUSEL',strip);
-  } finally {if(br)await br.close();if(srv)srv.close();for(const name of ['soft','loud'])fs.rmSync(path.join(dir,name+'.mp4'),{force:true});fs.rmdirSync(dir);}
+    const sample=await p.evaluate(async()=>{
+      window.__arMemeRadarItems=[{id:'short-reaction',singleReaction:true,title:'짧은 원본',cuts:[{line:'',videoUrl:'/meme-fixture-mini.mp4'}]}];
+      await arApplyMemeItemToStudio(0,'pure');
+      isPlaying=false;
+      window.__timelines.main.seek(.9);
+      await new Promise(r=>setTimeout(r,200));
+      arFinalAudioUnlocked=true;
+      evaluateDealerDrmStatus=()=>1; // Local recording fixture, no account or billing.
+      AR_SERVER.mode=false;
+      await exportSynthesizedVideo();
+      if(!window.lastRecordedVideoBlob) throw new Error('short silent meme export failed');
+      return await new Promise(r=>{const reader=new FileReader();reader.onload=()=>r(reader.result.split(',')[1]);reader.readAsDataURL(window.lastRecordedVideoBlob);});
+    });
+    const file=path.join(dir,'rendered.mp4');
+    fs.writeFileSync(file,Buffer.from(sample,'base64'));
+    const seconds=Number(cp.execFileSync('ffprobe',['-v','error','-show_entries','format=duration','-of','csv=p=0',file]));
+    assert.ok(seconds>1.5 && seconds<2.2,'short meme duration '+seconds);
+    const rgb=cp.execFileSync('ffmpeg',['-loglevel','error','-i',file,'-vf','crop=2:2:540:860,scale=1:1','-frames:v','1','-pix_fmt','rgb24','-f','rawvideo','pipe:1']);
+    assert.ok(rgb[2]>130 && rgb[1]<50,'first frame should be blue, before the green action');
+    console.log('SHORT EXPORT',seconds,Array.from(rgb));
+  } finally {if(br)await br.close();if(srv)srv.close();for(const name of ['soft','loud','mini','rendered'])fs.rmSync(path.join(dir,name+'.mp4'),{force:true});fs.rmdirSync(dir);}
 })().catch(e=>{console.error(e);process.exitCode=1;});

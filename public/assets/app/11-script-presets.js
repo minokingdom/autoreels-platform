@@ -770,7 +770,7 @@
           const audioContext = AudioEngine.ensureContext();
           await audioContext.resume();
           const effectsReady = AudioEngine.prepareSceneSfx();
-          if (AudioEngine.ttsVoice !== 'off') {
+          if (AudioEngine.ttsVoice !== 'off' && arVoiceAllowed() && (!arActiveMemeDialogue() || campaign.cutCaptions.some(line => String(line || '').trim()))) {
             if (text) text.textContent = '성우 음성 준비 중…';
             let timeout;
             try {
@@ -786,12 +786,39 @@
           window.__exportingVideo = true;
           window.__exportStartedAt = 0;
           window.__timelines.main.seek(0);
+          const firstClip = arActiveMemeDialogue() && campaign.uploadedPhotos[0];
+          if (firstClip?._isVideo) {
+            firstClip.pause();
+            const start = firstClip._continuousVideo ? Number(firstClip._trimStart) || 0 : 0;
+            if (Math.abs(firstClip.currentTime - start) > 0.001) firstClip.currentTime = start;
+            await new Promise((resolve, reject) => {
+              const finish = () => {
+                clearTimeout(timer);
+                firstClip.removeEventListener('seeked', ready);
+                firstClip.removeEventListener('loadeddata', ready);
+              };
+              const ready = () => {
+                if (firstClip.seeking || firstClip.readyState < 2) return;
+                finish();
+                resolve();
+              };
+              const timer = setTimeout(() => {
+                finish();
+                reject(new Error('첫 장면을 불러오지 못했습니다. 다시 저장해 주세요.'));
+              }, 5000);
+              firstClip.addEventListener('seeked',ready);
+              firstClip.addEventListener('loadeddata',ready);
+              ready();
+            });
+            firstClip._memeFrameStamp = null;
+            window.__timelines.main.seek(0);
+          }
           canvasStream = canvas.captureStream(60); // 60프레임으로 녹화 (2026-11-21 사장님 요청: 부드럽게)
           const tracks = [...canvasStream.getVideoTracks(), ...(AudioEngine.streamDest ? AudioEngine.streamDest.stream.getAudioTracks() : [])];
           const isMobileExport = (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 768px)').matches) || (typeof navigator !== 'undefined' && (navigator.maxTouchPoints || 0) > 0);
           recorder = new MediaRecorder(new MediaStream(tracks), { mimeType, videoBitsPerSecond: isMobileExport ? 8000000 : 12000000 }); // 60프레임에 맞춰 비트레이트도 올림
           const cleanMime = recorder.mimeType.includes('mp4') ? 'video/mp4' : 'video/webm';
-          const seconds = Math.max(4, Number(TOTAL_DURATION) || 12), chunks = [];
+          const seconds = Math.max(arActiveMemeDialogue() ? 0.1 : 4, Number(TOTAL_DURATION) || 12), chunks = [];
           const blob = await new Promise((resolve, reject) => {
             let stopped = false;
             const fail = message => {
@@ -811,6 +838,7 @@
             AudioEngine.lastSfxSlot = -2;
             AudioEngine.lastSfxTime = -1;
             isPlaying = true;
+            if (firstClip?._isVideo) syncCutVideos(0, 0);
             AudioEngine.handleSceneSfx(0);
             if (AudioEngine.ttsVoice !== 'off') AudioEngine.playMasterAt(0);
             AudioEngine.startBgmLoop();

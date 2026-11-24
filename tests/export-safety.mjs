@@ -104,7 +104,7 @@ try {
   };
   await page.route('**/api/tts-script?**',async route=>{
     const url = new URL(route.request().url());
-    assert.equal(url.searchParams.get('v'),'11');
+    assert.equal(url.searchParams.get('v'),'13');
     assert.deepEqual(JSON.parse(url.searchParams.get('lines')),['첫 컷','둘째 컷','셋째 컷','마지막 컷']);
     await route.fulfill({json:{ok:true,model:'airy-tts-v1',clips_base64:[audioClip(4800,220),audioClip(9600,240),audioClip(14400,260),audioClip(19200,280)]}});
   });
@@ -200,15 +200,18 @@ try {
   const legacyVoice=await page.evaluate(async()=>{
     const savedVoice='8cf5ee4cb0224c109852a206f185a05f';
     AudioEngine.restoreVoice(savedVoice);
+    const savedOption = document.getElementById('ttsVoiceSelect').selectedOptions[0];
+    const restoredHidden = savedOption.value === savedVoice && savedOption.hidden;
     AudioEngine.voiceListLoaded=false;
     await AudioEngine.loadVoiceList();
     const select=document.getElementById('ttsVoiceSelect');
-    return {voice:AudioEngine.ttsVoice,selected:select.value,hidden:select.selectedOptions[0]?.hidden,
+    return {restoredHidden,savedVoice,voice:AudioEngine.ttsVoice,selected:select.value,
       visible:[...select.options].filter(option=>!option.hidden).map(option=>option.value)};
   });
   assert.equal(legacyVoice.selected,legacyVoice.voice);
-  assert.equal(legacyVoice.hidden,true);
-  assert.ok(!legacyVoice.visible.includes(legacyVoice.voice));
+  assert.equal(legacyVoice.restoredHidden,true);
+  assert.equal(legacyVoice.selected,'ko-KR-Chirp3-HD-Puck');
+  assert.ok(!legacyVoice.visible.includes(legacyVoice.savedVoice));
 
 
   assert.deepEqual(pageErrors,[]);assert.deepEqual(await page.evaluate(()=>window.__smokeAsyncErrors),[]);
