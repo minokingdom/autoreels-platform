@@ -5,33 +5,21 @@
     "color": "#203750",
     "cuts": [
       {
-        "line": "11월 25일 주요 뉴스",
+        "line": "11월 26일 주요 뉴스",
         "mediaType": "타이포그래피",
         "role": "도입",
         "sourceTag": "오늘의 브리핑"
       },
       {
-        "line": "대전세종충남 기말고사 '수능급' 감독한다…AI 커닝 차단 총력전",
+        "line": "AI 시험 부정행위 장비 판매 관련 지갑에 28억원어치 테더 유입",
         "mediaType": "타이포그래피",
         "role": "소식 1",
         "sourceTag": "연합뉴스"
       },
       {
-        "line": "윤석열 \"12·3 비상계엄 선포, 미국 지지 필요 없었다\"",
+        "line": "'계엄 국무회의 위증' 윤석열 오늘 대법 판단…1·2심 무죄",
         "mediaType": "타이포그래피",
         "role": "소식 2",
-        "sourceTag": "SBS"
-      },
-      {
-        "line": "서울변회 \"재판 결과로 대법원장 탄핵, 사법독립 우려\"",
-        "mediaType": "타이포그래피",
-        "role": "소식 3",
-        "sourceTag": "SBS"
-      },
-      {
-        "line": "인천경제청 \"송도세브란스병원 지상부 건축공사 내달 시작\"",
-        "mediaType": "타이포그래피",
-        "role": "소식 4",
         "sourceTag": "SBS"
       },
       {
@@ -41,40 +29,30 @@
         "sourceTag": "오늘의 브리핑"
       }
     ],
-    "factNote": "연합뉴스 · https://www.yna.co.kr/view/AKR20261125150400063\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008863567\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008863563\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008863373",
+    "factNote": "연합뉴스 · https://www.yna.co.kr/view/AKR20261125177600002\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008863987",
     "factoryType": "briefing",
     "genre": "뉴스 브리핑",
-    "id": "briefing_2026-11-25",
-    "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 312 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">도입</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">11월 25일</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">주요 뉴스</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g><g transform=\"translate(104 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 1</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">대전세종충남</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기말고사</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">'수능급'</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">감독한다…AI</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">커닝 차단 총력전</text><text x=\"7\" y=\"160\" font-size=\"7\">연합뉴스</text></g></g><g transform=\"translate(208 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 2</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">윤석열 \"12·3</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">비상계엄 선포,</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">미국 지지 필요</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">없었다\"</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 3</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">서울변회 \"재판</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">결과로 대법원장</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">탄핵, 사법독립</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">우려\"</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(104 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 4</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">인천경제청</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">\"송도세브란스병원</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">지상부 건축공사</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">내달 시작\"</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(208 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">마무리</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기사별 출처는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">설명에서</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">확인하세요.</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g></svg>",
+    "id": "briefing_2026-11-26",
+    "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 208 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">도입</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">11월 26일</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">주요 뉴스</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g><g transform=\"translate(104 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 1</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">AI 시험</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">부정행위 장비</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">판매 관련 지갑에</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">28억원어치 테더</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">유입</text><text x=\"7\" y=\"160\" font-size=\"7\">연합뉴스</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 2</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">'계엄 국무회의</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">위증' 윤석열</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">오늘 대법</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">판단…1·2심</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">무죄</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(104 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">마무리</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기사별 출처는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">설명에서</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">확인하세요.</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g></svg>",
     "sourceTag": "연합뉴스",
-    "sourceUrl": "https://www.yna.co.kr/view/AKR20261125150400063",
+    "sourceUrl": "https://www.yna.co.kr/view/AKR20261125177600002",
     "sources": [
       {
-        "headline": "대전세종충남 기말고사 '수능급' 감독한다…AI 커닝 차단 총력전",
+        "headline": "AI 시험 부정행위 장비 판매 관련 지갑에 28억원어치 테더 유입",
         "name": "연합뉴스",
-        "url": "https://www.yna.co.kr/view/AKR20261125150400063"
+        "url": "https://www.yna.co.kr/view/AKR20261125177600002"
       },
       {
-        "headline": "윤석열 \"12·3 비상계엄 선포, 미국 지지 필요 없었다\"",
+        "headline": "'계엄 국무회의 위증' 윤석열 오늘 대법 판단…1·2심 무죄",
         "name": "SBS",
-        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863567"
-      },
-      {
-        "headline": "서울변회 \"재판 결과로 대법원장 탄핵, 사법독립 우려\"",
-        "name": "SBS",
-        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863563"
-      },
-      {
-        "headline": "인천경제청 \"송도세브란스병원 지상부 건축공사 내달 시작\"",
-        "name": "SBS",
-        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863373"
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863987"
       }
     ],
-    "title": "11월 25일 주요 뉴스",
+    "title": "11월 26일 주요 뉴스",
     "why": "오늘 보도된 기사 제목을 한눈에 살펴보세요.",
-    "year": "2026-11-25"
+    "year": "2026-11-26"
   },
-  "date": "2026-11-25",
+  "date": "2026-11-26",
   "quotes": [
     {
       "badge": "최근 게시",
@@ -82,30 +60,30 @@
       "color": "#433954",
       "cuts": [
         {
-          "line": "제가 한 번 신어봐도 될까요?",
+          "line": "내가 사준 거라서 안 먹은 건 가요?",
           "mediaType": "타이포그래피",
           "role": "대사",
           "sourceTag": "KBS Drama"
         },
         {
-          "line": "엄마와의 일을 떠올려 아이디어를 낸 정민아",
+          "line": "퇴근하는 정민아에게 직접 따지는 강경헌",
           "mediaType": "타이포그래피",
           "role": "장면",
           "sourceTag": "KBS Drama"
         }
       ],
-      "factNote": "KBS Drama · https://www.youtube.com/watch?v=BmNiWMRV96c",
+      "factNote": "KBS Drama · https://www.youtube.com/watch?v=8DZWC4s-N0w",
       "factoryType": "quote",
       "genre": "드라마",
-      "id": "quote_BmNiWMRV96c",
-      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">제가 한 번</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">신어봐도 될까요?</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">엄마와의 일을</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">떠올려 아이디어를</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">낸 정민아</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g></svg>",
-      "publishedAt": "2026-11-25T12:05:30+00:00",
-      "quote": "제가 한 번 신어봐도 될까요?",
-      "scenePlayerId": "681CDF57FBD90B9AA9CE1B6811099841C5E0",
+      "id": "quote_8DZWC4s-N0w",
+      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">내가 사준 거라서</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">안 먹은 건</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">가요?</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">퇴근하는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">정민아에게 직접</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">따지는 강경헌</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g></svg>",
+      "publishedAt": "2026-11-25T13:34:58+00:00",
+      "quote": "내가 사준 거라서 안 먹은 건 가요?",
+      "scenePlayerId": "",
       "sourceTag": "KBS Drama",
-      "sourceUrl": "https://www.youtube.com/watch?v=BmNiWMRV96c",
-      "title": "제가 한 번 신어봐도 될까요?",
-      "why": "엄마와의 일을 떠올려 아이디어를 낸 정민아",
+      "sourceUrl": "https://www.youtube.com/watch?v=8DZWC4s-N0w",
+      "title": "내가 사준 거라서 안 먹은 건 가요?",
+      "why": "퇴근하는 정민아에게 직접 따지는 강경헌",
       "work": "엄마가 미쳤어요"
     },
     {
@@ -114,30 +92,30 @@
       "color": "#433954",
       "cuts": [
         {
-          "line": "평소처럼 대해주세요",
+          "line": "안 좋은 추억이라도 있어요?",
           "mediaType": "타이포그래피",
           "role": "대사",
           "sourceTag": "KBS Drama"
         },
         {
-          "line": "검사 결과를 듣고 오열하는 김희정",
+          "line": "동하에게 치킨을 안 먹는 이유를 말하는 정민아",
           "mediaType": "타이포그래피",
           "role": "장면",
           "sourceTag": "KBS Drama"
         }
       ],
-      "factNote": "KBS Drama · https://www.youtube.com/watch?v=m30wijmCE_A",
+      "factNote": "KBS Drama · https://www.youtube.com/watch?v=MWf3Qm2k4c8",
       "factoryType": "quote",
       "genre": "드라마",
-      "id": "quote_m30wijmCE_A",
-      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">평소처럼</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">대해주세요</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">검사 결과를 듣고</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">오열하는 김희정</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g></svg>",
-      "publishedAt": "2026-11-25T11:56:22+00:00",
-      "quote": "평소처럼 대해주세요",
-      "scenePlayerId": "3F35E14671F2379990EF2110A47682ED43D4",
+      "id": "quote_MWf3Qm2k4c8",
+      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">안 좋은</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">추억이라도</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">있어요?</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">동하에게 치킨을</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">안 먹는 이유를</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">말하는 정민아</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g></svg>",
+      "publishedAt": "2026-11-25T13:17:12+00:00",
+      "quote": "안 좋은 추억이라도 있어요?",
+      "scenePlayerId": "",
       "sourceTag": "KBS Drama",
-      "sourceUrl": "https://www.youtube.com/watch?v=m30wijmCE_A",
-      "title": "평소처럼 대해주세요",
-      "why": "검사 결과를 듣고 오열하는 김희정",
+      "sourceUrl": "https://www.youtube.com/watch?v=MWf3Qm2k4c8",
+      "title": "안 좋은 추억이라도 있어요?",
+      "why": "동하에게 치킨을 안 먹는 이유를 말하는 정민아",
       "work": "엄마가 미쳤어요"
     },
     {
@@ -261,38 +239,6 @@
       "title": "괜찮아요?",
       "why": "성이언에게 들러붙는 윤지원",
       "work": "가족관계증명서"
-    },
-    {
-      "badge": "최근 게시",
-      "cat": "명대사",
-      "color": "#433954",
-      "cuts": [
-        {
-          "line": "이제 정말 끝났네요",
-          "mediaType": "타이포그래피",
-          "role": "대사",
-          "sourceTag": "MBCdrama"
-        },
-        {
-          "line": "유연석의 범행 영상을 경찰에 제출한 서현진",
-          "mediaType": "타이포그래피",
-          "role": "장면",
-          "sourceTag": "MBCdrama"
-        }
-      ],
-      "factNote": "MBCdrama · https://www.youtube.com/watch?v=766yO5OEmwA",
-      "factoryType": "quote",
-      "genre": "드라마",
-      "id": "quote_766yO5OEmwA",
-      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">이제 정말</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">끝났네요</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">유연석의 범행</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">영상을 경찰에</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">제출한 서현진</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g></svg>",
-      "publishedAt": "2026-11-21T14:07:42+00:00",
-      "quote": "이제 정말 끝났네요",
-      "scenePlayerId": "",
-      "sourceTag": "MBCdrama",
-      "sourceUrl": "https://www.youtube.com/watch?v=766yO5OEmwA",
-      "title": "이제 정말 끝났네요",
-      "why": "유연석의 범행 영상을 경찰에 제출한 서현진",
-      "work": "라이어"
     }
   ]
 }

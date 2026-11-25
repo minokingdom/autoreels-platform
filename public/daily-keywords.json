@@ -1,59 +1,79 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-25T21:44:08.910165+09:00",
+  "collectedAt": "2026-11-26T08:35:04.471956+09:00",
   "items": [
     {
-      "term": "persib bandung vs fc seoul",
-      "startedAt": "2026-11-25T03:40:00-08:00",
+      "term": "mu",
+      "startedAt": "2026-11-25T14:30:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "재혼황후",
-      "startedAt": "2026-11-25T03:40:00-08:00",
+      "term": "금융감독원",
+      "startedAt": "2026-11-25T14:20:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "나스닥 100",
+      "startedAt": "2026-11-25T14:20:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "해군",
-      "startedAt": "2026-11-25T03:30:00-08:00",
+      "term": "필라데피아 대 마이애미",
+      "startedAt": "2026-11-25T14:10:00-08:00",
       "traffic": "500+"
     },
     {
-      "term": "백화점",
-      "startedAt": "2026-11-25T03:30:00-08:00",
+      "term": "리그 오브 레전드 챔피언스 코리아",
+      "startedAt": "2026-11-25T14:10:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "schd",
+      "startedAt": "2026-11-25T14:10:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "강남",
-      "startedAt": "2026-11-25T03:20:00-08:00",
+      "term": "ionq",
+      "startedAt": "2026-11-25T14:10:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "은퇴 요원 관리팀",
-      "startedAt": "2026-11-25T02:50:00-08:00",
+      "term": "tqqq",
+      "startedAt": "2026-11-25T14:10:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "kb국민은행",
+      "startedAt": "2026-11-25T14:00:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "이강인",
+      "startedAt": "2026-11-25T13:50:00-08:00",
       "traffic": "2000+"
-    },
-    {
-      "term": "마이크론 테크놀로지",
-      "startedAt": "2026-11-25T02:50:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "lg에너지솔루션",
-      "startedAt": "2026-11-25T02:50:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "청룡영화상",
-      "startedAt": "2026-11-25T02:40:00-08:00",
-      "traffic": "1000+"
-    },
-    {
-      "term": "페이즈",
-      "startedAt": "2026-11-25T02:40:00-08:00",
-      "traffic": "200+"
     }
   ],
   "issues": [
+    {
+      "term": "AI 부정행위 논란",
+      "day": "2026-11-26",
+      "kind": "보도",
+      "publisher": "연합뉴스",
+      "url": "https://www.yna.co.kr/view/AKR20261125177600002",
+      "publishedAt": "2026-11-26T06:05:01+09:00",
+      "headline": "AI 시험 부정행위 장비 판매 관련 지갑에 28억원어치 테더 유입"
+    },
+    {
+      "term": "윤석열 오늘 대법",
+      "day": "2026-11-26",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863987",
+      "publishedAt": "2026-11-26T06:58:00+09:00",
+      "headline": "'계엄 국무회의 위증' 윤석열 오늘 대법 판단…1·2심 무죄"
+    }
+  ],
+  "previousIssues": [
     {
       "term": "AI 부정행위 논란",
       "day": "2026-11-25",
@@ -89,71 +109,6 @@
       "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863373",
       "publishedAt": "2026-11-25T17:14:00+09:00",
       "headline": "인천경제청 \"송도세브란스병원 지상부 건축공사 내달 시작\""
-    }
-  ],
-  "previousIssues": [
-    {
-      "term": "수능",
-      "day": "2026-11-24",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860336",
-      "publishedAt": "2026-11-24T12:34:00+09:00",
-      "headline": "\"이럴 용기로 공부를 하지\"…수능날 '휴지 뭉치' 딱 걸렸다"
-    },
-    {
-      "term": "AI 부정행위 논란",
-      "day": "2026-11-24",
-      "kind": "보도",
-      "publisher": "연합뉴스",
-      "url": "https://www.yna.co.kr/view/AKR20261124044300530",
-      "publishedAt": "2026-11-24T10:57:37+09:00",
-      "headline": "국가자격시험 'AI 커닝' 차단…꺼진 기기 탐지·부정행위 징역 5년"
-    },
-    {
-      "term": "신세계백화점 폭파 협박범은",
-      "day": "2026-11-24",
-      "kind": "보도",
-      "publisher": "연합뉴스",
-      "url": "https://www.yna.co.kr/view/AKR20261124097151057",
-      "publishedAt": "2026-11-24T12:40:09+09:00",
-      "headline": "신세계백화점 폭파 협박범은 울산 중학생…경찰에 범행 시인(종합)"
-    },
-    {
-      "term": "현직 부장판사",
-      "day": "2026-11-24",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860835",
-      "publishedAt": "2026-11-24T12:36:00+09:00",
-      "headline": "현직 부장판사, 조희대 탄핵 추진 비판…\"계엄 선포만큼이나 민주주의 역사에 오점\""
-    },
-    {
-      "term": "연 최고",
-      "day": "2026-11-24",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860814",
-      "publishedAt": "2026-11-24T12:07:00+09:00",
-      "headline": "연 최고 8만%…\"딸 납치\" 협박까지 한 사채업자 일당 검거"
-    },
-    {
-      "term": "명동",
-      "day": "2026-11-24",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860731",
-      "publishedAt": "2026-11-24T11:41:00+09:00",
-      "headline": "명동·홍대 등 관광특구 화장실 QR코드로 확인…개방화장실 확대된다"
-    },
-    {
-      "term": "문신으로 마약 판매",
-      "day": "2026-11-24",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008860712",
-      "publishedAt": "2026-11-24T11:35:00+09:00",
-      "headline": "문신으로 마약 판매 홍보한 20대 유튜버 항소심서 징역 2년 유지"
     }
   ]
 }

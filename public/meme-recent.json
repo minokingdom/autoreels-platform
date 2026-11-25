@@ -1,6 +1,43 @@
 {
   "quotes": [
     {
+      "id": "8DZWC4s-N0w",
+      "work": "엄마가 미쳤어요",
+      "quote": "내가 사준 거라서 안 먹은 건 가요?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-25T13:34:58+00:00",
+      "context": "퇴근하는 정민아에게 직접 따지는 강경헌"
+    },
+    {
+      "id": "MWf3Qm2k4c8",
+      "work": "엄마가 미쳤어요",
+      "quote": "안 좋은 추억이라도 있어요?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-25T13:17:12+00:00",
+      "context": "동하에게 치킨을 안 먹는 이유를 말하는 정민아"
+    },
+    {
+      "id": "3OVHjQv4nwg",
+      "work": "엄마가 미쳤어요",
+      "quote": "이왕 먹을 거 좋은 거 먹어야지",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-25T13:08:53+00:00",
+      "context": "가게 정리도 안 하고 혼자 시간을 보내는 김희정",
+      "scenePlayerId": "613990FC02F84863CE14168EB4C251472EF0"
+    },
+    {
+      "id": "Sc_fq1Rvy38",
+      "work": "엄마가 미쳤어요",
+      "quote": "이제 다 끝났어요...",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-25T12:42:16+00:00",
+      "context": "돈 떼먹은 김 프로를 찾으러 왔던 김종훈"
+    },
+    {
       "id": "BmNiWMRV96c",
       "work": "엄마가 미쳤어요",
       "quote": "제가 한 번 신어봐도 될까요?",
@@ -430,18 +467,17 @@
       "publisher": "MBCdrama",
       "publishedAt": "2026-11-23T10:27:27+00:00",
       "context": "연행당하는 서도영을 본 임지은"
-    },
-    {
-      "id": "766yO5OEmwA",
-      "work": "라이어",
-      "quote": "이제 정말 끝났네요",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-21T14:07:42+00:00",
-      "context": "유연석의 범행 영상을 경찰에 제출한 서현진"
     }
   ],
   "clips": [
+    {
+      "id": "ChldVnHnlD1sjCLl1N",
+      "title": "Lets Go Dancing GIF",
+      "publisher": "stinkyzaba",
+      "publishedAt": "2026-11-25T18:03:31Z",
+      "url": "https://media.giphy.com/media/ChldVnHnlD1sjCLl1N/giphy.mp4",
+      "hasOriginalAudio": false
+    },
     {
       "id": "n6R7bbE1ac583EWf7w",
       "title": "Shocked Kris GIF by LA Clippers",
