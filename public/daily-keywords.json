@@ -1,76 +1,94 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-25T08:51:17.006269+09:00",
+  "collectedAt": "2026-11-25T21:44:08.910165+09:00",
   "items": [
     {
-      "term": "필라델피아 반도체 지수",
-      "startedAt": "2026-11-24T14:40:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "교수",
-      "startedAt": "2026-11-24T14:40:00-08:00",
+      "term": "persib bandung vs fc seoul",
+      "startedAt": "2026-11-25T03:40:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "채무",
-      "startedAt": "2026-11-24T14:30:00-08:00",
-      "traffic": "2000+"
-    },
-    {
-      "term": "김포시",
-      "startedAt": "2026-11-24T14:30:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "real madrid vs psv eindhoven standings",
-      "startedAt": "2026-11-24T14:20:00-08:00",
-      "traffic": "2000+"
-    },
-    {
-      "term": "mu",
-      "startedAt": "2026-11-24T14:20:00-08:00",
+      "term": "재혼황후",
+      "startedAt": "2026-11-25T03:40:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "박윤영",
-      "startedAt": "2026-11-24T14:20:00-08:00",
+      "term": "해군",
+      "startedAt": "2026-11-25T03:30:00-08:00",
       "traffic": "500+"
     },
     {
-      "term": "skhy",
-      "startedAt": "2026-11-24T14:10:00-08:00",
+      "term": "백화점",
+      "startedAt": "2026-11-25T03:30:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "강남",
+      "startedAt": "2026-11-25T03:20:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "은퇴 요원 관리팀",
+      "startedAt": "2026-11-25T02:50:00-08:00",
+      "traffic": "2000+"
+    },
+    {
+      "term": "마이크론 테크놀로지",
+      "startedAt": "2026-11-25T02:50:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "lg에너지솔루션",
+      "startedAt": "2026-11-25T02:50:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "청룡영화상",
+      "startedAt": "2026-11-25T02:40:00-08:00",
       "traffic": "1000+"
     },
     {
-      "term": "schd",
-      "startedAt": "2026-11-24T14:10:00-08:00",
+      "term": "페이즈",
+      "startedAt": "2026-11-25T02:40:00-08:00",
       "traffic": "200+"
-    },
-    {
-      "term": "나스닥 100",
-      "startedAt": "2026-11-24T14:00:00-08:00",
-      "traffic": "2000+"
     }
   ],
   "issues": [
     {
-      "term": "대중교통 파업",
+      "term": "AI 부정행위 논란",
       "day": "2026-11-25",
       "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008861922",
-      "publishedAt": "2026-11-25T08:32:00+09:00",
-      "headline": "서울지하철 파업 직전 극적 타결…출근길 대란 피했다"
+      "publisher": "연합뉴스",
+      "url": "https://www.yna.co.kr/view/AKR20261125150400063",
+      "publishedAt": "2026-11-25T16:55:14+09:00",
+      "headline": "대전세종충남 기말고사 '수능급' 감독한다…AI 커닝 차단 총력전"
     },
     {
-      "term": "포항 도로 터널",
+      "term": "윤석열",
       "day": "2026-11-25",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008862013",
-      "publishedAt": "2026-11-25T07:03:00+09:00",
-      "headline": "포항 도로 터널 외벽서 화재…2시간 50분 만에 꺼져"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863567",
+      "publishedAt": "2026-11-25T19:34:00+09:00",
+      "headline": "윤석열 \"12·3 비상계엄 선포, 미국 지지 필요 없었다\""
+    },
+    {
+      "term": "서울변회",
+      "day": "2026-11-25",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863563",
+      "publishedAt": "2026-11-25T19:21:00+09:00",
+      "headline": "서울변회 \"재판 결과로 대법원장 탄핵, 사법독립 우려\""
+    },
+    {
+      "term": "인천경제청",
+      "day": "2026-11-25",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863373",
+      "publishedAt": "2026-11-25T17:14:00+09:00",
+      "headline": "인천경제청 \"송도세브란스병원 지상부 건축공사 내달 시작\""
     }
   ],
   "previousIssues": [

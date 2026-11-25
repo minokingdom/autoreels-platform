@@ -11,15 +11,27 @@
         "sourceTag": "오늘의 브리핑"
       },
       {
-        "line": "서울지하철 파업 직전 극적 타결…출근길 대란 피했다",
+        "line": "대전세종충남 기말고사 '수능급' 감독한다…AI 커닝 차단 총력전",
         "mediaType": "타이포그래피",
         "role": "소식 1",
+        "sourceTag": "연합뉴스"
+      },
+      {
+        "line": "윤석열 \"12·3 비상계엄 선포, 미국 지지 필요 없었다\"",
+        "mediaType": "타이포그래피",
+        "role": "소식 2",
         "sourceTag": "SBS"
       },
       {
-        "line": "포항 도로 터널 외벽서 화재…2시간 50분 만에 꺼져",
+        "line": "서울변회 \"재판 결과로 대법원장 탄핵, 사법독립 우려\"",
         "mediaType": "타이포그래피",
-        "role": "소식 2",
+        "role": "소식 3",
+        "sourceTag": "SBS"
+      },
+      {
+        "line": "인천경제청 \"송도세브란스병원 지상부 건축공사 내달 시작\"",
+        "mediaType": "타이포그래피",
+        "role": "소식 4",
         "sourceTag": "SBS"
       },
       {
@@ -29,23 +41,33 @@
         "sourceTag": "오늘의 브리핑"
       }
     ],
-    "factNote": "SBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008861922\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008862013",
+    "factNote": "연합뉴스 · https://www.yna.co.kr/view/AKR20261125150400063\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008863567\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008863563\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008863373",
     "factoryType": "briefing",
     "genre": "뉴스 브리핑",
     "id": "briefing_2026-11-25",
-    "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 208 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">도입</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">11월 25일</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">주요 뉴스</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g><g transform=\"translate(104 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 1</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">서울지하철 파업</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">직전 극적</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">타결…출근길 대란</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">피했다</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 2</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">포항 도로 터널</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">외벽서</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">화재…2시간</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">50분 만에 꺼져</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(104 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">마무리</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기사별 출처는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">설명에서</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">확인하세요.</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g></svg>",
-    "sourceTag": "SBS",
-    "sourceUrl": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008861922",
+    "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 312 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">도입</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">11월 25일</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">주요 뉴스</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g><g transform=\"translate(104 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 1</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">대전세종충남</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기말고사</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">'수능급'</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">감독한다…AI</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">커닝 차단 총력전</text><text x=\"7\" y=\"160\" font-size=\"7\">연합뉴스</text></g></g><g transform=\"translate(208 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 2</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">윤석열 \"12·3</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">비상계엄 선포,</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">미국 지지 필요</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">없었다\"</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 3</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">서울변회 \"재판</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">결과로 대법원장</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">탄핵, 사법독립</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">우려\"</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(104 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 4</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">인천경제청</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">\"송도세브란스병원</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">지상부 건축공사</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">내달 시작\"</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(208 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">마무리</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기사별 출처는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">설명에서</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">확인하세요.</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g></svg>",
+    "sourceTag": "연합뉴스",
+    "sourceUrl": "https://www.yna.co.kr/view/AKR20261125150400063",
     "sources": [
       {
-        "headline": "서울지하철 파업 직전 극적 타결…출근길 대란 피했다",
-        "name": "SBS",
-        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008861922"
+        "headline": "대전세종충남 기말고사 '수능급' 감독한다…AI 커닝 차단 총력전",
+        "name": "연합뉴스",
+        "url": "https://www.yna.co.kr/view/AKR20261125150400063"
       },
       {
-        "headline": "포항 도로 터널 외벽서 화재…2시간 50분 만에 꺼져",
+        "headline": "윤석열 \"12·3 비상계엄 선포, 미국 지지 필요 없었다\"",
         "name": "SBS",
-        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008862013"
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863567"
+      },
+      {
+        "headline": "서울변회 \"재판 결과로 대법원장 탄핵, 사법독립 우려\"",
+        "name": "SBS",
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863563"
+      },
+      {
+        "headline": "인천경제청 \"송도세브란스병원 지상부 건축공사 내달 시작\"",
+        "name": "SBS",
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863373"
       }
     ],
     "title": "11월 25일 주요 뉴스",
@@ -60,30 +82,30 @@
       "color": "#433954",
       "cuts": [
         {
-          "line": "저 어떡해요 선생님...",
+          "line": "제가 한 번 신어봐도 될까요?",
           "mediaType": "타이포그래피",
           "role": "대사",
           "sourceTag": "KBS Drama"
         },
         {
-          "line": "오열하는 김희정을 위로하는 공정환",
+          "line": "엄마와의 일을 떠올려 아이디어를 낸 정민아",
           "mediaType": "타이포그래피",
           "role": "장면",
           "sourceTag": "KBS Drama"
         }
       ],
-      "factNote": "KBS Drama · https://www.youtube.com/watch?v=Q2r7ACD8iyQ",
+      "factNote": "KBS Drama · https://www.youtube.com/watch?v=BmNiWMRV96c",
       "factoryType": "quote",
       "genre": "드라마",
-      "id": "quote_Q2r7ACD8iyQ",
-      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">저 어떡해요</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">선생님...</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">오열하는 김희정을</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">위로하는 공정환</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g></svg>",
-      "publishedAt": "2026-11-24T12:47:22+00:00",
-      "quote": "저 어떡해요 선생님...",
-      "scenePlayerId": "83761B512C97E73A931B7CD6EE6BEB6D40A7",
+      "id": "quote_BmNiWMRV96c",
+      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">제가 한 번</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">신어봐도 될까요?</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">엄마와의 일을</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">떠올려 아이디어를</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">낸 정민아</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g></svg>",
+      "publishedAt": "2026-11-25T12:05:30+00:00",
+      "quote": "제가 한 번 신어봐도 될까요?",
+      "scenePlayerId": "681CDF57FBD90B9AA9CE1B6811099841C5E0",
       "sourceTag": "KBS Drama",
-      "sourceUrl": "https://www.youtube.com/watch?v=Q2r7ACD8iyQ",
-      "title": "저 어떡해요 선생님...",
-      "why": "오열하는 김희정을 위로하는 공정환",
+      "sourceUrl": "https://www.youtube.com/watch?v=BmNiWMRV96c",
+      "title": "제가 한 번 신어봐도 될까요?",
+      "why": "엄마와의 일을 떠올려 아이디어를 낸 정민아",
       "work": "엄마가 미쳤어요"
     },
     {
@@ -92,30 +114,30 @@
       "color": "#433954",
       "cuts": [
         {
-          "line": "너 얼마나 알고 있는 게냐?",
+          "line": "평소처럼 대해주세요",
           "mediaType": "타이포그래피",
           "role": "대사",
           "sourceTag": "KBS Drama"
         },
         {
-          "line": "남성진의 허를 찌르는 김영옥의 역질문!",
+          "line": "검사 결과를 듣고 오열하는 김희정",
           "mediaType": "타이포그래피",
           "role": "장면",
           "sourceTag": "KBS Drama"
         }
       ],
-      "factNote": "KBS Drama · https://www.youtube.com/watch?v=EuW2eEXB99k",
+      "factNote": "KBS Drama · https://www.youtube.com/watch?v=m30wijmCE_A",
       "factoryType": "quote",
       "genre": "드라마",
-      "id": "quote_EuW2eEXB99k",
-      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">너 얼마나 알고</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">있는 게냐?</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">남성진의 허를</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">찌르는 김영옥의</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">역질문!</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g></svg>",
-      "publishedAt": "2026-11-24T12:44:34+00:00",
-      "quote": "너 얼마나 알고 있는 게냐?",
-      "scenePlayerId": "D61DD0D82963BDD177EE216FDDAA4E7CE478",
+      "id": "quote_m30wijmCE_A",
+      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">평소처럼</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">대해주세요</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">검사 결과를 듣고</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">오열하는 김희정</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g></svg>",
+      "publishedAt": "2026-11-25T11:56:22+00:00",
+      "quote": "평소처럼 대해주세요",
+      "scenePlayerId": "3F35E14671F2379990EF2110A47682ED43D4",
       "sourceTag": "KBS Drama",
-      "sourceUrl": "https://www.youtube.com/watch?v=EuW2eEXB99k",
-      "title": "너 얼마나 알고 있는 게냐?",
-      "why": "남성진의 허를 찌르는 김영옥의 역질문!",
+      "sourceUrl": "https://www.youtube.com/watch?v=m30wijmCE_A",
+      "title": "평소처럼 대해주세요",
+      "why": "검사 결과를 듣고 오열하는 김희정",
       "work": "엄마가 미쳤어요"
     },
     {
@@ -124,30 +146,62 @@
       "color": "#433954",
       "cuts": [
         {
-          "line": "당신이 죽인거야?",
+          "line": "이제 와서 엄마 노릇이야?",
           "mediaType": "타이포그래피",
           "role": "대사",
           "sourceTag": "KBS Drama"
         },
         {
-          "line": "설정환에게 술김에 말실수한 유태웅",
+          "line": "장서희&주새벽 대화를 들은 전혜원",
           "mediaType": "타이포그래피",
           "role": "장면",
           "sourceTag": "KBS Drama"
         }
       ],
-      "factNote": "KBS Drama · https://www.youtube.com/watch?v=HuCl9u2wIuU",
+      "factNote": "KBS Drama · https://www.youtube.com/watch?v=bwK9686mxZ4",
       "factoryType": "quote",
       "genre": "드라마",
-      "id": "quote_HuCl9u2wIuU",
-      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">당신이 죽인거야?</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">설정환에게 술김에</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">말실수한 유태웅</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g></svg>",
-      "publishedAt": "2026-11-24T11:53:24+00:00",
-      "quote": "당신이 죽인거야?",
+      "id": "quote_bwK9686mxZ4",
+      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">이제 와서 엄마</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">노릇이야?</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">장서희&amp;주새벽</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">대화를 들은</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">전혜원</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g></svg>",
+      "publishedAt": "2026-11-25T11:41:16+00:00",
+      "quote": "이제 와서 엄마 노릇이야?",
+      "scenePlayerId": "182337D9510BC18709D55D241B37B14007B5",
+      "sourceTag": "KBS Drama",
+      "sourceUrl": "https://www.youtube.com/watch?v=bwK9686mxZ4",
+      "title": "이제 와서 엄마 노릇이야?",
+      "why": "장서희&주새벽 대화를 들은 전혜원",
+      "work": "욕망의 덫"
+    },
+    {
+      "badge": "최근 게시",
+      "cat": "명대사",
+      "color": "#433954",
+      "cuts": [
+        {
+          "line": "희귀 혈액형이에요",
+          "mediaType": "타이포그래피",
+          "role": "대사",
+          "sourceTag": "KBS Drama"
+        },
+        {
+          "line": "유태웅의 혈액형을 알게 된 전혜원",
+          "mediaType": "타이포그래피",
+          "role": "장면",
+          "sourceTag": "KBS Drama"
+        }
+      ],
+      "factNote": "KBS Drama · https://www.youtube.com/watch?v=UuDdRSIGNms",
+      "factoryType": "quote",
+      "genre": "드라마",
+      "id": "quote_UuDdRSIGNms",
+      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">희귀 혈액형이에요</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">유태웅의 혈액형을</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">알게 된 전혜원</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g></svg>",
+      "publishedAt": "2026-11-25T11:39:09+00:00",
+      "quote": "희귀 혈액형이에요",
       "scenePlayerId": "",
       "sourceTag": "KBS Drama",
-      "sourceUrl": "https://www.youtube.com/watch?v=HuCl9u2wIuU",
-      "title": "당신이 죽인거야?",
-      "why": "설정환에게 술김에 말실수한 유태웅",
+      "sourceUrl": "https://www.youtube.com/watch?v=UuDdRSIGNms",
+      "title": "희귀 혈액형이에요",
+      "why": "유태웅의 혈액형을 알게 된 전혜원",
       "work": "욕망의 덫"
     },
     {
@@ -156,55 +210,23 @@
       "color": "#433954",
       "cuts": [
         {
-          "line": "은설 씨 같은 딸 부러워",
-          "mediaType": "타이포그래피",
-          "role": "대사",
-          "sourceTag": "KBS Drama"
-        },
-        {
-          "line": "전혜원에게 목걸이를 선물한 윤해영",
-          "mediaType": "타이포그래피",
-          "role": "장면",
-          "sourceTag": "KBS Drama"
-        }
-      ],
-      "factNote": "KBS Drama · https://www.youtube.com/watch?v=_pJ_5ZlRF0A",
-      "factoryType": "quote",
-      "genre": "드라마",
-      "id": "quote__pJ_5ZlRF0A",
-      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">은설 씨 같은 딸</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">부러워</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">전혜원에게</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">목걸이를 선물한</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">윤해영</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g></svg>",
-      "publishedAt": "2026-11-24T11:48:19+00:00",
-      "quote": "은설 씨 같은 딸 부러워",
-      "scenePlayerId": "0197842C53D198064ACFD9DA3DC67EB9F2D6",
-      "sourceTag": "KBS Drama",
-      "sourceUrl": "https://www.youtube.com/watch?v=_pJ_5ZlRF0A",
-      "title": "은설 씨 같은 딸 부러워",
-      "why": "전혜원에게 목걸이를 선물한 윤해영",
-      "work": "욕망의 덫"
-    },
-    {
-      "badge": "최근 게시",
-      "cat": "명대사",
-      "color": "#433954",
-      "cuts": [
-        {
-          "line": "지금 내 위치도 알겠네?",
+          "line": "너희 엄마 죗값은 네가 치르는 게 맞아",
           "mediaType": "타이포그래피",
           "role": "대사",
           "sourceTag": "MBCdrama"
         }
       ],
-      "factNote": "MBCdrama · https://www.youtube.com/watch?v=TlZ41hXZZPE",
+      "factNote": "MBCdrama · https://www.youtube.com/watch?v=ZAMZVvbHTDI",
       "factoryType": "quote",
       "genre": "드라마",
-      "id": "quote_TlZ41hXZZPE",
-      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">지금 내 위치도</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">알겠네?</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g></svg>",
-      "publishedAt": "2026-11-24T11:17:00+00:00",
-      "quote": "지금 내 위치도 알겠네?",
+      "id": "quote_ZAMZVvbHTDI",
+      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">너희 엄마 죗값은</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">네가 치르는 게</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">맞아</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g></svg>",
+      "publishedAt": "2026-11-25T11:01:20+00:00",
+      "quote": "너희 엄마 죗값은 네가 치르는 게 맞아",
       "scenePlayerId": "",
       "sourceTag": "MBCdrama",
-      "sourceUrl": "https://www.youtube.com/watch?v=TlZ41hXZZPE",
-      "title": "지금 내 위치도 알겠네?",
+      "sourceUrl": "https://www.youtube.com/watch?v=ZAMZVvbHTDI",
+      "title": "너희 엄마 죗값은 네가 치르는 게 맞아",
       "why": "",
       "work": "가족관계증명서"
     },
@@ -214,30 +236,30 @@
       "color": "#433954",
       "cuts": [
         {
-          "line": "여자 시신이래요...",
+          "line": "괜찮아요?",
           "mediaType": "타이포그래피",
           "role": "대사",
           "sourceTag": "MBCdrama"
         },
         {
-          "line": "전승빈 말에 놀란 윤희석",
+          "line": "성이언에게 들러붙는 윤지원",
           "mediaType": "타이포그래피",
           "role": "장면",
           "sourceTag": "MBCdrama"
         }
       ],
-      "factNote": "MBCdrama · https://www.youtube.com/watch?v=n_c7nMaNk-E",
+      "factNote": "MBCdrama · https://www.youtube.com/watch?v=j6ICae0-8kc",
       "factoryType": "quote",
       "genre": "드라마",
-      "id": "quote_n_c7nMaNk-E",
-      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">여자</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">시신이래요...</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">전승빈 말에 놀란</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">윤희석</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g></svg>",
-      "publishedAt": "2026-11-24T10:57:33+00:00",
-      "quote": "여자 시신이래요...",
+      "id": "quote_j6ICae0-8kc",
+      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">괜찮아요?</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">성이언에게</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">들러붙는 윤지원</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g></svg>",
+      "publishedAt": "2026-11-25T10:57:47+00:00",
+      "quote": "괜찮아요?",
       "scenePlayerId": "",
       "sourceTag": "MBCdrama",
-      "sourceUrl": "https://www.youtube.com/watch?v=n_c7nMaNk-E",
-      "title": "여자 시신이래요...",
-      "why": "전승빈 말에 놀란 윤희석",
+      "sourceUrl": "https://www.youtube.com/watch?v=j6ICae0-8kc",
+      "title": "괜찮아요?",
+      "why": "성이언에게 들러붙는 윤지원",
       "work": "가족관계증명서"
     },
     {
