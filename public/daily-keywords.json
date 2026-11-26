@@ -1,130 +1,94 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-26T11:10:29.043619+09:00",
+  "collectedAt": "2026-11-26T21:18:54.614088+09:00",
   "items": [
     {
-      "term": "가수",
-      "startedAt": "2026-11-25T17:00:00-08:00",
-      "traffic": "1000+"
+      "term": "두산타워",
+      "startedAt": "2026-11-26T03:00:00-08:00",
+      "traffic": "200+"
     },
     {
-      "term": "기준금리",
-      "startedAt": "2026-11-25T16:50:00-08:00",
-      "traffic": "1000+"
-    },
-    {
-      "term": "계엄",
-      "startedAt": "2026-11-25T16:50:00-08:00",
-      "traffic": "1000+"
-    },
-    {
-      "term": "진우와 해티",
-      "startedAt": "2026-11-25T16:40:00-08:00",
-      "traffic": "2000+"
-    },
-    {
-      "term": "병무청",
-      "startedAt": "2026-11-25T16:40:00-08:00",
-      "traffic": "1000+"
-    },
-    {
-      "term": "기장군",
-      "startedAt": "2026-11-25T16:30:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "시청률",
-      "startedAt": "2026-11-25T16:00:00-08:00",
-      "traffic": "5000+"
-    },
-    {
-      "term": "광주은행",
-      "startedAt": "2026-11-25T16:00:00-08:00",
+      "term": "근로장려금 신청",
+      "startedAt": "2026-11-26T02:50:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "조별리그",
-      "startedAt": "2026-11-25T15:40:00-08:00",
-      "traffic": "10000+"
+      "term": "슈퍼문",
+      "startedAt": "2026-11-26T02:40:00-08:00",
+      "traffic": "100+"
     },
     {
-      "term": "빅터 레이예스",
-      "startedAt": "2026-11-25T15:40:00-08:00",
-      "traffic": "10000+"
+      "term": "이지훈",
+      "startedAt": "2026-11-26T02:10:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "한국보건의료인국가시험원",
+      "startedAt": "2026-11-26T02:10:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "india a vs sri lanka a",
+      "startedAt": "2026-11-26T01:50:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "검찰",
+      "startedAt": "2026-11-26T01:40:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "구미역",
+      "startedAt": "2026-11-26T01:40:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "미국 휴장",
+      "startedAt": "2026-11-26T01:20:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "디워",
+      "startedAt": "2026-11-26T00:30:00-08:00",
+      "traffic": "1000+"
     }
   ],
   "issues": [
     {
-      "term": "수능",
-      "day": "2026-11-26",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008864574",
-      "publishedAt": "2026-11-26T11:07:00+09:00",
-      "headline": "[속보] 경찰, '리트 만점자' 집·수능시험지 보관 장소 압수수색"
-    },
-    {
-      "term": "대법",
-      "day": "2026-11-26",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008864489",
-      "publishedAt": "2026-11-26T11:03:00+09:00",
-      "headline": "[속보] 대법, 윤석열 '한덕수 재판 위증' 무죄 확정"
-    },
-    {
-      "term": "김석준 부산교육감 무죄",
+      "term": "AI 부정행위 논란",
       "day": "2026-11-26",
       "kind": "보도",
       "publisher": "연합뉴스",
-      "url": "https://www.yna.co.kr/view/AKR20261126074451004",
-      "publishedAt": "2026-11-26T10:55:10+09:00",
-      "headline": "'전교조 해직교사 특채' 김석준 부산교육감 무죄 확정(종합)"
+      "url": "https://www.yna.co.kr/view/AKR20261126187600004",
+      "publishedAt": "2026-11-26T19:19:08+09:00",
+      "headline": "경찰, 'AI 커닝' 세무사 수석 구속영장 신청…\"증거인멸 우려\""
     },
     {
-      "term": "한준호",
+      "term": "코레일",
       "day": "2026-11-26",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008864523",
-      "publishedAt": "2026-11-26T10:55:00+09:00",
-      "headline": "한준호 \"갓난아이 돌보는 심정, 매일 깨어있는 모습으로 노력\""
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008865616",
+      "publishedAt": "2026-11-26T18:12:00+09:00",
+      "headline": "[속보] 코레일 \"전철 235대 20분 이상 지연…일반열차 4대 운행 중지\""
     },
     {
-      "term": "학교비정규직 4만 명",
+      "term": "인천 남동산단 PVC공장",
+      "day": "2026-11-26",
+      "kind": "보도",
+      "publisher": "연합뉴스",
+      "url": "https://www.yna.co.kr/view/AKR20261126179700704",
+      "publishedAt": "2026-11-26T18:10:31+09:00",
+      "headline": "[영상] 인천 남동산단 PVC공장 화재 4시간만에 진화…\"3층서 시신 1구\""
+    },
+    {
+      "term": "오물에 아내 방치",
       "day": "2026-11-26",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008864511",
-      "publishedAt": "2026-11-26T10:54:00+09:00",
-      "headline": "학교비정규직 4만 명 내일 총파업…교육당국, 급식·돌봄 비상대응"
-    },
-    {
-      "term": "한남3구역 23년 만에",
-      "day": "2026-11-26",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008864470",
-      "publishedAt": "2026-11-26T10:49:00+09:00",
-      "headline": "'서울 최대 재개발' 한남3구역 23년 만에 첫 삽…6천여 세대 조성"
-    },
-    {
-      "term": "부산 앞바다 선박서",
-      "day": "2026-11-26",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008864477",
-      "publishedAt": "2026-11-26T10:48:00+09:00",
-      "headline": "부산 앞바다 선박서 복통 호소한 인니 선원들…1명 사망"
-    },
-    {
-      "term": "고교 기말고사 앞두고",
-      "day": "2026-11-26",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008864459",
-      "publishedAt": "2026-11-26T10:36:00+09:00",
-      "headline": "고교 기말고사 앞두고 금속탐지기 1만 2천 개 추가 구매"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008865472",
+      "publishedAt": "2026-11-26T16:55:00+09:00",
+      "headline": "오물에 아내 방치 살해한 전 부사관 항소심도 징역 30년"
     }
   ],
   "previousIssues": [

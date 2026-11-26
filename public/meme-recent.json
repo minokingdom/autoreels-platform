@@ -1,6 +1,191 @@
 {
   "quotes": [
     {
+      "id": "3jlAgPCQzt0",
+      "work": "엄마가 미쳤어요",
+      "quote": "내가 찍자고 한건 절대 아니야",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T12:17:08+00:00",
+      "context": "김희정에게 이한위와 찍은 가족사진을 들킨 양희경"
+    },
+    {
+      "id": "gURuPXUyUIs",
+      "work": "엄마가 미쳤어요",
+      "quote": "도와주세요 할머니",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T12:14:15+00:00",
+      "context": "김영옥에게 도움을 청하는 최유빈"
+    },
+    {
+      "id": "wYeSvseja4s",
+      "work": "엄마가 미쳤어요",
+      "quote": "어머니 약 드시는 거 본 적 있어요?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T12:09:13+00:00",
+      "context": "김영옥을 의심하는 강경헌?"
+    },
+    {
+      "id": "pW26FaBrffk",
+      "work": "엄마가 미쳤어요",
+      "quote": "어릴 때 버려졌대요",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T12:08:21+00:00",
+      "context": "정민아의 과거를 알게 된 강경헌!",
+      "scenePlayerId": "B817EBC610833B72AFE3FC00F15DF45674A3"
+    },
+    {
+      "id": "GTC8_httsOg",
+      "work": "엄마가 미쳤어요",
+      "quote": "내쫓을 건 아니지?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T12:05:02+00:00",
+      "context": "정민아와 김가란의 집에 간 김희정",
+      "scenePlayerId": "EE8A2B1E3A244F55E1CEEA2DFB95513ECC5A"
+    },
+    {
+      "id": "jm7nHTge8qc",
+      "work": "욕망의 덫",
+      "quote": "내가 네 자리 뺏을까 봐?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T11:45:42+00:00",
+      "context": "주새벽의 계획을 알게 된 전혜원"
+    },
+    {
+      "id": "MeVno-AgxHg",
+      "work": "욕망의 덫",
+      "quote": "차 실장 뭔가 달라졌다고",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T11:44:32+00:00",
+      "context": "달라진 설정환에 신경 쓰이는 유태웅",
+      "scenePlayerId": "7BF1B218E974624F90B06242EFD218F3BD32"
+    },
+    {
+      "id": "-97nmMmbZN4",
+      "work": "욕망의 덫",
+      "quote": "그 사람이 속인 사실들이...",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T11:41:24+00:00",
+      "context": "손성윤에게 고민 상담하는 전혜원"
+    },
+    {
+      "id": "phxjjhyFGg8",
+      "work": "욕망의 덫",
+      "quote": "이게 모두를 위한 일이지",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T11:35:31+00:00",
+      "context": "장서희의 덫이 마음에 드는 유태웅"
+    },
+    {
+      "id": "thf11Ytfcy0",
+      "work": "욕망의 덫",
+      "quote": "그런 내가 대표님 딸이 될 수 있을까요?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T11:29:39+00:00",
+      "context": "유태웅의 말에 생각이 많아진 전혜원"
+    },
+    {
+      "id": "YgV4SkIJX04",
+      "work": "욕망의 덫",
+      "quote": "고은설한테 단단히 홀렸구만",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T11:29:30+00:00",
+      "context": "전혜원 편을 들어주는 윤해영",
+      "scenePlayerId": "A8D24160422411B4872E9B09557FB349DE0B"
+    },
+    {
+      "id": "DwfLk_BBTBY",
+      "work": "욕망의 덫",
+      "quote": "대표님 잠깐 시간 되실까요?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T11:20:50+00:00",
+      "context": "윤해영을 지키려는 전혜원",
+      "scenePlayerId": "5DF860FF852DAB47F56CC2262953FCCA04AD"
+    },
+    {
+      "id": "Q6vY_0ZcvtQ",
+      "work": "욕망의 덫",
+      "quote": "제가 엄마를 닮았나요?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T11:18:01+00:00",
+      "context": "장서희에게 허를 찌르는 질문을 한 전혜원"
+    },
+    {
+      "id": "-DCuXlERHcE",
+      "work": "가족관계증명서",
+      "quote": "절대 들키지 마라~",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-26T11:16:13+00:00",
+      "context": ""
+    },
+    {
+      "id": "DCWuAy1wKaQ",
+      "work": "욕망의 덫",
+      "quote": "원래 내 자리였어",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T11:11:50+00:00",
+      "context": "다시 모든 걸 되찾기로 다짐하는 전혜원"
+    },
+    {
+      "id": "TIYowIc0j7o",
+      "work": "가족관계증명서",
+      "quote": "죄송해요",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-26T11:11:07+00:00",
+      "context": "임지은 앞에서 무릎 꿇는 박세영"
+    },
+    {
+      "id": "om-D8gqhVQ4",
+      "work": "가족관계증명서",
+      "quote": "내가 우스워?",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-26T10:57:31+00:00",
+      "context": "윤지원 뺨 때린 박세영"
+    },
+    {
+      "id": "HF2mNoO3j4Y",
+      "work": "가족관계증명서",
+      "quote": "너 싫다 그랬지",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-26T10:48:30+00:00",
+      "context": "박세영에게 사진 보여주는 최수린"
+    },
+    {
+      "id": "Y5A8eAXGDO0",
+      "work": "가족관계증명서",
+      "quote": "외롭진 않을 텐데..",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-26T10:36:59+00:00",
+      "context": "정소영을 생각하는 서도영"
+    },
+    {
+      "id": "P8u9n2WQmlo",
+      "work": "가족관계증명서",
+      "quote": "나지니 좀 치우자",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-26T10:27:59+00:00",
+      "context": "성이언X윤지원 사진 찍는 최수린"
+    },
+    {
       "id": "8DZWC4s-N0w",
       "work": "엄마가 미쳤어요",
       "quote": "내가 사준 거라서 안 먹은 건 가요?",
@@ -282,191 +467,6 @@
       "publishedAt": "2026-11-24T11:48:17+00:00",
       "context": "장서희 전화 차단한 김광영",
       "scenePlayerId": "7894DEEC95FC7F641E74198B8C5F07A0D6FB"
-    },
-    {
-      "id": "hxmO2q89rWQ",
-      "work": "욕망의 덫",
-      "quote": "그날 내가 들었어요!",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-24T11:44:35+00:00",
-      "context": "설정환에게 돌아온 기억 말하는 박현정",
-      "scenePlayerId": "F9604FBA7DC1E5FC33B516DBE2FC09629E6B"
-    },
-    {
-      "id": "TlZ41hXZZPE",
-      "work": "가족관계증명서",
-      "quote": "지금 내 위치도 알겠네?",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-24T11:17:00+00:00",
-      "context": ""
-    },
-    {
-      "id": "n_c7nMaNk-E",
-      "work": "가족관계증명서",
-      "quote": "여자 시신이래요...",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-24T10:57:33+00:00",
-      "context": "전승빈 말에 놀란 윤희석"
-    },
-    {
-      "id": "3cJzifnahLc",
-      "work": "가족관계증명서",
-      "quote": "세리 씨 어디서 어떻게 지내?",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-24T10:47:55+00:00",
-      "context": "성이언에게 묻는 윤희석"
-    },
-    {
-      "id": "tn61-Nxgf_s",
-      "work": "가족관계증명서",
-      "quote": "지니야..!",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-24T10:42:05+00:00",
-      "context": "박세영에게 절연당한 한고은"
-    },
-    {
-      "id": "EDpdgU5wolU",
-      "work": "가족관계증명서",
-      "quote": "정말 할 거야..?",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-24T10:32:52+00:00",
-      "context": "혼자 고민하는 윤지원"
-    },
-    {
-      "id": "awxGPC2md7w",
-      "work": "가족관계증명서",
-      "quote": "너한테 기회를 준 거야",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-24T10:27:43+00:00",
-      "context": "윤지원에게 지시하는 최수린"
-    },
-    {
-      "id": "uQY_g1BQXaA",
-      "work": "엄마가 미쳤어요",
-      "quote": "강다미 씨한테 호감 있어",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-23T13:02:28+00:00",
-      "context": "동하에게 자신의 마음을 밝히는 배지완"
-    },
-    {
-      "id": "KQnQiLRc5fI",
-      "work": "엄마가 미쳤어요",
-      "quote": "아가, 이리 와 봐라",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-23T12:44:46+00:00",
-      "context": "친손녀를 보자 절로 번지는 양희경의 미소",
-      "scenePlayerId": "8289C6F0A4B78F88AFE79D6A553FBF3DD2BF"
-    },
-    {
-      "id": "uuHO0P_Hiss",
-      "work": "엄마가 미쳤어요",
-      "quote": "기억나죠? 자세한 위치",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-23T12:35:18+00:00",
-      "context": "CCTV를 확인한 동하"
-    },
-    {
-      "id": "r2Q_GuJ2d1c",
-      "work": "엄마가 미쳤어요",
-      "quote": "아~ 직업병이다?",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-23T12:29:34+00:00",
-      "context": "혼잣말하는 정민아가 신경 쓰이는 동하",
-      "scenePlayerId": "286C260D8535E103F0AEE38A42BA794AC751"
-    },
-    {
-      "id": "znoDIAqYRv0",
-      "work": "엄마가 미쳤어요",
-      "quote": "우리 어머니 어디 계세요?",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-23T12:23:37+00:00",
-      "context": "양희경 걱정에 한달음에 뛰어온 이한위"
-    },
-    {
-      "id": "PHOKx79AxcY",
-      "work": "욕망의 덫",
-      "quote": "일부러 오태섭을 뺀 건가?",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-23T11:44:56+00:00",
-      "context": "유태웅을 의심하는 설정환",
-      "scenePlayerId": "EF715651119A31BE5BA34BDD0B099DD69707"
-    },
-    {
-      "id": "LI9OehRmiCc",
-      "work": "욕망의 덫",
-      "quote": "청마의 어디까지 올라가고 싶냐고",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-23T11:42:02+00:00",
-      "context": "설정환에게 도움을 요청하는 주새벽",
-      "scenePlayerId": "DD492FDC66BA7509EE59185158158FA1F14E"
-    },
-    {
-      "id": "35OhNlpFh5E",
-      "work": "가족관계증명서",
-      "quote": "더는 못 봐주겠다고",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-23T11:06:48+00:00",
-      "context": ""
-    },
-    {
-      "id": "NryrHiyWUXY",
-      "work": "가족관계증명서",
-      "quote": "알고 있었던 거야?",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-23T10:57:00+00:00",
-      "context": "박세영에게 묻는 성이언"
-    },
-    {
-      "id": "Qb_FxVbK7CQ",
-      "work": "가족관계증명서",
-      "quote": "그 금이 왜 언니 거야?",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-23T10:53:01+00:00",
-      "context": "임지은에게 뻔뻔하게 나오는 한고은"
-    },
-    {
-      "id": "2Noc6Ol9yK4",
-      "work": "가족관계증명서",
-      "quote": "우리 어떡해...",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-23T10:42:39+00:00",
-      "context": "충격적인 소식을 들은 성이언"
-    },
-    {
-      "id": "OtGCTy4FMHc",
-      "work": "가족관계증명서",
-      "quote": "당신 같은 줄 알아요?",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-23T10:32:28+00:00",
-      "context": "한고은 말에 발끈하는 전승빈"
-    },
-    {
-      "id": "r-UG7X5g9BA",
-      "work": "가족관계증명서",
-      "quote": "불 질렀어..?",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-23T10:27:27+00:00",
-      "context": "연행당하는 서도영을 본 임지은"
     }
   ],
   "clips": [
@@ -516,6 +516,14 @@
       "publisher": "stinkyzaba",
       "publishedAt": "2026-11-23T23:34:04Z",
       "url": "https://media.giphy.com/media/ZUEKsf5fbtd5j5Eg7J/giphy.mp4",
+      "hasOriginalAudio": false
+    },
+    {
+      "id": "6XliIk55862tRJe1xZ",
+      "title": "Orange Tabby Dance GIF by funimagesvip",
+      "publisher": "funimagesvip",
+      "publishedAt": "2026-11-23T19:51:10Z",
+      "url": "https://media.giphy.com/media/6XliIk55862tRJe1xZ/giphy.mp4",
       "hasOriginalAudio": false
     },
     {
