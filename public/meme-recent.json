@@ -1,13 +1,90 @@
 {
   "quotes": [
     {
+      "id": "3ygzqVzu-9U",
+      "work": "사운드:트랙",
+      "quote": "너무 슬프지 않았으면 좋겠는데",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T14:26:28+00:00",
+      "context": "서로의 행복을 바라는 주종혁&한수아",
+      "scenePlayerId": "9952816B07DB3C611D17FE85B3FD17399B70"
+    },
+    {
+      "id": "M7L1CqV-j9o",
+      "work": "사운드:트랙",
+      "quote": "수아가 화를 내니까...",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T14:17:30+00:00",
+      "context": "죽은 한수아의 환영을 봤던 주종혁",
+      "scenePlayerId": "FAB7B078405FD0589A105D33720DAAB0EF68"
+    },
+    {
+      "id": "1Hp0HP_JHgI",
+      "work": "사운드:트랙",
+      "quote": "무슨 말이라도 해줘요",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T14:05:17+00:00",
+      "context": "한수아가 떠올라 박유림에게 사과하는 주종혁"
+    },
+    {
+      "id": "DnKq3QSAAGY",
+      "work": "사운드:트랙",
+      "quote": "위로가 되더라고요",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T13:57:14+00:00",
+      "context": "주종혁에게 고마움을 말하는 박유림",
+      "scenePlayerId": "A1CCBF96A52A9D95F251141B435665847E88"
+    },
+    {
+      "id": "eMQbMuw8RR4",
+      "work": "사운드:트랙",
+      "quote": "그 사람을 위해서라면",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T13:35:37+00:00",
+      "context": "박유림의 말을 떠올리는 주종혁",
+      "scenePlayerId": "D749F6818B83335A7F84185158158FA1F14E"
+    },
+    {
+      "id": "Fbdjw4pG_gU",
+      "work": "엄마가 미쳤어요",
+      "quote": "나 유치원 안 갈래 가기 싫어",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T12:38:46+00:00",
+      "context": "유치원에 가기 싫다고 하는 김래온"
+    },
+    {
+      "id": "gEtn2eEzk40",
+      "work": "엄마가 미쳤어요",
+      "quote": "너 할머니가 어떤 분인지 알아?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T12:32:56+00:00",
+      "context": "김나은에게 양희경의 안부를 잘 챙기라고 하는 조미령"
+    },
+    {
+      "id": "tTfcZ-DRM0E",
+      "work": "엄마가 미쳤어요",
+      "quote": "사장님 좀 쉬게 해주세요",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-26T12:32:17+00:00",
+      "context": "안연홍에게 당부하는 공정환"
+    },
+    {
       "id": "3jlAgPCQzt0",
       "work": "엄마가 미쳤어요",
       "quote": "내가 찍자고 한건 절대 아니야",
       "genre": "드라마",
       "publisher": "KBS Drama",
       "publishedAt": "2026-11-26T12:17:08+00:00",
-      "context": "김희정에게 이한위와 찍은 가족사진을 들킨 양희경"
+      "context": "김희정에게 이한위와 찍은 가족사진을 들킨 양희경",
+      "scenePlayerId": "309C5E08ECBF8FF4E13A9B4AE236E28DA6E2"
     },
     {
       "id": "gURuPXUyUIs",
@@ -138,7 +215,8 @@
       "genre": "드라마",
       "publisher": "KBS Drama",
       "publishedAt": "2026-11-26T11:11:50+00:00",
-      "context": "다시 모든 걸 되찾기로 다짐하는 전혜원"
+      "context": "다시 모든 걸 되찾기로 다짐하는 전혜원",
+      "scenePlayerId": "C04310A140A64A19D329FBA473B0CC6872C8"
     },
     {
       "id": "TIYowIc0j7o",
@@ -391,82 +469,6 @@
       "publishedAt": "2026-11-24T12:38:29+00:00",
       "context": "정민아와 함께 있는 배지완을 견제하는 동하",
       "scenePlayerId": "8433754F2EAD615DD1210C6D1B1808F8CCED"
-    },
-    {
-      "id": "2yT7hUTigEU",
-      "work": "엄마가 미쳤어요",
-      "quote": "앞으로 생활비 받아써요",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-24T12:35:37+00:00",
-      "context": "차영옥에게 돈을 생활비로 주겠다고 하는 강경헌"
-    },
-    {
-      "id": "dTVhPVbfbyo",
-      "work": "엄마가 미쳤어요",
-      "quote": "아빠가 돌아왔다는 거야?",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-24T12:32:11+00:00",
-      "context": "이한위가 동네로 이사 온 사실을 알게 된 정민아!"
-    },
-    {
-      "id": "RlBBXCxnxAQ",
-      "work": "엄마가 미쳤어요",
-      "quote": "가출한 건 아니겠지..?",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-24T12:11:36+00:00",
-      "context": "집에 들어오지 않는 김희정에 의문을 품는 가족들",
-      "scenePlayerId": "A95FA49960ADDCB55229D5235A659E5B0C4E"
-    },
-    {
-      "id": "QxfKFIHPyFA",
-      "work": "엄마가 미쳤어요",
-      "quote": "같이 찍어요",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-24T12:08:24+00:00",
-      "context": "양희경에게 함께 가족사진을 찍자고 하는 이한위"
-    },
-    {
-      "id": "QMJjo0iSwc0",
-      "work": "엄마가 미쳤어요",
-      "quote": "너무 아파요",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-24T12:05:39+00:00",
-      "context": "복통을 호소하는 김희정을 발견한 공정환!",
-      "scenePlayerId": "6D2009E735DC02036D1E528E2FCBA8005B17"
-    },
-    {
-      "id": "HuCl9u2wIuU",
-      "work": "욕망의 덫",
-      "quote": "당신이 죽인거야?",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-24T11:53:24+00:00",
-      "context": "설정환에게 술김에 말실수한 유태웅"
-    },
-    {
-      "id": "_pJ_5ZlRF0A",
-      "work": "욕망의 덫",
-      "quote": "은설 씨 같은 딸 부러워",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-24T11:48:19+00:00",
-      "context": "전혜원에게 목걸이를 선물한 윤해영",
-      "scenePlayerId": "0197842C53D198064ACFD9DA3DC67EB9F2D6"
-    },
-    {
-      "id": "Do8hey4EVjQ",
-      "work": "욕망의 덫",
-      "quote": "이게 날 차단을 해?",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-24T11:48:17+00:00",
-      "context": "장서희 전화 차단한 김광영",
-      "scenePlayerId": "7894DEEC95FC7F641E74198B8C5F07A0D6FB"
     }
   ],
   "clips": [
@@ -532,6 +534,14 @@
       "publisher": "the innernette",
       "publishedAt": "2026-11-20T19:38:13Z",
       "url": "https://media.giphy.com/media/qy5prNBJ7r6IqUFmJT/giphy.mp4",
+      "hasOriginalAudio": false
+    },
+    {
+      "id": "lV15KDoKB06rWT4y4R",
+      "title": "Fall Autumn GIF",
+      "publisher": "AllieRanae",
+      "publishedAt": "2026-11-20T15:54:19Z",
+      "url": "https://media.giphy.com/media/lV15KDoKB06rWT4y4R/giphy.mp4",
       "hasOriginalAudio": false
     },
     {

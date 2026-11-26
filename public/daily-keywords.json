@@ -1,59 +1,60 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-26T21:18:54.614088+09:00",
+  "collectedAt": "2026-11-27T08:46:34.848710+09:00",
   "items": [
     {
-      "term": "두산타워",
-      "startedAt": "2026-11-26T03:00:00-08:00",
+      "term": "배준호",
+      "startedAt": "2026-11-26T14:40:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "근로장려금 신청",
-      "startedAt": "2026-11-26T02:50:00-08:00",
+      "term": "예멘 정부",
+      "startedAt": "2026-11-26T14:40:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "슈퍼문",
-      "startedAt": "2026-11-26T02:40:00-08:00",
+      "term": "이관희",
+      "startedAt": "2026-11-26T14:40:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "이지훈",
-      "startedAt": "2026-11-26T02:10:00-08:00",
+      "term": "홍창기",
+      "startedAt": "2026-11-26T14:30:00-08:00",
+      "traffic": "2000+"
+    },
+    {
+      "term": "야닉 시너",
+      "startedAt": "2026-11-26T14:30:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "new zealand vs india",
+      "startedAt": "2026-11-26T14:30:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "블루 아카이브",
+      "startedAt": "2026-11-26T14:10:00-08:00",
+      "traffic": "1000+"
+    },
+    {
+      "term": "삼성전자 배당금",
+      "startedAt": "2026-11-26T14:10:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "한국보건의료인국가시험원",
-      "startedAt": "2026-11-26T02:10:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "india a vs sri lanka a",
-      "startedAt": "2026-11-26T01:50:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "검찰",
-      "startedAt": "2026-11-26T01:40:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "구미역",
-      "startedAt": "2026-11-26T01:40:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "미국 휴장",
-      "startedAt": "2026-11-26T01:20:00-08:00",
+      "term": "김포시장",
+      "startedAt": "2026-11-26T14:10:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "디워",
-      "startedAt": "2026-11-26T00:30:00-08:00",
+      "term": "열차",
+      "startedAt": "2026-11-26T14:10:00-08:00",
       "traffic": "1000+"
     }
   ],
-  "issues": [
+  "issues": [],
+  "previousIssues": [
     {
       "term": "AI 부정행위 논란",
       "day": "2026-11-26",
@@ -89,44 +90,6 @@
       "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008865472",
       "publishedAt": "2026-11-26T16:55:00+09:00",
       "headline": "오물에 아내 방치 살해한 전 부사관 항소심도 징역 30년"
-    }
-  ],
-  "previousIssues": [
-    {
-      "term": "AI 부정행위 논란",
-      "day": "2026-11-25",
-      "kind": "보도",
-      "publisher": "연합뉴스",
-      "url": "https://www.yna.co.kr/view/AKR20261125150400063",
-      "publishedAt": "2026-11-25T16:55:14+09:00",
-      "headline": "대전세종충남 기말고사 '수능급' 감독한다…AI 커닝 차단 총력전"
-    },
-    {
-      "term": "윤석열",
-      "day": "2026-11-25",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863567",
-      "publishedAt": "2026-11-25T19:34:00+09:00",
-      "headline": "윤석열 \"12·3 비상계엄 선포, 미국 지지 필요 없었다\""
-    },
-    {
-      "term": "서울변회",
-      "day": "2026-11-25",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863563",
-      "publishedAt": "2026-11-25T19:21:00+09:00",
-      "headline": "서울변회 \"재판 결과로 대법원장 탄핵, 사법독립 우려\""
-    },
-    {
-      "term": "인천경제청",
-      "day": "2026-11-25",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863373",
-      "publishedAt": "2026-11-25T17:14:00+09:00",
-      "headline": "인천경제청 \"송도세브란스병원 지상부 건축공사 내달 시작\""
     }
   ]
 }
