@@ -11,15 +11,27 @@
         "sourceTag": "오늘의 브리핑"
       },
       {
-        "line": "AI 시험 부정행위 장비 판매 관련 지갑에 28억원어치 테더 유입",
+        "line": "[속보] 경찰, '리트 만점자' 집·수능시험지 보관 장소 압수수색",
         "mediaType": "타이포그래피",
         "role": "소식 1",
+        "sourceTag": "SBS"
+      },
+      {
+        "line": "[속보] 대법, 윤석열 '한덕수 재판 위증' 무죄 확정",
+        "mediaType": "타이포그래피",
+        "role": "소식 2",
+        "sourceTag": "SBS"
+      },
+      {
+        "line": "'전교조 해직교사 특채' 김석준 부산교육감 무죄 확정(종합)",
+        "mediaType": "타이포그래피",
+        "role": "소식 3",
         "sourceTag": "연합뉴스"
       },
       {
-        "line": "'계엄 국무회의 위증' 윤석열 오늘 대법 판단…1·2심 무죄",
+        "line": "한준호 \"갓난아이 돌보는 심정, 매일 깨어있는 모습으로 노력\"",
         "mediaType": "타이포그래피",
-        "role": "소식 2",
+        "role": "소식 4",
         "sourceTag": "SBS"
       },
       {
@@ -29,23 +41,33 @@
         "sourceTag": "오늘의 브리핑"
       }
     ],
-    "factNote": "연합뉴스 · https://www.yna.co.kr/view/AKR20261125177600002\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008863987",
+    "factNote": "SBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008864574\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008864489\n연합뉴스 · https://www.yna.co.kr/view/AKR20261126074451004\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008864523",
     "factoryType": "briefing",
     "genre": "뉴스 브리핑",
     "id": "briefing_2026-11-26",
-    "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 208 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">도입</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">11월 26일</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">주요 뉴스</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g><g transform=\"translate(104 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 1</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">AI 시험</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">부정행위 장비</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">판매 관련 지갑에</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">28억원어치 테더</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">유입</text><text x=\"7\" y=\"160\" font-size=\"7\">연합뉴스</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 2</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">'계엄 국무회의</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">위증' 윤석열</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">오늘 대법</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">판단…1·2심</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">무죄</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(104 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">마무리</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기사별 출처는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">설명에서</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">확인하세요.</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g></svg>",
-    "sourceTag": "연합뉴스",
-    "sourceUrl": "https://www.yna.co.kr/view/AKR20261125177600002",
+    "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 312 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">도입</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">11월 26일</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">주요 뉴스</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g><g transform=\"translate(104 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 1</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">[속보] 경찰,</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">'리트 만점자'</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">집·수능시험지</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">보관 장소</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">압수수색</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(208 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 2</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">[속보] 대법,</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">윤석열 '한덕수</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">재판 위증' 무죄</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">확정</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 3</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">'전교조 해직교사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">특채' 김석준</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">부산교육감 무죄</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">확정(종합)</text><text x=\"7\" y=\"160\" font-size=\"7\">연합뉴스</text></g></g><g transform=\"translate(104 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 4</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">한준호 \"갓난아이</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">돌보는 심정,</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">매일 깨어있는</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">모습으로 노력\"</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(208 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">마무리</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기사별 출처는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">설명에서</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">확인하세요.</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g></svg>",
+    "sourceTag": "SBS",
+    "sourceUrl": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008864574",
     "sources": [
       {
-        "headline": "AI 시험 부정행위 장비 판매 관련 지갑에 28억원어치 테더 유입",
-        "name": "연합뉴스",
-        "url": "https://www.yna.co.kr/view/AKR20261125177600002"
+        "headline": "[속보] 경찰, '리트 만점자' 집·수능시험지 보관 장소 압수수색",
+        "name": "SBS",
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008864574"
       },
       {
-        "headline": "'계엄 국무회의 위증' 윤석열 오늘 대법 판단…1·2심 무죄",
+        "headline": "[속보] 대법, 윤석열 '한덕수 재판 위증' 무죄 확정",
         "name": "SBS",
-        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008863987"
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008864489"
+      },
+      {
+        "headline": "'전교조 해직교사 특채' 김석준 부산교육감 무죄 확정(종합)",
+        "name": "연합뉴스",
+        "url": "https://www.yna.co.kr/view/AKR20261126074451004"
+      },
+      {
+        "headline": "한준호 \"갓난아이 돌보는 심정, 매일 깨어있는 모습으로 노력\"",
+        "name": "SBS",
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008864523"
       }
     ],
     "title": "11월 26일 주요 뉴스",
