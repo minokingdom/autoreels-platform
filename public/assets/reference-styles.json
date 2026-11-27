@@ -429,7 +429,7 @@
     "camera": "zoom-in",
     "transition": "cut",
     "name": "비트 마스크",
-    "summary": "숫자, 사선 패널, 둥근 막대로 내 사진이 열리는 리듬감 있는 테마입니다.",
+    "summary": "내 문구와 사선 패널, 둥근 막대로 사진이 열리는 리듬감 있는 테마입니다.",
     "background": "#09060a",
     "foreground": "#ffffff",
     "accent": "#f6ccaf",

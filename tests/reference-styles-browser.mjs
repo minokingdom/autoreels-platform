@@ -1,6 +1,90 @@
 import {chromium} from 'playwright';
 import http from 'node:http';import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';
 import {buildApp} from '../scripts/build-app.mjs';
+async function checkBeatCopy(page) {
+  return page.evaluate(() => {
+    const spec = arFindDesign('ref_4ef965a33bea39d2');
+    const canvas = document.createElement('canvas');
+    canvas.width = 270; canvas.height = 480;
+    const output = canvas.getContext('2d');
+    const proto = CanvasRenderingContext2D.prototype;
+    const original = proto.fillText;
+    const oldHook = campaign.hook, oldCaptions = campaign.cutCaptions;
+    let ink = [];
+    proto.fillText = function (text, ...args) {
+      if (this === output || this.canvas === arBeatMatte) ink.push(String(text));
+      return original.call(this, text, ...args);
+    };
+    try {
+      for (const [first, last, hook] of [
+        ['우리 동네 카페', '다음에 또 만나요', ''],
+        ['BMW 3시리즈', '2027년 봄에 만나요', ''],
+        ['', '', '내가 정한 제목'],
+        ['', '', '']
+      ]) {
+        campaign.cutCaptions = [first, last]; campaign.hook = hook;
+        for (const [time, expected] of [[1.2, first || hook], [19.9, last || hook]]) {
+          ink = [];
+          arRenderReferenceFrame(output,270,480,time,20,2,{},spec);
+          const drawn = ink.join('').replace(/\s/g,'');
+          if (drawn !== expected.replace(/\s/g,'')) throw Error('테마 문구가 대본과 다릅니다: ' + JSON.stringify(ink));
+        }
+      }
+    } finally {
+      proto.fillText = original; campaign.cutCaptions = oldCaptions; campaign.hook = oldHook;
+    }
+    return '비트 마스크 오프닝·엔딩 8개 문구 검사 통과';
+  });
+}
+async function checkBeatDiagonals(page) {
+  return page.evaluate(() => {
+    const canvas = document.createElement('canvas'), photo = document.createElement('canvas');
+    const context = canvas.getContext('2d', {willReadFrequently:true});
+    const paint = photo.getContext('2d');
+    paint.fillStyle = '#fff'; paint.fillRect(0,0,photo.width,photo.height);
+    const scene = {photos:[photo], n:1, idx:0, cutIdx:0, cuts:1};
+    const plan = campaign.scenePlan;
+    let worst = 0, measured = 0;
+    try {
+      campaign.scenePlan = [];
+      for (const width of [270,540]) {
+        const height = width * 16 / 9;
+        canvas.width = width; canvas.height = height;
+        for (const [start, end] of [[3.58,4.72],[5.52,6.60],[7.40,8.38]]) {
+          for (let frame = Math.ceil(start*30); frame <= end*30; frame++) {
+            const t = frame / 30, b = arBeatDiagonalBand(t,width,height);
+            context.fillStyle='#000'; context.fillRect(0,0,width,height);
+            arBeatMaskFrame(context,width,height,scene,0,1,t/18.4,'','pretM');
+            const data=context.getImageData(0,0,width,height).data;
+            for (let x = 3; x < width - 3; x += 7) {
+              const center = b.y + (x+.5-width/2)*Math.tan(b.angle);
+              for (const sign of [-1,1]) {
+                const expected = center + sign*b.height/(2*Math.cos(b.angle));
+                const y = Math.floor(expected);
+                if (y < 5 || y > height - 6) continue;
+                const luminance = row => data[4*(row*width+x)];
+                const threshold = luminance(y-sign*4) / 2;
+                if (threshold < 75) throw Error('사선 안쪽 사진 누락');
+                let error=Infinity;
+                for(let row=y-3;row<=y+2;row++) {
+                  const a=luminance(row), d=luminance(row+1);
+                  if(a!==d && (a-threshold)*(d-threshold)<=0) {
+                    const cross=row+.5+(threshold-a)/(d-a);
+                    error=Math.min(error,Math.abs(expected-cross));
+                  }
+                }
+                if(error>1)throw Error('사선 경계가 기준선에서 벗어남 '+[t,x,y,error]);
+                worst=Math.max(worst,error); measured++;
+              }
+            }
+          }
+        }
+      }
+    } finally { campaign.scenePlan=plan; }
+    if (measured < 5000) throw Error('사선 검사 부족');
+    return {measured, maxPixelError:Number(worst.toFixed(2))};
+  });
+}
 const repo=path.resolve(import.meta.dirname,'..'),root=path.join(repo,'public');buildApp(repo);
 const server=http.createServer((req,res)=>{let file=path.join(root,req.url.split('?')[0]);if(!fs.existsSync(file)||fs.statSync(file).isDirectory())file=path.join(root,'studio.html');res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.css')?'text/css':file.endsWith('.html')?'text/html':'application/octet-stream');res.end(fs.readFileSync(file));});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch();const page=await browser.newPage();
@@ -8,6 +92,7 @@ try{
  await page.route('**/api/**',r=>r.fulfill({status:503,contentType:'application/json',body:'{"ok":false}'}));
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(`http://127.0.0.1:${server.address().port}/studio`);await page.waitForFunction(()=>typeof arRenderReferenceFrame==='function');
+ console.log(await checkBeatCopy(page), await checkBeatDiagonals(page));
  const result=await page.evaluate(()=>{
   setIndustry('cafe');const base={id:'ref_0123456789abcdef',name:'분석 렌더 시험',summary:'시험',category:'감성',layout:'full',font:'pretM',captionPosition:'bottom',textMotion:'rise',camera:'zoom-in',transition:'fade',background:'#141414',foreground:'#ffffff',accent:'#ccaa88',captionSize:.06,zoom:.04,shade:.4,grain:.02,entrySeconds:.5};
   campaign.cutCaptions=Array.from({length:8},(_,i)=>`서로 다른 사진과 자막 ${i+1}`);

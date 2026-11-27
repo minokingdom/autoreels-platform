@@ -17,8 +17,8 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
   c.save();
   c.fillStyle=r.background;c.fillRect(0,0,W,H);
   if(r.layout==='beat-mask') {
-    arBeatMaskFrame(c,W,H,S,idx,totalCuts,p);
-    arReferenceCaption(c,caption,W,H,H*.73,H*.15,r,entry);
+    const titleVisible = arBeatMaskFrame(c,W,H,S,idx,totalCuts,p,caption,r.font);
+    if (!titleVisible) arReferenceCaption(c,caption,W,H,H*.73,H*.15,r,entry);
     inSign(c,d,W/2,H*.94,r.foreground,'center',W*.03);
     c.restore();return;
   }
