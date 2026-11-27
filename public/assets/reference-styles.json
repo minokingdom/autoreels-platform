@@ -418,5 +418,26 @@
     "grain": 0,
     "entrySeconds": 0.72,
     "addedAt": "2026-11-22T05:37:54Z"
+  },
+  {
+    "id": "ref_4ef965a33bea39d2",
+    "category": "브이로그",
+    "layout": "beat-mask",
+    "font": "pretM",
+    "captionPosition": "bottom",
+    "textMotion": "fade",
+    "camera": "zoom-in",
+    "transition": "cut",
+    "name": "비트 마스크",
+    "summary": "숫자, 사선 패널, 둥근 막대로 내 사진이 열리는 리듬감 있는 테마입니다.",
+    "background": "#09060a",
+    "foreground": "#ffffff",
+    "accent": "#f6ccaf",
+    "captionSize": 0.058,
+    "zoom": 0.035,
+    "shade": 0,
+    "grain": 0,
+    "entrySeconds": 0.36,
+    "addedAt": "2026-11-27T15:40:06Z"
   }
 ]
