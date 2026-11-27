@@ -1,6 +1,51 @@
 {
   "quotes": [
     {
+      "id": "fLdcO6gy3iA",
+      "work": "옆자리, 프란체스카",
+      "quote": "붙지 말라고 하지 않았나?",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-27T01:00:33+00:00",
+      "context": "놀란 김현진을 받아준 한수아"
+    },
+    {
+      "id": "QmfrZKeQfhE",
+      "work": "옆자리, 프란체스카",
+      "quote": "저 애는...!",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-27T01:00:32+00:00",
+      "context": "한수아를 보고 놀란 김현진"
+    },
+    {
+      "id": "eAV9_6whPIk",
+      "work": "옆자리, 프란체스카",
+      "quote": "누구 찾아?",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-27T01:00:26+00:00",
+      "context": "한수아를 찾아온 이승규"
+    },
+    {
+      "id": "NN9aHI3vzXA",
+      "work": "옆자리, 프란체스카",
+      "quote": "너~무 불길해!",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-27T01:00:24+00:00",
+      "context": "집에 들어가는 관을 본 박희진"
+    },
+    {
+      "id": "yetdiSPLSL0",
+      "work": "라이어",
+      "quote": "민준호 씨를 마지막으로 만났을 때가 언제였죠?",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-27T00:00:14+00:00",
+      "context": "서현진을 찾아온 최대훈?!"
+    },
+    {
       "id": "3ygzqVzu-9U",
       "work": "사운드:트랙",
       "quote": "너무 슬프지 않았으면 좋겠는데",
@@ -421,54 +466,6 @@
       "publisher": "MBCdrama",
       "publishedAt": "2026-11-25T10:47:15+00:00",
       "context": "성이언에게 짜증 내는 박세영"
-    },
-    {
-      "id": "D2lKkkSqvwA",
-      "work": "가족관계증명서",
-      "quote": "지후 씨가 좋아",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-25T10:37:38+00:00",
-      "context": "성이언을 떠올리는 윤지원"
-    },
-    {
-      "id": "7ME4EpPgzeo",
-      "work": "가족관계증명서",
-      "quote": "힘들잖아요",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-25T10:27:44+00:00",
-      "context": "가려는 성이언 붙잡는 윤지원"
-    },
-    {
-      "id": "Q2r7ACD8iyQ",
-      "work": "엄마가 미쳤어요",
-      "quote": "저 어떡해요 선생님...",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-24T12:47:22+00:00",
-      "context": "오열하는 김희정을 위로하는 공정환",
-      "scenePlayerId": "83761B512C97E73A931B7CD6EE6BEB6D40A7"
-    },
-    {
-      "id": "EuW2eEXB99k",
-      "work": "엄마가 미쳤어요",
-      "quote": "너 얼마나 알고 있는 게냐?",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-24T12:44:34+00:00",
-      "context": "남성진의 허를 찌르는 김영옥의 역질문!",
-      "scenePlayerId": "D61DD0D82963BDD177EE216FDDAA4E7CE478"
-    },
-    {
-      "id": "SbP9LWut3gI",
-      "work": "엄마가 미쳤어요",
-      "quote": "지각이에요 지각!",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-24T12:38:29+00:00",
-      "context": "정민아와 함께 있는 배지완을 견제하는 동하",
-      "scenePlayerId": "8433754F2EAD615DD1210C6D1B1808F8CCED"
     }
   ],
   "clips": [
@@ -526,6 +523,22 @@
       "publisher": "funimagesvip",
       "publishedAt": "2026-11-23T19:51:10Z",
       "url": "https://media.giphy.com/media/6XliIk55862tRJe1xZ/giphy.mp4",
+      "hasOriginalAudio": false
+    },
+    {
+      "id": "VdJDtLQcqBZAlWxqmH",
+      "title": "Happy Friends GIF",
+      "publisher": "AskAton",
+      "publishedAt": "2026-11-22T23:31:08Z",
+      "url": "https://media.giphy.com/media/VdJDtLQcqBZAlWxqmH/giphy.mp4",
+      "hasOriginalAudio": false
+    },
+    {
+      "id": "BtoSg1NBlReSm0I6JO",
+      "title": "Fall Autumn GIF",
+      "publisher": "AllieRanae",
+      "publishedAt": "2026-11-21T16:16:32Z",
+      "url": "https://media.giphy.com/media/BtoSg1NBlReSm0I6JO/giphy.mp4",
       "hasOriginalAudio": false
     },
     {

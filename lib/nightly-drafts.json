@@ -1,7 +1,177 @@
 {
-  "briefing": null,
+  "briefing": {
+    "badge": "오늘의 브리핑",
+    "cat": "쇼츠 포맷",
+    "color": "#203750",
+    "cuts": [
+      {
+        "line": "11월 27일 주요 뉴스",
+        "mediaType": "타이포그래피",
+        "role": "도입",
+        "sourceTag": "오늘의 브리핑"
+      },
+      {
+        "line": "올해 수능 부정행위 적발 70% '쑥'…원천 차단 해법 찾을까",
+        "mediaType": "타이포그래피",
+        "role": "소식 1",
+        "sourceTag": "SBS"
+      },
+      {
+        "line": "'마약 전과' 전직 정치인 아들, 전 연인 스토킹·폭행 혐의 체포",
+        "mediaType": "타이포그래피",
+        "role": "소식 2",
+        "sourceTag": "SBS"
+      },
+      {
+        "line": "[단독] 경찰, '임플란트 시술 중 환자 사망' 치과 압수수색",
+        "mediaType": "타이포그래피",
+        "role": "소식 3",
+        "sourceTag": "SBS"
+      },
+      {
+        "line": "'딥페이크 의혹' 불송치 박완수 지사 \"경남 대도약 반드시 실현\"",
+        "mediaType": "타이포그래피",
+        "role": "소식 4",
+        "sourceTag": "연합뉴스"
+      },
+      {
+        "line": "기사별 출처는 설명에서 확인하세요.",
+        "mediaType": "타이포그래피",
+        "role": "마무리",
+        "sourceTag": "오늘의 브리핑"
+      }
+    ],
+    "factNote": "SBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008866366\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008866458\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008866284\n연합뉴스 · https://www.yna.co.kr/view/AKR20261127057000052",
+    "factoryType": "briefing",
+    "genre": "뉴스 브리핑",
+    "id": "briefing_2026-11-27",
+    "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 312 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">도입</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">11월 27일</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">주요 뉴스</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g><g transform=\"translate(104 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 1</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">올해 수능</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">부정행위 적발</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">70%</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">'쑥'…원천 차단</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">해법 찾을까</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(208 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 2</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">'마약 전과'</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">전직 정치인</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">아들, 전 연인</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">스토킹·폭행 혐의</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">체포</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 3</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">[단독] 경찰,</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">'임플란트 시술</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">중 환자 사망'</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">치과 압수수색</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(104 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 4</text><text x=\"7\" y=\"57\" font-size=\"10\" font-weight=\"700\">'딥페이크 의혹'</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">불송치 박완수</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">지사 \"경남</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">대도약 반드시</text><text x=\"7\" y=\"113\" font-size=\"10\" font-weight=\"700\">실현\"</text><text x=\"7\" y=\"160\" font-size=\"7\">연합뉴스</text></g></g><g transform=\"translate(208 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">마무리</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기사별 출처는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">설명에서</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">확인하세요.</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g></svg>",
+    "sourceTag": "SBS",
+    "sourceUrl": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008866366",
+    "sources": [
+      {
+        "headline": "올해 수능 부정행위 적발 70% '쑥'…원천 차단 해법 찾을까",
+        "name": "SBS",
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008866366"
+      },
+      {
+        "headline": "'마약 전과' 전직 정치인 아들, 전 연인 스토킹·폭행 혐의 체포",
+        "name": "SBS",
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008866458"
+      },
+      {
+        "headline": "[단독] 경찰, '임플란트 시술 중 환자 사망' 치과 압수수색",
+        "name": "SBS",
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008866284"
+      },
+      {
+        "headline": "'딥페이크 의혹' 불송치 박완수 지사 \"경남 대도약 반드시 실현\"",
+        "name": "연합뉴스",
+        "url": "https://www.yna.co.kr/view/AKR20261127057000052"
+      }
+    ],
+    "title": "11월 27일 주요 뉴스",
+    "why": "오늘 보도된 기사 제목을 한눈에 살펴보세요.",
+    "year": "2026-11-27"
+  },
   "date": "2026-11-27",
   "quotes": [
+    {
+      "badge": "최근 게시",
+      "cat": "명대사",
+      "color": "#433954",
+      "cuts": [
+        {
+          "line": "붙지 말라고 하지 않았나?",
+          "mediaType": "타이포그래피",
+          "role": "대사",
+          "sourceTag": "MBCdrama"
+        },
+        {
+          "line": "놀란 김현진을 받아준 한수아",
+          "mediaType": "타이포그래피",
+          "role": "장면",
+          "sourceTag": "MBCdrama"
+        }
+      ],
+      "factNote": "MBCdrama · https://www.youtube.com/watch?v=fLdcO6gy3iA",
+      "factoryType": "quote",
+      "genre": "드라마",
+      "id": "quote_fLdcO6gy3iA",
+      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">붙지 말라고 하지</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">않았나?</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">놀란 김현진을</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">받아준 한수아</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g></svg>",
+      "publishedAt": "2026-11-27T01:00:33+00:00",
+      "quote": "붙지 말라고 하지 않았나?",
+      "scenePlayerId": "",
+      "sourceTag": "MBCdrama",
+      "sourceUrl": "https://www.youtube.com/watch?v=fLdcO6gy3iA",
+      "title": "붙지 말라고 하지 않았나?",
+      "why": "놀란 김현진을 받아준 한수아",
+      "work": "옆자리, 프란체스카"
+    },
+    {
+      "badge": "최근 게시",
+      "cat": "명대사",
+      "color": "#433954",
+      "cuts": [
+        {
+          "line": "저 애는...!",
+          "mediaType": "타이포그래피",
+          "role": "대사",
+          "sourceTag": "MBCdrama"
+        },
+        {
+          "line": "한수아를 보고 놀란 김현진",
+          "mediaType": "타이포그래피",
+          "role": "장면",
+          "sourceTag": "MBCdrama"
+        }
+      ],
+      "factNote": "MBCdrama · https://www.youtube.com/watch?v=QmfrZKeQfhE",
+      "factoryType": "quote",
+      "genre": "드라마",
+      "id": "quote_QmfrZKeQfhE",
+      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">저 애는...!</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">한수아를 보고</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">놀란 김현진</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g></svg>",
+      "publishedAt": "2026-11-27T01:00:32+00:00",
+      "quote": "저 애는...!",
+      "scenePlayerId": "",
+      "sourceTag": "MBCdrama",
+      "sourceUrl": "https://www.youtube.com/watch?v=QmfrZKeQfhE",
+      "title": "저 애는...!",
+      "why": "한수아를 보고 놀란 김현진",
+      "work": "옆자리, 프란체스카"
+    },
+    {
+      "badge": "최근 게시",
+      "cat": "명대사",
+      "color": "#433954",
+      "cuts": [
+        {
+          "line": "민준호 씨를 마지막으로 만났을 때가 언제였죠?",
+          "mediaType": "타이포그래피",
+          "role": "대사",
+          "sourceTag": "MBCdrama"
+        },
+        {
+          "line": "서현진을 찾아온 최대훈?!",
+          "mediaType": "타이포그래피",
+          "role": "장면",
+          "sourceTag": "MBCdrama"
+        }
+      ],
+      "factNote": "MBCdrama · https://www.youtube.com/watch?v=yetdiSPLSL0",
+      "factoryType": "quote",
+      "genre": "드라마",
+      "id": "quote_yetdiSPLSL0",
+      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">민준호 씨를</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">마지막으로 만났을</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">때가 언제였죠?</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">서현진을 찾아온</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">최대훈?!</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g></svg>",
+      "publishedAt": "2026-11-27T00:00:14+00:00",
+      "quote": "민준호 씨를 마지막으로 만났을 때가 언제였죠?",
+      "scenePlayerId": "",
+      "sourceTag": "MBCdrama",
+      "sourceUrl": "https://www.youtube.com/watch?v=yetdiSPLSL0",
+      "title": "민준호 씨를 마지막으로 만났을 때가 언제였죠?",
+      "why": "서현진을 찾아온 최대훈?!",
+      "work": "라이어"
+    },
     {
       "badge": "최근 게시",
       "cat": "명대사",
@@ -161,96 +331,6 @@
       "title": "내가 네 자리 뺏을까 봐?",
       "why": "주새벽의 계획을 알게 된 전혜원",
       "work": "욕망의 덫"
-    },
-    {
-      "badge": "최근 게시",
-      "cat": "명대사",
-      "color": "#433954",
-      "cuts": [
-        {
-          "line": "차 실장 뭔가 달라졌다고",
-          "mediaType": "타이포그래피",
-          "role": "대사",
-          "sourceTag": "KBS Drama"
-        },
-        {
-          "line": "달라진 설정환에 신경 쓰이는 유태웅",
-          "mediaType": "타이포그래피",
-          "role": "장면",
-          "sourceTag": "KBS Drama"
-        }
-      ],
-      "factNote": "KBS Drama · https://www.youtube.com/watch?v=MeVno-AgxHg",
-      "factoryType": "quote",
-      "genre": "드라마",
-      "id": "quote_MeVno-AgxHg",
-      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">차 실장 뭔가</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">달라졌다고</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">달라진 설정환에</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">신경 쓰이는</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">유태웅</text><text x=\"7\" y=\"160\" font-size=\"7\">KBS Drama</text></g></g></svg>",
-      "publishedAt": "2026-11-26T11:44:32+00:00",
-      "quote": "차 실장 뭔가 달라졌다고",
-      "scenePlayerId": "7BF1B218E974624F90B06242EFD218F3BD32",
-      "sourceTag": "KBS Drama",
-      "sourceUrl": "https://www.youtube.com/watch?v=MeVno-AgxHg",
-      "title": "차 실장 뭔가 달라졌다고",
-      "why": "달라진 설정환에 신경 쓰이는 유태웅",
-      "work": "욕망의 덫"
-    },
-    {
-      "badge": "최근 게시",
-      "cat": "명대사",
-      "color": "#433954",
-      "cuts": [
-        {
-          "line": "절대 들키지 마라~",
-          "mediaType": "타이포그래피",
-          "role": "대사",
-          "sourceTag": "MBCdrama"
-        }
-      ],
-      "factNote": "MBCdrama · https://www.youtube.com/watch?v=-DCuXlERHcE",
-      "factoryType": "quote",
-      "genre": "드라마",
-      "id": "quote_-DCuXlERHcE",
-      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">절대 들키지</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">마라~</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g></svg>",
-      "publishedAt": "2026-11-26T11:16:13+00:00",
-      "quote": "절대 들키지 마라~",
-      "scenePlayerId": "",
-      "sourceTag": "MBCdrama",
-      "sourceUrl": "https://www.youtube.com/watch?v=-DCuXlERHcE",
-      "title": "절대 들키지 마라~",
-      "why": "",
-      "work": "가족관계증명서"
-    },
-    {
-      "badge": "최근 게시",
-      "cat": "명대사",
-      "color": "#433954",
-      "cuts": [
-        {
-          "line": "죄송해요",
-          "mediaType": "타이포그래피",
-          "role": "대사",
-          "sourceTag": "MBCdrama"
-        },
-        {
-          "line": "임지은 앞에서 무릎 꿇는 박세영",
-          "mediaType": "타이포그래피",
-          "role": "장면",
-          "sourceTag": "MBCdrama"
-        }
-      ],
-      "factNote": "MBCdrama · https://www.youtube.com/watch?v=TIYowIc0j7o",
-      "factoryType": "quote",
-      "genre": "드라마",
-      "id": "quote_TIYowIc0j7o",
-      "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 104 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">대사</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">죄송해요</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#433954\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">장면</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">임지은 앞에서</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">무릎 꿇는 박세영</text><text x=\"7\" y=\"160\" font-size=\"7\">MBCdrama</text></g></g></svg>",
-      "publishedAt": "2026-11-26T11:11:07+00:00",
-      "quote": "죄송해요",
-      "scenePlayerId": "",
-      "sourceTag": "MBCdrama",
-      "sourceUrl": "https://www.youtube.com/watch?v=TIYowIc0j7o",
-      "title": "죄송해요",
-      "why": "임지은 앞에서 무릎 꿇는 박세영",
-      "work": "가족관계증명서"
     }
   ]
 }
