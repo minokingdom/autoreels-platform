@@ -999,6 +999,556 @@
         "#667abc",
         "#2c3451"
       ]
+    },
+    {
+      "id": "original-house-01",
+      "name": "플로어 오픈",
+      "genre": "하우스",
+      "mood": "신나는",
+      "colors": [
+        "#4155a2",
+        "#181f3b"
+      ],
+      "bpm": 117
+    },
+    {
+      "id": "original-house-02",
+      "name": "유리 블록",
+      "genre": "하우스",
+      "mood": "신나는",
+      "colors": [
+        "#4459aa",
+        "#19213f"
+      ],
+      "bpm": 124
+    },
+    {
+      "id": "original-house-03",
+      "name": "스텝 온",
+      "genre": "하우스",
+      "mood": "신나는",
+      "colors": [
+        "#475db1",
+        "#1b2444"
+      ],
+      "bpm": 121
+    },
+    {
+      "id": "original-house-04",
+      "name": "레몬 스트로브",
+      "genre": "하우스",
+      "mood": "신나는",
+      "colors": [
+        "#4a61b8",
+        "#1d2648"
+      ],
+      "bpm": 127
+    },
+    {
+      "id": "original-house-05",
+      "name": "풀사이드 킥",
+      "genre": "하우스",
+      "mood": "신나는",
+      "colors": [
+        "#4c65c0",
+        "#1e284c"
+      ],
+      "bpm": 119
+    },
+    {
+      "id": "original-house-06",
+      "name": "프리즘 룸",
+      "genre": "하우스",
+      "mood": "신나는",
+      "colors": [
+        "#4f69c7",
+        "#202a51"
+      ],
+      "bpm": 129
+    },
+    {
+      "id": "original-house-07",
+      "name": "밤의 체크인",
+      "genre": "하우스",
+      "mood": "신나는",
+      "colors": [
+        "#526cce",
+        "#222d55"
+      ],
+      "bpm": 125
+    },
+    {
+      "id": "original-house-08",
+      "name": "미러 타일",
+      "genre": "하우스",
+      "mood": "신나는",
+      "colors": [
+        "#5570d5",
+        "#242f59"
+      ],
+      "bpm": 122
+    },
+    {
+      "id": "original-house-09",
+      "name": "돌아가는 조명",
+      "genre": "하우스",
+      "mood": "신나는",
+      "colors": [
+        "#5874dd",
+        "#25315e"
+      ],
+      "bpm": 128
+    },
+    {
+      "id": "original-house-10",
+      "name": "애프터 아워",
+      "genre": "하우스",
+      "mood": "신나는",
+      "colors": [
+        "#5b78e4",
+        "#273462"
+      ],
+      "bpm": 123
+    },
+    {
+      "id": "original-twostep-01",
+      "name": "엇박 산책",
+      "genre": "투스텝",
+      "mood": "신나는",
+      "colors": [
+        "#307c70",
+        "#112d29"
+      ],
+      "bpm": 126
+    },
+    {
+      "id": "original-twostep-02",
+      "name": "주머니 속 차표",
+      "genre": "투스텝",
+      "mood": "신나는",
+      "colors": [
+        "#328175",
+        "#13302c"
+      ],
+      "bpm": 133
+    },
+    {
+      "id": "original-twostep-03",
+      "name": "두 칸 점프",
+      "genre": "투스텝",
+      "mood": "신나는",
+      "colors": [
+        "#34877a",
+        "#14342f"
+      ],
+      "bpm": 130
+    },
+    {
+      "id": "original-twostep-04",
+      "name": "빗길 셔플",
+      "genre": "투스텝",
+      "mood": "신나는",
+      "colors": [
+        "#368d7f",
+        "#153732"
+      ],
+      "bpm": 136
+    },
+    {
+      "id": "original-twostep-05",
+      "name": "코너 스텝",
+      "genre": "투스텝",
+      "mood": "신나는",
+      "colors": [
+        "#389284",
+        "#163a35"
+      ],
+      "bpm": 128
+    },
+    {
+      "id": "original-twostep-06",
+      "name": "마지막 환승",
+      "genre": "투스텝",
+      "mood": "신나는",
+      "colors": [
+        "#3a9889",
+        "#183e38"
+      ],
+      "bpm": 138
+    },
+    {
+      "id": "original-twostep-07",
+      "name": "사이드 도어",
+      "genre": "투스텝",
+      "mood": "신나는",
+      "colors": [
+        "#3d9d8e",
+        "#19413b"
+      ],
+      "bpm": 134
+    },
+    {
+      "id": "original-twostep-08",
+      "name": "물웅덩이 점프",
+      "genre": "투스텝",
+      "mood": "신나는",
+      "colors": [
+        "#3fa393",
+        "#1a443e"
+      ],
+      "bpm": 131
+    },
+    {
+      "id": "original-twostep-09",
+      "name": "한 박자 뒤",
+      "genre": "투스텝",
+      "mood": "신나는",
+      "colors": [
+        "#41a898",
+        "#1c4841"
+      ],
+      "bpm": 137
+    },
+    {
+      "id": "original-twostep-10",
+      "name": "다음 승강장",
+      "genre": "투스텝",
+      "mood": "신나는",
+      "colors": [
+        "#43ae9d",
+        "#1d4b44"
+      ],
+      "bpm": 132
+    },
+    {
+      "id": "original-breakbeat-01",
+      "name": "오프로드",
+      "genre": "브레이크비트",
+      "mood": "신나는",
+      "colors": [
+        "#9d492e",
+        "#391a11"
+      ],
+      "bpm": 131
+    },
+    {
+      "id": "original-breakbeat-02",
+      "name": "급커브",
+      "genre": "브레이크비트",
+      "mood": "신나는",
+      "colors": [
+        "#a44c30",
+        "#3d1c12"
+      ],
+      "bpm": 138
+    },
+    {
+      "id": "original-breakbeat-03",
+      "name": "커브의 안쪽",
+      "genre": "브레이크비트",
+      "mood": "신나는",
+      "colors": [
+        "#ab4f32",
+        "#411e13"
+      ],
+      "bpm": 135
+    },
+    {
+      "id": "original-breakbeat-04",
+      "name": "체커 플래그",
+      "genre": "브레이크비트",
+      "mood": "신나는",
+      "colors": [
+        "#b25235",
+        "#462015"
+      ],
+      "bpm": 141
+    },
+    {
+      "id": "original-breakbeat-05",
+      "name": "바퀴 자국",
+      "genre": "브레이크비트",
+      "mood": "신나는",
+      "colors": [
+        "#b95637",
+        "#4a2216"
+      ],
+      "bpm": 133
+    },
+    {
+      "id": "original-breakbeat-06",
+      "name": "킥플립",
+      "genre": "브레이크비트",
+      "mood": "신나는",
+      "colors": [
+        "#c05939",
+        "#4e2417"
+      ],
+      "bpm": 143
+    },
+    {
+      "id": "original-breakbeat-07",
+      "name": "콘크리트 파크",
+      "genre": "브레이크비트",
+      "mood": "신나는",
+      "colors": [
+        "#c75c3b",
+        "#522618"
+      ],
+      "bpm": 139
+    },
+    {
+      "id": "original-breakbeat-08",
+      "name": "터널 출구",
+      "genre": "브레이크비트",
+      "mood": "신나는",
+      "colors": [
+        "#ce5f3d",
+        "#562819"
+      ],
+      "bpm": 136
+    },
+    {
+      "id": "original-breakbeat-09",
+      "name": "더블 테이크",
+      "genre": "브레이크비트",
+      "mood": "신나는",
+      "colors": [
+        "#d5633f",
+        "#5a2a1b"
+      ],
+      "bpm": 142
+    },
+    {
+      "id": "original-breakbeat-10",
+      "name": "언더패스",
+      "genre": "브레이크비트",
+      "mood": "신나는",
+      "colors": [
+        "#dc6641",
+        "#5f2c1c"
+      ],
+      "bpm": 137
+    },
+    {
+      "id": "original-afrogroove-01",
+      "name": "라임 마켓",
+      "genre": "아프로 그루브",
+      "mood": "신나는",
+      "colors": [
+        "#9b762d",
+        "#382b10"
+      ],
+      "bpm": 99
+    },
+    {
+      "id": "original-afrogroove-02",
+      "name": "그늘 아래",
+      "genre": "아프로 그루브",
+      "mood": "신나는",
+      "colors": [
+        "#a27c2f",
+        "#3d2e12"
+      ],
+      "bpm": 106
+    },
+    {
+      "id": "original-afrogroove-03",
+      "name": "모래 위 스텝",
+      "genre": "아프로 그루브",
+      "mood": "신나는",
+      "colors": [
+        "#a98131",
+        "#413113"
+      ],
+      "bpm": 103
+    },
+    {
+      "id": "original-afrogroove-04",
+      "name": "야자수 골목",
+      "genre": "아프로 그루브",
+      "mood": "신나는",
+      "colors": [
+        "#b08633",
+        "#453414"
+      ],
+      "bpm": 109
+    },
+    {
+      "id": "original-afrogroove-05",
+      "name": "망고 바스켓",
+      "genre": "아프로 그루브",
+      "mood": "신나는",
+      "colors": [
+        "#b78b35",
+        "#493815"
+      ],
+      "bpm": 101
+    },
+    {
+      "id": "original-afrogroove-06",
+      "name": "붉은 흙길",
+      "genre": "아프로 그루브",
+      "mood": "신나는",
+      "colors": [
+        "#be9137",
+        "#4d3b16"
+      ],
+      "bpm": 111
+    },
+    {
+      "id": "original-afrogroove-07",
+      "name": "노을의 안뜰",
+      "genre": "아프로 그루브",
+      "mood": "신나는",
+      "colors": [
+        "#c59639",
+        "#513e17"
+      ],
+      "bpm": 107
+    },
+    {
+      "id": "original-afrogroove-08",
+      "name": "바람 부는 항구",
+      "genre": "아프로 그루브",
+      "mood": "신나는",
+      "colors": [
+        "#cc9b3b",
+        "#554119"
+      ],
+      "bpm": 104
+    },
+    {
+      "id": "original-afrogroove-09",
+      "name": "열대 정류장",
+      "genre": "아프로 그루브",
+      "mood": "신나는",
+      "colors": [
+        "#d3a13d",
+        "#5a441a"
+      ],
+      "bpm": 110
+    },
+    {
+      "id": "original-afrogroove-10",
+      "name": "햇빛 조각",
+      "genre": "아프로 그루브",
+      "mood": "신나는",
+      "colors": [
+        "#daa63f",
+        "#5e471b"
+      ],
+      "bpm": 105
+    },
+    {
+      "id": "original-boombap-01",
+      "name": "바늘을 내려",
+      "genre": "붐뱁",
+      "mood": "신나는",
+      "colors": [
+        "#714a7b",
+        "#291b2d"
+      ],
+      "bpm": 85
+    },
+    {
+      "id": "original-boombap-02",
+      "name": "벽돌 골목",
+      "genre": "붐뱁",
+      "mood": "신나는",
+      "colors": [
+        "#764d81",
+        "#2c1d30"
+      ],
+      "bpm": 92
+    },
+    {
+      "id": "original-boombap-03",
+      "name": "백 포켓",
+      "genre": "붐뱁",
+      "mood": "신나는",
+      "colors": [
+        "#7b5186",
+        "#2f1f33"
+      ],
+      "bpm": 89
+    },
+    {
+      "id": "original-boombap-04",
+      "name": "레코드 가게",
+      "genre": "붐뱁",
+      "mood": "신나는",
+      "colors": [
+        "#80548c",
+        "#322137"
+      ],
+      "bpm": 95
+    },
+    {
+      "id": "original-boombap-05",
+      "name": "낮은 천장",
+      "genre": "붐뱁",
+      "mood": "신나는",
+      "colors": [
+        "#865791",
+        "#35233a"
+      ],
+      "bpm": 87
+    },
+    {
+      "id": "original-boombap-06",
+      "name": "농구장 입구",
+      "genre": "붐뱁",
+      "mood": "신나는",
+      "colors": [
+        "#8b5b97",
+        "#38253d"
+      ],
+      "bpm": 97
+    },
+    {
+      "id": "original-boombap-07",
+      "name": "지하 연습실",
+      "genre": "붐뱁",
+      "mood": "신나는",
+      "colors": [
+        "#905e9c",
+        "#3b2741"
+      ],
+      "bpm": 93
+    },
+    {
+      "id": "original-boombap-08",
+      "name": "그루브 노트",
+      "genre": "붐뱁",
+      "mood": "신나는",
+      "colors": [
+        "#9561a2",
+        "#3e2944"
+      ],
+      "bpm": 90
+    },
+    {
+      "id": "original-boombap-09",
+      "name": "낡은 헤드폰",
+      "genre": "붐뱁",
+      "mood": "신나는",
+      "colors": [
+        "#9a65a7",
+        "#412b47"
+      ],
+      "bpm": 96
+    },
+    {
+      "id": "original-boombap-10",
+      "name": "마지막 크레이트",
+      "genre": "붐뱁",
+      "mood": "신나는",
+      "colors": [
+        "#9f68ad",
+        "#442d4a"
+      ],
+      "bpm": 91
     }
   ],
   "effects": [

@@ -619,19 +619,19 @@ function applyMusicUrl(s,url,label){
   musicSel.dispatchEvent(new Event('input',{bubbles:true}));
   renderCutTrack(s);
 }
-function pickMusic(s,tab='내장 100곡'){
+function pickMusic(s,tab='내장 음악'){
   let previewAudio=null;
   const stopPreview=()=>{if(previewAudio){try{previewAudio.pause();previewAudio.src='';}catch(_){} previewAudio=null;}};
   const box=mixDialog('배경 음악',()=>{stopPreview();});
   byId('mixDialog').addEventListener('close',stopPreview,{once:true});
   const nav=document.createElement('div');nav.className='fx-tabs';
-  for(const name of ['내장 100곡','실시간 스트리밍','내 음원·가요']){
+  for(const name of ['내장 음악','실시간 스트리밍','내 음원·가요']){
     const b=mixButton(name,()=>{stopPreview();pickMusic(s,name);});
     b.setAttribute('aria-pressed',String(name===tab));nav.append(b);
   }
   box.append(nav);
 
-  if(tab==='내장 100곡'){
+  if(tab==='내장 음악'){
     const select=mixField(box,'곡 선택',byId('music').cloneNode(true));select.removeAttribute('id');select.value=s.clip.music||'';
     select.addEventListener('change',()=>applyMusicUrl(s,select.value,select.selectedOptions[0]?.text));
     return;

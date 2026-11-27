@@ -2538,6 +2538,8 @@
       try {
         if (typeof AudioEngine !== 'undefined' && AudioEngine) {
           const style = String(AudioEngine.bgmStyle || 'showroom');
+          const track = AR_LIBRARY_MUSIC.get(document.getElementById('bgmStyleSelect')?.value);
+          if (track?.bpm) return track.bpm;
           if (AudioEngine.customBgmBuffer && (style === 'custom_mp3' || style.startsWith('ace_') || style.startsWith('lyria_'))) {
             if (style === 'custom_mp3') return arDetectBufferBpm(AudioEngine.customBgmBuffer);
           }
