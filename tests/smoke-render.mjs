@@ -70,6 +70,13 @@ await page.waitForTimeout(1000);
 
 const result = await page.evaluate(async () => {
   const out = { designs: 0, frames: 0, errors: [] };
+  const measure = document.createElement('canvas').getContext('2d');
+  const longCaption = '갓구운소금빵과따뜻한라떼가준비되었습니다';
+  const wrapped = gWrap(measure, longCaption, 220, 3, 32, 24, 'sans-serif', 700);
+  if (wrapped.lines.join('') !== longCaption || wrapped.lines.length > 3 ||
+      wrapped.lines.some(line => measure.measureText(line).width > 220)) {
+    out.errors.push('띄어쓰기 없는 한글 자막이 세 줄 안에 표시되지 않음');
+  }
   const inds = ['auto', 'restaurant', 'cafe', 'clinic', 'beauty', 'personal'];
   for (const ind of inds) {
     try { setIndustry(ind); } catch (e) { out.errors.push(`setIndustry(${ind}): ${e.message}`); continue; }

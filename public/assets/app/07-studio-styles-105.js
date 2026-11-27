@@ -4,7 +4,7 @@
 
     const STUDIO_100_B5_SPECS = [
       ['s100_lf_glassskin',   '글래스 스킨',       '감성',      '#f4f7fb', '#fceef5', '#f472b6', '#ffffff', 'gowun',   false, 'lifestyle', 'bright',   '풀화면 투명 물광 광택과 진주빛 유리 프레임'],
-      ['s100_lf_beautyrev',   '뷰티 리뷰카드',     '신뢰',      '#fff7f8', '#ffeef1', '#f43f5e', '#ffffff', 'pretM',   false, 'lifestyle', 'bright',   '풀화면 98% 만족 뷰티 어워드 배지'],
+      ['s100_lf_beautyrev',   '뷰티 리뷰카드',     '신뢰',      '#fff7f8', '#ffeef1', '#f43f5e', '#ffffff', 'pretM',   false, 'lifestyle', 'bright',   '풀화면 뷰티 노트와 컷 진행 표시'],
       ['s100_lf_looktag',     '룩북 태그',         '고급',      '#f3f1ed', '#e8e4dc', '#18181b', '#ffffff', 'maru',    false, 'lifestyle', 'luxury',   '풀화면 살랑 흔들리는 의류 행택 룩북'],
       ['s100_lf_roomtour',    '공간 투어',         '브이로그',   '#f2eee8', '#e6dfd4', '#d97706', '#ffffff', 'gowun',   false, 'lifestyle', 'lofi',     '풀화면 공간 핀 배지와 따뜻한 인테리어 톤'],
       ['s100_lf_beforeafter', '비포&애프터 분할',   '비포·애프터','#0e1116', '#161b24', '#38bdf8', '#ffffff', 'dohyeon', false, 'lifestyle', 'urban',    '풀화면 좌우 슬라이더 핸들과 BEFORE·AFTER'],
@@ -41,14 +41,18 @@
         s100DrawCaption(c, W, H, caption, { cutIdx, local, fontKey: 'gowun', x: W / 2, y: 766, maxW: W - 88, maxLines: 3, maxSize: 38, minSize: 23, color: '#ffffff', shadow: 'rgba(236,72,153,0.55)', ent, capHidden });
       };
 
-      STUDIO_100_RENDERERS.s100_lf_beautyrev = ({ c, W, H, local, lp, S, cutIdx, caption, capHidden, ent, accent }) => {
-        s100FullBleed(c, S, cutIdx, local, lp, W, H, { botScrim: 'rgba(31,20,28,0.82)', botH: 340 });
-        gRoundRect(c, 24, 34, 178, 34, 17); c.fillStyle = accent; c.fill();
-        c.fillStyle = '#ffffff'; c.font = `800 12.5px Pretendard, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-        c.fillText('★ 만족도 98% PICK', 113, 51);
-        c.fillStyle = 'rgba(255,255,255,0.28)'; gRoundRect(c, 30, 868, W - 60, 8, 4); c.fill();
-        c.fillStyle = accent; gRoundRect(c, 30, 868, (W - 60) * 0.94 * ent, 8, 4); c.fill();
-        s100DrawCaption(c, W, H, caption, { cutIdx, local, fontKey: 'pretM', x: W / 2, y: 762, maxW: W - 80, maxLines: 3, maxSize: 38, minSize: 23, color: '#ffffff', shadow: 'rgba(0,0,0,0.85)', ent, capHidden });
+      STUDIO_100_RENDERERS.s100_lf_beautyrev = ({ c, W, H, local, lp, S, cutIdx, totalCuts, caption, capHidden, ent, accent }) => {
+        s100FullBleed(c, S, cutIdx, local, lp, W, H, { botScrim: 'rgba(32,16,25,0.93)', botH: H * 0.54 });
+        const x = W * 0.075;
+        c.fillStyle = '#fff3f7'; c.textAlign = 'left'; c.textBaseline = 'middle';
+        c.font = gFont(650, W * 0.031, 'Pretendard, sans-serif');
+        c.fillText('뷰티 노트', x, H * 0.66);
+        c.textAlign = 'right';
+        c.fillText((cutIdx + 1) + ' / ' + totalCuts, W - x, H * 0.66);
+        const rail = W - 2 * x;
+        c.fillStyle = 'rgba(255,255,255,0.34)'; c.fillRect(x, H * 0.682, rail, 2);
+        c.fillStyle = accent; c.fillRect(x, H * 0.682, rail * (cutIdx + lp) / totalCuts, 3);
+        s100DrawCaption(c, W, H, caption, { cutIdx, local, fontKey: 'pretM', x, y: H * 0.80, maxW: rail, maxLines: 3, maxSize: 38, minSize: 23, color: '#ffffff', align: 'left', ent, capHidden });
       };
 
       STUDIO_100_RENDERERS.s100_lf_looktag = ({ c, W, H, t, local, lp, S, cutIdx, caption, capHidden, ent }) => {

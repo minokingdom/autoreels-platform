@@ -761,12 +761,12 @@
       film:      [15, 11, 'zoomOut'],
       editorial: [16, 21, 'panX'],
       kinetic:   [3, 22, 'zoomIn'],
-      tv:        [4, 5, 'zoomIn'],
+      broadcast: [4, 5, 'zoomIn'],
       game:      [2, 18, 'zoomIn'],
       note:      [16, 5, 'panY'],
       food:      [21, 10, 'zoomIn'],
-      life:      [10, 1, 'diag'],
-      biz:       [23, 6, 'panX']
+      lifestyle: [10, 1, 'diag'],
+      business:  [23, 6, 'panX']
     };
     const AR_CAT_PHOTO_ANIM = {
       '감성': [10, 21, 'diag'],
@@ -789,27 +789,12 @@
       const id = (ds && ds.id) ? String(ds.id) : '';
       let h = 0;
       for (let i = 0; i < id.length; i++) h = ((h * 33) ^ id.charCodeAt(i)) >>> 0;
-      let base = (ds && ds.s100Genre && AR_STYLE_PHOTO_ANIM[ds.s100Genre])
+      const base = (ds && ds.s100Genre && AR_STYLE_PHOTO_ANIM[ds.s100Genre])
         || (ds && ds.cat && AR_CAT_PHOTO_ANIM[ds.cat])
         || [AR_CLEAN_POOL[h % AR_CLEAN_POOL.length], AR_CLEAN_POOL[(h + 5) % AR_CLEAN_POOL.length], AR_GENTLE_CAMS[h % AR_GENTLE_CAMS.length]];
-      const poolByGenre = {
-        art:       [1, 10, 21, 16, 18, 12, 6, 11, 23, 0],
-        film:      [15, 11, 10, 16, 0, 23, 6, 4, 5, 21],
-        editorial: [16, 21, 2, 6, 23, 11, 10, 0, 22, 12],
-        kinetic:   [3, 22, 4, 5, 2, 18, 6, 23, 12, 0],
-        tv:        [4, 5, 11, 22, 2, 15, 6, 16, 0, 18],
-        game:      [2, 22, 18, 3, 12, 23, 4, 5, 6, 0],
-        note:      [16, 5, 4, 10, 21, 18, 11, 0, 6, 1],
-        food:      [21, 10, 1, 16, 5, 6, 11, 0, 18, 23],
-        life:      [10, 21, 1, 16, 6, 23, 5, 11, 0, 18],
-        biz:       [23, 6, 2, 16, 10, 4, 5, 11, 21, 0]
-      };
-      // 기본값: 평소엔 순수 크로스 디졸브(-1)로 차분하게 흐르다가, 중간중간 포인트 컷(3·6·9번째 컷)에만 세련된 전환 1회!
-      const AR_POINT_ACCENTS = [16, 4, 3, 6, 5, 11]; // 책장넘김 · 부드러운슬라이드 · 클린사선 · 좌우커튼 · 업슬라이드 · 시네마셔터
-      let mode = (cutIdx > 0 && cutIdx % 3 === 2)
-        ? AR_POINT_ACCENTS[(h + Math.floor(cutIdx / 3)) % AR_POINT_ACCENTS.length]
-        : -1;
-      let camMode = AR_GENTLE_CAMS[(h + cutIdx * 2) % AR_GENTLE_CAMS.length];
+      // 세 번째 컷마다 장르에 맞는 전환을 한 번 쓰고, 나머지 컷은 부드럽게 잇는다.
+      let mode = cutIdx % 3 === 2 ? base[Math.floor(cutIdx / 3) % 2] : -1;
+      let camMode = base[2];
       const ov = typeof getCutElementOverride === 'function' ? getCutElementOverride(cutIdx) : null;
       if (ov && ov.photo) {
         if (ov.photo.entrance !== undefined && ov.photo.entrance !== null && ov.photo.entrance !== '' && ov.photo.entrance !== 'auto') {
@@ -871,8 +856,10 @@
       const drawCur = (z, dx, dy) => mPhoto(c, S, 0, x, y, w, h, z, dx, dy);
       const drawPrev = (ox = x, oy = y, zAdd = 0) => mPhoto(c, S, -1, ox, oy, w, h, prevPose.z + zAdd, prevPose.px, prevPose.py);
 
-      const tDur = cutIdx === 0 ? 0.85 : 0.92;
-      const rawP = mClamp(local / tDur);
+      // local은 균등 컷 기준의 가상 시간이다. 전환 길이는 실제 컷의 1/4 이내로 맞춘다.
+      const seconds = getCutLengths()[cutIdx] || cutSpan;
+      const transitionSpan = cutSpan * Math.min(0.25, 0.48 / seconds);
+      const rawP = mClamp(local / transitionSpan);
       const p = easeQuint(rawP);
       const rem = 1 - p;
       const hasPrev = cutIdx > 0;
@@ -884,12 +871,10 @@
 
       if (mode === -1) {
         // 순수 크로스 디졸브: 이전 컷의 마지막 확대/위치 그대로 유지하면서 새 사진으로 부드럽게 녹아듦 (줄어듦·끊김 0%)
-        const disDur = 0.82;
-        if (hasPrev && local < disDur) {
-          const dp = easeQuint(mClamp(local / disDur));
-          drawPrev(x, y, 0);
+        if (hasPrev && local < transitionSpan) {
+          drawPrev();
           c.save();
-          c.globalAlpha *= dp;
+          c.globalAlpha *= p;
           drawCur(steadyZoom, steadyPx, steadyPy);
           c.restore();
         } else {
@@ -898,14 +883,14 @@
       } else if (rem > 0.001) {
         if (mode === 1) {
           // 1) 소프트 원형 아이리스 (번쩍이는 테두리 선 제거)
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           const r = Math.max(12, Math.hypot(w, h) * 0.62 * p);
           c.save(); c.beginPath(); c.arc(x + w / 2, y + h / 2, r, 0, Math.PI * 2); c.clip();
           drawCur(steadyZoom + rem * 0.05, steadyPx, steadyPy);
           c.restore();
         } else if (mode === 2) {
           // 2) 5단 에디토리얼 셔터 블라인드
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           const strips = 5, sw = w / strips;
           c.save(); c.beginPath();
           for (let i = 0; i < strips; i++) {
@@ -946,7 +931,7 @@
           c.restore();
         } else if (mode === 7) {
           // 7) 차분한 카드 안착 (오버슈트 바운스 제거)
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           c.save();
           c.translate(x + w / 2, y + h / 2 + rem * h * 0.14);
           c.rotate(rem * 0.045 * dir);
@@ -956,7 +941,7 @@
           c.restore();
         } else if (mode === 8) {
           // 8) 다이아몬드 리빌 (외곽선 제거)
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           const rad = Math.hypot(w, h) * 0.78 * p, cx0 = x + w / 2, cy0 = y + h / 2;
           c.save(); c.beginPath();
           c.moveTo(cx0, cy0 - rad); c.lineTo(cx0 + rad, cy0); c.lineTo(cx0, cy0 + rad); c.lineTo(cx0 - rad, cy0);
@@ -965,7 +950,7 @@
           c.restore();
         } else if (mode === 9) {
           // 9) 4분할 모자이크 타일 리빌
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           const hw = Math.ceil(w / 2), hh = Math.ceil(h / 2);
           [[0, 0, 0], [hw, 0, 0.06], [0, hh, 0.10], [hw, hh, 0.14]].forEach(([qx, qy, delay]) => {
             const qp = easeQuint(mClamp((rawP - delay) / 0.78));
@@ -976,7 +961,7 @@
           });
         } else if (mode === 10) {
           // 10) 소프트 시네마 포커스 풀 (밝기 번쩍임 제거, 은은한 블러만)
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           const blurPx = Math.max(0, rem * 8);
           c.save();
           c.globalAlpha = easeCubic(rawP * 1.45);
@@ -992,7 +977,7 @@
           c.restore();
         } else if (mode === 12) {
           // 12) 부드러운 시계 와이프 (레이더 바늘 선 제거)
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           const cx0 = x + w / 2, cy0 = y + h / 2, maxR = Math.hypot(w, h) * 0.75;
           const startA = -Math.PI / 2, endA = startA + Math.PI * 2 * p;
           c.save(); c.beginPath(); c.moveTo(cx0, cy0); c.arc(cx0, cy0, maxR, startA, endA); c.closePath(); c.clip();
@@ -1011,7 +996,7 @@
           c.restore();
         } else if (mode === 14) {
           // 14) 소프트 슬라이스 시프트 (눈부신 RGB 번쩍임 제거)
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           const bands = 6, bh = Math.ceil(h / bands);
           for (let i = 0; i < bands; i++) {
             const bp2 = easeQuint(mClamp((rawP - (i % 3) * 0.04) / 0.84));
@@ -1045,7 +1030,7 @@
           c.fillStyle = pg; c.fillRect(foldX, y, shW, h);
         } else if (mode === 17) {
           // 17) 소프트 팝인 (과한 바운스 제거, 매끄러운 확장)
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           const scPop = 0.86 + 0.14 * p;
           const cw = w * scPop, ch = h * scPop;
           const cx0 = x + (w - cw) / 2, cy0 = y + (h - ch) / 2;
@@ -1056,7 +1041,7 @@
           c.restore();
         } else if (mode === 18) {
           // 18) 8단 웨이브 리빌 (한 방향으로 차분하게 열림)
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           const rows = 8, rh = Math.ceil(h / rows);
           for (let i = 0; i < rows; i++) {
             const rp = easeQuint(mClamp((rawP - i * 0.03) / 0.72));
@@ -1078,7 +1063,7 @@
           c.restore();
         } else if (mode === 20) {
           // 20) 체커보드 4×6 타일 캐스케이드
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           const cols = 4, rows = 6, tw = w / cols, th = h / rows;
           c.save(); c.beginPath();
           for (let r0 = 0; r0 < rows; r0++) {
@@ -1095,7 +1080,7 @@
           c.restore();
         } else if (mode === 21) {
           // 21) 럭셔리 아치 창문 오픈
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           const aw = w * (0.34 + 0.86 * p), ah = h * (0.40 + 0.80 * p);
           const ax = x + (w - aw) / 2, ay = y + (h - ah) / 2;
           const ar = Math.min(aw / 2, ah * 0.45) * rem;
@@ -1111,7 +1096,7 @@
           c.restore();
         } else if (mode === 22) {
           // 22) 상하 스플릿 슬라이드 (중앙 흰 선 제거)
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           const midY = Math.round(h / 2), shift = Math.round(w * rem);
           c.save(); c.beginPath(); c.rect(x, y, w, midY + 1); c.clip();
           mPhoto(c, S, 0, x - shift, y, w, h, steadyZoom, steadyPx, steadyPy);
@@ -1121,7 +1106,7 @@
           c.restore();
         } else if (mode === 23) {
           // 23) 6날 카메라 조리개 (외곽선 제거, 차분한 육각 확장)
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           const cx0 = x + w / 2, cy0 = y + h / 2;
           const rad = Math.max(16, Math.hypot(w, h) * 0.72 * p);
           const rot = rem * 0.35;
@@ -1136,7 +1121,7 @@
           c.restore();
         } else {
           // 0) 클린 줌 안착 (눈부신 플래시 제거, 차분한 크로스 페이드 + 안착)
-          if (hasPrev) mPhoto(c, S, -1, x, y, w, h, baseScale, 0, 0);
+          if (hasPrev) drawPrev();
           c.save();
           c.globalAlpha = easeCubic(rawP * 1.45);
           drawCur(steadyZoom + rem * 0.07, steadyPx, steadyPy);

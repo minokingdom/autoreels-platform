@@ -11,7 +11,7 @@
       ['s100_tv_finance',     '금융 브리핑',       '상담·정보', '#08101e', '#0f1d36', '#10b981', '#ecfdf5', 'pretM',   false, 'broadcast', 'news',     '풀화면 실시간 상승 차트와 경제 브리핑 바'],
       ['s100_tv_interview',   '인터뷰 하단 바',    '신뢰',     '#0d1017', '#161b26', '#6366f1', '#ffffff', 'pretM',   false, 'broadcast', 'showroom', '깔끔한 인터뷰 화자 하단 바와 인디고 포인트'],
       ['s100_tv_top5',        '랭킹 TOP5',        '재미',     '#120f17', '#21192b', '#f59e0b', '#ffffff', 'gasoek',  false, 'broadcast', 'urban',    '풀화면 메탈릭 골드 순위 배지 카운트다운'],
-      ['s100_tv_review',      '별점 리뷰 카드',    '신뢰',     '#14151a', '#1d1f27', '#facc15', '#ffffff', 'pretM',   false, 'broadcast', 'bright',   '풀화면 5.0 별점 배지와 실구매 인증 리뷰'],
+      ['s100_tv_review',      '한줄 리뷰 카드',    '신뢰',     '#14151a', '#1d1f27', '#facc15', '#ffffff', 'pretM',   false, 'broadcast', 'bright',   '풀화면 사진 위에 올린 한줄 리뷰'],
       ['s100_tv_qa',          'Q&A 말풍선',       '상담·정보', '#0f172a', '#1e293b', '#38bdf8', '#0f172a', 'jua',     false, 'broadcast', 'bright',   '풀화면 상단 질문 배지와 하단 화이트 말풍선'],
 
       ['s100_gm_rpg',         '16비트 픽셀 RPG',   '재미',     '#0c1026', '#161d40', '#facc15', '#ffffff', 'mono',    false, 'game',      'funk',     '풀화면 HP 상태바와 클래식 RPG 대화창'],
@@ -151,12 +151,14 @@
       };
 
       STUDIO_100_RENDERERS.s100_tv_review = ({ c, W, H, local, lp, S, cutIdx, caption, capHidden, ent, accent }) => {
-        s100FullBleed(c, S, cutIdx, local, lp, W, H, { topScrim: 'rgba(14,15,20,0.62)', botScrim: 'rgba(14,15,20,0.86)', botH: 340 });
-        gRoundRect(c, W / 2 - 114, 40, 228, 36, 18); c.fillStyle = 'rgba(20,21,26,0.86)'; c.fill();
-        c.strokeStyle = 'rgba(250,204,21,0.65)'; c.lineWidth = 1.5; c.stroke();
-        c.fillStyle = accent; c.font = `800 14px Pretendard, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
-        c.fillText('★★★★★  5.0  실제 후기', W / 2, 58);
-        s100DrawCaption(c, W, H, caption ? `“${caption}”` : '', { cutIdx, local, fontKey: 'pretM', x: W / 2, y: 766, maxW: W - 84, maxLines: 3, maxSize: 36, minSize: 22, color: '#ffffff', boxBg: 'rgba(20,21,26,0.74)', boxBorder: 'rgba(250,204,21,0.35)', boxRadius: 16, padX: 20, padY: 14, ent, capHidden });
+        s100FullBleed(c, S, cutIdx, local, lp, W, H, { botScrim: 'rgba(12,15,20,0.94)', botH: H * 0.54 });
+        if (!caption || capHidden) return;
+        const x = W * 0.085;
+        c.fillStyle = accent; c.fillRect(x, H * 0.65, W * 0.065 * ent, 3);
+        c.textAlign = 'left'; c.textBaseline = 'middle';
+        c.font = gFont(600, W * 0.032, 'Pretendard, sans-serif');
+        c.fillStyle = '#fff8dc'; c.fillText('한줄 리뷰', x, H * 0.68);
+        s100DrawCaption(c, W, H, caption, { cutIdx, local, fontKey: 'pretM', x, y: H * 0.80, maxW: W - 2 * x, maxLines: 3, maxSize: 38, minSize: 22, color: '#ffffff', align: 'left', ent, capHidden });
       };
 
       STUDIO_100_RENDERERS.s100_tv_qa = ({ c, W, H, local, lp, S, cutIdx, caption, capHidden, ent, accent }) => {

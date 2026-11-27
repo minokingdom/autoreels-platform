@@ -287,6 +287,31 @@
       c.fillText(f.text, x, y);
       return f.size;
     }
+    // 한 줄보다 긴 어절만 글자 경계에서 나눈다. 이모지·조합 문자는 한 덩어리로 유지한다.
+    const gCaptionSegments = typeof Intl.Segmenter === 'function' ? new Intl.Segmenter('ko') : null;
+    function gWrapWideWords(c, words, maxW, limit) {
+      const lines = [];
+      let line = '';
+      for (const word of words) {
+        const next = line ? line + ' ' + word : word;
+        if (c.measureText(next).width <= maxW) { line = next; continue; }
+        if (line) lines.push(line);
+        line = '';
+        if (c.measureText(word).width <= maxW) { line = word; continue; }
+        const chars = gCaptionSegments ? Array.from(gCaptionSegments.segment(word), part => part.segment) : Array.from(word);
+        for (const ch of chars) {
+          if (c.measureText(line + ch).width > maxW) {
+            if (!line) return { lines, overflow: true };
+            lines.push(line);
+            if (lines.length >= limit || c.measureText(ch).width > maxW) return { lines, overflow: true };
+            line = '';
+          }
+          line += ch;
+        }
+      }
+      if (line) lines.push(line);
+      return { lines: lines.slice(0, limit), overflow: lines.length > limit };
+    }
     // 어절·구절을 지킨 뒤, 같은 줄 수 안에서 전체 줄 너비의 편차를 최소화한다.
     function gWrap(c, text, maxW, maxLines, size, minSize, family, weight) {
       // 사장님이 직접 넣은 줄바꿈(Enter)은 그 자리에서 꼭 나누고, 나머지는 자동으로 균형 있게 나눔
@@ -312,6 +337,33 @@
       const breaks = words.map((w) => short(w) === 1 || tight(w) ? 1 : 0);
       const better = (a, b) => !b || a.bad < b.bad || (a.bad === b.bad && a.cost < b.cost);
       if (!words.length) { c.font = gFont(weight, size, family); return { lines: [], size }; }
+      c.font = gFont(weight, smallest, family);
+      const needsSplit = words.some(word => c.measureText(word).width > maxW);
+      c.font = gFont(weight, size, family);
+      const longHangul = words.length === 1 && limit > 1 && /[가-힣]{9}/u.test(words[0]) && c.measureText(words[0]).width > maxW;
+      if (needsSplit || longHangul) {
+        for (let s = size; ; s = Math.max(smallest, s - 1)) {
+          c.font = gFont(weight, s, family);
+          let width = maxW;
+          if (longHangul) {
+            const measured = c.measureText(words[0]).width;
+            const rows = Math.ceil(measured / maxW);
+            width = Math.min(maxW, measured / rows + s * 0.8);
+          }
+          const { lines, overflow } = gWrapWideWords(c, words, width, limit);
+          if (!overflow) return { lines, size: s };
+          if (s === smallest) {
+            lines.length = Math.min(lines.length, limit);
+            const last = lines.length - 1;
+            if (last >= 0) {
+              const chars = gCaptionSegments ? Array.from(gCaptionSegments.segment(lines[last]), part => part.segment) : Array.from(lines[last]);
+              while (chars.length && c.measureText(chars.join('') + '…').width > maxW) chars.pop();
+              lines[last] = c.measureText('…').width <= maxW ? chars.join('') + '…' : '';
+            }
+            return { lines: lines.slice(0, limit), size: s };
+          }
+        }
+      }
       // 줄 수를 고정한 동적 계획법으로 뒤쪽 줄까지 함께 비교한다.
       const arrange = (tokens) => {
         const n = tokens.length, widths = Array.from({ length: n }, () => []);
