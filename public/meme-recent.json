@@ -1,22 +1,108 @@
 {
   "quotes": [
     {
+      "id": "xEHJFQZexI0",
+      "work": "라이어",
+      "quote": "민준호 안 죽였어요",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-27T14:16:19+00:00",
+      "context": ""
+    },
+    {
+      "id": "coWH3C2VzyI",
+      "work": "라이어 용의자 엔딩",
+      "quote": "민준호 살해 용의자로",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-27T14:07:06+00:00",
+      "context": "서현진"
+    },
+    {
+      "id": "_qnbZncBhCI",
+      "work": "엄마가 미쳤어요",
+      "quote": "안 그래도 거슬리는데, 이름까지 비슷하네",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T13:23:51+00:00",
+      "context": "정민아가 신경 쓰이는 강경헌",
+      "scenePlayerId": "8F1A363D36E2E73C67985508428F425CE66C"
+    },
+    {
+      "id": "Xr___2eVfWc",
+      "work": "엄마가 미쳤어요",
+      "quote": "아버지는 아버지야",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T12:59:24+00:00",
+      "context": "이한위를 보고 흥분한 김종훈을 진정시키는 강은탁"
+    },
+    {
+      "id": "LJBAPVGJ-t4",
+      "work": "엄마가 미쳤어요",
+      "quote": "나는... 네 애비다!",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T12:47:23+00:00",
+      "context": "이한위를 도둑 취급하는 김종훈에게",
+      "scenePlayerId": "FA4638B29ECB6964B687E77B8BF50C066627"
+    },
+    {
+      "id": "p85A0xhmRZM",
+      "work": "엄마가 미쳤어요",
+      "quote": "사장님이 약속해 주실 차례",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T12:38:26+00:00",
+      "context": "김희정이 치료를 적극적으로 받길 원하는 공정환",
+      "scenePlayerId": "AA84D169DE01B9D820173EA0921C4D37B8D4"
+    },
+    {
+      "id": "1QIS_Rpj0bM",
+      "work": "엄마가 미쳤어요",
+      "quote": "살아야 할 이유를 알려 준 사람",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T12:32:33+00:00",
+      "context": "과거 인연을 털어놓는 공정환",
+      "scenePlayerId": "5E3B153A1478CAFC5C2006E673CEF2BE0FC5"
+    },
+    {
+      "id": "0CPBBVQROq4",
+      "work": "엄마가 미쳤어요",
+      "quote": "여기가 언니 사무실이에요?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T12:24:11+00:00",
+      "context": "치매 증상을 보이는 김영옥",
+      "scenePlayerId": "BA3E6DEFABD7744690129A5E9BB1746B0AAC"
+    },
+    {
+      "id": "3v5kZeHe34c",
+      "work": "엄마가 미쳤어요",
+      "quote": "지금 당장 보내줄 거지?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T12:17:44+00:00",
+      "context": "실종 전단지를 만들어 강경헌을 또 협박?!"
+    },
+    {
       "id": "vDl37kQkSco",
       "work": "욕망의 덫",
-      "quote": "원하는 게 뭐냐고",
+      "quote": "진짜 원하는 게 뭐야",
       "genre": "드라마",
       "publisher": "KBS Drama",
       "publishedAt": "2026-11-27T11:50:22+00:00",
-      "context": "장서희에게 소리치는 전혜원"
+      "context": "장서희에게 분노한 전혜원"
     },
     {
       "id": "Y3BGy-Dzvn0",
       "work": "욕망의 덫",
-      "quote": "그 사람 가해 아닌가요?",
+      "quote": "편안해 보이시네요?",
       "genre": "드라마",
       "publisher": "KBS Drama",
       "publishedAt": "2026-11-27T11:48:09+00:00",
-      "context": "사우나에서 만난 유태웅&설정환"
+      "context": "사우나에서 유태웅 압박하는 설정환"
     },
     {
       "id": "CM7aDBJxz-U",
@@ -382,92 +468,17 @@
       "publisher": "MBCdrama",
       "publishedAt": "2026-11-26T11:16:13+00:00",
       "context": ""
-    },
-    {
-      "id": "DCWuAy1wKaQ",
-      "work": "욕망의 덫",
-      "quote": "원래 내 자리였어",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-26T11:11:50+00:00",
-      "context": "다시 모든 걸 되찾기로 다짐하는 전혜원",
-      "scenePlayerId": "C04310A140A64A19D329FBA473B0CC6872C8"
-    },
-    {
-      "id": "TIYowIc0j7o",
-      "work": "가족관계증명서",
-      "quote": "죄송해요",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-26T11:11:07+00:00",
-      "context": "임지은 앞에서 무릎 꿇는 박세영"
-    },
-    {
-      "id": "om-D8gqhVQ4",
-      "work": "가족관계증명서",
-      "quote": "내가 우스워?",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-26T10:57:31+00:00",
-      "context": "윤지원 뺨 때린 박세영"
-    },
-    {
-      "id": "HF2mNoO3j4Y",
-      "work": "가족관계증명서",
-      "quote": "너 싫다 그랬지",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-26T10:48:30+00:00",
-      "context": "박세영에게 사진 보여주는 최수린"
-    },
-    {
-      "id": "Y5A8eAXGDO0",
-      "work": "가족관계증명서",
-      "quote": "외롭진 않을 텐데..",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-26T10:36:59+00:00",
-      "context": "정소영을 생각하는 서도영"
-    },
-    {
-      "id": "P8u9n2WQmlo",
-      "work": "가족관계증명서",
-      "quote": "나지니 좀 치우자",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-26T10:27:59+00:00",
-      "context": "성이언X윤지원 사진 찍는 최수린"
-    },
-    {
-      "id": "8DZWC4s-N0w",
-      "work": "엄마가 미쳤어요",
-      "quote": "내가 사준 거라서 안 먹은 건 가요?",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-25T13:34:58+00:00",
-      "context": "퇴근하는 정민아에게 직접 따지는 강경헌"
-    },
-    {
-      "id": "MWf3Qm2k4c8",
-      "work": "엄마가 미쳤어요",
-      "quote": "안 좋은 추억이라도 있어요?",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-25T13:17:12+00:00",
-      "context": "동하에게 치킨을 안 먹는 이유를 말하는 정민아"
-    },
-    {
-      "id": "3OVHjQv4nwg",
-      "work": "엄마가 미쳤어요",
-      "quote": "이왕 먹을 거 좋은 거 먹어야지",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-25T13:08:53+00:00",
-      "context": "가게 정리도 안 하고 혼자 시간을 보내는 김희정",
-      "scenePlayerId": "613990FC02F84863CE14168EB4C251472EF0"
     }
   ],
   "clips": [
+    {
+      "id": "CJLJ1na8rciax1AGmo",
+      "title": "Awkward Amanda Seyfried GIF",
+      "publisher": "stinkyzaba",
+      "publishedAt": "2026-11-27T20:38:07Z",
+      "url": "https://media.giphy.com/media/CJLJ1na8rciax1AGmo/giphy.mp4",
+      "hasOriginalAudio": false
+    },
     {
       "id": "ChldVnHnlD1sjCLl1N",
       "title": "Lets Go Dancing GIF",
@@ -538,22 +549,6 @@
       "publisher": "AllieRanae",
       "publishedAt": "2026-11-21T16:16:32Z",
       "url": "https://media.giphy.com/media/BtoSg1NBlReSm0I6JO/giphy.mp4",
-      "hasOriginalAudio": false
-    },
-    {
-      "id": "qy5prNBJ7r6IqUFmJT",
-      "title": "Give Me Want GIF by the innernette",
-      "publisher": "the innernette",
-      "publishedAt": "2026-11-20T19:38:13Z",
-      "url": "https://media.giphy.com/media/qy5prNBJ7r6IqUFmJT/giphy.mp4",
-      "hasOriginalAudio": false
-    },
-    {
-      "id": "lV15KDoKB06rWT4y4R",
-      "title": "Fall Autumn GIF",
-      "publisher": "AllieRanae",
-      "publishedAt": "2026-11-20T15:54:19Z",
-      "url": "https://media.giphy.com/media/lV15KDoKB06rWT4y4R/giphy.mp4",
       "hasOriginalAudio": false
     }
   ]
