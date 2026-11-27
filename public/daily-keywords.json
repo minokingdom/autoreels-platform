@@ -1,121 +1,94 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-27T11:09:04.206886+09:00",
+  "collectedAt": "2026-11-27T21:06:17.812056+09:00",
   "items": [
     {
-      "term": "ai 에이전트",
-      "startedAt": "2026-11-26T17:00:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "유한양행",
-      "startedAt": "2026-11-26T17:00:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "lg에너지솔루션",
-      "startedAt": "2026-11-26T16:50:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "병무청",
-      "startedAt": "2026-11-26T16:50:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "h&m",
-      "startedAt": "2026-11-26T16:40:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "김아현의 금빛 스탁",
-      "startedAt": "2026-11-26T16:30:00-08:00",
-      "traffic": "5000+"
-    },
-    {
-      "term": "주주",
-      "startedAt": "2026-11-26T16:20:00-08:00",
+      "term": "황교안",
+      "startedAt": "2026-11-27T02:50:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "연비",
-      "startedAt": "2026-11-26T16:10:00-08:00",
-      "traffic": "5000+"
-    },
-    {
-      "term": "포수",
-      "startedAt": "2026-11-26T16:00:00-08:00",
-      "traffic": "5000+"
-    },
-    {
-      "term": "과학기술인공제회",
-      "startedAt": "2026-11-26T16:00:00-08:00",
+      "term": "파기 환송",
+      "startedAt": "2026-11-27T02:50:00-08:00",
       "traffic": "2000+"
+    },
+    {
+      "term": "블랙 프라이데이",
+      "startedAt": "2026-11-27T02:40:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "bangladesh a vs pakistan a",
+      "startedAt": "2026-11-27T02:30:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "agf",
+      "startedAt": "2026-11-27T02:20:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "김이현",
+      "startedAt": "2026-11-27T01:40:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "서울교통공사 채용",
+      "startedAt": "2026-11-27T01:30:00-08:00",
+      "traffic": "1000+"
+    },
+    {
+      "term": "aus vs eng",
+      "startedAt": "2026-11-27T01:30:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "australia vs england",
+      "startedAt": "2026-11-27T01:00:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "오세훈",
+      "startedAt": "2026-11-27T00:40:00-08:00",
+      "traffic": "1000+"
     }
   ],
   "issues": [
     {
-      "term": "수능",
+      "term": "김범수 무죄",
       "day": "2026-11-27",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008866366",
-      "publishedAt": "2026-11-27T10:17:00+09:00",
-      "headline": "올해 수능 부정행위 적발 70% '쑥'…원천 차단 해법 찾을까"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867314",
+      "publishedAt": "2026-11-27T19:11:00+09:00",
+      "headline": "'SM엔터 시세조종' 김범수 무죄 확정…공소청 상고 포기"
     },
     {
-      "term": "전직 정치인 아들",
+      "term": "승용차 들이받은 트럭이",
       "day": "2026-11-27",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008866458",
-      "publishedAt": "2026-11-27T10:51:00+09:00",
-      "headline": "'마약 전과' 전직 정치인 아들, 전 연인 스토킹·폭행 혐의 체포"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867124",
+      "publishedAt": "2026-11-27T16:56:00+09:00",
+      "headline": "승용차 들이받은 트럭이 중앙분리대 넘어 연쇄 충돌"
     },
     {
-      "term": "경찰",
+      "term": "대구 수성구 아파트",
       "day": "2026-11-27",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008866284",
-      "publishedAt": "2026-11-27T10:44:00+09:00",
-      "headline": "[단독] 경찰, '임플란트 시술 중 환자 사망' 치과 압수수색"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867115",
+      "publishedAt": "2026-11-27T16:46:00+09:00",
+      "headline": "대구 수성구 아파트 14층서 불…소방관 포함 5명 경상"
     },
     {
-      "term": "불송치 박완수 지사",
-      "day": "2026-11-27",
-      "kind": "보도",
-      "publisher": "연합뉴스",
-      "url": "https://www.yna.co.kr/view/AKR20261127057000052",
-      "publishedAt": "2026-11-27T10:40:58+09:00",
-      "headline": "'딥페이크 의혹' 불송치 박완수 지사 \"경남 대도약 반드시 실현\""
-    },
-    {
-      "term": "성매매",
+      "term": "오세훈",
       "day": "2026-11-27",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008866192",
-      "publishedAt": "2026-11-27T10:25:00+09:00",
-      "headline": "성매매·절도 지시했나…'성북 10대 살해' 피의자 전 연인 송치"
-    },
-    {
-      "term": "학교 비정규직 오늘",
-      "day": "2026-11-27",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008866278",
-      "publishedAt": "2026-11-27T09:57:00+09:00",
-      "headline": "학교 비정규직 오늘 총파업…전국 학교 급식·돌봄 차질 예상"
-    },
-    {
-      "term": "강원 원주시",
-      "day": "2026-11-27",
-      "kind": "보도",
-      "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008866247",
-      "publishedAt": "2026-11-27T09:50:00+09:00",
-      "headline": "강원 원주시, 고향사랑기부 지정기부사업 모금 목표 3천만 원 조기달성"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867076",
+      "publishedAt": "2026-11-27T16:31:00+09:00",
+      "headline": "오세훈, '한강버스 허위사실 공표 의혹' 경찰 조사받아"
     }
   ],
   "previousIssues": [

@@ -1,6 +1,136 @@
 {
   "quotes": [
     {
+      "id": "vDl37kQkSco",
+      "work": "욕망의 덫",
+      "quote": "원하는 게 뭐냐고",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T11:50:22+00:00",
+      "context": "장서희에게 소리치는 전혜원"
+    },
+    {
+      "id": "Y3BGy-Dzvn0",
+      "work": "욕망의 덫",
+      "quote": "그 사람 가해 아닌가요?",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T11:48:09+00:00",
+      "context": "사우나에서 만난 유태웅&설정환"
+    },
+    {
+      "id": "CM7aDBJxz-U",
+      "work": "욕망의 덫",
+      "quote": "평소처럼 자연스럽게",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T11:44:54+00:00",
+      "context": "장서희 붙잡는 윤해영",
+      "scenePlayerId": "8A32F79B3F0453CFF69BCD9D25651C59FE16"
+    },
+    {
+      "id": "ht8wUCIKpUc",
+      "work": "욕망의 덫",
+      "quote": "누나 같아서요",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T11:41:57+00:00",
+      "context": "전혜원을 도우려는 유진석",
+      "scenePlayerId": "A5EC4496EA9222B90F2AB0C1EC00B5F6BD2E"
+    },
+    {
+      "id": "t-M7BZzZ7fE",
+      "work": "욕망의 덫",
+      "quote": "절대 들키면 안 돼",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T11:29:26+00:00",
+      "context": "과거의 기억을 꿈꾸는 박현정",
+      "scenePlayerId": "76CFD6019DF36B0D6FBD693FC12A4E395EB3"
+    },
+    {
+      "id": "t_Y68kxR8as",
+      "work": "욕망의 덫",
+      "quote": "결정적 증거 확보가 우선",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T11:26:26+00:00",
+      "context": "이혼 변호사 상담받는 윤해영"
+    },
+    {
+      "id": "B_PcQCCunrI",
+      "work": "욕망의 덫",
+      "quote": "차 실장, 잘 구슬려봐",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T11:23:05+00:00",
+      "context": "박현정 입원시키려는 유태웅"
+    },
+    {
+      "id": "L0YHPPxF0NI",
+      "work": "욕망의 덫",
+      "quote": "적당히 까부시라고요",
+      "genre": "드라마",
+      "publisher": "KBS Drama",
+      "publishedAt": "2026-11-27T11:11:28+00:00",
+      "context": "주새벽 불러 세우는 전혜원",
+      "scenePlayerId": "662D30725A3950515309385E7B25066D9397"
+    },
+    {
+      "id": "2S7xxp88yqM",
+      "work": "가족관계증명서",
+      "quote": "지후 씨 원래 이런 놈이었어?",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-27T10:56:45+00:00",
+      "context": ""
+    },
+    {
+      "id": "znno_zVLOCA",
+      "work": "가족관계증명서",
+      "quote": "자주 오네?",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-27T10:52:02+00:00",
+      "context": "이상한 낌새를 눈치챈 성이언"
+    },
+    {
+      "id": "gJsw5EKOBAQ",
+      "work": "가족관계증명서",
+      "quote": "지후 씨 잘 지내겠지..?",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-27T10:42:20+00:00",
+      "context": "혼자만의 시간을 갖는 박세영"
+    },
+    {
+      "id": "o0qPNBD_kWM",
+      "work": "가족관계증명서",
+      "quote": "다 어머니 탓이잖아요!",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-27T10:33:09+00:00",
+      "context": "분노하는 성이언"
+    },
+    {
+      "id": "3nCqefsRfDk",
+      "work": "가족관계증명서",
+      "quote": "지니가 집을 나갔어",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-27T10:28:01+00:00",
+      "context": "박영운X윤지원을 찾아간 성이언"
+    },
+    {
+      "id": "bNw4teulwNM",
+      "work": "가족관계증명서",
+      "quote": "이혼이요?",
+      "genre": "드라마",
+      "publisher": "MBCdrama",
+      "publishedAt": "2026-11-27T10:21:47+00:00",
+      "context": "최수린의 말에 놀라는 성이언"
+    },
+    {
       "id": "fLdcO6gy3iA",
       "work": "옆자리, 프란체스카",
       "quote": "붙지 말라고 하지 않았나?",
@@ -335,137 +465,6 @@
       "publishedAt": "2026-11-25T13:08:53+00:00",
       "context": "가게 정리도 안 하고 혼자 시간을 보내는 김희정",
       "scenePlayerId": "613990FC02F84863CE14168EB4C251472EF0"
-    },
-    {
-      "id": "Sc_fq1Rvy38",
-      "work": "엄마가 미쳤어요",
-      "quote": "이제 다 끝났어요...",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-25T12:42:16+00:00",
-      "context": "돈 떼먹은 김 프로를 찾으러 왔던 김종훈"
-    },
-    {
-      "id": "BmNiWMRV96c",
-      "work": "엄마가 미쳤어요",
-      "quote": "제가 한 번 신어봐도 될까요?",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-25T12:05:30+00:00",
-      "context": "엄마와의 일을 떠올려 아이디어를 낸 정민아",
-      "scenePlayerId": "681CDF57FBD90B9AA9CE1B6811099841C5E0"
-    },
-    {
-      "id": "m30wijmCE_A",
-      "work": "엄마가 미쳤어요",
-      "quote": "평소처럼 대해주세요",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-25T11:56:22+00:00",
-      "context": "검사 결과를 듣고 오열하는 김희정",
-      "scenePlayerId": "3F35E14671F2379990EF2110A47682ED43D4"
-    },
-    {
-      "id": "bwK9686mxZ4",
-      "work": "욕망의 덫",
-      "quote": "이제 와서 엄마 노릇이야?",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-25T11:41:16+00:00",
-      "context": "장서희&주새벽 대화를 들은 전혜원",
-      "scenePlayerId": "182337D9510BC18709D55D241B37B14007B5"
-    },
-    {
-      "id": "UuDdRSIGNms",
-      "work": "욕망의 덫",
-      "quote": "희귀 혈액형이에요",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-25T11:39:09+00:00",
-      "context": "유태웅의 혈액형을 알게 된 전혜원"
-    },
-    {
-      "id": "Zn2cLV6HmmU",
-      "work": "욕망의 덫",
-      "quote": "걔 보통 아니야!",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-25T11:32:37+00:00",
-      "context": "유태웅에게 이르는 주새벽",
-      "scenePlayerId": "61A02666EB5355DA4D9EC6C8BCBD22996D1D"
-    },
-    {
-      "id": "8W4lraRvvZQ",
-      "work": "욕망의 덫",
-      "quote": "다음 계획을 준비 중이에요",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-25T11:27:21+00:00",
-      "context": "윤해영에게 조언하는 전혜원"
-    },
-    {
-      "id": "hp-SO9aBjR0",
-      "work": "욕망의 덫",
-      "quote": "무슨 말실수를 했어요?",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-25T11:18:03+00:00",
-      "context": "박현정을 만나러 온 장서희"
-    },
-    {
-      "id": "kkguO-tDMuc",
-      "work": "욕망의 덫",
-      "quote": "내가 얻는 게 많았어",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-25T11:14:55+00:00",
-      "context": "설정환 떠보는 유태웅",
-      "scenePlayerId": "2060623CE1C67D597756234F3368CA60F2D7"
-    },
-    {
-      "id": "__zaWlru1yA",
-      "work": "욕망의 덫",
-      "quote": "일찍 찾지 그러셨어요?",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-25T11:08:48+00:00",
-      "context": "장서희에게 뼈 있는 말 하는 전혜원"
-    },
-    {
-      "id": "p2-2sSEt1OA",
-      "work": "욕망의 덫",
-      "quote": "날 받아들인 이유가...",
-      "genre": "드라마",
-      "publisher": "KBS Drama",
-      "publishedAt": "2026-11-25T11:06:01+00:00",
-      "context": "유태웅에게 분노하는 설정환"
-    },
-    {
-      "id": "ZAMZVvbHTDI",
-      "work": "가족관계증명서",
-      "quote": "너희 엄마 죗값은 네가 치르는 게 맞아",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-25T11:01:20+00:00",
-      "context": ""
-    },
-    {
-      "id": "j6ICae0-8kc",
-      "work": "가족관계증명서",
-      "quote": "괜찮아요?",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-25T10:57:47+00:00",
-      "context": "성이언에게 들러붙는 윤지원"
-    },
-    {
-      "id": "UtUAbeeFpdg",
-      "work": "가족관계증명서",
-      "quote": "왜 자꾸 가!",
-      "genre": "드라마",
-      "publisher": "MBCdrama",
-      "publishedAt": "2026-11-25T10:47:15+00:00",
-      "context": "성이언에게 짜증 내는 박세영"
     }
   ],
   "clips": [
@@ -555,14 +554,6 @@
       "publisher": "AllieRanae",
       "publishedAt": "2026-11-20T15:54:19Z",
       "url": "https://media.giphy.com/media/lV15KDoKB06rWT4y4R/giphy.mp4",
-      "hasOriginalAudio": false
-    },
-    {
-      "id": "wVdeizmpZ4MGCbYtEb",
-      "title": "Happy Rui Hachimura GIF by LA Clippers",
-      "publisher": "LA Clippers",
-      "publishedAt": "2026-11-20T02:50:15Z",
-      "url": "https://media.giphy.com/media/wVdeizmpZ4MGCbYtEb/giphy.mp4",
       "hasOriginalAudio": false
     }
   ]
