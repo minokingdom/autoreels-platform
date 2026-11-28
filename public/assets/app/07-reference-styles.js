@@ -16,6 +16,10 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
   const caption=gCleanCaption((campaign.cutCaptions||[])[idx]||campaign.hook||'');
   c.save();
   c.fillStyle=r.background;c.fillRect(0,0,W,H);
+  if(['magazine-turn','mono-teaser','runway-lookbook'].includes(r.layout)) {
+    arFashionReferenceFrame(c,W,H,S,r,idx,p,totalCuts,caption,entry,d);
+    c.restore();return;
+  }
   if(r.layout==='travel-shutter' || r.layout==='fold-postcard') {
     const journey=(idx+p)/Math.max(1,totalCuts);
     const title=r.layout==='travel-shutter' && (journey<.155 || journey>.91);
