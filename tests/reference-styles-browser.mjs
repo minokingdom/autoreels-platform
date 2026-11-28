@@ -62,19 +62,15 @@ async function checkShutterAndFold(page) {
     function visible(render,t,x,y) { return mask(render,t,'#fff')[y*144+x] > 200; }
     if (!visible(arTravelShutter,.08,10,100) || visible(arTravelShutter,.08,135,100)) throw Error('셔터 열림 순서');
     if (visible(arTravelShutter,.99,72,128)) throw Error('셔터 엔딩 닫힘');
-    const cross=(ctx,w,h,s,i,t)=>arFoldCrossOrTiles(ctx,w,h,s,'cross',t);
-    const tiles=(ctx,w,h,s,i,t)=>arFoldCrossOrTiles(ctx,w,h,s,'tiles',t);
-    if (!visible(cross,.02,72,128) || visible(cross,.02,1,128)) throw Error('X자 중심/측면');
-    if (!visible(tiles,.19,5,192) || visible(tiles,.19,5,10)) throw Error('하단 타일 순서');
-    for(const cuts of [1,2,9]){
-      const S={...scene,cuts};
-      for(let frame=0;frame<=120;frame++){
-        const t=frame/120*cuts,idx=Math.min(cuts-1,Math.floor(t));
-        c.clearRect(0,0,144,256);
-        arFoldPostcard(c,144,256,S,idx,t-idx,cuts);
-        const rgba=c.getImageData(0,0,144,256).data;
-        for(let i=3;i<rgba.length;i+=4)if(rgba[i]!==255)throw Error('접히는 엽서에 여백: '+[cuts,frame,i]);
-      }
+    const isOpen=(time,x,y)=>visible(arFoldPostcard,time/7.502,x,y);
+    if (!isOpen(1.06,12,128)||isOpen(1.06,78,128))throw Error('엽서 왼쪽부터 열림');
+    if (!isOpen(3.8,72,128)||isOpen(3.8,72,7)||isOpen(3.8,72,248))throw Error('접힌 면의 상하 대칭');
+    if (!isOpen(4.72,72,128)||isOpen(4.72,5,128)||isOpen(4.72,72,12))throw Error('고정된 X자 창');
+    if (!isOpen(5.08,72,12)||isOpen(5.08,5,128))throw Error('X자 상하가 먼저 열림');
+    if (!isOpen(5.76,24,192)||isOpen(5.76,24,48))throw Error('아랫줄 먼저 인화');
+    if (!isOpen(6.72,135,48)||isOpen(6.72,5,48))throw Error('윗줄 오른쪽부터 인화');
+    for(const [x,y] of [[0,0],[143,0],[0,255],[143,255]]) {
+      if(!isOpen(7.3,x,y))throw Error('마지막 화면이 가장자리까지 채워지지 않음');
     }
     return '세로 셔터와 접이식 엽서 경계 검사 통과';
   });
