@@ -1,59 +1,87 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-28T08:23:59.103659+09:00",
+  "collectedAt": "2026-11-28T10:56:13.433780+09:00",
   "items": [
     {
-      "term": "김정화",
-      "startedAt": "2026-11-27T14:20:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "보편적 기본소득",
-      "startedAt": "2026-11-27T14:20:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "위암",
-      "startedAt": "2026-11-27T14:20:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "이승엽",
-      "startedAt": "2026-11-27T14:10:00-08:00",
-      "traffic": "500+"
-    },
-    {
-      "term": "s&p 500",
-      "startedAt": "2026-11-27T14:10:00-08:00",
+      "term": "대한민국 u-17 축구 국가대표팀",
+      "startedAt": "2026-11-27T16:40:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "포포투",
-      "startedAt": "2026-11-27T14:00:00-08:00",
+      "term": "nh농협은행",
+      "startedAt": "2026-11-27T16:40:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "대한간호협회",
-      "startedAt": "2026-11-27T14:00:00-08:00",
+      "term": "경상수지",
+      "startedAt": "2026-11-27T16:30:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "서울경제",
-      "startedAt": "2026-11-27T14:00:00-08:00",
+      "term": "콜럼버스 크루 대 인터 마이애미",
+      "startedAt": "2026-11-27T16:20:00-08:00",
+      "traffic": "1000+"
+    },
+    {
+      "term": "삼성 엑시노스",
+      "startedAt": "2026-11-27T16:10:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "이해욱",
+      "startedAt": "2026-11-27T16:00:00-08:00",
+      "traffic": "1000+"
+    },
+    {
+      "term": "신상출시 편스토랑",
+      "startedAt": "2026-11-27T16:00:00-08:00",
       "traffic": "200+"
     },
     {
-      "term": "이상민",
-      "startedAt": "2026-11-27T14:00:00-08:00",
+      "term": "르윈 디아즈",
+      "startedAt": "2026-11-27T15:50:00-08:00",
+      "traffic": "2000+"
+    },
+    {
+      "term": "화웨이",
+      "startedAt": "2026-11-27T15:50:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "skhy",
-      "startedAt": "2026-11-27T14:00:00-08:00",
+      "term": "소방관",
+      "startedAt": "2026-11-27T15:40:00-08:00",
       "traffic": "200+"
     }
   ],
-  "issues": [],
+  "issues": [
+    {
+      "term": "인천공항 출국하던 전역군인",
+      "day": "2026-11-28",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867702",
+      "publishedAt": "2026-11-28T10:29:00+09:00",
+      "headline": "인천공항 출국하던 전역군인 여행가방서 또 '공포탄'"
+    },
+    {
+      "term": "산청 임도서 경운기",
+      "day": "2026-11-28",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867674",
+      "publishedAt": "2026-11-28T09:55:00+09:00",
+      "headline": "산청 임도서 경운기 넘어져 추락…노부부 사상"
+    },
+    {
+      "term": "경북 성주 야산",
+      "day": "2026-11-28",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867643",
+      "publishedAt": "2026-11-28T09:22:00+09:00",
+      "headline": "경북 성주 야산 산불 2시간여만에 진화…0.5㏊ 피해"
+    }
+  ],
   "previousIssues": [
     {
       "term": "김범수 무죄",

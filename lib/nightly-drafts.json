@@ -1,5 +1,68 @@
 {
-  "briefing": null,
+  "briefing": {
+    "badge": "오늘의 브리핑",
+    "cat": "쇼츠 포맷",
+    "color": "#203750",
+    "cuts": [
+      {
+        "line": "11월 28일 주요 뉴스",
+        "mediaType": "타이포그래피",
+        "role": "도입",
+        "sourceTag": "오늘의 브리핑"
+      },
+      {
+        "line": "인천공항 출국하던 전역군인 여행가방서 또 '공포탄'",
+        "mediaType": "타이포그래피",
+        "role": "소식 1",
+        "sourceTag": "SBS"
+      },
+      {
+        "line": "산청 임도서 경운기 넘어져 추락…노부부 사상",
+        "mediaType": "타이포그래피",
+        "role": "소식 2",
+        "sourceTag": "SBS"
+      },
+      {
+        "line": "경북 성주 야산 산불 2시간여만에 진화…0.5㏊ 피해",
+        "mediaType": "타이포그래피",
+        "role": "소식 3",
+        "sourceTag": "SBS"
+      },
+      {
+        "line": "기사별 출처는 설명에서 확인하세요.",
+        "mediaType": "타이포그래피",
+        "role": "마무리",
+        "sourceTag": "오늘의 브리핑"
+      }
+    ],
+    "factNote": "SBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008867702\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008867674\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008867643",
+    "factoryType": "briefing",
+    "genre": "뉴스 브리핑",
+    "id": "briefing_2026-11-28",
+    "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 312 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">도입</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">11월 28일</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">주요 뉴스</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g><g transform=\"translate(104 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 1</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">인천공항 출국하던</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">전역군인</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">여행가방서 또</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">'공포탄'</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(208 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 2</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">산청 임도서</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">경운기 넘어져</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">추락…노부부 사상</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 3</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">경북 성주 야산</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">산불 2시간여만에</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">진화…0.5㏊</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">피해</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(104 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">마무리</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기사별 출처는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">설명에서</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">확인하세요.</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g></svg>",
+    "sourceTag": "SBS",
+    "sourceUrl": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867702",
+    "sources": [
+      {
+        "headline": "인천공항 출국하던 전역군인 여행가방서 또 '공포탄'",
+        "name": "SBS",
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867702"
+      },
+      {
+        "headline": "산청 임도서 경운기 넘어져 추락…노부부 사상",
+        "name": "SBS",
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867674"
+      },
+      {
+        "headline": "경북 성주 야산 산불 2시간여만에 진화…0.5㏊ 피해",
+        "name": "SBS",
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867643"
+      }
+    ],
+    "title": "11월 28일 주요 뉴스",
+    "why": "오늘 보도된 기사 제목을 한눈에 살펴보세요.",
+    "year": "2026-11-28"
+  },
   "date": "2026-11-28",
   "quotes": [
     {
