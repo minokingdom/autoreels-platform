@@ -1,6 +1,41 @@
 import {chromium} from 'playwright';
 import http from 'node:http';import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';
 import {buildApp} from '../scripts/build-app.mjs';
+async function checkShutterAndFold(page) {
+  return page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 144;
+    canvas.height = 256;
+    const c = canvas.getContext('2d', {willReadFrequently:true});
+    const photo = document.createElement('canvas');
+    photo.width = photo.height = 32;
+    const paint = photo.getContext('2d');
+    const scene = {photos:[photo], n:1, idx:0, cutIdx:0, cuts:1};
+    function mask(render, t, color) {
+      paint.fillStyle = color;
+      paint.fillRect(0, 0, 32, 32);
+      c.clearRect(0, 0, 144, 256);
+      render(c, 144, 256, scene, 0, t, 1);
+      return c.getImageData(0, 0, 144, 256).data.filter((_, i) => i % 4 === 3);
+    }
+    for (const render of [arTravelShutter, arFoldPostcard]) {
+      for (const t of [.02,.08,.25,.54,.59,.68,.75,.83,.92,.99]) {
+        const bright = mask(render,t,'#fff');
+        const dark = mask(render,t,'#111');
+        if (bright.some((a,i) => a !== dark[i])) throw Error('사진에 따라 경계가 달라짐 '+t);
+      }
+    }
+    function visible(render,t,x,y) { return mask(render,t,'#fff')[y*144+x] > 200; }
+    if (!visible(arTravelShutter,.08,10,100) || visible(arTravelShutter,.08,135,100)) throw Error('셔터 열림 순서');
+    if (visible(arTravelShutter,.99,72,128)) throw Error('셔터 엔딩 닫힘');
+    if (!visible(arFoldPostcard,.59,72,128) || visible(arFoldPostcard,.59,1,128)) throw Error('X자 중심/측면');
+    if (!visible(arFoldPostcard,.78,5,192) || visible(arFoldPostcard,.78,5,10)) throw Error('하단 타일 순서');
+    for (const [x,y] of [[0,0],[0,255],[143,0],[143,255]]) {
+      if (!visible(arFoldPostcard,.99,x,y)) throw Error('엽서 마지막 프레임 모서리 누락');
+    }
+    return '세로 셔터와 접이식 엽서 경계 검사 통과';
+  });
+}
 async function checkBeatCopy(page) {
   return page.evaluate(() => {
     const spec = arFindDesign('ref_4ef965a33bea39d2');
@@ -92,6 +127,7 @@ try{
  await page.route('**/api/**',r=>r.fulfill({status:503,contentType:'application/json',body:'{"ok":false}'}));
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(`http://127.0.0.1:${server.address().port}/studio`);await page.waitForFunction(()=>typeof arRenderReferenceFrame==='function');
+ console.log(await checkShutterAndFold(page));
  console.log(await checkBeatCopy(page), await checkBeatDiagonals(page));
  const result=await page.evaluate(()=>{
   setIndustry('cafe');const base={id:'ref_0123456789abcdef',name:'분석 렌더 시험',summary:'시험',category:'감성',layout:'full',font:'pretM',captionPosition:'bottom',textMotion:'rise',camera:'zoom-in',transition:'fade',background:'#141414',foreground:'#ffffff',accent:'#ccaa88',captionSize:.06,zoom:.04,shade:.4,grain:.02,entrySeconds:.5};

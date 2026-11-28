@@ -16,6 +16,15 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
   const caption=gCleanCaption((campaign.cutCaptions||[])[idx]||campaign.hook||'');
   c.save();
   c.fillStyle=r.background;c.fillRect(0,0,W,H);
+  if(r.layout==='travel-shutter' || r.layout==='fold-postcard') {
+    const journey=(idx+p)/Math.max(1,totalCuts);
+    const title=r.layout==='travel-shutter' && (journey<.155 || journey>.91);
+    if(r.layout==='travel-shutter') arTravelShutter(c,W,H,S,idx,p,totalCuts);
+    else arFoldPostcard(c,W,H,S,idx,p,totalCuts);
+    arReferenceCaption(c,caption,W,H,title?H*.34:H*.73,title?H*.32:H*.16,r,entry);
+    inSign(c,d,W/2,H*.94,r.foreground,'center',W*.03);
+    c.restore();return;
+  }
   if(r.layout==='beat-mask') {
     const titleVisible = arBeatMaskFrame(c,W,H,S,idx,totalCuts,p,caption,r.font);
     if (!titleVisible) arReferenceCaption(c,caption,W,H,H*.73,H*.15,r,entry);
