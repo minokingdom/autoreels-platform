@@ -11,21 +11,27 @@
         "sourceTag": "오늘의 브리핑"
       },
       {
-        "line": "인천공항 출국하던 전역군인 여행가방서 또 '공포탄'",
+        "line": "[지식의 발견] \"당장 폐지한다고…\" 전 교육과정평가원장이 말하는 미래의 수능?",
         "mediaType": "타이포그래피",
         "role": "소식 1",
         "sourceTag": "SBS"
       },
       {
-        "line": "산청 임도서 경운기 넘어져 추락…노부부 사상",
+        "line": "안동 오르막길서 정비 중인 트럭 미끄러져…60대 운전자 깔려 숨져",
         "mediaType": "타이포그래피",
         "role": "소식 2",
         "sourceTag": "SBS"
       },
       {
-        "line": "경북 성주 야산 산불 2시간여만에 진화…0.5㏊ 피해",
+        "line": "보건의료인 국시서 전자기기 3건 적발…\"전파탐지기로 확인\"",
         "mediaType": "타이포그래피",
         "role": "소식 3",
+        "sourceTag": "SBS"
+      },
+      {
+        "line": "김용준 전 헌법재판소장 별세…향년 87세",
+        "mediaType": "타이포그래피",
+        "role": "소식 4",
         "sourceTag": "SBS"
       },
       {
@@ -35,28 +41,33 @@
         "sourceTag": "오늘의 브리핑"
       }
     ],
-    "factNote": "SBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008867702\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008867674\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008867643",
+    "factNote": "SBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008867220\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008868035\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008867952\nSBS · https://news.sbs.co.kr/news/endPage.do?news_id=N1008868060",
     "factoryType": "briefing",
     "genre": "뉴스 브리핑",
     "id": "briefing_2026-11-28",
-    "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 312 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">도입</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">11월 28일</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">주요 뉴스</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g><g transform=\"translate(104 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 1</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">인천공항 출국하던</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">전역군인</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">여행가방서 또</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">'공포탄'</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(208 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 2</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">산청 임도서</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">경운기 넘어져</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">추락…노부부 사상</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 3</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">경북 성주 야산</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">산불 2시간여만에</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">진화…0.5㏊</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">피해</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(104 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">마무리</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기사별 출처는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">설명에서</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">확인하세요.</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g></svg>",
+    "previewSheet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 312 360\" font-family=\"sans-serif\"><g transform=\"translate(0 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">도입</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">11월 28일</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">주요 뉴스</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g><g transform=\"translate(104 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 1</text><text x=\"7\" y=\"50\" font-size=\"10\" font-weight=\"700\">[지식의 발견]</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">\"당장</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">폐지한다고…\" 전</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">교육과정평가원장이</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">말하는 미래의</text><text x=\"7\" y=\"120\" font-size=\"10\" font-weight=\"700\">수능?</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(208 0)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 2</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">안동 오르막길서</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">정비 중인 트럭</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">미끄러져…60대</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">운전자 깔려 숨져</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(0 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 3</text><text x=\"7\" y=\"64\" font-size=\"10\" font-weight=\"700\">보건의료인 국시서</text><text x=\"7\" y=\"78\" font-size=\"10\" font-weight=\"700\">전자기기 3건</text><text x=\"7\" y=\"92\" font-size=\"10\" font-weight=\"700\">적발…\"전파탐지기</text><text x=\"7\" y=\"106\" font-size=\"10\" font-weight=\"700\">로 확인\"</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(104 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">소식 4</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">김용준 전</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">헌법재판소장</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">별세…향년 87세</text><text x=\"7\" y=\"160\" font-size=\"7\">SBS</text></g></g><g transform=\"translate(208 180)\"><rect width=\"100\" height=\"176\" rx=\"5\" fill=\"#203750\"/><g fill=\"#fff\"><text x=\"7\" y=\"20\" font-size=\"8\">마무리</text><text x=\"7\" y=\"71\" font-size=\"10\" font-weight=\"700\">기사별 출처는</text><text x=\"7\" y=\"85\" font-size=\"10\" font-weight=\"700\">설명에서</text><text x=\"7\" y=\"99\" font-size=\"10\" font-weight=\"700\">확인하세요.</text><text x=\"7\" y=\"160\" font-size=\"7\">오늘의 브리핑</text></g></g></svg>",
     "sourceTag": "SBS",
-    "sourceUrl": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867702",
+    "sourceUrl": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867220",
     "sources": [
       {
-        "headline": "인천공항 출국하던 전역군인 여행가방서 또 '공포탄'",
+        "headline": "[지식의 발견] \"당장 폐지한다고…\" 전 교육과정평가원장이 말하는 미래의 수능?",
         "name": "SBS",
-        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867702"
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867220"
       },
       {
-        "headline": "산청 임도서 경운기 넘어져 추락…노부부 사상",
+        "headline": "안동 오르막길서 정비 중인 트럭 미끄러져…60대 운전자 깔려 숨져",
         "name": "SBS",
-        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867674"
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008868035"
       },
       {
-        "headline": "경북 성주 야산 산불 2시간여만에 진화…0.5㏊ 피해",
+        "headline": "보건의료인 국시서 전자기기 3건 적발…\"전파탐지기로 확인\"",
         "name": "SBS",
-        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867643"
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867952"
+      },
+      {
+        "headline": "김용준 전 헌법재판소장 별세…향년 87세",
+        "name": "SBS",
+        "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008868060"
       }
     ],
     "title": "11월 28일 주요 뉴스",

@@ -1,85 +1,130 @@
 {
   "source": "https://trends.google.com/trending/rss?geo=KR",
-  "collectedAt": "2026-11-28T10:56:13.433780+09:00",
+  "collectedAt": "2026-11-28T20:38:24.043178+09:00",
   "items": [
     {
-      "term": "대한민국 u-17 축구 국가대표팀",
-      "startedAt": "2026-11-27T16:40:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "nh농협은행",
-      "startedAt": "2026-11-27T16:40:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "경상수지",
-      "startedAt": "2026-11-27T16:30:00-08:00",
+      "term": "브래디",
+      "startedAt": "2026-11-28T02:30:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "콜럼버스 크루 대 인터 마이애미",
-      "startedAt": "2026-11-27T16:20:00-08:00",
-      "traffic": "1000+"
-    },
-    {
-      "term": "삼성 엑시노스",
-      "startedAt": "2026-11-27T16:10:00-08:00",
-      "traffic": "100+"
-    },
-    {
-      "term": "이해욱",
-      "startedAt": "2026-11-27T16:00:00-08:00",
-      "traffic": "1000+"
-    },
-    {
-      "term": "신상출시 편스토랑",
-      "startedAt": "2026-11-27T16:00:00-08:00",
-      "traffic": "200+"
-    },
-    {
-      "term": "르윈 디아즈",
-      "startedAt": "2026-11-27T15:50:00-08:00",
+      "term": "주가",
+      "startedAt": "2026-11-28T02:20:00-08:00",
       "traffic": "2000+"
     },
     {
-      "term": "화웨이",
-      "startedAt": "2026-11-27T15:50:00-08:00",
+      "term": "최가온",
+      "startedAt": "2026-11-28T02:20:00-08:00",
       "traffic": "100+"
     },
     {
-      "term": "소방관",
-      "startedAt": "2026-11-27T15:40:00-08:00",
+      "term": "베스킨라빈스",
+      "startedAt": "2026-11-28T02:10:00-08:00",
       "traffic": "200+"
+    },
+    {
+      "term": "울산광역시",
+      "startedAt": "2026-11-28T01:40:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "욕망의 덫",
+      "startedAt": "2026-11-28T01:20:00-08:00",
+      "traffic": "500+"
+    },
+    {
+      "term": "서울역",
+      "startedAt": "2026-11-28T01:10:00-08:00",
+      "traffic": "1000+"
+    },
+    {
+      "term": "제주공항",
+      "startedAt": "2026-11-28T01:10:00-08:00",
+      "traffic": "100+"
+    },
+    {
+      "term": "국가유공자",
+      "startedAt": "2026-11-28T00:50:00-08:00",
+      "traffic": "200+"
+    },
+    {
+      "term": "開票",
+      "startedAt": "2026-11-28T00:30:00-08:00",
+      "traffic": "500+"
     }
   ],
   "issues": [
     {
-      "term": "인천공항 출국하던 전역군인",
+      "term": "수능",
       "day": "2026-11-28",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867702",
-      "publishedAt": "2026-11-28T10:29:00+09:00",
-      "headline": "인천공항 출국하던 전역군인 여행가방서 또 '공포탄'"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867220",
+      "publishedAt": "2026-11-28T18:36:00+09:00",
+      "headline": "[지식의 발견] \"당장 폐지한다고…\" 전 교육과정평가원장이 말하는 미래의 수능?"
     },
     {
-      "term": "산청 임도서 경운기",
+      "term": "안동 오르막길서 정비",
       "day": "2026-11-28",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867674",
-      "publishedAt": "2026-11-28T09:55:00+09:00",
-      "headline": "산청 임도서 경운기 넘어져 추락…노부부 사상"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008868035",
+      "publishedAt": "2026-11-28T20:33:00+09:00",
+      "headline": "안동 오르막길서 정비 중인 트럭 미끄러져…60대 운전자 깔려 숨져"
     },
     {
-      "term": "경북 성주 야산",
+      "term": "보건의료인 국시서 전자기기",
       "day": "2026-11-28",
       "kind": "보도",
       "publisher": "SBS",
-      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867643",
-      "publishedAt": "2026-11-28T09:22:00+09:00",
-      "headline": "경북 성주 야산 산불 2시간여만에 진화…0.5㏊ 피해"
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867952",
+      "publishedAt": "2026-11-28T19:18:00+09:00",
+      "headline": "보건의료인 국시서 전자기기 3건 적발…\"전파탐지기로 확인\""
+    },
+    {
+      "term": "김용준 전 헌법재판소장",
+      "day": "2026-11-28",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008868060",
+      "publishedAt": "2026-11-28T19:16:00+09:00",
+      "headline": "김용준 전 헌법재판소장 별세…향년 87세"
+    },
+    {
+      "term": "철도노조 준법투쟁 첫",
+      "day": "2026-11-28",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008868059",
+      "publishedAt": "2026-11-28T19:14:00+09:00",
+      "headline": "철도노조 준법투쟁 첫 주말…수도권 전철 105대 지연"
+    },
+    {
+      "term": "신상진 성남시장 불구속",
+      "day": "2026-11-28",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008868058",
+      "publishedAt": "2026-11-28T19:14:00+09:00",
+      "headline": "'공직선거법 위반 혐의' 신상진 성남시장 불구속 송치"
+    },
+    {
+      "term": "소방공무원들 향해",
+      "day": "2026-11-28",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008868048",
+      "publishedAt": "2026-11-28T18:57:00+09:00",
+      "headline": "소방공무원들 향해 '놈' 발언…인천시의원에 소방노조 반발"
+    },
+    {
+      "term": "인천 앞바다서 뒤집힌",
+      "day": "2026-11-28",
+      "kind": "보도",
+      "publisher": "SBS",
+      "url": "https://news.sbs.co.kr/news/endPage.do?news_id=N1008867865",
+      "publishedAt": "2026-11-28T18:57:00+09:00",
+      "headline": "인천 앞바다서 뒤집힌 카약…초등생·아버지 '저체온증'"
     }
   ],
   "previousIssues": [
