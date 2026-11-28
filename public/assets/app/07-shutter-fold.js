@@ -37,24 +37,27 @@ function arFoldPanels(c,W,H,S,t) {
   if(surface.width!==width||surface.height!==height){surface.width=width;surface.height=height;}
   const sc=surface.getContext('2d');
   sc.clearRect(0,0,width,height);mPhoto(sc,S,0,0,0,width,height,1.045);
-  const count=6;
+
+  // 한 장의 사진으로 9:16 바탕을 채우고 그 위에서 엽서를 중심축 기준으로 펼친다.
+  c.drawImage(surface,0,0,W,H);
+  const count=6,strip=W/count;
+  const opens=Array.from({length:count},(_,i)=>arReferenceFanEase((t-i*.078)/.25));
+  const widths=opens.map(q=>strip*(.12+.88*q));
+  let x=(W-widths.reduce((sum,w)=>sum+w,0))/2;
+  c.fillStyle='rgba(20,17,18,'+(.32*(1-opens[count-1]))+')';c.fillRect(0,0,W,H);
   for(let i=0;i<count;i++){
-    const q=arReferenceFanEase((t-i*.078)/.25);
-    if(!q)continue;
-    const left=i*W/count,full=(i+1)*W/count-left;
-    const right=left+full*q;
-    const bend=x=>Math.sin(Math.PI*x/W)*H*.057;
-    const yl=bend(left),yr=bend(right)+(1-q)*H*.078;
-    c.save();
-    // 0폭 프레임을 건너뛰어 접히는 축의 나눗셈을 피한다.
-    if(right-left>.05){
-      c.transform(1,(yr-yl)/(right-left),0,1,left,yl);
-      c.drawImage(surface,i*width/count,0,width/count,height,0,0,right-left,H*.90);
-      if(i>0){c.fillStyle='rgba(15,16,22,.42)';c.fillRect(0,0,Math.min(full*.02,1),H*.90);}
-      const sheen=1-Math.min(1,Math.abs(t-(.63+i*.054))/.045);
-      if(sheen>0){c.fillStyle='rgba(255,255,255,'+(.80*sheen)+')';c.fillRect(0,0,right-left,H*.90);}
+    const q=opens[i], w=widths[i];
+    const sheen=1-Math.min(1,Math.abs(t-(.63+i*.054))/.045);
+    if(opens[count-1]<1){
+      c.drawImage(surface,i*width/count,0,width/count,height,x,0,w,H);
+      const crease=c.createLinearGradient(x,0,x+w,0);
+      const shadow=(1-q)*.48;
+      crease.addColorStop(i%2?1:0,'rgba(12,12,14,'+shadow+')');
+      crease.addColorStop(i%2?0:1,'rgba(250,247,236,'+((1-q)*.18)+')');
+      c.fillStyle=crease;c.fillRect(x,0,w,H);
     }
-    c.restore();
+    if(sheen>0){c.fillStyle='rgba(255,255,255,'+(.34*sheen)+')';c.fillRect(x,0,w,H);}
+    x+=w;
   }
 }
 
@@ -94,6 +97,17 @@ function arFoldPostcard(c,W,H,S,idx,p,count) {
   const foldCuts=Math.max(1,Math.min(count-1,Math.round(count*.582)));
   const t=count===1?p:idx<foldCuts?.582*(idx+p)/foldCuts:.582+.418*(idx-foldCuts+p)/(count-foldCuts);
   if(t<.582){arFoldPanels(c,W,H,S,t/.582);return;}
-  if(t<.729){arFoldCrossOrTiles(c,W,H,S,'cross',(t-.582)/.147);return;}
-  arFoldCrossOrTiles(c,W,H,S,'tiles',(t-.729)/.271);
+  if(t<.729){
+    // X자의 바깥쪽에도 이전 컷이 남아서 처음부터 끝까지 사진이 화면을 채운다.
+    const cross=(t-.582)/.147;
+    mPhoto(c,arReferenceFanScene(S,Math.max(0,idx-1)),0,0,0,W,H,1.045);
+    arFoldCrossOrTiles(c,W,H,S,'cross',cross);
+    return;
+  }
+  const tiles=(t-.729)/.271;
+  mPhoto(c,S,0,0,0,W,H,1.05);
+  // 인화면을 가리지 않고도 앞쪽 타일이 읽히도록 이동 중에만 바탕 노출을 낮춘다.
+  c.fillStyle='rgba(19,19,21,'+(.34*Math.sin(Math.PI*tiles))+')';
+  c.fillRect(0,0,W,H);
+  arFoldCrossOrTiles(c,W,H,S,'tiles',tiles);
 }
