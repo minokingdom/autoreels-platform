@@ -16,6 +16,16 @@ function arRenderReferenceFrame(c,W,H,t,mainDuration,totalCuts,d,spec) {
   const caption=gCleanCaption((campaign.cutCaptions||[])[idx]||campaign.hook||'');
   c.save();
   c.fillStyle=r.background;c.fillRect(0,0,W,H);
+  if(r.layout==='photo-disc' || r.layout==='booth-print'){
+    const booth=r.layout==='booth-print';
+    if(booth)arBoothPrint(c,W,H,S,idx,p,totalCuts);
+    else arPhotoDisc(c,W,H,S,idx,p,totalCuts);
+    c.save();
+    if(!booth){c.shadowColor='rgba(0,0,0,.9)';c.shadowBlur=W*.012;}
+    arReferenceCaption(c,caption,W,H,booth?H*.065:H*.78,H*.16,r,entry);
+    c.restore();inSign(c,d,W/2,H*.95,r.foreground,'center',W*.029);
+    c.restore();return;
+  }
   if(['magazine-turn','mono-teaser','runway-lookbook'].includes(r.layout)) {
     arFashionReferenceFrame(c,W,H,S,r,idx,p,totalCuts,caption,entry,d);
     c.restore();return;

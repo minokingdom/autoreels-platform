@@ -1,6 +1,40 @@
 import {chromium} from 'playwright';
 import http from 'node:http';import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';
 import {buildApp} from '../scripts/build-app.mjs';
+async function checkDiscAndBooth(page) {
+  return page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width=180; canvas.height=320;
+    const c=canvas.getContext('2d',{willReadFrequently:true});
+    const colors=['#ff0000','#00ff00','#0000ff','#ffff00','#ff00ff'];
+    const photos=colors.map(color=>{
+      const photo=document.createElement('canvas');photo.width=photo.height=32;
+      const ctx=photo.getContext('2d');ctx.fillStyle=color;ctx.fillRect(0,0,32,32);
+      ctx.fillStyle='white';ctx.fillRect(0,0,8,32);return photo;
+    });
+    const scene={photos,n:5,idx:0,cutIdx:0,cuts:5};
+    const oldPlan=campaign.scenePlan;
+    campaign.scenePlan=[];
+    const rgb=(x,y)=>Array.from(c.getImageData(x,y,1,1).data).slice(0,3).join(',');
+    try {
+      arBoothPrint(c,180,320,scene,3,.99,5);
+      const cells=[[57,153],[124,153],[57,242],[124,242]].map(([x,y])=>rgb(x,y));
+      if(cells.join('|')!=='255,0,0|0,255,0|0,0,255|255,255,0')throw Error('인화지 네 컷 순서');
+      arBoothPrint(c,180,320,scene,4,.99,5);
+      if(rgb(57,153)!=='255,0,255'||rgb(124,242)!=='255,0,255')throw Error('마지막 한 장 인화');
+      arBoothPrint(c,180,320,scene,4,0,5);
+      if(rgb(57,153)==='255,0,255')throw Error('인화지가 슬롯 밖에 먼저 보임');
+      function disc(p){
+        c.fillStyle='#3e3027';c.fillRect(0,0,180,320);
+        arPhotoDisc(c,180,320,scene,0,p,5);
+        return [rgb(18,38),canvas.toDataURL()];
+      }
+      const [outside,first]=disc(.1),[laterOutside,later]=disc(.8);
+      if(outside!==laterOutside||first===later||disc(.1)[1]!==first)throw Error('고정 배경·원형 회전·되감기');
+    } finally {campaign.scenePlan=oldPlan;}
+    return '포토 디스크·네 컷 인화기 검사 통과';
+  });
+}
 async function checkShutterAndFold(page) {
   return page.evaluate(() => {
     const canvas = document.createElement('canvas');
@@ -127,6 +161,7 @@ try{
  await page.route('**/api/**',r=>r.fulfill({status:503,contentType:'application/json',body:'{"ok":false}'}));
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(`http://127.0.0.1:${server.address().port}/studio`);await page.waitForFunction(()=>typeof arRenderReferenceFrame==='function');
+ console.log(await checkDiscAndBooth(page));
  console.log(await checkShutterAndFold(page));
  console.log(await checkBeatCopy(page), await checkBeatDiagonals(page));
  const result=await page.evaluate(()=>{
